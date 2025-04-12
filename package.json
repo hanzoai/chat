@@ -1,5 +1,5 @@
 {
-  "name": "LibreChat",
+  "name": "Hanzo",
   "version": "v0.7.7",
   "description": "",
   "workspaces": [
@@ -74,12 +74,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danny-avila/LibreChat.git"
+    "url": "git+https://github.com/danny-avila/Hanzo.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/danny-avila/LibreChat/issues"
+    "url": "https://github.com/danny-avila/Hanzo/issues"
   },
   "homepage": "https://librechat.ai/",
   "devDependencies": {
