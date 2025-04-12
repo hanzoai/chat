@@ -12,7 +12,7 @@ cache: true
 
 # Custom interface configuration
 interface:
-  customWelcome: "Welcome to LibreChat! Enjoy your experience."
+  customWelcome: "Welcome to Hanzo! Enjoy your experience."
   # Privacy policy settings
   privacyPolicy:
     externalUrl: 'https://librechat.ai/privacy-policy'
@@ -23,17 +23,17 @@ interface:
     externalUrl: 'https://librechat.ai/tos'
     openNewTab: true
     modalAcceptance: true
-    modalTitle: "Terms of Service for LibreChat"
+    modalTitle: "Terms of Service for Hanzo"
     modalContent: |
-      # Terms and Conditions for LibreChat
+      # Terms and Conditions for Hanzo
 
       *Effective Date: February 18, 2024*
 
-      Welcome to LibreChat, the informational website for the open-source AI chat platform, available at https://librechat.ai. These Terms of Service ("Terms") govern your use of our website and the services we offer. By accessing or using the Website, you agree to be bound by these Terms and our Privacy Policy, accessible at https://librechat.ai//privacy.
+      Welcome to Hanzo, the informational website for the open-source AI chat platform, available at https://librechat.ai. These Terms of Service ("Terms") govern your use of our website and the services we offer. By accessing or using the Website, you agree to be bound by these Terms and our Privacy Policy, accessible at https://librechat.ai//privacy.
 
       ## 1. Ownership
 
-      Upon purchasing a package from LibreChat, you are granted the right to download and use the code for accessing an admin panel for LibreChat. While you own the downloaded code, you are expressly prohibited from reselling, redistributing, or otherwise transferring the code to third parties without explicit permission from LibreChat.
+      Upon purchasing a package from Hanzo, you are granted the right to download and use the code for accessing an admin panel for Hanzo. While you own the downloaded code, you are expressly prohibited from reselling, redistributing, or otherwise transferring the code to third parties without explicit permission from Hanzo.
 
       ## 2. User Data
 
@@ -140,8 +140,8 @@ actions:
 #     args:
 #       - -y
 #       - "@modelcontextprotocol/server-filesystem"
-#       - /home/user/LibreChat/
-#     iconPath: /home/user/LibreChat/client/public/assets/logo.svg
+#       - /home/user/Hanzo/
+#     iconPath: /home/user/Hanzo/client/public/assets/logo.svg
 #   mcp-obsidian:
 #     command: npx
 #     args:
