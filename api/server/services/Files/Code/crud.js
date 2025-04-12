@@ -22,7 +22,7 @@ async function getCodeOutputDownloadStream(fileIdentifier, apiKey) {
       url: `${baseURL}/download/${fileIdentifier}`,
       responseType: 'stream',
       headers: {
-        'User-Agent': 'LibreChat/1.0',
+        'User-Agent': 'Hanzo/1.0',
         'X-API-Key': apiKey,
       },
       timeout: 15000,
@@ -66,7 +66,7 @@ async function uploadCodeEnvFile({ req, stream, filename, apiKey, entity_id = ''
       headers: {
         ...form.getHeaders(),
         'Content-Type': 'multipart/form-data',
-        'User-Agent': 'LibreChat/1.0',
+        'User-Agent': 'Hanzo/1.0',
         'User-Id': req.user.id,
         'X-API-Key': apiKey,
       },

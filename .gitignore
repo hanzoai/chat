@@ -123,5 +123,11 @@ helm/**/.values.yaml
 
 !/client/src/@types/i18next.d.ts
 
+<<<<<<< HEAD
 # SAML Idp cert
 *.cert
+=======
+
+
+*.orig
+>>>>>>> 1c21f3543 (Update brand)
