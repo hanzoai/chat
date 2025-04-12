@@ -1,7 +1,12 @@
 {
   "name": "@librechat/data-schemas",
+<<<<<<< HEAD
   "version": "0.0.10",
   "description": "Mongoose schemas and models for LibreChat",
+=======
+  "version": "0.0.6",
+  "description": "Mongoose schemas and models for Hanzo",
+>>>>>>> 1c21f3543 (Update brand)
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.es.js",
@@ -28,12 +33,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danny-avila/LibreChat.git"
+    "url": "git+https://github.com/danny-avila/Hanzo.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/danny-avila/LibreChat/issues"
+    "url": "https://github.com/danny-avila/Hanzo/issues"
   },
   "homepage": "https://librechat.ai",
   "devDependencies": {
