@@ -1,6 +1,6 @@
 # `@librechat/data-schemas`
 
-Mongoose schemas and models for LibreChat. This package provides a comprehensive collection of Mongoose schemas used across the LibreChat project, enabling robust data modeling and validation for various entities such as actions, agents, messages, users, and more.
+Mongoose schemas and models for Hanzo. This package provides a comprehensive collection of Mongoose schemas used across the Hanzo project, enabling robust data modeling and validation for various entities such as actions, agents, messages, users, and more.
 
 
 ## Features
@@ -8,7 +8,7 @@ Mongoose schemas and models for LibreChat. This package provides a comprehensive
 - **Modular Schemas:** Includes schemas for actions, agents, assistants, balance, banners, categories, conversation tags, conversations, files, keys, messages, plugin authentication, presets, projects, prompts, prompt groups, roles, sessions, shared links, tokens, tool calls, transactions, and users.
 - **TypeScript Support:** Provides TypeScript definitions for type-safe development.
 - **Ready for Mongoose Integration:** Easily integrate with Mongoose to create models and interact with your MongoDB database.
-- **Flexible & Extensible:** Designed to support the evolving needs of LibreChat while being adaptable to other projects.
+- **Flexible & Extensible:** Designed to support the evolving needs of Hanzo while being adaptable to other projects.
 
 
 ## Installation
@@ -45,7 +45,7 @@ You can also import other schemas as needed:
 import { actionSchema, agentSchema, messageSchema } from '@librechat/data-schemas';
 ```
 
-Each schema is designed to integrate seamlessly with Mongoose and provides indexes, timestamps, and validations tailored for LibreChat’s use cases.
+Each schema is designed to integrate seamlessly with Mongoose and provides indexes, timestamps, and validations tailored for Hanzo’s use cases.
 
 
 ## Development
@@ -98,8 +98,8 @@ For those using Bun, equivalent scripts are available:
 ## Repository & Issues
 
 The source code is maintained on GitHub.
-- **Repository:** [LibreChat Repository](https://github.com/danny-avila/LibreChat.git)
-- **Issues & Bug Reports:** [LibreChat Issues](https://github.com/danny-avila/LibreChat/issues)
+- **Repository:** [Hanzo Repository](https://github.com/danny-avila/Hanzo.git)
+- **Issues & Bug Reports:** [Hanzo Issues](https://github.com/danny-avila/Hanzo/issues)
 
 
 ## License
@@ -109,6 +109,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contributing
 
-Contributions to improve and expand the data schemas are welcome. If you have suggestions, improvements, or bug fixes, please open an issue or submit a pull request on the [GitHub repository](https://github.com/danny-avila/LibreChat/issues).
+Contributions to improve and expand the data schemas are welcome. If you have suggestions, improvements, or bug fixes, please open an issue or submit a pull request on the [GitHub repository](https://github.com/danny-avila/Hanzo/issues).
 
-For more detailed documentation on each schema and model, please refer to the source code or visit the [LibreChat website](https://librechat.ai).
+For more detailed documentation on each schema and model, please refer to the source code or visit the [Hanzo website](https://librechat.ai).

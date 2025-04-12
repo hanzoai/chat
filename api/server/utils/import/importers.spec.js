@@ -101,7 +101,7 @@ describe('importChatGptConvo', () => {
   });
 });
 
-describe('importLibreChatConvo', () => {
+describe('importHanzoConvo', () => {
   const jsonDataNonRecursiveBranches = JSON.parse(
     fs.readFileSync(path.join(__dirname, '__data__', 'librechat-opts-nonr-branches.json'), 'utf8'),
   );

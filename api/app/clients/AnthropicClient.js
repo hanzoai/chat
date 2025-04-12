@@ -247,7 +247,7 @@ class AnthropicClient extends BaseClient {
   }
 
   /**
-   * Get Token Count for LibreChat Message
+   * Get Token Count for Hanzo Message
    * @param {TMessage} responseMessage
    * @returns {number}
    */

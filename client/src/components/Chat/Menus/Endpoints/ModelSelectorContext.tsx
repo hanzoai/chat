@@ -15,7 +15,7 @@ type ModelSelectorContextType = {
   selectedValues: SelectedValues;
   endpointSearchValues: Record<string, string>;
   searchResults: (t.TModelSpec | Endpoint)[] | null;
-  // LibreChat
+  // Hanzo
   modelSpecs: t.TModelSpec[];
   mappedEndpoints: Endpoint[];
   agentsMap: t.TAgentsMap | undefined;
@@ -165,7 +165,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     searchResults,
     selectedValues,
     endpointSearchValues,
-    // LibreChat
+    // Hanzo
     agentsMap,
     modelSpecs,
     assistantsMap,
