@@ -42,8 +42,7 @@ mcpServers:
     args:
       - -m
       - hanzo_mcp.cli
-      - --port
-      - "3001"
+      - --enable-agent-tool
     timeout: 60000
     initTimeout: 15000
 
