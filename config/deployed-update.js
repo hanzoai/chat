@@ -41,7 +41,7 @@ const shouldRebase = process.argv.includes('--rebase');
   execSync(downCommand, { stdio: 'inherit' });
 
   console.purple('Removing all tags for Hanzo `deployed` images...');
-  const repositories = ['ghcr.io/danny-avila/librechat-dev-api', 'librechat-client'];
+  const repositories = ['ghcr.io/hanzoai/librechat-dev-api', 'librechat-client'];
   repositories.forEach((repo) => {
     const tags = execSync(`sudo docker images ${repo} -q`, { encoding: 'utf8' })
       .split('\n')
