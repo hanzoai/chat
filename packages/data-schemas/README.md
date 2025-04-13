@@ -98,8 +98,8 @@ For those using Bun, equivalent scripts are available:
 ## Repository & Issues
 
 The source code is maintained on GitHub.
-- **Repository:** [Hanzo Repository](https://github.com/danny-avila/Hanzo.git)
-- **Issues & Bug Reports:** [Hanzo Issues](https://github.com/danny-avila/Hanzo/issues)
+- **Repository:** [Hanzo Repository](https://github.com/hanzoai/Hanzo.git)
+- **Issues & Bug Reports:** [Hanzo Issues](https://github.com/hanzoai/Hanzo/issues)
 
 
 ## License
@@ -109,6 +109,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contributing
 
-Contributions to improve and expand the data schemas are welcome. If you have suggestions, improvements, or bug fixes, please open an issue or submit a pull request on the [GitHub repository](https://github.com/danny-avila/Hanzo/issues).
+Contributions to improve and expand the data schemas are welcome. If you have suggestions, improvements, or bug fixes, please open an issue or submit a pull request on the [GitHub repository](https://github.com/hanzoai/Hanzo/issues).
 
 For more detailed documentation on each schema and model, please refer to the source code or visit the [Hanzo website](https://librechat.ai).

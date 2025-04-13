@@ -20,7 +20,7 @@
     <img
       src="https://img.shields.io/badge/DOCS-blue.svg?style=for-the-badge&logo=read-the-docs&logoColor=white&labelColor=000000&logoWidth=20">
   </a>
-  <a aria-label="Sponsors" href="https://github.com/sponsors/danny-avila">
+  <a aria-label="Sponsors" href="https://github.com/sponsors/hanzoai">
     <img
       src="https://img.shields.io/badge/SPONSORS-brightgreen.svg?style=for-the-badge&logo=github-sponsors&logoColor=white&labelColor=000000&logoWidth=20">
   </a>
@@ -135,7 +135,7 @@ Click on the thumbnail to open the video☝️
 ## 🌐 Resources
 
 **GitHub Repo:**
-  - **RAG API:** [github.com/danny-avila/rag_api](https://github.com/danny-avila/rag_api)
+  - **RAG API:** [github.com/hanzoai/rag_api](https://github.com/hanzoai/rag_api)
   - **Website:** [github.com/Hanzo-AI/librechat.ai](https://github.com/Hanzo-AI/librechat.ai)
 
 **Other:**
@@ -148,7 +148,7 @@ Click on the thumbnail to open the video☝️
 ## 📝 Changelog
 
 Keep up with the latest updates by visiting the releases page and notes:
-- [Releases](https://github.com/danny-avila/Hanzo/releases)
+- [Releases](https://github.com/hanzoai/Hanzo/releases)
 - [Changelog](https://www.librechat.ai/changelog) 
 
 **⚠️ Please consult the [changelog](https://www.librechat.ai/changelog) for breaking changes before updating.**
@@ -158,13 +158,13 @@ Keep up with the latest updates by visiting the releases page and notes:
 ## ⭐ Star History
 
 <p align="center">
-  <a href="https://star-history.com/#danny-avila/Hanzo&Date">
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=danny-avila/Hanzo&type=Date&theme=dark" onerror="this.src='https://api.star-history.com/svg?repos=danny-avila/Hanzo&type=Date'" />
+  <a href="https://star-history.com/#hanzoai/Hanzo&Date">
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hanzoai/Hanzo&type=Date&theme=dark" onerror="this.src='https://api.star-history.com/svg?repos=hanzoai/Hanzo&type=Date'" />
   </a>
 </p>
 <p align="center">
   <a href="https://trendshift.io/repositories/4685" target="_blank" style="padding: 10px;">
-    <img src="https://trendshift.io/api/badge/repositories/4685" alt="danny-avila%2FHanzo | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
+    <img src="https://trendshift.io/api/badge/repositories/4685" alt="hanzoai%2FHanzo | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
   </a>
   <a href="https://runacap.com/ross-index/q1-24/" target="_blank" rel="noopener" style="margin-left: 20px;">
     <img style="width: 260px; height: 56px" src="https://runacap.com/wp-content/uploads/2024/04/ROSS_badge_white_Q1_2024.svg" alt="ROSS Index - Fastest Growing Open-Source Startups in Q1 2024 | Runa Capital" width="260" height="56"/>
@@ -185,8 +185,8 @@ If you'd like to help translate Hanzo into your language, we'd love your contrib
 
 ## 💖 This project exists in its current state thanks to all the people who contribute
 
-<a href="https://github.com/danny-avila/Hanzo/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=danny-avila/Hanzo" />
+<a href="https://github.com/hanzoai/Hanzo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=hanzoai/Hanzo" />
 </a>
 
 ---
