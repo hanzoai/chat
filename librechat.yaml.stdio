@@ -1,0 +1,61 @@
+version: "1.2.4"
+
+endpoints:
+  # OpenAI configuration
+  openAI:
+    # If using environment variables, add these to your .env file
+    apiKey: "${OPENAI_API_KEY}"
+    
+  # Anthropic configuration
+  anthropic:
+    apiKey: "${ANTHROPIC_API_KEY}"
+    
+  # Custom endpoints (LM Studio)
+  custom:
+    - name: "LM Studio"
+      apiKey: ""
+      baseURL: "http://192.168.1.189:1234/v1"
+      models:
+        default:
+          - gemma-3-27b-it
+          - phi-4
+          - qwen2.5-7b-instruct-1m
+          - deepseek-r1-distill-qwen-32b
+          - deepseek-r1-distill-qwen-7b
+        fetch: false
+      titleModel: "gemma-3-27b-it"
+      titleConvo: true
+      mcpServerId: hanzo-mcp
+
+# Agents configuration
+agents:
+  disableBuilder: false
+  recursionLimit: 50
+  maxRecursionLimit: 100
+  capabilities: ["execute_code", "file_search", "actions", "tools"]
+
+# MCP Servers configuration
+mcpServers:
+  hanzo-mcp:
+    type: stdio
+    command: python3
+    args:
+      - -m
+      - hanzo_mcp.cli
+      - --port
+      - "3001"
+    timeout: 60000
+    initTimeout: 15000
+
+# Interface configuration
+interface:
+  customWelcome: "Welcome to Hanzo Chat!"
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  sidePanel: true
+  presets: true
+  prompts: true
+  bookmarks: true
+  multiConvo: true
+  agents: true
