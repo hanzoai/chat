@@ -47,8 +47,8 @@ start-mcp:
 		echo "MCP server is already running with PID $$(cat mcp_server.pid)"; \
 		echo "Use 'make restart-mcp' to restart it."; \
 	else \
-		python3 run_mcp_server.py & \
-		echo "MCP server started. See run_mcp_server.py output for details."; \
+		./run_mcp_server.py & \
+		echo "MCP server started. Server is running at http://localhost:3001/sse"; \
 	fi
 
 # Stop MCP server
