@@ -1,15 +1,8 @@
 {
-<<<<<<< HEAD:packages/api/package.json
   "name": "@librechat/api",
   "version": "1.2.4",
   "type": "commonjs",
-  "description": "MCP services for LibreChat",
-=======
-  "name": "librechat-mcp",
-  "version": "1.1.0",
-  "type": "module",
   "description": "MCP services for Hanzo",
->>>>>>> 1c21f3543 (Update brand):packages/mcp/package.json
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "types": "./dist/types/index.d.ts",
