@@ -130,11 +130,7 @@ async function validateDockerRunning() {
   console.green('Your Hanzo app is now up to date! Start the app with the following command:');
   console.purple(startCommand);
   console.orange(
-<<<<<<< HEAD
-    "Note: it's also recommended to clear your browser cookies and localStorage for LibreChat to assure a fully clean installation.",
-=======
     'Note: it\'s also recommended to clear your browser cookies and localStorage for Hanzo to assure a fully clean installation.',
->>>>>>> 1c21f3543 (Update brand)
   );
   console.orange("Also: Don't worry, your data is safe :)");
 })();

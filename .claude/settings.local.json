@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git rebase:*)",
+      "Bash(git -C /Users/z/work/librechat/LibreChat log --oneline -10)",
+      "Bash(git -C /Users/z/work/librechat/LibreChat log --oneline 97085073..HEAD)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm install)",
+      "Bash(rm:*)"
+    ],
+    "deny": []
+  }
+}
