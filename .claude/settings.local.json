@@ -11,7 +11,17 @@
       "Bash(git commit:*)",
       "Bash(git checkout:*)",
       "Bash(npm install)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(npm run build:data-provider:*)",
+      "Bash(npm run build:data-schemas:*)",
+      "Bash(npm run build:api:*)",
+      "Bash(pgrep:*)",
+      "Bash(brew services:*)",
+      "Bash(find:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": []
   }
