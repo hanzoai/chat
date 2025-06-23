@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide covers the optional features and their configuration in Morphic.
+This guide covers the optional features and their configuration in Hanzo Search.
 
 ## Table of Contents
 
@@ -178,8 +178,11 @@ AZURE_RESOURCE_NAME=[YOUR_RESOURCE_NAME]
 
 ### DeepSeek
 
+Note: Deepseek function calling is currently unstable: https://github.com/vercel/ai/issues/4313#issuecomment-2587891644
+If you want to use Deepseek, remove the comment and add it to the models array: https://github.com/hanzoai/chat/blob/main/lib/types/models.ts
+
 ```bash
-DEEPSEEK_API_KEY=[YOUR_API_KEY]
+# DEEPSEEK_API_KEY=[YOUR_API_KEY]
 ```
 
 ### Fireworks
