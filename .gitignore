@@ -37,3 +37,5 @@ next-env.d.ts
 
 # cursor
 .cursor/rules/private
+
+*.orig

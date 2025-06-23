@@ -1,0 +1,325 @@
+commit d81bf4629e96686e621f9c7a50bea77b1728f38b
+Author: Zach Kelling <z@zeekay.io>
+Date:   Mon Feb 3 15:50:40 2025 -0600
+
+    rebrand as Hanzo
+
+diff --git a/.github/ISSUE_TEMPLATE/feature_request.yml b/.github/ISSUE_TEMPLATE/feature_request.yml
+index 1f4031cec..1e19bea62 100644
+--- a/.github/ISSUE_TEMPLATE/feature_request.yml
++++ b/.github/ISSUE_TEMPLATE/feature_request.yml
+@@ -1,15 +1,15 @@
+ name: ✨ Feature Request
+-description: Propose a new feature for Morphic.
++description: Propose a new feature for Hanzo Chat.
+ labels: []
+ body:
+   - type: markdown
+     attributes:
+       value: |
+-        This template is to propose new features for Morphic. Please fill out the following information to help us understand your feature request.
++        This template is to propose new features for Hanzo Chat. Please fill out the following information to help us understand your feature request.
+   - type: textarea
+     attributes:
+       label: Feature Description
+-      description: A detailed description of the feature you are proposing for Morphic. Include any relevant technical details.
++      description: A detailed description of the feature you are proposing for Hanzo Chat. Include any relevant technical details.
+       placeholder: |
+         Feature description...
+     validations:
+diff --git a/.gitignore b/.gitignore
+index 6afdcaa0a..12684e15e 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -36,4 +36,6 @@ yarn-error.log*
+ next-env.d.ts
+ 
+ # cursor
+-.cursor/rules/private
+\ No newline at end of file
++.cursor/rules/private
++
++*.orig
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+index fab9bb987..f305d2828 100644
+--- a/.vscode/settings.json
++++ b/.vscode/settings.json
+@@ -4,5 +4,8 @@
+   "cSpell.words": ["openai", "Tavily"],
+   "editor.codeActionsOnSave": {
+     "source.organizeImports": "always"
++  },
++  "[typescriptreact]": {
++    "editor.defaultFormatter": "vscode.typescript-language-features"
+   }
+ }
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index c70c87a7e..b97744344 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -1,6 +1,6 @@
+-# Contributing to Morphic
++# Contributing to Hanzo Chat
+ 
+-Thank you for your interest in contributing to Morphic! This document provides guidelines and instructions for contributing.
++Thank you for your interest in contributing to Hanzo Chat! This document provides guidelines and instructions for contributing.
+ 
+ ## Code of Conduct
+ 
+@@ -10,7 +10,7 @@ By participating in this project, you are expected to uphold our [Code of Conduc
+ 
+ ### Reporting Issues
+ 
+-- Check if the issue already exists in our [GitHub Issues](https://github.com/miurla/morphic/issues)
++- Check if the issue already exists in our [GitHub Issues](https://github.com/hanzoai/chat/issues)
+ - Use the issue templates when creating a new issue
+ - Provide as much context as possible
+ 
+diff --git a/README.md b/README.md
+index 8c86ed4bf..f586255d4 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-# Morphic
++# Hanzo Search
+ 
+ An AI-powered search engine with a generative UI.
+ 
+@@ -111,13 +111,13 @@ Models are configured in `public/config/models.json`. Each model requires its co
+ Fork the repo to your Github account, then run the following command to clone the repo:
+ 
+ ```bash
+-git clone git@github.com:[YOUR_GITHUB_ACCOUNT]/morphic.git
++git clone git@github.com:[YOUR_GITHUB_ACCOUNT]/chat.git
+ ```
+ 
+ ### 2. Install dependencies
+ 
+ ```bash
+-cd morphic
++cd chat
+ bun install
+ ```
+ 
+@@ -155,11 +155,11 @@ Visit http://localhost:3000 in your browser.
+ 
+ ## 🌐 Deploy
+ 
+-Host your own live version of Morphic with Vercel, Cloudflare Pages, or Docker.
++Host your own live version of Hanzo Search with Vercel, Cloudflare Pages, or Docker.
+ 
+ ### Vercel
+ 
+-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmiurla%2Fmorphic&env=OPENAI_API_KEY,TAVILY_API_KEY,UPSTASH_REDIS_REST_URL,UPSTASH_REDIS_REST_TOKEN)
++[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fhanzoai%2Fchat&env=OPENAI_API_KEY,TAVILY_API_KEY,UPSTASH_REDIS_REST_URL,UPSTASH_REDIS_REST_TOKEN)
+ 
+ ### Docker Prebuilt Image
+ 
+@@ -188,20 +188,20 @@ The default model configuration is located at `public/config/models.json`. For D
+ 
+ ### Setting up the Search Engine in Your Browser
+ 
+-If you want to use Morphic as a search engine in your browser, follow these steps:
++If you want to use Hanzo Search as a search engine in your browser, follow these steps:
+ 
+ 1. Open your browser settings.
+ 2. Navigate to the search engine settings section.
+ 3. Select "Manage search engines and site search".
+ 4. Under "Site search", click on "Add".
+ 5. Fill in the fields as follows:
+-   - **Search engine**: Morphic
+-   - **Shortcut**: morphic
+-   - **URL with %s in place of query**: `https://morphic.sh/search?q=%s`
++   - **Search engine**: Hanzo Search
++   - **Shortcut**: hanzo-search
++  - **URL with %s in place of query**: `https://hanzo.ai/search?q=%s`
+ 6. Click "Add" to save the new search engine.
+-7. Find "Morphic" in the list of site search, click on the three dots next to it, and select "Make default".
++7. Find "Hanzo Search" in the list of site search, click on the three dots next to it, and select "Make default".
+ 
+-This will allow you to use Morphic as your default search engine in the browser.
++This will allow you to use Hanzo Search as your default search engine in the browser.
+ 
+ ## 💙 Sponsors
+ 
+@@ -211,9 +211,31 @@ This project is proudly supported by:
+   <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
+ </a>
+ 
++## ⚡ AI SDK Implementation
++
++### Current Version: AI SDK UI
++
++This version of Hanzo Search uses the AI SDK UI implementation, which is recommended for production use. It provides better streaming performance and more reliable client-side UI updates.
++
++### Previous Version: AI SDK RSC (v0.2.34 and earlier)
++
++The React Server Components (RSC) implementation of AI SDK was used in versions up to [v0.2.34](https://github.com/hanzoai/chat/releases/tag/v0.2.34) but is now considered experimental and not recommended for production. If you need to reference the RSC implementation, please check the v0.2.34 release tag.
++
++> Note: v0.2.34 was the final version using RSC implementation before migrating to AI SDK UI.
++
++For more information about choosing between AI SDK UI and RSC, see the [official documentation](https://sdk.vercel.ai/docs/getting-started/navigating-the-library#when-to-use-ai-sdk-rsc).
++
++## 📦 Open Source vs Cloud Offering
++
++Hanzo Search is open source software available under the Apache-2.0 license.
++
++To maintain sustainable development and provide cloud-ready features, we offer a hosted version of Hanzo Search alongside our open-source offering. The cloud solution makes Hanzo Search accessible to non-technical users and provides additional features while keeping the core functionality open and available for developers.
++
++For our cloud service, visit [hanzo.ai](https://hanzo.ai).
++
+ ## 👥 Contributing
+ 
+-We welcome contributions to Morphic! Whether it's bug reports, feature requests, or pull requests, all contributions are appreciated.
++We welcome contributions to Hanzo Search! Whether it's bug reports, feature requests, or pull requests, all contributions are appreciated.
+ 
+ Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+ 
+diff --git a/app/favicon.ico b/app/favicon.ico
+index 72117e7cc..00da8f0c9 100644
+Binary files a/app/favicon.ico and b/app/favicon.ico differ
+diff --git a/app/layout.tsx b/app/layout.tsx
+index d9820e9da..f516f5d78 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -16,12 +16,12 @@ const fontSans = FontSans({
+   variable: '--font-sans'
+ })
+ 
+-const title = 'Morphic'
++const title = 'Hanzo Chat'
+ const description =
+   'A fully open-source AI-powered answer engine with a generative UI.'
+ 
+ export const metadata: Metadata = {
+-  metadataBase: new URL('https://morphic.sh'),
++  metadataBase: new URL('https://hanzo.ai'),
+   title,
+   description,
+   openGraph: {
+diff --git a/components/ui/icons.tsx b/components/ui/icons.tsx
+index 8a00dc9ee..c8b914fda 100644
+--- a/components/ui/icons.tsx
++++ b/components/ui/icons.tsx
+@@ -12,9 +12,14 @@ function IconLogo({ className, ...props }: React.ComponentProps<'svg'>) {
+       className={cn('h-4 w-4', className)}
+       {...props}
+     >
+-      <circle cx="128" cy="128" r="128" fill="black"></circle>
+-      <circle cx="102" cy="128" r="18" fill="white"></circle>
+-      <circle cx="154" cy="128" r="18" fill="white"></circle>
++      <g transform="translate(0.000000,128.000000) scale(0.100000,-0.100000)"
++        fill="#000000" stroke="none">
++        <path d="M0 640 l0 -640 640 0 640 0 0 640 0 640 -640 0 -640 0 0 -640z m518
++248 l3 -118 119 0 120 0 0 120 0 120 125 0 125 0 0 -122 0 -123 -122 -122
++-123 -123 123 0 122 0 0 -125 0 -125 -125 0 -125 0 0 125 0 126 -121 -3 -122
++-3 -1 -120 -1 -120 -122 -3 -123 -3 0 129 0 128 120 119 c66 65 120 120 120
++122 0 1 -54 3 -120 3 l-120 0 0 120 0 121 123 -3 122 -3 3 -117z"/>
++      </g>
+     </svg>
+   )
+ }
+diff --git a/docker-compose.yaml b/docker-compose.yaml
+index cad1303ae..a3f12185d 100644
+--- a/docker-compose.yaml
++++ b/docker-compose.yaml
+@@ -1,16 +1,16 @@
+-# Docker Compose configuration for the morphic-stack development environment
++# Docker Compose configuration for the hanzo-stack development environment
+ 
+-name: morphic-stack
++name: hanzo-stack
+ services:
+-  morphic:
+-    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/morphic}:latest
++  hanzo:
++    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/hanzo}:latest
+     command: bun start -H 0.0.0.0
+     build:
+       context: .
+       dockerfile: Dockerfile
+       cache_from:
+-        - morphic:builder
+-        - morphic:latest
++        - hanzo:builder
++        - hanzo:latest
+     env_file: .env.local # Load environment variables
+     ports:
+       - '3000:3000' # Maps port 3000 on the host to port 3000 in the container.
+diff --git a/docs/CONFIGURATION.md b/docs/CONFIGURATION.md
+index c333ca1bb..70cc69299 100644
+--- a/docs/CONFIGURATION.md
++++ b/docs/CONFIGURATION.md
+@@ -1,6 +1,6 @@
+ # Configuration Guide
+ 
+-This guide covers the optional features and their configuration in Morphic.
++This guide covers the optional features and their configuration in Hanzo Search.
+ 
+ ## Table of Contents
+ 
+@@ -178,8 +178,11 @@ AZURE_RESOURCE_NAME=[YOUR_RESOURCE_NAME]
+ 
+ ### DeepSeek
+ 
++Note: Deepseek function calling is currently unstable: https://github.com/vercel/ai/issues/4313#issuecomment-2587891644
++If you want to use Deepseek, remove the comment and add it to the models array: https://github.com/hanzoai/chat/blob/main/lib/types/models.ts
++
+ ```bash
+-DEEPSEEK_API_KEY=[YOUR_API_KEY]
++# DEEPSEEK_API_KEY=[YOUR_API_KEY]
+ ```
+ 
+ ### Fireworks
+diff --git a/lib/agents/generate-related-questions.ts b/lib/agents/generate-related-questions.ts
+index 907e32445..4d7e11dff 100644
+--- a/lib/agents/generate-related-questions.ts
++++ b/lib/agents/generate-related-questions.ts
+@@ -24,10 +24,14 @@ export async function generateRelatedQuestions(
+     model: currentModel,
+     system: `As a professional web researcher, your task is to generate a set of three queries that explore the subject matter more deeply, building upon the initial query and the information uncovered in its search results.
+ 
+-    For instance, if the original query was "Starship's third test flight key milestones", your output should follow this format:
+-
+-    Aim to create queries that progressively delve into more specific aspects, implications, or adjacent topics related to the initial query. The goal is to anticipate the user's potential information needs and guide them towards a more comprehensive understanding of the subject matter.
+-    Please match the language of the response to the user's language.`,
++The response should follow this format:
++{
++  "items": [
++    {"query": "First related query"},
++    {"query": "Second related query"},
++    {"query": "Third related query"}
++  ]
++}`,
+     messages: lastMessages,
+     schema: relatedSchema
+   })
+diff --git a/lib/schemas/related-questions.ts b/lib/schemas/related-questions.ts
+new file mode 100644
+index 000000000..df3bd9463
+--- /dev/null
++++ b/lib/schemas/related-questions.ts
+@@ -0,0 +1,11 @@
++import { z } from 'zod'
++
++export const relatedQuestionsSchema = z.object({
++  items: z.array(
++    z.object({
++      query: z.string().min(1)
++    })
++  ).length(3) // This enforces exactly 3 items
++})
++
++export type RelatedQuestions = z.infer<typeof relatedQuestionsSchema> 
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index c01becb8c..0bac72c8d 100644
+--- a/package.json
++++ b/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "morphic",
++  "name": "@hanzo/chat",
+   "version": "0.1.0",
+   "private": true,
+   "license": "Apache-2.0",
