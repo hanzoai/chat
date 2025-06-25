@@ -116,7 +116,7 @@ export default function MemoryViewer() {
     if (percentage > 75) {
       return 'stroke-yellow-500';
     }
-    return 'stroke-green-500';
+    return 'stroke-gray-500';
   };
 
   const EditMemoryButton = ({ memory }: { memory: TUserMemory }) => {

@@ -277,7 +277,7 @@ export default function ActionsInput({
         <button
           disabled={!functions || !functions.length}
           onClick={saveAction}
-          className="focus:shadow-outline mt-1 flex min-w-[100px] items-center justify-center rounded bg-green-500 px-4 py-2 font-semibold text-white hover:bg-green-400 focus:border-green-500 focus:outline-none focus:ring-0 disabled:bg-green-400"
+          className="focus:shadow-outline mt-1 flex min-w-[100px] items-center justify-center rounded bg-white px-4 py-2 font-semibold text-black hover:bg-gray-100 focus:border-black focus:outline-none focus:ring-0 disabled:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:focus:border-white dark:disabled:bg-gray-700 border border-gray-300 dark:border-gray-600"
           type="button"
         >
           {getButtonContent()}

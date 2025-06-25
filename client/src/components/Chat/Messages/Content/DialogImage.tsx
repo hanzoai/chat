@@ -159,7 +159,7 @@ export default function DialogImage({ isOpen, onOpenChange, src = '', downloadIm
                     <span
                       className={`rounded px-2 py-1 text-xs font-medium capitalize ${
                         args?.quality === 'high'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-gray-100 text-gray-800'
                           : args?.quality === 'low'
                             ? 'bg-orange-100 text-orange-800'
                             : 'bg-gray-100 text-gray-800'
