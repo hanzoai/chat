@@ -23,7 +23,7 @@ const textDocument = {
 
 const spreadsheet = {
   paths: SheetPaths,
-  fill: '#10A37F',
+  fill: '#6b7280',
   title: 'Spreadsheet',
 };
 
