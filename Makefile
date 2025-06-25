@@ -1,0 +1,225 @@
+# Hanzo Chat Makefile for Local Development
+# ==========================================
+
+# Default target - show help
+.DEFAULT_GOAL := help
+
+# Variables
+DOCKER_COMPOSE := docker-compose
+NPM := npm
+PNPM := pnpm
+
+# Colors for output
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+RED := \033[0;31m
+NC := \033[0m # No Color
+BLUE := \033[0;34m
+
+# Help command - displays all available commands
+help: ## Show this help message
+	@echo "$(GREEN)"
+	@echo "╔══════════════════════════════════════════════════════════════╗"
+	@echo "║                    HANZO CHAT COMMANDS                       ║"
+	@echo "╚══════════════════════════════════════════════════════════════╝"
+	@echo "$(NC)"
+	@echo "$(YELLOW)Quick Start:$(NC)"
+	@echo "  $(GREEN)make start$(NC)          - Start all services with Docker Compose"
+	@echo "  $(GREEN)make dev$(NC)            - Start in development mode (local Node.js)"
+	@echo "  $(GREEN)make stop$(NC)           - Stop all services"
+	@echo ""
+	@echo "$(YELLOW)Docker Commands:$(NC)"
+	@echo "  $(GREEN)make up$(NC)             - Start Docker services in background"
+	@echo "  $(GREEN)make down$(NC)           - Stop and remove Docker containers"
+	@echo "  $(GREEN)make restart$(NC)        - Restart all Docker services"
+	@echo "  $(GREEN)make logs$(NC)           - Show Docker logs (all services)"
+	@echo "  $(GREEN)make logs-api$(NC)       - Show API logs only"
+	@echo "  $(GREEN)make ps$(NC)             - Show running containers"
+	@echo "  $(GREEN)make build$(NC)          - Build Docker images"
+	@echo ""
+	@echo "$(YELLOW)Development Commands:$(NC)"
+	@echo "  $(GREEN)make install$(NC)        - Install all dependencies"
+	@echo "  $(GREEN)make install-force$(NC)  - Clean install (remove node_modules)"
+	@echo "  $(GREEN)make build-packages$(NC) - Build all packages"
+	@echo "  $(GREEN)make dev-backend$(NC)    - Start backend in dev mode"
+	@echo "  $(GREEN)make dev-frontend$(NC)   - Start frontend in dev mode"
+	@echo "  $(GREEN)make lint$(NC)           - Run linter"
+	@echo "  $(GREEN)make format$(NC)         - Format code with Prettier"
+	@echo ""
+	@echo "$(YELLOW)Database Commands:$(NC)"
+	@echo "  $(GREEN)make db-shell$(NC)       - Access MongoDB shell"
+	@echo "  $(GREEN)make db-backup$(NC)      - Backup MongoDB database"
+	@echo "  $(GREEN)make db-restore$(NC)     - Restore MongoDB database"
+	@echo ""
+	@echo "$(YELLOW)Utility Commands:$(NC)"
+	@echo "  $(GREEN)make clean$(NC)          - Clean build artifacts and logs"
+	@echo "  $(GREEN)make clean-all$(NC)      - Clean everything (including node_modules)"
+	@echo "  $(GREEN)make status$(NC)         - Show service status"
+	@echo "  $(GREEN)make test$(NC)           - Run tests"
+	@echo "  $(GREEN)make shell$(NC)          - Access API container shell"
+	@echo ""
+	@echo "$(BLUE)Access the application at: http://localhost:3080$(NC)"
+	@echo ""
+
+# Quick start with banner
+start: ## Start all services with Docker Compose (with banner)
+	@echo "$(GREEN)"
+	@echo "╔══════════════════════════════════════════════════════════════╗"
+	@echo "║                  Starting Hanzo Chat...                      ║"
+	@echo "╚══════════════════════════════════════════════════════════════╝"
+	@echo "$(NC)"
+	@$(MAKE) check-docker
+	@$(MAKE) up
+	@echo ""
+	@echo "$(GREEN)✓ All services started successfully!$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Access points:$(NC)"
+	@echo "  • Application: $(BLUE)http://localhost:3080$(NC)"
+	@echo "  • API Health:  $(BLUE)http://localhost:3080/api/health$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Useful commands:$(NC)"
+	@echo "  • View logs:   $(GREEN)make logs$(NC)"
+	@echo "  • Stop:        $(GREEN)make stop$(NC)"
+	@echo "  • Status:      $(GREEN)make status$(NC)"
+	@echo ""
+
+# Docker commands
+up: ## Start Docker services in background
+	@$(DOCKER_COMPOSE) up -d
+
+down: ## Stop and remove Docker containers
+	@$(DOCKER_COMPOSE) down
+
+stop: ## Stop all services
+	@$(DOCKER_COMPOSE) stop
+
+restart: ## Restart all Docker services
+	@$(DOCKER_COMPOSE) restart
+
+logs: ## Show Docker logs (all services)
+	@$(DOCKER_COMPOSE) logs -f
+
+logs-api: ## Show API logs only
+	@$(DOCKER_COMPOSE) logs -f api
+
+ps: ## Show running containers
+	@$(DOCKER_COMPOSE) ps
+
+build: ## Build Docker images
+	@$(DOCKER_COMPOSE) build
+
+# Development commands
+dev: ## Start in development mode (local Node.js)
+	@echo "$(YELLOW)Starting development servers...$(NC)"
+	@$(MAKE) install
+	@$(MAKE) build-packages
+	@echo "$(GREEN)Starting backend and frontend...$(NC)"
+	@(trap 'kill 0' SIGINT; \
+		$(NPM) run backend:dev & \
+		$(NPM) run frontend:dev & \
+		wait)
+
+install: ## Install all dependencies
+	@echo "$(YELLOW)Installing dependencies...$(NC)"
+	@$(NPM) install
+	@cd api && $(NPM) install
+	@cd client && $(NPM) install
+	@cd packages/data-provider && $(NPM) install
+	@cd packages/data-schemas && $(NPM) install
+	@cd packages/api && $(NPM) install
+	@echo "$(GREEN)✓ Dependencies installed$(NC)"
+
+install-force: ## Clean install (remove node_modules)
+	@echo "$(YELLOW)Performing clean install...$(NC)"
+	@$(MAKE) clean-all
+	@$(MAKE) install
+
+build-packages: ## Build all packages
+	@echo "$(YELLOW)Building packages...$(NC)"
+	@$(NPM) run build:data-provider
+	@$(NPM) run build:data-schemas
+	@$(NPM) run build:api
+	@echo "$(GREEN)✓ Packages built$(NC)"
+
+dev-backend: ## Start backend in dev mode
+	@$(NPM) run backend:dev
+
+dev-frontend: ## Start frontend in dev mode
+	@$(NPM) run frontend:dev
+
+lint: ## Run linter
+	@$(NPM) run lint
+
+format: ## Format code with Prettier
+	@$(NPM) run format
+
+# Database commands
+db-shell: ## Access MongoDB shell
+	@$(DOCKER_COMPOSE) exec mongodb mongosh Hanzo
+
+db-backup: ## Backup MongoDB database
+	@mkdir -p ./backups
+	@$(DOCKER_COMPOSE) exec mongodb mongodump --db Hanzo --out /dump
+	@$(DOCKER_COMPOSE) cp mongodb:/dump ./backups/hanzo-backup-$$(date +%Y%m%d-%H%M%S)
+	@echo "$(GREEN)✓ Database backed up$(NC)"
+
+db-restore: ## Restore MongoDB database from latest backup
+	@echo "$(YELLOW)Restoring from latest backup...$(NC)"
+	@LATEST_BACKUP=$$(ls -t ./backups | head -1); \
+	$(DOCKER_COMPOSE) cp ./backups/$$LATEST_BACKUP mongodb:/restore && \
+	$(DOCKER_COMPOSE) exec mongodb mongorestore --db Hanzo /restore/Hanzo
+	@echo "$(GREEN)✓ Database restored$(NC)"
+
+# Utility commands
+clean: ## Clean build artifacts and logs
+	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
+	@rm -rf api/dist client/dist packages/*/dist
+	@rm -rf logs/*.log
+	@rm -rf backend.log frontend.log mongod.log
+	@echo "$(GREEN)✓ Clean complete$(NC)"
+
+clean-all: clean ## Clean everything (including node_modules)
+	@echo "$(YELLOW)Removing node_modules...$(NC)"
+	@rm -rf node_modules api/node_modules client/node_modules packages/*/node_modules
+	@echo "$(GREEN)✓ Deep clean complete$(NC)"
+
+status: ## Show service status
+	@echo "$(YELLOW)Service Status:$(NC)"
+	@$(DOCKER_COMPOSE) ps
+	@echo ""
+	@echo "$(YELLOW)Port Status:$(NC)"
+	@lsof -i :3080 >/dev/null 2>&1 && echo "  $(GREEN)✓ Port 3080 (API) is active$(NC)" || echo "  $(RED)✗ Port 3080 (API) is not active$(NC)"
+
+test: ## Run tests
+	@$(NPM) run test:api
+	@$(NPM) run test:client
+
+shell: ## Access API container shell
+	@$(DOCKER_COMPOSE) exec api /bin/sh
+
+# Check if Docker/Colima is running
+check-docker:
+	@echo "$(YELLOW)Checking Docker status...$(NC)"
+	@docker info >/dev/null 2>&1 || (echo "$(RED)Docker is not running. Please start Docker/Colima first.$(NC)" && exit 1)
+	@echo "$(GREEN)✓ Docker is running$(NC)"
+
+# Environment setup
+setup-env: ## Create .env file from example
+	@if [ ! -f .env ]; then \
+		echo "$(YELLOW)Creating .env file...$(NC)"; \
+		cp .env.example .env; \
+		echo "$(GREEN)✓ .env file created. Please update with your API keys.$(NC)"; \
+	else \
+		echo "$(YELLOW).env file already exists$(NC)"; \
+	fi
+
+# Shortcuts
+s: start
+d: down
+l: logs
+r: restart
+
+.PHONY: help start up down stop restart logs logs-api ps build \
+        dev install install-force build-packages dev-backend dev-frontend \
+        lint format db-shell db-backup db-restore clean clean-all \
+        status test shell check-docker setup-env s d l r

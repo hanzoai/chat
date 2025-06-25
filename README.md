@@ -1,9 +1,9 @@
 <p align="center">
-  <a href="https://librechat.ai">
+  <a href="https://hanzo.ai">
     <img src="client/public/assets/logo.svg" height="256">
   </a>
   <h1 align="center">
-    <a href="https://librechat.ai">Hanzo</a>
+    <a href="https://hanzo.ai">Hanzo</a>
   </h1>
 </p>
 
@@ -20,7 +20,7 @@
     <img
       src="https://img.shields.io/badge/DOCS-blue.svg?style=for-the-badge&logo=read-the-docs&logoColor=white&labelColor=000000&logoWidth=20">
   </a>
-  <a aria-label="Sponsors" href="https://github.com/sponsors/danny-avila">
+  <a aria-label="Sponsors" href="https://github.com/sponsors/hanzoai">
     <img
       src="https://img.shields.io/badge/SPONSORS-brightgreen.svg?style=for-the-badge&logo=github-sponsors&logoColor=white&labelColor=000000&logoWidth=20">
   </a>
@@ -39,7 +39,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.librechat.ai/docs/translation">
+  <a href="https://hanzo.ai/docs/translation">
     <img 
       src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&color=2096F3&label=locize&query=%24.translatedPercentage&url=https://api.locize.app/badgedata/4cb2598b-ed4d-469c-9b04-2ed531a8cb45&suffix=%+translated" 
       alt="Translation Progress">

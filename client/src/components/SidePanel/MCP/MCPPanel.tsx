@@ -242,7 +242,7 @@ function MCPVariableEditor({ server, onSave, onRevoke, isSubmitting }: MCPVariab
         )}
         <Button
           type="submit"
-          className="bg-green-500 text-white hover:bg-green-600"
+          className="bg-white text-black hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
           disabled={isSubmitting || !isDirty}
         >
           {isSubmitting ? localize('com_ui_saving') : localize('com_ui_save')}
