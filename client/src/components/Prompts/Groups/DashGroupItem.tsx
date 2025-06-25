@@ -95,7 +95,7 @@ function DashGroupItemComponent({ group, instanceProjectId }: DashGroupItemProps
         <div className="flex h-full items-center gap-2">
           {isGlobalGroup && (
             <EarthIcon
-              className="icon-md text-green-500"
+              className="icon-md text-black dark:text-white"
               aria-label={localize('com_ui_global_group')}
             />
           )}

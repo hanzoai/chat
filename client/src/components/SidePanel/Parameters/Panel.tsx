@@ -180,7 +180,7 @@ export default function Parameters() {
       <div className="mt-2 flex justify-center">
         <button
           onClick={openDialog}
-          className="btn btn-primary focus:shadow-outline flex w-full items-center justify-center px-4 py-2 font-semibold text-white hover:bg-green-600 focus:border-green-500"
+          className="btn btn-primary focus:shadow-outline flex w-full items-center justify-center px-4 py-2 font-semibold text-black bg-white hover:bg-gray-100 focus:border-black dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:focus:border-white border border-gray-300 dark:border-gray-600"
           type="button"
         >
           {localize('com_endpoint_save_as_preset')}

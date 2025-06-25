@@ -43,7 +43,7 @@ export default function VersionItem({
           {localize('com_ui_agent_version_title', { versionNumber: versionsLength - index })}
         </span>
         {isActive && (
-          <span className="rounded-full border border-green-600 bg-green-600/20 px-2 py-0.5 text-xs font-medium text-green-700 dark:border-green-500 dark:bg-green-500/30 dark:text-green-300">
+          <span className="rounded-full border border-gray-400 bg-white px-2 py-0.5 text-xs font-medium text-black dark:border-gray-500 dark:bg-gray-800 dark:text-white">
             {localize('com_ui_agent_version_active')}
           </span>
         )}

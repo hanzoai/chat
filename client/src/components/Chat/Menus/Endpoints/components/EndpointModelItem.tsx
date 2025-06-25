@@ -51,7 +51,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
         ) : null}
         <span>{modelName}</span>
       </div>
-      {isGlobal && <EarthIcon className="ml-auto size-4 text-green-400" />}
+      {isGlobal && <EarthIcon className="ml-auto size-4 text-black dark:text-white" />}
       {isSelected && (
         <svg
           width="16"

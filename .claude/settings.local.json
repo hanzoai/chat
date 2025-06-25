@@ -21,7 +21,9 @@
       "Bash(brew services:*)",
       "Bash(find:*)",
       "Bash(git fetch:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(pnpm install:*)"
     ],
     "deny": []
   }
