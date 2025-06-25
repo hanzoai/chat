@@ -57,6 +57,7 @@ help: ## Show this help message
 	@echo "  $(GREEN)make status$(NC)         - Show service status"
 	@echo "  $(GREEN)make test$(NC)           - Run tests"
 	@echo "  $(GREEN)make shell$(NC)          - Access API container shell"
+	@echo "  $(GREEN)make update-branding$(NC) - Update Hanzo logo in running container"
 	@echo ""
 	@echo "$(BLUE)Access the application at: http://localhost:3080$(NC)"
 	@echo ""
@@ -171,6 +172,11 @@ db-restore: ## Restore MongoDB database from latest backup
 	@echo "$(GREEN)✓ Database restored$(NC)"
 
 # Utility commands
+update-branding: ## Update Hanzo branding in running container
+	@echo "$(YELLOW)Updating Hanzo branding...$(NC)"
+	@docker exec Hanzo cp /app/client/public/assets/logo.svg /app/client/dist/assets/logo.svg 2>/dev/null || true
+	@echo "$(GREEN)✓ Branding updated. Clear browser cache to see changes.$(NC)"
+
 clean: ## Clean build artifacts and logs
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
 	@rm -rf api/dist client/dist packages/*/dist
@@ -222,4 +228,4 @@ r: restart
 .PHONY: help start up down stop restart logs logs-api ps build \
         dev install install-force build-packages dev-backend dev-frontend \
         lint format db-shell db-backup db-restore clean clean-all \
-        status test shell check-docker setup-env s d l r
+        status test shell check-docker setup-env update-branding s d l r
