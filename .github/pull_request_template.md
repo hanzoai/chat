@@ -4,7 +4,7 @@
 - Please ensure that you have thoroughly read and understood the [Contributing Docs](https://github.com/hanzoai/chat/blob/main/.github/CONTRIBUTING.md) before submitting your Pull Request.
 
 ⚠️ Documentation Updates Notice:
-- Kindly note that documentation updates are managed in this repository: [librechat.ai](https://github.com/chat-AI/librechat.ai)
+- Kindly note that documentation updates are managed in this repository: [hanzo.ai](https://github.com/hanzoai/docs)
 
 ## Summary
 

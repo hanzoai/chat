@@ -29,7 +29,7 @@ body:
       description: |
         If using Docker, please run and provide the output of:
         ```bash
-        docker images | grep librechat
+        docker images | grep hanzochat
         ```
         
         If running from source, please run and provide the output of:

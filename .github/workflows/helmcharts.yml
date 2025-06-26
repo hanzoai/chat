@@ -28,7 +28,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Build Subchart Deps
         run: |
-          cd helm/librechat-rag-api
+          cd helm/hanzochat-rag-api
           helm dependency build 
 
       - name: Run chart-releaser
