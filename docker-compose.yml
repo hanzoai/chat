@@ -9,7 +9,7 @@ services:
     depends_on:
       - mongodb
       - rag_api
-    image: ghcr.io/danny-avila/librechat-dev:latest
+    image: ghcr.io/hanzoai/chat:latest
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
