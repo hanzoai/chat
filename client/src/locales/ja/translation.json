@@ -696,12 +696,12 @@
 <<<<<<< HEAD
   "com_ui_latest_production_version": "最新の製品バージョン",
   "com_ui_latest_version": "最新バージョン",
-  "com_ui_librechat_code_api_key": "LibreChat コードインタープリター APIキーを取得",
+  "com_ui_hanzo_code_api_key": "LibreChat コードインタープリター APIキーを取得",
 =======
-  "com_ui_librechat_code_api_key": "Hanzo コードインタープリター APIキーを取得",
+  "com_ui_hanzo_code_api_key": "Hanzo コードインタープリター APIキーを取得",
 >>>>>>> 1c21f3543 (Update brand)
-  "com_ui_librechat_code_api_subtitle": "セキュア。多言語対応。ファイル入出力。",
-  "com_ui_librechat_code_api_title": "AIコードを実行",
+  "com_ui_hanzo_code_api_subtitle": "セキュア。多言語対応。ファイル入出力。",
+  "com_ui_hanzo_code_api_title": "AIコードを実行",
   "com_ui_loading": "読み込み中...",
   "com_ui_locked": "ロック",
   "com_ui_logo": "{{0}}のロゴ",

@@ -729,12 +729,12 @@
 <<<<<<< HEAD
   "com_ui_latest_production_version": "최신 프로덕션 버전",
   "com_ui_latest_version": "최신 버전",
-  "com_ui_librechat_code_api_key": "LibreChat 코드 인터프리터 API 키 받기",
+  "com_ui_hanzo_code_api_key": "LibreChat 코드 인터프리터 API 키 받기",
 =======
-  "com_ui_librechat_code_api_key": "Hanzo 코드 인터프리터 API 키 받기",
+  "com_ui_hanzo_code_api_key": "Hanzo 코드 인터프리터 API 키 받기",
 >>>>>>> 1c21f3543 (Update brand)
-  "com_ui_librechat_code_api_subtitle": "안전한 보안. 다국어 지원. 파일 입출력.",
-  "com_ui_librechat_code_api_title": "AI 코드 실행",
+  "com_ui_hanzo_code_api_subtitle": "안전한 보안. 다국어 지원. 파일 입출력.",
+  "com_ui_hanzo_code_api_title": "AI 코드 실행",
   "com_ui_loading": "로딩 중...",
   "com_ui_locked": "잠김",
   "com_ui_logo": "{{0}} 로고",
