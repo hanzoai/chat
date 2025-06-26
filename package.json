@@ -1,7 +1,7 @@
 {
   "name": "@hanzochat/chat",
   "version": "v0.7.8",
-  "description": "Hanzo Chat - AI Infrastructure for Everyone",
+  "description": "Chat - Unified interface to Agents, LLMs, MCPs and any AI model or OpenAPI documented API with full RAG stack",
   "workspaces": [
     "api",
     "client",
