@@ -2,7 +2,7 @@ import {
   TConversationTagRequest,
   TConversationTagResponse,
   TConversationTagsResponse,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 
 export const updateConversationTag = (
   queryCache: TConversationTagsResponse,

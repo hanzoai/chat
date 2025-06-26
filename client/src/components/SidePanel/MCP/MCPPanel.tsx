@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ChevronLeft } from 'lucide-react';
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { useForm, Controller } from 'react-hook-form';
-import { useUpdateUserPluginsMutation } from 'chat-data-provider/react-query';
-import type { TUpdateUserPlugins } from 'chat-data-provider';
+import { useUpdateUserPluginsMutation } from '@hanzochat/data-provider/react-query';
+import type { TUpdateUserPlugins } from '@hanzochat/data-provider';
 import { Button, Input, Label } from '~/components/ui';
 import { useGetStartupConfig } from '~/data-provider';
 import MCPPanelSkeleton from './MCPPanelSkeleton';

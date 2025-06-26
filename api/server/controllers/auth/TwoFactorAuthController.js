@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { logger } = require('@chat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   verifyTOTP,
   getTOTPSecret,

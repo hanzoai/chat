@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import {
   Permissions,
   alternateName,
@@ -8,8 +8,8 @@ import {
   isAgentsEndpoint,
   getConfigDefaults,
   isAssistantsEndpoint,
-} from 'chat-data-provider';
-import type { TAssistantsMap, TEndpointsConfig } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TAssistantsMap, TEndpointsConfig } from '@hanzochat/data-provider';
 import type { MentionOption } from '~/common';
 import {
   useGetPresetsQuery,

@@ -1,4 +1,4 @@
-import { TAgentsMap } from 'chat-data-provider';
+import { TAgentsMap } from '@hanzochat/data-provider';
 import { useMemo } from 'react';
 import { useListAgentsQuery } from '~/data-provider';
 import { mapAgents } from '~/utils';

@@ -1,5 +1,5 @@
-import { logger } from '@chat/data-schemas';
-import type { IPluginAuth, PluginAuthMethods } from '@chat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
+import type { IPluginAuth, PluginAuthMethods } from '@hanzochat/data-schemas';
 import { decrypt } from '../crypto/encryption';
 
 export interface GetPluginAuthMapParams {

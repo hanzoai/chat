@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { FilePurpose } = require('chat-data-provider');
+const { FilePurpose } = require('@hanzochat/data-provider');
 const { sleep } = require('~/server/utils');
 const { logger } = require('~/config');
 

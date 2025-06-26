@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { PermissionTypes, Permissions } from 'chat-data-provider';
-import type { TUserMemory } from 'chat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
+import type { TUserMemory } from '@hanzochat/data-provider';
 import { OGDialog, OGDialogTemplate, Button, Label, Input } from '~/components/ui';
 import { useUpdateMemoryMutation, useMemoriesQuery } from '~/data-provider';
 import { useLocalize, useHasAccess } from '~/hooks';

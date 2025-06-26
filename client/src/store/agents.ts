@@ -1,6 +1,6 @@
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { atomFamily, useRecoilCallback } from 'recoil';
-import type { TEphemeralAgent } from 'chat-data-provider';
+import type { TEphemeralAgent } from '@hanzochat/data-provider';
 import { logger } from '~/utils';
 
 export const ephemeralAgentByConvoId = atomFamily<TEphemeralAgent | null, string>({

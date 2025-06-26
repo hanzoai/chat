@@ -1,4 +1,4 @@
-const { GLOBAL_PROJECT_NAME } = require('chat-data-provider').Constants;
+const { GLOBAL_PROJECT_NAME } = require('@hanzochat/data-provider').Constants;
 const { Project } = require('~/db/models');
 
 /**

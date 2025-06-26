@@ -1,6 +1,6 @@
-import { EModelEndpoint } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import { getPresetTitle, removeUnavailableTools } from '../presets';
-import type { TPreset, TPlugin } from 'chat-data-provider';
+import type { TPreset, TPlugin } from '@hanzochat/data-provider';
 
 describe('presets utils', () => {
   describe('getPresetTitle', () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { EarthIcon } from 'lucide-react';
-import { isAgentsEndpoint, isAssistantsEndpoint } from 'chat-data-provider';
+import { isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
 import type { Endpoint } from '~/common';
 import { useModelSelectorContext } from '../ModelSelectorContext';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';

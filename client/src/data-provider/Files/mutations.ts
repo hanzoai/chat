@@ -1,4 +1,4 @@
-import { EToolResources } from 'chat-data-provider';
+import { EToolResources } from '@hanzochat/data-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   QueryKeys,
@@ -6,8 +6,8 @@ import {
   MutationKeys,
   defaultOrderQuery,
   isAssistantsEndpoint,
-} from 'chat-data-provider';
-import type * as t from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type * as t from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
 
 export const useUploadFileMutation = (

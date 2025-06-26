@@ -1,7 +1,7 @@
 import { useSetRecoilState } from 'recoil';
 import type { QueryClient } from '@tanstack/react-query';
-import { QueryKeys, Tools } from 'chat-data-provider';
-import type { TAttachment, EventSubmission, MemoriesResponse } from 'chat-data-provider';
+import { QueryKeys, Tools } from '@hanzochat/data-provider';
+import type { TAttachment, EventSubmission, MemoriesResponse } from '@hanzochat/data-provider';
 import { handleMemoryArtifact } from '~/utils/memory';
 import store from '~/store';
 

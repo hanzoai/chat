@@ -1,6 +1,6 @@
 import { atom, selector } from 'recoil';
-import { EModelEndpoint } from 'chat-data-provider';
-import type { TEndpointsConfig } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { TEndpointsConfig } from '@hanzochat/data-provider';
 
 const defaultConfig: TEndpointsConfig = {
   [EModelEndpoint.azureOpenAI]: null,

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { isAssistantsEndpoint } from 'chat-data-provider';
-import type { AssistantsEndpoint, TConversation, TPreset } from 'chat-data-provider';
+import { isAssistantsEndpoint } from '@hanzochat/data-provider';
+import type { AssistantsEndpoint, TConversation, TPreset } from '@hanzochat/data-provider';
 import useDefaultConvo from '~/hooks/Conversations/useDefaultConvo';
 import { useChatContext } from '~/Providers/ChatContext';
 import useAssistantListMap from './useAssistantListMap';

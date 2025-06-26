@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useMemo, memo, lazy, Suspense, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
-import { PermissionTypes, Permissions } from 'chat-data-provider';
-import type { ConversationListResponse } from 'chat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
+import type { ConversationListResponse } from '@hanzochat/data-provider';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
 import {
   useLocalize,

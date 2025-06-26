@@ -4,13 +4,13 @@ import {
   dataService,
   promptPermissionsSchema,
   memoryPermissionsSchema,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   UseQueryOptions,
   UseMutationResult,
   QueryObserverResult,
 } from '@tanstack/react-query';
-import type * as t from 'chat-data-provider';
+import type * as t from '@hanzochat/data-provider';
 
 export const useGetRole = (
   roleName: string,

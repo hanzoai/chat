@@ -1,5 +1,5 @@
-const { getGoogleConfig, isEnabled } = require('@chat/api');
-const { EModelEndpoint, AuthKeys } = require('chat-data-provider');
+const { getGoogleConfig, isEnabled } = require('@hanzochat/api');
+const { EModelEndpoint, AuthKeys } = require('@hanzochat/data-provider');
 const { getUserKey, checkUserKeyExpiry } = require('~/server/services/UserService');
 const { GoogleClient } = require('~/app');
 

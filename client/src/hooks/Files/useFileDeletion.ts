@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
-import { FileSources, EToolResources, removeNullishValues } from 'chat-data-provider';
+import { FileSources, EToolResources, removeNullishValues } from '@hanzochat/data-provider';
 import { useCallback, useState, useEffect } from 'react';
-import type * as t from 'chat-data-provider';
+import type * as t from '@hanzochat/data-provider';
 import type { UseMutateAsyncFunction } from '@tanstack/react-query';
 import type { ExtendedFile, GenericSetter } from '~/common';
 import useSetFilesToDelete from './useSetFilesToDelete';

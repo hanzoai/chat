@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-const { sendEvent } = require('@chat/api');
-const { getResponseSender, Constants } = require('chat-data-provider');
+const { sendEvent } = require('@hanzochat/api');
+const { getResponseSender, Constants } = require('@hanzochat/data-provider');
 const { sendError } = require('~/server/middleware/error');
 const { saveMessage } = require('~/models');
 

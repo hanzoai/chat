@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { TMessage, TAttachment, SearchResultData } from 'chat-data-provider';
+import type { TMessage, TAttachment, SearchResultData } from '@hanzochat/data-provider';
 import { useLocalize, useCopyToClipboard } from '~/hooks';
 import { Clipboard, CheckMark } from '~/components/svg';
 

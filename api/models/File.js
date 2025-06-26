@@ -1,5 +1,5 @@
-const { logger } = require('@chat/data-schemas');
-const { EToolResources, FileContext } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { EToolResources, FileContext } = require('@hanzochat/data-provider');
 const { File } = require('~/db/models');
 
 /**

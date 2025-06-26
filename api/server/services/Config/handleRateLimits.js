@@ -1,4 +1,4 @@
-const { RateLimitPrefix } = require('chat-data-provider');
+const { RateLimitPrefix } = require('@hanzochat/data-provider');
 
 /**
  *

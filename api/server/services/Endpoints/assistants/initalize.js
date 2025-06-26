@@ -1,6 +1,6 @@
 const OpenAI = require('openai');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { ErrorTypes, EModelEndpoint } = require('chat-data-provider');
+const { ErrorTypes, EModelEndpoint } = require('@hanzochat/data-provider');
 const {
   getUserKeyValues,
   getUserKeyExpiry,

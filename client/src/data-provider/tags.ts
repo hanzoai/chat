@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { UseQueryOptions, QueryObserverResult } from '@tanstack/react-query';
-import type { TConversationTagsResponse } from 'chat-data-provider';
-import { QueryKeys, dataService } from 'chat-data-provider';
+import type { TConversationTagsResponse } from '@hanzochat/data-provider';
+import { QueryKeys, dataService } from '@hanzochat/data-provider';
 
 export const useGetConversationTags = (
   config?: UseQueryOptions<TConversationTagsResponse>,

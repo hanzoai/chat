@@ -1,7 +1,7 @@
 import { useRecoilValue } from 'recoil';
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { TMessage } from 'chat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import useScrollToRef from '~/hooks/useScrollToRef';
 import { useChatContext } from '~/Providers';
 import store from '~/store';

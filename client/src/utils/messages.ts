@@ -1,5 +1,5 @@
-import { ContentTypes, Constants } from 'chat-data-provider';
-import type { TMessage, TMessageContentParts } from 'chat-data-provider';
+import { ContentTypes, Constants } from '@hanzochat/data-provider';
+import type { TMessage, TMessageContentParts } from '@hanzochat/data-provider';
 
 export const getLengthAndLastTenChars = (str?: string): string => {
   if (typeof str !== 'string' || str.length === 0) {

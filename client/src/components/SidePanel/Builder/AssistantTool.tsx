@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import type { TPlugin } from 'chat-data-provider';
-import { useUpdateUserPluginsMutation } from 'chat-data-provider/react-query';
+import type { TPlugin } from '@hanzochat/data-provider';
+import { useUpdateUserPluginsMutation } from '@hanzochat/data-provider/react-query';
 import { OGDialog, OGDialogTrigger, Label } from '~/components/ui';
 import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
 import { useToastContext } from '~/Providers';

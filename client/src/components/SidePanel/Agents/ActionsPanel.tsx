@@ -5,7 +5,7 @@ import {
   AuthTypeEnum,
   AuthorizationTypeEnum,
   TokenExchangeMethodEnum,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import ActionsAuth from '~/components/SidePanel/Builder/ActionsAuth';
 import { useAgentPanelContext } from '~/Providers/AgentPanelContext';
 import { OGDialog, OGDialogTrigger, Label } from '~/components/ui';

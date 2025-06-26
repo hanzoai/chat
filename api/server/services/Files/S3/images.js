@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { logger } = require('@chat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { resizeImageBuffer } = require('../images/resize');
 const { updateUser, updateFile } = require('~/models');
 const { saveBufferToS3 } = require('./crud');

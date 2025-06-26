@@ -1,5 +1,5 @@
-import type { TPreset, TPlugin } from 'chat-data-provider';
-import { EModelEndpoint } from 'chat-data-provider';
+import type { TPreset, TPlugin } from '@hanzochat/data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 
 type TEndpoints = Array<string | EModelEndpoint>;
 

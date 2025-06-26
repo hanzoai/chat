@@ -1,5 +1,5 @@
-import { EModelEndpoint } from 'chat-data-provider';
-import type { TAssistantsMap } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { TAssistantsMap } from '@hanzochat/data-provider';
 import { useListAssistantsQuery } from '~/data-provider';
 import { mapAssistants } from '~/utils';
 

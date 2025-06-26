@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import React, { useMemo, useCallback } from 'react';
 import { useWatch, useForm, FormProvider } from 'react-hook-form';
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import {
   Tools,
   Constants,
@@ -10,7 +10,7 @@ import {
   TAgentsEndpoint,
   TEndpointsConfig,
   isAssistantsEndpoint,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type { AgentForm, StringOption } from '~/common';
 import {
   useCreateAgentMutation,

@@ -1,4 +1,4 @@
-const { EModelEndpoint, anthropicSettings } = require('chat-data-provider');
+const { EModelEndpoint, anthropicSettings } = require('@hanzochat/data-provider');
 const { matchModelName } = require('~/utils');
 const { logger } = require('~/config');
 

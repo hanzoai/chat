@@ -101,7 +101,7 @@ const getSyncConfig = () => ({
 });
 
 /**
- * Local implementation of parseTextParts to avoid dependency on chat-data-provider
+ * Local implementation of parseTextParts to avoid dependency on @hanzochat/data-provider
  * Extracts text content from an array of content items
  */
 const parseTextParts = (content: ContentItem[]): string => {

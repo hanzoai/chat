@@ -1,4 +1,4 @@
-import { TPlugin } from 'chat-data-provider';
+import { TPlugin } from '@hanzochat/data-provider';
 import { XCircle, DownloadCloud } from 'lucide-react';
 import { useLocalize } from '~/hooks';
 

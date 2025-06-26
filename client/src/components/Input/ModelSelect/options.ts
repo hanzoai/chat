@@ -1,4 +1,4 @@
-import { EModelEndpoint } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import type { TModelSelectProps } from '~/common';
 import type { FC } from 'react';
 

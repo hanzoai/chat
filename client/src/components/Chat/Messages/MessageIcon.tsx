@@ -1,5 +1,5 @@
 import React, { useMemo, memo } from 'react';
-import type { Assistant, Agent } from 'chat-data-provider';
+import type { Assistant, Agent } from '@hanzochat/data-provider';
 import type { TMessageIcon } from '~/common';
 import { getEndpointField, getIconEndpoint, logger } from '~/utils';
 import ConvoIconURL from '~/components/Endpoints/ConvoIconURL';

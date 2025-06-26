@@ -1,5 +1,5 @@
 const { nanoid } = require('nanoid');
-const { Tools } = require('chat-data-provider');
+const { Tools } = require('@hanzochat/data-provider');
 const { logger } = require('~/config');
 
 /**

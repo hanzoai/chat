@@ -1,7 +1,7 @@
 const { Router } = require('express');
-const { MCPOAuthHandler } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
-const { CacheKeys } = require('chat-data-provider');
+const { MCPOAuthHandler } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys } = require('@hanzochat/data-provider');
 const { requireJwtAuth } = require('~/server/middleware');
 const { getFlowStateManager } = require('~/config');
 const { getLogStores } = require('~/cache');

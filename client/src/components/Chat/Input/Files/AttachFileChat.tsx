@@ -6,7 +6,7 @@ import {
   isAgentsEndpoint,
   EndpointFileConfig,
   fileConfig as defaultFileConfig,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { useGetFileConfig } from '~/data-provider';
 import AttachFileMenu from './AttachFileMenu';
 import { useChatContext } from '~/Providers';

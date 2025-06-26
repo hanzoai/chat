@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { createMethods } = require('@chat/data-schemas');
+const { createMethods } = require('@hanzochat/data-schemas');
 const methods = createMethods(mongoose);
 const { comparePassword } = require('./userMethods');
 const {

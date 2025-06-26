@@ -1,7 +1,7 @@
 const { v4 } = require('uuid');
-const { sleep } = require('@chat/agents');
-const { sendEvent } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { sleep } = require('@librechat/agents');
+const { sendEvent } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   Time,
   Constants,
@@ -12,7 +12,7 @@ const {
   EModelEndpoint,
   retrievalMimeTypes,
   AssistantStreamEvents,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   initThread,
   recordUsage,
@@ -72,7 +72,7 @@ const chatV2 = async (req, res) => {
   let parentMessageId = _parentId;
   /** @type {TMessage[]} */
   let previousMessages = [];
-  /** @type {import('chat-data-provider').TConversation | null} */
+  /** @type {import('@hanzochat/data-provider').TConversation | null} */
   let conversation = null;
   /** @type {string[]} */
   let file_ids = [];

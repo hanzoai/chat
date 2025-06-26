@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { EModelEndpoint, ImageDetail } from 'chat-data-provider';
-import type { ConversationData } from 'chat-data-provider';
+import { EModelEndpoint, ImageDetail } from '@hanzochat/data-provider';
+import type { ConversationData } from '@hanzochat/data-provider';
 
 const today = new Date();
 today.setDate(today.getDate() - 3);

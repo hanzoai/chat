@@ -1,6 +1,6 @@
-const { logger } = require('@chat/data-schemas');
-const { isEnabled, math } = require('@chat/api');
-const { ViolationTypes } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { isEnabled, math } = require('@hanzochat/api');
+const { ViolationTypes } = require('@hanzochat/data-provider');
 const { deleteAllUserSessions } = require('~/models');
 const { removePorts } = require('~/server/utils');
 const getLogStores = require('./getLogStores');

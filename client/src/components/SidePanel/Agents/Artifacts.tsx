@@ -1,5 +1,5 @@
 import { useFormContext } from 'react-hook-form';
-import { ArtifactModes, AgentCapabilities } from 'chat-data-provider';
+import { ArtifactModes, AgentCapabilities } from '@hanzochat/data-provider';
 import type { AgentForm } from '~/common';
 import {
   Switch,

@@ -1,4 +1,4 @@
-const { EModelEndpoint } = require('chat-data-provider');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { useAzurePlugins } = require('~/server/services/Config/EndpointService').config;
 const {
   getOpenAIModels,

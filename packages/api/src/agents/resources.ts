@@ -1,8 +1,8 @@
-import { logger } from '@chat/data-schemas';
-import { EModelEndpoint, EToolResources, AgentCapabilities } from 'chat-data-provider';
-import type { AgentToolResources, TFile, AgentBaseResource } from 'chat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { EModelEndpoint, EToolResources, AgentCapabilities } from '@hanzochat/data-provider';
+import type { AgentToolResources, TFile, AgentBaseResource } from '@hanzochat/data-provider';
 import type { FilterQuery, QueryOptions, ProjectionType } from 'mongoose';
-import type { IMongoFile } from '@chat/data-schemas';
+import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { Request as ServerRequest } from 'express';
 
 /**

@@ -21,12 +21,12 @@ jest.mock('~/models', () => ({
   createUser: jest.fn(),
   updateUser: jest.fn(),
 }));
-jest.mock('@chat/api', () => ({
-  ...jest.requireActual('@chat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   isEnabled: jest.fn(() => false),
 }));
-jest.mock('@chat/data-schemas', () => ({
-  ...jest.requireActual('@chat/api'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   logger: {
     info: jest.fn(),
     debug: jest.fn(),

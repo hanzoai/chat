@@ -2,8 +2,8 @@ import {
   MCPOptions,
   StdioOptionsSchema,
   StreamableHTTPOptionsSchema,
-} from 'chat-data-provider';
-import type { TUser } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 import { processMCPEnv } from '~/utils/env';
 
 // Helper function to create test user objects

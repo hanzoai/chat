@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { SettingsIcon } from 'lucide-react';
-import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'chat-data-provider';
+import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
 import type { Endpoint } from '~/common';
 import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
 import { useModelSelectorContext } from '../ModelSelectorContext';

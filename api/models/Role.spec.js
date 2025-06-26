@@ -5,7 +5,7 @@ const {
   Permissions,
   roleDefaults,
   PermissionTypes,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getRoleByName, updateAccessPermissions } = require('~/models/Role');
 const getLogStores = require('~/cache/getLogStores');
 const { initializeRoles } = require('~/models');

@@ -1,4 +1,4 @@
-const { CacheKeys } = require('chat-data-provider');
+const { CacheKeys } = require('@hanzochat/data-provider');
 const { saveConvo } = require('~/models/Conversation');
 const getLogStores = require('~/cache/getLogStores');
 const { isEnabled } = require('~/server/utils');

@@ -4,9 +4,9 @@ import {
   ToolCallTypes,
   imageGenTools,
   isImageVisionTool,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { memo } from 'react';
-import type { TMessageContentParts, TAttachment } from 'chat-data-provider';
+import type { TMessageContentParts, TAttachment } from '@hanzochat/data-provider';
 import { OpenAIImageGen, EmptyText, Reasoning, ExecuteCode, AgentUpdate, Text } from './Parts';
 import { ErrorMessage } from './MessageContent';
 import RetrievalCall from './RetrievalCall';

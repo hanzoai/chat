@@ -1,5 +1,5 @@
 import type { Document } from 'mongoose';
-import type { TFeedbackRating, TFeedbackTag } from 'chat-data-provider';
+import type { TFeedbackRating, TFeedbackTag } from '@hanzochat/data-provider';
 
 // @ts-ignore
 export interface IMessage extends Document {

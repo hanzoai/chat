@@ -1,4 +1,4 @@
-const { EModelEndpoint, getEnabledEndpoints } = require('chat-data-provider');
+const { EModelEndpoint, getEnabledEndpoints } = require('@hanzochat/data-provider');
 const loadAsyncEndpoints = require('./loadAsyncEndpoints');
 const { config } = require('./EndpointService');
 

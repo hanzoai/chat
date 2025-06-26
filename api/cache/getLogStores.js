@@ -1,6 +1,6 @@
 const { Keyv } = require('keyv');
-const { isEnabled, math } = require('@chat/api');
-const { CacheKeys, ViolationTypes, Time } = require('chat-data-provider');
+const { isEnabled, math } = require('@hanzochat/api');
+const { CacheKeys, ViolationTypes, Time } = require('@hanzochat/data-provider');
 const { logFile, violationFile } = require('./keyvFiles');
 const keyvRedis = require('./keyvRedis');
 const keyvMongo = require('./keyvMongo');

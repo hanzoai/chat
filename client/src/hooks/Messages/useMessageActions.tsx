@@ -1,6 +1,6 @@
 import { useRecoilValue } from 'recoil';
 import { useCallback, useMemo, useState } from 'react';
-import { useUpdateFeedbackMutation } from 'chat-data-provider/react-query';
+import { useUpdateFeedbackMutation } from '@hanzochat/data-provider/react-query';
 import {
   isAssistantsEndpoint,
   isAgentsEndpoint,
@@ -9,7 +9,7 @@ import {
   TFeedback,
   toMinimalFeedback,
   SearchResultData,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type { TMessageProps } from '~/common';
 import {
   useChatContext,

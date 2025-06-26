@@ -1,4 +1,4 @@
-const { RunStatus, defaultOrderQuery, CacheKeys } = require('chat-data-provider');
+const { RunStatus, defaultOrderQuery, CacheKeys } = require('@hanzochat/data-provider');
 const getLogStores = require('~/cache/getLogStores');
 const { retrieveRun } = require('./methods');
 const { sleep } = require('~/server/utils');

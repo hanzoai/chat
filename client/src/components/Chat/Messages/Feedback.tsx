@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import * as Ariakit from '@ariakit/react';
-import { TFeedback, TFeedbackTag, getTagsForRating } from 'chat-data-provider';
+import { TFeedback, TFeedbackTag, getTagsForRating } from '@hanzochat/data-provider';
 import {
   AlertCircle,
   PenTool,

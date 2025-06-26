@@ -66,8 +66,8 @@ jest.mock('~/utils', () => ({
 }));
 
 // Mock the tQueryParamsSchema
-jest.mock('chat-data-provider', () => ({
-  ...jest.requireActual('chat-data-provider'),
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
   tQueryParamsSchema: {
     shape: {
       model: { parse: jest.fn((value) => value) },

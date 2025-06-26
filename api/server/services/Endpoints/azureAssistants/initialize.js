@@ -1,7 +1,7 @@
 const OpenAI = require('openai');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { constructAzureURL, isUserProvided, resolveHeaders } = require('@chat/api');
-const { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } = require('chat-data-provider');
+const { constructAzureURL, isUserProvided, resolveHeaders } = require('@hanzochat/api');
+const { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } = require('@hanzochat/data-provider');
 const {
   getUserKeyValues,
   getUserKeyExpiry,

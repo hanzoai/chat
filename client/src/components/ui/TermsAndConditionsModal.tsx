@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { TTermsOfService } from 'chat-data-provider';
+import type { TTermsOfService } from '@hanzochat/data-provider';
 import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import DialogTemplate from '~/components/ui/DialogTemplate';
 import { useAcceptTermsMutation } from '~/data-provider';

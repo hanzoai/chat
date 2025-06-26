@@ -1,4 +1,4 @@
-const { TTSProviders } = require('chat-data-provider');
+const { TTSProviders } = require('@hanzochat/data-provider');
 const { getCustomConfig } = require('~/server/services/Config');
 const { getProvider } = require('./TTSService');
 

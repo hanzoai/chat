@@ -20,7 +20,7 @@ import {
   megabyte,
   isAssistantsEndpoint,
   type TFile,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 
 import {
   Button,

@@ -1,5 +1,5 @@
-import { Capabilities, EModelEndpoint } from 'chat-data-provider';
-import type { Assistant, AssistantsEndpoint } from 'chat-data-provider';
+import { Capabilities, EModelEndpoint } from '@hanzochat/data-provider';
+import type { Assistant, AssistantsEndpoint } from '@hanzochat/data-provider';
 import type { Option, ExtendedFile } from './types';
 
 export type ActionsEndpoint = AssistantsEndpoint | EModelEndpoint.agents;

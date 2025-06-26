@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { useOutletContext } from 'react-router-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useResetPasswordMutation } from 'chat-data-provider/react-query';
-import type { TResetPassword } from 'chat-data-provider';
+import { useResetPasswordMutation } from '@hanzochat/data-provider/react-query';
+import type { TResetPassword } from '@hanzochat/data-provider';
 import type { TLoginLayoutContext } from '~/common';
 import { Spinner, Button } from '~/components';
 import { useLocalize } from '~/hooks';

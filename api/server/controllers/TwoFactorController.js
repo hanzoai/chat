@@ -1,5 +1,5 @@
-const { encryptV3 } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { encryptV3 } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   verifyTOTP,
   getTOTPSecret,

@@ -1,5 +1,5 @@
-const { logger } = require('@chat/data-schemas');
-const { SystemRoles } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { SystemRoles } = require('@hanzochat/data-provider');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { getUserById, updateUser } = require('~/models');
 

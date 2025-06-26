@@ -8,8 +8,8 @@ import {
   isAgentsEndpoint,
   tQueryParamsSchema,
   isAssistantsEndpoint,
-} from 'chat-data-provider';
-import type { TPreset, TEndpointsConfig, TStartupConfig } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TPreset, TEndpointsConfig, TStartupConfig } from '@hanzochat/data-provider';
 import type { ZodAny } from 'zod';
 import { getConvoSwitchLogic, getModelSpecIconURL, removeUnavailableTools, logger } from '~/utils';
 import useDefaultConvo from '~/hooks/Conversations/useDefaultConvo';

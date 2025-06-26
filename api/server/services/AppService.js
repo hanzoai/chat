@@ -5,8 +5,8 @@ const {
   loadMemoryConfig,
   getConfigDefaults,
   loadWebSearchConfig,
-} = require('chat-data-provider');
-const { agentsConfigSetup } = require('@chat/api');
+} = require('@hanzochat/data-provider');
+const { agentsConfigSetup } = require('@hanzochat/api');
 const {
   checkHealth,
   checkConfig,

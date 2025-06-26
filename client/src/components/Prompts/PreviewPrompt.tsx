@@ -1,4 +1,4 @@
-import type { TPromptGroup } from 'chat-data-provider';
+import type { TPromptGroup } from '@hanzochat/data-provider';
 import { OGDialogContent, OGDialog } from '~/components/ui';
 import PromptDetails from './PromptDetails';
 

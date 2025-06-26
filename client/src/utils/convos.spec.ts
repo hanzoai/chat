@@ -1,5 +1,5 @@
 import { QueryClient, InfiniteData } from '@tanstack/react-query';
-import type { TConversation } from 'chat-data-provider';
+import type { TConversation } from '@hanzochat/data-provider';
 import {
   dateKeys,
   storeEndpointSettings,

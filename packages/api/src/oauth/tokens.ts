@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { logger } from '@chat/data-schemas';
-import { TokenExchangeMethodEnum } from 'chat-data-provider';
-import type { TokenMethods } from '@chat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
+import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
+import type { TokenMethods } from '@hanzochat/data-schemas';
 import type { AxiosError } from 'axios';
 import { encryptV2, decryptV2 } from '~/crypto';
 import { logAxiosError } from '~/utils';

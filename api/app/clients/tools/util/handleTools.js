@@ -1,14 +1,14 @@
-const { mcpToolPattern } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { mcpToolPattern } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const { SerpAPI } = require('@langchain/community/tools/serpapi');
 const { Calculator } = require('@langchain/community/tools/calculator');
-const { EnvVar, createCodeExecutionTool, createSearchTool } = require('@chat/agents');
+const { EnvVar, createCodeExecutionTool, createSearchTool } = require('@librechat/agents');
 const {
   Tools,
   EToolResources,
   loadWebSearchAuth,
   replaceSpecialVars,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   availableTools,
   manifestToolMap,

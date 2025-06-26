@@ -3,7 +3,7 @@ import type {
   TConversation,
   EModelEndpoint,
   TEndpointsConfig,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { getLocalStorageItems } from './localStorage';
 import { mapEndpoints } from './endpoints';
 

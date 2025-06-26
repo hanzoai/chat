@@ -1,6 +1,6 @@
 const axios = require('axios');
-const { logger } = require('@chat/data-schemas');
-const { EModelEndpoint, defaultModels } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { EModelEndpoint, defaultModels } = require('@hanzochat/data-provider');
 
 const {
   fetchModels,
@@ -28,8 +28,8 @@ jest.mock('~/cache/getLogStores', () =>
     set: jest.fn().mockResolvedValue(true),
   })),
 );
-jest.mock('@chat/data-schemas', () => ({
-  ...jest.requireActual('@chat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     error: jest.fn(),
   },
@@ -188,8 +188,8 @@ describe('getOpenAIModels with mocked config', () => {
         userProvidedOpenAI: true,
       },
     }));
-    jest.mock('chat-data-provider', () => {
-      const original = jest.requireActual('chat-data-provider');
+    jest.mock('@hanzochat/data-provider', () => {
+      const original = jest.requireActual('@hanzochat/data-provider');
       return {
         ...original,
         defaultModels: {

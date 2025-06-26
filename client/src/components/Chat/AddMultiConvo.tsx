@@ -1,6 +1,6 @@
 import { PlusCircle } from 'lucide-react';
-import { isAssistantsEndpoint } from 'chat-data-provider';
-import type { TConversation } from 'chat-data-provider';
+import { isAssistantsEndpoint } from '@hanzochat/data-provider';
+import type { TConversation } from '@hanzochat/data-provider';
 import { useChatContext, useAddedChatContext } from '~/Providers';
 import { TooltipAnchor } from '~/components';
 import { mainTextareaId } from '~/common';

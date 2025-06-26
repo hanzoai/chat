@@ -1,15 +1,15 @@
 const { z } = require('zod');
 const { tool } = require('@langchain/core/tools');
-const { logger } = require('@chat/data-schemas');
-const { Time, CacheKeys, StepTypes } = require('chat-data-provider');
-const { sendEvent, normalizeServerName, MCPOAuthHandler } = require('@chat/api');
-const { Constants: AgentConstants, Providers, GraphEvents } = require('@chat/agents');
+const { logger } = require('@hanzochat/data-schemas');
+const { Time, CacheKeys, StepTypes } = require('@hanzochat/data-provider');
+const { sendEvent, normalizeServerName, MCPOAuthHandler } = require('@hanzochat/api');
+const { Constants: AgentConstants, Providers, GraphEvents } = require('@librechat/agents');
 const {
   Constants,
   ContentTypes,
   isAssistantsEndpoint,
   convertJsonSchemaToZod,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getMCPManager, getFlowStateManager } = require('~/config');
 const { findToken, createToken, updateToken } = require('~/models');
 const { getCachedTools } = require('./Config');
@@ -99,7 +99,7 @@ function createAbortHandler({ userId, serverName, toolName, flowManager }) {
  * @param {ServerRequest} params.req - The Express request object, containing user/request info.
  * @param {ServerResponse} params.res - The Express response object for sending events.
  * @param {string} params.toolKey - The toolKey for the tool.
- * @param {import('@chat/agents').Providers | EModelEndpoint} params.provider - The provider for the tool.
+ * @param {import('@librechat/agents').Providers | EModelEndpoint} params.provider - The provider for the tool.
  * @param {string} params.model - The model for the tool.
  * @returns { Promise<typeof tool | { _call: (toolInput: Object | string) => unknown}> } An object with `_call` method to execute the tool input.
  */

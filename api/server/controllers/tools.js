@@ -1,5 +1,5 @@
 const { nanoid } = require('nanoid');
-const { EnvVar } = require('@chat/agents');
+const { EnvVar } = require('@librechat/agents');
 const {
   Tools,
   AuthType,
@@ -7,7 +7,7 @@ const {
   ToolCallTypes,
   PermissionTypes,
   loadWebSearchAuth,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { processFileURL, uploadImageBuffer } = require('~/server/services/Files/process');
 const { processCodeOutput } = require('~/server/services/Files/Code/process');
 const { createToolCall, getToolCallsByConvo } = require('~/models/ToolCall');

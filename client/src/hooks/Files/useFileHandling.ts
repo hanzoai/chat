@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type { TEndpointsConfig, TError } from 'chat-data-provider';
+import type { TEndpointsConfig, TError } from '@hanzochat/data-provider';
 import {
   defaultAssistantsVersion,
   fileConfig as defaultFileConfig,
@@ -8,7 +8,7 @@ import {
   isAssistantsEndpoint,
   mergeFileConfig,
   QueryKeys,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import debounce from 'lodash/debounce';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 } from 'uuid';

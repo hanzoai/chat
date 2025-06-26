@@ -1,4 +1,4 @@
-const { removeNullishValues, anthropicSettings } = require('chat-data-provider');
+const { removeNullishValues, anthropicSettings } = require('@hanzochat/data-provider');
 const generateArtifactsPrompt = require('~/app/clients/prompts/artifacts');
 
 const buildOptions = (endpoint, parsedBody) => {

@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import TagManager from 'react-gtm-module';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { LocalStorageKeys } from 'chat-data-provider';
-import { useAvailablePluginsQuery } from 'chat-data-provider/react-query';
-import type { TStartupConfig, TPlugin, TUser } from 'chat-data-provider';
+import { LocalStorageKeys } from '@hanzochat/data-provider';
+import { useAvailablePluginsQuery } from '@hanzochat/data-provider/react-query';
+import type { TStartupConfig, TPlugin, TUser } from '@hanzochat/data-provider';
 import { mapPlugins, selectPlugins, processPlugins } from '~/utils';
 import useSpeechSettingsInit from './useSpeechSettingsInit';
 import store from '~/store';

@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys } from 'chat-data-provider';
-import type { BatchFile, TFile } from 'chat-data-provider';
+import { QueryKeys } from '@hanzochat/data-provider';
+import type { BatchFile, TFile } from '@hanzochat/data-provider';
 import { useDeleteFilesMutation } from '~/data-provider';
 import useFileDeletion from './useFileDeletion';
 

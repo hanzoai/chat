@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import type { DynamicSettingProps } from 'chat-data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 import { Label, HoverCard, HoverCardTrigger } from '~/components/ui';
 import ControlCombobox from '~/components/ui/ControlCombobox';
 import { TranslationKeys, useLocalize, useParameterEffects } from '~/hooks';

@@ -1,5 +1,5 @@
-import { chat } from 'chat-data-provider';
-import type { DynamicSettingProps } from 'chat-data-provider';
+import { chat } from '@hanzochat/data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 
 type ChatKeys = keyof typeof chat;
 

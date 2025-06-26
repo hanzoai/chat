@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
-import { EModelEndpoint } from 'chat-data-provider';
-import { useUserKeyQuery, useUpdateUserKeysMutation } from 'chat-data-provider/react-query';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import { useUserKeyQuery, useUpdateUserKeysMutation } from '@hanzochat/data-provider/react-query';
 import { useGetEndpointsQuery } from '~/data-provider';
 
 const useUserKey = (endpoint: string) => {

@@ -8,7 +8,7 @@ const {
   defaultAgentCapabilities,
   deprecatedAzureVariables,
   conflictingAzureVariables,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 
 const AppService = require('./AppService');
 

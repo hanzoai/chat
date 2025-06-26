@@ -1,6 +1,6 @@
 const { EventSource } = require('eventsource');
-const { Time } = require('chat-data-provider');
-const { MCPManager, FlowStateManager } = require('@chat/api');
+const { Time } = require('@hanzochat/data-provider');
+const { MCPManager, FlowStateManager } = require('@hanzochat/api');
 const logger = require('./winston');
 
 global.EventSource = EventSource;

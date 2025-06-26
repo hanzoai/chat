@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { MCP } from 'chat-data-provider';
+import type { MCP } from '@hanzochat/data-provider';
 import GearIcon from '~/components/svg/GearIcon';
 import MCPIcon from '~/components/svg/MCPIcon';
 import { cn } from '~/utils';

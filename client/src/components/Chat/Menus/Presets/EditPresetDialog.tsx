@@ -1,8 +1,8 @@
 import { useRecoilState } from 'recoil';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, isAgentsEndpoint } from 'chat-data-provider';
-import type { TModelsConfig, TEndpointsConfig } from 'chat-data-provider';
+import { QueryKeys, isAgentsEndpoint } from '@hanzochat/data-provider';
+import type { TModelsConfig, TEndpointsConfig } from '@hanzochat/data-provider';
 import {
   cn,
   defaultTextProps,

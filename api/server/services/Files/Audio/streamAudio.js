@@ -4,7 +4,7 @@ const {
   SEPARATORS,
   parseTextParts,
   findLastSeparatorIndex,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getMessage } = require('~/models/Message');
 const { getLogStores } = require('~/cache');
 

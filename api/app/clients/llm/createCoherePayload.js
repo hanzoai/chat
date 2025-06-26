@@ -1,4 +1,4 @@
-const { CohereConstants } = require('chat-data-provider');
+const { CohereConstants } = require('@hanzochat/data-provider');
 const { titleInstruction } = require('../prompts/titlePrompts');
 
 // Mapping OpenAI roles to Cohere roles

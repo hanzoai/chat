@@ -1,6 +1,6 @@
 import { useRecoilValue } from 'recoil';
-import { SettingsViews, TConversation } from 'chat-data-provider';
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
+import { SettingsViews, TConversation } from '@hanzochat/data-provider';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import type { TSettingsProps } from '~/common';
 import { useGetEndpointsQuery } from '~/data-provider';
 import { cn, getEndpointField } from '~/utils';

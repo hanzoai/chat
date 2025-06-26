@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, memo } from 'react';
-import { useUserKeyQuery } from 'chat-data-provider/react-query';
-import type { TEndpointsConfig, TInterfaceConfig } from 'chat-data-provider';
+import { useUserKeyQuery } from '@hanzochat/data-provider/react-query';
+import type { TEndpointsConfig, TInterfaceConfig } from '@hanzochat/data-provider';
 import type { ImperativePanelHandle } from 'react-resizable-panels';
 import { ResizableHandleAlt, ResizablePanel } from '~/components/ui/Resizable';
 import { useMediaQuery, useLocalStorage, useLocalize } from '~/hooks';

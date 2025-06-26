@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useCreatePresetMutation } from 'chat-data-provider/react-query';
+import { useCreatePresetMutation } from '@hanzochat/data-provider/react-query';
 import type { TEditPresetProps } from '~/common';
 import { cn, removeFocusOutlines, cleanupPreset, defaultTextProps } from '~/utils/';
 import OGDialogTemplate from '~/components/ui/OGDialogTemplate';

@@ -1,4 +1,4 @@
-const { EModelEndpoint } = require('chat-data-provider');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { getModelMaxTokens, processModelData, matchModelName, maxTokensMap } = require('./tokens');
 
 describe('getModelMaxTokens', () => {

@@ -1,6 +1,6 @@
 const express = require('express');
-const { logger } = require('@chat/data-schemas');
-const { ContentTypes } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { ContentTypes } = require('@hanzochat/data-provider');
 const {
   saveConvo,
   saveMessage,

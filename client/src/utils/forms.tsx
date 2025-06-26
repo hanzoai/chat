@@ -6,8 +6,8 @@ import {
   EToolResources,
   LocalStorageKeys,
   defaultAgentFormValues,
-} from 'chat-data-provider';
-import type { Agent, TFile } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { Agent, TFile } from '@hanzochat/data-provider';
 import type { DropdownValueSetter, TAgentOption, ExtendedFile } from '~/common';
 
 /**

@@ -1,5 +1,5 @@
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { createHandleLLMNewToken } = require('@chat/api');
+const { createHandleLLMNewToken } = require('@hanzochat/api');
 const {
   AuthType,
   Constants,
@@ -7,7 +7,7 @@ const {
   bedrockInputParser,
   bedrockOutputParser,
   removeNullishValues,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getUserKey, checkUserKeyExpiry } = require('~/server/services/UserService');
 
 const getOptions = async ({ req, overrideModel, endpointOption }) => {

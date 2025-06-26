@@ -1,13 +1,13 @@
 // hooks/Plugins/usePluginInstall.ts
 import { useCallback } from 'react';
-import { useUpdateUserPluginsMutation } from 'chat-data-provider/react-query';
+import { useUpdateUserPluginsMutation } from '@hanzochat/data-provider/react-query';
 import type {
   TError,
   TUser,
   TUpdateUserPlugins,
   TPlugin,
   TPluginAction,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { useSetRecoilState } from 'recoil';
 import store from '~/store';
 

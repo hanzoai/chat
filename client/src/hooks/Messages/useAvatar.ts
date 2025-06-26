@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { createAvatar } from '@dicebear/core';
 import { initials } from '@dicebear/collection';
-import type { TUser } from 'chat-data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 
 const avatarCache: Record<string, string> = {};
 

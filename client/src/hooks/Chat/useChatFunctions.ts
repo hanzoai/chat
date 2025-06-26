@@ -9,7 +9,7 @@ import {
   parseCompactConvo,
   replaceSpecialVars,
   isAssistantsEndpoint,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { useSetRecoilState, useResetRecoilState, useRecoilValue } from 'recoil';
 import type {
   TMessage,
@@ -18,7 +18,7 @@ import type {
   TEndpointOption,
   TEndpointsConfig,
   EndpointSchemaKey,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type { SetterOrUpdater } from 'recoil';
 import type { TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';

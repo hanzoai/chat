@@ -1,5 +1,5 @@
-import { EModelEndpoint, AuthType } from 'chat-data-provider';
-import type { TModelSpec } from 'chat-data-provider';
+import { EModelEndpoint, AuthType } from '@hanzochat/data-provider';
+import type { TModelSpec } from '@hanzochat/data-provider';
 
 export const data: TModelSpec[] = [
   {

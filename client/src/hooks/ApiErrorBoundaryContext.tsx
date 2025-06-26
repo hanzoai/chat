@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TError } from 'chat-data-provider';
+import { TError } from '@hanzochat/data-provider';
 
 type ProviderValue = {
   error?: TError;

@@ -1,7 +1,7 @@
 const crypto = require('crypto');
-const { logger } = require('@chat/data-schemas');
-const { parseConvo } = require('chat-data-provider');
-const { sendEvent, handleError } = require('@chat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { parseConvo } = require('@hanzochat/data-provider');
+const { sendEvent, handleError } = require('@hanzochat/api');
 const { saveMessage, getMessages } = require('~/models/Message');
 const { getConvo } = require('~/models/Conversation');
 

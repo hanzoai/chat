@@ -4,7 +4,7 @@ const {
   PermissionTypes,
   isMemoryEnabled,
   removeNullishValues,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { updateAccessPermissions } = require('~/models/Role');
 const { logger } = require('~/config');
 
