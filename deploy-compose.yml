@@ -5,7 +5,7 @@ services:
     #   dockerfile: Dockerfile.multi
     #   target: api-build
     image: ghcr.io/hanzoai/chat:latest
-    container_name: Hanzo-API
+    container_name: chat-api
     ports:
       - 3080:3080
     depends_on:
@@ -13,13 +13,13 @@ services:
       - rag_api
     restart: always
     extra_hosts:
-    - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     env_file:
       - .env
     environment:
       - HOST=0.0.0.0
       - NODE_ENV=production
-      - MONGO_URI=mongodb://mongodb:27017/Hanzo
+      - MONGO_URI=mongodb://mongodb:27017/chat
       - MEILI_HOST=http://meilisearch:7700
       - RAG_PORT=${RAG_PORT:-8000}
       - RAG_API_URL=http://rag_api:${RAG_PORT:-8000}
@@ -33,7 +33,7 @@ services:
 
   client:
     image: nginx:1.27.0-alpine
-    container_name: Hanzo-NGINX
+    container_name: chat-nginx
     ports:
       - 80:80
       - 443:443

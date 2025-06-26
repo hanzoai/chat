@@ -1,41 +1,53 @@
-version: "1.2.4"
+version: '1.2.4'
 
 endpoints:
   # OpenAI configuration
   openAI:
     # If using environment variables, add these to your .env file
-    apiKey: "${OPENAI_API_KEY}"
-    
+    apiKey: '${OPENAI_API_KEY}'
+
   # Anthropic configuration
   anthropic:
-    apiKey: "${ANTHROPIC_API_KEY}"
-    
+    apiKey: '${ANTHROPIC_API_KEY}'
+
   # Google configuration
   google:
-    apiKey: "${GOOGLE_KEY}"
-    
+    apiKey: '${GOOGLE_KEY}'
+
   # Custom endpoints - LM Studio will be auto-detected when running
   custom:
-    - name: "groq"
-      apiKey: "${GROQ_API_KEY:-${HANZO_API_KEY}}"
-      baseURL: "${GROQ_BASE_URL:-https://api.groq.com/openai/v1}"
+    - name: 'groq'
+      apiKey: '${GROQ_API_KEY:-${HANZO_API_KEY}}'
+      baseURL: '${GROQ_BASE_URL:-https://api.groq.com/openai/v1}'
       models:
-        default: ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768", "gemma-7b-it", "gemma2-9b-it"]
+        default:
+          [
+            'llama-3.3-70b-versatile',
+            'llama-3.1-70b-versatile',
+            'mixtral-8x7b-32768',
+            'gemma-7b-it',
+            'gemma2-9b-it',
+          ]
         fetch: false
       titleConvo: true
-      titleModel: "mixtral-8x7b-32768"
-      
-    - name: "together"
-      apiKey: "${TOGETHERAI_API_KEY:-${HANZO_API_KEY}}"
-      baseURL: "${TOGETHER_BASE_URL:-https://api.together.xyz/v1}"
+      titleModel: 'mixtral-8x7b-32768'
+
+    - name: 'together'
+      apiKey: '${TOGETHERAI_API_KEY:-${HANZO_API_KEY}}'
+      baseURL: '${TOGETHER_BASE_URL:-https://api.together.xyz/v1}'
       models:
-        default: ["mistralai/Mixtral-8x7B-Instruct-v0.1", "meta-llama/Llama-3-70b-chat-hf", "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO"]
+        default:
+          [
+            'mistralai/Mixtral-8x7B-Instruct-v0.1',
+            'meta-llama/Llama-3-70b-chat-hf',
+            'NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO',
+          ]
         fetch: false
       titleConvo: true
-      
-    - name: "openrouter"
-      apiKey: "${OPENROUTER_KEY:-${HANZO_API_KEY}}"
-      baseURL: "${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+
+    - name: 'openrouter'
+      apiKey: '${OPENROUTER_KEY:-${HANZO_API_KEY}}'
+      baseURL: '${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}'
       models:
         fetch: true
       titleConvo: true
@@ -45,23 +57,21 @@ agents:
   disableBuilder: false
   recursionLimit: 50
   maxRecursionLimit: 100
-  capabilities: ["execute_code", "file_search", "actions", "tools"]
+  capabilities: ['execute_code', 'file_search', 'actions', 'tools']
 
 # MCP Servers configuration
 mcpServers:
   hanzo-mcp:
     type: stdio
-    command: python3
+    command: hanzo-mcp
     args:
-      - -m
-      - hanzo_mcp.cli
       - --enable-agent-tool
     timeout: 60000
     initTimeout: 15000
 
 # Interface configuration
 interface:
-  customWelcome: "Welcome to Hanzo Chat!"
+  customWelcome: 'Welcome to Chat!'
   endpointsMenu: true
   modelSelect: true
   parameters: true

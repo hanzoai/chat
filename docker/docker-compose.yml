@@ -9,17 +9,17 @@ services:
   api:
     container_name: chat
     ports:
-      - "${PORT}:${PORT}"
+      - '${PORT}:${PORT}'
     depends_on:
       - mongodb
       - rag_api
     image: ghcr.io/hanzoai/chat:latest
     restart: always
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     environment:
       - HOST=0.0.0.0
-      - MONGO_URI=mongodb://mongodb:27017/Hanzo
+      - MONGO_URI=mongodb://mongodb:27017/chat
       - MEILI_HOST=http://meilisearch:7700
       - RAG_PORT=${RAG_PORT:-8000}
       - RAG_API_URL=http://rag_api:${RAG_PORT:-8000}
