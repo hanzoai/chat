@@ -90,6 +90,10 @@ export class Run {
     this.metadata = options.metadata || {};
   }
 
+  static async create(options: any) {
+    return new Run(options);
+  }
+
   async start() {
     this.status = 'running';
     this.updated_at = new Date().toISOString();
