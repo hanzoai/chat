@@ -4,15 +4,9 @@
   "com_a11y_ai_composing": "AI 仍在撰写中。",
   "com_a11y_end": "AI 已完成回复。",
   "com_a11y_start": "AI 已开始回复。",
-<<<<<<< HEAD
   "com_agents_allow_editing": "允许其他用户编辑您的代理",
   "com_agents_by_chat": "由 Chat 提供",
-  "com_agents_code_interpreter": "启用后，您的代理可以安全地使用 Chat 代码解释器 API 来运行生成的代码，包括文件处理功能。需要有效的 API 密钥。",
-=======
-  "com_agents_allow_editing": "允许其他用户编辑您的助手",
-  "com_agents_by_chat": "由 Hanzo 提供",
-  "com_agents_code_interpreter": "启用后，您的代理可以安全地使用Hanzo代码解释器API来运行生成的代码，包括文件处理功能。需要有效的API密钥。",
->>>>>>> 1c21f3543 (Update brand)
+  "com_agents_code_interpreter": "启用后，您的代理可以安全地使用 Hanzo 代码解释器 API 来运行生成的代码，包括文件处理功能。需要有效的 API 密钥。",
   "com_agents_code_interpreter_title": "代码解释器 API",
   "com_agents_create_error": "更新代理时出现错误。",
   "com_agents_description_placeholder": "可选：在此描述您的代理",

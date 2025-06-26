@@ -618,12 +618,8 @@
   "com_ui_input": "Entrada",
   "com_ui_instructions": "Instrucciones",
   "com_ui_latest_footer": "IA para todos.",
-<<<<<<< HEAD
   "com_ui_latest_version": "Última versión",
-  "com_ui_hanzo_code_api_key": "Obtenga su clave API del Intérprete de Código de Chat",
-=======
   "com_ui_hanzo_code_api_key": "Obtenga su clave API del Intérprete de Código de Hanzo",
->>>>>>> 1c21f3543 (Update brand)
   "com_ui_hanzo_code_api_subtitle": "Seguro. Multilenguaje. Archivos de entrada/salida.",
   "com_ui_hanzo_code_api_title": "Ejecutar Código IA",
   "com_ui_loading": "Cargando...",
