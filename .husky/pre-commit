@@ -1,5 +1,34 @@
-#!/usr/bin/env sh 
-set -e
+#!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
-[ -n "$CI" ] && exit 0
-npx lint-staged --config ./.husky/lint-staged.config.js
+
+# Run linting on staged files
+npx lint-staged
+
+# Run tests for changed files
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx)$' || true)
+
+if [ -n "$CHANGED_FILES" ]; then
+  echo "Running tests for changed files..."
+  
+  # Check if client files changed
+  if echo "$CHANGED_FILES" | grep -q "^client/"; then
+    echo "Client files changed, running client tests..."
+    cd client && npm run test:ci -- --passWithNoTests --bail
+    cd ..
+  fi
+  
+  # Check if API files changed
+  if echo "$CHANGED_FILES" | grep -q "^api/"; then
+    echo "API files changed, running API tests..."
+    cd api && npm run test:ci -- --passWithNoTests --bail --maxWorkers=2
+    cd ..
+  fi
+  
+  # Check if package files changed
+  if echo "$CHANGED_FILES" | grep -q "^packages/"; then
+    echo "Package files changed, building packages..."
+    npm run build:data-provider
+    npm run build:data-schemas
+    npm run build:api
+  fi
+fi

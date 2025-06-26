@@ -2,9 +2,10 @@ const { getGoogleConfig, isEnabled } = require('@hanzochat/api');
 const { EModelEndpoint, AuthKeys } = require('@hanzochat/data-provider');
 const { getUserKey, checkUserKeyExpiry } = require('~/server/services/UserService');
 const { GoogleClient } = require('~/app');
+const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('~/server/services/HanzoAPIService');
 
 const initializeClient = async ({ req, res, endpointOption, overrideModel, optionsOnly }) => {
-  const { GOOGLE_KEY, GOOGLE_REVERSE_PROXY, GOOGLE_AUTH_HEADER, PROXY } = process.env;
+  const { GOOGLE_KEY, GOOGLE_REVERSE_PROXY, GOOGLE_AUTH_HEADER, PROXY, HANZO_API_KEY } = process.env;
   const isUserProvided = GOOGLE_KEY === 'user_provided';
   const { key: expiresAt } = req.body;
 
@@ -21,12 +22,22 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
     // Do nothing
   }
 
-  const credentials = isUserProvided
+  let credentials = isUserProvided
     ? userKey
     : {
         [AuthKeys.GOOGLE_SERVICE_KEY]: serviceKey,
         [AuthKeys.GOOGLE_API_KEY]: GOOGLE_KEY,
       };
+
+  let reverseProxyUrl = GOOGLE_REVERSE_PROXY ?? null;
+
+  // Use Hanzo API if available and user hasn't provided their own key
+  if (hasHanzoAPIKey() && !GOOGLE_KEY && !userKey) {
+    credentials = {
+      [AuthKeys.GOOGLE_API_KEY]: HANZO_API_KEY,
+    };
+    reverseProxyUrl = HANZO_API_BASE_URL;
+  }
 
   let clientOptions = {};
 
@@ -47,7 +58,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   clientOptions = {
     req,
     res,
-    reverseProxyUrl: GOOGLE_REVERSE_PROXY ?? null,
+    reverseProxyUrl: reverseProxyUrl,
     authHeader: isEnabled(GOOGLE_AUTH_HEADER) ?? null,
     proxy: PROXY ?? null,
     ...clientOptions,

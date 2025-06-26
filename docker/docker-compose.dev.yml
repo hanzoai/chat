@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/hanzoai/chat:latest
+    environment:
+      - INIT_FIXTURES=true
+
+  # One-time fixture initialization service
+  init-fixtures:
+    image: ghcr.io/hanzoai/chat:latest
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/LibreChat
+    volumes:
+      - ./api/server/services/fixtures.js:/app/api/server/services/fixtures.js:ro
+    command: >
+      sh -c "
+        echo 'Waiting for MongoDB to be ready...';
+        sleep 10;
+        echo 'Initializing fixtures...';
+        node -e \"
+          const mongoose = require('mongoose');
+          const initializeFixtures = require('/app/api/server/services/fixtures.js');
+          
+          async function run() {
+            try {
+              await mongoose.connect(process.env.MONGO_URI);
+              console.log('Connected to MongoDB');
+              
+              // Import models after connection
+              require('@hanzochat/data-schemas').createModels(mongoose);
+              
+              await initializeFixtures();
+              console.log('Fixtures initialized');
+              process.exit(0);
+            } catch (error) {
+              console.error('Error:', error);
+              process.exit(1);
+            }
+          }
+          
+          run();
+        \"
+      "
+    restart: "no"

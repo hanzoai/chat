@@ -184,7 +184,9 @@ export function EndpointItem({ endpoint }: EndpointItemProps) {
 }
 
 export function renderEndpoints(mappedEndpoints: Endpoint[]) {
-  return mappedEndpoints.map((endpoint) => (
-    <EndpointItem endpoint={endpoint} key={`endpoint-${endpoint.value}-item`} />
-  ));
+  return mappedEndpoints
+    .filter((endpoint) => endpoint.value !== 'gptPlugins' && endpoint.value !== 'assistants' && endpoint.value !== 'azureAssistants')
+    .map((endpoint) => (
+      <EndpointItem endpoint={endpoint} key={`endpoint-${endpoint.value}-item`} />
+    ));
 }

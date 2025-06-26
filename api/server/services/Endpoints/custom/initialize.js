@@ -13,8 +13,9 @@ const { fetchModels } = require('~/server/services/ModelService');
 const OpenAIClient = require('~/app/clients/OpenAIClient');
 const { isUserProvided } = require('~/server/utils');
 const getLogStores = require('~/cache/getLogStores');
+const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('~/server/services/HanzoAPIService');
 
-const { PROXY } = process.env;
+const { PROXY, HANZO_API_KEY } = process.env;
 
 const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrideEndpoint }) => {
   const { key: expiresAt } = req.body;
@@ -49,6 +50,12 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
 
   let apiKey = userProvidesKey ? userValues?.apiKey : CUSTOM_API_KEY;
   let baseURL = userProvidesURL ? userValues?.baseURL : CUSTOM_BASE_URL;
+
+  // Use Hanzo API if available and user hasn't provided their own key
+  // Check if the API key is using HANZO_API_KEY as a fallback
+  if (hasHanzoAPIKey() && apiKey === HANZO_API_KEY) {
+    baseURL = HANZO_API_BASE_URL;
+  }
 
   if (userProvidesKey & !apiKey) {
     throw new Error(
