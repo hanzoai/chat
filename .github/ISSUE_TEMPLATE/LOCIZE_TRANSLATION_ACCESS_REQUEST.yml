@@ -1,12 +1,12 @@
 name: Locize Translation Access Request
-description: Request access to an additional language in Locize for LibreChat translations.
+description: Request access to an additional language in Locize for chat translations.
 title: "Locize Access Request: "
 labels: ["🌍 i18n", "🔑 access request"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for your interest in contributing to LibreChat translations!  
+        Thank you for your interest in contributing to chat translations!  
         Please fill out the form below to request access to an additional language in **Locize**.
 
         **🔗 Available Languages:** [View the list here](https://www.librechat.ai/docs/translation)
@@ -38,5 +38,5 @@ body:
       label: Agreement
       description: By submitting this request, you confirm that you will contribute responsibly and adhere to the project guidelines.
       options:
-        - label: I agree to use my access solely for contributing to LibreChat translations.
+        - label: I agree to use my access solely for contributing to chat translations.
           required: true
