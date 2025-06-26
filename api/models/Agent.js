@@ -55,7 +55,7 @@ const getAgent = async (searchParameter) => await Agent.findOne(searchParameter)
  * @param {ServerRequest} params.req
  * @param {string} params.agent_id
  * @param {string} params.endpoint
- * @param {import('@librechat/agents').ClientOptions} [params.model_parameters]
+ * @param {import('@hanzochat/agents').ClientOptions} [params.model_parameters]
  * @returns {Promise<Agent|null>} The agent document as a plain object, or null if not found.
  */
 const loadEphemeralAgent = async ({ req, agent_id, endpoint, model_parameters: _m }) => {
@@ -107,7 +107,7 @@ const loadEphemeralAgent = async ({ req, agent_id, endpoint, model_parameters: _
  * @param {ServerRequest} params.req
  * @param {string} params.agent_id
  * @param {string} params.endpoint
- * @param {import('@librechat/agents').ClientOptions} [params.model_parameters]
+ * @param {import('@hanzochat/agents').ClientOptions} [params.model_parameters]
  * @returns {Promise<Agent|null>} The agent document as a plain object, or null if not found.
  */
 const loadAgent = async ({ req, agent_id, endpoint, model_parameters }) => {

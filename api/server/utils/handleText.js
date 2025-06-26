@@ -8,7 +8,7 @@ const {
   defaultAgentCapabilities,
 } = require('@hanzochat/data-provider');
 const { sendEvent } = require('@hanzochat/api');
-const { Providers } = require('@librechat/agents');
+const { Providers } = require('@hanzochat/agents');
 const partialRight = require('lodash/partialRight');
 
 /** Helper function to escape special characters in regex

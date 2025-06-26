@@ -2,7 +2,7 @@ const { mcpToolPattern } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
 const { SerpAPI } = require('@langchain/community/tools/serpapi');
 const { Calculator } = require('@langchain/community/tools/calculator');
-const { EnvVar, createCodeExecutionTool, createSearchTool } = require('@librechat/agents');
+const { EnvVar, createCodeExecutionTool, createSearchTool } = require('@hanzochat/agents');
 const {
   Tools,
   EToolResources,

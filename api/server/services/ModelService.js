@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { Providers } = require('@librechat/agents');
+const { Providers } = require('@hanzochat/agents');
 const { logAxiosError } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');

@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { logger } from '@hanzochat/data-schemas';
-import { GraphEvents, sleep } from '@librechat/agents';
+import { GraphEvents, sleep } from '@hanzochat/agents';
 import type { Response as ServerResponse } from 'express';
 import type { ServerSentEvent } from '~/types';
 import { sendEvent } from './events';

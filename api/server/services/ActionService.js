@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { nanoid } = require('nanoid');
 const { tool } = require('@langchain/core/tools');
 const { logger } = require('@hanzochat/data-schemas');
-const { GraphEvents, sleep } = require('@librechat/agents');
+const { GraphEvents, sleep } = require('@hanzochat/agents');
 const {
   sendEvent,
   encryptV2,
