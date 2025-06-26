@@ -10,22 +10,35 @@ endpoints:
   anthropic:
     apiKey: "${ANTHROPIC_API_KEY}"
     
-  # Custom endpoints (LM Studio)
+  # Google configuration
+  google:
+    apiKey: "${GOOGLE_KEY}"
+    
+  # Custom endpoints - LM Studio will be auto-detected when running
   custom:
-    - name: "LM Studio"
-      apiKey: ""
-      baseURL: "http://192.168.1.189:1234/v1"
+    - name: "groq"
+      apiKey: "${GROQ_API_KEY:-${HANZO_API_KEY}}"
+      baseURL: "${GROQ_BASE_URL:-https://api.groq.com/openai/v1}"
       models:
-        default:
-          - gemma-3-27b-it
-          - phi-4
-          - qwen2.5-7b-instruct-1m
-          - deepseek-r1-distill-qwen-32b
-          - deepseek-r1-distill-qwen-7b
+        default: ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768", "gemma-7b-it", "gemma2-9b-it"]
         fetch: false
-      titleModel: "gemma-3-27b-it"
       titleConvo: true
-      mcpServerId: hanzo-mcp
+      titleModel: "mixtral-8x7b-32768"
+      
+    - name: "together"
+      apiKey: "${TOGETHERAI_API_KEY:-${HANZO_API_KEY}}"
+      baseURL: "${TOGETHER_BASE_URL:-https://api.together.xyz/v1}"
+      models:
+        default: ["mistralai/Mixtral-8x7B-Instruct-v0.1", "meta-llama/Llama-3-70b-chat-hf", "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO"]
+        fetch: false
+      titleConvo: true
+      
+    - name: "openrouter"
+      apiKey: "${OPENROUTER_KEY:-${HANZO_API_KEY}}"
+      baseURL: "${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+      models:
+        fetch: true
+      titleConvo: true
 
 # Agents configuration
 agents:

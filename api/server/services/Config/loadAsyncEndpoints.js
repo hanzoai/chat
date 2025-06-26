@@ -1,8 +1,9 @@
 const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { isUserProvided } = require('~/server/utils');
 const { config } = require('./EndpointService');
+const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('../HanzoAPIService');
 
-const { openAIApiKey, azureOpenAIApiKey, useAzurePlugins, userProvidedOpenAI, googleKey } = config;
+const { openAIApiKey, azureOpenAIApiKey, useAzurePlugins, userProvidedOpenAI, googleKey, hanzoApiKey } = config;
 
 /**
  * Load async endpoints and return a configuration object

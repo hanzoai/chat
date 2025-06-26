@@ -28,6 +28,7 @@ export { default as SamlIcon } from './SamlIcon';
 export { default as AnthropicIcon } from './AnthropicIcon';
 export { default as SendIcon } from './SendIcon';
 export { default as LinkIcon } from './LinkIcon';
+export { default as LMStudioIcon } from './LMStudioIcon';
 export { default as DotsIcon } from './DotsIcon';
 export { default as GearIcon } from './GearIcon';
 export { default as PinIcon } from './PinIcon';

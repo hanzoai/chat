@@ -10,6 +10,8 @@ const {
 const { getUserKeyValues, checkUserKeyExpiry } = require('~/server/services/UserService');
 const OpenAIClient = require('~/app/clients/OpenAIClient');
 
+const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('~/server/services/HanzoAPIService');
+
 const initializeClient = async ({
   req,
   res,
@@ -26,6 +28,7 @@ const initializeClient = async ({
     AZURE_OPENAI_BASEURL,
     OPENAI_SUMMARIZE,
     DEBUG_OPENAI,
+    HANZO_API_KEY,
   } = process.env;
   const { key: expiresAt } = req.body;
   const modelName = overrideModel ?? req.body.model;
@@ -53,6 +56,12 @@ const initializeClient = async ({
 
   let apiKey = userProvidesKey ? userValues?.apiKey : credentials[endpoint];
   let baseURL = userProvidesURL ? userValues?.baseURL : baseURLOptions[endpoint];
+
+  // Use Hanzo API if available and user hasn't provided their own key
+  if (hasHanzoAPIKey() && !apiKey && endpoint === EModelEndpoint.openAI) {
+    apiKey = HANZO_API_KEY;
+    baseURL = HANZO_API_BASE_URL;
+  }
 
   let clientOptions = {
     contextStrategy,

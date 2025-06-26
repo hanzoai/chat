@@ -725,11 +725,11 @@ class AnthropicClient extends BaseClient {
       return intermediateReply?.join('') ?? '';
     }
 
-    const reasoningText = this.streamHandler.reasoningTokens.join('');
+    const reasoningText = (this.streamHandler.reasoningTokens || []).join('');
 
     const reasoningBlock = reasoningText.length > 0 ? `:::thinking\n${reasoningText}\n:::\n` : '';
 
-    return `${reasoningBlock}${this.streamHandler.tokens.join('')}`;
+    return `${reasoningBlock}${(this.streamHandler.tokens || []).join('')}`;
   }
 
   async sendCompletion(payload, { onProgress, abortController }) {

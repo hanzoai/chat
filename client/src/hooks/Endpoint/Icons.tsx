@@ -12,6 +12,7 @@ import {
   LightningIcon,
   BedrockIcon,
   Sparkles,
+  LMStudioIcon,
 } from '~/components/svg';
 import UnknownIcon from './UnknownIcon';
 import { cn } from '~/utils';

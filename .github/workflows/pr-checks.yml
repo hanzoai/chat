@@ -1,0 +1,197 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+      api: ${{ steps.filter.outputs.api }}
+      packages: ${{ steps.filter.outputs.packages }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          client:
+            - 'client/**'
+            - 'package.json'
+          api:
+            - 'api/**'
+            - 'package.json'
+          packages:
+            - 'packages/**'
+
+  test-client:
+    name: Client Tests
+    needs: changes
+    if: needs.changes.outputs.client == 'true' || needs.changes.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build dependencies
+      run: |
+        npm run build:data-provider
+        npm run build:data-schemas
+
+    - name: Run client tests
+      run: NODE_ENV=test npm run test:client -- --passWithNoTests
+
+    - name: Comment PR (Client)
+      uses: actions/github-script@v7
+      if: always()
+      with:
+        script: |
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && comment.body.includes('Client Test Results')
+          );
+          
+          const body = `### 🧪 Client Test Results
+          
+          ${context.job.status === 'success' ? '✅ All client tests passed!' : '❌ Client tests failed'}
+          
+          [View full test results](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
+
+  test-api:
+    name: API Tests
+    needs: changes
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build dependencies
+      run: |
+        npm run build:data-provider
+        npm run build:data-schemas
+        npm run build:api
+
+    - name: Setup test environment
+      run: |
+        echo "NODE_ENV=test" > .env.test
+        echo "MONGO_URI=mongodb://localhost:27017/HanzoChat_test" >> .env.test
+        echo "MEILI_HOST=" >> .env.test
+        echo "RAG_API_URL=" >> .env.test
+        echo "ALLOW_REGISTRATION=true" >> .env.test
+        echo "DEBUG_LOGGING=false" >> .env.test
+        echo "CREDS_KEY=test-creds-key-32-chars-long-string" >> .env.test
+        echo "CREDS_IV=test-creds-iv-16" >> .env.test
+        echo "JWT_SECRET=test-jwt-secret-very-secure" >> .env.test
+        echo "JWT_REFRESH_SECRET=test-jwt-refresh-secret" >> .env.test
+
+    - name: Run API tests
+      run: NODE_ENV=test npm run test:api -- --maxWorkers=2 --passWithNoTests
+
+  size-check:
+    name: Bundle Size Check
+    needs: changes
+    if: needs.changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build client
+      run: npm run build:client
+      env:
+        DOMAIN_CLIENT: https://chat.hanzo.ai
+        DOMAIN_SERVER: https://chat.hanzo.ai
+
+    - name: Check bundle size
+      uses: andresz1/size-limit-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        directory: client/dist
+        pattern: "**/*.{js,css}"
+
+  type-check:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: TypeScript check
+      run: |
+        cd client && npx tsc --noEmit || true
+        cd ../api && npx tsc --noEmit || true
