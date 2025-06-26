@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import * as Ariakit from '@ariakit/react';
 import { Globe, Settings, Settings2, TerminalSquareIcon } from 'lucide-react';
 import type { MenuItemProps } from '~/common';
-import { Permissions, PermissionTypes, AuthType } from 'librechat-data-provider';
+import { Permissions, PermissionTypes, AuthType } from 'chat-data-provider';
 import { TooltipAnchor, DropdownPopup } from '~/components';
 import MCPSubMenu from '~/components/Chat/Input/MCPSubMenu';
 import { PinIcon, VectorIcon } from '~/components/svg';

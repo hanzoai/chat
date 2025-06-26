@@ -1,6 +1,6 @@
-import { Providers } from '@librechat/agents';
-import { googleSettings, AuthKeys } from 'librechat-data-provider';
-import type { GoogleClientOptions, VertexAIClientOptions } from '@librechat/agents';
+import { Providers } from '@chat/agents';
+import { googleSettings, AuthKeys } from 'chat-data-provider';
+import type { GoogleClientOptions, VertexAIClientOptions } from '@chat/agents';
 import type * as t from '~/types';
 import { isEnabled } from '~/utils';
 

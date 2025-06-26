@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@chat/data-schemas';
 import {
   discoverOAuthMetadata,
   registerClient,
@@ -8,7 +8,7 @@ import {
   discoverOAuthProtectedResourceMetadata,
 } from '@modelcontextprotocol/sdk/client/auth.js';
 import { OAuthMetadataSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
-import type { MCPOptions } from 'librechat-data-provider';
+import type { MCPOptions } from 'chat-data-provider';
 import type { FlowStateManager } from '~/flow/manager';
 import type {
   OAuthClientInformation,
@@ -97,7 +97,7 @@ export class MCPOAuthHandler {
 
     /** Client metadata based on what the server supports */
     const clientMetadata = {
-      client_name: 'LibreChat MCP Client',
+      client_name: 'Chat MCP Client',
       redirect_uris: [redirectUri || this.getDefaultRedirectUri()],
       grant_types: ['authorization_code'] as string[],
       response_types: ['code'] as string[],

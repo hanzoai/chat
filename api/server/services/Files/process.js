@@ -17,8 +17,8 @@ const {
   removeNullishValues,
   hostImageNamePrefix,
   isAssistantsEndpoint,
-} = require('librechat-data-provider');
-const { EnvVar } = require('@librechat/agents');
+} = require('chat-data-provider');
+const { EnvVar } = require('@chat/agents');
 const {
   convertImage,
   resizeAndConvert,

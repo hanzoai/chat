@@ -1,6 +1,6 @@
-const { logger } = require('@librechat/data-schemas');
-const { getUserMCPAuthMap } = require('@librechat/api');
-const { CacheKeys, EModelEndpoint } = require('librechat-data-provider');
+const { logger } = require('@chat/data-schemas');
+const { getUserMCPAuthMap } = require('@chat/api');
+const { CacheKeys, EModelEndpoint } = require('chat-data-provider');
 const { normalizeEndpointName, isEnabled } = require('~/server/utils');
 const loadCustomConfig = require('./loadCustomConfig');
 const { getCachedTools } = require('./getCachedTools');

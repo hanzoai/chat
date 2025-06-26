@@ -5,7 +5,7 @@
   "com_a11y_end": "AIは返信を完了しました。",
   "com_a11y_start": "AIが返信を開始しました。",
   "com_agents_allow_editing": "他のユーザーにエージェントの編集を許可する",
-  "com_agents_by_librechat": "Hanzoより",
+  "com_agents_by_chat": "Hanzoより",
   "com_agents_code_interpreter": "有効にすると、エージェントがHanzo Code Interpreter APIを使用して、ファイル処理を含む生成されたコードを安全に実行できるようになります。有効な APIキーが必要です。",
   "com_agents_code_interpreter_title": "コードインタープリター API",
   "com_agents_create_error": "エージェントの作成中にエラーが発生しました。",
@@ -696,7 +696,7 @@
 <<<<<<< HEAD
   "com_ui_latest_production_version": "最新の製品バージョン",
   "com_ui_latest_version": "最新バージョン",
-  "com_ui_hanzo_code_api_key": "LibreChat コードインタープリター APIキーを取得",
+  "com_ui_hanzo_code_api_key": "Chat コードインタープリター APIキーを取得",
 =======
   "com_ui_hanzo_code_api_key": "Hanzo コードインタープリター APIキーを取得",
 >>>>>>> 1c21f3543 (Update brand)

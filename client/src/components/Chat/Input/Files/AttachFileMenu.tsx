@@ -3,7 +3,7 @@ import * as Ariakit from '@ariakit/react';
 import React, { useRef, useState, useMemo } from 'react';
 import { FileSearch, ImageUpIcon, TerminalSquareIcon, FileType2Icon } from 'lucide-react';
 import { FileUpload, TooltipAnchor, DropdownPopup, AttachmentIcon } from '~/components';
-import { EToolResources, EModelEndpoint } from 'librechat-data-provider';
+import { EToolResources, EModelEndpoint } from 'chat-data-provider';
 import { useGetEndpointsQuery } from '~/data-provider';
 import { useLocalize, useFileHandling } from '~/hooks';
 import { ephemeralAgentByConvoId } from '~/store';

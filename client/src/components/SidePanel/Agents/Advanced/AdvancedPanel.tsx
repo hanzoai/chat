@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { ChevronLeft } from 'lucide-react';
-import { AgentCapabilities } from 'librechat-data-provider';
+import { AgentCapabilities } from 'chat-data-provider';
 import { useFormContext, Controller } from 'react-hook-form';
 import type { AgentForm, AgentPanelProps } from '~/common';
 import MaxAgentSteps from './MaxAgentSteps';

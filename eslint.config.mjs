@@ -150,7 +150,7 @@ export default [
       //       value: {
       //         react: ['^react$'],
       //         // react: ['^react$', '^fs', '^zod', '^path'],
-      //         local: ['^(\\.{1,2}|~)/', '^librechat-data-provider'],
+      //         local: ['^(\\.{1,2}|~)/', '^chat-data-provider'],
       //       },
       //     },
       //     groups: [

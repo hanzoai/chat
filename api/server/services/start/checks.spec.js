@@ -1,6 +1,6 @@
-// Mock librechat-data-provider
-jest.mock('librechat-data-provider', () => ({
-  ...jest.requireActual('librechat-data-provider'),
+// Mock chat-data-provider
+jest.mock('chat-data-provider', () => ({
+  ...jest.requireActual('chat-data-provider'),
   extractVariableName: jest.fn(),
 }));
 
@@ -14,7 +14,7 @@ jest.mock('~/config', () => ({
 
 const { checkWebSearchConfig } = require('./checks');
 const { logger } = require('~/config');
-const { extractVariableName } = require('librechat-data-provider');
+const { extractVariableName } = require('chat-data-provider');
 
 describe('checkWebSearchConfig', () => {
   let originalEnv;
@@ -145,7 +145,7 @@ describe('checkWebSearchConfig', () => {
 
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'More info: https://www.librechat.ai/docs/configuration/librechat_yaml/web_search',
+          'More info: https://www.hanzo.ai/docs/configuration/chat_yaml/web_search',
         ),
       );
     });

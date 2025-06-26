@@ -1,7 +1,7 @@
 # Hanzo Chat Project - Development Guide
 
 ## Project Overview
-Hanzo Chat is a chat application based on LibreChat, which is a platform for interacting with various AI models. The project follows a microservices architecture with several components running in Docker containers.
+Hanzo Chat is a chat application based on Chat, which is a platform for interacting with various AI models. The project follows a microservices architecture with several components running in Docker containers.
 
 ## Architecture Components
 

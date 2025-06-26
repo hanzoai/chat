@@ -6,7 +6,7 @@ const {
   PermissionTypes,
   roleDefaults,
   SystemRoles,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const { checkAdmin, requireJwtAuth } = require('~/server/middleware');
 const { updateRoleByName, getRoleByName } = require('~/models/Role');
 

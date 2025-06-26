@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { openAISchema, EModelEndpoint } from 'librechat-data-provider';
-import type { TEndpointOption, TAzureConfig, TEndpoint } from 'librechat-data-provider';
-import type { OpenAIClientOptions } from '@librechat/agents';
+import { openAISchema, EModelEndpoint } from 'chat-data-provider';
+import type { TEndpointOption, TAzureConfig, TEndpoint } from 'chat-data-provider';
+import type { OpenAIClientOptions } from '@chat/agents';
 import type { AzureOptions } from './azure';
 
 export type OpenAIParameters = z.infer<typeof openAISchema>;

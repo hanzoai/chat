@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@chat/data-schemas';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import {
@@ -93,7 +93,7 @@ export class MCPConnection extends EventEmitter {
     }
     this.client = new Client(
       {
-        name: '@librechat/api-client',
+        name: '@chat/api-client',
         version: '1.2.3',
       },
       {

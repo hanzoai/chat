@@ -31,7 +31,7 @@ jest.mock('axios', () => {
   };
 });
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@chat/data-schemas', () => ({
   logger: {
     error: jest.fn(),
   },
@@ -47,7 +47,7 @@ import axios from 'axios';
 import type { Request as ExpressRequest } from 'express';
 import type { Readable } from 'stream';
 import type { MistralFileUploadResponse, MistralSignedUrlResponse, OCRResult } from '~/types';
-import { logger as mockLogger } from '@librechat/data-schemas';
+import { logger as mockLogger } from '@chat/data-schemas';
 import {
   uploadDocumentToMistral,
   uploadMistralOCR,

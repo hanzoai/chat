@@ -1,8 +1,8 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useRecoilState } from 'recoil';
 import debounce from 'lodash/debounce';
-import { Constants, LocalStorageKeys } from 'librechat-data-provider';
-import type { VerifyToolAuthResponse } from 'librechat-data-provider';
+import { Constants, LocalStorageKeys } from 'chat-data-provider';
+import type { VerifyToolAuthResponse } from 'chat-data-provider';
 import type { UseQueryOptions } from '@tanstack/react-query';
 import { useVerifyAgentToolAuth } from '~/data-provider';
 import useLocalStorage from '~/hooks/useLocalStorageAlt';

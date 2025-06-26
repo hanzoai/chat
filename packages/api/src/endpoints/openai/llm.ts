@@ -1,5 +1,5 @@
 import { ProxyAgent } from 'undici';
-import { KnownEndpoints } from 'librechat-data-provider';
+import { KnownEndpoints } from 'chat-data-provider';
 import type * as t from '~/types';
 import { sanitizeModelName, constructAzureURL } from '~/utils/azure';
 import { isEnabled } from '~/utils/common';
@@ -85,8 +85,8 @@ export function getOpenAIConfig(
     configOptions.baseURL = reverseProxyUrl;
     configOptions.defaultHeaders = Object.assign(
       {
-        'HTTP-Referer': 'https://librechat.ai',
-        'X-Title': 'LibreChat',
+        'HTTP-Referer': 'https://hanzo.ai',
+        'X-Title': 'Chat',
       },
       headers,
     );

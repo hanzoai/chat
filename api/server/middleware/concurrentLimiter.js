@@ -1,4 +1,4 @@
-const { Time, CacheKeys } = require('librechat-data-provider');
+const { Time, CacheKeys } = require('chat-data-provider');
 const clearPendingReq = require('~/cache/clearPendingReq');
 const { logViolation, getLogStores } = require('~/cache');
 const { isEnabled } = require('~/server/utils');

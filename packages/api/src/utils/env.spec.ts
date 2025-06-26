@@ -1,5 +1,5 @@
 import { resolveHeaders } from './env';
-import type { TUser } from 'librechat-data-provider';
+import type { TUser } from 'chat-data-provider';
 
 // Helper function to create test user objects
 function createTestUser(overrides: Partial<TUser> = {}): TUser {
@@ -64,7 +64,7 @@ describe('resolveHeaders', () => {
   it('should process user ID placeholder when user has id', () => {
     const user = { id: 'test-user-123' };
     const headers = {
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Id': '{{CHAT_USER_ID}}',
       'Content-Type': 'application/json',
     };
 
@@ -78,14 +78,14 @@ describe('resolveHeaders', () => {
 
   it('should not process user ID placeholder when user is undefined', () => {
     const headers = {
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Id': '{{CHAT_USER_ID}}',
       'Content-Type': 'application/json',
     };
 
     const result = resolveHeaders(headers);
 
     expect(result).toEqual({
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Id': '{{CHAT_USER_ID}}',
       'Content-Type': 'application/json',
     });
   });
@@ -93,14 +93,14 @@ describe('resolveHeaders', () => {
   it('should not process user ID placeholder when user has no id', () => {
     const user = { id: '' };
     const headers = {
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Id': '{{CHAT_USER_ID}}',
       'Content-Type': 'application/json',
     };
 
     const result = resolveHeaders(headers, user);
 
     expect(result).toEqual({
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Id': '{{CHAT_USER_ID}}',
       'Content-Type': 'application/json',
     });
   });
@@ -115,11 +115,11 @@ describe('resolveHeaders', () => {
     });
 
     const headers = {
-      'User-Email': '{{LIBRECHAT_USER_EMAIL}}',
-      'User-Name': '{{LIBRECHAT_USER_NAME}}',
-      'User-Username': '{{LIBRECHAT_USER_USERNAME}}',
-      'User-Role': '{{LIBRECHAT_USER_ROLE}}',
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Email': '{{CHAT_USER_EMAIL}}',
+      'User-Name': '{{CHAT_USER_NAME}}',
+      'User-Username': '{{CHAT_USER_USERNAME}}',
+      'User-Role': '{{CHAT_USER_ROLE}}',
+      'User-Id': '{{CHAT_USER_ID}}',
       'Content-Type': 'application/json',
     };
 
@@ -143,9 +143,9 @@ describe('resolveHeaders', () => {
     });
 
     const headers = {
-      'User-Email': '{{LIBRECHAT_USER_EMAIL}}',
-      'User-Username': '{{LIBRECHAT_USER_USERNAME}}',
-      'Non-Existent': '{{LIBRECHAT_USER_NONEXISTENT}}',
+      'User-Email': '{{CHAT_USER_EMAIL}}',
+      'User-Username': '{{CHAT_USER_USERNAME}}',
+      'Non-Existent': '{{CHAT_USER_NONEXISTENT}}',
     };
 
     const result = resolveHeaders(headers, user);
@@ -153,7 +153,7 @@ describe('resolveHeaders', () => {
     expect(result).toEqual({
       'User-Email': 'test@example.com',
       'User-Username': '', // Empty string for missing field
-      'Non-Existent': '{{LIBRECHAT_USER_NONEXISTENT}}', // Unchanged for non-existent field
+      'Non-Existent': '{{CHAT_USER_NONEXISTENT}}', // Unchanged for non-existent field
     });
   });
 
@@ -168,7 +168,7 @@ describe('resolveHeaders', () => {
       Authorization: 'Bearer {{CUSTOM_TOKEN}}',
       'X-Region': '{{REGION}}',
       'X-System-Key': '${TEST_API_KEY}',
-      'X-User-Id': '{{LIBRECHAT_USER_ID}}',
+      'X-User-Id': '{{CHAT_USER_ID}}',
     };
 
     const result = resolveHeaders(headers, user, customUserVars);
@@ -187,11 +187,11 @@ describe('resolveHeaders', () => {
       email: 'user-email@example.com',
     });
     const customUserVars = {
-      LIBRECHAT_USER_EMAIL: 'custom-email@example.com',
+      CHAT_USER_EMAIL: 'custom-email@example.com',
     };
 
     const headers = {
-      'Test-Email': '{{LIBRECHAT_USER_EMAIL}}',
+      'Test-Email': '{{CHAT_USER_EMAIL}}',
     };
 
     const result = resolveHeaders(headers, user, customUserVars);
@@ -209,8 +209,8 @@ describe('resolveHeaders', () => {
     });
 
     const headers = {
-      'User-Role': '{{LIBRECHAT_USER_ROLE}}',
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Role': '{{CHAT_USER_ROLE}}',
+      'User-Id': '{{CHAT_USER_ID}}',
     };
 
     const result = resolveHeaders(headers, user);
@@ -228,9 +228,9 @@ describe('resolveHeaders', () => {
     });
 
     const headers = {
-      'Primary-Email': '{{LIBRECHAT_USER_EMAIL}}',
-      'Secondary-Email': '{{LIBRECHAT_USER_EMAIL}}',
-      'Backup-Email': '{{LIBRECHAT_USER_EMAIL}}',
+      'Primary-Email': '{{CHAT_USER_EMAIL}}',
+      'Secondary-Email': '{{CHAT_USER_EMAIL}}',
+      'Backup-Email': '{{CHAT_USER_EMAIL}}',
     };
 
     const result = resolveHeaders(headers, user);
@@ -253,9 +253,9 @@ describe('resolveHeaders', () => {
 
     const headers = {
       Authorization: 'Bearer {{CUSTOM_TOKEN}}',
-      'X-User-Id': '{{LIBRECHAT_USER_ID}}',
+      'X-User-Id': '{{CHAT_USER_ID}}',
       'X-System-Key': '${TEST_API_KEY}',
-      'X-User-Email': '{{LIBRECHAT_USER_EMAIL}}',
+      'X-User-Email': '{{CHAT_USER_EMAIL}}',
       'Content-Type': 'application/json',
     };
 
@@ -273,7 +273,7 @@ describe('resolveHeaders', () => {
   it('should not modify the original headers object', () => {
     const originalHeaders = {
       Authorization: '${TEST_API_KEY}',
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Id': '{{CHAT_USER_ID}}',
     };
     const user = { id: 'user-123' };
 
@@ -288,7 +288,7 @@ describe('resolveHeaders', () => {
     // Verify the original object is unchanged
     expect(originalHeaders).toEqual({
       Authorization: '${TEST_API_KEY}',
-      'User-Id': '{{LIBRECHAT_USER_ID}}',
+      'User-Id': '{{CHAT_USER_ID}}',
     });
   });
 
@@ -338,23 +338,23 @@ describe('resolveHeaders', () => {
     };
 
     const headers = {
-      'X-User-ID': '{{LIBRECHAT_USER_ID}}',
-      'X-User-Name': '{{LIBRECHAT_USER_NAME}}',
-      'X-User-Username': '{{LIBRECHAT_USER_USERNAME}}',
-      'X-User-Email': '{{LIBRECHAT_USER_EMAIL}}',
-      'X-User-Provider': '{{LIBRECHAT_USER_PROVIDER}}',
-      'X-User-Role': '{{LIBRECHAT_USER_ROLE}}',
-      'X-User-GoogleId': '{{LIBRECHAT_USER_GOOGLEID}}',
-      'X-User-FacebookId': '{{LIBRECHAT_USER_FACEBOOKID}}',
-      'X-User-OpenIdId': '{{LIBRECHAT_USER_OPENIDID}}',
-      'X-User-SamlId': '{{LIBRECHAT_USER_SAMLID}}',
-      'X-User-LdapId': '{{LIBRECHAT_USER_LDAPID}}',
-      'X-User-GithubId': '{{LIBRECHAT_USER_GITHUBID}}',
-      'X-User-DiscordId': '{{LIBRECHAT_USER_DISCORDID}}',
-      'X-User-AppleId': '{{LIBRECHAT_USER_APPLEID}}',
-      'X-User-EmailVerified': '{{LIBRECHAT_USER_EMAILVERIFIED}}',
-      'X-User-TwoFactorEnabled': '{{LIBRECHAT_USER_TWOFACTORENABLED}}',
-      'X-User-TermsAccepted': '{{LIBRECHAT_USER_TERMSACCEPTED}}',
+      'X-User-ID': '{{CHAT_USER_ID}}',
+      'X-User-Name': '{{CHAT_USER_NAME}}',
+      'X-User-Username': '{{CHAT_USER_USERNAME}}',
+      'X-User-Email': '{{CHAT_USER_EMAIL}}',
+      'X-User-Provider': '{{CHAT_USER_PROVIDER}}',
+      'X-User-Role': '{{CHAT_USER_ROLE}}',
+      'X-User-GoogleId': '{{CHAT_USER_GOOGLEID}}',
+      'X-User-FacebookId': '{{CHAT_USER_FACEBOOKID}}',
+      'X-User-OpenIdId': '{{CHAT_USER_OPENIDID}}',
+      'X-User-SamlId': '{{CHAT_USER_SAMLID}}',
+      'X-User-LdapId': '{{CHAT_USER_LDAPID}}',
+      'X-User-GithubId': '{{CHAT_USER_GITHUBID}}',
+      'X-User-DiscordId': '{{CHAT_USER_DISCORDID}}',
+      'X-User-AppleId': '{{CHAT_USER_APPLEID}}',
+      'X-User-EmailVerified': '{{CHAT_USER_EMAILVERIFIED}}',
+      'X-User-TwoFactorEnabled': '{{CHAT_USER_TWOFACTORENABLED}}',
+      'X-User-TermsAccepted': '{{CHAT_USER_TERMSACCEPTED}}',
     };
 
     const result = resolveHeaders(headers, user);
@@ -381,7 +381,7 @@ describe('resolveHeaders', () => {
   it('should handle multiple placeholders in one value', () => {
     const user = { id: 'abc', email: 'me@example.com' };
     const headers = {
-      'X-Multi': 'User: {{LIBRECHAT_USER_ID}}, Env: ${TEST_API_KEY}, Custom: {{MY_CUSTOM}}',
+      'X-Multi': 'User: {{CHAT_USER_ID}}, Env: ${TEST_API_KEY}, Custom: {{MY_CUSTOM}}',
     };
     const customVars = { MY_CUSTOM: 'custom-value' };
     const result = resolveHeaders(headers, user, customVars);
@@ -392,7 +392,7 @@ describe('resolveHeaders', () => {
     const user = { id: 'abc' };
     const headers = {
       'X-Unknown': '{{SOMETHING_NOT_RECOGNIZED}}',
-      'X-Known': '{{LIBRECHAT_USER_ID}}',
+      'X-Known': '{{CHAT_USER_ID}}',
     };
     const result = resolveHeaders(headers, user);
     expect(result['X-Unknown']).toBe('{{SOMETHING_NOT_RECOGNIZED}}');
@@ -407,13 +407,13 @@ describe('resolveHeaders', () => {
       twoFactorEnabled: false,
     };
     const headers = {
-      'X-User': '{{LIBRECHAT_USER_ID}}',
+      'X-User': '{{CHAT_USER_ID}}',
       'X-Env': '${TEST_API_KEY}',
       'X-Custom': '{{MY_CUSTOM}}',
-      'X-Multi': 'ID: {{LIBRECHAT_USER_ID}}, ENV: ${TEST_API_KEY}, CUSTOM: {{MY_CUSTOM}}',
+      'X-Multi': 'ID: {{CHAT_USER_ID}}, ENV: ${TEST_API_KEY}, CUSTOM: {{MY_CUSTOM}}',
       'X-Unknown': '{{NOT_A_REAL_PLACEHOLDER}}',
       'X-Empty': '',
-      'X-Boolean': '{{LIBRECHAT_USER_EMAILVERIFIED}}',
+      'X-Boolean': '{{CHAT_USER_EMAILVERIFIED}}',
     };
     const customVars = { MY_CUSTOM: 'custom-value' };
     const result = resolveHeaders(headers, user, customVars);

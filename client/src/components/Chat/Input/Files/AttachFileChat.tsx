@@ -6,7 +6,7 @@ import {
   isAgentsEndpoint,
   EndpointFileConfig,
   fileConfig as defaultFileConfig,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import { useGetFileConfig } from '~/data-provider';
 import AttachFileMenu from './AttachFileMenu';
 import { useChatContext } from '~/Providers';

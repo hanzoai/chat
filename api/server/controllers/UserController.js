@@ -4,8 +4,8 @@ const {
   FileSources,
   webSearchKeys,
   extractWebSearchEnvVars,
-} = require('librechat-data-provider');
-const { logger } = require('@librechat/data-schemas');
+} = require('chat-data-provider');
+const { logger } = require('@chat/data-schemas');
 const {
   getFiles,
   updateUser,

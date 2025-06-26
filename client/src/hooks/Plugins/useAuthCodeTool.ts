@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AuthType, Tools, QueryKeys } from 'librechat-data-provider';
-import { useUpdateUserPluginsMutation } from 'librechat-data-provider/react-query';
+import { AuthType, Tools, QueryKeys } from 'chat-data-provider';
+import { useUpdateUserPluginsMutation } from 'chat-data-provider/react-query';
 // import { useToastContext } from '~/Providers';
 
 const useAuthCodeTool = (options?: { isEntityTool: boolean }) => {
@@ -28,7 +28,7 @@ const useAuthCodeTool = (options?: { isEntityTool: boolean }) => {
       updateUserPlugins.mutate({
         pluginKey: Tools.execute_code,
         action: 'install',
-        auth: { LIBRECHAT_CODE_API_KEY: apiKey },
+        auth: { CHAT_CODE_API_KEY: apiKey },
         isEntityTool,
       });
     },
@@ -39,7 +39,7 @@ const useAuthCodeTool = (options?: { isEntityTool: boolean }) => {
     updateUserPlugins.mutate({
       pluginKey: Tools.execute_code,
       action: 'uninstall',
-      auth: { LIBRECHAT_CODE_API_KEY: null },
+      auth: { CHAT_CODE_API_KEY: null },
       isEntityTool,
     });
   }, [updateUserPlugins, isEntityTool]);

@@ -5,7 +5,7 @@
   "com_a11y_end": "The AI has finished their reply.",
   "com_a11y_start": "The AI has started their reply.",
   "com_agents_allow_editing": "Allow other users to edit your agent",
-  "com_agents_by_librechat": "by Hanzo",
+  "com_agents_by_chat": "by Hanzo",
   "com_agents_code_interpreter": "When enabled, allows your agent to leverage the Hanzo Code Interpreter API to run generated code, including file processing, securely. Requires a valid API key.",
   "com_agents_code_interpreter_title": "Code Interpreter API",
   "com_agents_create_error": "There was an error creating your agent.",

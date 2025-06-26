@@ -1,7 +1,7 @@
 const { z } = require('zod');
 const axios = require('axios');
 const { tool } = require('@langchain/core/tools');
-const { Tools, EToolResources } = require('librechat-data-provider');
+const { Tools, EToolResources } = require('chat-data-provider');
 const { getFiles } = require('~/models/File');
 const { logger } = require('~/config');
 
@@ -66,7 +66,7 @@ const createFileSearchTool = async ({ req, files, entity_id }) => {
 
       /**
        *
-       * @param {import('librechat-data-provider').TFile} file
+       * @param {import('chat-data-provider').TFile} file
        * @returns {{ file_id: string, query: string, k: number, entity_id?: string }}
        */
       const createQueryBody = (file) => {

@@ -1,6 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const { RedisStore } = require('rate-limit-redis');
-const { ViolationTypes } = require('librechat-data-provider');
+const { ViolationTypes } = require('chat-data-provider');
 const { removePorts, isEnabled } = require('~/server/utils');
 const ioredisClient = require('~/cache/ioredisClient');
 const { logViolation } = require('~/cache');
