@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { EModelEndpoint } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 
 export const useKeyDialog = () => {
   const [keyDialogOpen, setKeyDialogOpen] = useState(false);

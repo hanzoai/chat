@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const { getRandomValues } = require('@chat/api');
-const { logger, hashToken } = require('@chat/data-schemas');
+const { getRandomValues } = require('@hanzochat/api');
+const { logger, hashToken } = require('@hanzochat/data-schemas');
 const { createToken, findToken } = require('~/models');
 
 /**

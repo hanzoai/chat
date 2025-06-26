@@ -11,8 +11,8 @@ import {
 import { debounce } from 'lodash';
 import { useRecoilState } from 'recoil';
 import { useNavigate } from 'react-router-dom';
-import { setTokenHeader, SystemRoles } from 'chat-data-provider';
-import type * as t from 'chat-data-provider';
+import { setTokenHeader, SystemRoles } from '@hanzochat/data-provider';
+import type * as t from '@hanzochat/data-provider';
 import {
   useGetRole,
   useGetUserQuery,

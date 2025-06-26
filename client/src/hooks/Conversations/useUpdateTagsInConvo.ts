@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys } from 'chat-data-provider';
-import type { ConversationListResponse } from 'chat-data-provider';
+import { QueryKeys } from '@hanzochat/data-provider';
+import type { ConversationListResponse } from '@hanzochat/data-provider';
 import type { InfiniteData } from '@tanstack/react-query';
-import type t from 'chat-data-provider';
+import type t from '@hanzochat/data-provider';
 import { updateConvoFieldsInfinite } from '~/utils/convos';
 
 const useUpdateTagsInConvo = () => {

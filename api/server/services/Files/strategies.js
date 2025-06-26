@@ -1,5 +1,5 @@
-const { FileSources } = require('chat-data-provider');
-const { uploadMistralOCR, uploadAzureMistralOCR } = require('@chat/api');
+const { FileSources } = require('@hanzochat/data-provider');
+const { uploadMistralOCR, uploadAzureMistralOCR } = require('@hanzochat/api');
 const {
   getFirebaseURL,
   prepareImageURL,

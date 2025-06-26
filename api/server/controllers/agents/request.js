@@ -1,6 +1,6 @@
-const { sendEvent } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
-const { Constants } = require('chat-data-provider');
+const { sendEvent } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { Constants } = require('@hanzochat/data-provider');
 const {
   handleAbortError,
   createAbortController,

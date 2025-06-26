@@ -1,12 +1,12 @@
 const initializeClient = require('./initialize');
 
-jest.mock('@chat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   resolveHeaders: jest.fn(),
   getOpenAIConfig: jest.fn(),
   createHandleLLMNewToken: jest.fn(),
 }));
 
-jest.mock('chat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   CacheKeys: { TOKEN_CONFIG: 'token_config' },
   ErrorTypes: { NO_USER_KEY: 'NO_USER_KEY', NO_BASE_URL: 'NO_BASE_URL' },
   envVarRegex: /\$\{([^}]+)\}/,
@@ -14,7 +14,7 @@ jest.mock('chat-data-provider', () => ({
   extractEnvVariable: jest.fn((value) => value),
 }));
 
-jest.mock('@chat/agents', () => ({
+jest.mock('@librechat/agents', () => ({
   Providers: { OLLAMA: 'ollama' },
 }));
 
@@ -65,7 +65,7 @@ describe('custom/initializeClient', () => {
   });
 
   it('calls resolveHeaders with headers and user', async () => {
-    const { resolveHeaders } = require('@chat/api');
+    const { resolveHeaders } = require('@hanzochat/api');
     await initializeClient({ req: mockRequest, res: mockResponse, optionsOnly: true });
     expect(resolveHeaders).toHaveBeenCalledWith(
       { 'x-user': '{{CHAT_USER_ID}}', 'x-email': '{{CHAT_USER_EMAIL}}' },

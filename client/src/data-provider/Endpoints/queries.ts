@@ -1,8 +1,8 @@
 import { useRecoilValue } from 'recoil';
-import { QueryKeys, dataService } from 'chat-data-provider';
+import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import { useQuery } from '@tanstack/react-query';
 import type { QueryObserverResult, UseQueryOptions } from '@tanstack/react-query';
-import type t from 'chat-data-provider';
+import type t from '@hanzochat/data-provider';
 import store from '~/store';
 
 export const useGetEndpointsQuery = <TData = t.TEndpointsConfig>(

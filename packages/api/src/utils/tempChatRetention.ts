@@ -1,5 +1,5 @@
-import { logger } from '@chat/data-schemas';
-import type { TCustomConfig } from 'chat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import type { TCustomConfig } from '@hanzochat/data-provider';
 
 /**
  * Default retention period for temporary chats in hours

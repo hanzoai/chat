@@ -9,8 +9,8 @@ import {
   createPayload,
   LocalStorageKeys,
   removeNullishValues,
-} from 'chat-data-provider';
-import type { TMessage, TPayload, TSubmission, EventSubmission } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TMessage, TPayload, TSubmission, EventSubmission } from '@hanzochat/data-provider';
 import type { EventHandlerParams } from './useEventHandlers';
 import type { TResData } from '~/common';
 import { useGenTitleMutation, useGetStartupConfig, useGetUserBalance } from '~/data-provider';

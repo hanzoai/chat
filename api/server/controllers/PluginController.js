@@ -1,11 +1,11 @@
-const { logger } = require('@chat/data-schemas');
-const { CacheKeys, AuthType } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys, AuthType } = require('@hanzochat/data-provider');
 const { getCustomConfig, getCachedTools } = require('~/server/services/Config');
 const { getToolkitKey } = require('~/server/services/ToolService');
 const { getMCPManager, getFlowStateManager } = require('~/config');
 const { availableTools } = require('~/app/clients/tools');
 const { getLogStores } = require('~/cache');
-const { Constants } = require('chat-data-provider');
+const { Constants } = require('@hanzochat/data-provider');
 
 /**
  * Filters out duplicate plugins from the list of plugins.

@@ -3,8 +3,8 @@ import {
   EToolResources,
   mergeFileConfig,
   fileConfig as defaultFileConfig,
-} from 'chat-data-provider';
-import type { AssistantsEndpoint, EndpointFileConfig } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { AssistantsEndpoint, EndpointFileConfig } from '@hanzochat/data-provider';
 import type { ExtendedFile } from '~/common';
 import FileRow from '~/components/Chat/Input/Files/FileRow';
 import { useGetFileConfig } from '~/data-provider';

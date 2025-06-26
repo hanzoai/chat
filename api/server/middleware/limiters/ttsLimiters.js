@@ -1,6 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const { RedisStore } = require('rate-limit-redis');
-const { ViolationTypes } = require('chat-data-provider');
+const { ViolationTypes } = require('@hanzochat/data-provider');
 const ioredisClient = require('~/cache/ioredisClient');
 const logViolation = require('~/cache/logViolation');
 const { isEnabled } = require('~/server/utils');

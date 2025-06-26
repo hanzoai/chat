@@ -1,5 +1,5 @@
-import { EModelEndpoint, agentsEndpointSchema } from 'chat-data-provider';
-import type { TCustomConfig, TAgentsEndpoint } from 'chat-data-provider';
+import { EModelEndpoint, agentsEndpointSchema } from '@hanzochat/data-provider';
+import type { TCustomConfig, TAgentsEndpoint } from '@hanzochat/data-provider';
 
 /**
  * Sets up the Agents configuration from the config (`chat.yaml`) file.

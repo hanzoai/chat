@@ -5,7 +5,7 @@ import {
   AuthTypeEnum,
   AuthorizationTypeEnum,
   TokenExchangeMethodEnum,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import {
   OGDialog,
   OGDialogClose,

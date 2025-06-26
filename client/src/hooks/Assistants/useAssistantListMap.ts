@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { EModelEndpoint } from 'chat-data-provider';
-import type { AssistantListResponse, AssistantsEndpoint } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { AssistantListResponse, AssistantsEndpoint } from '@hanzochat/data-provider';
 import type { AssistantListItem } from '~/common';
 import { useListAssistantsQuery } from '~/data-provider';
 

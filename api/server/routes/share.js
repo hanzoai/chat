@@ -1,6 +1,6 @@
 const express = require('express');
-const { isEnabled } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { isEnabled } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   getSharedMessages,
   createSharedLink,

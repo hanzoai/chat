@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { SearchResultData } from 'chat-data-provider';
+import type { SearchResultData } from '@hanzochat/data-provider';
 
 type SearchContext = {
   searchResults?: { [key: string]: SearchResultData };

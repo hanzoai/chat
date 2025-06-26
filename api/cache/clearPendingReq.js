@@ -1,4 +1,4 @@
-const { Time, CacheKeys } = require('chat-data-provider');
+const { Time, CacheKeys } = require('@hanzochat/data-provider');
 const { isEnabled } = require('~/server/utils');
 const getLogStores = require('./getLogStores');
 

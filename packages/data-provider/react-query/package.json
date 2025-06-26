@@ -1,5 +1,5 @@
 {
-  "name": "chat-data-provider/react-query",
+  "name": "@hanzochat/data-provider/react-query",
   "private": true,
   "main": "../index.js",
   "module": "./index.es.js",

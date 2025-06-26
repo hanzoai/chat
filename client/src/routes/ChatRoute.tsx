@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Constants, EModelEndpoint } from 'chat-data-provider';
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
-import type { TPreset } from 'chat-data-provider';
+import { Constants, EModelEndpoint } from '@hanzochat/data-provider';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
+import type { TPreset } from '@hanzochat/data-provider';
 import { useGetConvoIdQuery, useGetStartupConfig, useGetEndpointsQuery } from '~/data-provider';
 import { useNewConvo, useAppStartup, useAssistantListMap, useIdChangeEffect } from '~/hooks';
 import { getDefaultModelSpec, getModelSpecPreset, logger } from '~/utils';

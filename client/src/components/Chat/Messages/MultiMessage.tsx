@@ -1,7 +1,7 @@
 import { useRecoilState } from 'recoil';
 import { useEffect, useCallback } from 'react';
-import { isAssistantsEndpoint } from 'chat-data-provider';
-import type { TMessage } from 'chat-data-provider';
+import { isAssistantsEndpoint } from '@hanzochat/data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import type { TMessageProps } from '~/common';
 
 import MessageContent from '~/components/Messages/MessageContent';

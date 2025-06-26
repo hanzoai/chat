@@ -7,8 +7,8 @@ import {
   isParamEndpoint,
   EModelEndpoint,
   Permissions,
-} from 'chat-data-provider';
-import type { TInterfaceConfig, TEndpointsConfig } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TInterfaceConfig, TEndpointsConfig } from '@hanzochat/data-provider';
 import type { NavLink } from '~/common';
 import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { dataService, QueryKeys, Constants } from 'chat-data-provider';
+import { dataService, QueryKeys, Constants } from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
-import type * as t from 'chat-data-provider';
+import type * as t from '@hanzochat/data-provider';
 
 export const useEditArtifact = (
   _options?: t.EditArtifactOptions,

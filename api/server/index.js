@@ -8,8 +8,8 @@ const express = require('express');
 const passport = require('passport');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
-const { isEnabled } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { isEnabled } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const mongoSanitize = require('express-mongo-sanitize');
 const { connectDb, indexSync } = require('~/db');
 

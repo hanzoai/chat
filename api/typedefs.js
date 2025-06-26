@@ -45,115 +45,115 @@
 
 /**
  * @exports Graph
- * @typedef {import('@chat/agents').Graph} Graph
+ * @typedef {import('@librechat/agents').Graph} Graph
  * @memberof typedefs
  */
 
 /**
  * @exports StandardGraph
- * @typedef {import('@chat/agents').StandardGraph} StandardGraph
+ * @typedef {import('@librechat/agents').StandardGraph} StandardGraph
  * @memberof typedefs
  */
 
 /**
  * @exports MessageContentComplex
- * @typedef {import('@chat/agents').MessageContentComplex} MessageContentComplex
+ * @typedef {import('@librechat/agents').MessageContentComplex} MessageContentComplex
  * @memberof typedefs
  */
 
 /**
  * @exports EventHandler
- * @typedef {import('@chat/agents').EventHandler} EventHandler
+ * @typedef {import('@librechat/agents').EventHandler} EventHandler
  * @memberof typedefs
  */
 
 /**
  * @exports ModelEndData
- * @typedef {import('@chat/agents').ModelEndData} ModelEndData
+ * @typedef {import('@librechat/agents').ModelEndData} ModelEndData
  * @memberof typedefs
  */
 
 /**
  * @exports ToolEndData
- * @typedef {import('@chat/agents').ToolEndData} ToolEndData
+ * @typedef {import('@librechat/agents').ToolEndData} ToolEndData
  * @memberof typedefs
  */
 
 /**
  * @exports ToolEndCallback
- * @typedef {import('@chat/agents').ToolEndCallback} ToolEndCallback
+ * @typedef {import('@librechat/agents').ToolEndCallback} ToolEndCallback
  * @memberof typedefs
  */
 
 /**
  * @exports ChatModelStreamHandler
- * @typedef {import('@chat/agents').ChatModelStreamHandler} ChatModelStreamHandler
+ * @typedef {import('@librechat/agents').ChatModelStreamHandler} ChatModelStreamHandler
  * @memberof typedefs
  */
 
 /**
  * @exports ContentAggregator
- * @typedef {import('@chat/agents').ContentAggregatorResult['aggregateContent']} ContentAggregator
+ * @typedef {import('@librechat/agents').ContentAggregatorResult['aggregateContent']} ContentAggregator
  * @memberof typedefs
  */
 
 /**
  * @exports GraphEvents
- * @typedef {import('@chat/agents').GraphEvents} GraphEvents
+ * @typedef {import('@librechat/agents').GraphEvents} GraphEvents
  * @memberof typedefs
  */
 
 /**
  * @exports AgentRun
- * @typedef {import('@chat/agents').Run} AgentRun
+ * @typedef {import('@librechat/agents').Run} AgentRun
  * @memberof typedefs
  */
 
 /**
  * @exports IState
- * @typedef {import('@chat/agents').IState} IState
+ * @typedef {import('@librechat/agents').IState} IState
  * @memberof typedefs
  */
 
 /**
  * @exports ClientCallbacks
- * @typedef {import('@chat/agents').ClientCallbacks} ClientCallbacks
+ * @typedef {import('@librechat/agents').ClientCallbacks} ClientCallbacks
  * @memberof typedefs
  */
 
 /**
  * @exports OpenAIClientOptions
- * @typedef {import('@chat/agents').OpenAIClientOptions} OpenAIClientOptions
+ * @typedef {import('@librechat/agents').OpenAIClientOptions} OpenAIClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports AnthropicClientOptions
- * @typedef {import('@chat/agents').AnthropicClientOptions} AnthropicClientOptions
+ * @typedef {import('@librechat/agents').AnthropicClientOptions} AnthropicClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports BedrockClientOptions
- * @typedef {import('@chat/agents').BedrockConverseClientOptions} BedrockClientOptions
+ * @typedef {import('@librechat/agents').BedrockConverseClientOptions} BedrockClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports VertexAIClientOptions
- * @typedef {import('@chat/agents').VertexAIClientOptions} VertexAIClientOptions
+ * @typedef {import('@librechat/agents').VertexAIClientOptions} VertexAIClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports GoogleClientOptions
- * @typedef {import('@chat/agents').GoogleClientOptions} GoogleClientOptions
+ * @typedef {import('@librechat/agents').GoogleClientOptions} GoogleClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports StreamEventData
- * @typedef {import('@chat/agents').StreamEventData} StreamEventData
+ * @typedef {import('@librechat/agents').StreamEventData} StreamEventData
  * @memberof typedefs
  */
 
@@ -472,19 +472,19 @@
 
 /**
  * @exports AgentToolCallDelta
- * @typedef {import('chat-data-provider').Agents.ToolCallDelta} AgentToolCallDelta
+ * @typedef {import('@hanzochat/data-provider').Agents.ToolCallDelta} AgentToolCallDelta
  * @memberof typedefs
  */
 
 /**
  * @exports ToolCallChunk
- * @typedef {import('chat-data-provider').Agents.ToolCallChunk} ToolCallChunk
+ * @typedef {import('@hanzochat/data-provider').Agents.ToolCallChunk} ToolCallChunk
  * @memberof typedefs
  */
 
 /**
  * @exports MessageContentImageUrl
- * @typedef {import('chat-data-provider').Agents.MessageContentImageUrl} MessageContentImageUrl
+ * @typedef {import('@hanzochat/data-provider').Agents.MessageContentImageUrl} MessageContentImageUrl
  * @memberof typedefs
  */
 
@@ -492,102 +492,102 @@
 
 /**
  * @exports SearchResult
- * @typedef {import('@chat/agents').SearchResult} SearchResult
+ * @typedef {import('@librechat/agents').SearchResult} SearchResult
  * @memberof typedefs
  */
 
 /**
  * @exports SearchResultData
- * @typedef {import('@chat/agents').SearchResultData} SearchResultData
+ * @typedef {import('@librechat/agents').SearchResultData} SearchResultData
  * @memberof typedefs
  */
 
 /**
  * @exports ValidSource
- * @typedef {import('chat-data-provider').ValidSource} ValidSource
+ * @typedef {import('@hanzochat/data-provider').ValidSource} ValidSource
  * @memberof typedefs
  */
 
 /** Prompts */
 /**
  * @exports TPrompt
- * @typedef {import('chat-data-provider').TPrompt} TPrompt
+ * @typedef {import('@hanzochat/data-provider').TPrompt} TPrompt
  * @memberof typedefs
  */
 
 /**
  * @exports TPromptGroup
- * @typedef {import('chat-data-provider').TPromptGroup} TPromptGroup
+ * @typedef {import('@hanzochat/data-provider').TPromptGroup} TPromptGroup
  * @memberof typedefs
  */
 
 /**
  * @exports TCreatePrompt
- * @typedef {import('chat-data-provider').TCreatePrompt} TCreatePrompt
+ * @typedef {import('@hanzochat/data-provider').TCreatePrompt} TCreatePrompt
  * @memberof typedefs
  */
 
 /**
  * @exports TCreatePromptRecord
- * @typedef {import('chat-data-provider').TCreatePromptRecord} TCreatePromptRecord
+ * @typedef {import('@hanzochat/data-provider').TCreatePromptRecord} TCreatePromptRecord
  * @memberof typedefs
  */
 /**
  * @exports TCreatePromptResponse
- * @typedef {import('chat-data-provider').TCreatePromptResponse} TCreatePromptResponse
+ * @typedef {import('@hanzochat/data-provider').TCreatePromptResponse} TCreatePromptResponse
  * @memberof typedefs
  */
 /**
  * @exports TUpdatePromptGroupResponse
- * @typedef {import('chat-data-provider').TUpdatePromptGroupResponse} TUpdatePromptGroupResponse
+ * @typedef {import('@hanzochat/data-provider').TUpdatePromptGroupResponse} TUpdatePromptGroupResponse
  * @memberof typedefs
  */
 
 /**
  * @exports TPromptGroupsWithFilterRequest
- * @typedef {import('chat-data-provider').TPromptGroupsWithFilterRequest } TPromptGroupsWithFilterRequest
+ * @typedef {import('@hanzochat/data-provider').TPromptGroupsWithFilterRequest } TPromptGroupsWithFilterRequest
  * @memberof typedefs
  */
 
 /**
  * @exports PromptGroupListResponse
- * @typedef {import('chat-data-provider').PromptGroupListResponse } PromptGroupListResponse
+ * @typedef {import('@hanzochat/data-provider').PromptGroupListResponse } PromptGroupListResponse
  * @memberof typedefs
  */
 
 /**
  * @exports TGetCategoriesResponse
- * @typedef {import('chat-data-provider').TGetCategoriesResponse } TGetCategoriesResponse
+ * @typedef {import('@hanzochat/data-provider').TGetCategoriesResponse } TGetCategoriesResponse
  * @memberof typedefs
  */
 
 /**
  * @exports TGetRandomPromptsResponse
- * @typedef {import('chat-data-provider').TGetRandomPromptsResponse } TGetRandomPromptsResponse
+ * @typedef {import('@hanzochat/data-provider').TGetRandomPromptsResponse } TGetRandomPromptsResponse
  * @memberof typedefs
  */
 
 /**
  * @exports TGetRandomPromptsRequest
- * @typedef {import('chat-data-provider').TGetRandomPromptsRequest } TGetRandomPromptsRequest
+ * @typedef {import('@hanzochat/data-provider').TGetRandomPromptsRequest } TGetRandomPromptsRequest
  * @memberof typedefs
  */
 
 /**
  * @exports TUpdatePromptGroupPayload
- * @typedef {import('chat-data-provider').TUpdatePromptGroupPayload } TUpdatePromptGroupPayload
+ * @typedef {import('@hanzochat/data-provider').TUpdatePromptGroupPayload } TUpdatePromptGroupPayload
  * @memberof typedefs
  */
 
 /**
  * @exports TDeletePromptVariables
- * @typedef {import('chat-data-provider').TDeletePromptVariables } TDeletePromptVariables
+ * @typedef {import('@hanzochat/data-provider').TDeletePromptVariables } TDeletePromptVariables
  * @memberof typedefs
  */
 
 /**
  * @exports TDeletePromptResponse
- * @typedef {import('chat-data-provider').TDeletePromptResponse } TDeletePromptResponse
+ * @typedef {import('@hanzochat/data-provider').TDeletePromptResponse } TDeletePromptResponse
  * @memberof typedefs
  */
 
@@ -595,235 +595,235 @@
 
 /**
  * @exports TRole
- * @typedef {import('chat-data-provider').TRole } TRole
+ * @typedef {import('@hanzochat/data-provider').TRole } TRole
  * @memberof typedefs
  */
 
 /**
  * @exports PermissionTypes
- * @typedef {import('chat-data-provider').PermissionTypes } PermissionTypes
+ * @typedef {import('@hanzochat/data-provider').PermissionTypes } PermissionTypes
  * @memberof typedefs
  */
 
 /**
  * @exports Permissions
- * @typedef {import('chat-data-provider').Permissions } Permissions
+ * @typedef {import('@hanzochat/data-provider').Permissions } Permissions
  * @memberof typedefs
  */
 
 /** Assistants */
 /**
  * @exports Assistant
- * @typedef {import('chat-data-provider').Assistant} Assistant
+ * @typedef {import('@hanzochat/data-provider').Assistant} Assistant
  * @memberof typedefs
  */
 
 /**
  * @exports AssistantDocument
- * @typedef {import('chat-data-provider').AssistantDocument} AssistantDocument
+ * @typedef {import('@hanzochat/data-provider').AssistantDocument} AssistantDocument
  * @memberof typedefs
  */
 
 /**
  * @exports OpenAIFile
- * @typedef {import('chat-data-provider').File} OpenAIFile
+ * @typedef {import('@hanzochat/data-provider').File} OpenAIFile
  * @memberof typedefs
  */
 
 /**
  * @exports TConfig
- * @typedef {import('chat-data-provider').TConfig} TConfig
+ * @typedef {import('@hanzochat/data-provider').TConfig} TConfig
  * @memberof typedefs
  */
 
 /**
  * @exports TPayload
- * @typedef {import('chat-data-provider').TPayload} TPayload
+ * @typedef {import('@hanzochat/data-provider').TPayload} TPayload
  * @memberof typedefs
  */
 
 /**
  * @exports TAzureModelConfig
- * @typedef {import('chat-data-provider').TAzureModelConfig} TAzureModelConfig
+ * @typedef {import('@hanzochat/data-provider').TAzureModelConfig} TAzureModelConfig
  * @memberof typedefs
  */
 
 /**
  * @exports TAzureGroup
- * @typedef {import('chat-data-provider').TAzureGroup} TAzureGroup
+ * @typedef {import('@hanzochat/data-provider').TAzureGroup} TAzureGroup
  * @memberof typedefs
  */
 
 /**
  * @exports TAzureGroups
- * @typedef {import('chat-data-provider').TAzureGroups} TAzureGroups
+ * @typedef {import('@hanzochat/data-provider').TAzureGroups} TAzureGroups
  * @memberof typedefs
  */
 
 /**
  * @exports TAzureModelGroupMap
- * @typedef {import('chat-data-provider').TAzureModelGroupMap} TAzureModelGroupMap
+ * @typedef {import('@hanzochat/data-provider').TAzureModelGroupMap} TAzureModelGroupMap
  * @memberof typedefs
  */
 /**
  * @exports TAzureGroupMap
- * @typedef {import('chat-data-provider').TAzureGroupMap} TAzureGroupMap
+ * @typedef {import('@hanzochat/data-provider').TAzureGroupMap} TAzureGroupMap
  * @memberof typedefs
  */
 
 /**
  * @exports TAzureConfig
- * @typedef {import('chat-data-provider').TAzureConfig} TAzureConfig
+ * @typedef {import('@hanzochat/data-provider').TAzureConfig} TAzureConfig
  * @memberof typedefs
  */
 
 /**
  * @exports TModelsConfig
- * @typedef {import('chat-data-provider').TModelsConfig} TModelsConfig
+ * @typedef {import('@hanzochat/data-provider').TModelsConfig} TModelsConfig
  * @memberof typedefs
  */
 
 /**
  * @exports TStartupConfig
- * @typedef {import('chat-data-provider').TStartupConfig} TStartupConfig
+ * @typedef {import('@hanzochat/data-provider').TStartupConfig} TStartupConfig
  * @memberof typedefs
  */
 
 /**
  * @exports TConfigDefaults
- * @typedef {import('chat-data-provider').TConfigDefaults} TConfigDefaults
+ * @typedef {import('@hanzochat/data-provider').TConfigDefaults} TConfigDefaults
  * @memberof typedefs
  */
 
 /**
  * @exports TPlugin
- * @typedef {import('chat-data-provider').TPlugin} TPlugin
+ * @typedef {import('@hanzochat/data-provider').TPlugin} TPlugin
  * @memberof typedefs
  */
 
 /**
  * @exports TAzureConfigValidationResult
- * @typedef {import('chat-data-provider').TAzureConfigValidationResult} TAzureConfigValidationResult
+ * @typedef {import('@hanzochat/data-provider').TAzureConfigValidationResult} TAzureConfigValidationResult
  * @memberof typedefs
  */
 
 /**
  * @exports EImageOutputType
- * @typedef {import('chat-data-provider').EImageOutputType} EImageOutputType
+ * @typedef {import('@hanzochat/data-provider').EImageOutputType} EImageOutputType
  * @memberof typedefs
  */
 
 /**
  * @exports TCustomConfig
- * @typedef {import('chat-data-provider').TCustomConfig} TCustomConfig
+ * @typedef {import('@hanzochat/data-provider').TCustomConfig} TCustomConfig
  * @memberof typedefs
  */
 
 /**
  * @exports TProviderSchema
- * @typedef {import('chat-data-provider').TProviderSchema} TProviderSchema
+ * @typedef {import('@hanzochat/data-provider').TProviderSchema} TProviderSchema
  * @memberof typedefs
  */
 
 /**
  * @exports TBaseEndpoint
- * @typedef {import('chat-data-provider').TBaseEndpoint} TBaseEndpoint
+ * @typedef {import('@hanzochat/data-provider').TBaseEndpoint} TBaseEndpoint
  * @memberof typedefs
  */
 
 /**
  * @exports TEndpoint
- * @typedef {import('chat-data-provider').TEndpoint} TEndpoint
+ * @typedef {import('@hanzochat/data-provider').TEndpoint} TEndpoint
  * @memberof typedefs
  */
 
 /**
  * @exports TEndpointsConfig
- * @typedef {import('chat-data-provider').TEndpointsConfig} TEndpointsConfig
+ * @typedef {import('@hanzochat/data-provider').TEndpointsConfig} TEndpointsConfig
  * @memberof typedefs
  */
 
 /**
  * @exports TMessage
- * @typedef {import('chat-data-provider').TMessage} TMessage
+ * @typedef {import('@hanzochat/data-provider').TMessage} TMessage
  * @memberof typedefs
  */
 
 /**
  * @exports TConversation
- * @typedef {import('chat-data-provider').TConversation} TConversation
+ * @typedef {import('@hanzochat/data-provider').TConversation} TConversation
  * @memberof typedefs
  */
 
 /**
  * @exports TModelSpec
- * @typedef {import('chat-data-provider').TModelSpec} TModelSpec
+ * @typedef {import('@hanzochat/data-provider').TModelSpec} TModelSpec
  * @memberof typedefs
  */
 
 /**
  * @exports TPlugin
- * @typedef {import('chat-data-provider').TPlugin} TPlugin
+ * @typedef {import('@hanzochat/data-provider').TPlugin} TPlugin
  * @memberof typedefs
  */
 
 /**
  * @exports FileSources
- * @typedef {import('chat-data-provider').FileSources} FileSources
+ * @typedef {import('@hanzochat/data-provider').FileSources} FileSources
  * @memberof typedefs
  */
 
 /**
  * @exports TMessage
- * @typedef {import('chat-data-provider').TMessage} TMessage
+ * @typedef {import('@hanzochat/data-provider').TMessage} TMessage
  * @memberof typedefs
  */
 
 /**
  * @exports ImageFile
- * @typedef {import('chat-data-provider').ImageFile} ImageFile
+ * @typedef {import('@hanzochat/data-provider').ImageFile} ImageFile
  * @memberof typedefs
  */
 
 /**
  * @exports TMessageContentParts
- * @typedef {import('chat-data-provider').TMessageContentParts} TMessageContentParts
+ * @typedef {import('@hanzochat/data-provider').TMessageContentParts} TMessageContentParts
  * @memberof typedefs
  */
 
 /**
  * @exports StreamContentData
- * @typedef {import('chat-data-provider').StreamContentData} StreamContentData
+ * @typedef {import('@hanzochat/data-provider').StreamContentData} StreamContentData
  * @memberof typedefs
  */
 
 /**
  * @exports ActionRequest
- * @typedef {import('chat-data-provider').ActionRequest} ActionRequest
+ * @typedef {import('@hanzochat/data-provider').ActionRequest} ActionRequest
  * @memberof typedefs
  */
 
 /**
  * @exports Action
- * @typedef {import('chat-data-provider').Action} Action
+ * @typedef {import('@hanzochat/data-provider').Action} Action
  * @memberof typedefs
  */
 
 /**
  * @exports ActionMetadata
- * @typedef {import('chat-data-provider').ActionMetadata} ActionMetadata
+ * @typedef {import('@hanzochat/data-provider').ActionMetadata} ActionMetadata
  * @memberof typedefs
  */
 
 /**
  * @exports ActionAuth
- * @typedef {import('chat-data-provider').ActionAuth} ActionAuth
+ * @typedef {import('@hanzochat/data-provider').ActionAuth} ActionAuth
  * @memberof typedefs
  */
 
 /**
  * @exports DeleteFilesBody
- * @typedef {import('chat-data-provider').DeleteFilesBody} DeleteFilesBody
+ * @typedef {import('@hanzochat/data-provider').DeleteFilesBody} DeleteFilesBody
  * @memberof typedefs
  */
 
@@ -867,24 +867,24 @@
 
 /**
  * @exports MongoFile
- * @typedef {import('@chat/data-schemas').IMongoFile} MongoFile
+ * @typedef {import('@hanzochat/data-schemas').IMongoFile} MongoFile
  * @memberof typedefs
  */
 /**
  * @exports IBalance
- * @typedef {import('@chat/data-schemas').IBalance} IBalance
+ * @typedef {import('@hanzochat/data-schemas').IBalance} IBalance
  * @memberof typedefs
  */
 
 /**
  * @exports MongoUser
- * @typedef {import('@chat/data-schemas').IUser} MongoUser
+ * @typedef {import('@hanzochat/data-schemas').IUser} MongoUser
  * @memberof typedefs
  */
 
 /**
  * @exports IPluginAuth
- * @typedef {import('@chat/data-schemas').IPluginAuth} IPluginAuth
+ * @typedef {import('@hanzochat/data-schemas').IPluginAuth} IPluginAuth
  * @memberof typedefs
  */
 
@@ -930,73 +930,73 @@
 
 /**
  * @exports EModelEndpoint
- * @typedef {import('chat-data-provider').EModelEndpoint} EModelEndpoint
+ * @typedef {import('@hanzochat/data-provider').EModelEndpoint} EModelEndpoint
  * @memberof typedefs
  */
 
 /**
  * @exports TEndpointOption
- * @typedef {import('chat-data-provider').TEndpointOption} TEndpointOption
+ * @typedef {import('@hanzochat/data-provider').TEndpointOption} TEndpointOption
  * @memberof typedefs
  */
 
 /**
  * @exports TAttachment
- * @typedef {import('chat-data-provider').TAttachment} TAttachment
+ * @typedef {import('@hanzochat/data-provider').TAttachment} TAttachment
  * @memberof typedefs
  */
 
 /**
  * @exports AssistantCreateParams
- * @typedef {import('chat-data-provider').AssistantCreateParams} AssistantCreateParams
+ * @typedef {import('@hanzochat/data-provider').AssistantCreateParams} AssistantCreateParams
  * @memberof typedefs
  */
 
 /**
  * @exports AssistantUpdateParams
- * @typedef {import('chat-data-provider').AssistantUpdateParams} AssistantUpdateParams
+ * @typedef {import('@hanzochat/data-provider').AssistantUpdateParams} AssistantUpdateParams
  * @memberof typedefs
  */
 
 /**
  * @exports AssistantListParams
- * @typedef {import('chat-data-provider').AssistantListParams} AssistantListParams
+ * @typedef {import('@hanzochat/data-provider').AssistantListParams} AssistantListParams
  * @memberof typedefs
  */
 
 /**
  * @exports AssistantListResponse
- * @typedef {import('chat-data-provider').AssistantListResponse} AssistantListResponse
+ * @typedef {import('@hanzochat/data-provider').AssistantListResponse} AssistantListResponse
  * @memberof typedefs
  */
 
 /**
  * @exports ContentPart
- * @typedef {import('chat-data-provider').ContentPart} ContentPart
+ * @typedef {import('@hanzochat/data-provider').ContentPart} ContentPart
  * @memberof typedefs
  */
 
 /**
  * @exports StepTypes
- * @typedef {import('chat-data-provider').StepTypes} StepTypes
+ * @typedef {import('@hanzochat/data-provider').StepTypes} StepTypes
  * @memberof typedefs
  */
 
 /**
  * @exports TContentData
- * @typedef {import('chat-data-provider').TContentData} TContentData
+ * @typedef {import('@hanzochat/data-provider').TContentData} TContentData
  * @memberof typedefs
  */
 
 /**
  * @exports ContentPart
- * @typedef {import('chat-data-provider').ContentPart} ContentPart
+ * @typedef {import('@hanzochat/data-provider').ContentPart} ContentPart
  * @memberof typedefs
  */
 
 /**
  * @exports PartMetadata
- * @typedef {import('chat-data-provider').PartMetadata} PartMetadata
+ * @typedef {import('@hanzochat/data-provider').PartMetadata} PartMetadata
  * @memberof typedefs
  */
 
@@ -1014,73 +1014,73 @@
 
 /**
  * @exports TAssistantEndpoint
- * @typedef {import('chat-data-provider').TAssistantEndpoint} TAssistantEndpoint
+ * @typedef {import('@hanzochat/data-provider').TAssistantEndpoint} TAssistantEndpoint
  * @memberof typedefs
  */
 
 /**
  * @exports TAgentsEndpoint
- * @typedef {import('chat-data-provider').TAgentsEndpoint} TAgentsEndpoint
+ * @typedef {import('@hanzochat/data-provider').TAgentsEndpoint} TAgentsEndpoint
  * @memberof typedefs
  */
 
 /**
  * @exports Agent
- * @typedef {import('chat-data-provider').Agent} Agent
+ * @typedef {import('@hanzochat/data-provider').Agent} Agent
  * @memberof typedefs
  */
 
 /**
  * @exports TEphemeralAgent
- * @typedef {import('chat-data-provider').TEphemeralAgent} TEphemeralAgent
+ * @typedef {import('@hanzochat/data-provider').TEphemeralAgent} TEphemeralAgent
  * @memberof typedefs
  */
 
 /**
  * @exports TWebSearchKeys
- * @typedef {import('chat-data-provider').TWebSearchKeys} TWebSearchKeys
+ * @typedef {import('@hanzochat/data-provider').TWebSearchKeys} TWebSearchKeys
  * @memberof typedefs
  */
 
 /**
  * @exports AgentToolResources
- * @typedef {import('chat-data-provider').AgentToolResources} AgentToolResources
+ * @typedef {import('@hanzochat/data-provider').AgentToolResources} AgentToolResources
  * @memberof typedefs
  */
 
 /**
  * @exports AgentCreateParams
- * @typedef {import('chat-data-provider').AgentCreateParams} AgentCreateParams
+ * @typedef {import('@hanzochat/data-provider').AgentCreateParams} AgentCreateParams
  * @memberof typedefs
  */
 
 /**
  * @exports AgentUpdateParams
- * @typedef {import('chat-data-provider').AgentUpdateParams} AgentUpdateParams
+ * @typedef {import('@hanzochat/data-provider').AgentUpdateParams} AgentUpdateParams
  * @memberof typedefs
  */
 
 /**
  * @exports AgentListParams
- * @typedef {import('chat-data-provider').AgentListParams} AgentListParams
+ * @typedef {import('@hanzochat/data-provider').AgentListParams} AgentListParams
  * @memberof typedefs
  */
 
 /**
  * @exports AgentListResponse
- * @typedef {import('chat-data-provider').AgentListResponse} AgentListResponse
+ * @typedef {import('@hanzochat/data-provider').AgentListResponse} AgentListResponse
  * @memberof typedefs
  */
 
 /**
  * @exports JsonSchemaType
- * @typedef {import('chat-data-provider').JsonSchemaType} JsonSchemaType
+ * @typedef {import('@hanzochat/data-provider').JsonSchemaType} JsonSchemaType
  * @memberof typedefs
  */
 
 /**
  * @exports MCPServers
- * @typedef {import('@chat/api').MCPServers} MCPServers
+ * @typedef {import('@hanzochat/api').MCPServers} MCPServers
  * @memberof typedefs
  */
 
@@ -1092,31 +1092,31 @@
 
 /**
  * @exports MCPManager
- * @typedef {import('@chat/api').MCPManager} MCPManager
+ * @typedef {import('@hanzochat/api').MCPManager} MCPManager
  * @memberof typedefs
  */
 
 /**
  * @exports FlowStateManager
- * @typedef {import('@chat/api').FlowStateManager} FlowStateManager
+ * @typedef {import('@hanzochat/api').FlowStateManager} FlowStateManager
  * @memberof typedefs
  */
 
 /**
  * @exports LCAvailableTools
- * @typedef {import('@chat/api').LCAvailableTools} LCAvailableTools
+ * @typedef {import('@hanzochat/api').LCAvailableTools} LCAvailableTools
  * @memberof typedefs
  */
 
 /**
  * @exports LCTool
- * @typedef {import('@chat/api').LCTool} LCTool
+ * @typedef {import('@hanzochat/api').LCTool} LCTool
  * @memberof typedefs
  */
 
 /**
  * @exports FormattedContent
- * @typedef {import('@chat/api').FormattedContent} FormattedContent
+ * @typedef {import('@hanzochat/api').FormattedContent} FormattedContent
  * @memberof typedefs
  */
 
@@ -1917,13 +1917,13 @@
 
 /**
  * @exports TForkConvoResponse
- * @typedef {import('chat-data-provider').TForkConvoResponse} TForkConvoResponse
+ * @typedef {import('@hanzochat/data-provider').TForkConvoResponse} TForkConvoResponse
  * @memberof typedefs
  */
 
 /**
  * @exports TForkConvoRequest
- * @typedef {import('chat-data-provider').TForkConvoRequest} TForkConvoRequest
+ * @typedef {import('@hanzochat/data-provider').TForkConvoRequest} TForkConvoRequest
  * @memberof typedefs
  */
 

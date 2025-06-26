@@ -1,4 +1,4 @@
-const { SystemRoles } = require('chat-data-provider');
+const { SystemRoles } = require('@hanzochat/data-provider');
 
 function checkAdmin(req, res, next) {
   try {

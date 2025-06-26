@@ -1,4 +1,4 @@
-import { EModelEndpoint, isAssistantsEndpoint } from 'chat-data-provider';
+import { EModelEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
 
 type TUseGenerations = {
   error?: boolean;

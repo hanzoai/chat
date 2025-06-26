@@ -1,4 +1,4 @@
-import { LocalStorageKeys, TConversation, isUUID } from 'chat-data-provider';
+import { LocalStorageKeys, TConversation, isUUID } from '@hanzochat/data-provider';
 
 export function getLocalStorageItems() {
   const items = {

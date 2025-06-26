@@ -1,8 +1,8 @@
 import { X, Link2, PlusCircle } from 'lucide-react';
-import { EModelEndpoint } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import type { ControllerRenderProps } from 'react-hook-form';
-import type { TMessage } from 'chat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import type { AgentForm, OptionWithIcon } from '~/common';
 import ControlCombobox from '~/components/ui/ControlCombobox';
 import { HoverCard, HoverCardPortal, HoverCardContent, HoverCardTrigger } from '~/components/ui';

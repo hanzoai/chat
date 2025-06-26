@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const { MeiliSearch } = require('meilisearch');
-const { logger } = require('@chat/data-schemas');
-const { FlowStateManager } = require('@chat/api');
-const { CacheKeys } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { FlowStateManager } = require('@hanzochat/api');
+const { CacheKeys } = require('@hanzochat/data-provider');
 
 const { isEnabled } = require('~/server/utils');
 const { getLogStores } = require('~/cache');

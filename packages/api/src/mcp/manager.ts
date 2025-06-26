@@ -1,9 +1,9 @@
-import { logger } from '@chat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { CallToolResultSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import type { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import type { OAuthClientInformation } from '@modelcontextprotocol/sdk/shared/auth.js';
-import type { JsonSchemaType, TUser } from 'chat-data-provider';
-import type { TokenMethods } from '@chat/data-schemas';
+import type { JsonSchemaType, TUser } from '@hanzochat/data-provider';
+import type { TokenMethods } from '@hanzochat/data-schemas';
 import type { FlowStateManager } from '~/flow/manager';
 import type { MCPOAuthTokens, MCPOAuthFlowMetadata } from './oauth/types';
 import type { FlowMetadata } from '~/flow/types';

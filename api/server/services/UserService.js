@@ -1,6 +1,6 @@
-const { logger } = require('@chat/data-schemas');
-const { encrypt, decrypt } = require('@chat/api');
-const { ErrorTypes } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { encrypt, decrypt } = require('@hanzochat/api');
+const { ErrorTypes } = require('@hanzochat/data-provider');
 const { updateUser } = require('~/models');
 const { Key } = require('~/db/models');
 

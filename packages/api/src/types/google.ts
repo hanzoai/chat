@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AuthKeys, googleBaseSchema } from 'chat-data-provider';
+import { AuthKeys, googleBaseSchema } from '@hanzochat/data-provider';
 
 export type GoogleParameters = z.infer<typeof googleBaseSchema>;
 

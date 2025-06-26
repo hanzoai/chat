@@ -1,4 +1,4 @@
-import type { MemoryArtifact } from 'chat-data-provider';
+import type { MemoryArtifact } from '@hanzochat/data-provider';
 import { useLocalize } from '~/hooks';
 
 export default function MemoryInfo({ memoryArtifacts }: { memoryArtifacts: MemoryArtifact[] }) {

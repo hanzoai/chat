@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Action } from 'chat-data-provider';
+import type { Action } from '@hanzochat/data-provider';
 import GearIcon from '~/components/svg/GearIcon';
 import { cn } from '~/utils';
 

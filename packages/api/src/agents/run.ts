@@ -1,13 +1,13 @@
-import { Run, Providers } from '@chat/agents';
-import { providerEndpointMap, KnownEndpoints } from 'chat-data-provider';
+import { Run, Providers } from '@librechat/agents';
+import { providerEndpointMap, KnownEndpoints } from '@hanzochat/data-provider';
 import type {
   StandardGraphConfig,
   EventHandler,
   GenericTool,
   GraphEvents,
   IState,
-} from '@chat/agents';
-import type { Agent } from 'chat-data-provider';
+} from '@librechat/agents';
+import type { Agent } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 
 const customProviders = new Set([

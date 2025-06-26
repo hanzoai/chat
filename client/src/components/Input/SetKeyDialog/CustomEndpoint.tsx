@@ -1,4 +1,4 @@
-import { EModelEndpoint } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import { useFormContext, Controller } from 'react-hook-form';
 import InputWithLabel from './InputWithLabel';
 

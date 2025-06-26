@@ -1,5 +1,5 @@
 import React from 'react';
-import { EModelEndpoint } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import { SetKeyDialog } from '~/components/Input/SetKeyDialog';
 import { getEndpointField } from '~/utils';
 

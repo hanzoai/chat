@@ -1,5 +1,5 @@
-import { EModelEndpoint, Constants } from 'chat-data-provider';
-import type { TConversation, TPreset } from 'chat-data-provider';
+import { EModelEndpoint, Constants } from '@hanzochat/data-provider';
+import type { TConversation, TPreset } from '@hanzochat/data-provider';
 import createChatSearchParams from './createChatSearchParams';
 
 describe('createChatSearchParams', () => {

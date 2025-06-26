@@ -7,7 +7,7 @@ import { useRecoilValue } from 'recoil';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import remarkDirective from 'remark-directive';
-import { PermissionTypes, Permissions } from 'chat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { Pluggable } from 'unified';
 import {
   useToastContext,

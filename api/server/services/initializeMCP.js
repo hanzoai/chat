@@ -1,5 +1,5 @@
-const { logger } = require('@chat/data-schemas');
-const { CacheKeys } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys } = require('@hanzochat/data-provider');
 const { findToken, updateToken, createToken, deleteTokens } = require('~/models');
 const { getMCPManager, getFlowStateManager } = require('~/config');
 const { getCachedTools, setCachedTools } = require('./Config');

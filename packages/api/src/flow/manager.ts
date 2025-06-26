@@ -1,5 +1,5 @@
 import { Keyv } from 'keyv';
-import { logger } from '@chat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { StoredDataNoRaw } from 'keyv';
 import type { FlowState, FlowMetadata, FlowManagerOptions } from './types';
 

@@ -1,5 +1,5 @@
-const { logger } = require('@chat/data-schemas');
-const { ToolCallTypes } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { ToolCallTypes } = require('@hanzochat/data-provider');
 const validateAuthor = require('~/server/middleware/assistants/validateAuthor');
 const { validateAndUpdateTool } = require('~/server/services/ActionService');
 const { getCachedTools } = require('~/server/services/Config');

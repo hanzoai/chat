@@ -1,4 +1,4 @@
-import { FileSources } from 'chat-data-provider';
+import { FileSources } from '@hanzochat/data-provider';
 import ImagePreview from './ImagePreview';
 import RemoveFile from './RemoveFile';
 

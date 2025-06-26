@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const { nanoid } = require('nanoid');
-const { logger } = require('@chat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   Tools,
   Constants,
@@ -8,7 +8,7 @@ const {
   SystemRoles,
   EToolResources,
   actionDelimiter,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   getAgent,
   createAgent,

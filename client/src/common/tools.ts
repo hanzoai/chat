@@ -1,4 +1,4 @@
-import type { AuthType } from 'chat-data-provider';
+import type { AuthType } from '@hanzochat/data-provider';
 
 export type ApiKeyFormData = {
   apiKey: string;

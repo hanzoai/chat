@@ -1,6 +1,6 @@
-// Mock chat-data-provider
-jest.mock('chat-data-provider', () => ({
-  ...jest.requireActual('chat-data-provider'),
+// Mock @hanzochat/data-provider
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
   extractVariableName: jest.fn(),
 }));
 
@@ -14,7 +14,7 @@ jest.mock('~/config', () => ({
 
 const { checkWebSearchConfig } = require('./checks');
 const { logger } = require('~/config');
-const { extractVariableName } = require('chat-data-provider');
+const { extractVariableName } = require('@hanzochat/data-provider');
 
 describe('checkWebSearchConfig', () => {
   let originalEnv;

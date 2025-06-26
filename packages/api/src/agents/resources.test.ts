@@ -1,12 +1,12 @@
 import { primeResources } from './resources';
-import { logger } from '@chat/data-schemas';
-import { EModelEndpoint, EToolResources, AgentCapabilities } from 'chat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { EModelEndpoint, EToolResources, AgentCapabilities } from '@hanzochat/data-provider';
 import type { Request as ServerRequest } from 'express';
-import type { TFile } from 'chat-data-provider';
+import type { TFile } from '@hanzochat/data-provider';
 import type { TGetFiles } from './resources';
 
 // Mock logger
-jest.mock('@chat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     error: jest.fn(),
   },

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { TConversation, TEndpointOption, TPreset } from 'chat-data-provider';
+import type { TConversation, TEndpointOption, TPreset } from '@hanzochat/data-provider';
 import type { SetterOrUpdater } from 'recoil';
 import useGetSender from '~/hooks/Conversations/useGetSender';
 import { useGetEndpointsQuery } from '~/data-provider';

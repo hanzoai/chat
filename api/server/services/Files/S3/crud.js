@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
-const { FileSources } = require('chat-data-provider');
+const { FileSources } = require('@hanzochat/data-provider');
 const {
   PutObjectCommand,
   GetObjectCommand,

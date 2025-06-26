@@ -1,6 +1,6 @@
 const multer = require('multer');
 const express = require('express');
-const { CacheKeys, EModelEndpoint } = require('chat-data-provider');
+const { CacheKeys, EModelEndpoint } = require('@hanzochat/data-provider');
 const { getConvosByCursor, deleteConvos, getConvo, saveConvo } = require('~/models/Conversation');
 const { forkConversation, duplicateConversation } = require('~/server/utils/import/fork');
 const { storage, importFileFilter } = require('~/server/routes/files/multer');

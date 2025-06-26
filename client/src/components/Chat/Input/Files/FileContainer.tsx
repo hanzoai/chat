@@ -1,4 +1,4 @@
-import type { TFile } from 'chat-data-provider';
+import type { TFile } from '@hanzochat/data-provider';
 import type { ExtendedFile } from '~/common';
 import { getFileType, cn } from '~/utils';
 import FilePreview from './FilePreview';

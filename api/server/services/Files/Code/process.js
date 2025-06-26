@@ -1,16 +1,16 @@
 const path = require('path');
 const { v4 } = require('uuid');
 const axios = require('axios');
-const { logAxiosError } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
-const { getCodeBaseURL } = require('@chat/agents');
+const { logAxiosError } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { getCodeBaseURL } = require('@librechat/agents');
 const {
   Tools,
   FileContext,
   FileSources,
   imageExtRegex,
   EToolResources,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { convertImage } = require('~/server/services/Files/images/convert');
 const { createFile, getFiles, updateFile } = require('~/models/File');

@@ -1,4 +1,4 @@
-const { logger } = require('@chat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { Banner } = require('~/db/models');
 
 /**

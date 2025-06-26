@@ -1,10 +1,10 @@
-import { InfiniteCollections, QueryKeys } from 'chat-data-provider';
+import { InfiniteCollections, QueryKeys } from '@hanzochat/data-provider';
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 import type {
   PromptGroupListResponse,
   PromptGroupListData,
   TPromptGroup,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import {
   addData,
   deleteData,

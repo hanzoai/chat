@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys } from 'chat-data-provider';
+import { QueryKeys } from '@hanzochat/data-provider';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import type { TMessage } from 'chat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import useChatFunctions from '~/hooks/Chat/useChatFunctions';
 import store from '~/store';
 

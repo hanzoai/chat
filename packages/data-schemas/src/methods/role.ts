@@ -1,4 +1,4 @@
-import { roleDefaults, SystemRoles } from 'chat-data-provider';
+import { roleDefaults, SystemRoles } from '@hanzochat/data-provider';
 
 // Factory function that takes mongoose instance and returns the methods
 export function createRoleMethods(mongoose: typeof import('mongoose')) {

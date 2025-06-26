@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-import type { TAttachment } from 'chat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 
 export interface IToolCallData extends Document {
   conversationId: string;

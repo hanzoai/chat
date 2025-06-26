@@ -1,7 +1,7 @@
 const { klona } = require('klona');
-const { sleep } = require('@chat/agents');
-const { sendEvent } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { sleep } = require('@librechat/agents');
+const { sendEvent } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   StepTypes,
   RunStatus,
@@ -11,7 +11,7 @@ const {
   imageGenTools,
   EModelEndpoint,
   defaultOrderQuery,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { retrieveAndProcessFile } = require('~/server/services/Files/process');
 const { processRequiredActions } = require('~/server/services/ToolService');
 const { RunManager, waitForRun } = require('~/server/services/Runs');

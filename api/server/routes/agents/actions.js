@@ -1,6 +1,6 @@
 const express = require('express');
 const { nanoid } = require('nanoid');
-const { actionDelimiter, SystemRoles, removeNullishValues } = require('chat-data-provider');
+const { actionDelimiter, SystemRoles, removeNullishValues } = require('@hanzochat/data-provider');
 const { encryptMetadata, domainParser } = require('~/server/services/ActionService');
 const { updateAction, getActions, deleteAction } = require('~/models/Action');
 const { isActionDomainAllowed } = require('~/server/services/domains');

@@ -1,7 +1,7 @@
 const { Keyv } = require('keyv');
 const uap = require('ua-parser-js');
-const { logger } = require('@chat/data-schemas');
-const { ViolationTypes } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { ViolationTypes } = require('@hanzochat/data-provider');
 const { isEnabled, removePorts } = require('~/server/utils');
 const keyvMongo = require('~/cache/keyvMongo');
 const denyRequest = require('./denyRequest');

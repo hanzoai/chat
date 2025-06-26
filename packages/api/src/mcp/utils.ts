@@ -1,4 +1,4 @@
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 
 export const mcpToolPattern = new RegExp(`^.+${Constants.mcp_delimiter}.+$`);
 /**

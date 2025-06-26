@@ -9,8 +9,8 @@ import {
   LocalStorageKeys,
   SettingDefinition,
   agentParamSettings,
-} from 'chat-data-provider';
-import type * as t from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type * as t from '@hanzochat/data-provider';
 import type { AgentForm, AgentModelPanelProps, StringOption } from '~/common';
 import ControlCombobox from '~/components/ui/ControlCombobox';
 import { useGetEndpointsQuery } from '~/data-provider';

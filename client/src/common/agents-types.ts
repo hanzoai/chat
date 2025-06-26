@@ -1,5 +1,5 @@
-import { AgentCapabilities, ArtifactModes } from 'chat-data-provider';
-import type { Agent, AgentProvider, AgentModelParameters } from 'chat-data-provider';
+import { AgentCapabilities, ArtifactModes } from '@hanzochat/data-provider';
+import type { Agent, AgentProvider, AgentModelParameters } from '@hanzochat/data-provider';
 import type { OptionWithIcon, ExtendedFile } from './types';
 
 export type TAgentOption = OptionWithIcon &

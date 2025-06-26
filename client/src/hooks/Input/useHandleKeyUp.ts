@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
-import { PermissionTypes, Permissions } from 'chat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { SetterOrUpdater } from 'recoil';
 import useHasAccess from '~/hooks/Roles/useHasAccess';
 import store from '~/store';

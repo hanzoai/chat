@@ -1,4 +1,4 @@
-import { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } from 'chat-data-provider';
+import { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } from '@hanzochat/data-provider';
 import type {
   UserKeyValues,
   OpenAIOptionsResult,

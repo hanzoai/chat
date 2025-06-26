@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { SystemRoles } from 'chat-data-provider';
+import { SystemRoles } from '@hanzochat/data-provider';
 import { IUser } from '~/types';
 
 // Session sub-schema

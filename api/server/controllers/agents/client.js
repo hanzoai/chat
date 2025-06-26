@@ -1,12 +1,12 @@
 require('events').EventEmitter.defaultMaxListeners = 100;
-const { logger } = require('@chat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   sendEvent,
   createRun,
   Tokenizer,
   memoryInstructions,
   createMemoryProcessor,
-} = require('@chat/api');
+} = require('@hanzochat/api');
 const {
   Callback,
   Providers,
@@ -16,7 +16,7 @@ const {
   formatContentStrings,
   getTokenCountForMessage,
   createMetadataAggregator,
-} = require('@chat/agents');
+} = require('@librechat/agents');
 const {
   Constants,
   Permissions,
@@ -29,7 +29,7 @@ const {
   AgentCapabilities,
   bedrockInputSchema,
   removeNullishValues,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { DynamicStructuredTool } = require('@langchain/core/tools');
 const { getBufferString, HumanMessage } = require('@langchain/core/messages');
 const { createGetMCPAuthMap, checkCapability } = require('~/server/services/Config');
@@ -464,7 +464,7 @@ class AgentClient extends BaseClient {
       agent.model_parameters,
     );
 
-    /** @type {import('@chat/api').MemoryConfig} */
+    /** @type {import('@hanzochat/api').MemoryConfig} */
     const config = {
       validKeys: memoryConfig.validKeys,
       instructions: agent.instructions,
@@ -994,7 +994,7 @@ class AgentClient extends BaseClient {
     const { req, res, agent } = this.options;
     const endpoint = agent.endpoint;
 
-    /** @type {import('@chat/agents').ClientOptions} */
+    /** @type {import('@librechat/agents').ClientOptions} */
     let clientOptions = {
       maxTokens: 75,
       model: agent.model_parameters.model,
@@ -1036,7 +1036,7 @@ class AgentClient extends BaseClient {
       provider = Providers.OPENAI;
     }
 
-    /** @type {import('@chat/agents').ClientOptions} */
+    /** @type {import('@librechat/agents').ClientOptions} */
     clientOptions = { ...options.llmConfig };
     if (options.configOptions) {
       clientOptions.configuration = options.configOptions;

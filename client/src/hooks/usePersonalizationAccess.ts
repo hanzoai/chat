@@ -1,4 +1,4 @@
-import { PermissionTypes, Permissions } from 'chat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import useHasAccess from './Roles/useHasAccess';
 
 export default function usePersonalizationAccess() {

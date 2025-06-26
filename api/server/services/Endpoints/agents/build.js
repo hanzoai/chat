@@ -1,4 +1,4 @@
-const { isAgentsEndpoint, removeNullishValues, Constants } = require('chat-data-provider');
+const { isAgentsEndpoint, removeNullishValues, Constants } = require('@hanzochat/data-provider');
 const { loadAgent } = require('~/models/Agent');
 const { logger } = require('~/config');
 

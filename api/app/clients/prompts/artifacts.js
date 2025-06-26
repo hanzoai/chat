@@ -1,5 +1,5 @@
 const dedent = require('dedent');
-const { EModelEndpoint, ArtifactModes } = require('chat-data-provider');
+const { EModelEndpoint, ArtifactModes } = require('@hanzochat/data-provider');
 const { generateShadcnPrompt } = require('~/app/clients/prompts/shadcn-docs/generate');
 const { components } = require('~/app/clients/prompts/shadcn-docs/components');
 

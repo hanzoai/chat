@@ -1,4 +1,4 @@
-const { Constants, ForkOptions } = require('chat-data-provider');
+const { Constants, ForkOptions } = require('@hanzochat/data-provider');
 
 jest.mock('~/models/Conversation', () => ({
   getConvo: jest.fn(),

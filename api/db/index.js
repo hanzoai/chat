@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { createModels } = require('@chat/data-schemas');
+const { createModels } = require('@hanzochat/data-schemas');
 const { connectDb } = require('./connect');
 const indexSync = require('./indexSync');
 

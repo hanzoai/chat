@@ -1,6 +1,6 @@
 const express = require('express');
-const { Tokenizer } = require('@chat/api');
-const { PermissionTypes, Permissions } = require('chat-data-provider');
+const { Tokenizer } = require('@hanzochat/api');
+const { PermissionTypes, Permissions } = require('@hanzochat/data-provider');
 const {
   getAllUserMemories,
   toggleUserMemories,

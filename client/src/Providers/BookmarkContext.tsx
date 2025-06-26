@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { TConversationTag } from 'chat-data-provider';
+import type { TConversationTag } from '@hanzochat/data-provider';
 
 type TBookmarkContext = { bookmarks: TConversationTag[] };
 

@@ -3,8 +3,8 @@ import {
   isAgentsEndpoint,
   tQueryParamsSchema,
   isAssistantsEndpoint,
-} from 'chat-data-provider';
-import type { TConversation, TPreset } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TConversation, TPreset } from '@hanzochat/data-provider';
 
 const allowedParams = Object.keys(tQueryParamsSchema.shape);
 export default function createChatSearchParams(

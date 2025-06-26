@@ -1,4 +1,4 @@
-const { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } = require('chat-data-provider');
+const { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } = require('@hanzochat/data-provider');
 const {
   isEnabled,
   resolveHeaders,
@@ -6,7 +6,7 @@ const {
   getOpenAIConfig,
   getAzureCredentials,
   createHandleLLMNewToken,
-} = require('@chat/api');
+} = require('@hanzochat/api');
 const { getUserKeyValues, checkUserKeyExpiry } = require('~/server/services/UserService');
 const OpenAIClient = require('~/app/clients/OpenAIClient');
 

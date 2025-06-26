@@ -1,16 +1,16 @@
 import React, { memo, useRef, useMemo, useEffect, useCallback, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { Settings2 } from 'lucide-react';
-import { useUpdateUserPluginsMutation } from 'chat-data-provider/react-query';
-import { Constants, EModelEndpoint, LocalStorageKeys } from 'chat-data-provider';
-import type { TPlugin, TPluginAuthConfig, TUpdateUserPlugins } from 'chat-data-provider';
+import { useUpdateUserPluginsMutation } from '@hanzochat/data-provider/react-query';
+import { Constants, EModelEndpoint, LocalStorageKeys } from '@hanzochat/data-provider';
+import type { TPlugin, TPluginAuthConfig, TUpdateUserPlugins } from '@hanzochat/data-provider';
 import MCPConfigDialog, { type ConfigFieldDetail } from '~/components/ui/MCPConfigDialog';
 import { useAvailableToolsQuery } from '~/data-provider';
 import useLocalStorage from '~/hooks/useLocalStorageAlt';
 import MultiSelect from '~/components/ui/MultiSelect';
 import { ephemeralAgentByConvoId } from '~/store';
 import { useToastContext } from '~/Providers';
-import MCPIcon from '~/components/ui/MCPIcon';
+import MCPIcon from '~/components/svg/MCPIcon';
 import { useLocalize } from '~/hooks';
 
 interface McpServerInfo {

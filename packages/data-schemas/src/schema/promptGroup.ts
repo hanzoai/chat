@@ -1,5 +1,5 @@
 import { Schema, Document, Types } from 'mongoose';
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 
 export interface IPromptGroup {
   name: string;

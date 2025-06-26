@@ -1,8 +1,8 @@
 import throttle from 'lodash/throttle';
 import { useRecoilValue } from 'recoil';
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
-import type { TMessage } from 'chat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import { useChatContext, useAddedChatContext } from '~/Providers';
 import { getTextKey, logger } from '~/utils';
 import store from '~/store';

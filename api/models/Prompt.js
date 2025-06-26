@@ -1,6 +1,6 @@
 const { ObjectId } = require('mongodb');
-const { logger } = require('@chat/data-schemas');
-const { SystemRoles, SystemCategories, Constants } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { SystemRoles, SystemCategories, Constants } = require('@hanzochat/data-provider');
 const {
   getProjectByName,
   addGroupIdsToProject,

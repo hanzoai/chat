@@ -1,4 +1,4 @@
-import type { MemoriesResponse, TUserMemory, MemoryArtifact } from 'chat-data-provider';
+import type { MemoriesResponse, TUserMemory, MemoryArtifact } from '@hanzochat/data-provider';
 
 type HandleMemoryArtifactParams = {
   memoryArtifact: MemoryArtifact;

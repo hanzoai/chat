@@ -1,14 +1,14 @@
 import { useRecoilValue } from 'recoil';
 import { useCallback, useRef, useEffect } from 'react';
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
-import { LocalStorageKeys, isAssistantsEndpoint } from 'chat-data-provider';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
+import { LocalStorageKeys, isAssistantsEndpoint } from '@hanzochat/data-provider';
 import type {
   TPreset,
   TModelsConfig,
   TConversation,
   TEndpointsConfig,
   EModelEndpoint,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type { SetterOrUpdater } from 'recoil';
 import type { AssistantListItem } from '~/common';
 import { getEndpointField, buildDefaultConvo, getDefaultEndpoint, logger } from '~/utils';

@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const express = require('express');
-const { isAgentsEndpoint } = require('chat-data-provider');
+const { isAgentsEndpoint } = require('@hanzochat/data-provider');
 const {
   filterFile,
   processImageFile,

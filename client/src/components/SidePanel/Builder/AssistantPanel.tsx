@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useForm, FormProvider, Controller, useWatch } from 'react-hook-form';
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import {
   Tools,
   Capabilities,
   actionDelimiter,
   ImageVisionTool,
   defaultAssistantFormValues,
-} from 'chat-data-provider';
-import type { FunctionTool, TConfig } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { FunctionTool, TConfig } from '@hanzochat/data-provider';
 import type { AssistantForm, AssistantPanelProps } from '~/common';
 import {
   useCreateAssistantMutation,

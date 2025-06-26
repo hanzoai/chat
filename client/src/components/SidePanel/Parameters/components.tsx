@@ -1,5 +1,5 @@
-import { ComponentTypes } from 'chat-data-provider';
-import type { DynamicSettingProps } from 'chat-data-provider';
+import { ComponentTypes } from '@hanzochat/data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 import {
   DynamicCombobox,
   DynamicDropdown,

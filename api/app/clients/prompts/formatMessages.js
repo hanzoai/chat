@@ -1,5 +1,5 @@
 const { ToolMessage } = require('@langchain/core/messages');
-const { EModelEndpoint, ContentTypes } = require('chat-data-provider');
+const { EModelEndpoint, ContentTypes } = require('@hanzochat/data-provider');
 const { HumanMessage, AIMessage, SystemMessage } = require('@langchain/core/messages');
 
 /**

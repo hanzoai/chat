@@ -3,8 +3,8 @@ import {
   EModelEndpoint,
   isAssistantsEndpoint,
   isAgentsEndpoint,
-} from 'chat-data-provider';
-import type { TConversation, EndpointSchemaKey } from 'chat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TConversation, EndpointSchemaKey } from '@hanzochat/data-provider';
 import { getLocalStorageItems } from './localStorage';
 
 const buildDefaultConvo = ({

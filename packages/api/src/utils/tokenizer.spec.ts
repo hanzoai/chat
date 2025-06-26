@@ -5,11 +5,11 @@
  * Make sure to install `tiktoken` and have it configured properly.
  */
 
-import { logger } from '@chat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { Tiktoken } from 'tiktoken';
 import Tokenizer from './tokenizer';
 
-jest.mock('@chat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     error: jest.fn(),
   },

@@ -1,5 +1,5 @@
 const express = require('express');
-const { PermissionTypes, Permissions, SystemRoles } = require('chat-data-provider');
+const { PermissionTypes, Permissions, SystemRoles } = require('@hanzochat/data-provider');
 const {
   getPrompt,
   getPrompts,

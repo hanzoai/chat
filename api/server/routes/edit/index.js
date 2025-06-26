@@ -4,7 +4,7 @@ const custom = require('./custom');
 const google = require('./google');
 const anthropic = require('./anthropic');
 const { isEnabled } = require('~/server/utils');
-const { EModelEndpoint } = require('chat-data-provider');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 const {
   checkBan,
   uaParser,

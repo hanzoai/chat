@@ -1,11 +1,11 @@
 import filenamify from 'filenamify';
 import exportFromJSON from 'export-from-json';
-import { QueryKeys } from 'chat-data-provider';
+import { QueryKeys } from '@hanzochat/data-provider';
 import { useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { useCreatePresetMutation, useGetModelsQuery } from 'chat-data-provider/react-query';
-import type { TPreset, TEndpointsConfig } from 'chat-data-provider';
+import { useCreatePresetMutation, useGetModelsQuery } from '@hanzochat/data-provider/react-query';
+import type { TPreset, TEndpointsConfig } from '@hanzochat/data-provider';
 import {
   useUpdatePresetMutation,
   useDeletePresetMutation,

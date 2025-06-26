@@ -1,4 +1,4 @@
-const { removeNullishValues } = require('chat-data-provider');
+const { removeNullishValues } = require('@hanzochat/data-provider');
 const { logger } = require('~/config');
 
 /**

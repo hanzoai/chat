@@ -1,4 +1,4 @@
-import { TMessage } from 'chat-data-provider';
+import { TMessage } from '@hanzochat/data-provider';
 import Files from './Files';
 
 const Container = ({ children, message }: { children: React.ReactNode; message?: TMessage }) => (

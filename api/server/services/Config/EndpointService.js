@@ -1,5 +1,5 @@
-const { isUserProvided } = require('@chat/api');
-const { EModelEndpoint } = require('chat-data-provider');
+const { isUserProvided } = require('@hanzochat/api');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { generateConfig } = require('~/server/utils/handleText');
 
 const {

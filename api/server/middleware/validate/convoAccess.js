@@ -1,5 +1,5 @@
-const { isEnabled } = require('@chat/api');
-const { Constants, ViolationTypes, Time } = require('chat-data-provider');
+const { isEnabled } = require('@hanzochat/api');
+const { Constants, ViolationTypes, Time } = require('@hanzochat/data-provider');
 const { searchConversation } = require('~/models/Conversation');
 const denyRequest = require('~/server/middleware/denyRequest');
 const { logViolation, getLogStores } = require('~/cache');

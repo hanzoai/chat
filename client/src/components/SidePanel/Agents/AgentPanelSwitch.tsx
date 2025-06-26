@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { EModelEndpoint, AgentCapabilities } from 'chat-data-provider';
-import type { TConfig, TEndpointsConfig, TAgentsEndpoint } from 'chat-data-provider';
+import { EModelEndpoint, AgentCapabilities } from '@hanzochat/data-provider';
+import type { TConfig, TEndpointsConfig, TAgentsEndpoint } from '@hanzochat/data-provider';
 import { AgentPanelProvider, useAgentPanelContext } from '~/Providers/AgentPanelContext';
 import { useGetEndpointsQuery } from '~/data-provider';
 import VersionPanel from './Version/VersionPanel';

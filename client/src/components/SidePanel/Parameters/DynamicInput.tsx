@@ -1,5 +1,5 @@
-import { OptionTypes } from 'chat-data-provider';
-import type { DynamicSettingProps } from 'chat-data-provider';
+import { OptionTypes } from '@hanzochat/data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 import { useLocalize, useDebouncedInput, useParameterEffects, TranslationKeys } from '~/hooks';
 import { Label, Input, HoverCard, HoverCardTrigger } from '~/components/ui';
 import { useChatContext } from '~/Providers';

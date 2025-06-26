@@ -1,5 +1,5 @@
 const z = require('zod');
-const { EModelEndpoint } = require('chat-data-provider');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 
 const openAIModels = {
   'o4-mini': 200000,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { defaultAssistantsVersion } from 'chat-data-provider';
-import type { Action, TEndpointsConfig, AssistantsEndpoint } from 'chat-data-provider';
+import { defaultAssistantsVersion } from '@hanzochat/data-provider';
+import type { Action, TEndpointsConfig, AssistantsEndpoint } from '@hanzochat/data-provider';
 import type { ActionsEndpoint } from '~/common';
 import {
   useGetActionsQuery,

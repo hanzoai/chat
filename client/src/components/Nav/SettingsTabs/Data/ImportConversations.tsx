@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Import } from 'lucide-react';
-import type { TError } from 'chat-data-provider';
+import type { TError } from '@hanzochat/data-provider';
 import { useUploadConversationsMutation } from '~/data-provider';
 import { useToastContext } from '~/Providers';
 import { Spinner } from '~/components/svg';

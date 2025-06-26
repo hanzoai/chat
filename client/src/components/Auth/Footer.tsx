@@ -1,5 +1,5 @@
 import { useLocalize } from '~/hooks';
-import { TStartupConfig } from 'chat-data-provider';
+import { TStartupConfig } from '@hanzochat/data-provider';
 
 function Footer({ startupConfig }: { startupConfig: TStartupConfig | null | undefined }) {
   const localize = useLocalize();

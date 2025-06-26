@@ -1,5 +1,5 @@
-import { specialVariables } from 'chat-data-provider';
-import type { TPromptGroup } from 'chat-data-provider';
+import { specialVariables } from '@hanzochat/data-provider';
+import type { TPromptGroup } from '@hanzochat/data-provider';
 
 /**
  * Detects the presence of variables in the given text, excluding those found in `specialVariables`.

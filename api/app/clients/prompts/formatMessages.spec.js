@@ -1,4 +1,4 @@
-const { Constants } = require('chat-data-provider');
+const { Constants } = require('@hanzochat/data-provider');
 const { HumanMessage, AIMessage, SystemMessage } = require('@langchain/core/messages');
 const { formatMessage, formatLangChainMessages, formatFromLangChain } = require('./formatMessages');
 

@@ -4,7 +4,7 @@ const logger = require('~/config/winston');
 
 jest.mock('openai');
 
-jest.mock('@chat/data-schemas', () => {
+jest.mock('@hanzochat/data-schemas', () => {
   return {
     logger: {
       info: jest.fn(),

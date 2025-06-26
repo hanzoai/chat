@@ -1,5 +1,5 @@
 import TextareaAutosize from 'react-textarea-autosize';
-import { EModelEndpoint, endpointSettings } from 'chat-data-provider';
+import { EModelEndpoint, endpointSettings } from '@hanzochat/data-provider';
 import type { TModelSelectProps, OnInputNumberChange } from '~/common';
 import {
   Input,

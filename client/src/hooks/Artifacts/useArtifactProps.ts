@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { removeNullishValues } from 'chat-data-provider';
+import { removeNullishValues } from '@hanzochat/data-provider';
 import type { Artifact } from '~/common';
 import { getKey, getProps, getTemplate, getArtifactFilename } from '~/utils/artifacts';
 import { getMermaidFiles } from '~/utils/mermaid';

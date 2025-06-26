@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 import { useEffect, useRef, useCallback } from 'react';
 import { useRecoilValue, useRecoilState } from 'recoil';
-import type { TEndpointOption } from 'chat-data-provider';
+import type { TEndpointOption } from '@hanzochat/data-provider';
 import type { KeyboardEvent } from 'react';
 import {
   forceResize,

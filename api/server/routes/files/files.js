@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const express = require('express');
-const { EnvVar } = require('@chat/agents');
+const { EnvVar } = require('@librechat/agents');
 const {
   Time,
   isUUID,
@@ -9,7 +9,7 @@ const {
   EModelEndpoint,
   isAgentsEndpoint,
   checkOpenAIStorage,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   filterFile,
   processFileUpload,
