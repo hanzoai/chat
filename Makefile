@@ -141,11 +141,12 @@ build: ## Build Docker images
 # Development commands
 dev: ## Start in development mode (local Node.js)
 	@echo "$(YELLOW)Starting development servers...$(NC)"
+	@$(MAKE) check-containers
 	@$(MAKE) install
 	@$(MAKE) build-packages
 	@echo "$(GREEN)Starting backend and frontend...$(NC)"
 	@(trap 'kill 0' SIGINT; \
-		$(NPM) run backend:dev & \
+		MONGO_URI=mongodb://localhost:27017/HanzoChat $(NPM) run backend:dev & \
 		$(NPM) run frontend:dev & \
 		wait)
 
@@ -246,6 +247,19 @@ check-docker:
 	@docker info >/dev/null 2>&1 || (echo "$(RED)Docker is not running. Please start Docker/Colima first.$(NC)" && exit 1)
 	@echo "$(GREEN)✓ Docker is running$(NC)"
 
+# Check if required containers are running
+check-containers:
+	@echo "$(YELLOW)Checking required containers...$(NC)"
+	@if ! docker ps | grep -q "chat-mongodb"; then \
+		echo "$(YELLOW)Starting MongoDB...$(NC)"; \
+		docker run -d --name chat-mongodb -p 27017:27017 mongo || true; \
+	fi
+	@if ! docker ps | grep -q "chat-meilisearch"; then \
+		echo "$(YELLOW)Starting Meilisearch...$(NC)"; \
+		docker run -d --name chat-meilisearch -p 7700:7700 -e MEILI_MASTER_KEY=DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt getmeili/meilisearch:v1.12.3 || true; \
+	fi
+	@echo "$(GREEN)✓ Required containers are running$(NC)"
+
 # Environment setup
 setup-env: ## Create .env file from example
 	@if [ ! -f .env ]; then \
@@ -327,5 +341,5 @@ r: restart
 .PHONY: help start vendor up down stop restart logs logs-api ps build \
         dev install install-force build-packages dev-backend dev-frontend \
         lint format db-shell db-backup db-restore clean clean-all \
-        status test shell check-docker check-env setup-env setup-vendor-env \
-        update-branding init-fixtures s d l r
+        status test shell check-docker check-containers check-env setup-env \
+        setup-vendor-env update-branding init-fixtures s d l r
