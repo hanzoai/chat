@@ -88,19 +88,16 @@ start: ## Start Chat in vendor mode
 	@echo "  • API Health:  $(BLUE)http://localhost:3080/api/health$(NC)"
 	@echo ""
 	@echo "$(GREEN)╔══════════════════════════════════════════════════════════════╗$(NC)"
-	@echo "$(GREEN)║              🚀 Quick Start - Default Login                  ║$(NC)"
+	@echo "$(GREEN)║                 🔐 Login with Demo Account                   ║$(NC)"
 	@echo "$(GREEN)╚══════════════════════════════════════════════════════════════╝$(NC)"
 	@echo ""
 	@echo "  $(YELLOW)Email:$(NC)    $(BLUE)wow@this.com$(NC)"
 	@echo "  $(YELLOW)Password:$(NC) $(BLUE)demo1234$(NC)"
 	@echo ""
-	@echo "  $(GREEN)➜ Run 'make init-fixtures' to create this demo user$(NC)"
-	@echo ""
 	@echo "$(YELLOW)Useful commands:$(NC)"
 	@echo "  • View logs:      $(GREEN)make logs$(NC)"
 	@echo "  • Stop:           $(GREEN)make stop$(NC)"
 	@echo "  • Status:         $(GREEN)make status$(NC)"
-	@echo "  • Create demo:    $(GREEN)make init-fixtures$(NC)"
 	@echo ""
 
 # Show vendor configuration
@@ -127,6 +124,8 @@ vendor: ## Show current vendor configuration
 # Docker commands
 up: ## Start Docker services in background
 	@$(DOCKER_COMPOSE) up -d
+	@sleep 2
+	@$(DOCKER_COMPOSE) exec api node config/create-user.js wow@this.com "Demo User" wow demo1234 --email-verified=true >/dev/null 2>&1 || true
 	@echo ""
 	@echo "$(GREEN)╔══════════════════════════════════════════════════════════════╗$(NC)"
 	@echo "$(GREEN)║                    Services Started                          ║$(NC)"
@@ -150,13 +149,11 @@ up: ## Start Docker services in background
 	@echo "  $(GREEN)make stop$(NC)            → Stop all services"
 	@echo ""
 	@echo "$(GREEN)╔══════════════════════════════════════════════════════════════╗$(NC)"
-	@echo "$(GREEN)║                    🔐 Default Login                          ║$(NC)"
+	@echo "$(GREEN)║                 🔐 Login with Demo Account                   ║$(NC)"
 	@echo "$(GREEN)╚══════════════════════════════════════════════════════════════╝$(NC)"
 	@echo ""
 	@echo "  $(YELLOW)Email:$(NC)    $(BLUE)wow@this.com$(NC)"
 	@echo "  $(YELLOW)Password:$(NC) $(BLUE)demo1234$(NC)"
-	@echo ""
-	@echo "  $(GREEN)➜ Run 'make init-fixtures' to create this demo user$(NC)"
 	@echo ""
 	@echo "$(YELLOW)💡 Tips:$(NC)"
 	@echo "  • Create new account with 'Sign up' if needed"
