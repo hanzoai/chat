@@ -90,11 +90,11 @@ async function validateDockerRunning() {
     execSync(downCommand, { stdio: 'inherit' });
     console.purple('Pruning all Hanzo Docker images...');
 
-    const imageName = singleCompose ? 'librechat_single' : 'librechat';
+    const imageName = singleCompose ? 'hanzo_chat_single' : 'hanzo_chat';
     try {
       execSync(`${sudo}docker rmi ${imageName}:latest`, { stdio: 'inherit' });
     } catch (e) {
-      console.purple('Failed to remove Docker image librechat:latest. It might not exist.');
+      console.purple('Failed to remove Docker image hanzo-chat:latest. It might not exist.');
     }
     console.purple('Removing all unused dangling Docker images...');
     execSync(`${sudo}docker image prune -f`, { stdio: 'inherit' });
