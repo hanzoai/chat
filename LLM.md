@@ -73,7 +73,7 @@ Hanzo Chat is a chat application based on LibreChat, which is a platform for int
 - `.env`: Environment variables for application settings
 - `docker-compose.yml`: Main service configuration
 - `docker-compose.override.yml`: Custom overrides for local development
-- `librechat.yaml`: Optional configuration file for customizing endpoints
+- `chat.yaml`: Optional configuration file for customizing endpoints
 
 ## Features
 - Multi-model AI chat interface

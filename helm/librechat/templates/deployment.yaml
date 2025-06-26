@@ -53,8 +53,8 @@ spec:
           volumeMounts:
           {{- if or .Values.librechat.configYamlContent .Values.librechat.existingConfigYaml }}
           - name: config-yaml
-            mountPath: "/app/librechat.yaml"
-            subPath: "librechat.yaml"
+            mountPath: "/app/chat.yaml"
+            subPath: "chat.yaml"
             readOnly: true
           {{- end }}
           {{- if .Values.librechat.imageVolume.enabled }}

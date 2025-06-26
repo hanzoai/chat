@@ -42,7 +42,7 @@ Project maintainers have the right and responsibility to remove, edit, or reject
     - Install [MongoDB Community Edition](https://www.mongodb.com/docs/manual/administration/install-community/), ensure that `mongosh` connects to your local instance.
     - Run: `npx install playwright`, then `npx playwright install`.
     - Copy `config.local`: `cp e2e/config.local.example.ts e2e/config.local.ts`.
-    - Copy `librechat.yaml`: `cp librechat.example.yaml librechat.yaml`.
+    - Copy `chat.yaml`: `cp chat.example.yaml chat.yaml`.
     - Run: `npm run e2e`.
 
 ## 2. Development Notes
