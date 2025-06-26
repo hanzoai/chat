@@ -1,14 +1,14 @@
-const { mcpToolPattern } = require('@librechat/api');
-const { logger } = require('@librechat/data-schemas');
+const { mcpToolPattern } = require('@chat/api');
+const { logger } = require('@chat/data-schemas');
 const { SerpAPI } = require('@langchain/community/tools/serpapi');
 const { Calculator } = require('@langchain/community/tools/calculator');
-const { EnvVar, createCodeExecutionTool, createSearchTool } = require('@librechat/agents');
+const { EnvVar, createCodeExecutionTool, createSearchTool } = require('@chat/agents');
 const {
   Tools,
   EToolResources,
   loadWebSearchAuth,
   replaceSpecialVars,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const {
   availableTools,
   manifestToolMap,

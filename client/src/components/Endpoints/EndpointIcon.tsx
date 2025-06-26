@@ -1,10 +1,10 @@
-import { isAssistantsEndpoint } from 'librechat-data-provider';
+import { isAssistantsEndpoint } from 'chat-data-provider';
 import type {
   TConversation,
   TEndpointsConfig,
   TPreset,
   TAssistantsMap,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import ConvoIconURL from '~/components/Endpoints/ConvoIconURL';
 import MinimalIcon from '~/components/Endpoints/MinimalIcon';
 import { getEndpointField, getIconEndpoint } from '~/utils';

@@ -3,7 +3,7 @@
   "com_a11y_end": "AI ตอบคำถามเสร็จสิ้นแล้ว",
   "com_a11y_start": "AI เริ่มต้นตอบคำถามแล้ว",
   "com_agents_allow_editing": "อนุญาตให้ผู้ใช้คนอื่นแก้ไขเอเจนต์ของคุณ",
-  "com_agents_by_librechat": "โดย Hanzo",
+  "com_agents_by_chat": "โดย Hanzo",
   "com_agents_code_interpreter": "เมื่อเปิดใช้งาน อนุญาตให้เอเจนต์ของคุณใช้ประโยชน์จาก Hanzo Code Interpreter API เพื่อรันโค้ดที่สร้างขึ้น รวมถึงการประมวลผลไฟล์ได้อย่างปลอดภัย ต้องใช้คีย์ API ที่ถูกต้อง",
   "com_agents_code_interpreter_title": "Code Interpreter API",
   "com_agents_create_error": "เกิดข้อผิดพลาดในการสร้างเอเจนต์ของคุณ",

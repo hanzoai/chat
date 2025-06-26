@@ -1,11 +1,11 @@
-const { logger } = require('@librechat/data-schemas');
-const { createContentAggregator } = require('@librechat/agents');
+const { logger } = require('@chat/data-schemas');
+const { createContentAggregator } = require('@chat/agents');
 const {
   Constants,
   EModelEndpoint,
   isAgentsEndpoint,
   getResponseSender,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const {
   createToolEndCallback,
   getDefaultHandlers,

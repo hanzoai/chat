@@ -3,7 +3,7 @@
   "com_a11y_end": "AI 已完成回覆",
   "com_a11y_start": "AI 已開始回覆。",
   "com_agents_allow_editing": "允許其他使用者編輯您的助理",
-  "com_agents_by_librechat": "由 Hanzo 提供",
+  "com_agents_by_chat": "由 Hanzo 提供",
   "com_agents_code_interpreter": "啟用後，您的代理可以安全地使用 Hanzo 程式碼解譯器 API 來執行產生的程式碼，包括檔案處理功能。需要有效的 API 金鑰。",
   "com_agents_code_interpreter_title": "程式碼解譯器 API",
   "com_agents_create_error": "建立您的代理時發生錯誤。",

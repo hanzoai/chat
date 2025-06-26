@@ -1,7 +1,7 @@
 import { ChevronLeft } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { useGetAgentByIdQuery, useRevertAgentVersionMutation } from '~/data-provider';
-import type { Agent } from 'librechat-data-provider';
+import type { Agent } from 'chat-data-provider';
 import { isActiveVersion } from './isActiveVersion';
 import { useAgentPanelContext } from '~/Providers';
 import { useLocalize, useToast } from '~/hooks';

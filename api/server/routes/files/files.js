@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const express = require('express');
-const { EnvVar } = require('@librechat/agents');
+const { EnvVar } = require('@chat/agents');
 const {
   Time,
   isUUID,
@@ -9,7 +9,7 @@ const {
   EModelEndpoint,
   isAgentsEndpoint,
   checkOpenAIStorage,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const {
   filterFile,
   processFileUpload,

@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
-const { sanitizeFilename } = require('@librechat/api');
-const { fileConfig: defaultFileConfig, mergeFileConfig } = require('librechat-data-provider');
+const { sanitizeFilename } = require('@chat/api');
+const { fileConfig: defaultFileConfig, mergeFileConfig } = require('chat-data-provider');
 const { getCustomConfig } = require('~/server/services/Config');
 
 const storage = multer.diskStorage({
@@ -34,7 +34,7 @@ const importFileFilter = (req, file, cb) => {
 
 /**
  *
- * @param {import('librechat-data-provider').FileConfig | undefined} customFileConfig
+ * @param {import('chat-data-provider').FileConfig | undefined} customFileConfig
  */
 const createFileFilter = (customFileConfig) => {
   /**

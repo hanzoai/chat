@@ -1,8 +1,8 @@
-import { logger } from '@librechat/data-schemas';
-import { EModelEndpoint, EToolResources, AgentCapabilities } from 'librechat-data-provider';
-import type { AgentToolResources, TFile, AgentBaseResource } from 'librechat-data-provider';
+import { logger } from '@chat/data-schemas';
+import { EModelEndpoint, EToolResources, AgentCapabilities } from 'chat-data-provider';
+import type { AgentToolResources, TFile, AgentBaseResource } from 'chat-data-provider';
 import type { FilterQuery, QueryOptions, ProjectionType } from 'mongoose';
-import type { IMongoFile } from '@librechat/data-schemas';
+import type { IMongoFile } from '@chat/data-schemas';
 import type { Request as ServerRequest } from 'express';
 
 /**

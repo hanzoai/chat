@@ -6,9 +6,9 @@ const {
   defaultRetrievalModels,
   defaultAssistantsVersion,
   defaultAgentCapabilities,
-} = require('librechat-data-provider');
-const { sendEvent } = require('@librechat/api');
-const { Providers } = require('@librechat/agents');
+} = require('chat-data-provider');
+const { sendEvent } = require('@chat/api');
+const { Providers } = require('@chat/agents');
 const partialRight = require('lodash/partialRight');
 
 /** Helper function to escape special characters in regex

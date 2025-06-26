@@ -1,6 +1,6 @@
-const { sendEvent } = require('@librechat/api');
-const { logger } = require('@librechat/data-schemas');
-const { Constants } = require('librechat-data-provider');
+const { sendEvent } = require('@chat/api');
+const { logger } = require('@chat/data-schemas');
+const { Constants } = require('chat-data-provider');
 const {
   handleAbortError,
   createAbortController,

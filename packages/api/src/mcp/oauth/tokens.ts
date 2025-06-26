@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@chat/data-schemas';
 import type { OAuthTokens, OAuthClientInformation } from '@modelcontextprotocol/sdk/shared/auth.js';
-import type { TokenMethods, IToken } from '@librechat/data-schemas';
+import type { TokenMethods, IToken } from '@chat/data-schemas';
 import type { MCPOAuthTokens, ExtendedOAuthTokens } from './types';
 import { encryptV2, decryptV2 } from '~/crypto';
 import { isSystemUserId } from '~/mcp/enum';

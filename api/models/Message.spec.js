@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const { v4: uuidv4 } = require('uuid');
-const { messageSchema } = require('@librechat/data-schemas');
+const { messageSchema } = require('@chat/data-schemas');
 
 const {
   saveMessage,
@@ -13,7 +13,7 @@ const {
 } = require('./Message');
 
 /**
- * @type {import('mongoose').Model<import('@librechat/data-schemas').IMessage>}
+ * @type {import('mongoose').Model<import('@chat/data-schemas').IMessage>}
  */
 let Message;
 

@@ -3,7 +3,7 @@
   "com_a11y_end": "ИИ закончил свой ответ",
   "com_a11y_start": "ИИ начал отвечать",
   "com_agents_allow_editing": "Разрешить другим пользователям редактировать вашего агента",
-  "com_agents_by_librechat": "от Hanzo",
+  "com_agents_by_chat": "от Hanzo",
   "com_agents_code_interpreter": "При включении позволяет агенту использовать API интерпретатора кода Hanzo для безопасного выполнения сгенерированного кода, включая обработку файлов. Требуется действующий ключ API.",
   "com_agents_code_interpreter_title": "API Интерпретатора кода",
   "com_agents_create_error": "Произошла ошибка при создании вашего агента",

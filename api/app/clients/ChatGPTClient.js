@@ -2,7 +2,7 @@ const { Keyv } = require('keyv');
 const crypto = require('crypto');
 const { CohereClient } = require('cohere-ai');
 const { fetchEventSource } = require('@waylaidwanderer/fetch-event-source');
-const { constructAzureURL, genAzureChatCompletion } = require('@librechat/api');
+const { constructAzureURL, genAzureChatCompletion } = require('@chat/api');
 const { encoding_for_model: encodingForModel, get_encoding: getEncoding } = require('tiktoken');
 const {
   ImageDetail,
@@ -10,7 +10,7 @@ const {
   resolveHeaders,
   CohereConstants,
   mapModelToAzureConfig,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const { createContextHandlers } = require('./prompts');
 const { createCoherePayload } = require('./llm');
 const { extractBaseURL } = require('~/utils');
@@ -267,7 +267,7 @@ class ChatGPTClient extends BaseClient {
     }
 
     if (this.useOpenRouter) {
-      opts.headers['HTTP-Referer'] = 'https://librechat.ai';
+      opts.headers['HTTP-Referer'] = 'https://hanzo.ai';
       opts.headers['X-Title'] = 'Hanzo';
     }
 

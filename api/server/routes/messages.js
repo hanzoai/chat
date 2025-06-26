@@ -1,6 +1,6 @@
 const express = require('express');
-const { logger } = require('@librechat/data-schemas');
-const { ContentTypes } = require('librechat-data-provider');
+const { logger } = require('@chat/data-schemas');
+const { ContentTypes } = require('chat-data-provider');
 const {
   saveConvo,
   saveMessage,

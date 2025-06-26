@@ -1,18 +1,18 @@
 /** Memories */
 import { z } from 'zod';
 import { tool } from '@langchain/core/tools';
-import { Tools } from 'librechat-data-provider';
-import { logger } from '@librechat/data-schemas';
-import { Run, Providers, GraphEvents } from '@librechat/agents';
+import { Tools } from 'chat-data-provider';
+import { logger } from '@chat/data-schemas';
+import { Run, Providers, GraphEvents } from '@chat/agents';
 import type {
   StreamEventData,
   ToolEndCallback,
   EventHandler,
   ToolEndData,
   LLMConfig,
-} from '@librechat/agents';
-import type { TAttachment, MemoryArtifact } from 'librechat-data-provider';
-import type { ObjectId, MemoryMethods } from '@librechat/data-schemas';
+} from '@chat/agents';
+import type { TAttachment, MemoryArtifact } from 'chat-data-provider';
+import type { ObjectId, MemoryMethods } from '@chat/data-schemas';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { Response as ServerResponse } from 'express';
 import { Tokenizer } from '~/utils';

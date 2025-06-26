@@ -1,5 +1,5 @@
-import { EModelEndpoint, agentsEndpointSchema } from 'librechat-data-provider';
-import type { TCustomConfig, TAgentsEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint, agentsEndpointSchema } from 'chat-data-provider';
+import type { TCustomConfig, TAgentsEndpoint } from 'chat-data-provider';
 
 /**
  * Sets up the Agents configuration from the config (`chat.yaml`) file.

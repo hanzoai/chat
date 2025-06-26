@@ -1,4 +1,4 @@
-# Please consult our docs for more info: https://www.librechat.ai/docs/configuration/docker_override
+# Please consult our docs for more info: https://www.hanzo.ai/docs/configuration/docker_override
 
 # TO USE THIS FILE, FIRST UNCOMMENT THE LINE ('services:')
 
@@ -15,43 +15,43 @@
 #   api:
 #     volumes:
 #     - type: bind
-#       source: ./librechat.yaml
-#       target: /app/librechat.yaml
-#     image: ghcr.io/hanzoai/librechat:latest
+#       source: ./chat.yaml
+#       target: /app/chat.yaml
+#     image: ghcr.io/hanzoai/chat:latest
 
 # ---------------------------------------------------
 
 # services:
 
-# # USE LIBRECHAT CONFIG FILE
+# # USE CHAT CONFIG FILE
 #   api:
 #     volumes:
 #     - type: bind
-#       source: ./librechat.yaml
-#       target: /app/librechat.yaml
+#       source: ./chat.yaml
+#       target: /app/chat.yaml
 
 # # LOCAL BUILD
 #   api:
-#     image: librechat
+#     image: chat
 #     build:
 #       context: .
 #       target: node
 
 # # BUILD FROM LATEST IMAGE
 #   api:
-#     image: ghcr.io/hanzoai/librechat-dev:latest
+#     image: ghcr.io/hanzoai/chat-dev:latest
 
 # # BUILD FROM LATEST IMAGE (NUMBERED RELEASE)
 #   api:
-#     image: ghcr.io/hanzoai/librechat:latest
+#     image: ghcr.io/hanzoai/chat:latest
 
 # # BUILD FROM LATEST API IMAGE
 #   api:
-#     image: ghcr.io/hanzoai/librechat-dev-api:latest
+#     image: ghcr.io/hanzoai/chat-dev-api:latest
 
 # # BUILD FROM LATEST API IMAGE (NUMBERED RELEASE)
 #   api:
-#     image: ghcr.io/hanzoai/librechat-api:latest
+#     image: ghcr.io/hanzoai/chat-api:latest
 
 # # ADD SAML CERT FILE
 #   api:
@@ -104,7 +104,7 @@
 
 # # USE RAG API IMAGE WITH LOCAL EMBEDDINGS SUPPORT
 #  rag_api:
-#    image: ghcr.io/hanzoai/librechat-rag-api-dev:latest
+#    image: ghcr.io/hanzoai/chat-rag-api-dev:latest
 # # For Linux user:
 #    extra_hosts:
 #      - "host.docker.internal:host-gateway"

@@ -1,16 +1,16 @@
 const path = require('path');
 const { v4 } = require('uuid');
 const axios = require('axios');
-const { logAxiosError } = require('@librechat/api');
-const { logger } = require('@librechat/data-schemas');
-const { getCodeBaseURL } = require('@librechat/agents');
+const { logAxiosError } = require('@chat/api');
+const { logger } = require('@chat/data-schemas');
+const { getCodeBaseURL } = require('@chat/agents');
 const {
   Tools,
   FileContext,
   FileSources,
   imageExtRegex,
   EToolResources,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { convertImage } = require('~/server/services/Files/images/convert');
 const { createFile, getFiles, updateFile } = require('~/models/File');

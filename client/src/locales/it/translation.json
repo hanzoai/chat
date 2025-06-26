@@ -3,7 +3,7 @@
   "com_a11y_end": "L'IA ha terminato la sua risposta",
   "com_a11y_start": "L'IA ha iniziato la sua risposta",
   "com_agents_allow_editing": "Permetti ad altri utenti di modificare il tuo agente",
-  "com_agents_by_librechat": "da Hanzo",
+  "com_agents_by_chat": "da Hanzo",
   "com_agents_code_interpreter": "Quando abilitato, permette al tuo agente di utilizzare l'API Hanzo Code Interpreter per eseguire codice generato in modo sicuro, inclusa l'elaborazione dei file. Richiede una chiave API valida.",
   "com_agents_code_interpreter_title": "API Interprete Codice",
   "com_agents_create_error": "Si è verificato un errore durante la creazione del tuo agente.",
