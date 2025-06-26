@@ -55,4 +55,4 @@ ENV HOST=0.0.0.0
 EXPOSE 3080
 
 # Start the application
-CMD ["npm", "run", "backend"]
+CMD ["node", "api/server/index.js"]
