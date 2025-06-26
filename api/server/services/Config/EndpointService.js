@@ -2,6 +2,7 @@ const { isUserProvided } = require('@hanzochat/api');
 const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { generateConfig } = require('~/server/utils/handleText');
 const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('../HanzoAPIService');
+const { getVendorService } = require('../VendorService');
 
 const {
   OPENAI_API_KEY: openAIApiKey,
@@ -27,6 +28,19 @@ const userProvidedOpenAI = useAzurePlugins
 
 // Helper to determine if we should use Hanzo API for a given endpoint
 const getEndpointConfig = (originalKey, originalBaseURL, endpoint) => {
+  const vendorService = getVendorService();
+  
+  // If vendor mode is enabled, override everything
+  if (vendorService.isEnabled()) {
+    const vendorConfig = vendorService.getEndpointConfig();
+    return {
+      apiKey: vendorConfig.apiKey,
+      baseURL: vendorConfig.baseURL,
+      isVendorMode: true,
+      vendorEndpoint: vendorConfig.type,
+    };
+  }
+  
   const config = generateConfig(originalKey, originalBaseURL, endpoint);
   
   // If Hanzo API key is set and user hasn't provided their own key, use Hanzo API

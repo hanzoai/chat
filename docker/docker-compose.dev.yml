@@ -1,50 +1,32 @@
-version: '3.8'
+# Development-specific overrides for Docker Compose
+# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: ghcr.io/hanzoai/chat:latest
     environment:
-      - INIT_FIXTURES=true
-
-  # One-time fixture initialization service
-  init-fixtures:
-    image: ghcr.io/hanzoai/chat:latest
-    depends_on:
-      - mongodb
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/LibreChat
+      - NODE_ENV=development
+      - DEBUG_LOGGING=true
+      - PORT=${PORT:-3080}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt}
     volumes:
-      - ./api/server/services/fixtures.js:/app/api/server/services/fixtures.js:ro
-    command: >
-      sh -c "
-        echo 'Waiting for MongoDB to be ready...';
-        sleep 10;
-        echo 'Initializing fixtures...';
-        node -e \"
-          const mongoose = require('mongoose');
-          const initializeFixtures = require('/app/api/server/services/fixtures.js');
-          
-          async function run() {
-            try {
-              await mongoose.connect(process.env.MONGO_URI);
-              console.log('Connected to MongoDB');
-              
-              // Import models after connection
-              require('@hanzochat/data-schemas').createModels(mongoose);
-              
-              await initializeFixtures();
-              console.log('Fixtures initialized');
-              process.exit(0);
-            } catch (error) {
-              console.error('Error:', error);
-              process.exit(1);
-            }
-          }
-          
-          run();
-        \"
-      "
-    restart: "no"
+      # Mount source code for hot reloading
+      - ../api:/app/api:delegated
+      - ../client:/app/client:delegated
+      - ../packages:/app/packages:delegated
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/api/node_modules
+      - /app/client/node_modules
+      - /app/packages/data-provider/node_modules
+      - /app/packages/data-schemas/node_modules
+      - /app/packages/api/node_modules
+    command: npm run backend:dev
+
+  meilisearch:
+    environment:
+      - MEILI_ENV=development
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt}
+
+  mongodb:
+    ports:
+      - "27017:27017"  # Expose MongoDB for local development tools

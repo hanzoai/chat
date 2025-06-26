@@ -1,50 +1,58 @@
-# v0.7.8
+# Build stage
+FROM node:20-alpine AS builder
 
-# Base node image
-FROM node:20-alpine AS node
-
-# Install jemalloc
-RUN apk add --no-cache jemalloc
-RUN apk add --no-cache python3 py3-pip uv
-
-# Set environment variable to use jemalloc
-ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
-
-# Add `uv` for extended MCP support
-COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
-RUN uv --version
-
-RUN mkdir -p /app && chown node:node /app
 WORKDIR /app
 
-USER node
+# Copy package files
+COPY package*.json ./
+COPY api/package*.json ./api/
+COPY client/package*.json ./client/
+COPY packages/data-provider/package*.json ./packages/data-provider/
+COPY packages/data-schemas/package*.json ./packages/data-schemas/
+COPY packages/api/package*.json ./packages/api/
 
-COPY --chown=node:node . .
+# Install dependencies
+RUN npm ci
 
-RUN \
-    # Allow mounting of these files, which have no default
-    touch .env ; \
-    # Create directories for the volumes to inherit the correct permissions
-    mkdir -p /app/client/public/images /app/api/logs ; \
-    npm config set fetch-retry-maxtimeout 600000 ; \
-    npm config set fetch-retries 5 ; \
-    npm config set fetch-retry-mintimeout 15000 ; \
-    npm install --no-audit; \
-    # React client build
-    NODE_OPTIONS="--max-old-space-size=2048" npm run frontend; \
-    npm prune --production; \
-    npm cache clean --force
+# Copy source code
+COPY . .
 
-RUN mkdir -p /app/client/public/images /app/api/logs
+# Build packages
+RUN npm run build:data-provider && \
+    npm run build:data-schemas && \
+    npm run build:api
 
-# Node API setup
-EXPOSE 3080
+# Build client
+RUN cd client && npm run build:ci
+
+# Runtime stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install production dependencies only
+COPY package*.json ./
+COPY api/package*.json ./api/
+RUN npm ci --omit=dev
+
+# Copy built application
+COPY --from=builder /app/api ./api
+COPY --from=builder /app/client/dist ./client/dist
+COPY --from=builder /app/packages ./packages
+
+# Copy other necessary files
+COPY .env* ./
+COPY config ./config
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/uploads /app/images
+
+# Set environment
+ENV NODE_ENV=production
 ENV HOST=0.0.0.0
-CMD ["npm", "run", "backend"]
 
-# Optional: for client with nginx routing
-# FROM nginx:stable-alpine AS nginx-client
-# WORKDIR /usr/share/nginx/html
-# COPY --from=node /app/client/dist /usr/share/nginx/html
-# COPY client/nginx.conf /etc/nginx/conf.d/default.conf
-# ENTRYPOINT ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 3080
+
+# Start the application
+CMD ["npm", "run", "backend"]
