@@ -45,115 +45,115 @@
 
 /**
  * @exports Graph
- * @typedef {import('@librechat/agents').Graph} Graph
+ * @typedef {import('@hanzochat/agents').Graph} Graph
  * @memberof typedefs
  */
 
 /**
  * @exports StandardGraph
- * @typedef {import('@librechat/agents').StandardGraph} StandardGraph
+ * @typedef {import('@hanzochat/agents').StandardGraph} StandardGraph
  * @memberof typedefs
  */
 
 /**
  * @exports MessageContentComplex
- * @typedef {import('@librechat/agents').MessageContentComplex} MessageContentComplex
+ * @typedef {import('@hanzochat/agents').MessageContentComplex} MessageContentComplex
  * @memberof typedefs
  */
 
 /**
  * @exports EventHandler
- * @typedef {import('@librechat/agents').EventHandler} EventHandler
+ * @typedef {import('@hanzochat/agents').EventHandler} EventHandler
  * @memberof typedefs
  */
 
 /**
  * @exports ModelEndData
- * @typedef {import('@librechat/agents').ModelEndData} ModelEndData
+ * @typedef {import('@hanzochat/agents').ModelEndData} ModelEndData
  * @memberof typedefs
  */
 
 /**
  * @exports ToolEndData
- * @typedef {import('@librechat/agents').ToolEndData} ToolEndData
+ * @typedef {import('@hanzochat/agents').ToolEndData} ToolEndData
  * @memberof typedefs
  */
 
 /**
  * @exports ToolEndCallback
- * @typedef {import('@librechat/agents').ToolEndCallback} ToolEndCallback
+ * @typedef {import('@hanzochat/agents').ToolEndCallback} ToolEndCallback
  * @memberof typedefs
  */
 
 /**
  * @exports ChatModelStreamHandler
- * @typedef {import('@librechat/agents').ChatModelStreamHandler} ChatModelStreamHandler
+ * @typedef {import('@hanzochat/agents').ChatModelStreamHandler} ChatModelStreamHandler
  * @memberof typedefs
  */
 
 /**
  * @exports ContentAggregator
- * @typedef {import('@librechat/agents').ContentAggregatorResult['aggregateContent']} ContentAggregator
+ * @typedef {import('@hanzochat/agents').ContentAggregatorResult['aggregateContent']} ContentAggregator
  * @memberof typedefs
  */
 
 /**
  * @exports GraphEvents
- * @typedef {import('@librechat/agents').GraphEvents} GraphEvents
+ * @typedef {import('@hanzochat/agents').GraphEvents} GraphEvents
  * @memberof typedefs
  */
 
 /**
  * @exports AgentRun
- * @typedef {import('@librechat/agents').Run} AgentRun
+ * @typedef {import('@hanzochat/agents').Run} AgentRun
  * @memberof typedefs
  */
 
 /**
  * @exports IState
- * @typedef {import('@librechat/agents').IState} IState
+ * @typedef {import('@hanzochat/agents').IState} IState
  * @memberof typedefs
  */
 
 /**
  * @exports ClientCallbacks
- * @typedef {import('@librechat/agents').ClientCallbacks} ClientCallbacks
+ * @typedef {import('@hanzochat/agents').ClientCallbacks} ClientCallbacks
  * @memberof typedefs
  */
 
 /**
  * @exports OpenAIClientOptions
- * @typedef {import('@librechat/agents').OpenAIClientOptions} OpenAIClientOptions
+ * @typedef {import('@hanzochat/agents').OpenAIClientOptions} OpenAIClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports AnthropicClientOptions
- * @typedef {import('@librechat/agents').AnthropicClientOptions} AnthropicClientOptions
+ * @typedef {import('@hanzochat/agents').AnthropicClientOptions} AnthropicClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports BedrockClientOptions
- * @typedef {import('@librechat/agents').BedrockConverseClientOptions} BedrockClientOptions
+ * @typedef {import('@hanzochat/agents').BedrockConverseClientOptions} BedrockClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports VertexAIClientOptions
- * @typedef {import('@librechat/agents').VertexAIClientOptions} VertexAIClientOptions
+ * @typedef {import('@hanzochat/agents').VertexAIClientOptions} VertexAIClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports GoogleClientOptions
- * @typedef {import('@librechat/agents').GoogleClientOptions} GoogleClientOptions
+ * @typedef {import('@hanzochat/agents').GoogleClientOptions} GoogleClientOptions
  * @memberof typedefs
  */
 
 /**
  * @exports StreamEventData
- * @typedef {import('@librechat/agents').StreamEventData} StreamEventData
+ * @typedef {import('@hanzochat/agents').StreamEventData} StreamEventData
  * @memberof typedefs
  */
 
@@ -492,13 +492,13 @@
 
 /**
  * @exports SearchResult
- * @typedef {import('@librechat/agents').SearchResult} SearchResult
+ * @typedef {import('@hanzochat/agents').SearchResult} SearchResult
  * @memberof typedefs
  */
 
 /**
  * @exports SearchResultData
- * @typedef {import('@librechat/agents').SearchResultData} SearchResultData
+ * @typedef {import('@hanzochat/agents').SearchResultData} SearchResultData
  * @memberof typedefs
  */
 

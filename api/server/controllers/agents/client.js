@@ -16,7 +16,7 @@ const {
   formatContentStrings,
   getTokenCountForMessage,
   createMetadataAggregator,
-} = require('@librechat/agents');
+} = require('@hanzochat/agents');
 const {
   Constants,
   Permissions,
@@ -994,7 +994,7 @@ class AgentClient extends BaseClient {
     const { req, res, agent } = this.options;
     const endpoint = agent.endpoint;
 
-    /** @type {import('@librechat/agents').ClientOptions} */
+    /** @type {import('@hanzochat/agents').ClientOptions} */
     let clientOptions = {
       maxTokens: 75,
       model: agent.model_parameters.model,
@@ -1036,7 +1036,7 @@ class AgentClient extends BaseClient {
       provider = Providers.OPENAI;
     }
 
-    /** @type {import('@librechat/agents').ClientOptions} */
+    /** @type {import('@hanzochat/agents').ClientOptions} */
     clientOptions = { ...options.llmConfig };
     if (options.configOptions) {
       clientOptions.configuration = options.configOptions;

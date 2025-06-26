@@ -14,7 +14,7 @@ jest.mock('@hanzochat/data-provider', () => ({
   extractEnvVariable: jest.fn((value) => value),
 }));
 
-jest.mock('@librechat/agents', () => ({
+jest.mock('@hanzochat/agents', () => ({
   Providers: { OLLAMA: 'ollama' },
 }));
 

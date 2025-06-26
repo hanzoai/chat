@@ -1,6 +1,6 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import { googleSettings, AuthKeys } from '@hanzochat/data-provider';
-import type { GoogleClientOptions, VertexAIClientOptions } from '@librechat/agents';
+import type { GoogleClientOptions, VertexAIClientOptions } from '@hanzochat/agents';
 import type * as t from '~/types';
 import { isEnabled } from '~/utils';
 

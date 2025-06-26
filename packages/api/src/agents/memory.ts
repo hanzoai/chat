@@ -3,14 +3,14 @@ import { z } from 'zod';
 import { tool } from '@langchain/core/tools';
 import { Tools } from '@hanzochat/data-provider';
 import { logger } from '@hanzochat/data-schemas';
-import { Run, Providers, GraphEvents } from '@librechat/agents';
+import { Run, Providers, GraphEvents } from '@hanzochat/agents';
 import type {
   StreamEventData,
   ToolEndCallback,
   EventHandler,
   ToolEndData,
   LLMConfig,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import type { TAttachment, MemoryArtifact } from '@hanzochat/data-provider';
 import type { ObjectId, MemoryMethods } from '@hanzochat/data-schemas';
 import type { BaseMessage } from '@langchain/core/messages';

@@ -3,7 +3,7 @@ const { tool } = require('@langchain/core/tools');
 const { logger } = require('@hanzochat/data-schemas');
 const { Time, CacheKeys, StepTypes } = require('@hanzochat/data-provider');
 const { sendEvent, normalizeServerName, MCPOAuthHandler } = require('@hanzochat/api');
-const { Constants: AgentConstants, Providers, GraphEvents } = require('@librechat/agents');
+const { Constants: AgentConstants, Providers, GraphEvents } = require('@hanzochat/agents');
 const {
   Constants,
   ContentTypes,
@@ -99,7 +99,7 @@ function createAbortHandler({ userId, serverName, toolName, flowManager }) {
  * @param {ServerRequest} params.req - The Express request object, containing user/request info.
  * @param {ServerResponse} params.res - The Express response object for sending events.
  * @param {string} params.toolKey - The toolKey for the tool.
- * @param {import('@librechat/agents').Providers | EModelEndpoint} params.provider - The provider for the tool.
+ * @param {import('@hanzochat/agents').Providers | EModelEndpoint} params.provider - The provider for the tool.
  * @param {string} params.model - The model for the tool.
  * @returns { Promise<typeof tool | { _call: (toolInput: Object | string) => unknown}> } An object with `_call` method to execute the tool input.
  */

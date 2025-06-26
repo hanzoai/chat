@@ -30,7 +30,7 @@
     "type": "git",
     "url": "git+https://github.com/hanzoai/chat.git"
   },
-  "author": "",
+  "author": "Hanzo Industries Inc <dev@hanzo.ai>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hanzoai/chat/issues"

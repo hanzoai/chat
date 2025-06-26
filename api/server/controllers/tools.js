@@ -1,5 +1,5 @@
 const { nanoid } = require('nanoid');
-const { EnvVar } = require('@librechat/agents');
+const { EnvVar } = require('@hanzochat/agents');
 const {
   Tools,
   AuthType,

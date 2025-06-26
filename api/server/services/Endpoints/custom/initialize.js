@@ -5,7 +5,7 @@ const {
   FetchTokenConfig,
   extractEnvVariable,
 } = require('@hanzochat/data-provider');
-const { Providers } = require('@librechat/agents');
+const { Providers } = require('@hanzochat/agents');
 const { getOpenAIConfig, createHandleLLMNewToken, resolveHeaders } = require('@hanzochat/api');
 const { getUserKeyValues, checkUserKeyExpiry } = require('~/server/services/UserService');
 const { getCustomEndpointConfig } = require('~/server/services/Config');

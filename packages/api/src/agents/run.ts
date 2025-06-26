@@ -1,4 +1,4 @@
-import { Run, Providers } from '@librechat/agents';
+import { Run, Providers } from '@hanzochat/agents';
 import { providerEndpointMap, KnownEndpoints } from '@hanzochat/data-provider';
 import type {
   StandardGraphConfig,
@@ -6,7 +6,7 @@ import type {
   GenericTool,
   GraphEvents,
   IState,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import type { Agent } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 

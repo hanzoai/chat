@@ -31,7 +31,7 @@
     "type": "git",
     "url": "git+https://github.com/hanzoai/chat.git"
   },
-  "author": "",
+  "author": "Hanzo Industries Inc <dev@hanzo.ai>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/hanzoai/chat/issues"
@@ -67,10 +67,11 @@
     "typescript": "^5.0.4"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "peerDependencies": {
-    "@librechat/agents": "^2.4.46",
+    "@hanzochat/agents": "^2.4.46",
     "@hanzochat/data-schemas": "*",
     "@modelcontextprotocol/sdk": "^1.12.3",
     "axios": "^1.8.2",
