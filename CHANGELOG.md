@@ -11,7 +11,6 @@ All notable changes to this project will be documented in this file.
 
 ### ✨ New Features
 
-<<<<<<< HEAD
 - ✨ feat: implement search parameter updates by **@mawburn** in [#7151](https://github.com/hanzoai/Chat/pull/7151)
 - 🎏 feat: Add MCP support for Streamable HTTP Transport by **@benverhees** in [#7353](https://github.com/hanzoai/Chat/pull/7353)
 - 🔒 feat: Add Content Security Policy using Helmet middleware by **@rubentalstra** in [#7377](https://github.com/hanzoai/Chat/pull/7377)
@@ -233,13 +232,5 @@ Changes from v0.7.7 to v0.7.8-rc1.
 [See full release details][release-v0.7.8-rc1]
 
 [release-v0.7.8-rc1]: https://github.com/hanzoai/Chat/releases/tag/v0.7.8-rc1
-=======
-- 🪄 feat: Agent Artifacts by **@hanzoai** in [#5804](https://github.com/hanzoai/chat/pull/5804)
-
-### ⚙️ Other Changes
-
-- 🔄 chore: Enforce 18next Language Keys by **@rubentalstra** in [#5803](https://github.com/hanzoai/chat/pull/5803)
-- 🔃 refactor: Parent Message ID Handling on Error, Update Translations, Bump Agents by **@hanzoai** in [#5833](https://github.com/hanzoai/chat/pull/5833)
->>>>>>> 1c21f3543 (Update brand)
 
 ---

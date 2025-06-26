@@ -4,15 +4,9 @@
   "com_a11y_ai_composing": "A IA ainda está compondo.",
   "com_a11y_end": "A IA terminou de responder.",
   "com_a11y_start": "A IA começou a responder.",
-<<<<<<< HEAD
-  "com_agents_allow_editing": "Permitir que outros utilizadores editem o seu agente",
-  "com_agents_by_chat": "por Chat",
-  "com_agents_code_interpreter": "Quando ativado, permite que seu agente aproveite a API do interpretador de código Chat para executar o código gerado, incluindo o processamento de arquivos, com segurança. Requer uma chave de API válida.",
-=======
   "com_agents_allow_editing": "Permitir que outros usuários editem seu agente",
-  "com_agents_by_chat": "por Hanzo",
+  "com_agents_by_chat": "por Chat",
   "com_agents_code_interpreter": "Quando ativado, permite que seu agente aproveite a API do interpretador de código Hanzo para executar o código gerado, incluindo o processamento de arquivos, com segurança. Requer uma chave de API válida.",
->>>>>>> 1c21f3543 (Update brand)
   "com_agents_code_interpreter_title": "API do Interpretador de Código",
   "com_agents_create_error": "Houve um erro ao criar seu agente.",
   "com_agents_description_placeholder": "Opcional: Descreva seu Agente aqui",
