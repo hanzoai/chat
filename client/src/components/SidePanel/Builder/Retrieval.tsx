@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { Capabilities } from 'librechat-data-provider';
-import type { AssistantsEndpoint } from 'librechat-data-provider';
+import { Capabilities } from 'chat-data-provider';
+import type { AssistantsEndpoint } from 'chat-data-provider';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import {
   Checkbox,

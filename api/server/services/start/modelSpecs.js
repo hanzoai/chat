@@ -1,4 +1,4 @@
-const { EModelEndpoint } = require('librechat-data-provider');
+const { EModelEndpoint } = require('chat-data-provider');
 const { normalizeEndpointName } = require('~/server/utils');
 const { logger } = require('~/config');
 
@@ -53,7 +53,7 @@ function processModelSpecs(endpoints, _modelSpecs, interfaceConfig) {
     if (!endpoint) {
       logger.warn(`Model spec with endpoint "${spec.preset.endpoint}" was skipped: Endpoint not found in configuration. The \`endpoint\` value must exactly match either a system-defined endpoint or a custom endpoint defined by the user.
 
-For more information, see the documentation at https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/model_specs#endpoint`);
+For more information, see the documentation at https://www.hanzo.ai/docs/configuration/chat_yaml/object_structure/model_specs#endpoint`);
       continue;
     }
 

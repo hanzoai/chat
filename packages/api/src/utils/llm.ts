@@ -1,10 +1,10 @@
-import { librechat } from 'librechat-data-provider';
-import type { DynamicSettingProps } from 'librechat-data-provider';
+import { chat } from 'chat-data-provider';
+import type { DynamicSettingProps } from 'chat-data-provider';
 
-type LibreChatKeys = keyof typeof librechat;
+type ChatKeys = keyof typeof chat;
 
-type LibreChatParams = {
-  modelOptions: Omit<NonNullable<DynamicSettingProps['conversation']>, LibreChatKeys>;
+type ChatParams = {
+  modelOptions: Omit<NonNullable<DynamicSettingProps['conversation']>, ChatKeys>;
   resendFiles: boolean;
   promptPrefix?: string | null;
   maxContextTokens?: number;
@@ -12,16 +12,16 @@ type LibreChatParams = {
 };
 
 /**
- * Separates LibreChat-specific parameters from model options
+ * Separates Chat-specific parameters from model options
  * @param options - The combined options object
  */
-export function extractLibreChatParams(
+export function extractChatParams(
   options?: DynamicSettingProps['conversation'],
-): LibreChatParams {
+): ChatParams {
   if (!options) {
     return {
-      modelOptions: {} as Omit<NonNullable<DynamicSettingProps['conversation']>, LibreChatKeys>,
-      resendFiles: librechat.resendFiles.default as boolean,
+      modelOptions: {} as Omit<NonNullable<DynamicSettingProps['conversation']>, ChatKeys>,
+      resendFiles: chat.resendFiles.default as boolean,
     };
   }
 
@@ -29,7 +29,7 @@ export function extractLibreChatParams(
 
   const resendFiles =
     (delete modelOptions.resendFiles, options.resendFiles) ??
-    (librechat.resendFiles.default as boolean);
+    (chat.resendFiles.default as boolean);
   const promptPrefix = (delete modelOptions.promptPrefix, options.promptPrefix);
   const maxContextTokens = (delete modelOptions.maxContextTokens, options.maxContextTokens);
   const modelLabel = (delete modelOptions.modelLabel, options.modelLabel);
@@ -37,7 +37,7 @@ export function extractLibreChatParams(
   return {
     modelOptions: modelOptions as Omit<
       NonNullable<DynamicSettingProps['conversation']>,
-      LibreChatKeys
+      ChatKeys
     >,
     maxContextTokens,
     promptPrefix,

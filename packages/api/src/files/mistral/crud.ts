@@ -1,14 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import FormData from 'form-data';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@chat/data-schemas';
 import {
   FileSources,
   envVarRegex,
   extractEnvVariable,
   extractVariableName,
-} from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
+} from 'chat-data-provider';
+import type { TCustomConfig } from 'chat-data-provider';
 import type { Request as ServerRequest } from 'express';
 import type { AxiosError } from 'axios';
 import type {

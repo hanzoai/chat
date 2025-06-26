@@ -1,5 +1,5 @@
 import { Schema, Document, Types } from 'mongoose';
-import { Constants } from 'librechat-data-provider';
+import { Constants } from 'chat-data-provider';
 
 export interface IPromptGroup {
   name: string;

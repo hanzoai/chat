@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { EModelEndpoint, EToolResources } from 'librechat-data-provider';
+import { EModelEndpoint, EToolResources } from 'chat-data-provider';
 import { FileSearch, ImageUpIcon, FileType2Icon, TerminalSquareIcon } from 'lucide-react';
 import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
 import { useGetEndpointsQuery } from '~/data-provider';

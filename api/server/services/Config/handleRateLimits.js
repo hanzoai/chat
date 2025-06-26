@@ -1,4 +1,4 @@
-const { RateLimitPrefix } = require('librechat-data-provider');
+const { RateLimitPrefix } = require('chat-data-provider');
 
 /**
  *

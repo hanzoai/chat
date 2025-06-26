@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@chat/data-schemas');
 const { getBalanceConfig } = require('~/server/services/Config');
 const { Balance } = require('~/db/models');
 

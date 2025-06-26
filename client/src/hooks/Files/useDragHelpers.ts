@@ -10,9 +10,9 @@ import {
   EToolResources,
   AgentCapabilities,
   isAssistantsEndpoint,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import type { DropTargetMonitor } from 'react-dnd';
-import type * as t from 'librechat-data-provider';
+import type * as t from 'chat-data-provider';
 import store, { ephemeralAgentByConvoId } from '~/store';
 import useFileHandling from './useFileHandling';
 

@@ -1,6 +1,6 @@
 const { EventSource } = require('eventsource');
-const { Time } = require('librechat-data-provider');
-const { MCPManager, FlowStateManager } = require('@librechat/api');
+const { Time } = require('chat-data-provider');
+const { MCPManager, FlowStateManager } = require('@chat/api');
 const logger = require('./winston');
 
 global.EventSource = EventSource;

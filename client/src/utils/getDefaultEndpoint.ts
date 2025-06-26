@@ -3,7 +3,7 @@ import type {
   TConversation,
   EModelEndpoint,
   TEndpointsConfig,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import { getLocalStorageItems } from './localStorage';
 import { mapEndpoints } from './endpoints';
 

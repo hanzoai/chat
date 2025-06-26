@@ -1,4 +1,4 @@
-import { EToolResources } from 'librechat-data-provider';
+import { EToolResources } from 'chat-data-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   QueryKeys,
@@ -6,8 +6,8 @@ import {
   MutationKeys,
   defaultOrderQuery,
   isAssistantsEndpoint,
-} from 'librechat-data-provider';
-import type * as t from 'librechat-data-provider';
+} from 'chat-data-provider';
+import type * as t from 'chat-data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
 
 export const useUploadFileMutation = (

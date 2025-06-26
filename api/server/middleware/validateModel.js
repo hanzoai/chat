@@ -1,4 +1,4 @@
-const { ViolationTypes } = require('librechat-data-provider');
+const { ViolationTypes } = require('chat-data-provider');
 const { getModelsConfig } = require('~/server/controllers/ModelController');
 const { handleError } = require('~/server/utils');
 const { logViolation } = require('~/cache');

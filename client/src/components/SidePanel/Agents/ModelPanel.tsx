@@ -9,8 +9,8 @@ import {
   LocalStorageKeys,
   SettingDefinition,
   agentParamSettings,
-} from 'librechat-data-provider';
-import type * as t from 'librechat-data-provider';
+} from 'chat-data-provider';
+import type * as t from 'chat-data-provider';
 import type { AgentForm, AgentModelPanelProps, StringOption } from '~/common';
 import ControlCombobox from '~/components/ui/ControlCombobox';
 import { useGetEndpointsQuery } from '~/data-provider';

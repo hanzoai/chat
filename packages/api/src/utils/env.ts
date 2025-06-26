@@ -1,5 +1,5 @@
-import { extractEnvVariable } from 'librechat-data-provider';
-import type { TUser, MCPOptions } from 'librechat-data-provider';
+import { extractEnvVariable } from 'chat-data-provider';
+import type { TUser, MCPOptions } from 'chat-data-provider';
 
 /**
  * List of allowed user fields that can be used in MCP environment variables.
@@ -37,7 +37,7 @@ function processUserPlaceholders(value: string, user?: TUser): string {
   }
 
   for (const field of ALLOWED_USER_FIELDS) {
-    const placeholder = `{{LIBRECHAT_USER_${field.toUpperCase()}}}`;
+    const placeholder = `{{CHAT_USER_${field.toUpperCase()}}}`;
     if (!value.includes(placeholder)) {
       continue;
     }
@@ -89,7 +89,7 @@ function processSingleValue({
     }
   }
 
-  // 2. Replace user field placeholders (e.g., {{LIBRECHAT_USER_EMAIL}}, {{LIBRECHAT_USER_ID}})
+  // 2. Replace user field placeholders (e.g., {{CHAT_USER_EMAIL}}, {{CHAT_USER_ID}})
   value = processUserPlaceholders(value, user);
 
   // 3. Replace system environment variables

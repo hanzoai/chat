@@ -1,9 +1,9 @@
 import React, { memo, useRef, useMemo, useEffect, useCallback, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { Settings2 } from 'lucide-react';
-import { useUpdateUserPluginsMutation } from 'librechat-data-provider/react-query';
-import { Constants, EModelEndpoint, LocalStorageKeys } from 'librechat-data-provider';
-import type { TPlugin, TPluginAuthConfig, TUpdateUserPlugins } from 'librechat-data-provider';
+import { useUpdateUserPluginsMutation } from 'chat-data-provider/react-query';
+import { Constants, EModelEndpoint, LocalStorageKeys } from 'chat-data-provider';
+import type { TPlugin, TPluginAuthConfig, TUpdateUserPlugins } from 'chat-data-provider';
 import MCPConfigDialog, { type ConfigFieldDetail } from '~/components/ui/MCPConfigDialog';
 import { useAvailableToolsQuery } from '~/data-provider';
 import useLocalStorage from '~/hooks/useLocalStorageAlt';

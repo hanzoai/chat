@@ -4,7 +4,7 @@ import {
   EToolResources,
   mergeFileConfig,
   fileConfig as defaultFileConfig,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import type { ExtendedFile } from '~/common';
 import { useFileHandling, useLocalize, useLazyEffect } from '~/hooks';
 import FileRow from '~/components/Chat/Input/Files/FileRow';

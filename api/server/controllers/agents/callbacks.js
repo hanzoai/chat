@@ -1,7 +1,7 @@
 const { nanoid } = require('nanoid');
-const { sendEvent } = require('@librechat/api');
-const { logger } = require('@librechat/data-schemas');
-const { Tools, StepTypes, FileContext } = require('librechat-data-provider');
+const { sendEvent } = require('@chat/api');
+const { logger } = require('@chat/data-schemas');
+const { Tools, StepTypes, FileContext } = require('chat-data-provider');
 const {
   EnvVar,
   Providers,
@@ -10,7 +10,7 @@ const {
   ToolEndHandler,
   handleToolCalls,
   ChatModelStreamHandler,
-} = require('@librechat/agents');
+} = require('@chat/agents');
 const { processCodeOutput } = require('~/server/services/Files/Code/process');
 const { loadAuthValues } = require('~/server/services/Tools/credentials');
 const { saveBase64Image } = require('~/server/services/Files/process');

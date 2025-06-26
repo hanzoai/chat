@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const { EModelEndpoint } = require('librechat-data-provider');
+const { EModelEndpoint } = require('chat-data-provider');
 const { getBufferMetadata } = require('~/server/utils');
 const paths = require('~/config/paths');
 const { logger } = require('~/config');

@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { createTempChatExpirationDate } = require('@librechat/api');
+const { logger } = require('@chat/data-schemas');
+const { createTempChatExpirationDate } = require('@chat/api');
 const getCustomConfig = require('~/server/services/Config/loadCustomConfig');
 const { getMessages, deleteMessages } = require('./Message');
 const { Conversation } = require('~/db/models');

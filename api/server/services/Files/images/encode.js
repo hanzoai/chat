@@ -1,12 +1,12 @@
 const axios = require('axios');
-const { logAxiosError } = require('@librechat/api');
+const { logAxiosError } = require('@chat/api');
 const {
   FileSources,
   VisionModes,
   ImageDetail,
   ContentTypes,
   EModelEndpoint,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 
 /**

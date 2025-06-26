@@ -1,5 +1,5 @@
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { resolveHeaders } = require('librechat-data-provider');
+const { resolveHeaders } = require('chat-data-provider');
 const { createLLM } = require('~/app/clients/llm');
 
 /**
@@ -70,7 +70,7 @@ function initializeLLM(options) {
     configOptions.basePath = 'https://openrouter.ai/api/v1';
     configOptions.baseOptions = {
       headers: {
-        'HTTP-Referer': 'https://librechat.ai',
+        'HTTP-Referer': 'https://hanzo.ai',
         'X-Title': 'Hanzo',
       },
     };

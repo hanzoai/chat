@@ -5,13 +5,13 @@ import {
   validateAndParseOpenAPISpec,
   openapiToFunction,
   AuthTypeEnum,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import type {
   Action,
   FunctionTool,
   ActionMetadata,
   ValidationResult,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import type { ActionAuthForm } from '~/common';
 import type { Spec } from './ActionsTable';
 import ActionCallback from '~/components/SidePanel/Builder/ActionCallback';

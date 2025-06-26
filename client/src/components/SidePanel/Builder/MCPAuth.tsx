@@ -5,7 +5,7 @@ import {
   AuthorizationTypeEnum,
   TokenExchangeMethodEnum,
   AuthTypeEnum,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 
 export default function MCPAuth() {
   // Create a separate form for auth

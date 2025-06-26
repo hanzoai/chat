@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@chat/data-schemas');
 const { createSocialUser, handleExistingUser } = require('./process');
 const { isEnabled } = require('~/server/utils');
 const { findUser } = require('~/models');

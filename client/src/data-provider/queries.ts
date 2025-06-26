@@ -4,7 +4,7 @@ import {
   EModelEndpoint,
   defaultOrderQuery,
   defaultAssistantsVersion,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   InfiniteData,
@@ -12,7 +12,7 @@ import type {
   QueryObserverResult,
   UseQueryOptions,
 } from '@tanstack/react-query';
-import type t from 'librechat-data-provider';
+import type t from 'chat-data-provider';
 import type {
   Action,
   TPreset,
@@ -28,7 +28,7 @@ import type {
   TCheckUserKeyResponse,
   SharedLinksListParams,
   SharedLinksResponse,
-} from 'librechat-data-provider';
+} from 'chat-data-provider';
 import type { ConversationCursorData } from '~/utils/convos';
 import { findConversationInInfinite } from '~/utils';
 

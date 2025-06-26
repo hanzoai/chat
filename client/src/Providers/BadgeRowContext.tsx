@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { Tools, LocalStorageKeys } from 'librechat-data-provider';
+import { Tools, LocalStorageKeys } from 'chat-data-provider';
 import { useMCPSelect, useToolToggle, useCodeApiKeyForm, useSearchApiKeyForm } from '~/hooks';
 import { useGetStartupConfig } from '~/data-provider';
 

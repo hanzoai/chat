@@ -8,9 +8,9 @@ const {
   anthropicSettings,
   getResponseSender,
   validateVisionModel,
-} = require('librechat-data-provider');
-const { SplitStreamHandler: _Handler } = require('@librechat/agents');
-const { Tokenizer, createFetch, createStreamEventHandlers } = require('@librechat/api');
+} = require('chat-data-provider');
+const { SplitStreamHandler: _Handler } = require('@chat/agents');
+const { Tokenizer, createFetch, createStreamEventHandlers } = require('@chat/api');
 const {
   truncateText,
   formatMessage,

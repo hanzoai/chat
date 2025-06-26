@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const { nanoid } = require('nanoid');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@chat/data-schemas');
 const {
   Tools,
   Constants,
@@ -8,7 +8,7 @@ const {
   SystemRoles,
   EToolResources,
   actionDelimiter,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const {
   getAgent,
   createAgent,

@@ -1,6 +1,6 @@
 const { OllamaClient } = require('./OllamaClient');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { SplitStreamHandler, CustomOpenAIClient: OpenAI } = require('@librechat/agents');
+const { SplitStreamHandler, CustomOpenAIClient: OpenAI } = require('@chat/agents');
 const {
   isEnabled,
   Tokenizer,
@@ -9,7 +9,7 @@ const {
   constructAzureURL,
   genAzureChatCompletion,
   createStreamEventHandlers,
-} = require('@librechat/api');
+} = require('@chat/api');
 const {
   Constants,
   ImageDetail,
@@ -23,7 +23,7 @@ const {
   getResponseSender,
   validateVisionModel,
   mapModelToAzureConfig,
-} = require('librechat-data-provider');
+} = require('chat-data-provider');
 const {
   truncateText,
   formatMessage,
@@ -643,7 +643,7 @@ class OpenAIClient extends BaseClient {
       configOptions.basePath = 'https://openrouter.ai/api/v1';
       configOptions.baseOptions = {
         headers: {
-          'HTTP-Referer': 'https://librechat.ai',
+          'HTTP-Referer': 'https://hanzo.ai',
           'X-Title': 'Hanzo',
         },
       };
@@ -1146,7 +1146,7 @@ ${convo}
 
       if (this.useOpenRouter) {
         opts.defaultHeaders = {
-          'HTTP-Referer': 'https://librechat.ai',
+          'HTTP-Referer': 'https://hanzo.ai',
           'X-Title': 'Hanzo',
         };
       }

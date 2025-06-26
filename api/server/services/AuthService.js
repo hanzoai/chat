@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 const { webcrypto } = require('node:crypto');
-const { isEnabled } = require('@librechat/api');
-const { logger } = require('@librechat/data-schemas');
-const { SystemRoles, errorsToString } = require('librechat-data-provider');
+const { isEnabled } = require('@chat/api');
+const { logger } = require('@chat/data-schemas');
+const { SystemRoles, errorsToString } = require('chat-data-provider');
 const {
   findUser,
   createUser,
@@ -381,7 +381,7 @@ const setAuthTokens = async (userId, res, sessionId = null) => {
       secure: isProduction,
       sameSite: 'strict',
     });
-    res.cookie('token_provider', 'librechat', {
+    res.cookie('token_provider', 'chat', {
       expires: new Date(refreshTokenExpires),
       httpOnly: true,
       secure: isProduction,

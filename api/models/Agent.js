@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const crypto = require('node:crypto');
-const { logger } = require('@librechat/data-schemas');
-const { SystemRoles, Tools, actionDelimiter } = require('librechat-data-provider');
+const { logger } = require('@chat/data-schemas');
+const { SystemRoles, Tools, actionDelimiter } = require('chat-data-provider');
 const { GLOBAL_PROJECT_NAME, EPHEMERAL_AGENT_ID, mcp_delimiter } =
-  require('librechat-data-provider').Constants;
-const { CONFIG_STORE, STARTUP_CONFIG } = require('librechat-data-provider').CacheKeys;
+  require('chat-data-provider').Constants;
+const { CONFIG_STORE, STARTUP_CONFIG } = require('chat-data-provider').CacheKeys;
 const {
   getProjectByName,
   addAgentIdsToProject,
@@ -55,7 +55,7 @@ const getAgent = async (searchParameter) => await Agent.findOne(searchParameter)
  * @param {ServerRequest} params.req
  * @param {string} params.agent_id
  * @param {string} params.endpoint
- * @param {import('@librechat/agents').ClientOptions} [params.model_parameters]
+ * @param {import('@chat/agents').ClientOptions} [params.model_parameters]
  * @returns {Promise<Agent|null>} The agent document as a plain object, or null if not found.
  */
 const loadEphemeralAgent = async ({ req, agent_id, endpoint, model_parameters: _m }) => {
@@ -107,7 +107,7 @@ const loadEphemeralAgent = async ({ req, agent_id, endpoint, model_parameters: _
  * @param {ServerRequest} params.req
  * @param {string} params.agent_id
  * @param {string} params.endpoint
- * @param {import('@librechat/agents').ClientOptions} [params.model_parameters]
+ * @param {import('@chat/agents').ClientOptions} [params.model_parameters]
  * @returns {Promise<Agent|null>} The agent document as a plain object, or null if not found.
  */
 const loadAgent = async ({ req, agent_id, endpoint, model_parameters }) => {
