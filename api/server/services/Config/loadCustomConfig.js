@@ -15,7 +15,7 @@ const {
 const getLogStores = require('~/cache/getLogStores');
 
 const projectRoot = path.resolve(__dirname, '..', '..', '..', '..');
-const defaultConfigPath = path.resolve(projectRoot, 'librechat.yaml');
+const defaultConfigPath = path.resolve(projectRoot, 'chat.yaml');
 
 let i = 0;
 

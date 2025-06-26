@@ -2,7 +2,7 @@ import type { TCustomConfig, TMemoryConfig } from './config';
 
 /**
  * Loads the memory configuration and validates it
- * @param config - The memory configuration from librechat.yaml
+ * @param config - The memory configuration from chat.yaml
  * @returns The validated memory configuration
  */
 export function loadMemoryConfig(config: TCustomConfig['memory']): TMemoryConfig | undefined {

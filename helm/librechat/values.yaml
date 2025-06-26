@@ -86,7 +86,7 @@ librechat:
   #         forcePrompt: false
   #         modelDisplayLabel: "OpenRouter"
 
-  # name of existing Yaml configmap, key must be librechat.yaml
+  # name of existing Yaml configmap, key must be chat.yaml
   existingConfigYaml: ""
 
   # Volume used to store image Files uploaded to the Web UI
