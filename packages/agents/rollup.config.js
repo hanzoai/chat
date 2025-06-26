@@ -29,6 +29,8 @@ export default [
       typescript({
         tsconfig: './tsconfig.json',
         outputToFilesystem: true,
+        declaration: true,
+        declarationDir: 'dist',
       }),
       terser(),
     ],
