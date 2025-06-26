@@ -620,12 +620,12 @@
   "com_ui_latest_footer": "IA para todos.",
 <<<<<<< HEAD
   "com_ui_latest_version": "Última versión",
-  "com_ui_librechat_code_api_key": "Obtenga su clave API del Intérprete de Código de LibreChat",
+  "com_ui_hanzo_code_api_key": "Obtenga su clave API del Intérprete de Código de LibreChat",
 =======
-  "com_ui_librechat_code_api_key": "Obtenga su clave API del Intérprete de Código de Hanzo",
+  "com_ui_hanzo_code_api_key": "Obtenga su clave API del Intérprete de Código de Hanzo",
 >>>>>>> 1c21f3543 (Update brand)
-  "com_ui_librechat_code_api_subtitle": "Seguro. Multilenguaje. Archivos de entrada/salida.",
-  "com_ui_librechat_code_api_title": "Ejecutar Código IA",
+  "com_ui_hanzo_code_api_subtitle": "Seguro. Multilenguaje. Archivos de entrada/salida.",
+  "com_ui_hanzo_code_api_title": "Ejecutar Código IA",
   "com_ui_loading": "Cargando...",
   "com_ui_locked": "Bloqueado",
   "com_ui_logo": "Logotipo de {{0}}",

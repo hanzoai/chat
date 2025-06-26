@@ -1,6 +1,6 @@
 apiVersion: v2
-name: librechat
-description: A Helm chart for LibreChat
+name: hanzo-chat
+description: A Helm chart for Hanzo Chat
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -21,10 +21,10 @@ version: 1.8.9
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 
-# renovate: image=ghcr.io/danny-avila/librechat
+# renovate: image=ghcr.io/hanzoai/chat
 appVersion: "v0.7.8"
 
-home: https://www.librechat.ai
+home: https://hanzo.ai
 
 dependencies:
   - name: mongodb
@@ -35,7 +35,7 @@ dependencies:
     version: "0.11.0"
     condition: meilisearch.enabled
     repository: "https://meilisearch.github.io/meilisearch-kubernetes"
-  - name: librechat-rag-api
+  - name: hanzo-chat-rag-api
     version: "0.5.2"
-    condition: librechat-rag-api.enabled
-    repository: file://../librechat-rag-api
+    condition: hanzo-chat-rag-api.enabled
+    repository: file://../hanzo-chat-rag-api

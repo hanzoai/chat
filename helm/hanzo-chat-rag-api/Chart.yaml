@@ -1,6 +1,6 @@
 apiVersion: v2
-name: librechat-rag-api
-description: A Helm chart for LibreChat
+name: hanzo-chat-rag-api
+description: A Helm chart for Hanzo Chat RAG API
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -21,10 +21,10 @@ version: 0.5.2
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 
-# renovate: image=ghcr.io/danny-avila/librechat-rag-api-dev
+# renovate: image=ghcr.io/hanzoai/chat-rag-api
 appVersion: "v0.4.0"
 
-home: https://www.librechat.ai
+home: https://hanzo.ai
 
 dependencies:
   - name: postgresql
