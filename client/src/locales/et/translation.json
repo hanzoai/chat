@@ -461,7 +461,7 @@
   "com_ui_add_model_preset": "Lisa mudel või eelseadistus täiendava vastuse jaoks",
   "com_ui_add_multi_conversation": "Lisa mitmevestlus",
   "com_ui_admin": "Administraator",
-  "com_ui_admin_access_warning": "Administraatori juurdepääsu keelamine sellele funktsioonile võib põhjustada ootamatuid kasutajaliidese probleeme, mis nõuavad värskendamist. Kui see on salvestatud, on ainus viis taastada liideseseade kaudu librechat.yaml konfiguratsioonis, mis mõjutab kõiki rolle.",
+  "com_ui_admin_access_warning": "Administraatori juurdepääsu keelamine sellele funktsioonile võib põhjustada ootamatuid kasutajaliidese probleeme, mis nõuavad värskendamist. Kui see on salvestatud, on ainus viis taastada liideseseade kaudu chat.yaml konfiguratsioonis, mis mõjutab kõiki rolle.",
   "com_ui_admin_settings": "Administraatori seaded",
   "com_ui_advanced": "Täpsemad",
   "com_ui_advanced_settings": "Täpsemad seaded",

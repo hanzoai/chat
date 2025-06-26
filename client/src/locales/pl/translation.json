@@ -416,7 +416,7 @@
   "com_ui_add_model_preset": "Dodaj model lub preset dla dodatkowej odpowiedzi",
   "com_ui_add_multi_conversation": "Dodaj wielokrotną konwersację",
   "com_ui_admin": "Administrator",
-  "com_ui_admin_access_warning": "Wyłączenie dostępu administratora do tej funkcji może spowodować nieoczekiwane problemy z interfejsem użytkownika wymagające odświeżenia. Jeśli zostanie zapisane, jedynym sposobem na przywrócenie jest ustawienie interfejsu w konfiguracji librechat.yaml, które wpływa na wszystkie role.",
+  "com_ui_admin_access_warning": "Wyłączenie dostępu administratora do tej funkcji może spowodować nieoczekiwane problemy z interfejsem użytkownika wymagające odświeżenia. Jeśli zostanie zapisane, jedynym sposobem na przywrócenie jest ustawienie interfejsu w konfiguracji chat.yaml, które wpływa na wszystkie role.",
   "com_ui_admin_settings": "Ustawienia administratora",
   "com_ui_advanced": "Zaawansowane",
   "com_ui_agent": "Agent",
