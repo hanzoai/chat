@@ -1,4 +1,4 @@
-import type { TConversationTagsResponse } from 'chat-data-provider';
+import type { TConversationTagsResponse } from '@hanzochat/data-provider';
 import { updateConversationTag } from './conversationTags';
 
 describe('ConversationTag Utilities', () => {

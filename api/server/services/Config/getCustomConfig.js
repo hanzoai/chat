@@ -1,6 +1,6 @@
-const { logger } = require('@chat/data-schemas');
-const { getUserMCPAuthMap } = require('@chat/api');
-const { CacheKeys, EModelEndpoint } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { getUserMCPAuthMap } = require('@hanzochat/api');
+const { CacheKeys, EModelEndpoint } = require('@hanzochat/data-provider');
 const { normalizeEndpointName, isEnabled } = require('~/server/utils');
 const loadCustomConfig = require('./loadCustomConfig');
 const { getCachedTools } = require('./getCachedTools');

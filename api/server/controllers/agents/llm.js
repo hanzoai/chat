@@ -1,5 +1,5 @@
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { resolveHeaders } = require('chat-data-provider');
+const { resolveHeaders } = require('@hanzochat/data-provider');
 const { createLLM } = require('~/app/clients/llm');
 
 /**

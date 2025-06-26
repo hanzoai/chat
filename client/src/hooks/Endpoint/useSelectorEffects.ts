@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { isAgentsEndpoint, isAssistantsEndpoint, LocalStorageKeys } from 'chat-data-provider';
-import type * as t from 'chat-data-provider';
+import { isAgentsEndpoint, isAssistantsEndpoint, LocalStorageKeys } from '@hanzochat/data-provider';
+import type * as t from '@hanzochat/data-provider';
 import type { SelectedValues } from '~/common';
 import useSetIndexOptions from '~/hooks/Conversations/useSetIndexOptions';
 

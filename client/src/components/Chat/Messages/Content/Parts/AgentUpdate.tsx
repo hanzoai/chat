@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { EModelEndpoint } from 'chat-data-provider';
-import type { TMessage } from 'chat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import MessageIcon from '~/components/Share/MessageIcon';
 import { useAgentsMapContext } from '~/Providers';
 import { useLocalize } from '~/hooks';

@@ -1,6 +1,6 @@
 // errorHandler.js
-const { logger } = require('@chat/data-schemas');
-const { CacheKeys, ViolationTypes } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys, ViolationTypes } = require('@hanzochat/data-provider');
 const { sendResponse } = require('~/server/middleware/error');
 const { recordUsage } = require('~/server/services/Threads');
 const { getConvo } = require('~/models/Conversation');

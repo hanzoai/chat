@@ -1,5 +1,5 @@
 import { resolveHeaders } from './env';
-import type { TUser } from 'chat-data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 
 // Helper function to create test user objects
 function createTestUser(overrides: Partial<TUser> = {}): TUser {

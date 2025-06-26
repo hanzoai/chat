@@ -6,7 +6,7 @@ import {
   mergeFileConfig,
   AgentCapabilities,
   fileConfig as defaultFileConfig,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type { ExtendedFile, AgentForm } from '~/common';
 import { useFileHandling, useLocalize, useLazyEffect } from '~/hooks';
 import FileRow from '~/components/Chat/Input/Files/FileRow';

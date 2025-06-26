@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import type { TUser, TPlugin } from 'chat-data-provider';
+import type { TUser, TPlugin } from '@hanzochat/data-provider';
 
 const user = atom<TUser | undefined>({
   key: 'user',

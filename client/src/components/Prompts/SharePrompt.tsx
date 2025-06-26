@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo } from 'react';
 import { Share2Icon } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
-import { Permissions } from 'chat-data-provider';
+import { Permissions } from '@hanzochat/data-provider';
 import type {
   TPromptGroup,
   TStartupConfig,
   TUpdatePromptGroupPayload,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import {
   Button,
   Switch,

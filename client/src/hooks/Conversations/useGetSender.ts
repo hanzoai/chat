@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { getResponseSender } from 'chat-data-provider';
-import type { TEndpointOption, TEndpointsConfig } from 'chat-data-provider';
+import { getResponseSender } from '@hanzochat/data-provider';
+import type { TEndpointOption, TEndpointsConfig } from '@hanzochat/data-provider';
 import { useGetEndpointsQuery } from '~/data-provider';
 
 export default function useGetSender() {

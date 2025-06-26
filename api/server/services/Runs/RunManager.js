@@ -1,4 +1,4 @@
-const { ToolCallTypes } = require('chat-data-provider');
+const { ToolCallTypes } = require('@hanzochat/data-provider');
 const { logger } = require('~/config');
 
 /**

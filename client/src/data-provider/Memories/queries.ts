@@ -1,12 +1,12 @@
 /* Memories */
-import { QueryKeys, MutationKeys, dataService } from 'chat-data-provider';
+import { QueryKeys, MutationKeys, dataService } from '@hanzochat/data-provider';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import type {
   UseQueryOptions,
   UseMutationOptions,
   QueryObserverResult,
 } from '@tanstack/react-query';
-import type { TUserMemory, MemoriesResponse } from 'chat-data-provider';
+import type { TUserMemory, MemoriesResponse } from '@hanzochat/data-provider';
 
 export const useMemoriesQuery = (
   config?: UseQueryOptions<MemoriesResponse>,

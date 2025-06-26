@@ -2,8 +2,8 @@ const path = require('path');
 const axios = require('axios');
 const yaml = require('js-yaml');
 const keyBy = require('lodash/keyBy');
-const { loadYaml } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { loadYaml } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   CacheKeys,
   configSchema,
@@ -11,7 +11,7 @@ const {
   EImageOutputType,
   agentParamSettings,
   validateSettingDefinitions,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const getLogStores = require('~/cache/getLogStores');
 
 const projectRoot = path.resolve(__dirname, '..', '..', '..', '..');

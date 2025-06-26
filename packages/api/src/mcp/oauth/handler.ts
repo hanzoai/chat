@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { logger } from '@chat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import {
   discoverOAuthMetadata,
   registerClient,
@@ -8,7 +8,7 @@ import {
   discoverOAuthProtectedResourceMetadata,
 } from '@modelcontextprotocol/sdk/client/auth.js';
 import { OAuthMetadataSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
-import type { MCPOptions } from 'chat-data-provider';
+import type { MCPOptions } from '@hanzochat/data-provider';
 import type { FlowStateManager } from '~/flow/manager';
 import type {
   OAuthClientInformation,

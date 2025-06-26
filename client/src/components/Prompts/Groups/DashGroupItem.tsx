@@ -1,7 +1,7 @@
 import { memo, useState, useRef, useMemo, useCallback, KeyboardEvent } from 'react';
 import { EarthIcon, Pen } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { SystemRoles, type TPromptGroup } from 'chat-data-provider';
+import { SystemRoles, type TPromptGroup } from '@hanzochat/data-provider';
 import { useDeletePromptGroup, useUpdatePromptGroup } from '~/data-provider';
 import { Input, Label, Button, OGDialog, OGDialogTrigger } from '~/components/ui';
 import CategoryIcon from '~/components/Prompts/Groups/CategoryIcon';

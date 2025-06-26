@@ -2,7 +2,7 @@ import {
   AuthorizationTypeEnum,
   AuthTypeEnum,
   TokenExchangeMethodEnum,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { MCPForm } from '~/common/types';
 
 export const defaultMCPFormValues: MCPForm = {

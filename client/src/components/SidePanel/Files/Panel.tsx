@@ -1,4 +1,4 @@
-import type { TFile } from 'chat-data-provider';
+import type { TFile } from '@hanzochat/data-provider';
 import { useGetFiles } from '~/data-provider';
 import { columns } from './PanelColumns';
 import DataTable from './PanelTable';

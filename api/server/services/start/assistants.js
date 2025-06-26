@@ -2,7 +2,7 @@ const {
   Capabilities,
   assistantEndpointSchema,
   defaultAssistantsVersion,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { logger } = require('~/config');
 
 /**

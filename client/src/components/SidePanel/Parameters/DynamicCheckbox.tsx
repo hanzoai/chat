@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { OptionTypes } from 'chat-data-provider';
-import type { DynamicSettingProps } from 'chat-data-provider';
+import { OptionTypes } from '@hanzochat/data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 import { Label, Checkbox, HoverCard, HoverCardTrigger } from '~/components/ui';
 import { TranslationKeys, useLocalize, useDebouncedInput, useParameterEffects } from '~/hooks';
 import { useChatContext } from '~/Providers';

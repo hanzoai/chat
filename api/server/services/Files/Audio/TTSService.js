@@ -1,6 +1,6 @@
 const axios = require('axios');
-const { genAzureEndpoint } = require('@chat/api');
-const { extractEnvVariable, TTSProviders } = require('chat-data-provider');
+const { genAzureEndpoint } = require('@hanzochat/api');
+const { extractEnvVariable, TTSProviders } = require('@hanzochat/data-provider');
 const { getRandomVoiceId, createChunkProcessor, splitTextIntoChunks } = require('./streamAudio');
 const { getCustomConfig } = require('~/server/services/Config');
 const { logger } = require('~/config');

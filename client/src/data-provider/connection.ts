@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, Time, dataService } from 'chat-data-provider';
+import { QueryKeys, Time, dataService } from '@hanzochat/data-provider';
 import { logger } from '~/utils';
 
 export const useHealthCheck = (isAuthenticated = false) => {

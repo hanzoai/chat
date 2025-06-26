@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Capabilities } from 'chat-data-provider';
+import { Capabilities } from '@hanzochat/data-provider';
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { TConfig, AssistantsEndpoint } from 'chat-data-provider';
+import type { TConfig, AssistantsEndpoint } from '@hanzochat/data-provider';
 import type { AssistantForm } from '~/common';
 import ImageVision from './ImageVision';
 import { useLocalize } from '~/hooks';

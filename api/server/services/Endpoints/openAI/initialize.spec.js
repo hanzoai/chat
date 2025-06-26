@@ -1,5 +1,5 @@
 jest.mock('~/cache/getLogStores');
-const { EModelEndpoint, ErrorTypes, validateAzureGroups } = require('chat-data-provider');
+const { EModelEndpoint, ErrorTypes, validateAzureGroups } = require('@hanzochat/data-provider');
 const { getUserKey, getUserKeyValues } = require('~/server/services/UserService');
 const initializeClient = require('./initialize');
 const { OpenAIClient } = require('~/app');

@@ -1,5 +1,5 @@
 import { SquareSlash } from 'lucide-react';
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { useState, useEffect } from 'react';
 import { Input } from '~/components/ui';
 import { useLocalize } from '~/hooks';

@@ -5,13 +5,13 @@ import {
   validateAndParseOpenAPISpec,
   openapiToFunction,
   AuthTypeEnum,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   Action,
   FunctionTool,
   ActionMetadata,
   ValidationResult,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type { ActionAuthForm } from '~/common';
 import type { Spec } from './ActionsTable';
 import ActionCallback from '~/components/SidePanel/Builder/ActionCallback';

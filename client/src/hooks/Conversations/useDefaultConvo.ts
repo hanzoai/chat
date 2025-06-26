@@ -1,11 +1,11 @@
-import { excludedKeys } from 'chat-data-provider';
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
+import { excludedKeys } from '@hanzochat/data-provider';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import type {
   TEndpointsConfig,
   TModelsConfig,
   TConversation,
   TPreset,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { getDefaultEndpoint, buildDefaultConvo } from '~/utils';
 import { useGetEndpointsQuery } from '~/data-provider';
 

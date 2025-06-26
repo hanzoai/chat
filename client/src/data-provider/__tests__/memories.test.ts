@@ -1,4 +1,4 @@
-import { dataService as _dataService } from 'chat-data-provider';
+import { dataService as _dataService } from '@hanzochat/data-provider';
 import axios from 'axios';
 
 jest.mock('axios');

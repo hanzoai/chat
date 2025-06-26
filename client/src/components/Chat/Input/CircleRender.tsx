@@ -1,6 +1,6 @@
 import React from 'react';
 import { CircleIcon, CircleDotsIcon } from '~/components/svg';
-import { ECallState } from 'chat-data-provider';
+import { ECallState } from '@hanzochat/data-provider';
 
 const CircleRender = ({ rmsLevel, isCameraOn, state }) => {
   const getIconComponent = (state) => {

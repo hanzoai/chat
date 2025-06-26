@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { logger } from '@chat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { AxiosInstance, AxiosProxyConfig, AxiosError } from 'axios';
 
 /**

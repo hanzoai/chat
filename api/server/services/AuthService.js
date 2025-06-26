@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 const { webcrypto } = require('node:crypto');
-const { isEnabled } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
-const { SystemRoles, errorsToString } = require('chat-data-provider');
+const { isEnabled } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { SystemRoles, errorsToString } = require('@hanzochat/data-provider');
 const {
   findUser,
   createUser,

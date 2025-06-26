@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import type { TConversationTag } from 'chat-data-provider';
+import type { TConversationTag } from '@hanzochat/data-provider';
 import { TooltipAnchor, OGDialogTrigger, EditIcon, Button } from '~/components';
 import BookmarkEditDialog from './BookmarkEditDialog';
 import { useLocalize } from '~/hooks';

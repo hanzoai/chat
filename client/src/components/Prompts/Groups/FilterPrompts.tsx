@@ -1,7 +1,7 @@
 import { ListFilter, User, Share2 } from 'lucide-react';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { SystemCategories } from 'chat-data-provider';
+import { SystemCategories } from '@hanzochat/data-provider';
 import { usePromptGroupsNav, useLocalize, useCategories } from '~/hooks';
 import { Dropdown, AnimatedSearchInput } from '~/components/ui';
 import type { Option } from '~/common';

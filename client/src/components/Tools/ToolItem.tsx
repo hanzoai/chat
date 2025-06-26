@@ -1,5 +1,5 @@
 import { XCircle, PlusCircleIcon, Wrench } from 'lucide-react';
-import { AgentToolType } from 'chat-data-provider';
+import { AgentToolType } from '@hanzochat/data-provider';
 import { useLocalize } from '~/hooks';
 
 type ToolItemProps = {

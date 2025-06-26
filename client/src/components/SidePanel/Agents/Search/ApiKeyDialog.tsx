@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import * as Menu from '@ariakit/react/menu';
-import { AuthType, SearchCategories, RerankerTypes } from 'chat-data-provider';
+import { AuthType, SearchCategories, RerankerTypes } from '@hanzochat/data-provider';
 import type { UseFormRegister, UseFormHandleSubmit } from 'react-hook-form';
 import type { SearchApiKeyFormData } from '~/hooks/Plugins/useAuthSearchTool';
 import type { MenuItemProps } from '~/common';

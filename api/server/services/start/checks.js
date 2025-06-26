@@ -4,7 +4,7 @@ const {
   deprecatedAzureVariables,
   conflictingAzureVariables,
   extractVariableName,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { isEnabled, checkEmailConfig } = require('~/server/utils');
 const { logger } = require('~/config');
 

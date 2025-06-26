@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { getSettingsKeys } from 'chat-data-provider';
-import type { SettingDefinition } from 'chat-data-provider';
+import { getSettingsKeys } from '@hanzochat/data-provider';
+import type { SettingDefinition } from '@hanzochat/data-provider';
 import type { TModelSelectProps } from '~/common';
 import { componentMapping } from '~/components/SidePanel/Parameters/components';
-import { presetSettings } from 'chat-data-provider';
+import { presetSettings } from '@hanzochat/data-provider';
 
 export default function OpenAISettings({
   conversation,

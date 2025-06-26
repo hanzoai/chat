@@ -1,6 +1,6 @@
 const { OllamaClient } = require('./OllamaClient');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { SplitStreamHandler, CustomOpenAIClient: OpenAI } = require('@chat/agents');
+const { SplitStreamHandler, CustomOpenAIClient: OpenAI } = require('@librechat/agents');
 const {
   isEnabled,
   Tokenizer,
@@ -9,7 +9,7 @@ const {
   constructAzureURL,
   genAzureChatCompletion,
   createStreamEventHandlers,
-} = require('@chat/api');
+} = require('@hanzochat/api');
 const {
   Constants,
   ImageDetail,
@@ -23,7 +23,7 @@ const {
   getResponseSender,
   validateVisionModel,
   mapModelToAzureConfig,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   truncateText,
   formatMessage,

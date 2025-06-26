@@ -1,8 +1,8 @@
 import { Link } from 'lucide-react';
 import { useRecoilValue } from 'recoil';
-import { QueryKeys } from 'chat-data-provider';
+import { QueryKeys } from '@hanzochat/data-provider';
 import { useQueryClient } from '@tanstack/react-query';
-import type { TMessage, TConversation } from 'chat-data-provider';
+import type { TMessage, TConversation } from '@hanzochat/data-provider';
 import type { InfiniteData } from '@tanstack/react-query';
 import type { ConversationCursorData } from '~/utils';
 import { useLocalize, useNavigateToConvo } from '~/hooks';

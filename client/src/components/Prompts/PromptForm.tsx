@@ -4,8 +4,8 @@ import { Menu, Rocket } from 'lucide-react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import type { TCreatePrompt } from 'chat-data-provider';
-import { SystemRoles, PermissionTypes, Permissions } from 'chat-data-provider';
+import type { TCreatePrompt } from '@hanzochat/data-provider';
+import { SystemRoles, PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import {
   useCreatePrompt,
   useGetPrompts,

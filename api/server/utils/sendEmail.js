@@ -4,8 +4,8 @@ const axios = require('axios');
 const FormData = require('form-data');
 const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
-const { logAxiosError } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { logAxiosError } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const { isEnabled } = require('~/server/utils/handleText');
 
 /**

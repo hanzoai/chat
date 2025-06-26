@@ -1,5 +1,5 @@
 {
-  "name": "hanzo-data-provider",
+  "name": "@hanzochat/data-provider",
   "version": "0.7.88",
   "description": "data services for Hanzo Chat apps",
   "main": "dist/index.js",

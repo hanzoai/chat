@@ -15,9 +15,9 @@ import type {
   VisibilityState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { FileContext } from 'chat-data-provider';
+import { FileContext } from '@hanzochat/data-provider';
 import type { AugmentedColumnDef } from '~/common';
-import type { TFile } from 'chat-data-provider';
+import type { TFile } from '@hanzochat/data-provider';
 import {
   Button,
   Input,

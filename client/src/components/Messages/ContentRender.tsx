@@ -1,6 +1,6 @@
 import { useRecoilValue } from 'recoil';
 import { useCallback, useMemo, memo } from 'react';
-import type { TMessage, TMessageContentParts } from 'chat-data-provider';
+import type { TMessage, TMessageContentParts } from '@hanzochat/data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import ContentParts from '~/components/Chat/Messages/Content/ContentParts';
 import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';

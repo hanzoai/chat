@@ -4,7 +4,7 @@ import {
   AuthTypeEnum,
   AuthorizationTypeEnum,
   TokenExchangeMethodEnum,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { ChevronLeft } from 'lucide-react';
 import type { AssistantPanelProps, ActionAuthForm } from '~/common';
 import { useAssistantsMapContext, useToastContext } from '~/Providers';

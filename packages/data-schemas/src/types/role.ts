@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import { PermissionTypes, Permissions } from 'chat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 
 export interface IRole extends Document {
   name: string;

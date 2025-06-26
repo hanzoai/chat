@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useRecoilState } from 'recoil';
-import { Constants, LocalStorageKeys, EModelEndpoint } from 'chat-data-provider';
-import type { TPlugin } from 'chat-data-provider';
+import { Constants, LocalStorageKeys, EModelEndpoint } from '@hanzochat/data-provider';
+import type { TPlugin } from '@hanzochat/data-provider';
 import { useAvailableToolsQuery } from '~/data-provider';
 import useLocalStorage from '~/hooks/useLocalStorageAlt';
 import { ephemeralAgentByConvoId } from '~/store';

@@ -1,5 +1,5 @@
-import { useGetModelsQuery } from 'chat-data-provider/react-query';
-import type { TConversation } from 'chat-data-provider';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
+import type { TConversation } from '@hanzochat/data-provider';
 import type { TSetOption } from '~/common';
 import { multiChatOptions } from './options';
 

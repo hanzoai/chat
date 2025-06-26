@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { QueryKeys } from 'chat-data-provider';
+import { QueryKeys } from '@hanzochat/data-provider';
 import { Controller, useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
-import type { TConversationTag, TConversationTagRequest } from 'chat-data-provider';
+import type { TConversationTag, TConversationTagRequest } from '@hanzochat/data-provider';
 import { Checkbox, Label, TextareaAutosize, Input } from '~/components';
 import { useBookmarkContext } from '~/Providers/BookmarkContext';
 import { useConversationTagMutation } from '~/data-provider';

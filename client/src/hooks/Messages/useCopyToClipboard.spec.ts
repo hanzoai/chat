@@ -1,11 +1,11 @@
 import { renderHook, act } from '@testing-library/react';
 import copy from 'copy-to-clipboard';
-import { ContentTypes } from 'chat-data-provider';
+import { ContentTypes } from '@hanzochat/data-provider';
 import type {
   SearchResultData,
   ProcessedOrganic,
   TMessageContentParts,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import useCopyToClipboard from '~/hooks/Messages/useCopyToClipboard';
 
 // Mock the copy-to-clipboard module

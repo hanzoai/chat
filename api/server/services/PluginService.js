@@ -1,5 +1,5 @@
-const { logger } = require('@chat/data-schemas');
-const { encrypt, decrypt } = require('@chat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { encrypt, decrypt } = require('@hanzochat/api');
 const { findOnePluginAuth, updatePluginAuth, deletePluginAuth } = require('~/models');
 
 /**

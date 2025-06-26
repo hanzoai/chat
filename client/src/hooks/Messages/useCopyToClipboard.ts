@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import copy from 'copy-to-clipboard';
-import { ContentTypes, SearchResultData } from 'chat-data-provider';
-import type { TMessage } from 'chat-data-provider';
+import { ContentTypes, SearchResultData } from '@hanzochat/data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import {
   SPAN_REGEX,
   CLEANUP_REGEX,

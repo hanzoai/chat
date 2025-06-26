@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { isAgentsEndpoint, isAssistantsEndpoint } from 'chat-data-provider';
-import type * as t from 'chat-data-provider';
+import { isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
+import type * as t from '@hanzochat/data-provider';
 import type { Endpoint, SelectedValues } from '~/common';
 import { useAgentsMapContext, useAssistantsMapContext, useChatContext } from '~/Providers';
 import { useEndpoints, useSelectorEffects, useKeyDialog } from '~/hooks';

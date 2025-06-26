@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { TAttachment } from 'chat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import { StackedFavicons } from '~/components/Web/Sources';
 import { useSearchContext } from '~/Providers';
 import ProgressText from './ProgressText';

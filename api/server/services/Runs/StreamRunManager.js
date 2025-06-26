@@ -1,6 +1,6 @@
-const { sleep } = require('@chat/agents');
-const { sendEvent } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { sleep } = require('@librechat/agents');
+const { sendEvent } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   Constants,
   StepTypes,
@@ -8,7 +8,7 @@ const {
   ToolCallTypes,
   MessageContentTypes,
   AssistantStreamEvents,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { retrieveAndProcessFile } = require('~/server/services/Files/process');
 const { processRequiredActions } = require('~/server/services/ToolService');
 const { processMessages } = require('~/server/services/Threads');

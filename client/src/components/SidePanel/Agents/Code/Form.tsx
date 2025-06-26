@@ -1,4 +1,4 @@
-import { Tools } from 'chat-data-provider';
+import { Tools } from '@hanzochat/data-provider';
 import type { ExtendedFile } from '~/common';
 import { useVerifyAgentToolAuth } from '~/data-provider';
 import { useLocalize } from '~/hooks';

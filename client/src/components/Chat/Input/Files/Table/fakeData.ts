@@ -1,5 +1,5 @@
-import { FileSources } from 'chat-data-provider';
-import type { TFile } from 'chat-data-provider';
+import { FileSources } from '@hanzochat/data-provider';
+import type { TFile } from '@hanzochat/data-provider';
 
 export const files: TFile[] = [
   {

@@ -1,6 +1,6 @@
 const express = require('express');
-const { logger } = require('@chat/data-schemas');
-const { CacheKeys, defaultSocialLogins, Constants } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys, defaultSocialLogins, Constants } = require('@hanzochat/data-provider');
 const { getCustomConfig } = require('~/server/services/Config/getCustomConfig');
 const { getLdapConfig } = require('~/server/services/Config/ldap');
 const { getProjectByName } = require('~/models/Project');

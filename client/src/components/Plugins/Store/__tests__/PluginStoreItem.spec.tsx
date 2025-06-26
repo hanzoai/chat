@@ -1,7 +1,7 @@
 import 'test/matchMedia.mock';
 import { render, screen } from 'test/layout-test-utils';
 import userEvent from '@testing-library/user-event';
-import { TPlugin } from 'chat-data-provider';
+import { TPlugin } from '@hanzochat/data-provider';
 import PluginStoreItem from '../PluginStoreItem';
 
 const mockPlugin = {

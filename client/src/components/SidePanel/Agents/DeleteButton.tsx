@@ -1,5 +1,5 @@
 import { useFormContext } from 'react-hook-form';
-import type { Agent, AgentCreateParams } from 'chat-data-provider';
+import type { Agent, AgentCreateParams } from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { cn, logger, removeFocusOutlines, getDefaultAgentFormValues } from '~/utils';
 import { OGDialog, OGDialogTrigger, Label } from '~/components/ui';

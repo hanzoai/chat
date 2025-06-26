@@ -1,8 +1,8 @@
 import { Search, X } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useState, useEffect, useCallback } from 'react';
-import { useAvailablePluginsQuery } from 'chat-data-provider/react-query';
-import type { TError, TPlugin, TPluginAction } from 'chat-data-provider';
+import { useAvailablePluginsQuery } from '@hanzochat/data-provider/react-query';
+import type { TError, TPlugin, TPluginAction } from '@hanzochat/data-provider';
 import type { TPluginStoreDialogProps } from '~/common/types';
 import {
   usePluginDialogHelpers,

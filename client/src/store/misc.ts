@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import { TAttachment } from 'chat-data-provider';
+import { TAttachment } from '@hanzochat/data-provider';
 import { atomWithLocalStorage } from './utils';
 import { BadgeItem } from '~/common';
 

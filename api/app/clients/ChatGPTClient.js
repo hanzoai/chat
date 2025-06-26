@@ -2,7 +2,7 @@ const { Keyv } = require('keyv');
 const crypto = require('crypto');
 const { CohereClient } = require('cohere-ai');
 const { fetchEventSource } = require('@waylaidwanderer/fetch-event-source');
-const { constructAzureURL, genAzureChatCompletion } = require('@chat/api');
+const { constructAzureURL, genAzureChatCompletion } = require('@hanzochat/api');
 const { encoding_for_model: encodingForModel, get_encoding: getEncoding } = require('tiktoken');
 const {
   ImageDetail,
@@ -10,7 +10,7 @@ const {
   resolveHeaders,
   CohereConstants,
   mapModelToAzureConfig,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { createContextHandlers } = require('./prompts');
 const { createCoherePayload } = require('./llm');
 const { extractBaseURL } = require('~/utils');

@@ -1,5 +1,5 @@
 import dedent from 'dedent';
-import { ArtifactModes, shadcnComponents } from 'chat-data-provider';
+import { ArtifactModes, shadcnComponents } from '@hanzochat/data-provider';
 import type {
   SandpackProviderProps,
   SandpackPredefinedTemplate,

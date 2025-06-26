@@ -9,7 +9,7 @@ const {
   excludedKeys,
   ErrorTypes,
   Constants,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getMessages, saveMessage, updateMessage, saveConvo, getConvo } = require('~/models');
 const { checkBalance } = require('~/models/balanceMethods');
 const { truncateToolCallOutputs } = require('./prompts');
@@ -58,7 +58,7 @@ class BaseClient {
     this.fetchedConvo;
     /** @type {TMessage[]} */
     this.currentMessages = [];
-    /** @type {import('chat-data-provider').VisionModes | undefined} */
+    /** @type {import('@hanzochat/data-provider').VisionModes | undefined} */
     this.visionMode;
   }
 

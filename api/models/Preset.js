@@ -1,4 +1,4 @@
-const { logger } = require('@chat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { Preset } = require('~/db/models');
 
 const getPreset = async (user, presetId) => {

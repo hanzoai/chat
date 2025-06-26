@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { DynamicSettingProps } from 'chat-data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 import { Label, Switch, HoverCard, HoverCardTrigger } from '~/components/ui';
 import { TranslationKeys, useLocalize, useParameterEffects } from '~/hooks';
 import { useChatContext } from '~/Providers';

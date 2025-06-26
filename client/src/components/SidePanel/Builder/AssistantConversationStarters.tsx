@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Transition } from 'react-transition-group';
-import { Constants } from 'chat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { TooltipAnchor } from '~/components/ui';
 import { useLocalize } from '~/hooks';
 

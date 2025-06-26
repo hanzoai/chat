@@ -1,5 +1,5 @@
 import { Feather } from 'lucide-react';
-import { EModelEndpoint, alternateName } from 'chat-data-provider';
+import { EModelEndpoint, alternateName } from '@hanzochat/data-provider';
 import {
   AzureMinimalIcon,
   OpenAIMinimalIcon,

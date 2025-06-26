@@ -1,5 +1,5 @@
 const { ProxyAgent } = require('undici');
-const { anthropicSettings, removeNullishValues } = require('chat-data-provider');
+const { anthropicSettings, removeNullishValues } = require('@hanzochat/data-provider');
 const { checkPromptCacheSupport, getClaudeHeaders, configureReasoning } = require('./helpers');
 
 /**

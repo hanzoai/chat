@@ -12,7 +12,7 @@ import { CheckMark } from '~/components/svg';
 import useOnClickOutside from '~/hooks/useOnClickOutside';
 import { useMultiSearch } from './MultiSearch';
 import { cn } from '~/utils/';
-import type { TPlugin } from 'chat-data-provider';
+import type { TPlugin } from '@hanzochat/data-provider';
 
 export type TMultiSelectDropDownProps = {
   title?: string;

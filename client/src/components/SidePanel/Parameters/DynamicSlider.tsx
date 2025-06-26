@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
-import { OptionTypes } from 'chat-data-provider';
-import type { DynamicSettingProps } from 'chat-data-provider';
+import { OptionTypes } from '@hanzochat/data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 import { Label, Slider, HoverCard, Input, InputNumber, HoverCardTrigger } from '~/components/ui';
 import { useLocalize, useDebouncedInput, useParameterEffects, TranslationKeys } from '~/hooks';
 import { cn, defaultTextProps, optionText } from '~/utils';

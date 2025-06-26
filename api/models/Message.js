@@ -1,6 +1,6 @@
 const { z } = require('zod');
-const { logger } = require('@chat/data-schemas');
-const { createTempChatExpirationDate } = require('@chat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { createTempChatExpirationDate } = require('@hanzochat/api');
 const getCustomConfig = require('~/server/services/Config/loadCustomConfig');
 const { Message } = require('~/db/models');
 

@@ -1,16 +1,16 @@
-const { Providers } = require('@chat/agents');
+const { Providers } = require('@librechat/agents');
 const {
   primeResources,
   extractChatParams,
   optionalChainWithEmptyCheck,
-} = require('@chat/api');
+} = require('@hanzochat/api');
 const {
   ErrorTypes,
   EModelEndpoint,
   EToolResources,
   replaceSpecialVars,
   providerEndpointMap,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getProviderConfig } = require('~/server/services/Endpoints');
 const generateArtifactsPrompt = require('~/app/clients/prompts/artifacts');
 const { processFiles } = require('~/server/services/Files/process');
@@ -140,7 +140,7 @@ const initializeAgent = async ({
     agent.provider = options.provider;
   }
 
-  /** @type {import('@chat/agents').ClientOptions} */
+  /** @type {import('@librechat/agents').ClientOptions} */
   agent.model_parameters = { ...options.llmConfig };
   if (options.configOptions) {
     agent.model_parameters.configuration = options.configOptions;

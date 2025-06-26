@@ -5,7 +5,7 @@ import {
   AuthorizationTypeEnum,
   TokenExchangeMethodEnum,
   AuthTypeEnum,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 
 export default function MCPAuth() {
   // Create a separate form for auth

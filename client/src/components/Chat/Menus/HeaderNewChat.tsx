@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, Constants } from 'chat-data-provider';
-import type { TMessage } from 'chat-data-provider';
+import { QueryKeys, Constants } from '@hanzochat/data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import { TooltipAnchor, Button } from '~/components/ui';
 import { NewChatIcon } from '~/components/svg';
 import { useChatContext } from '~/Providers';

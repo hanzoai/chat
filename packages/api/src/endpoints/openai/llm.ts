@@ -1,5 +1,5 @@
 import { ProxyAgent } from 'undici';
-import { KnownEndpoints } from 'chat-data-provider';
+import { KnownEndpoints } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 import { sanitizeModelName, constructAzureURL } from '~/utils/azure';
 import { isEnabled } from '~/utils/common';

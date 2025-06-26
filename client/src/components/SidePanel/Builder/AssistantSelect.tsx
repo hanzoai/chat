@@ -8,7 +8,7 @@ import {
   LocalStorageKeys,
   isImageVisionTool,
   defaultAssistantFormValues,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type { UseFormReset } from 'react-hook-form';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type {
@@ -17,7 +17,7 @@ import type {
   AssistantDocument,
   AssistantsEndpoint,
   AssistantCreateParams,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   Actions,
   ExtendedFile,

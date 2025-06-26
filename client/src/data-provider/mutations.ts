@@ -2,11 +2,11 @@ import {
   Constants,
   defaultAssistantsVersion,
   ConversationListResponse,
-} from 'chat-data-provider';
+} from '@hanzochat/data-provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { dataService, MutationKeys, QueryKeys, defaultOrderQuery } from 'chat-data-provider';
+import { dataService, MutationKeys, QueryKeys, defaultOrderQuery } from '@hanzochat/data-provider';
 import type { InfiniteData, UseMutationResult } from '@tanstack/react-query';
-import type * as t from 'chat-data-provider';
+import type * as t from '@hanzochat/data-provider';
 import {
   logger,
   /* Conversations */

@@ -1,12 +1,12 @@
 const axios = require('axios');
-const { logAxiosError } = require('@chat/api');
+const { logAxiosError } = require('@hanzochat/api');
 const {
   FileSources,
   VisionModes,
   ImageDetail,
   ContentTypes,
   EModelEndpoint,
-} = require('chat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 
 /**

@@ -1,6 +1,6 @@
 import { useState, useMemo, memo } from 'react';
 import { Menu as MenuIcon, Edit as EditIcon, EarthIcon, TextSearch } from 'lucide-react';
-import type { TPromptGroup } from 'chat-data-provider';
+import type { TPromptGroup } from '@hanzochat/data-provider';
 import {
   DropdownMenu,
   DropdownMenuItem,

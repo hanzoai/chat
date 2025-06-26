@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import type { TUser } from 'chat-data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 import type { IconProps } from '~/common';
 import MessageEndpointIcon from './MessageEndpointIcon';
 import { useAuthContext } from '~/hooks/AuthContext';

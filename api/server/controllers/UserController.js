@@ -4,8 +4,8 @@ const {
   FileSources,
   webSearchKeys,
   extractWebSearchEnvVars,
-} = require('chat-data-provider');
-const { logger } = require('@chat/data-schemas');
+} = require('@hanzochat/data-provider');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   getFiles,
   updateUser,

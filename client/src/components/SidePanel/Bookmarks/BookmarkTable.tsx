@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { BookmarkPlusIcon } from 'lucide-react';
-import type { ConversationTagsResponse, TConversationTag } from 'chat-data-provider';
+import type { ConversationTagsResponse, TConversationTag } from '@hanzochat/data-provider';
 import {
   Table,
   Input,

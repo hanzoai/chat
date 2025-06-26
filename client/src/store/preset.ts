@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import { TPreset } from 'chat-data-provider';
+import { TPreset } from '@hanzochat/data-provider';
 
 const defaultPreset = atom<TPreset | null>({
   key: 'defaultPreset',

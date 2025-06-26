@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RefreshCcw, ShieldX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TBackupCode, TRegenerateBackupCodesResponse, type TUser } from 'chat-data-provider';
+import { TBackupCode, TRegenerateBackupCodesResponse, type TUser } from '@hanzochat/data-provider';
 import {
   OGDialog,
   OGDialogContent,

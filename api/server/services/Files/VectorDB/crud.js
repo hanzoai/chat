@@ -1,9 +1,9 @@
 const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
-const { logAxiosError } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
-const { FileSources } = require('chat-data-provider');
+const { logAxiosError } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
+const { FileSources } = require('@hanzochat/data-provider');
 
 /**
  * Deletes a file from the vector database. This function takes a file object, constructs the full path, and

@@ -1,6 +1,6 @@
-import { Tools } from 'chat-data-provider';
+import { Tools } from '@hanzochat/data-provider';
 import { useState, useRef, useMemo, useLayoutEffect, useEffect } from 'react';
-import type { MemoryArtifact, TAttachment } from 'chat-data-provider';
+import type { MemoryArtifact, TAttachment } from '@hanzochat/data-provider';
 import MemoryInfo from './MemoryInfo';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';

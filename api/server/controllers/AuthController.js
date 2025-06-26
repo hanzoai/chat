@@ -1,8 +1,8 @@
 const cookies = require('cookie');
 const jwt = require('jsonwebtoken');
 const openIdClient = require('openid-client');
-const { isEnabled } = require('@chat/api');
-const { logger } = require('@chat/data-schemas');
+const { isEnabled } = require('@hanzochat/api');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   requestPasswordReset,
   setOpenIDAuthTokens,

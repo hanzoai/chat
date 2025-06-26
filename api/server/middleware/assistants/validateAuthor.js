@@ -1,4 +1,4 @@
-const { SystemRoles } = require('chat-data-provider');
+const { SystemRoles } = require('@hanzochat/data-provider');
 const { getAssistant } = require('~/models/Assistant');
 
 /**

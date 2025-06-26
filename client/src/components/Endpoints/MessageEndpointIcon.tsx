@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Feather } from 'lucide-react';
-import { EModelEndpoint, isAssistantsEndpoint, alternateName } from 'chat-data-provider';
+import { EModelEndpoint, isAssistantsEndpoint, alternateName } from '@hanzochat/data-provider';
 import {
   Plugin,
   GPTIcon,

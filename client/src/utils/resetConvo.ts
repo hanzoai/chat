@@ -1,4 +1,4 @@
-import type { TMessage } from 'chat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 
 export default function resetConvo(messages: TMessage[], sender: string) {
   if (messages.length === 0) {

@@ -1,5 +1,5 @@
-const { logger } = require('@chat/data-schemas');
-const { errorsToString } = require('chat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { errorsToString } = require('@hanzochat/data-provider');
 const { Strategy: PassportLocalStrategy } = require('passport-local');
 const { isEnabled, checkEmailConfig } = require('~/server/utils');
 const { findUser, comparePassword, updateUser } = require('~/models');

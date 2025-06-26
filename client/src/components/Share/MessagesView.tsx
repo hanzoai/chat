@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { TMessage } from 'chat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import MultiMessage from './MultiMessage';
 import { useLocalize } from '~/hooks';
 
