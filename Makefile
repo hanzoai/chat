@@ -1,5 +1,6 @@
-# Hanzo Chat Makefile for Local Development
-# ==========================================
+# Chat Makefile for Local Development
+# Unified interface to Agents, LLMs, MCPs and any AI model or OpenAPI documented API with full RAG stack
+# ========================================================================================================
 
 # Default target - show help
 .DEFAULT_GOAL := help
@@ -20,11 +21,11 @@ BLUE := \033[0;34m
 help: ## Show this help message
 	@echo "$(GREEN)"
 	@echo "╔══════════════════════════════════════════════════════════════╗"
-	@echo "║                    HANZO CHAT COMMANDS                       ║"
+	@echo "║                        CHAT COMMANDS                         ║"
 	@echo "╚══════════════════════════════════════════════════════════════╝"
 	@echo "$(NC)"
 	@echo "$(YELLOW)Quick Start:$(NC)"
-	@echo "  $(GREEN)make start$(NC)          - Start Hanzo AI Chat (vendor mode)"
+	@echo "  $(GREEN)make start$(NC)          - Start Chat (vendor mode)"
 	@echo "  $(GREEN)make vendor$(NC)         - Show vendor configuration"
 	@echo "  $(GREEN)make dev$(NC)            - Start in development mode (local Node.js)"
 	@echo "  $(GREEN)make stop$(NC)           - Stop all services"
@@ -58,24 +59,24 @@ help: ## Show this help message
 	@echo "  $(GREEN)make status$(NC)         - Show service status"
 	@echo "  $(GREEN)make test$(NC)           - Run tests"
 	@echo "  $(GREEN)make shell$(NC)          - Access API container shell"
-	@echo "  $(GREEN)make update-branding$(NC) - Update Hanzo logo in running container"
+	@echo "  $(GREEN)make update-branding$(NC) - Update logo in running container"
 	@echo "  $(GREEN)make init-fixtures$(NC)  - Create demo user (dev only)"
 	@echo ""
 	@echo "$(BLUE)Access the application at: http://localhost:3080$(NC)"
 	@echo ""
 
-# Quick start with banner (Hanzo AI vendor mode by default)
-start: ## Start Hanzo AI Chat in vendor mode
+# Quick start with banner (vendor mode by default)
+start: ## Start Chat in vendor mode
 	@echo "$(GREEN)"
 	@echo "╔══════════════════════════════════════════════════════════════╗"
-	@echo "║                  Starting Hanzo AI Chat...                   ║"
+	@echo "║                     Starting Chat...                         ║"
 	@echo "╚══════════════════════════════════════════════════════════════╝"
 	@echo "$(NC)"
 	@$(MAKE) setup-vendor-env
 	@$(MAKE) check-docker
 	@$(MAKE) up
 	@echo ""
-	@echo "$(GREEN)✓ Hanzo AI Chat started successfully!$(NC)"
+	@echo "$(GREEN)✓ Chat started successfully!$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Vendor Mode Configuration:$(NC)"
 	@echo "  • Name:        $(BLUE)Hanzo AI$(NC)"
@@ -86,17 +87,27 @@ start: ## Start Hanzo AI Chat in vendor mode
 	@echo "  • Application: $(BLUE)http://localhost:3080$(NC)"
 	@echo "  • API Health:  $(BLUE)http://localhost:3080/api/health$(NC)"
 	@echo ""
+	@echo "$(GREEN)╔══════════════════════════════════════════════════════════════╗$(NC)"
+	@echo "$(GREEN)║              🚀 Quick Start - Default Login                  ║$(NC)"
+	@echo "$(GREEN)╚══════════════════════════════════════════════════════════════╝$(NC)"
+	@echo ""
+	@echo "  $(YELLOW)Email:$(NC)    $(BLUE)wow@this.com$(NC)"
+	@echo "  $(YELLOW)Password:$(NC) $(BLUE)demo1234$(NC)"
+	@echo ""
+	@echo "  $(GREEN)➜ Run 'make init-fixtures' to create this demo user$(NC)"
+	@echo ""
 	@echo "$(YELLOW)Useful commands:$(NC)"
-	@echo "  • View logs:   $(GREEN)make logs$(NC)"
-	@echo "  • Stop:        $(GREEN)make stop$(NC)"
-	@echo "  • Status:      $(GREEN)make status$(NC)"
+	@echo "  • View logs:      $(GREEN)make logs$(NC)"
+	@echo "  • Stop:           $(GREEN)make stop$(NC)"
+	@echo "  • Status:         $(GREEN)make status$(NC)"
+	@echo "  • Create demo:    $(GREEN)make init-fixtures$(NC)"
 	@echo ""
 
 # Show vendor configuration
 vendor: ## Show current vendor configuration
 	@echo "$(GREEN)"
 	@echo "╔══════════════════════════════════════════════════════════════╗"
-	@echo "║                  Hanzo AI Vendor Mode                        ║"
+	@echo "║                     Vendor Mode                              ║"
 	@echo "╚══════════════════════════════════════════════════════════════╝"
 	@echo "$(NC)"
 	@if [ -f .env ] && grep -q "VENDOR_MODE=true" .env; then \
@@ -110,12 +121,48 @@ vendor: ## Show current vendor configuration
 	else \
 		echo "$(RED)✗ Vendor mode is DISABLED$(NC)"; \
 		echo ""; \
-		echo "Run '$(GREEN)make start$(NC)' to enable Hanzo AI vendor mode"; \
+		echo "Run '$(GREEN)make start$(NC)' to enable vendor mode"; \
 	fi
 
 # Docker commands
 up: ## Start Docker services in background
 	@$(DOCKER_COMPOSE) up -d
+	@echo ""
+	@echo "$(GREEN)╔══════════════════════════════════════════════════════════════╗$(NC)"
+	@echo "$(GREEN)║                    Services Started                          ║$(NC)"
+	@echo "$(GREEN)╚══════════════════════════════════════════════════════════════╝$(NC)"
+	@echo ""
+	@echo "$(YELLOW)🚀 Chat Services:$(NC)"
+	@echo "  $(BLUE)Main Application$(NC)     → http://localhost:3080"
+	@echo "  $(BLUE)API Health Check$(NC)     → http://localhost:3080/api/health"
+	@echo ""
+	@echo "$(YELLOW)📊 Supporting Services:$(NC)"
+	@echo "  $(BLUE)MongoDB$(NC)              → localhost:27017 (database: chat)"
+	@echo "  $(BLUE)Meilisearch$(NC)          → localhost:7700 (search engine)"
+	@echo "  $(BLUE)PostgreSQL/pgvector$(NC)  → localhost:5432 (vector storage)"
+	@echo "  $(BLUE)RAG API$(NC)              → localhost:8000 (document processing)"
+	@echo ""
+	@echo "$(YELLOW)🔧 Management Commands:$(NC)"
+	@echo "  $(GREEN)make logs$(NC)            → View all service logs"
+	@echo "  $(GREEN)make logs-api$(NC)        → View chat API logs only"
+	@echo "  $(GREEN)make ps$(NC)              → Show container status"
+	@echo "  $(GREEN)make shell$(NC)           → Access container shell"
+	@echo "  $(GREEN)make stop$(NC)            → Stop all services"
+	@echo ""
+	@echo "$(GREEN)╔══════════════════════════════════════════════════════════════╗$(NC)"
+	@echo "$(GREEN)║                    🔐 Default Login                          ║$(NC)"
+	@echo "$(GREEN)╚══════════════════════════════════════════════════════════════╝$(NC)"
+	@echo ""
+	@echo "  $(YELLOW)Email:$(NC)    $(BLUE)wow@this.com$(NC)"
+	@echo "  $(YELLOW)Password:$(NC) $(BLUE)demo1234$(NC)"
+	@echo ""
+	@echo "  $(GREEN)➜ Run 'make init-fixtures' to create this demo user$(NC)"
+	@echo ""
+	@echo "$(YELLOW)💡 Tips:$(NC)"
+	@echo "  • Create new account with 'Sign up' if needed"
+	@echo "  • MCP tools available for file operations"
+	@echo "  • Upload documents for RAG processing"
+	@echo ""
 
 down: ## Stop and remove Docker containers
 	@$(DOCKER_COMPOSE) down
@@ -146,7 +193,7 @@ dev: ## Start in development mode (local Node.js)
 	@$(MAKE) build-packages
 	@echo "$(GREEN)Starting backend and frontend...$(NC)"
 	@(trap 'kill 0' SIGINT; \
-		MONGO_URI=mongodb://localhost:27017/HanzoChat $(NPM) run backend:dev & \
+		MONGO_URI=mongodb://localhost:27017/chat $(NPM) run backend:dev & \
 		$(NPM) run frontend:dev & \
 		wait)
 
@@ -186,25 +233,25 @@ format: ## Format code with Prettier
 
 # Database commands
 db-shell: ## Access MongoDB shell
-	@$(DOCKER_COMPOSE) exec mongodb mongosh Hanzo
+	@$(DOCKER_COMPOSE) exec mongodb mongosh chat
 
 db-backup: ## Backup MongoDB database
 	@mkdir -p ./backups
-	@$(DOCKER_COMPOSE) exec mongodb mongodump --db Hanzo --out /dump
-	@$(DOCKER_COMPOSE) cp mongodb:/dump ./backups/hanzo-backup-$$(date +%Y%m%d-%H%M%S)
+	@$(DOCKER_COMPOSE) exec mongodb mongodump --db chat --out /dump
+	@$(DOCKER_COMPOSE) cp mongodb:/dump ./backups/chat-backup-$$(date +%Y%m%d-%H%M%S)
 	@echo "$(GREEN)✓ Database backed up$(NC)"
 
 db-restore: ## Restore MongoDB database from latest backup
 	@echo "$(YELLOW)Restoring from latest backup...$(NC)"
 	@LATEST_BACKUP=$$(ls -t ./backups | head -1); \
 	$(DOCKER_COMPOSE) cp ./backups/$$LATEST_BACKUP mongodb:/restore && \
-	$(DOCKER_COMPOSE) exec mongodb mongorestore --db Hanzo /restore/Hanzo
+	$(DOCKER_COMPOSE) exec mongodb mongorestore --db chat /restore/chat
 	@echo "$(GREEN)✓ Database restored$(NC)"
 
 # Utility commands
-update-branding: ## Update Hanzo branding in running container
-	@echo "$(YELLOW)Updating Hanzo branding...$(NC)"
-	@docker exec Hanzo cp /app/client/public/assets/logo.svg /app/client/dist/assets/logo.svg 2>/dev/null || true
+update-branding: ## Update branding in running container
+	@echo "$(YELLOW)Updating branding...$(NC)"
+	@docker exec chat cp /app/client/public/assets/logo.svg /app/client/dist/assets/logo.svg 2>/dev/null || true
 	@echo "$(GREEN)✓ Branding updated. Clear browser cache to see changes.$(NC)"
 
 clean: ## Clean build artifacts and logs
@@ -220,11 +267,37 @@ clean-all: clean ## Clean everything (including node_modules)
 	@echo "$(GREEN)✓ Deep clean complete$(NC)"
 
 status: ## Show service status
-	@echo "$(YELLOW)Service Status:$(NC)"
-	@$(DOCKER_COMPOSE) ps
 	@echo ""
-	@echo "$(YELLOW)Port Status:$(NC)"
-	@lsof -i :3080 >/dev/null 2>&1 && echo "  $(GREEN)✓ Port 3080 (API) is active$(NC)" || echo "  $(RED)✗ Port 3080 (API) is not active$(NC)"
+	@echo "$(GREEN)╔══════════════════════════════════════════════════════════════╗$(NC)"
+	@echo "$(GREEN)║                    Service Status                            ║$(NC)"
+	@echo "$(GREEN)╚══════════════════════════════════════════════════════════════╝$(NC)"
+	@echo ""
+	@echo "$(YELLOW)🐳 Docker Containers:$(NC)"
+	@$(DOCKER_COMPOSE) ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" | tail -n +2 | \
+		awk -F'\t' '{printf "  %-20s %-25s %s\n", $$1, $$2, $$3}'
+	@echo ""
+	@echo "$(YELLOW)🌐 Service Health:$(NC)"
+	@curl -s http://localhost:3080/api/health >/dev/null 2>&1 && \
+		echo "  $(GREEN)✓ Chat API$(NC)            → http://localhost:3080 (healthy)" || \
+		echo "  $(RED)✗ Chat API$(NC)            → http://localhost:3080 (not responding)"
+	@curl -s http://localhost:8000/health >/dev/null 2>&1 && \
+		echo "  $(GREEN)✓ RAG API$(NC)             → http://localhost:8000 (healthy)" || \
+		echo "  $(RED)✗ RAG API$(NC)             → http://localhost:8000 (not responding)"
+	@docker exec chat-mongodb mongosh --quiet --eval "db.runCommand({ping: 1})" >/dev/null 2>&1 && \
+		echo "  $(GREEN)✓ MongoDB$(NC)             → localhost:27017 (connected)" || \
+		echo "  $(RED)✗ MongoDB$(NC)             → localhost:27017 (not connected)"
+	@curl -s http://localhost:7700/health >/dev/null 2>&1 && \
+		echo "  $(GREEN)✓ Meilisearch$(NC)         → localhost:7700 (healthy)" || \
+		echo "  $(YELLOW)- Meilisearch$(NC)         → localhost:7700 (internal only)"
+	@docker exec vectordb pg_isready >/dev/null 2>&1 && \
+		echo "  $(GREEN)✓ PostgreSQL/pgvector$(NC) → localhost:5432 (ready)" || \
+		echo "  $(YELLOW)- PostgreSQL/pgvector$(NC) → localhost:5432 (internal only)"
+	@echo ""
+	@echo "$(YELLOW)📋 Quick Actions:$(NC)"
+	@echo "  • View logs:    $(GREEN)make logs$(NC)"
+	@echo "  • Restart:      $(GREEN)make restart$(NC)"
+	@echo "  • Stop:         $(GREEN)make stop$(NC)"
+	@echo ""
 
 test: ## Run tests
 	@$(NPM) run test:api
@@ -276,12 +349,12 @@ setup-env: ## Create .env file from example
 		echo "$(YELLOW).env file already exists$(NC)"; \
 	fi
 
-# Setup vendor environment for Hanzo AI
-setup-vendor-env: ## Setup Hanzo AI vendor mode environment
+# Setup vendor environment
+setup-vendor-env: ## Setup vendor mode environment
 	@if [ -f .env ] && grep -q "VENDOR_MODE=true" .env; then \
 		echo "$(GREEN)✓ Vendor mode already configured$(NC)"; \
 	else \
-		echo "$(YELLOW)Setting up Hanzo AI vendor mode...$(NC)"; \
+		echo "$(YELLOW)Setting up vendor mode...$(NC)"; \
 		if [ ! -f .env ]; then \
 			cp .env.example .env; \
 		fi; \

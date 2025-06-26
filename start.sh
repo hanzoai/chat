@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Hanzo Chat Quick Start Script
+# Chat Quick Start Script
 
 # Check if .env exists, create from example if not
 if [ ! -f .env ]; then
@@ -17,13 +17,13 @@ if [ ! -f .env ]; then
 fi
 
 # Start services
-echo "Starting Hanzo Chat..."
+echo "Starting Chat..."
 docker compose up -d
 
 # Check if services started successfully
 if [ $? -eq 0 ]; then
     echo ""
-    echo "✅ Hanzo Chat is running!"
+    echo "✅ Chat is running!"
     echo ""
     echo "🌐 Access the application at: http://localhost:3080"
     echo ""
