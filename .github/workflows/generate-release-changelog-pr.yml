@@ -88,7 +88,7 @@ jobs:
           commit-message: "chore: update CHANGELOG for release ${{ github.ref_name }}"
           base: main
           branch: "changelog/${{ github.ref_name }}"
-          reviewers: danny-avila
+          reviewers: hanzoai
           title: "📜 docs: Changelog for release ${{ github.ref_name }}"
           body: |
             **Description**:

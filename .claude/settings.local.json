@@ -23,7 +23,9 @@
       "Bash(git fetch:*)",
       "Bash(git merge:*)",
       "Bash(git push:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(gh workflow run:*)",
+      "Bash(gh workflow:*)"
     ],
     "deny": []
   }
