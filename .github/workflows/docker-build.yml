@@ -1,0 +1,107 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # For main branch, tag as 'latest'
+            type=raw,value=latest,enable={{is_default_branch}}
+            # For develop branch, tag as 'develop'
+            type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
+            # For tags, use the tag name
+            type=ref,event=tag
+            # For PRs, use pr-NUMBER
+            type=ref,event=pr
+            # SHA short
+            type=sha,prefix={{branch}}-
+            # Vendor mode tag for main
+            type=raw,value=vendor-mode,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            ## Docker Image
+
+            🐳 Docker image is available at:
+            ```
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ```
+
+            ### Vendor Mode Usage
+
+            To run with Hanzo AI branding (default):
+            ```bash
+            docker run -d \
+              -p 3080:3080 \
+              --env-file .env \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ```
+
+            To run with custom branding:
+            ```bash
+            docker run -d \
+              -p 3080:3080 \
+              -e VENDOR_MODE=true \
+              -e VENDOR_NAME="Your Company" \
+              -e VENDOR_MODEL_DEFAULT="Your Model" \
+              -e VENDOR_MODEL_PRO="Your Model Pro" \
+              -e APP_TITLE="Your Platform" \
+              -e VENDOR_BACKEND_ENDPOINT=anthropic \
+              -e VENDOR_BACKEND_API_KEY=$YOUR_API_KEY \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ```
+          generate_release_notes: true
