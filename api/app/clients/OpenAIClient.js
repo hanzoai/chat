@@ -1080,16 +1080,16 @@ ${convo}
     let remainingText;
     let reasoningText = '';
 
-    if (this.streamHandler.reasoningTokens.length > 0) {
+    if (this.streamHandler.reasoningTokens && this.streamHandler.reasoningTokens.length > 0) {
       reasoningText = this.streamHandler.reasoningTokens.join('');
       thinkMatch = reasoningText.match(/<think>([\s\S]*?)<\/think>/)?.[1]?.trim();
       if (thinkMatch != null && thinkMatch) {
         const reasoningTokens = `:::thinking\n${thinkMatch}\n:::\n`;
         remainingText = reasoningText.split(/<\/think>/)?.[1]?.trim() || '';
-        return `${reasoningTokens}${remainingText}${this.streamHandler.tokens.join('')}`;
+        return `${reasoningTokens}${remainingText}${(this.streamHandler.tokens || []).join('')}`;
       } else if (thinkMatch === '') {
         remainingText = reasoningText.split(/<\/think>/)?.[1]?.trim() || '';
-        return `${remainingText}${this.streamHandler.tokens.join('')}`;
+        return `${remainingText}${(this.streamHandler.tokens || []).join('')}`;
       }
     }
 
@@ -1098,7 +1098,7 @@ ${convo}
         ? `:::thinking\n${reasoningText.replace('<think>', '').replace('</think>', '').trim()}\n:::\n`
         : '';
 
-    return `${reasoningTokens}${this.streamHandler.tokens.join('')}`;
+    return `${reasoningTokens}${(this.streamHandler.tokens || []).join('')}`;
   }
 
   getMessageMapMethod() {

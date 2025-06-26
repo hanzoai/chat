@@ -9,6 +9,7 @@ const {
   removeNullishValues,
 } = require('@hanzochat/data-provider');
 const { getUserKey, checkUserKeyExpiry } = require('~/server/services/UserService');
+const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('~/server/services/HanzoAPIService');
 
 const getOptions = async ({ req, overrideModel, endpointOption }) => {
   const {
@@ -18,6 +19,7 @@ const getOptions = async ({ req, overrideModel, endpointOption }) => {
     BEDROCK_REVERSE_PROXY,
     BEDROCK_AWS_DEFAULT_REGION,
     PROXY,
+    HANZO_API_KEY,
   } = process.env;
   const expiresAt = req.body.key;
   const isUserProvided = BEDROCK_AWS_SECRET_ACCESS_KEY === AuthType.USER_PROVIDED;
@@ -29,6 +31,17 @@ const getOptions = async ({ req, overrideModel, endpointOption }) => {
         secretAccessKey: BEDROCK_AWS_SECRET_ACCESS_KEY,
         ...(BEDROCK_AWS_SESSION_TOKEN && { sessionToken: BEDROCK_AWS_SESSION_TOKEN }),
       };
+
+  let reverseProxyUrl = BEDROCK_REVERSE_PROXY;
+
+  // Use Hanzo API if available and user hasn't provided their own credentials
+  if (hasHanzoAPIKey() && (!credentials || (!credentials.accessKeyId && !credentials.secretAccessKey))) {
+    credentials = {
+      accessKeyId: 'hanzo',
+      secretAccessKey: HANZO_API_KEY,
+    };
+    reverseProxyUrl = HANZO_API_BASE_URL;
+  }
 
   if (!credentials) {
     throw new Error('Bedrock credentials not provided. Please provide them again.');
@@ -84,8 +97,8 @@ const getOptions = async ({ req, overrideModel, endpointOption }) => {
     llmConfig.credentials = credentials;
   }
 
-  if (BEDROCK_REVERSE_PROXY) {
-    llmConfig.endpointHost = BEDROCK_REVERSE_PROXY;
+  if (reverseProxyUrl) {
+    llmConfig.endpointHost = reverseProxyUrl;
   }
 
   llmConfig.callbacks = [

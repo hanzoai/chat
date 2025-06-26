@@ -1,0 +1,51 @@
+# Production configuration for Hanzo Chat
+# Use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  api:
+    restart: always
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hanzo-chat.rule=Host(`hanzo.chat`)"
+      - "traefik.http.routers.hanzo-chat.entrypoints=websecure"
+      - "traefik.http.routers.hanzo-chat.tls=true"
+      - "traefik.http.routers.hanzo-chat.tls.certresolver=letsencrypt"
+      - "traefik.http.services.hanzo-chat.loadbalancer.server.port=${PORT:-3080}"
+      # Redirect HTTP to HTTPS
+      - "traefik.http.routers.hanzo-chat-http.rule=Host(`hanzo.chat`)"
+      - "traefik.http.routers.hanzo-chat-http.entrypoints=web"
+      - "traefik.http.routers.hanzo-chat-http.middlewares=hanzo-chat-redirect"
+      - "traefik.http.middlewares.hanzo-chat-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.hanzo-chat-redirect.redirectscheme.permanent=true"
+    networks:
+      - default
+      - traefik-public
+
+  mongodb:
+    volumes:
+      - mongodb_data_prod:/data/db
+    restart: always
+
+  meilisearch:
+    volumes:
+      - meilisearch_data_prod:/meili_data
+    restart: always
+
+  vectordb:
+    volumes:
+      - vectordb_data_prod:/data
+    restart: always
+
+  rag_api:
+    restart: always
+
+networks:
+  traefik-public:
+    external: true
+
+volumes:
+  mongodb_data_prod:
+  meilisearch_data_prod:
+  vectordb_data_prod:

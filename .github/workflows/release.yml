@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build all packages
+      run: |
+        npm run build:data-provider
+        npm run build:data-schemas
+        npm run build:api
+
+    - name: Run tests
+      run: |
+        NODE_ENV=test npm run test:client
+        NODE_ENV=test npm run test:api -- --maxWorkers=2
+
+    - name: Build production
+      run: npm run build:client
+      env:
+        DOMAIN_CLIENT: https://chat.hanzo.ai
+        DOMAIN_SERVER: https://chat.hanzo.ai
+        NODE_ENV: production
+
+    - name: Generate changelog
+      id: changelog
+      uses: TriPSs/conventional-changelog-action@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        skip-version-file: true
+        output-file: false
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: ${{ steps.changelog.outputs.clean_changelog }}
+        draft: false
+        prerelease: false
+
+    - name: Build Docker image
+      run: |
+        docker build -t ghcr.io/hanzoai/chat:${{ github.ref_name }} .
+        docker tag ghcr.io/hanzoai/chat:${{ github.ref_name }} ghcr.io/hanzoai/chat:latest
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push Docker image
+      run: |
+        docker push ghcr.io/hanzoai/chat:${{ github.ref_name }}
+        docker push ghcr.io/hanzoai/chat:latest
+
+  publish-npm:
+    name: Publish to NPM
+    needs: release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build packages
+      run: |
+        npm run build:data-provider
+        npm run build:data-schemas
+        npm run build:api
+
+    - name: Publish packages
+      run: |
+        cd packages/data-provider && npm publish --access public || true
+        cd ../data-schemas && npm publish --access public || true
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy:
+    name: Deploy to Production
+    needs: release
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Deploy to Hanzo Cloud
+      run: |
+        echo "Deploying version ${{ github.ref_name }} to production"
+        # Add your deployment script here
+        # Example: kubectl set image deployment/chat chat=ghcr.io/hanzoai/chat:${{ github.ref_name }}
+        
+    - name: Notify Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: 'Hanzo Chat ${{ github.ref_name }} deployed to production'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      if: always()

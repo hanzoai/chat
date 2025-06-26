@@ -6,6 +6,9 @@ const { getMultiplier, getCacheMultiplier } = require('./tx');
 const { createTransaction } = require('./Transaction');
 const { Balance } = require('~/db/models');
 
+// Increase timeout for database operations
+jest.setTimeout(10000);
+
 // Mock the custom config module so we can control the balance flag.
 jest.mock('~/server/services/Config');
 

@@ -2,15 +2,24 @@ const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { getUserKey, checkUserKeyExpiry } = require('~/server/services/UserService');
 const { getLLMConfig } = require('~/server/services/Endpoints/anthropic/llm');
 const AnthropicClient = require('~/app/clients/AnthropicClient');
+const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('~/server/services/HanzoAPIService');
 
 const initializeClient = async ({ req, res, endpointOption, overrideModel, optionsOnly }) => {
-  const { ANTHROPIC_API_KEY, ANTHROPIC_REVERSE_PROXY, PROXY } = process.env;
+  const { ANTHROPIC_API_KEY, ANTHROPIC_REVERSE_PROXY, PROXY, HANZO_API_KEY } = process.env;
   const expiresAt = req.body.key;
   const isUserProvided = ANTHROPIC_API_KEY === 'user_provided';
 
-  const anthropicApiKey = isUserProvided
+  let anthropicApiKey = isUserProvided
     ? await getUserKey({ userId: req.user.id, name: EModelEndpoint.anthropic })
     : ANTHROPIC_API_KEY;
+
+  let reverseProxyUrl = ANTHROPIC_REVERSE_PROXY ?? null;
+
+  // Use Hanzo API if available and user hasn't provided their own key
+  if (hasHanzoAPIKey() && !anthropicApiKey) {
+    anthropicApiKey = HANZO_API_KEY;
+    reverseProxyUrl = HANZO_API_BASE_URL;
+  }
 
   if (!anthropicApiKey) {
     throw new Error('Anthropic API key not provided. Please provide it again.');
@@ -39,7 +48,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   if (optionsOnly) {
     clientOptions = Object.assign(
       {
-        reverseProxyUrl: ANTHROPIC_REVERSE_PROXY ?? null,
+        reverseProxyUrl: reverseProxyUrl,
         proxy: PROXY ?? null,
         modelOptions: endpointOption?.model_parameters ?? {},
       },
@@ -54,7 +63,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   const client = new AnthropicClient(anthropicApiKey, {
     req,
     res,
-    reverseProxyUrl: ANTHROPIC_REVERSE_PROXY ?? null,
+    reverseProxyUrl: reverseProxyUrl,
     proxy: PROXY ?? null,
     ...clientOptions,
     ...endpointOption,

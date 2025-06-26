@@ -19,6 +19,7 @@ const errorController = require('./controllers/ErrorController');
 const initializeMCP = require('./services/initializeMCP');
 const configureSocialLogins = require('./socialLogins');
 const AppService = require('./services/AppService');
+const initializeFixtures = require('./services/fixtures');
 const staticCache = require('./utils/staticCache');
 const noIndex = require('./middleware/noIndex');
 const routes = require('./routes');
@@ -42,6 +43,7 @@ const startServer = async () => {
   indexSync().catch((err) => {
     logger.error('[indexSync] Background sync failed:', err);
   });
+
 
   app.disable('x-powered-by');
   app.set('trust proxy', trusted_proxy);
