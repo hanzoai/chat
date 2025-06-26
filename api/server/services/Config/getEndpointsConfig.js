@@ -2,6 +2,7 @@ const { CacheKeys, EModelEndpoint, orderEndpointsConfig } = require('@hanzochat/
 const loadDefaultEndpointsConfig = require('./loadDefaultEConfig');
 const loadConfigEndpoints = require('./loadConfigEndpoints');
 const getLogStores = require('~/cache/getLogStores');
+const { getVendorService } = require('../VendorService');
 
 /**
  *
@@ -9,6 +10,24 @@ const getLogStores = require('~/cache/getLogStores');
  * @returns {Promise<TEndpointsConfig>}
  */
 async function getEndpointsConfig(req) {
+  const vendorService = getVendorService();
+  
+  // If vendor mode is enabled, return only the vendor endpoint
+  if (vendorService.isEnabled()) {
+    const vendorEndpoint = vendorService.getEndpointConfig();
+    const vendorConfig = {
+      [vendorService.vendorName]: {
+        type: vendorEndpoint.type,
+        userProvide: false,
+        userProvideURL: false,
+        order: 0,
+        models: vendorService.getModels(),
+        iconURL: vendorEndpoint.iconURL,
+      }
+    };
+    return vendorConfig;
+  }
+
   const cache = getLogStores(CacheKeys.CONFIG_STORE);
   const cachedEndpointsConfig = await cache.get(CacheKeys.ENDPOINT_CONFIG);
   if (cachedEndpointsConfig) {
