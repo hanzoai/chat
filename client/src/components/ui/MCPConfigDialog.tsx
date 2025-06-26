@@ -89,11 +89,11 @@ export default function MCPConfigDialog({
                 />
                 {details.description && (
                   <p
-                    className="text-xs text-text-secondary [&_a]:text-blue-500 [&_a]:hover:text-blue-600 dark:[&_a]:text-blue-400 dark:[&_a]:hover:text-blue-300"
+                    className="text-xs text-text-secondary [&_a]:text-gray-600 [&_a]:hover:text-gray-700 dark:[&_a]:text-gray-400 dark:[&_a]:hover:text-gray-300"
                     dangerouslySetInnerHTML={{ __html: details.description }}
                   />
                 )}
-                {errors[key] && <p className="text-xs text-red-500">{errors[key]?.message}</p>}
+                {errors[key] && <p className="text-xs text-gray-600">{errors[key]?.message}</p>}
               </div>
             ))}
           </form>
@@ -107,7 +107,7 @@ export default function MCPConfigDialog({
           onRevoke && (
             <Button
               onClick={handleRevoke}
-              className="bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-800"
+              className="bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-900"
               disabled={isSubmitting}
             >
               {localize('com_ui_revoke')}

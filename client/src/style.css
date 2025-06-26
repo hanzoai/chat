@@ -18,39 +18,9 @@
   --gray-800: #212121;
   --gray-850: #171717;
   --gray-900: #0d0d0d;
-  --green-50: #f9fafb;
-  --green-100: #f3f4f6;
-  --green-200: #e5e7eb;
-  --green-300: #d1d5db;
-  --green-400: #9ca3af;
-  --green-500: #6b7280;
-  --green-600: #4b5563;
-  --green-700: #374151;
-  --green-800: #1f2937;
-  --green-900: #111827;
-  --green-950: #030712;
-  --red-50: #fef2f2;
-  --red-100: #fee2e2;
-  --red-200: #fecaca;
-  --red-300: #fca5a5;
-  --red-400: #f87171;
-  --red-500: #ef4444;
-  --red-600: #dc2626;
-  --red-700: #b91c1c;
-  --red-800: #991b1b;
-  --red-900: #7f1d1d;
-  --red-950: #450a0a;
-  --amber-50: #fffbeb;
-  --amber-100: #fef3c7;
-  --amber-200: #fde68a;
-  --amber-300: #fcd34d;
-  --amber-400: #fbbf24;
-  --amber-500: #f59e0b;
-  --amber-600: #d97706;
-  --amber-700: #b45309;
-  --amber-800: #92400e;
-  --amber-900: #78350f;
-  --amber-950: #451a03;
+  /* Removed green colors - using grays instead */
+  /* Removed red colors - using grays for warnings/errors */
+  /* Removed amber colors - using grays instead */
   --gizmo-gray-500: #999;
   --gizmo-gray-600: #666;
   --gizmo-gray-950: #0f0f0f;
@@ -66,7 +36,7 @@ html {
   --text-secondary: var(--gray-600);
   --text-secondary-alt: var(--gray-500);
   --text-tertiary: var(--gray-500);
-  --text-warning: var(--amber-500);
+  --text-warning: var(--gray-600);
   --ring-primary: var(--gray-500);
   --header-primary: var(--white);
   --header-hover: var(--gray-50);
@@ -85,8 +55,8 @@ html {
   --surface-dialog: var(--white);
   --surface-submit: var(--white);
   --surface-submit-hover: var(--gray-100);
-  --surface-destructive: var(--red-700);
-  --surface-destructive-hover: var(--red-800);
+  --surface-destructive: var(--gray-700);
+  --surface-destructive-hover: var(--gray-800);
   --surface-chat: var(--white);
   --border-light: var(--gray-200);
   --border-medium-alt: var(--gray-300);
@@ -126,7 +96,7 @@ html {
   --text-secondary: var(--gray-300);
   --text-secondary-alt: var(--gray-400);
   --text-tertiary: var(--gray-500);
-  --text-warning: var(--amber-500);
+  --text-warning: var(--gray-600);
   --header-primary: var(--gray-700);
   --header-hover: var(--gray-600);
   --header-button-hover: var(--gray-700);
@@ -144,8 +114,8 @@ html {
   --surface-dialog: var(--gray-850);
   --surface-submit: var(--white);
   --surface-submit-hover: var(--gray-100);
-  --surface-destructive: var(--red-800);
-  --surface-destructive-hover: var(--red-900);
+  --surface-destructive: var(--gray-800);
+  --surface-destructive-hover: var(--gray-900);
   --surface-chat: var(--gray-700);
   --border-light: var(--gray-700);
   --border-medium-alt: var(--gray-600);
@@ -166,16 +136,16 @@ html {
   --muted-foreground: 0 0% 63.9%;
   --accent: 0 0% 14.9%;
   --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 40.6%;
+  --destructive: 0 0% 30%;
   --destructive-foreground: 0 0% 98%;
   --border: 0 0% 14.9%;
   --input: 0 0% 14.9%;
   --ring: 0 0% 83.1%;
-  --chart-1: 220 70% 50%;
-  --chart-2: 160 60% 45%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
+  --chart-1: 0 0% 20%;
+  --chart-2: 0 0% 30%;
+  --chart-3: 0 0% 40%;
+  --chart-4: 0 0% 50%;
+  --chart-5: 0 0% 60%;
   --switch-unchecked: 0 0% 40%;
 }
 .gizmo {
