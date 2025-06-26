@@ -1,0 +1,44 @@
+# Example Docker Compose override file
+# Copy this to docker-compose.override.yml and customize as needed
+# This file is automatically loaded by Docker Compose
+
+services:
+  api:
+    environment:
+      # Override default port
+      - PORT=3080
+      
+      # Set default Meilisearch master key for development
+      - MEILI_MASTER_KEY=DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt
+      
+      # Add your API keys here
+      # - OPENAI_API_KEY=sk-...
+      # - ANTHROPIC_API_KEY=sk-ant-...
+      # - GOOGLE_KEY=...
+      
+      # Override MongoDB connection
+      # - MONGO_URI=mongodb://mongodb:27017/HanzoChatDev
+      
+      # Enable debug logging
+      # - DEBUG_LOGGING=true
+      # - CONSOLE_JSON=false
+
+  meilisearch:
+    environment:
+      # Use the same master key as the API service
+      - MEILI_MASTER_KEY=DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt
+
+  # Uncomment to expose MongoDB port for development tools
+  # mongodb:
+  #   ports:
+  #     - "27017:27017"
+
+  # Uncomment to expose Meilisearch dashboard
+  # meilisearch:
+  #   ports:
+  #     - "7700:7700"
+
+  # Uncomment to disable RAG API if not needed
+  # rag_api:
+  #   entrypoint: ["echo", "RAG API disabled"]
+  #   command: []
