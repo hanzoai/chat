@@ -1,7 +1,7 @@
 import { logger } from '@hanzochat/data-schemas';
 import { Constants } from '@hanzochat/data-provider';
 import type { PluginAuthMethods } from '@hanzochat/data-schemas';
-import type { GenericTool } from '@librechat/agents';
+import type { GenericTool } from '@hanzochat/agents';
 import { getPluginAuthMap } from '~/agents/auth';
 import { mcpToolPattern } from './utils';
 

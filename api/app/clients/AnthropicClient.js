@@ -9,7 +9,7 @@ const {
   getResponseSender,
   validateVisionModel,
 } = require('@hanzochat/data-provider');
-const { SplitStreamHandler: _Handler } = require('@librechat/agents');
+const { SplitStreamHandler: _Handler } = require('@hanzochat/agents');
 const { Tokenizer, createFetch, createStreamEventHandlers } = require('@hanzochat/api');
 const {
   truncateText,

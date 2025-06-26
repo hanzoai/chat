@@ -1,5 +1,5 @@
 const { logger } = require('@hanzochat/data-schemas');
-const { createContentAggregator } = require('@librechat/agents');
+const { createContentAggregator } = require('@hanzochat/agents');
 const {
   Constants,
   EModelEndpoint,

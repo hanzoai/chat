@@ -1,4 +1,4 @@
-const { Providers } = require('@librechat/agents');
+const { Providers } = require('@hanzochat/agents');
 const {
   primeResources,
   extractChatParams,
@@ -140,7 +140,7 @@ const initializeAgent = async ({
     agent.provider = options.provider;
   }
 
-  /** @type {import('@librechat/agents').ClientOptions} */
+  /** @type {import('@hanzochat/agents').ClientOptions} */
   agent.model_parameters = { ...options.llmConfig };
   if (options.configOptions) {
     agent.model_parameters.configuration = options.configOptions;

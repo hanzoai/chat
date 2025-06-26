@@ -18,7 +18,7 @@ const {
   hostImageNamePrefix,
   isAssistantsEndpoint,
 } = require('@hanzochat/data-provider');
-const { EnvVar } = require('@librechat/agents');
+const { EnvVar } = require('@hanzochat/agents');
 const {
   convertImage,
   resizeAndConvert,

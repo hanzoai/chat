@@ -21,7 +21,7 @@
     "url": "git+https://github.com/hanzoai/chat.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Hanzo Industries Inc <dev@hanzo.ai>",
   "license": "ISC",
   "_moduleAliases": {
     "~": "."
@@ -51,7 +51,7 @@
     "@langchain/google-genai": "^0.2.13",
     "@langchain/google-vertexai": "^0.2.13",
     "@langchain/textsplitters": "^0.1.0",
-    "@librechat/agents": "^2.4.46",
+    "@hanzochat/agents": "^2.4.46",
     "@node-saml/passport-saml": "^5.0.0",
     "@redis/client": "^1.6.1",
     "@waylaidwanderer/fetch-event-source": "^3.0.1",

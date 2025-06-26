@@ -21,7 +21,7 @@
     "url": "git+https://github.com/hanzoai/chat.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Hanzo Industries Inc <dev@hanzo.ai>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/hanzoai/chat/issues"

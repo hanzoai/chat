@@ -1,5 +1,5 @@
 const { klona } = require('klona');
-const { sleep } = require('@librechat/agents');
+const { sleep } = require('@hanzochat/agents');
 const { sendEvent } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
 const {

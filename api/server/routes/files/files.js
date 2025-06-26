@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const express = require('express');
-const { EnvVar } = require('@librechat/agents');
+const { EnvVar } = require('@hanzochat/agents');
 const {
   Time,
   isUUID,

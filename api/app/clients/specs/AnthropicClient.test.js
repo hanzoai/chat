@@ -1,4 +1,4 @@
-const { SplitStreamHandler } = require('@librechat/agents');
+const { SplitStreamHandler } = require('@hanzochat/agents');
 const { anthropicSettings } = require('@hanzochat/data-provider');
 const AnthropicClient = require('~/app/clients/AnthropicClient');
 
