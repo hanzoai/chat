@@ -34,14 +34,14 @@ test.describe('Settings suite', () => {
 
     try {
       await button1.click({ timeout: 100 });
-    } catch (e) {
-      // console.log('Bing button', e);
+    } catch (_e) {
+      // console.log('Bing button', _e);
     }
 
     try {
       await button2.click({ timeout: 100 });
-    } catch (e) {
-      // console.log('Sydney button', e);
+    } catch (_e) {
+      // console.log('Sydney button', _e);
     }
     await page.getByRole('option', { name: 'Sydney' }).click();
     await page.getByRole('tab', { name: 'Balanced' }).click();
@@ -56,7 +56,7 @@ test.describe('Settings suite', () => {
     await endpointItem.click();
 
     // Check if the settings persisted
-    const localStorage = await page.evaluate(() => window.localStorage);
+    const _localStorage = await page.evaluate(() => window.localStorage);
     const button = page.getByRole('button', { name: 'Mode: Sydney' });
     expect(button.count()).toBeTruthy();
   });

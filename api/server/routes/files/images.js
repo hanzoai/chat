@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
     try {
       await fs.unlink(req.file.path);
       logger.debug('[/files/images] Temp. image upload file deleted');
-    } catch (error) {
+    } catch (_error) {
       logger.debug('[/files/images] Temp. image upload file already deleted');
     }
   }

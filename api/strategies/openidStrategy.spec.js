@@ -50,7 +50,7 @@ jest.mock('openid-client', () => {
       issuer: 'https://fake-issuer.com',
       // Add any other properties needed by the implementation
     }),
-    fetchUserInfo: jest.fn().mockImplementation((config, accessToken, sub) => {
+    fetchUserInfo: jest.fn().mockImplementation((_config, _accessToken, _sub) => {
       // Only return additional properties, but don't override any claims
       return Promise.resolve({
         preferred_username: 'preferred_username',
@@ -300,7 +300,7 @@ describe('setupOpenId', () => {
     jwtDecode.mockReturnValue({
       roles: ['SomeOtherRole'],
     });
-    const userinfo = tokenset.claims();
+    const _userinfo = tokenset.claims();
 
     // Act
     const { user, details } = await validate(tokenset);
@@ -312,7 +312,7 @@ describe('setupOpenId', () => {
 
   it('should attempt to download and save the avatar if picture is provided', async () => {
     // Arrange – ensure userinfo contains a picture URL
-    const userinfo = tokenset.claims();
+    const _userinfo = tokenset.claims();
 
     // Act
     const { user } = await validate(tokenset);

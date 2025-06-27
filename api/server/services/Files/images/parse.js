@@ -16,7 +16,7 @@ function getImageBasename(urlString) {
     const basename = path.basename(url.pathname);
 
     return imageExtensionRegex.test(basename) ? basename : '';
-  } catch (error) {
+  } catch (_error) {
     // If URL parsing fails, return an empty string
     return '';
   }
@@ -33,7 +33,7 @@ function getFileBasename(urlString) {
   try {
     const url = new URL(urlString);
     return path.basename(url.pathname);
-  } catch (error) {
+  } catch (_error) {
     // If URL parsing fails, return an empty string
     return '';
   }

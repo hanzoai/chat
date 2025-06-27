@@ -273,8 +273,15 @@ const updateAgent = async (searchParameter, updateData, options = {}) => {
 
   const currentAgent = await Agent.findOne(searchParameter);
   if (currentAgent) {
-    const { __v, _id, id: _id2, versions, author: _author2, ...versionData } = currentAgent.toObject();
-    const { $push: _$push2, $pull: _$pull2, $addToSet: _$addToSet2, ...directUpdates } = updateData;
+    const {
+      __v,
+      _id,
+      id: _id2,
+      versions,
+      author: _author2,
+      ...versionData
+    } = currentAgent.toObject();
+    const { $push, $pull, $addToSet, ...directUpdates } = updateData;
 
     let actionsHash = null;
 

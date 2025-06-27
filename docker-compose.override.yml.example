@@ -103,8 +103,8 @@
 #       - 7700:7700
 
 # # USE RAG API IMAGE WITH LOCAL EMBEDDINGS SUPPORT
-#  rag_api:
-#    image: ghcr.io/hanzoai/chat-rag-api-dev:latest
+#  chat-rag-api:
+#    image: ghcr.io/hanzoai/chat-rag-api:latest
 # # For Linux user:
 #    extra_hosts:
 #      - "host.docker.internal:host-gateway"

@@ -1,16 +1,13 @@
 import type { TPreset, TPlugin } from '@hanzochat/data-provider';
-import { EModelEndpoint } from '@hanzochat/data-provider';
-
-type TEndpoints = Array<string | EModelEndpoint>;
 
 export const getPresetTitle = (preset: TPreset, mention?: boolean) => {
   const {
-    endpoint,
+    endpoint: _endpoint,
     title: presetTitle,
     model,
     tools,
     promptPrefix,
-    chatGptLabel,
+    chatGptLabel: _chatGptLabel,
     modelLabel,
   } = preset;
   const modelInfo = model ?? '';
