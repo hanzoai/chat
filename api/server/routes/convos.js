@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
       order,
     });
     res.status(200).json(result);
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ error: 'Error fetching conversations' });
   }
 });

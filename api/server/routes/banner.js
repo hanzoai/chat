@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', optionalJwtAuth, async (req, res) => {
   try {
     res.status(200).send(await getBanner(req.user));
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ message: 'Error getting banner' });
   }
 });

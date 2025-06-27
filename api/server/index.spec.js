@@ -1,5 +1,5 @@
 const fs = require('fs');
-const path = require('path');
+const _path = require('path');
 const request = require('supertest');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
@@ -69,7 +69,7 @@ async function healthCheckPoll(app, retries = 0) {
     if (response.status === 200) {
       return; // App is healthy
     }
-  } catch (error) {
+  } catch (_error) {
     // Ignore connection errors during polling
   }
 

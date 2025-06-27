@@ -78,7 +78,7 @@ const verifyToolAuth = async (req, res) => {
         authFields,
         throwError: false,
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(200).json({ authenticated: false, message: AuthType.USER_PROVIDED });
       return;
     }

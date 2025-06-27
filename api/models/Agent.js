@@ -23,7 +23,7 @@ const { Agent } = require('~/db/models');
  * @throws {Error} If the agent creation fails.
  */
 const createAgent = async (agentData) => {
-  const { author, ...versionData } = agentData;
+  const { author: _author, ...versionData } = agentData;
   const timestamp = new Date();
   const initialAgentData = {
     ...agentData,
@@ -178,7 +178,7 @@ const isDuplicateVersion = (updateData, currentData, versions, actionsHash = nul
     'actionsHash', // Exclude actionsHash from direct comparison
   ];
 
-  const { $push, $pull, $addToSet, ...directUpdates } = updateData;
+  const { $push: _$push, $pull: _$pull, $addToSet: _$addToSet, ...directUpdates } = updateData;
 
   if (Object.keys(directUpdates).length === 0 && !actionsHash) {
     return null;
@@ -273,8 +273,8 @@ const updateAgent = async (searchParameter, updateData, options = {}) => {
 
   const currentAgent = await Agent.findOne(searchParameter);
   if (currentAgent) {
-    const { __v, _id, id, versions, author, ...versionData } = currentAgent.toObject();
-    const { $push, $pull, $addToSet, ...directUpdates } = updateData;
+    const { __v, _id, id: _id2, versions, author: _author2, ...versionData } = currentAgent.toObject();
+    const { $push: _$push2, $pull: _$pull2, $addToSet: _$addToSet2, ...directUpdates } = updateData;
 
     let actionsHash = null;
 

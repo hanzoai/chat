@@ -78,7 +78,7 @@ const EditController = async (req, res, next, initializeClient) => {
           if (typeof handler === 'function') {
             handler();
           }
-        } catch (e) {
+        } catch (_e) {
           // Ignore
         }
       }
@@ -160,7 +160,7 @@ const EditController = async (req, res, next, initializeClient) => {
     cleanupHandlers.push(() => {
       try {
         res.removeListener('close', closeHandler);
-      } catch (e) {
+      } catch (_e) {
         // Ignore
       }
     });

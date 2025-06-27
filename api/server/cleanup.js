@@ -23,7 +23,7 @@ const clientRegistry = FinalizationRegistry
         } else {
           logger.debug('[FinalizationRegistry] Cleaning up client');
         }
-      } catch (e) {
+      } catch (_e) {
         // Ignore errors
       }
     })
@@ -334,7 +334,7 @@ function disposeClient(client) {
       }
     }
     client.options = null;
-  } catch (e) {
+  } catch (_e) {
     // Ignore errors during disposal
   }
 }

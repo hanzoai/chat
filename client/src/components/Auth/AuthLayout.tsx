@@ -1,4 +1,4 @@
-import { TranslationKeys, useLocalize } from '~/hooks';
+import { TranslationKeys, useLocalize, ThemeContext, isDark } from '~/hooks';
 import { TStartupConfig } from '@hanzochat/data-provider';
 import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import SocialLoginRender from './SocialLoginRender';
@@ -6,6 +6,7 @@ import { BlinkAnimation } from './BlinkAnimation';
 import { ThemeSelector } from '~/components';
 import { Banner } from '../Banners';
 import Footer from './Footer';
+import { useContext } from 'react';
 
 function AuthLayout({
   children,
@@ -25,6 +26,8 @@ function AuthLayout({
   error: TranslationKeys | null;
 }) {
   const localize = useLocalize();
+  const { theme } = useContext(ThemeContext);
+  const isCurrentlyDark = isDark(theme);
 
   const hasStartupConfigError = startupConfigError !== null && startupConfigError !== undefined;
   const DisplayError = () => {
@@ -65,7 +68,7 @@ function AuthLayout({
       <BlinkAnimation active={isFetching}>
         <div className="mt-6 h-10 w-full bg-cover">
           <img
-            src="/assets/hanzo-logo.svg"
+            src={isCurrentlyDark ? "/assets/hanzo-logo-dark.svg" : "/assets/hanzo-logo-light.svg"}
             className="h-full w-full object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Hanzo' })}
           />
