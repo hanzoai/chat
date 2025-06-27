@@ -844,28 +844,7 @@ const sharedOpenAIModels = [
   'gpt-3.5-turbo-0613',
 ];
 
-const sharedAnthropicModels = [
-  'claude-sonnet-4-20250514',
-  'claude-sonnet-4-latest',
-  'claude-opus-4-20250514',
-  'claude-opus-4-latest',
-  'claude-3-7-sonnet-latest',
-  'claude-3-7-sonnet-20250219',
-  'claude-3-5-haiku-20241022',
-  'claude-3-5-sonnet-20241022',
-  'claude-3-5-sonnet-20240620',
-  'claude-3-5-sonnet-latest',
-  'claude-3-opus-20240229',
-  'claude-3-sonnet-20240229',
-  'claude-3-haiku-20240307',
-  'claude-2.1',
-  'claude-2',
-  'claude-1.2',
-  'claude-1',
-  'claude-1-100k',
-  'claude-instant-1',
-  'claude-instant-1-100k',
-];
+const sharedAnthropicModels = ['model-1', 'model-2'];
 
 export const bedrockModels = [
   'anthropic.claude-3-5-sonnet-20241022-v2:0',

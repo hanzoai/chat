@@ -1,3 +1,4 @@
+jest.mock('@hanzochat/data-provider/react-query');
 import { render, screen, fireEvent } from 'test/layout-test-utils';
 import PluginStoreDialog from '../PluginStoreDialog';
 import userEvent from '@testing-library/user-event';

@@ -28,8 +28,7 @@ module.exports = {
       'jest-file-loader',
     '^test/(.*)$': '<rootDir>/test/$1',
     '^~/(.*)$': '<rootDir>/src/$1',
-    '^chat-data-provider/react-query$': '<rootDir>/../node_modules/chat-data-provider/src/react-query',
-    '^@hanzochat/data-provider/react-query$': '<rootDir>/../packages/data-provider/dist/react-query',
+    '^@hanzochat/data-provider/react-query': '<rootDir>/../packages/data-provider/src/react-query',
   },
   restoreMocks: true,
   testResultsProcessor: 'jest-junit',
@@ -41,6 +40,6 @@ module.exports = {
   },
   transformIgnorePatterns: ['node_modules/?!@zattoo/use-double-click'],
   preset: 'ts-jest',
-  setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect', '<rootDir>/test/setupTests.js'],
+  setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect', '<rootDir>/test/setupTests.js', '<rootDir>/../jest.setup.js'],
   clearMocks: true,
 };

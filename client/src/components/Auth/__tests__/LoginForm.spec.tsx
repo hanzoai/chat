@@ -1,3 +1,7 @@
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
+  tQueryParamsSchema: { shape: {} },
+}));
 import { render, getByTestId } from 'test/layout-test-utils';
 import userEvent from '@testing-library/user-event';
 import type { TStartupConfig } from '@hanzochat/data-provider';
@@ -113,7 +117,7 @@ test('renders login form', () => {
 });
 
 test('submits login form', async () => {
-  const { getByLabelText, getByRole } = render(
+  const { getByLabelText } = render(
     <Login onSubmit={mockLogin} startupConfig={mockStartupConfig} />,
   );
   const emailInput = getByLabelText(/email/i);
@@ -128,7 +132,7 @@ test('submits login form', async () => {
 });
 
 test('displays validation error messages', async () => {
-  const { getByLabelText, getByRole, getByText } = render(
+  const { getByLabelText, getByText } = render(
     <Login onSubmit={mockLogin} startupConfig={mockStartupConfig} />,
   );
   const emailInput = getByLabelText(/email/i);

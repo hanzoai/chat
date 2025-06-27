@@ -1,3 +1,4 @@
+jest.mock('@hanzochat/data-provider/react-query');
 import reactRouter from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { getByTestId, render, waitFor } from 'test/layout-test-utils';

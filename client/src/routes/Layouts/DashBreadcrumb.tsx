@@ -15,9 +15,9 @@ import {
   // DropdownMenuContent,
   // DropdownMenuTrigger,
 } from '~/components/ui';
+
 import { useLocalize, useCustomLink, useAuthContext } from '~/hooks';
 import AdvancedSwitch from '~/components/Prompts/AdvancedSwitch';
-// import { RightPanel } from '../../components/Prompts/RightPanel';
 import AdminSettings from '~/components/Prompts/AdminSettings';
 import { useDashboardContext } from '~/Providers';
 import { PromptsEditorMode } from '~/common';
@@ -26,7 +26,8 @@ import { atomWithLocalStorage } from '~/store/utils';
 
 const promptsPathPattern = /prompts\/(?!new(?:\/|$)).*$/;
 
-// Fallback atoms in case store doesn't have them
+const promptsNameAtom = store.promptsName || atomWithLocalStorage('promptsName', '');
+const promptsCategoryAtom = store.promptsCategory || atomWithLocalStorage('promptsCategory', '');
 const promptsEditorModeAtom =
   store.promptsEditorMode ||
   atomWithLocalStorage<PromptsEditorMode>('promptsEditorMode', PromptsEditorMode.SIMPLE);
@@ -46,9 +47,9 @@ export default function DashBreadcrumb() {
   const { prevLocationPath } = useDashboardContext();
   const lastConversationId = useMemo(() => getConversationId(prevLocationPath), [prevLocationPath]);
 
-  const setPromptsName = useSetRecoilState(store.promptsName);
-  const setPromptsCategory = useSetRecoilState(store.promptsCategory);
-  const editorMode = useRecoilValue(promptsEditorModeAtom);
+  const setPromptsName = useSetRecoilState(promptsNameAtom);
+  const setPromptsCategory = useSetRecoilState(promptsCategoryAtom);
+  const _editorMode = useRecoilValue(promptsEditorModeAtom);
 
   const clickCallback = useCallback(() => {
     setPromptsName('');
