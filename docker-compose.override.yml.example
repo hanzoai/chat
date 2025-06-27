@@ -39,19 +39,19 @@
 
 # # BUILD FROM LATEST IMAGE
 #   api:
-#     image: ghcr.io/hanzoai/chat-dev:latest
+#     image: hanzoai/chat-dev:latest
 
 # # BUILD FROM LATEST IMAGE (NUMBERED RELEASE)
 #   api:
-#     image: ghcr.io/hanzoai/chat:latest
+#     image: hanzoai/chat:latest
 
 # # BUILD FROM LATEST API IMAGE
 #   api:
-#     image: ghcr.io/hanzoai/chat-dev-api:latest
+#     image: hanzoai/chat-dev-api:latest
 
 # # BUILD FROM LATEST API IMAGE (NUMBERED RELEASE)
 #   api:
-#     image: ghcr.io/hanzoai/chat-api:latest
+#     image: hanzoai/chat-api:latest
 
 # # ADD SAML CERT FILE
 #   api:
@@ -104,7 +104,7 @@
 
 # # USE RAG API IMAGE WITH LOCAL EMBEDDINGS SUPPORT
 #  chat-rag-api:
-#    image: ghcr.io/hanzoai/chat-rag-api:latest
+#    image: hanzoai/chat-rag-api:latest
 # # For Linux user:
 #    extra_hosts:
 #      - "host.docker.internal:host-gateway"
