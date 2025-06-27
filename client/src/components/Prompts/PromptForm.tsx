@@ -32,17 +32,24 @@ import SharePrompt from './SharePrompt';
 import PromptName from './PromptName';
 import Command from './Command';
 import store from '~/store';
+import { atomWithLocalStorage } from '~/store/utils';
+
+// Fallback atoms in case store doesn't have them
+const alwaysMakeProdAtom = store.alwaysMakeProd || atomWithLocalStorage('alwaysMakeProd', true);
+const promptsEditorModeAtom =
+  store.promptsEditorMode ||
+  atomWithLocalStorage<PromptsEditorMode>('promptsEditorMode', PromptsEditorMode.SIMPLE);
 
 const PromptForm = () => {
   const params = useParams();
   const localize = useLocalize();
   const { user } = useAuthContext();
-  const alwaysMakeProd = useRecoilValue(store.alwaysMakeProd);
+  const alwaysMakeProd = useRecoilValue(alwaysMakeProdAtom);
   const { showToast } = useToastContext();
   const promptId = params.promptId || '';
 
   const [selectionIndex, setSelectionIndex] = useState<number>(0);
-  const editorMode = useRecoilValue(store.promptsEditorMode);
+  const editorMode = useRecoilValue(promptsEditorModeAtom);
   const prevIsEditingRef = useRef(false);
   const [isEditing, setIsEditing] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -287,18 +294,18 @@ const PromptForm = () => {
       {editorMode === PromptsEditorMode.ADVANCED &&
         (isLoadingPrompts
           ? Array.from({ length: 6 }).map((_, index: number) => (
-            <div key={index} className="my-2">
-              <Skeleton className="h-[72px] w-full" />
-            </div>
-          ))
+              <div key={index} className="my-2">
+                <Skeleton className="h-[72px] w-full" />
+              </div>
+            ))
           : prompts.length > 0 && (
-            <PromptVersions
-              group={group}
-              prompts={prompts}
-              selectionIndex={selectionIndex}
-              setSelectionIndex={setSelectionIndex}
-            />
-          ))}
+              <PromptVersions
+                group={group}
+                prompts={prompts}
+                selectionIndex={selectionIndex}
+                setSelectionIndex={setSelectionIndex}
+              />
+            ))}
     </div>
   );
 

@@ -28,7 +28,7 @@ export { default as useLocalize } from './useLocalize';
 export { default as useMediaQuery } from './useMediaQuery';
 export { default as useChatBadges } from './useChatBadges';
 export { default as useScrollToRef } from './useScrollToRef';
-export { default as useVendorMode } from './useVendorMode';
+export { default as useBrandMode } from './useBrandMode';
 export { default as useLocalStorage } from './useLocalStorage';
 export { default as useDocumentTitle } from './useDocumentTitle';
 export { default as useDelayedRender } from './useDelayedRender';

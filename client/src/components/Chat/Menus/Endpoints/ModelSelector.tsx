@@ -5,11 +5,11 @@ import { renderModelSpecs, renderEndpoints, renderSearchResults } from './compon
 import { getSelectedIcon, getDisplayValue } from './utils';
 import { CustomMenu as Menu } from './CustomMenu';
 import DialogManager from './DialogManager';
-import { useLocalize, useVendorMode } from '~/hooks';
+import { useLocalize, useBrandMode } from '~/hooks';
 
 function ModelSelectorContent() {
   const localize = useLocalize();
-  const { isVendorMode, vendorName, defaultModel, hideModelSwitcher } = useVendorMode();
+  const { isBrandMode, brandName, defaultModel, hideModelSwitcher } = useBrandMode();
 
   const {
     // Hanzo
@@ -65,8 +65,8 @@ function ModelSelectorContent() {
     </button>
   );
 
-  // In vendor mode, show a simplified model selector or just the model name
-  if (isVendorMode && hideModelSwitcher) {
+  // In brand mode, show a simplified model selector or just the model name
+  if (isBrandMode && hideModelSwitcher) {
     return (
       <div className="relative flex w-full max-w-md flex-col items-center gap-2">
         <div className="my-1 flex h-10 w-full max-w-[70vw] items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-secondary px-3 py-2 text-sm text-text-primary">
@@ -75,7 +75,9 @@ function ModelSelectorContent() {
               {selectedIcon}
             </div>
           )}
-          <span className="flex-grow truncate text-left">{selectedDisplayValue || defaultModel}</span>
+          <span className="flex-grow truncate text-left">
+            {selectedDisplayValue || defaultModel}
+          </span>
         </div>
       </div>
     );

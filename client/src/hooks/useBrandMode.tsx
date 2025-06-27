@@ -4,7 +4,7 @@ import { useSetRecoilState, useRecoilValue } from 'recoil';
 import { QueryKeys } from '@hanzochat/data-provider';
 import store from '~/store';
 
-export interface VendorConfig {
+export interface BrandConfig {
   enabled: boolean;
   name: string;
   models: {
@@ -29,7 +29,7 @@ export interface VendorConfig {
   }>;
 }
 
-const defaultVendorConfig: VendorConfig = {
+const defaultBrandConfig: BrandConfig = {
   enabled: false,
   name: 'Hanzo AI',
   models: {
@@ -46,16 +46,16 @@ const defaultVendorConfig: VendorConfig = {
   availableModels: [],
 };
 
-export default function useVendorMode() {
+export default function useBrandMode() {
   const setEndpointsConfig = useSetRecoilState(store.endpointsConfig);
   const setModelsConfig = useSetRecoilState(store.modelsConfig);
 
-  const { data: vendorConfig = defaultVendorConfig, isLoading } = useQuery<VendorConfig>({
-    queryKey: [QueryKeys.vendorConfig],
+  const { data: brandConfig = defaultBrandConfig, isLoading } = useQuery<BrandConfig>({
+    queryKey: [QueryKeys.brandConfig],
     queryFn: async () => {
-      const response = await fetch('/api/vendor/config');
+      const response = await fetch('/api/brand/config');
       if (!response.ok) {
-        throw new Error('Failed to fetch vendor config');
+        throw new Error('Failed to fetch brand config');
       }
       return response.json();
     },
@@ -64,50 +64,50 @@ export default function useVendorMode() {
     cacheTime: Infinity,
   });
 
-  // Apply vendor mode configuration to global state
+  // Apply brand mode configuration to global state
   useEffect(() => {
-    if (!vendorConfig.enabled || isLoading) {
+    if (!brandConfig.enabled || isLoading) {
       return;
     }
 
-    // Override endpoints config for vendor mode
+    // Override endpoints config for brand mode
     setEndpointsConfig({
-      [vendorConfig.name]: {
+      [brandConfig.name]: {
         type: 'custom',
         userProvide: false,
         userProvideURL: false,
         order: 0,
-        models: vendorConfig.availableModels,
-        iconURL: vendorConfig.logoUrl,
+        models: brandConfig.availableModels,
+        iconURL: brandConfig.logoUrl,
       },
     });
 
     // Set models config
     const modelsConfig: Record<string, string[]> = {
-      [vendorConfig.name]: vendorConfig.availableModels.map(m => m.id),
+      [brandConfig.name]: brandConfig.availableModels.map((m) => m.id),
     };
     setModelsConfig(modelsConfig);
 
     // Update app title if configured
-    if (vendorConfig.appTitle && typeof document !== 'undefined') {
-      document.title = vendorConfig.appTitle;
+    if (brandConfig.appTitle && typeof document !== 'undefined') {
+      document.title = brandConfig.appTitle;
     }
 
     // Apply brand color as CSS variable
-    if (vendorConfig.brandColor && typeof document !== 'undefined') {
-      document.documentElement.style.setProperty('--brand-color', vendorConfig.brandColor);
+    if (brandConfig.brandColor && typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--brand-color', brandConfig.brandColor);
     }
-  }, [vendorConfig, isLoading, setEndpointsConfig, setModelsConfig]);
+  }, [brandConfig, isLoading, setEndpointsConfig, setModelsConfig]);
 
   return {
-    vendorConfig,
-    isVendorMode: vendorConfig.enabled,
+    brandConfig,
+    isBrandMode: brandConfig.enabled,
     isLoading,
-    vendorName: vendorConfig.name,
-    hideModelSwitcher: vendorConfig.hideModelSwitcher,
-    hideEndpointMenu: vendorConfig.hideEndpointMenu,
-    hideApiKeyInput: vendorConfig.hideApiKeyInput,
-    hideAdvancedSettings: vendorConfig.hideAdvancedSettings,
-    defaultModel: vendorConfig.defaultModel,
+    brandName: brandConfig.name,
+    hideModelSwitcher: brandConfig.hideModelSwitcher,
+    hideEndpointMenu: brandConfig.hideEndpointMenu,
+    hideApiKeyInput: brandConfig.hideApiKeyInput,
+    hideAdvancedSettings: brandConfig.hideAdvancedSettings,
+    defaultModel: brandConfig.defaultModel,
   };
 }

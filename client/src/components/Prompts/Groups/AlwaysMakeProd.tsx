@@ -3,6 +3,10 @@ import { Switch } from '~/components/ui';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 import store from '~/store';
+import { atomWithLocalStorage } from '~/store/utils';
+
+// Fallback atom in case store doesn't have it
+const alwaysMakeProdAtom = store.alwaysMakeProd || atomWithLocalStorage('alwaysMakeProd', true);
 
 export default function AlwaysMakeProd({
   onCheckedChange,
@@ -11,7 +15,7 @@ export default function AlwaysMakeProd({
   onCheckedChange?: (value: boolean) => void;
   className?: string;
 }) {
-  const [alwaysMakeProd, setAlwaysMakeProd] = useRecoilState<boolean>(store.alwaysMakeProd);
+  const [alwaysMakeProd, setAlwaysMakeProd] = useRecoilState<boolean>(alwaysMakeProdAtom);
   const localize = useLocalize();
 
   const handleCheckedChange = (value: boolean) => {

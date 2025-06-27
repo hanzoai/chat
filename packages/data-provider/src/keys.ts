@@ -48,8 +48,8 @@ export enum QueryKeys {
   banner = 'banner',
   /* Memories */
   memories = 'memories',
-  /* Vendor Mode */
-  vendorConfig = 'vendorConfig',
+  /* Brand Mode */
+  brandConfig = 'brandConfig',
 }
 
 export enum MutationKeys {

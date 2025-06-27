@@ -104,6 +104,7 @@
 - ⚙️ **Configuration & Deployment**:
   - Configure Proxy, Reverse Proxy, Docker, & many Deployment options
   - Use completely local or deploy on the cloud
+  - **Brand Mode**: White-label deployments with custom branding and model names
 
 - 📖 **Open-Source & Community**:
   - Completely Open-Source & Built in Public

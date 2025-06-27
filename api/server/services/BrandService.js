@@ -1,43 +1,43 @@
 const { EModelEndpoint } = require('@hanzochat/data-provider');
 
 /**
- * Vendor Mode Service
+ * Brand Mode Service
  * Handles white-label deployments with fixed model names and backend routing
  */
-class VendorService {
+class BrandService {
   constructor() {
-    this.vendorMode = process.env.VENDOR_MODE === 'true';
-    this.vendorName = process.env.VENDOR_NAME || 'Hanzo AI';
-    this.vendorModels = {
-      default: process.env.VENDOR_MODEL_DEFAULT || 'Hanzo Zen-1',
-      pro: process.env.VENDOR_MODEL_PRO || 'Hanzo Zen-1 Pro',
+    this.brandMode = process.env.BRAND_MODE === 'true';
+    this.brandName = process.env.BRAND_NAME || 'Hanzo AI';
+    this.brandModels = {
+      default: process.env.BRAND_MODEL_DEFAULT || 'Hanzo Zen-1',
+      pro: process.env.BRAND_MODEL_PRO || 'Hanzo Zen-1 Pro',
     };
     this.backend = {
-      endpoint: process.env.VENDOR_BACKEND_ENDPOINT || 'anthropic',
-      apiKey: process.env.VENDOR_BACKEND_API_KEY,
-      baseURL: process.env.VENDOR_BACKEND_BASE_URL || 'https://api.hanzo.ai/v1',
+      endpoint: process.env.BRAND_BACKEND_ENDPOINT || 'anthropic',
+      apiKey: process.env.BRAND_BACKEND_API_KEY,
+      baseURL: process.env.BRAND_BACKEND_BASE_URL || 'https://api.hanzo.ai/v1',
       models: {
-        default: process.env.VENDOR_BACKEND_MODEL_DEFAULT || 'claude-3-5-sonnet-20241022',
-        pro: process.env.VENDOR_BACKEND_MODEL_PRO || 'claude-3-5-opus-latest',
+        default: process.env.BRAND_BACKEND_MODEL_DEFAULT || 'claude-3-5-sonnet-20241022',
+        pro: process.env.BRAND_BACKEND_MODEL_PRO || 'claude-3-5-opus-latest',
       },
     };
   }
 
   /**
-   * Check if vendor mode is enabled
+   * Check if brand mode is enabled
    */
   isEnabled() {
-    return this.vendorMode;
+    return this.brandMode;
   }
 
   /**
-   * Get vendor configuration
+   * Get brand configuration
    */
   getConfig() {
     return {
-      enabled: this.vendorMode,
-      name: this.vendorName,
-      models: this.vendorModels,
+      enabled: this.brandMode,
+      name: this.brandName,
+      models: this.brandModels,
       hideModelSwitcher: true,
       hideSidePanelParameters: true,
       singleEndpoint: true,
@@ -45,23 +45,23 @@ class VendorService {
   }
 
   /**
-   * Get available models for vendor mode
+   * Get available models for brand mode
    */
   getModels() {
-    if (!this.vendorMode) {
+    if (!this.brandMode) {
       return null;
     }
 
     return [
       {
-        id: this.vendorModels.default,
-        name: this.vendorModels.default,
+        id: this.brandModels.default,
+        name: this.brandModels.default,
         maxTokens: 200000,
         description: 'Fast, efficient AI model for everyday tasks',
       },
       {
-        id: this.vendorModels.pro,
-        name: this.vendorModels.pro,
+        id: this.brandModels.pro,
+        name: this.brandModels.pro,
         maxTokens: 200000,
         description: 'Advanced AI model for complex reasoning and analysis',
         capabilities: ['advanced-reasoning', 'code-generation', 'complex-analysis'],
@@ -70,17 +70,17 @@ class VendorService {
   }
 
   /**
-   * Transform vendor model to actual backend model
+   * Transform brand model to actual backend model
    */
-  transformModel(vendorModel) {
-    if (!this.vendorMode) {
-      return vendorModel;
+  transformModel(brandModel) {
+    if (!this.brandMode) {
+      return brandModel;
     }
 
-    // Map vendor model names to actual backend models
-    if (vendorModel === this.vendorModels.default) {
+    // Map brand model names to actual backend models
+    if (brandModel === this.brandModels.default) {
       return this.backend.models.default;
-    } else if (vendorModel === this.vendorModels.pro) {
+    } else if (brandModel === this.brandModels.pro) {
       return this.backend.models.pro;
     }
 
@@ -89,16 +89,16 @@ class VendorService {
   }
 
   /**
-   * Get endpoint configuration for vendor mode
+   * Get endpoint configuration for brand mode
    */
   getEndpointConfig() {
-    if (!this.vendorMode) {
+    if (!this.brandMode) {
       return null;
     }
 
     const endpoint = {
       type: EModelEndpoint.custom,
-      name: this.vendorName,
+      name: this.brandName,
       apiKey: this.backend.apiKey,
       baseURL: this.backend.baseURL,
       models: {
@@ -122,7 +122,7 @@ class VendorService {
       case 'hanzoai':
         endpoint.type = EModelEndpoint.custom;
         endpoint.headers = {
-          'X-Hanzo-Source': 'vendor-mode',
+          'X-Hanzo-Source': 'brand-mode',
         };
         break;
     }
@@ -131,10 +131,10 @@ class VendorService {
   }
 
   /**
-   * Transform request for vendor mode
+   * Transform request for brand mode
    */
   transformRequest(req) {
-    if (!this.vendorMode || !req.body) {
+    if (!this.brandMode || !req.body) {
       return req;
     }
 
@@ -143,35 +143,35 @@ class VendorService {
       req.body.model = this.transformModel(req.body.model);
     }
 
-    // Force endpoint to vendor configuration
+    // Force endpoint to brand configuration
     if (req.body.endpoint) {
-      req.body.endpoint = this.vendorName;
+      req.body.endpoint = this.brandName;
     }
 
-    // Add vendor headers
+    // Add brand headers
     if (!req.headers) {
       req.headers = {};
     }
-    req.headers['X-Vendor-Mode'] = 'true';
-    req.headers['X-Vendor-Name'] = this.vendorName;
+    req.headers['X-Brand-Mode'] = 'true';
+    req.headers['X-Brand-Name'] = this.brandName;
 
     return req;
   }
 
   /**
-   * Transform response for vendor mode
+   * Transform response for brand mode
    */
   transformResponse(response) {
-    if (!this.vendorMode || !response) {
+    if (!this.brandMode || !response) {
       return response;
     }
 
-    // Replace actual model names with vendor model names
+    // Replace actual model names with brand model names
     if (response.model) {
       if (response.model === this.backend.models.default) {
-        response.model = this.vendorModels.default;
+        response.model = this.brandModels.default;
       } else if (response.model === this.backend.models.pro) {
-        response.model = this.vendorModels.pro;
+        response.model = this.brandModels.pro;
       }
     }
 
@@ -179,39 +179,39 @@ class VendorService {
   }
 
   /**
-   * Get UI configuration for vendor mode
+   * Get UI configuration for brand mode
    */
   getUIConfig() {
-    if (!this.vendorMode) {
+    if (!this.brandMode) {
       return {};
     }
 
     return {
-      appTitle: this.vendorName,
+      appTitle: this.brandName,
       hideEndpointMenu: true,
       hideModelDropdown: true,
       hideSidePanel: false,
       hideAdvancedSettings: true,
       hideApiKeyInput: true,
-      brandColor: process.env.VENDOR_BRAND_COLOR || '#000000',
-      logoUrl: process.env.VENDOR_LOGO_URL || '/assets/hanzo-logo.svg',
-      defaultModel: this.vendorModels.default,
+      brandColor: process.env.BRAND_COLOR || '#000000',
+      logoUrl: process.env.BRAND_LOGO_URL || '/assets/hanzo-logo.svg',
+      defaultModel: this.brandModels.default,
       availableModels: this.getModels(),
     };
   }
 }
 
 // Singleton instance
-let vendorService;
+let brandService;
 
-function getVendorService() {
-  if (!vendorService) {
-    vendorService = new VendorService();
+function getBrandService() {
+  if (!brandService) {
+    brandService = new BrandService();
   }
-  return vendorService;
+  return brandService;
 }
 
 module.exports = {
-  getVendorService,
-  VendorService,
+  getBrandService,
+  BrandService,
 };
