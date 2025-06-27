@@ -1,6 +1,5 @@
 import { EModelEndpoint } from '@hanzochat/data-provider';
 import cleanupPreset from '../cleanupPreset';
-import type { TPreset } from '@hanzochat/data-provider';
 
 // Mock parseConvo since we're focusing on testing the chatGptLabel migration logic
 jest.mock('@hanzochat/data-provider', () => ({

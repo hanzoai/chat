@@ -134,7 +134,7 @@ async function encodeAndFormat(req, files, endpoint, mode) {
         promises.push([file, base64Data]);
         base64Data = null;
         continue;
-      } catch (error) {
+      } catch (_error) {
         // Error handling code
       }
     } else if (source !== FileSources.local && base64Only.has(endpoint)) {

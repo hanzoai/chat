@@ -10,7 +10,7 @@ services:
       - 3080:3080
     depends_on:
       - mongodb
-      - rag_api
+      - chat-rag-api
     restart: always
     extra_hosts:
       - 'host.docker.internal:host-gateway'
@@ -22,7 +22,7 @@ services:
       - MONGO_URI=mongodb://mongodb:27017/chat
       - MEILI_HOST=http://meilisearch:7700
       - RAG_PORT=${RAG_PORT:-8000}
-      - RAG_API_URL=http://rag_api:${RAG_PORT:-8000}
+      - RAG_API_URL=http://chat-rag-api:${RAG_PORT:-8000}
     volumes:
       - type: bind
         source: ./chat.yaml
@@ -73,7 +73,7 @@ services:
     restart: always
     volumes:
       - pgdata2:/var/lib/postgresql/data
-  rag_api:
+  chat-rag-api:
     image: ghcr.io/hanzoai/chat-rag-api:latest
     environment:
       - DB_HOST=vectordb

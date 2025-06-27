@@ -145,7 +145,7 @@ function extractFirebaseFilePath(urlString) {
     }
 
     return '';
-  } catch (error) {
+  } catch (_error) {
     // If URL parsing fails, return an empty string
     return '';
   }

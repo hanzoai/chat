@@ -40,6 +40,7 @@ interface SplitStreamHandlerOptions {
 export class SplitStreamHandler {
   constructor(_options?: SplitStreamHandlerOptions) {
     // Basic implementation
+    void _options;
   }
 
   async handle(stream: unknown) {
@@ -56,6 +57,7 @@ interface CustomOpenAIClientOptions {
 export class CustomOpenAIClient {
   constructor(_options?: CustomOpenAIClientOptions) {
     // Basic implementation
+    void _options;
   }
 }
 
@@ -65,6 +67,7 @@ interface ContentAggregatorOptions {
 }
 
 export const createContentAggregator = (_options?: ContentAggregatorOptions) => {
+  void _options;
   return {
     aggregate: <T>(content: T) => content,
   };
@@ -76,10 +79,12 @@ interface CodeExecutionToolOptions {
 }
 
 export const createCodeExecutionTool = (_options?: CodeExecutionToolOptions) => {
+  void _options;
   return {
     name: 'code_execution',
     description: 'Execute code',
     execute: async (_code: string) => {
+      void _code;
       return `Code execution not implemented`;
     },
   };
@@ -91,10 +96,12 @@ interface SearchToolOptions {
 }
 
 export const createSearchTool = (_options?: SearchToolOptions) => {
+  void _options;
   return {
     name: 'search',
     description: 'Search the web',
     execute: async (_query: string) => {
+      void _query;
       return `Search not implemented`;
     },
   };

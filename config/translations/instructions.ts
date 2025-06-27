@@ -27,7 +27,7 @@ function generateMarkdownFromObject(obj: object, depth = 0): string {
     .join('\n');
 }
 
-async function generatePromptForFile(filePath: string, fileName: string) {
+async function generatePromptForFile(filePath: string, _fileName: string) {
   const modulePath = path.resolve(filePath); // Ensuring path is correctly resolved
   const fileModule = await import(modulePath); // Dynamically importing the file as a module
   let comparisonsMarkdown = '';

@@ -22,7 +22,7 @@ async function register(page: Page, user: User) {
   await page.getByLabel('Submit registration').click();
 }
 
-async function logout(page: Page) {
+async function _logout(page: Page) {
   await page.getByTestId('nav-user').click();
   await page.getByRole('button', { name: 'Log out' }).click();
 }

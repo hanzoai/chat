@@ -235,7 +235,7 @@ function extractKeyFromS3Url(fileUrlOrKey) {
   try {
     const url = new URL(fileUrlOrKey);
     return url.pathname.substring(1);
-  } catch (error) {
+  } catch (_error) {
     const parts = fileUrlOrKey.split('/');
 
     if (parts.length >= 3 && !fileUrlOrKey.startsWith('http') && !fileUrlOrKey.startsWith('/')) {

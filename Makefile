@@ -61,6 +61,10 @@ help: ## Show this help message
 	@echo "  $(GREEN)make update-branding$(NC) - Update logo in running container"
 	@echo "  $(GREEN)make init-fixtures$(NC)  - Create demo user (dev only)"
 	@echo ""
+	@echo "$(YELLOW)Docker Registry Commands:$(NC)"
+	@echo "  $(GREEN)make publish-login$(NC)  - Show GitHub Container Registry login instructions"
+	@echo "  $(GREEN)make publish$(NC)        - Build and publish images (latest, stable tags)"
+	@echo ""
 	@echo "$(BLUE)Access the application at: http://localhost:3080$(NC)"
 	@echo ""
 
@@ -401,6 +405,32 @@ check-env: ## Check if environment is properly configured
 	fi
 	@echo "$(GREEN)✓ Environment check passed$(NC)"
 
+# Publish Docker images
+publish: ## Build and publish Docker images with latest and stable tags
+	@if ! docker info 2>&1 | grep -q "Username:"; then \
+		echo "$(RED)Error: Not logged in to Docker registry$(NC)"; \
+		echo ""; \
+		echo "$(YELLOW)To publish images, you need to login to GitHub Container Registry:$(NC)"; \
+		echo "1. Create a GitHub Personal Access Token with 'write:packages' permission:"; \
+		echo "   https://github.com/settings/tokens/new"; \
+		echo ""; \
+		echo "2. Login using:"; \
+		echo "   echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@./publish-images.sh
+
+publish-login: ## Login to GitHub Container Registry
+	@echo "$(YELLOW)GitHub Container Registry Login$(NC)"
+	@echo ""
+	@echo "1. First, create a GitHub Personal Access Token with 'write:packages' permission:"
+	@echo "   $(BLUE)https://github.com/settings/tokens/new$(NC)"
+	@echo ""
+	@echo "2. Then run:"
+	@echo "   $(GREEN)echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin$(NC)"
+	@echo ""
+
 # Shortcuts
 s: start
 d: down
@@ -411,4 +441,4 @@ r: restart
         dev install install-force build-packages dev-backend dev-frontend \
         lint format db-shell db-backup db-restore clean clean-all \
         status test shell check-docker check-containers check-env setup-env \
-        setup-vendor-env update-branding init-fixtures s d l r
+        setup-vendor-env update-branding init-fixtures publish publish-login s d l r

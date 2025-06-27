@@ -7,18 +7,18 @@ services:
     environment:
       - NODE_ENV=production
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.hanzo-chat.rule=Host(`hanzo.chat`)"
-      - "traefik.http.routers.hanzo-chat.entrypoints=websecure"
-      - "traefik.http.routers.hanzo-chat.tls=true"
-      - "traefik.http.routers.hanzo-chat.tls.certresolver=letsencrypt"
-      - "traefik.http.services.hanzo-chat.loadbalancer.server.port=${PORT:-3080}"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.hanzo-chat.rule=Host(`hanzo.chat`)'
+      - 'traefik.http.routers.hanzo-chat.entrypoints=websecure'
+      - 'traefik.http.routers.hanzo-chat.tls=true'
+      - 'traefik.http.routers.hanzo-chat.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.hanzo-chat.loadbalancer.server.port=${PORT:-3080}'
       # Redirect HTTP to HTTPS
-      - "traefik.http.routers.hanzo-chat-http.rule=Host(`hanzo.chat`)"
-      - "traefik.http.routers.hanzo-chat-http.entrypoints=web"
-      - "traefik.http.routers.hanzo-chat-http.middlewares=hanzo-chat-redirect"
-      - "traefik.http.middlewares.hanzo-chat-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.hanzo-chat-redirect.redirectscheme.permanent=true"
+      - 'traefik.http.routers.hanzo-chat-http.rule=Host(`hanzo.chat`)'
+      - 'traefik.http.routers.hanzo-chat-http.entrypoints=web'
+      - 'traefik.http.routers.hanzo-chat-http.middlewares=hanzo-chat-redirect'
+      - 'traefik.http.middlewares.hanzo-chat-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.middlewares.hanzo-chat-redirect.redirectscheme.permanent=true'
     networks:
       - default
       - traefik-public
@@ -38,7 +38,7 @@ services:
       - vectordb_data_prod:/data
     restart: always
 
-  rag_api:
+  chat-rag-api:
     restart: always
 
 networks:

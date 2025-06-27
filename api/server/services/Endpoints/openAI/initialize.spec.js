@@ -208,13 +208,21 @@ describe('initializeClient', () => {
   });
 
   it('should throw an error if no API keys are provided in the environment', async () => {
-    const req = { body: { endpoint: EModelEndpoint.openAI, key: null }, user: { id: '123' } };
+    const req = {
+      body: { endpoint: EModelEndpoint.openAI, key: null },
+      user: { id: '123' },
+      app: { locals: {} },
+    };
     const res = {};
     const endpointOption = {};
 
-    // Temporarily mock hasHanzoAPIKey and clear HANZO_API_KEY for this test
+    // Temporarily mock hasHanzoAPIKey and clear API keys for this test
     const originalHanzoAPIKey = process.env.HANZO_API_KEY;
+    const originalOpenAIKey = process.env.OPENAI_API_KEY;
+    const originalAzureKey = process.env.AZURE_API_KEY;
     process.env.HANZO_API_KEY = undefined;
+    process.env.OPENAI_API_KEY = undefined;
+    process.env.AZURE_API_KEY = undefined;
     const hasHanzoAPIKeyMock = jest
       .spyOn(require('~/server/services/HanzoAPIService'), 'hasHanzoAPIKey')
       .mockReturnValue(false);
@@ -226,6 +234,8 @@ describe('initializeClient', () => {
     // Restore original values
     hasHanzoAPIKeyMock.mockRestore();
     process.env.HANZO_API_KEY = originalHanzoAPIKey;
+    process.env.OPENAI_API_KEY = originalOpenAIKey;
+    process.env.AZURE_API_KEY = originalAzureKey;
   });
 
   it('should handle user-provided keys and check expiry', async () => {
