@@ -6,7 +6,8 @@ export default function Toast() {
   const { toast, onOpenChange } = useToast();
   const severityClassName = {
     [NotificationSeverity.INFO]: 'border-gray-500 bg-gray-500',
-    [NotificationSeverity.SUCCESS]: 'border-gray-400 bg-white text-black dark:border-gray-600 dark:bg-gray-800 dark:text-white',
+    [NotificationSeverity.SUCCESS]:
+      'border-gray-400 bg-white text-black dark:border-gray-600 dark:bg-gray-800 dark:text-white',
     [NotificationSeverity.WARNING]: 'border-orange-500 bg-orange-500',
     [NotificationSeverity.ERROR]: 'border-red-500 bg-red-500',
   };
@@ -25,9 +26,7 @@ export default function Toast() {
         <div
           className={`alert-root pointer-events-auto inline-flex flex-row gap-2 rounded-md border px-3 py-2 ${
             toast.severity === NotificationSeverity.SUCCESS ? '' : 'text-white'
-          } ${
-            severityClassName[toast.severity]
-          }`}
+          } ${severityClassName[toast.severity]}`}
         >
           {toast.showIcon && (
             <div className="mt-1 flex-shrink-0 flex-grow-0">

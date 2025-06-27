@@ -216,7 +216,7 @@ const EditPresetDialog = ({
             </button>
             <button
               onClick={submitPreset}
-              className="rounded-md bg-white px-3 py-2 text-sm font-medium text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 md:px-4 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:focus:ring-white border border-gray-300 dark:border-gray-600"
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:focus:ring-white md:px-4"
             >
               {localize('com_ui_save')}
             </button>

@@ -7,7 +7,7 @@ const DEMO_USER = {
   password: 'demo',
   name: 'Demo User',
   username: 'wow',
-  emailVerified: true
+  emailVerified: true,
 };
 
 /**
@@ -21,11 +21,8 @@ async function initializeFixtures() {
     }
 
     // Check if demo user already exists
-    const existingUser = await User.findOne({ 
-      $or: [
-        { email: DEMO_USER.email }, 
-        { username: DEMO_USER.username }
-      ] 
+    const existingUser = await User.findOne({
+      $or: [{ email: DEMO_USER.email }, { username: DEMO_USER.username }],
     });
 
     if (existingUser) {
@@ -40,11 +37,11 @@ async function initializeFixtures() {
       password: DEMO_USER.password,
       name: DEMO_USER.name,
       username: DEMO_USER.username,
-      confirm_password: DEMO_USER.password
+      confirm_password: DEMO_USER.password,
     };
 
-    const result = await registerUser(userPayload, { 
-      emailVerified: DEMO_USER.emailVerified 
+    const result = await registerUser(userPayload, {
+      emailVerified: DEMO_USER.emailVerified,
     });
 
     if (result.status === 200) {

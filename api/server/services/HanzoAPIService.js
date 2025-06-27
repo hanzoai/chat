@@ -39,13 +39,13 @@ async function getHanzoModels() {
     const axios = require('axios');
     const response = await axios.get(`${HANZO_API_BASE_URL}/models`, {
       headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${config.apiKey}`,
       },
       timeout: 5000,
     });
 
     if (response.data && response.data.data) {
-      return response.data.data.map(model => ({
+      return response.data.data.map((model) => ({
         id: model.id,
         name: model.id,
         provider: model.provider || 'hanzo',

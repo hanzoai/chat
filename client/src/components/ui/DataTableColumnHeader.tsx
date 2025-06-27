@@ -2,6 +2,7 @@ import { ArrowDownIcon, ArrowUpIcon, CaretSortIcon, EyeNoneIcon } from '@radix-u
 import { Column } from '@tanstack/react-table';
 
 import { cn } from '~/utils';
+import { useLocalize } from '~/hooks';
 import { Button } from './Button';
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ export function DataTableColumnHeader<TData, TValue>({
   title,
   className = '',
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  const localize = useLocalize();
   if (!column.getCanSort()) {
     return <div className={cn(className)}>{title}</div>;
   }
@@ -29,30 +31,32 @@ export function DataTableColumnHeader<TData, TValue>({
     <div className={cn('flex items-center space-x-2', className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="data-[state=open]:bg-accent -ml-3 h-8">
+          <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent">
             <span>{title}</span>
-            {column.getIsSorted() === 'desc' ? (
-              <ArrowDownIcon className="ml-2 h-4 w-4" />
-            ) : column.getIsSorted() === 'asc' ? (
-              <ArrowUpIcon className="ml-2 h-4 w-4" />
-            ) : (
-              <CaretSortIcon className="ml-2 h-4 w-4" />
-            )}
+            {(() => {
+              if (column.getIsSorted() === 'desc') {
+                return <ArrowDownIcon className="ml-2 h-4 w-4" />;
+              }
+              if (column.getIsSorted() === 'asc') {
+                return <ArrowUpIcon className="ml-2 h-4 w-4" />;
+              }
+              return <CaretSortIcon className="ml-2 h-4 w-4" />;
+            })()}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="z-[1001]">
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-            <ArrowUpIcon className="text-muted-foreground/70 mr-2 h-3.5 w-3.5" />
-            Asc
+            <ArrowUpIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+            {localize('com_ui_asc')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-            <ArrowDownIcon className="text-muted-foreground/70 mr-2 h-3.5 w-3.5" />
-            Desc
+            <ArrowDownIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+            {localize('com_ui_desc')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-            <EyeNoneIcon className="text-muted-foreground/70 mr-2 h-3.5 w-3.5" />
-            Hide
+            <EyeNoneIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+            {localize('com_ui_hide')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

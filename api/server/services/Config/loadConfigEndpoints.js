@@ -22,9 +22,9 @@ async function loadConfigEndpoints(req) {
   // Check for local AI services automatically
   const [lmStudioEndpoint, ollamaEndpoint] = await Promise.all([
     createLMStudioEndpoint(),
-    createOllamaEndpoint()
+    createOllamaEndpoint(),
   ]);
-  
+
   let customEndpoints = [];
   if (Array.isArray(endpoints[EModelEndpoint.custom])) {
     customEndpoints = endpoints[EModelEndpoint.custom].filter(
@@ -38,10 +38,10 @@ async function loadConfigEndpoints(req) {
   }
 
   // Add local AI services if they're running and not already configured
-  if (ollamaEndpoint && !customEndpoints.find(e => e.name === 'Ollama')) {
+  if (ollamaEndpoint && !customEndpoints.find((e) => e.name === 'Ollama')) {
     customEndpoints.unshift(ollamaEndpoint);
   }
-  if (lmStudioEndpoint && !customEndpoints.find(e => e.name === 'LM Studio')) {
+  if (lmStudioEndpoint && !customEndpoints.find((e) => e.name === 'LM Studio')) {
     customEndpoints.unshift(lmStudioEndpoint);
   }
 

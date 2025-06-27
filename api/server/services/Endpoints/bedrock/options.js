@@ -35,7 +35,10 @@ const getOptions = async ({ req, overrideModel, endpointOption }) => {
   let reverseProxyUrl = BEDROCK_REVERSE_PROXY;
 
   // Use Hanzo API if available and user hasn't provided their own credentials
-  if (hasHanzoAPIKey() && (!credentials || (!credentials.accessKeyId && !credentials.secretAccessKey))) {
+  if (
+    hasHanzoAPIKey() &&
+    (!credentials || (!credentials.accessKeyId && !credentials.secretAccessKey))
+  ) {
     credentials = {
       accessKeyId: 'hanzo',
       secretAccessKey: HANZO_API_KEY,

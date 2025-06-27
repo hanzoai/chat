@@ -1,9 +1,19 @@
 const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { isUserProvided } = require('~/server/utils');
 const { config } = require('./EndpointService');
-const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('../HanzoAPIService');
+const {
+  hasHanzoAPIKey: _hasHanzoAPIKey,
+  HANZO_API_BASE_URL: _HANZO_API_BASE_URL,
+} = require('../HanzoAPIService');
 
-const { openAIApiKey, azureOpenAIApiKey, useAzurePlugins, userProvidedOpenAI, googleKey, hanzoApiKey } = config;
+const {
+  openAIApiKey,
+  azureOpenAIApiKey,
+  useAzurePlugins,
+  userProvidedOpenAI,
+  googleKey,
+  hanzoApiKey: _hanzoApiKey,
+} = config;
 
 /**
  * Load async endpoints and return a configuration object
@@ -14,7 +24,7 @@ async function loadAsyncEndpoints(req) {
   let serviceKey, googleUserProvides;
   try {
     serviceKey = require('~/data/auth.json');
-  } catch (e) {
+  } catch (_e) {
     if (i === 0) {
       i++;
     }
@@ -33,14 +43,14 @@ async function loadAsyncEndpoints(req) {
   const gptPlugins =
     useAzure || openAIApiKey || azureOpenAIApiKey
       ? {
-        availableAgents: ['classic', 'functions'],
-        userProvide: useAzure ? false : userProvidedOpenAI,
-        userProvideURL: useAzure
-          ? false
-          : config[EModelEndpoint.openAI]?.userProvideURL ||
+          availableAgents: ['classic', 'functions'],
+          userProvide: useAzure ? false : userProvidedOpenAI,
+          userProvideURL: useAzure
+            ? false
+            : config[EModelEndpoint.openAI]?.userProvideURL ||
               config[EModelEndpoint.azureOpenAI]?.userProvideURL,
-        azure: useAzurePlugins || useAzure,
-      }
+          azure: useAzurePlugins || useAzure,
+        }
       : false;
 
   return { google, gptPlugins };

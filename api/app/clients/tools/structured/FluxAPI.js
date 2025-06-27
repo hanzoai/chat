@@ -8,7 +8,7 @@ const { FileContext, ContentTypes } = require('@hanzochat/data-provider');
 const { logger } = require('~/config');
 
 const displayMessage =
-  'Flux displayed an image. All generated images are already plainly visible, so don\'t repeat the descriptions in detail. Do not list download links as they are available in the UI already. The user may download the images by clicking on them, but do not mention anything about downloading to the user.';
+  "Flux displayed an image. All generated images are already plainly visible, so don't repeat the descriptions in detail. Do not list download links as they are available in the UI already. The user may download the images by clicking on them, but do not mention anything about downloading to the user.";
 
 /**
  * FluxAPI - A tool for generating high-quality images from text prompts using the Flux API.
@@ -342,7 +342,7 @@ class FluxAPI extends Tool {
       const endpointKey = Object.entries(FluxAPI.PRICING).find(([key, _]) =>
         endpoint.includes(key.toLowerCase().replace(/_/g, '-')),
       )?.[0];
-      const cost = FluxAPI.PRICING[endpointKey] || 0;
+      const _cost = FluxAPI.PRICING[endpointKey] || 0;
        */
       this.result = this.returnMetadata ? result : this.wrapInMarkdown(result.filepath);
       return this.returnValue(this.result);
@@ -539,7 +539,7 @@ class FluxAPI extends Tool {
       const endpointKey = endpoint.includes('ultra')
         ? 'FLUX_PRO_1_1_ULTRA_FINETUNED'
         : 'FLUX_PRO_FINETUNED';
-      const cost = FluxAPI.PRICING[endpointKey] || 0;
+      const _cost = FluxAPI.PRICING[endpointKey] || 0;
       // Return the result based on returnMetadata flag
       this.result = this.returnMetadata ? result : this.wrapInMarkdown(result.filepath);
       return this.returnValue(this.result);

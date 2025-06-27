@@ -1,4 +1,9 @@
-import { QueryKeys, dataService, EModelEndpoint, defaultOrderQuery } from '@hanzochat/data-provider';
+import {
+  QueryKeys,
+  dataService,
+  EModelEndpoint,
+  defaultOrderQuery,
+} from '@hanzochat/data-provider';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryObserverResult, UseQueryOptions } from '@tanstack/react-query';
 import type t from '@hanzochat/data-provider';

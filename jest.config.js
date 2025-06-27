@@ -12,16 +12,8 @@ module.exports = {
     '!**/next.config.js',
     '!**/babel.config.js',
   ],
-  testMatch: [
-    '**/__tests__/**/*.(js|jsx|ts|tsx)',
-    '**/*.(test|spec).(js|jsx|ts|tsx)',
-  ],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/.next/',
-    '/dist/',
-    '/coverage/',
-  ],
+  testMatch: ['**/__tests__/**/*.(js|jsx|ts|tsx)', '**/*.(test|spec).(js|jsx|ts|tsx)'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/dist/', '/coverage/'],
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
   },
@@ -34,13 +26,16 @@ module.exports = {
   testTimeout: 30000,
   reporters: [
     'default',
-    ['jest-junit', {
-      outputDirectory: './test-results',
-      outputName: 'junit.xml',
-      classNameTemplate: '{classname}',
-      titleTemplate: '{title}',
-      ancestorSeparator: ' › ',
-      usePathForSuiteName: 'true',
-    }],
+    [
+      'jest-junit',
+      {
+        outputDirectory: './test-results',
+        outputName: 'junit.xml',
+        classNameTemplate: '{classname}',
+        titleTemplate: '{title}',
+        ancestorSeparator: ' › ',
+        usePathForSuiteName: 'true',
+      },
+    ],
   ],
 };

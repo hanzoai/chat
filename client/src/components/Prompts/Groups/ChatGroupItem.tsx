@@ -62,7 +62,10 @@ function ChatGroupItem({
       >
         <div className="flex flex-row items-center gap-2">
           {groupIsGlobal === true && (
-            <EarthIcon className="icon-md text-black dark:text-white" aria-label="Global prompt group" />
+            <EarthIcon
+              className="icon-md text-black dark:text-white"
+              aria-label="Global prompt group"
+            />
           )}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>

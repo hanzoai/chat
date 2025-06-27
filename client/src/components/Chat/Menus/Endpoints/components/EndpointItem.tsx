@@ -67,7 +67,10 @@ export function EndpointItem({ endpoint }: EndpointItemProps) {
   const { model: selectedModel, endpoint: selectedEndpoint } = selectedValues;
 
   const searchValue = endpointSearchValues[endpoint.value] || '';
-  const isUserProvided = useMemo(() => endpointRequiresUserKey(endpoint.value), [endpoint.value]);
+  const isUserProvided = useMemo(
+    () => endpointRequiresUserKey(endpoint.value),
+    [endpoint.value, endpointRequiresUserKey],
+  );
 
   const renderIconLabel = () => (
     <div className="flex items-center gap-2">
@@ -134,15 +137,24 @@ export function EndpointItem({ endpoint }: EndpointItemProps) {
           </div>
         }
       >
-        {isAssistantsEndpoint(endpoint.value) && endpoint.models === undefined ? (
-          <div className="flex items-center justify-center p-2">
-            <Spinner />
-          </div>
-        ) : filteredModels ? (
-          renderEndpointModels(endpoint, endpoint.models || [], selectedModel, filteredModels)
-        ) : (
-          endpoint.models && renderEndpointModels(endpoint, endpoint.models, selectedModel)
-        )}
+        {(() => {
+          if (isAssistantsEndpoint(endpoint.value) && endpoint.models === undefined) {
+            return (
+              <div className="flex items-center justify-center p-2">
+                <Spinner />
+              </div>
+            );
+          }
+          if (filteredModels) {
+            return renderEndpointModels(
+              endpoint,
+              endpoint.models || [],
+              selectedModel,
+              filteredModels,
+            );
+          }
+          return endpoint.models && renderEndpointModels(endpoint, endpoint.models, selectedModel);
+        })()}
       </Menu>
     );
   } else {
@@ -185,7 +197,12 @@ export function EndpointItem({ endpoint }: EndpointItemProps) {
 
 export function renderEndpoints(mappedEndpoints: Endpoint[]) {
   return mappedEndpoints
-    .filter((endpoint) => endpoint.value !== 'gptPlugins' && endpoint.value !== 'assistants' && endpoint.value !== 'azureAssistants')
+    .filter(
+      (endpoint) =>
+        endpoint.value !== 'gptPlugins' &&
+        endpoint.value !== 'assistants' &&
+        endpoint.value !== 'azureAssistants',
+    )
     .map((endpoint) => (
       <EndpointItem endpoint={endpoint} key={`endpoint-${endpoint.value}-item`} />
     ));

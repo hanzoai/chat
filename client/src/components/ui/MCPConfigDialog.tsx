@@ -100,7 +100,8 @@ export default function MCPConfigDialog({
         }
         selection={{
           selectHandler: handleSubmit(onFormSubmit),
-          selectClasses: 'bg-white hover:bg-gray-100 text-black dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600',
+          selectClasses:
+            'bg-white hover:bg-gray-100 text-black dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600',
           selectText: isSubmitting ? localize('com_ui_saving') : localize('com_ui_save'),
         }}
         buttons={

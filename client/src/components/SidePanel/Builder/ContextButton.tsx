@@ -1,4 +1,8 @@
-import type { Assistant, AssistantCreateParams, AssistantsEndpoint } from '@hanzochat/data-provider';
+import type {
+  Assistant,
+  AssistantCreateParams,
+  AssistantsEndpoint,
+} from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { Dialog, DialogTrigger, Label } from '~/components/ui';
 import { useChatContext, useToastContext } from '~/Providers';
