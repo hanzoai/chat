@@ -1,6 +1,6 @@
 {
   "name": "@hanzochat/chat",
-  "version": "v0.7.8",
+  "version": "v0.7.9",
   "description": "Chat - Unified interface to Agents, LLMs, MCPs and any AI model or OpenAPI documented API with full RAG stack",
   "workspaces": [
     "api",
