@@ -297,7 +297,7 @@ class STTService {
       try {
         await fs.unlink(req.file.path);
         logger.debug('[/speech/stt] Temp. audio upload file deleted');
-      } catch (error) {
+      } catch (_error) {
         logger.debug('[/speech/stt] Temp. audio upload file already deleted');
       }
     }

@@ -53,7 +53,7 @@ jest.mock('~/cache/getLogStores', () => {
 });
 
 describe('domainParser', () => {
-  const req = {
+  const _req = {
     app: {
       locals: {
         [EModelEndpoint.azureOpenAI]: {
@@ -63,7 +63,7 @@ describe('domainParser', () => {
     },
   };
 
-  const reqNoAzure = {
+  const _reqNoAzure = {
     app: {
       locals: {
         [EModelEndpoint.azureOpenAI]: {

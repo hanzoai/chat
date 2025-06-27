@@ -74,7 +74,7 @@ describe('initializeClient', () => {
       let userValues = getUserKey();
       try {
         userValues = JSON.parse(userValues);
-      } catch (e) {
+      } catch (_e) {
         throw new Error(
           JSON.stringify({
             type: ErrorTypes.INVALID_USER_KEY,

@@ -68,7 +68,7 @@ function AuthLayout({
       <BlinkAnimation active={isFetching}>
         <div className="mt-6 h-10 w-full bg-cover">
           <img
-            src={isCurrentlyDark ? "/assets/hanzo-logo-dark.svg" : "/assets/hanzo-logo-light.svg"}
+            src={isCurrentlyDark ? '/assets/hanzo-logo-dark.svg' : '/assets/hanzo-logo-light.svg'}
             className="h-full w-full object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Hanzo' })}
           />

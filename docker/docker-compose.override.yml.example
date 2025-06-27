@@ -39,6 +39,6 @@ services:
   #     - "7700:7700"
 
   # Uncomment to disable RAG API if not needed
-  # rag_api:
+  # chat-rag-api:
   #   entrypoint: ["echo", "RAG API disabled"]
   #   command: []

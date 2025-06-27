@@ -1,5 +1,5 @@
 import React from 'react';
-import { TModelSpec, TStartupConfig } from '@hanzochat/data-provider';
+import { TStartupConfig } from '@hanzochat/data-provider';
 
 export interface Endpoint {
   value: string;
