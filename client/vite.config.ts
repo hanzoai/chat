@@ -233,6 +233,7 @@ export default defineConfig(({ command }) => ({
       '~': path.join(__dirname, 'src/'),
       $fonts: path.resolve(__dirname, 'public/fonts'),
       'micromark-extension-math': 'micromark-extension-llm-math',
+      '@hanzochat/data-provider': path.resolve(__dirname, '../packages/data-provider/src'),
     },
   },
 }));

@@ -3,12 +3,16 @@ import { useSetRecoilState } from 'recoil';
 import { useLocalize, useCustomLink } from '~/hooks';
 import { Button } from '~/components/ui';
 import { cn } from '~/utils';
+
 import store from '~/store';
+import { atomWithLocalStorage } from '~/store/utils';
 
 export default function ManagePrompts({ className }: { className?: string }) {
   const localize = useLocalize();
-  const setPromptsName = useSetRecoilState(store.promptsName);
-  const setPromptsCategory = useSetRecoilState(store.promptsCategory);
+  const promptsNameAtom = store.promptsName || atomWithLocalStorage('promptsName', '');
+  const promptsCategoryAtom = store.promptsCategory || atomWithLocalStorage('promptsCategory', '');
+  const setPromptsName = useSetRecoilState(promptsNameAtom);
+  const setPromptsCategory = useSetRecoilState(promptsCategoryAtom);
   const clickCallback = useCallback(() => {
     setPromptsName('');
     setPromptsCategory('');

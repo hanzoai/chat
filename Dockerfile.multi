@@ -14,6 +14,7 @@ RUN npm config set fetch-retry-maxtimeout 600000 && \
     npm config set fetch-retry-mintimeout 15000
 COPY package*.json ./
 COPY packages/data-provider/package*.json ./packages/data-provider/
+COPY packages/agents/package*.json ./packages/agents/
 COPY packages/api/package*.json ./packages/api/
 COPY packages/data-schemas/package*.json ./packages/data-schemas/
 COPY client/package*.json ./client/
@@ -37,12 +38,21 @@ COPY packages/data-schemas ./
 COPY --from=data-provider-build /app/packages/data-provider/dist /app/packages/data-provider/dist
 RUN npm run build
 
+# Build `agents` package
+FROM base AS agents-build
+WORKDIR /app/packages/agents
+COPY packages/agents ./
+COPY --from=data-provider-build /app/packages/data-provider/dist /app/packages/data-provider/dist
+COPY --from=data-schemas-build /app/packages/data-schemas/dist /app/packages/data-schemas/dist
+RUN npm run build
+
 # Build `api` package
 FROM base AS api-package-build
 WORKDIR /app/packages/api
 COPY packages/api ./
 COPY --from=data-provider-build /app/packages/data-provider/dist /app/packages/data-provider/dist
 COPY --from=data-schemas-build /app/packages/data-schemas/dist /app/packages/data-schemas/dist
+COPY --from=agents-build /app/packages/agents/dist /app/packages/agents/dist
 RUN npm run build
 
 # Client build
@@ -65,6 +75,7 @@ COPY api ./api
 COPY config ./config
 COPY --from=data-provider-build /app/packages/data-provider/dist ./packages/data-provider/dist
 COPY --from=data-schemas-build /app/packages/data-schemas/dist ./packages/data-schemas/dist
+COPY --from=agents-build /app/packages/agents/dist ./packages/agents/dist
 COPY --from=api-package-build /app/packages/api/dist ./packages/api/dist
 COPY --from=client-build /app/client/dist ./client/dist
 WORKDIR /app/api

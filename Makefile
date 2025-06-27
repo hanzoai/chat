@@ -8,7 +8,6 @@
 # Variables
 DOCKER_COMPOSE := docker compose
 NPM := npm
-PNPM := pnpm
 
 # Colors for output
 GREEN := \033[0;32m
@@ -303,7 +302,7 @@ test: ## Run tests
 shell: ## Access API container shell
 	@$(DOCKER_COMPOSE) exec api /bin/sh
 
-init-fixtures: ## Create demo user (dev only) 
+init-fixtures: ## Create demo user (dev only)
 	@echo "$(YELLOW)Creating demo user...$(NC)"
 	@$(DOCKER_COMPOSE) exec api node config/create-user.js wow@this.com "Demo User" wow demo1234 --email-verified=true || echo "$(RED)Failed to create demo user. Make sure services are running.$(NC)"
 	@echo ""
