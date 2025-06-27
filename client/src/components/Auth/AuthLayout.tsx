@@ -66,7 +66,7 @@ function AuthLayout({
         <div className="mt-6 h-10 w-full bg-cover">
           <img
             src="/assets/hanzo-logo.svg"
-            className="h-full w-full object-contain text-black dark:text-white"
+            className="h-full w-full object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Hanzo' })}
           />
         </div>
