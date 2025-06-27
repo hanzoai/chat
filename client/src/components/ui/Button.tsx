@@ -17,7 +17,8 @@ const buttonVariants = cva(
         ghost: 'hover:bg-surface-hover hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
         // Updated to white button with black text
-        submit: 'bg-surface-submit text-black hover:bg-surface-submit-hover border border-border-light',
+        submit:
+          'bg-surface-submit text-black hover:bg-surface-submit-hover border border-border-light',
       },
       size: {
         default: 'h-10 px-4 py-2',

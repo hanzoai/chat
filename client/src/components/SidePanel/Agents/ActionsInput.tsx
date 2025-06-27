@@ -209,7 +209,7 @@ export default function ActionsInput({
             htmlFor="schemaInput"
             className="text-token-text-primary whitespace-nowrap font-medium"
           >
-            Schema
+            {localize('com_ui_schema')}
           </label>
           <div className="flex items-center gap-2">
             {/* <button className="btn btn-neutral border-token-border-light relative h-8 min-w-[100px] rounded-lg font-medium">
@@ -221,9 +221,9 @@ export default function ActionsInput({
             >
               <option value="label">{localize('com_ui_examples')}</option>
               {/* TODO: make these appear and function correctly */}
-              <option value="0">Weather (JSON)</option>
-              <option value="1">Pet Store (YAML)</option>
-              <option value="2">Blank Template</option>
+              <option value="0">{localize('com_ui_weather_json')}</option>
+              <option value="1">{localize('com_ui_pet_store_yaml')}</option>
+              <option value="2">{localize('com_ui_blank_template')}</option>
             </select>
           </div>
         </div>
@@ -277,7 +277,7 @@ export default function ActionsInput({
         <button
           disabled={!functions || !functions.length}
           onClick={saveAction}
-          className="focus:shadow-outline mt-1 flex min-w-[100px] items-center justify-center rounded bg-white px-4 py-2 font-semibold text-black hover:bg-gray-100 focus:border-black focus:outline-none focus:ring-0 disabled:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:focus:border-white dark:disabled:bg-gray-700 border border-gray-300 dark:border-gray-600"
+          className="focus:shadow-outline mt-1 flex min-w-[100px] items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 font-semibold text-black hover:bg-gray-100 focus:border-black focus:outline-none focus:ring-0 disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:focus:border-white dark:disabled:bg-gray-700"
           type="button"
         >
           {getButtonContent()}

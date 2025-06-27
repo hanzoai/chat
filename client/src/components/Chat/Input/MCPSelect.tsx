@@ -201,7 +201,9 @@ function MCPSelect({ conversationId }: { conversationId?: string | null }) {
               className="ml-2 flex h-6 w-6 items-center justify-center rounded p-1 hover:bg-black/10 dark:hover:bg-white/10"
               aria-label={`Configure ${serverName}`}
             >
-              <Settings2 className={`h-4 w-4 ${tool.authenticated ? 'text-black dark:text-white' : ''}`} />
+              <Settings2
+                className={`h-4 w-4 ${tool.authenticated ? 'text-black dark:text-white' : ''}`}
+              />
             </button>
           </div>
         );

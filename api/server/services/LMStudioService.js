@@ -14,7 +14,7 @@ async function isLMStudioRunning() {
       timeout: 2000, // 2 second timeout for local check
     });
     return response.status === 200;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -28,9 +28,9 @@ async function getLMStudioModels() {
     const response = await axios.get(`${LM_STUDIO_BASE_URL}/models`, {
       timeout: 5000,
     });
-    
+
     if (response.data && response.data.data) {
-      return response.data.data.map(model => model.id);
+      return response.data.data.map((model) => model.id);
     }
     return [];
   } catch (error) {
@@ -45,13 +45,13 @@ async function getLMStudioModels() {
  */
 async function createLMStudioEndpoint() {
   const isRunning = await isLMStudioRunning();
-  
+
   if (!isRunning) {
     return null;
   }
 
   const models = await getLMStudioModels();
-  
+
   // Default models if none are loaded in LM Studio
   const defaultModels = [
     'lmstudio-community/Qwen2.5-7B-Instruct-GGUF',

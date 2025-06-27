@@ -93,7 +93,7 @@ async function validateDockerRunning() {
     const imageName = singleCompose ? 'hanzo_chat_single' : 'hanzo_chat';
     try {
       execSync(`${sudo}docker rmi ${imageName}:latest`, { stdio: 'inherit' });
-    } catch (e) {
+    } catch (_e) {
       console.purple('Failed to remove Docker image hanzo-chat:latest. It might not exist.');
     }
     console.purple('Removing all unused dangling Docker images...');
@@ -130,7 +130,7 @@ async function validateDockerRunning() {
   console.green('Your Hanzo app is now up to date! Start the app with the following command:');
   console.purple(startCommand);
   console.orange(
-    'Note: it\'s also recommended to clear your browser cookies and localStorage for Hanzo to assure a fully clean installation.',
+    "Note: it's also recommended to clear your browser cookies and localStorage for Hanzo to assure a fully clean installation.",
   );
   console.orange("Also: Don't worry, your data is safe :)");
 })();

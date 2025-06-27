@@ -40,7 +40,7 @@ global.testUtils = {
       }, 100);
     });
   },
-  
+
   // Create mock user
   createMockUser: (overrides = {}) => ({
     id: 'test-user-id',
@@ -49,7 +49,7 @@ global.testUtils = {
     role: 'user',
     ...overrides,
   }),
-  
+
   // Create mock conversation
   createMockConversation: (overrides = {}) => ({
     conversationId: 'test-conversation-id',
@@ -66,7 +66,7 @@ global.fetch = jest.fn();
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation(query => ({
+    value: jest.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
