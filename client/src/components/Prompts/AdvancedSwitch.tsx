@@ -2,13 +2,18 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import { PromptsEditorMode } from '~/common';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
+import { atomWithLocalStorage } from '~/store/utils';
 
-const { promptsEditorMode, alwaysMakeProd } = store;
+// Fallback atoms in case store doesn't have them
+const promptsEditorModeAtom =
+  store.promptsEditorMode ||
+  atomWithLocalStorage<PromptsEditorMode>('promptsEditorMode', PromptsEditorMode.SIMPLE);
+const alwaysMakeProdAtom = store.alwaysMakeProd || atomWithLocalStorage('alwaysMakeProd', true);
 
 const AdvancedSwitch = () => {
   const localize = useLocalize();
-  const [mode, setMode] = useRecoilState(promptsEditorMode);
-  const setAlwaysMakeProd = useSetRecoilState(alwaysMakeProd);
+  const [mode, setMode] = useRecoilState(promptsEditorModeAtom);
+  const setAlwaysMakeProd = useSetRecoilState(alwaysMakeProdAtom);
 
   return (
     <div className="relative flex h-10 items-center justify-center rounded-xl border border-border-light bg-surface-primary transition-all duration-300">

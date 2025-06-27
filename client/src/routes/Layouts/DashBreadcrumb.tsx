@@ -20,10 +20,16 @@ import AdvancedSwitch from '~/components/Prompts/AdvancedSwitch';
 // import { RightPanel } from '../../components/Prompts/RightPanel';
 import AdminSettings from '~/components/Prompts/AdminSettings';
 import { useDashboardContext } from '~/Providers';
-// import { PromptsEditorMode } from '~/common';
+import { PromptsEditorMode } from '~/common';
 import store from '~/store';
+import { atomWithLocalStorage } from '~/store/utils';
 
 const promptsPathPattern = /prompts\/(?!new(?:\/|$)).*$/;
+
+// Fallback atoms in case store doesn't have them
+const promptsEditorModeAtom =
+  store.promptsEditorMode ||
+  atomWithLocalStorage<PromptsEditorMode>('promptsEditorMode', PromptsEditorMode.SIMPLE);
 
 const getConversationId = (prevLocationPath: string) => {
   if (!prevLocationPath || prevLocationPath.includes('/d/')) {
@@ -42,7 +48,7 @@ export default function DashBreadcrumb() {
 
   const setPromptsName = useSetRecoilState(store.promptsName);
   const setPromptsCategory = useSetRecoilState(store.promptsCategory);
-  const editorMode = useRecoilValue(store.promptsEditorMode);
+  const editorMode = useRecoilValue(promptsEditorModeAtom);
 
   const clickCallback = useCallback(() => {
     setPromptsName('');
