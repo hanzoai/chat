@@ -47,6 +47,12 @@ help: ## Show this help message
 	@echo "  $(GREEN)make lint$(NC)           - Run linter"
 	@echo "  $(GREEN)make format$(NC)         - Format code with Prettier"
 	@echo ""
+	@echo "$(YELLOW)Docker Build & Push:$(NC)"
+	@echo "  $(GREEN)make docker-build$(NC)   - Build multi-platform Docker images"
+	@echo "  $(GREEN)make docker-push$(NC)    - Push images with :latest tag"
+	@echo "  $(GREEN)make docker-all$(NC)     - Build and push all images"
+	@echo "  $(GREEN)make docker-release TAG=v0.7.9$(NC) - Build and push with version tag"
+	@echo ""
 	@echo "$(YELLOW)Database Commands:$(NC)"
 	@echo "  $(GREEN)make db-shell$(NC)       - Access MongoDB shell"
 	@echo "  $(GREEN)make db-backup$(NC)      - Backup MongoDB database"
@@ -431,6 +437,30 @@ publish-login: ## Login to GitHub Container Registry
 	@echo "   $(GREEN)echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin$(NC)"
 	@echo ""
 
+# Docker build targets
+docker-build: ## Build multi-platform Docker images
+	@echo "$(BLUE)======================================$(NC)"
+	@echo "$(GREEN)Building Multi-platform Docker Images$(NC)"
+	@echo "$(BLUE)======================================$(NC)"
+	@BUILD_ONLY=true ./scripts/build-verify-push.sh
+
+docker-push: ## Push Docker images with :latest tag
+	@echo "$(BLUE)======================================$(NC)"
+	@echo "$(GREEN)Pushing Docker Images to Registry$(NC)"
+	@echo "$(BLUE)======================================$(NC)"
+	@./scripts/docker-publish.sh
+
+docker-all: check-docker ## Build and push all Docker images
+	@$(MAKE) docker-push
+
+docker-release: check-docker ## Build and push with version tag (e.g., make docker-release TAG=v0.7.9)
+	@if [ -z "$(TAG)" ]; then \
+		echo "$(RED)Error: TAG is required$(NC)"; \
+		echo "Usage: make docker-release TAG=v0.7.9"; \
+		exit 1; \
+	fi
+	@./scripts/docker-publish.sh $(TAG)
+
 # Shortcuts
 s: start
 d: down
@@ -441,4 +471,5 @@ r: restart
         dev install install-force build-packages dev-backend dev-frontend \
         lint format db-shell db-backup db-restore clean clean-all \
         status test shell check-docker check-containers check-env setup-env \
-        setup-vendor-env update-branding init-fixtures publish publish-login s d l r
+        setup-vendor-env update-branding init-fixtures publish publish-login \
+        docker-build docker-push docker-all docker-release s d l r
