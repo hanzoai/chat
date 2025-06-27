@@ -2,7 +2,7 @@ const {
   CacheKeys,
   SystemRoles,
   roleDefaults,
-  PermissionTypes,
+  PermissionTypes: _PermissionTypes,
   permissionsSchema,
   removeNullishValues,
 } = require('@hanzochat/data-provider');

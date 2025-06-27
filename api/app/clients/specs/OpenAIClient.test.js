@@ -1,6 +1,6 @@
 jest.mock('~/cache/getLogStores');
 require('dotenv').config();
-const { fetchEventSource } = require('@waylaidwanderer/fetch-event-source');
+const { fetchEventSource: _fetchEventSource } = require('@waylaidwanderer/fetch-event-source');
 const getLogStores = require('~/cache/getLogStores');
 const OpenAIClient = require('../OpenAIClient');
 jest.mock('meilisearch');
@@ -169,7 +169,7 @@ describe('OpenAIClient', () => {
     },
   };
 
-  const defaultAzureOptions = {
+  const _defaultAzureOptions = {
     azureOpenAIApiInstanceName: 'your-instance-name',
     azureOpenAIApiDeploymentName: 'your-deployment-name',
     azureOpenAIApiVersion: '2020-07-01-preview',

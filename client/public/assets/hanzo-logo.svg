@@ -4,7 +4,7 @@
     fill: #000000;
   }
   .logo-shadow {
-    fill: #222222;
+    fill: #4A4A4A;
   }
   @media (prefers-color-scheme: dark) {
     .logo-main {
@@ -13,6 +13,12 @@
     .logo-shadow {
       fill: #D3D3D3;
     }
+  }
+  .dark .logo-main {
+    fill: #FFFFFF;
+  }
+  .dark .logo-shadow {
+    fill: #D3D3D3;
   }
 </style>
 <path class="logo-main" d="M22.21 67V44.6369H0V67H22.21Z"/>
