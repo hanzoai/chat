@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useContext } from 'react';
 import { EModelEndpoint, KnownEndpoints } from '@hanzochat/data-provider';
 import { CustomMinimalIcon, XAIcon } from '~/components/svg';
 import { IconContext } from '~/common';
 import { cn } from '~/utils';
+import { ThemeContext, isDark } from '~/hooks/ThemeContext';
 
 const knownEndpointAssets = {
   [KnownEndpoints.anyscale]: '/assets/anyscale.png',
@@ -64,6 +65,7 @@ function UnknownIcon({
   endpoint?: EModelEndpoint | string | null;
   context?: 'landing' | 'menu-item' | 'nav' | 'message';
 }) {
+  const { theme } = useContext(ThemeContext);
   const endpoint = _endpoint ?? '';
   if (!endpoint) {
     return <CustomMinimalIcon className={className} />;
@@ -84,7 +86,14 @@ function UnknownIcon({
   }
 
   if (iconURL) {
-    return <img className={className} src={iconURL} alt={`${endpoint} Icon`} />;
+    // Handle hanzo-logo theme switching
+    let themedIconURL = iconURL;
+    if (iconURL === '/assets/hanzo-logo.svg') {
+      themedIconURL = isDark(theme)
+        ? '/assets/hanzo-logo-dark.svg'
+        : '/assets/hanzo-logo-light.svg';
+    }
+    return <img className={className} src={themedIconURL} alt={`${endpoint} Icon`} />;
   }
 
   const assetPath: string = knownEndpointAssets[currentEndpoint] ?? '';
