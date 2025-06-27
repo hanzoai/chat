@@ -3,14 +3,10 @@ let addImages = require('./addImages');
 describe('addImages', () => {
   let intermediateSteps;
   let responseMessage;
-  let options;
 
   beforeEach(() => {
     intermediateSteps = [];
     responseMessage = { text: '' };
-    options = { debug: false };
-    this.options = options;
-    addImages = addImages.bind(this);
   });
 
   it('should handle null or undefined parameters', () => {
@@ -74,7 +70,7 @@ describe('addImages', () => {
 
   it('should append correctly from a real scenario', () => {
     responseMessage.text =
-      'Here is the generated image based on your request. It depicts a surreal landscape filled with floating musical notes. The style is impressionistic, with vibrant sunset hues dominating the scene. At the center, there\'s a silhouette of a grand piano, adding a dreamy emotion to the overall image. This could serve as a unique and creative music album cover. Would you like to make any changes or generate another image?';
+      "Here is the generated image based on your request. It depicts a surreal landscape filled with floating musical notes. The style is impressionistic, with vibrant sunset hues dominating the scene. At the center, there's a silhouette of a grand piano, adding a dreamy emotion to the overall image. This could serve as a unique and creative music album cover. Would you like to make any changes or generate another image?";
     const originalText = responseMessage.text;
     const imageMarkdown = '![generated image](/images/img-RnVWaYo2Yg4x3e0isICiMuf5.png)';
     intermediateSteps.push({ observation: imageMarkdown });

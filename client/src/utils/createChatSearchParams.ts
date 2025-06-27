@@ -6,7 +6,7 @@ import {
 } from '@hanzochat/data-provider';
 import type { TConversation, TPreset } from '@hanzochat/data-provider';
 
-const allowedParams = Object.keys(tQueryParamsSchema.shape);
+const allowedParams = tQueryParamsSchema?.shape ? Object.keys(tQueryParamsSchema.shape) : [];
 export default function createChatSearchParams(
   input: TConversation | TPreset | Record<string, string> | null,
 ): URLSearchParams {

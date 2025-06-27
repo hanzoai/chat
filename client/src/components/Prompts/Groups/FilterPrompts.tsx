@@ -6,7 +6,9 @@ import { usePromptGroupsNav, useLocalize, useCategories } from '~/hooks';
 import { Dropdown, AnimatedSearchInput } from '~/components/ui';
 import type { Option } from '~/common';
 import { cn } from '~/utils';
+
 import store from '~/store';
+import { atomWithLocalStorage } from '~/store/utils';
 
 export default function FilterPrompts({
   setName,
@@ -16,7 +18,8 @@ export default function FilterPrompts({
 }) {
   const localize = useLocalize();
   const [displayName, setDisplayName] = useState('');
-  const setCategory = useSetRecoilState(store.promptsCategory);
+  const promptsCategoryAtom = store.promptsCategory || atomWithLocalStorage('promptsCategory', '');
+  const setCategory = useSetRecoilState(promptsCategoryAtom);
   const categoryFilter = useRecoilValue(store.promptsCategory);
   const { categories } = useCategories('h-4 w-4');
   const [isSearching, setIsSearching] = useState(false);

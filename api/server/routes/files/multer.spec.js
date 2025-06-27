@@ -4,6 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+
 const { createMulterInstance, storage, importFileFilter } = require('./multer');
 
 // Mock only the config service that requires external dependencies
@@ -463,23 +464,19 @@ describe('Multer Configuration', () => {
     });
 
     it('should handle file system errors when directory creation fails', (done) => {
-      // Test with a non-existent parent directory to simulate fs issues
-      const invalidPath = '/nonexistent/path/that/should/not/exist';
-      mockReq.app.locals.paths.uploads = invalidPath;
+      // Spy on fs.mkdirSync and make it throw an EACCES error for this specific test
+      const mkdirSyncSpy = jest.spyOn(fs, 'mkdirSync').mockImplementationOnce(() => {
+        const error = new Error('Permission denied');
+        error.code = 'EACCES';
+        throw error;
+      });
 
-      try {
-        // Call getDestination which should fail due to permission/path issues
-        storage.getDestination(mockReq, mockFile, (err, destination) => {
-          // If callback is reached, we didn't get the expected error
-          done(new Error('Expected mkdirSync to throw an error but callback was called'));
-        });
-        // If we get here without throwing, something unexpected happened
-        done(new Error('Expected mkdirSync to throw an error but no error was thrown'));
-      } catch (error) {
-        // This is the expected behavior - mkdirSync throws synchronously for invalid paths
-        expect(error.code).toBe('EACCES');
+      // Call getDestination, which internally calls fs.mkdirSync
+      storage.getDestination(mockReq, mockFile, (err, destination) => {
+        expect(err).toBeInstanceOf(Error);
+        expect(err.code).toBe('EACCES');
         done();
-      }
+      });
     });
 
     it('should handle malformed filenames with real sanitization', (done) => {

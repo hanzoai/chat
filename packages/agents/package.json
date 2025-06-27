@@ -4,12 +4,12 @@
   "description": "Agent utilities for Hanzo Chat",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.es.js",
       "require": "./dist/index.js",
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {

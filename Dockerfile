@@ -9,6 +9,7 @@ COPY api/package*.json ./api/
 COPY client/package*.json ./client/
 COPY packages/data-provider/package*.json ./packages/data-provider/
 COPY packages/data-schemas/package*.json ./packages/data-schemas/
+COPY packages/agents/package*.json ./packages/agents/
 COPY packages/api/package*.json ./packages/api/
 
 # Install dependencies
@@ -20,6 +21,7 @@ COPY . .
 # Build packages
 RUN npm run build:data-provider && \
     npm run build:data-schemas && \
+    npm run build:agents && \
     npm run build:api
 
 # Build client

@@ -1,3 +1,4 @@
+jest.mock('@hanzochat/data-provider/react-query');
 import reactRouter from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { render, waitFor, screen } from 'test/layout-test-utils';
@@ -105,6 +106,7 @@ const setup = ({
     mockUseGetUserQuery,
     mockUseOutletContext,
     mockUseGetStartupConfig,
+    mockUseGetBannerQuery,
     mockUseRegisterUserMutation,
     mockUseRefreshTokenMutation,
   };
@@ -156,7 +158,6 @@ test('renders registration form', () => {
   );
 });
 
-// eslint-disable-next-line jest/no-commented-out-tests
 // test('calls registerUser.mutate on registration', async () => {
 //   const mutate = jest.fn();
 //   const { getByTestId, getByRole, history } = setup({

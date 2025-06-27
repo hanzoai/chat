@@ -2,7 +2,7 @@ const { isUserProvided } = require('@hanzochat/api');
 const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { generateConfig } = require('~/server/utils/handleText');
 const { hasHanzoAPIKey, HANZO_API_BASE_URL } = require('../HanzoAPIService');
-const { getVendorService } = require('../VendorService');
+const { getBrandService } = require('../BrandService');
 
 const {
   OPENAI_API_KEY: openAIApiKey,
@@ -28,21 +28,21 @@ const userProvidedOpenAI = useAzurePlugins
 
 // Helper to determine if we should use Hanzo API for a given endpoint
 const getEndpointConfig = (originalKey, originalBaseURL, endpoint) => {
-  const vendorService = getVendorService();
-  
-  // If vendor mode is enabled, override everything
-  if (vendorService.isEnabled()) {
-    const vendorConfig = vendorService.getEndpointConfig();
+  const brandService = getBrandService();
+
+  // If brand mode is enabled, override everything
+  if (brandService.isEnabled()) {
+    const brandConfig = brandService.getEndpointConfig();
     return {
-      apiKey: vendorConfig.apiKey,
-      baseURL: vendorConfig.baseURL,
-      isVendorMode: true,
-      vendorEndpoint: vendorConfig.type,
+      apiKey: brandConfig.apiKey,
+      baseURL: brandConfig.baseURL,
+      isBrandMode: true,
+      brandEndpoint: brandConfig.type,
     };
   }
-  
+
   const config = generateConfig(originalKey, originalBaseURL, endpoint);
-  
+
   // If Hanzo API key is set and user hasn't provided their own key, use Hanzo API
   if (hasHanzoAPIKey() && (!originalKey || isUserProvided(originalKey))) {
     if (typeof config === 'object') {
@@ -51,7 +51,7 @@ const getEndpointConfig = (originalKey, originalBaseURL, endpoint) => {
       config.isHanzoProxy = true;
     }
   }
-  
+
   return config;
 };
 
@@ -63,9 +63,17 @@ module.exports = {
     userProvidedOpenAI,
     googleKey,
     hanzoApiKey,
-    [EModelEndpoint.anthropic]: getEndpointConfig(anthropicApiKey, undefined, EModelEndpoint.anthropic),
+    [EModelEndpoint.anthropic]: getEndpointConfig(
+      anthropicApiKey,
+      undefined,
+      EModelEndpoint.anthropic,
+    ),
     [EModelEndpoint.chatGPTBrowser]: generateConfig(chatGPTToken),
-    [EModelEndpoint.openAI]: getEndpointConfig(openAIApiKey, OPENAI_REVERSE_PROXY, EModelEndpoint.openAI),
+    [EModelEndpoint.openAI]: getEndpointConfig(
+      openAIApiKey,
+      OPENAI_REVERSE_PROXY,
+      EModelEndpoint.openAI,
+    ),
     [EModelEndpoint.azureOpenAI]: generateConfig(azureOpenAIApiKey, AZURE_OPENAI_BASEURL),
     [EModelEndpoint.assistants]: generateConfig(
       assistantsApiKey,
@@ -80,7 +88,7 @@ module.exports = {
     [EModelEndpoint.bedrock]: getEndpointConfig(
       process.env.BEDROCK_AWS_SECRET_ACCESS_KEY ?? process.env.BEDROCK_AWS_DEFAULT_REGION,
       undefined,
-      EModelEndpoint.bedrock
+      EModelEndpoint.bedrock,
     ),
     /* key will be part of separate config */
     [EModelEndpoint.agents]: generateConfig('true', undefined, EModelEndpoint.agents),

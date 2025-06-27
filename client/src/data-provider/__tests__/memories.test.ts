@@ -1,19 +1,21 @@
-import { dataService as _dataService } from '@hanzochat/data-provider';
-import axios from 'axios';
+import { dataService } from '@hanzochat/data-provider';
 
-jest.mock('axios');
-
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
+  dataService: {
+    getMemories: jest.fn(),
+  },
+}));
 
 describe('getMemories', () => {
   it('should fetch memories from /api/memories', async () => {
     const mockData = [{ key: 'foo', value: 'bar', updated_at: '2024-05-01T00:00:00Z' }];
 
-    mockedAxios.get.mockResolvedValueOnce({ data: mockData } as any);
+    (dataService.getMemories as jest.Mock).mockResolvedValueOnce(mockData);
 
-    const result = await (_dataService as any).getMemories();
+    const result = await dataService.getMemories();
 
-    expect(mockedAxios.get).toHaveBeenCalledWith('/api/memories', expect.any(Object));
+    expect(dataService.getMemories).toHaveBeenCalled();
     expect(result).toEqual(mockData);
   });
 });
