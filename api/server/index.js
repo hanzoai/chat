@@ -44,7 +44,6 @@ const startServer = async () => {
     logger.error('[indexSync] Background sync failed:', err);
   });
 
-
   app.disable('x-powered-by');
   app.set('trust proxy', trusted_proxy);
 
@@ -63,11 +62,11 @@ const startServer = async () => {
   app.use(mongoSanitize());
   app.use(cors());
   app.use(cookieParser());
-  
-  // Vendor mode middleware
-  const { vendorModeMiddleware, vendorUIConfigMiddleware } = require('./middleware/vendorMode');
-  app.use(vendorModeMiddleware);
-  app.use(vendorUIConfigMiddleware);
+
+  // Brand mode middleware
+  const { brandModeMiddleware, brandUIConfigMiddleware } = require('./middleware/brandMode');
+  app.use(brandModeMiddleware);
+  app.use(brandUIConfigMiddleware);
 
   if (!isEnabled(DISABLE_COMPRESSION)) {
     app.use(compression());
@@ -117,7 +116,7 @@ const startServer = async () => {
   app.use('/api/models', routes.models);
   app.use('/api/plugins', routes.plugins);
   app.use('/api/config', routes.config);
-  app.get('/api/vendor/config', require('./routes/config/vendorConfig').getVendorConfig);
+  app.get('/api/brand/config', require('./routes/config/brandConfig').getBrandConfig);
   app.use('/api/assistants', routes.assistants);
   app.use('/api/files', await routes.files.initialize());
   app.use('/images/', validateImageRequest, routes.staticRoute);

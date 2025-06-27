@@ -19,8 +19,7 @@ import { PromptsEditorMode } from '~/common';
 import { cn, langSubset } from '~/utils';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
-
-const { promptsEditorMode } = store;
+import { atomWithLocalStorage } from '~/store/utils';
 
 type Props = {
   name: string;
@@ -31,7 +30,11 @@ type Props = {
 const PromptEditor: React.FC<Props> = ({ name, isEditing, setIsEditing }) => {
   const localize = useLocalize();
   const { control } = useFormContext();
-  const editorMode = useRecoilValue(promptsEditorMode);
+  // Fallback atom in case store doesn't have it
+  const promptsEditorModeAtom =
+    store.promptsEditorMode ||
+    atomWithLocalStorage<PromptsEditorMode>('promptsEditorMode', PromptsEditorMode.SIMPLE);
+  const editorMode = useRecoilValue(promptsEditorModeAtom);
   const { dirtyFields } = useFormState({ control: control });
   const { prompt } = dirtyFields as { prompt?: string };
 
