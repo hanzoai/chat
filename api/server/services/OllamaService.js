@@ -14,7 +14,7 @@ async function isOllamaRunning() {
       timeout: 2000, // 2 second timeout for local check
     });
     return response.status === 200;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -28,9 +28,9 @@ async function getOllamaModels() {
     const response = await axios.get(`${OLLAMA_BASE_URL}/api/tags`, {
       timeout: 5000,
     });
-    
+
     if (response.data && response.data.models) {
-      return response.data.models.map(model => model.name);
+      return response.data.models.map((model) => model.name);
     }
     return [];
   } catch (error) {
@@ -45,21 +45,15 @@ async function getOllamaModels() {
  */
 async function createOllamaEndpoint() {
   const isRunning = await isOllamaRunning();
-  
+
   if (!isRunning) {
     return null;
   }
 
   const models = await getOllamaModels();
-  
+
   // Default models if none are pulled in Ollama
-  const defaultModels = [
-    'llama3.2',
-    'llama3.1',
-    'qwen2.5-coder',
-    'gemma2',
-    'mistral',
-  ];
+  const defaultModels = ['llama3.2', 'llama3.1', 'qwen2.5-coder', 'gemma2', 'mistral'];
 
   return {
     name: 'Ollama',

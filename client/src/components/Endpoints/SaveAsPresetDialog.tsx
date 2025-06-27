@@ -23,7 +23,7 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
     });
 
     const toastTitle =
-      _preset.title ?? '' ? `\`${_preset.title}\`` : localize('com_endpoint_preset_title');
+      (_preset.title ?? '') ? `\`${_preset.title}\`` : localize('com_endpoint_preset_title');
 
     createPresetMutation.mutate(_preset, {
       onSuccess: () => {
@@ -76,7 +76,7 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
                 aria-label={localize('com_endpoint_preset_name')}
                 className={cn(
                   defaultTextProps,
-                  'flex h-10 max-h-10 w-full resize-none border-border-medium px-3 py-2 ',
+                  'flex h-10 max-h-10 w-full resize-none border-border-medium px-3 py-2',
                   removeFocusOutlines,
                 )}
               />
@@ -85,7 +85,8 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
         }
         selection={{
           selectHandler: submitPreset,
-          selectClasses: 'bg-white hover:bg-gray-100 text-black dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600',
+          selectClasses:
+            'bg-white hover:bg-gray-100 text-black dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600',
           selectText: localize('com_ui_save'),
         }}
       />

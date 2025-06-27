@@ -73,7 +73,7 @@ const TermsAndConditionsModal = ({
         main={
           <section
             // Motivation: This is a dialog, so its content should be focusable
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+
             tabIndex={0}
             className="max-h-[60vh] overflow-y-auto p-4"
             aria-label={localize('com_ui_terms_and_conditions')}
@@ -97,7 +97,7 @@ const TermsAndConditionsModal = ({
             </button>
             <button
               onClick={handleAccept}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-border-heavy bg-surface-secondary px-4 py-2 text-sm text-text-primary hover:bg-gray-100 hover:text-black focus:bg-gray-100 focus:text-black dark:hover:bg-gray-700 dark:focus:bg-gray-700 dark:hover:text-white dark:focus:text-white"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border-heavy bg-surface-secondary px-4 py-2 text-sm text-text-primary hover:bg-gray-100 hover:text-black focus:bg-gray-100 focus:text-black dark:hover:bg-gray-700 dark:hover:text-white dark:focus:bg-gray-700 dark:focus:text-white"
             >
               {localize('com_ui_accept')}
             </button>

@@ -3,6 +3,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { ChevronRight, MoreHorizontal } from 'lucide-react';
 
 import { cn } from '~/utils';
+import { useLocalize } from '~/hooks';
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
@@ -17,7 +18,7 @@ const BreadcrumbList = React.forwardRef<HTMLOListElement, React.ComponentPropsWi
     <ol
       ref={ref}
       className={cn(
-        'text-muted-foreground flex flex-wrap items-center gap-1.5 break-words text-sm sm:gap-2.5',
+        'flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground sm:gap-2.5',
         className,
       )}
       {...props}
@@ -44,7 +45,7 @@ const BreadcrumbLink = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      className={cn('hover:text-foreground transition-colors', className)}
+      className={cn('transition-colors hover:text-foreground', className)}
       {...props}
     />
   );
@@ -58,7 +59,7 @@ const BreadcrumbPage = React.forwardRef<HTMLSpanElement, React.ComponentPropsWit
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn('text-foreground font-normal', className)}
+      className={cn('font-normal text-foreground', className)}
       {...props}
     />
   ),
@@ -77,17 +78,20 @@ const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentP
 );
 BreadcrumbSeparator.displayName = 'BreadcrumbSeparator';
 
-const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps<'span'>) => (
-  <span
-    role="presentation"
-    aria-hidden="true"
-    className={cn('flex h-9 w-9 items-center justify-center', className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More</span>
-  </span>
-);
+const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps<'span'>) => {
+  const localize = useLocalize();
+  return (
+    <span
+      role="presentation"
+      aria-hidden="true"
+      className={cn('flex h-9 w-9 items-center justify-center', className)}
+      {...props}
+    >
+      <MoreHorizontal className="h-4 w-4" />
+      <span className="sr-only">{localize('com_ui_more')}</span>
+    </span>
+  );
+};
 BreadcrumbEllipsis.displayName = 'BreadcrumbElipssis';
 
 export {

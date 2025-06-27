@@ -8,12 +8,12 @@ export interface ClientOptions {
 }
 
 export interface OpenAIClientOptions extends ClientOptions {
-  defaultQuery?: Record<string, any>;
-  defaultHeaders?: Record<string, any>;
+  defaultQuery?: Record<string, unknown>;
+  defaultHeaders?: Record<string, unknown>;
   dangerouslyAllowBrowser?: boolean;
   maxRetries?: number;
   timeout?: number;
-  httpAgent?: any;
+  httpAgent?: unknown;
 }
 
 export interface GoogleClientOptions extends ClientOptions {
@@ -32,14 +32,14 @@ export interface VertexAIClientOptions extends GoogleClientOptions {
 
 export interface EventHandler {
   name: string;
-  handle: (event: any) => void | Promise<void>;
+  handle: (event: unknown) => void | Promise<void>;
 }
 
 export interface GenericTool {
   name: string;
   description?: string;
-  func?: (input: any) => Promise<any>;
-  schema?: any;
+  func?: (input: unknown) => Promise<unknown>;
+  schema?: unknown;
 }
 
 export interface StreamEventData {
@@ -55,7 +55,7 @@ export interface ToolEndCallback {
 
 export interface ToolEndData {
   tool: string;
-  result: any;
+  result: unknown;
   error?: Error;
 }
 
@@ -77,8 +77,8 @@ export interface StandardGraphConfig {
 }
 
 export interface IState {
-  messages: any[];
-  [key: string]: any;
+  messages: unknown[];
+  [key: string]: unknown;
 }
 
 export interface Run {
@@ -86,12 +86,12 @@ export interface Run {
   status: string;
   created_at: string;
   updated_at: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RunResponse {
   run: Run;
-  output?: any;
+  output?: unknown;
   error?: Error;
 }
 
