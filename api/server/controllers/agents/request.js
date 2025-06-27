@@ -66,7 +66,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
           if (typeof handler === 'function') {
             handler();
           }
-        } catch (e) {
+        } catch (_e) {
           // Ignore cleanup errors
         }
       }
@@ -154,7 +154,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     cleanupHandlers.push(() => {
       try {
         res.removeListener('close', closeHandler);
-      } catch (e) {
+      } catch (_e) {
         // Ignore
       }
     });

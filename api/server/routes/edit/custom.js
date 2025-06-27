@@ -3,7 +3,6 @@ const EditController = require('~/server/controllers/EditController');
 const { initializeClient } = require('~/server/services/Endpoints/custom');
 const { addTitle } = require('~/server/services/Endpoints/openAI');
 const {
-  handleAbort,
   setHeaders,
   validateModel,
   validateEndpoint,

@@ -199,7 +199,7 @@ const createAbortController = (req, res, getAbortData, getReqData) => {
       const cleanupHandler = () => {
         try {
           cleanupAbortController(addedAbortKey);
-        } catch (e) {
+        } catch (_e) {
           // Ignore cleanup errors
         }
       };
@@ -221,7 +221,7 @@ const createAbortController = (req, res, getAbortData, getReqData) => {
     const cleanupHandler = () => {
       try {
         cleanupAbortController(abortKey);
-      } catch (e) {
+      } catch (_e) {
         // Ignore cleanup errors
       }
     };
@@ -368,7 +368,7 @@ const handleAbortError = async (res, req, error, data) => {
     const callback = async () => {
       try {
         cleanupAbortController(conversationId);
-      } catch (e) {
+      } catch (_e) {
         // Ignore cleanup errors
       }
     };
