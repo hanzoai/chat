@@ -3,6 +3,7 @@ import { EModelEndpoint, KnownEndpoints } from '@hanzochat/data-provider';
 import { CustomMinimalIcon, XAIcon } from '~/components/svg';
 import { IconContext } from '~/common';
 import { cn } from '~/utils';
+import { useTheme, isDark } from '~/hooks/ThemeContext';
 
 const knownEndpointAssets = {
   [KnownEndpoints.anyscale]: '/assets/anyscale.png',
@@ -64,6 +65,9 @@ function UnknownIcon({
   endpoint?: EModelEndpoint | string | null;
   context?: 'landing' | 'menu-item' | 'nav' | 'message';
 }) {
+  const { theme } = useTheme();
+  const isCurrentlyDark = isDark(theme);
+
   const endpoint = _endpoint ?? '';
   if (!endpoint) {
     return <CustomMinimalIcon className={className} />;
@@ -84,6 +88,13 @@ function UnknownIcon({
   }
 
   if (iconURL) {
+    // Handle theme-aware Hanzo logos
+    if (iconURL === '/assets/hanzo-logo.svg') {
+      const themedIconURL = isCurrentlyDark
+        ? '/assets/hanzo-logo-dark.svg'
+        : '/assets/hanzo-logo-light.svg';
+      return <img className={className} src={themedIconURL} alt={`${endpoint} Icon`} />;
+    }
     return <img className={className} src={iconURL} alt={`${endpoint} Icon`} />;
   }
 
