@@ -1,0 +1,35 @@
+# Development Dockerfile for Hanzo Chat
+FROM node:20-alpine
+
+# Install additional dependencies
+RUN apk add --no-cache \
+    git \
+    python3 \
+    make \
+    g++
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY .env.example .env
+
+# Install dependencies
+RUN npm install
+
+# Copy source code (will be overridden by volume mount)
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p /app/uploads /app/logs
+
+# Expose port
+EXPOSE 3081
+
+# Environment for hot reloading
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+ENV NODE_ENV=development
+
+# Development command
+CMD ["npm", "run", "dev"]
