@@ -1,68 +1,57 @@
-version: "3.11"
+# Hanzo Router (LiteLLM) - Local Development
+# Usage: docker compose up -d
+
 services:
-  litellm:
-    build:
-      context: .
-      args:
-        target: runtime
-    image: ghcr.io/berriai/litellm:main-stable
-    #########################################
-    ## Uncomment these lines to start proxy with a config.yaml file ##
-    # volumes:
-    #  - ./config.yaml:/app/config.yaml <<- this is missing in the docker-compose file currently
-    # command:
-    #  - "--config=/app/config.yaml"
-    ##############################################
-    ports:
-      - "4000:4000" # Map the container port to the host, change the host port if necessary
+  postgres:
+    image: postgres:16-alpine
     environment:
-      DATABASE_URL: "postgresql://llmproxy:dbpassword9090@db:5432/litellm"
-      STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
-    env_file:
-      - .env # Load local .env file
-    depends_on:
-      - db  # Indicates that this service depends on the 'db' service, ensuring 'db' starts first
-    healthcheck:  # Defines the health check configuration for the container
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
-      interval: 30s  # Perform health check every 30 seconds
-      timeout: 10s   # Health check command times out after 10 seconds
-      retries: 3     # Retry up to 3 times if health check fails
-      start_period: 40s  # Wait 40 seconds after container start before beginning health checks
-
-  db:
-    image: postgres:16
-    restart: always
-    container_name: litellm_db
-    environment:
-      POSTGRES_DB: litellm
-      POSTGRES_USER: llmproxy
-      POSTGRES_PASSWORD: dbpassword9090
+      POSTGRES_USER: hanzo
+      POSTGRES_PASSWORD: hanzo123
+      POSTGRES_DB: router
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Different port to avoid conflicts
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Persists Postgres data across container restarts
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d litellm -U llmproxy"]
-      interval: 1s
+      test: ["CMD-SHELL", "pg_isready -U hanzo"]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
 
-  prometheus:
-    image: prom/prometheus
-    volumes:
-      - prometheus_data:/prometheus
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass routersecret
     ports:
-      - "9090:9090"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=15d"
-    restart: always
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "routersecret", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  router:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://hanzo:hanzo123@postgres:5432/router
+      REDIS_URL: redis://:routersecret@redis:6379
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-router-master-dev}
+      # LLM Keys
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      TOGETHER_API_KEY: ${TOGETHER_API_KEY}
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "1"]
 
 volumes:
-  prometheus_data:
-    driver: local
   postgres_data:
-    name: litellm_postgres_data # Named volume for Postgres data persistence
-
+  redis_data:
