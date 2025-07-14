@@ -1,0 +1,88 @@
+# Hanzo Router Configuration
+# Unified LLM gateway for all AI providers in the Hanzo ecosystem
+
+model_list:
+  # Primary Hanzo AI models (via Anthropic)
+  - model_name: hanzo-zen-1
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+    model_info:
+      description: "Hanzo Zen-1: Fast, efficient AI for most tasks"
+      
+  - model_name: hanzo-zen-1-pro
+    litellm_params:
+      model: anthropic/claude-3-opus-20240229
+      api_key: os.environ/ANTHROPIC_API_KEY
+    model_info:
+      description: "Hanzo Zen-1 Pro: Advanced reasoning for complex tasks"
+
+  # Additional models via different providers
+  - model_name: gpt-4
+    litellm_params:
+      model: openai/gpt-4
+      api_key: os.environ/OPENAI_API_KEY
+      
+  - model_name: gpt-3.5-turbo
+    litellm_params:
+      model: openai/gpt-3.5-turbo
+      api_key: os.environ/OPENAI_API_KEY
+      
+  # Together AI models
+  - model_name: mixtral-8x7b
+    litellm_params:
+      model: together_ai/mixtral-8x7b-32768
+      api_key: os.environ/TOGETHER_API_KEY
+      
+  # Wildcard routing for flexibility
+  - model_name: "openai/*"
+    litellm_params:
+      model: "openai/*"
+      api_key: os.environ/OPENAI_API_KEY
+      
+  - model_name: "anthropic/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_key: os.environ/ANTHROPIC_API_KEY
+      
+  - model_name: "together_ai/*"
+    litellm_params:
+      model: "together_ai/*"
+      api_key: os.environ/TOGETHER_API_KEY
+
+litellm_settings:
+  drop_params: true
+  num_retries: 3
+  request_timeout: 300
+  telemetry: false
+  
+router_settings:
+  routing_strategy: simple-shuffle
+  enable_pre_call_checks: true
+  redis_host: os.environ/REDIS_HOST
+  redis_password: os.environ/REDIS_PASSWORD
+  redis_port: os.environ/REDIS_PORT
+  
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  store_model_in_db: true
+  database_url: os.environ/DATABASE_URL
+  database_connection_pool_limit: 10
+  
+  # UI Configuration
+  ui_access_mode: "admin"
+  
+  # Branding
+  custom_branding:
+    app_name: "Hanzo AI Chat"
+    logo_url: "/assets/hanzo-logo.svg"
+    primary_color: "#000000"
+    
+  # MCP Integration
+  mcp_enabled: true
+  mcp_servers:
+    - name: "hanzo-mcp"
+      command: ["python", "-m", "hanzo_mcp_server"]
+      
+# Enable health checks
+health_check_interval: 30

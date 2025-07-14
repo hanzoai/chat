@@ -1,0 +1,218 @@
+# Hanzo AI Chat Stack - Local Production Environment
+# This runs pre-built images suitable for local testing
+# For development with mounted volumes, use compose.dev.yml
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: hanzo-postgres
+    environment:
+      POSTGRES_USER: hanzo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hanzo123}
+      POSTGRES_DB: hanzo_chat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hanzo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: hanzo-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-hanzosecret}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-hanzosecret}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # MongoDB for Chat History
+  mongodb:
+    image: mongo:7-jammy
+    container_name: hanzo-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: hanzo
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-hanzo123}
+      MONGO_INITDB_DATABASE: HanzoChat
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Meilisearch for Full-Text Search
+  meilisearch:
+    image: getmeili/meilisearch:v1.9
+    container_name: hanzo-meilisearch
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-HanzoMeiliMasterKey}
+      MEILI_ENV: production
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Hanzo Router (LiteLLM Gateway)
+  router:
+    image: hanzo/router:latest
+    container_name: hanzo-router
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://hanzo:${POSTGRES_PASSWORD:-hanzo123}@postgres:5432/hanzo_chat
+      REDIS_URL: redis://:${REDIS_PASSWORD:-hanzosecret}@redis:6379
+      
+      # Router Configuration
+      ROUTER_MASTER_KEY: ${ROUTER_MASTER_KEY:-sk-hanzo-master-key}
+      LITELLM_MASTER_KEY: ${ROUTER_MASTER_KEY:-sk-hanzo-master-key} # For compatibility
+      
+      # LLM API Keys
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      TOGETHER_API_KEY: ${TOGETHER_API_KEY}
+      
+      # Logging
+      ROUTER_LOG_LEVEL: INFO
+      DEBUG: ${DEBUG:-false}
+    volumes:
+      - ./hanzo-config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "${ROUTER_WORKERS:-4}"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Hanzo Chat Frontend
+  chat:
+    image: ghcr.io/hanzoai/chat:latest
+    container_name: hanzo-chat
+    ports:
+      - "3081:3080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      router:
+        condition: service_healthy
+      demo-init:
+        condition: service_completed_successfully
+    environment:
+      # Server Configuration
+      HOST: 0.0.0.0
+      PORT: 3080
+      
+      # Database
+      MONGO_URI: mongodb://hanzo:${MONGO_PASSWORD:-hanzo123}@mongodb:27017/HanzoChat?authSource=admin
+      
+      # Domain
+      DOMAIN_CLIENT: ${DOMAIN_CLIENT:-http://localhost:3081}
+      DOMAIN_SERVER: ${DOMAIN_SERVER:-http://localhost:3081}
+      
+      # Branding
+      APP_TITLE: "Hanzo AI Chat"
+      CUSTOM_FOOTER: "Powered by Hanzo AI"
+      
+      # Router Gateway
+      OPENAI_API_KEY: proxy
+      OPENAI_BASE_URL: http://router:4000/v1
+      
+      # Auth & Security
+      JWT_SECRET: ${JWT_SECRET:-hanzo-jwt-secret-change-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-hanzo-refresh-secret-change-in-production}
+      CREDS_KEY: ${CREDS_KEY:-hanzo-creds-key-change-in-production}
+      CREDS_IV: ${CREDS_IV:-hanzo-creds-iv-change}
+      
+      # Features
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      ALLOW_UNVERIFIED_EMAIL_LOGIN: ${ALLOW_UNVERIFIED_EMAIL_LOGIN:-false}
+      
+      # Search
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-HanzoMeiliMasterKey}
+      
+      # MCP Integration
+      MCP_ENABLED: true
+      
+      # Logging
+      DEBUG_LOGGING: ${DEBUG:-false}
+    volumes:
+      - ./scripts:/app/scripts:ro
+      - ./client/dist/assets:/app/client/dist/assets:ro
+      - chat_uploads:/app/uploads
+      - chat_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Demo User Initialization Service
+  demo-init:
+    image: node:18-alpine
+    container_name: hanzo-demo-init
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://hanzo:${MONGO_PASSWORD:-hanzo123}@mongodb:27017/HanzoChat?authSource=admin
+    volumes:
+      - ./scripts/seed_demo_user.js:/app/seed_demo_user.js:ro
+    working_dir: /app
+    command: |
+      sh -c "
+        npm install mongoose bcryptjs
+        node seed_demo_user.js
+      "
+    networks:
+      - hanzo-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongodb_data:
+  meilisearch_data:
+  chat_uploads:
+  chat_logs:
+
+networks:
+  hanzo-network:
+    driver: bridge
