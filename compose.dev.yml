@@ -1,0 +1,215 @@
+# Hanzo AI Chat Stack - Development Environment
+# This mounts source code for live editing
+# Use with: docker compose -f compose.dev.yml up
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: hanzo-postgres-dev
+    environment:
+      POSTGRES_USER: hanzo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hanzo123}
+      POSTGRES_DB: hanzo_chat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hanzo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network-dev
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: hanzo-redis-dev
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-hanzosecret}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-hanzosecret}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network-dev
+
+  # MongoDB for Chat History
+  mongodb:
+    image: mongo:7-jammy
+    container_name: hanzo-mongodb-dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: hanzo
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-hanzo123}
+      MONGO_INITDB_DATABASE: HanzoChat
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_dev:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network-dev
+
+  # Meilisearch for Full-Text Search
+  meilisearch:
+    image: getmeili/meilisearch:v1.9
+    container_name: hanzo-meilisearch-dev
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-HanzoMeiliMasterKey}
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data_dev:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network-dev
+
+  # Hanzo Router (Development Mode with Hot Reload)
+  router:
+    build:
+      context: ../router
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: hanzo-router-dev
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://hanzo:${POSTGRES_PASSWORD:-hanzo123}@postgres:5432/hanzo_chat
+      REDIS_URL: redis://:${REDIS_PASSWORD:-hanzosecret}@redis:6379
+      
+      # Router Configuration
+      ROUTER_MASTER_KEY: ${ROUTER_MASTER_KEY:-sk-hanzo-master-key}
+      LITELLM_MASTER_KEY: ${ROUTER_MASTER_KEY:-sk-hanzo-master-key}
+      
+      # LLM API Keys
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      TOGETHER_API_KEY: ${TOGETHER_API_KEY}
+      
+      # Development
+      LITELLM_LOG: DEBUG
+      DEBUG: true
+      PYTHONUNBUFFERED: 1
+    volumes:
+      # Mount source code for development
+      - ../router/litellm:/app/litellm:ro
+      - ../router/pyproject.toml:/app/pyproject.toml:ro
+      - ./hanzo-config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "1", "--detailed_debug"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hanzo-network-dev
+
+  # Hanzo Chat Frontend (Development Mode)
+  chat:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: hanzo-chat-dev
+    ports:
+      - "3081:3080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      router:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      HOST: 0.0.0.0
+      PORT: 3080
+      NODE_ENV: development
+      
+      # Database
+      MONGO_URI: mongodb://hanzo:${MONGO_PASSWORD:-hanzo123}@mongodb:27017/HanzoChat?authSource=admin
+      
+      # Domain
+      DOMAIN_CLIENT: ${DOMAIN_CLIENT:-http://localhost:3081}
+      DOMAIN_SERVER: ${DOMAIN_SERVER:-http://localhost:3081}
+      
+      # Branding
+      APP_TITLE: "Hanzo AI Chat (Dev)"
+      CUSTOM_FOOTER: "Development Environment"
+      
+      # Router Gateway
+      OPENAI_API_KEY: proxy
+      OPENAI_BASE_URL: http://router:4000/v1
+      
+      # Auth & Security
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret}
+      CREDS_KEY: ${CREDS_KEY:-dev-creds-key}
+      CREDS_IV: ${CREDS_IV:-dev-creds-iv}
+      
+      # Features
+      ALLOW_REGISTRATION: true
+      ALLOW_UNVERIFIED_EMAIL_LOGIN: true
+      
+      # Search
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-HanzoMeiliMasterKey}
+      
+      # MCP Integration
+      MCP_ENABLED: true
+      
+      # Logging
+      DEBUG_LOGGING: true
+    volumes:
+      # Mount source for development
+      - ./api:/app/api:ro
+      - ./client:/app/client:ro
+      - ./packages:/app/packages:ro
+      - ./package.json:/app/package.json:ro
+      - ./client/dist/assets:/app/client/dist/assets:ro
+      - chat_uploads_dev:/app/uploads
+      - chat_logs_dev:/app/logs
+      # Node modules volume for faster rebuilds
+      - node_modules:/app/node_modules
+    command: ["npm", "run", "dev"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hanzo-network-dev
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+  mongodb_data_dev:
+  meilisearch_data_dev:
+  chat_uploads_dev:
+  chat_logs_dev:
+  node_modules:
+
+networks:
+  hanzo-network-dev:
+    driver: bridge
