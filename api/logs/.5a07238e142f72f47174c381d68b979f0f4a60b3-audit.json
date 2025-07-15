@@ -1,0 +1,45 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/z/work/hanzo/chat/api/logs/.5a07238e142f72f47174c381d68b979f0f4a60b3-audit.json",
+    "files": [
+        {
+            "date": 1750474453457,
+            "name": "/Users/z/work/hanzo/chat/api/logs/debug-2025-06-20.log",
+            "hash": "696c5dfed20dbc87cd7113adb058ad5df3e53b93b9fc24840b7e236724ac4823"
+        },
+        {
+            "date": 1750715218180,
+            "name": "/Users/z/work/hanzo/chat/api/logs/debug-2025-06-23.log",
+            "hash": "c802b606c51329d1d65fe6c877dff02200e4d57e6565de3697ce4d8938bd8366"
+        },
+        {
+            "date": 1750883760400,
+            "name": "/Users/z/work/hanzo/chat/api/logs/debug-2025-06-25.log",
+            "hash": "202106c1ae63bd10f256f9249f6f32e20e495b9ca7f5ab7844f6dff28716805a"
+        },
+        {
+            "date": 1750950599470,
+            "name": "/Users/z/work/hanzo/chat/api/logs/debug-2025-06-26.log",
+            "hash": "e5f73d742f92938cef296a5c97cf8bb7f4e3db0198b8bc53bb0eee3ddf0f1e84"
+        },
+        {
+            "date": 1751049961804,
+            "name": "/Users/z/work/hanzo/chat/api/logs/debug-2025-06-27.log",
+            "hash": "15a471f383c1ea303252a3b35f88e44cc4bd1905666617dc9afc4b415d3ddac9"
+        },
+        {
+            "date": 1751124937592,
+            "name": "/Users/z/work/hanzo/chat/api/logs/debug-2025-06-28.log",
+            "hash": "77a7dd41fff34914a5ce25239c9fd77fafb8c3617a7a118550af69fbcc577643"
+        },
+        {
+            "date": 1751599940774,
+            "name": "/Users/z/work/hanzo/chat/api/logs/debug-2025-07-03.log",
+            "hash": "c86e337d49f3edad24952270eb6bebba4588201f1e14eab31b2482ee0c68be00"
+        }
+    ],
+    "hashType": "sha256"
+}

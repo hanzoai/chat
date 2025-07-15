@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(for file in /Users/z/work/hanzo/chat/client/src/locales/*/translation.json)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)",
+      "Bash(rg:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(make:*)",
+      "Bash(npm install)",
+      "Bash(true)",
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker push:*)",
+      "Bash(docker tag:*)",
+      "Bash(git push:*)",
+      "Bash(npm view:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls:*)"
+    ],
+    "deny": []
+  }
+}

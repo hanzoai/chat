@@ -1,0 +1,160 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/components/svg/PaLMinimalIcon.tsx</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/components/svg</a> PaLMinimalIcon.tsx</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { cn } from '~/utils';
+export default function <span class="fstat-no" title="function not covered" >PaLMinimalIcon(</span>{ className = <span class="branch-0 cbranch-no" title="branch not covered" >'' </span>}: { className?: string }) {
+<span class="cstat-no" title="statement not covered" >  return (</span>
+    &lt;svg
+      stroke="currentColor"
+      fill="none"
+      strokeWidth="1"
+      viewBox="0 0 32 32"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn('h-4 w-4', className)}
+      height="1em"
+      width="1em"
+      xmlns="http://www.w3.org/2000/svg"
+    &gt;
+      &lt;path d="m16 30.238c1.2298 0 2.2259-0.99608 2.2259-2.2259v-11.46c-0.63513-0.56429-1.6553-1.6805-2.2259-2.251-0.79858 0.83793-1.3599 1.3599-2.2259 2.251v11.46c0 1.2298 0.99608 2.2259 2.2259 2.2259z" /&gt;
+      &lt;path d="m24.868 15.761c-0.61691-0.61643-1.3121-1.1065-2.0536-1.4703-6.8147 0.010467 0.13304 0.031026-6.8147 0.010467l9.5286 9.5286c0.39324 0.39324 1.0703 0.23743 1.2372-0.29122 0.83841-2.6544 0.20589-5.6723-1.8976-7.7776z" /&gt;
+      &lt;path d="m7.1318 15.761c0.5902-0.58975 1.2521-1.0639 1.9575-1.4224 6.9107-0.037427-0.11812-0.057288 6.9107-0.037427l-9.5286 9.5286c-0.39324 0.39324-1.0703 0.23743-1.2372-0.29122-0.83841-2.6543-0.20589-5.6723 1.8976-7.7776z" /&gt;
+      &lt;path d="m24.162 8.3655c-0.93169 0-1.8288 0.15009-2.6691 0.42772-5.4924 5.5079 0 0-5.4924 5.5079h15.069c0.61767 0 1.0295-0.65292 0.74938-1.2038-1.432-2.8102-4.3219-4.7318-7.657-4.7318z" /&gt;
+      &lt;path d="m17.575 4.333c-0.62613 0.62613-1.1343 1.3257-1.5248 2.0718 1.6767 4.1174 0.53518 6.3909-0.05003 7.8964l10.656-10.656c0.43775-0.43775 0.2671-1.1908-0.3209-1.3819-3.0012-0.97382-6.4031-0.28751-8.7607 2.0701z" /&gt;
+      &lt;path d="m14.425 4.333c2.6822 2.6822 3.1997 6.7129 1.5748 9.9682l-10.656-10.656c-0.43775-0.43775-0.2671-1.1908 0.3209-1.3819 3.0012-0.97382 6.4031-0.28751 8.7607 2.0701z" /&gt;
+      &lt;path d="m7.8385 8.3655c0.9121 0 1.791 0.14385 2.616 0.41037 5.5455 5.5253-0.061773 0.011675 5.5455 5.5253h-15.069c-0.61768 0-1.0295-0.65292-0.74938-1.2038 1.432-2.8102 4.3219-4.7318 7.657-4.7318z" /&gt;
+    &lt;/svg&gt;
+  );
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-07-04T03:30:09.496Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    
