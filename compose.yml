@@ -3,7 +3,7 @@
 # For development with mounted volumes, use compose.dev.yml
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database (for Router)
   postgres:
     image: postgres:16-alpine
     container_name: hanzo-postgres
@@ -17,6 +17,26 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hanzo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # MySQL Database (for IAM)
+  mysql:
+    image: mysql:8.0.25
+    container_name: hanzo-mysql
+    platform: linux/amd64
+    environment:
+      MYSQL_DATABASE: iam
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-hanzo123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-hanzo123}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -118,6 +138,209 @@ services:
     networks:
       - hanzo-network
 
+  # Hanzo IAM (Identity & Access Management)
+  iam:
+    build:
+      context: ../iam
+      dockerfile: Dockerfile
+      target: STANDARD
+    image: hanzo/iam:latest
+    container_name: hanzo-iam
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      RUNNING_IN_DOCKER: "true"
+      # Local dev mode - bypass orgs/teams
+      LOCAL_DEV_MODE: "true"
+      SKIP_ORG_CHECK: "true"
+      # Production domains (for reference)
+      PRODUCTION_URL: "https://hanzo.id"
+      PRODUCTION_API: "https://api.hanzo.id"
+    volumes:
+      - ../iam/conf/app_local.conf:/conf/app.conf:ro
+      - ../iam/init_data_local.json:/init_data.json:ro
+      - ../iam/web/build:/web/build:ro
+    command: ["./server", "--createDatabase=true"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/get-account"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Hanzo Services Bridge
+  services:
+    build:
+      context: ../services/services
+      dockerfile: Dockerfile.dev
+    image: hanzo/services:dev
+    container_name: hanzo-services
+    ports:
+      - "3333:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      iam:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      LOCAL_DEV_MODE: "true"
+      # Database connections
+      DATABASE_URL: postgresql://hanzo:hanzo123@postgres:5432/services
+      REDIS_URL: redis://redis:6379
+      # Service URLs
+      IAM_URL: http://iam:8000
+      CLOUD_URL: http://cloud:3000
+      ROUTER_URL: http://router:4000
+      CHAT_URL: http://chat:3080
+      # Production domains (for reference)
+      PRODUCTION_URL: "https://hanzo.services"
+      PRODUCTION_IAM: "https://hanzo.id"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # ClickHouse Database (for Cloud Analytics)
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    container_name: hanzo-clickhouse
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-clickhouse123}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # MinIO (S3-compatible storage for Cloud)
+  minio:
+    image: minio/minio
+    container_name: hanzo-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-miniosecret}
+    ports:
+      - "9001:9001"  # Console
+      - "9002:9000"  # API (changed from 9000 to avoid conflict with router)
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Hanzo Cloud Frontend (AI Platform Management)
+  cloud:
+    build:
+      context: ../cloud
+      dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_HANZO_CLOUD_REGION: "LOCAL"
+    image: hanzo/cloud:latest
+    container_name: hanzo-cloud
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      iam:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://hanzo:${POSTGRES_PASSWORD:-hanzo123}@postgres:5432/cloud
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-clickhouse123}
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_AUTH: ${REDIS_PASSWORD:-hanzosecret}
+      
+      # S3 Storage
+      HANZO_S3_EVENT_UPLOAD_BUCKET: hanzo
+      HANZO_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
+      HANZO_S3_EVENT_UPLOAD_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minio}
+      HANZO_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-miniosecret}
+      HANZO_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: true
+      HANZO_S3_MEDIA_UPLOAD_BUCKET: hanzo
+      HANZO_S3_MEDIA_UPLOAD_ENDPOINT: http://minio:9000
+      HANZO_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minio}
+      HANZO_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-miniosecret}
+      HANZO_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: true
+      
+      # Security
+      SALT: ${CLOUD_SALT:-mysalt}
+      ENCRYPTION_KEY: ${CLOUD_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      
+      # Auth (using IAM)
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-mysecret}
+      
+      # Router Integration
+      HANZO_ROUTER_URL: http://router:4000
+      HANZO_ROUTER_API_KEY: ${ROUTER_MASTER_KEY:-sk-hanzo-master-key}
+      
+      # Initial Setup
+      HANZO_INIT_ORG_NAME: "Hanzo AI"
+      HANZO_INIT_PROJECT_NAME: "Default Project"
+      HANZO_INIT_USER_EMAIL: admin@hanzo.ai
+      HANZO_INIT_USER_NAME: "Admin"
+      HANZO_INIT_USER_PASSWORD: demo1234
+      
+      # Features
+      HANZO_ENABLE_EXPERIMENTAL_FEATURES: true
+      TELEMETRY_ENABLED: false
+      NEXT_PUBLIC_HANZO_CLOUD_REGION: LOCAL
+      
+      # Local Dev Mode
+      LOCAL_DEV_MODE: true
+      SKIP_ORG_CHECK: true
+      SINGLE_TENANT_MODE: true
+      
+      # Services Integration
+      SERVICES_URL: http://services:3000
+      
+      # Production domains (for reference)
+      PRODUCTION_URL: "https://cloud.hanzo.ai"
+      PRODUCTION_SERVICES: "https://hanzo.services"
+    networks:
+      - hanzo-network
+
   # Hanzo Chat Frontend
   chat:
     image: ghcr.io/hanzoai/chat:latest
@@ -131,8 +354,8 @@ services:
         condition: service_healthy
       router:
         condition: service_healthy
-      demo-init:
-        condition: service_completed_successfully
+      iam:
+        condition: service_healthy
     environment:
       # Server Configuration
       HOST: 0.0.0.0
@@ -159,9 +382,21 @@ services:
       CREDS_KEY: ${CREDS_KEY:-hanzo-creds-key-change-in-production}
       CREDS_IV: ${CREDS_IV:-hanzo-creds-iv-change}
       
+      # SSO Configuration (Hanzo IAM)
+      OPENID_CLIENT_ID: hanzo-chat-client
+      OPENID_CLIENT_SECRET: hanzo-chat-secret-change-in-production
+      OPENID_ISSUER: http://iam:8000
+      OPENID_SESSION_SECRET: ${OPENID_SESSION_SECRET:-hanzo-session-secret}
+      OPENID_SCOPE: "openid profile email"
+      OPENID_CALLBACK_URL: http://localhost:3081/api/auth/callback/openid
+      
+      # Social Login
+      ALLOW_SOCIAL_LOGIN: true
+      ALLOW_SOCIAL_REGISTRATION: true
+      
       # Features
-      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
-      ALLOW_UNVERIFIED_EMAIL_LOGIN: ${ALLOW_UNVERIFIED_EMAIL_LOGIN:-false}
+      ALLOW_REGISTRATION: false  # Users register via IAM
+      ALLOW_UNVERIFIED_EMAIL_LOGIN: false
       
       # Search
       MEILI_HOST: http://meilisearch:7700
@@ -185,31 +420,16 @@ services:
     networks:
       - hanzo-network
 
-  # Demo User Initialization Service
-  demo-init:
-    image: node:18-alpine
-    container_name: hanzo-demo-init
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    environment:
-      MONGO_URI: mongodb://hanzo:${MONGO_PASSWORD:-hanzo123}@mongodb:27017/HanzoChat?authSource=admin
-    volumes:
-      - ./scripts/seed_demo_user.js:/app/seed_demo_user.js:ro
-    working_dir: /app
-    command: |
-      sh -c "
-        npm install mongoose bcryptjs
-        node seed_demo_user.js
-      "
-    networks:
-      - hanzo-network
 
 volumes:
   postgres_data:
+  mysql_data:
   redis_data:
   mongodb_data:
   meilisearch_data:
+  clickhouse_data:
+  clickhouse_logs:
+  minio_data:
   chat_uploads:
   chat_logs:
 
