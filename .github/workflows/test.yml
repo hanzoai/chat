@@ -1,0 +1,90 @@
+name: Test Chat Service
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+      
+      meili:
+        image: getmeili/meilisearch:latest
+        env:
+          MEILI_MASTER_KEY: test_master_key
+        ports:
+          - 7700:7700
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8
+        
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+    
+    - uses: actions/cache@v4
+      name: Setup pnpm cache
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Run linting
+      run: |
+        pnpm run lint:api || true
+        pnpm run lint:client || true
+    
+    - name: Run API tests
+      run: pnpm run test:api
+      env:
+        NODE_ENV: test
+        MONGO_URI: mongodb://localhost:27017/librechat-test
+        MEILI_HOST: http://localhost:7700
+        MEILI_MASTER_KEY: test_master_key
+    
+    - name: Run client tests
+      run: pnpm run test:client
+    
+    - name: Build project
+      run: pnpm run build
+    
+    - name: Test Docker build
+      run: docker build -f Dockerfile -t chat-test .
+    
+    - name: Security scan with Trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'chat-test'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'

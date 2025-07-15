@@ -1,0 +1,26 @@
+{
+    "hanzo-mcp": {
+        "command": ["python", "-m", "hanzo_mcp_server"],
+        "args": [],
+        "description": "Hanzo MCP server with file operations, search, code analysis, and agent delegation"
+    },
+    "hanzo-operative": {
+        "command": ["python", "-m", "hanzo_operative"],
+        "args": ["--headless"],
+        "description": "Hanzo Operative for browser automation and computer control"
+    },
+    "hanzo-agent": {
+        "command": ["python", "-m", "hanzo_agent_mcp"],
+        "args": [],
+        "description": "Hanzo Agent SDK for multi-agent workflows"
+    },
+    "zapier": {
+        "sse_url": "https://mcp.zapier.com/api/mcp",
+        "description": "Zapier integration for workflow automation"
+    },
+    "deepwiki": {
+        "http_url": "https://mcp.deepwiki.com/mcp",
+        "sse_url": "https://mcp.deepwiki.com/sse",
+        "description": "DeepWiki for repository documentation and search"
+    }
+}
