@@ -124,11 +124,15 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       TOGETHER_API_KEY: ${TOGETHER_API_KEY}
       
+      # Runtime Integration
+      RUNTIME_API_URL: http://runtime:3000/api
+      RUNTIME_API_KEY: runtime-secret-key
+      
       # Logging
       ROUTER_LOG_LEVEL: INFO
       DEBUG: ${DEBUG:-false}
     volumes:
-      - ./hanzo-config.yaml:/app/config.yaml:ro
+      - ./config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "${ROUTER_WORKERS:-4}"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health/readiness"]
@@ -410,10 +414,131 @@ services:
     volumes:
       - ./scripts:/app/scripts:ro
       - ./client/dist/assets:/app/client/dist/assets:ro
+      - ./client/dist/favicon.ico:/app/client/dist/favicon.ico:ro
       - chat_uploads:/app/uploads
       - chat_logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
+  # Hanzo Runtime API (Code Execution)
+  # NOTE: Using mock runtime for now, replace with full build when ready
+  runtime:
+    # build:
+    #   context: ../runtime
+    #   dockerfile: ../chat/runtime/Dockerfile
+    #   args:
+    #     - --build-context=runtime=../runtime
+    image: node:20-alpine
+    container_name: hanzo-runtime
+    ports:
+      - "3003:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      APP_URL: http://localhost:3003
+      
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: hanzo
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-hanzo123}
+      DB_DATABASE: hanzo_runtime
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_AUTH: ${REDIS_PASSWORD:-hanzosecret}
+      
+      # Auth (using local dev mode)
+      OIDC_CLIENT_ID: runtime-client
+      OIDC_ISSUER_BASE_URL: http://iam:8000
+      OIDC_AUDIENCE: runtime-api
+      
+      # S3 Storage
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minio}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-miniosecret}
+      S3_DEFAULT_BUCKET: runtime-storage
+      
+      # Docker Registry (for sandbox images)
+      INTERNAL_REGISTRY_URL: registry:5000
+      
+      # Skip external connections in local dev
+      SKIP_CONNECTIONS: true
+      
+      # Local runner will be auto-created
+      RUNNER_DOMAIN: localtest.me:3003
+      RUNNER_API_KEY: secret_api_token
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: |
+      sh -c "
+        cat > /tmp/server.js << 'EOF'
+        const http = require('http');
+        
+        const server = http.createServer((req, res) => {
+          console.log(req.method, req.url);
+          
+          // CORS headers
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+          
+          if (req.method === 'OPTIONS') {
+            res.writeHead(200);
+            res.end();
+            return;
+          }
+          
+          if (req.url === '/api/health' || req.url === '/health') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'ok', service: 'hanzo-runtime' }));
+          } else if (req.url === '/api/sandboxes' && req.method === 'POST') {
+            // Mock sandbox creation
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              id: 'sandbox-' + Date.now(),
+              state: 'started',
+              language: 'python',
+              createdAt: new Date().toISOString()
+            }));
+          } else if (req.url.startsWith('/api/sandboxes/') && req.method === 'DELETE') {
+            // Mock sandbox deletion
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+          } else if (req.url.includes('/execute') && req.method === 'POST') {
+            // Mock code execution
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              output: 'Hello from Hanzo Runtime!\\nCode execution successful.',
+              exitCode: 0,
+              executionTime: 100
+            }));
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Not found' }));
+          }
+        });
+        
+        server.listen(3000, '0.0.0.0', () => {
+          console.log('Mock Hanzo Runtime API running on port 3000');
+        });
+        EOF
+        
+        node /tmp/server.js
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="353" failures="0" errors="0" time="2.432">
+  <testsuite name="Environment Variable Extraction" errors="0" failures="0" skipped="1" timestamp="2025-06-26T19:28:45" time="0.862" tests="20">
+    <testcase classname="Environment Variable Extraction extractEnvVariable (original tests) should return the value of the environment variable" name="Environment Variable Extraction extractEnvVariable (original tests) should return the value of the environment variable" time="0.002">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable (original tests) should return the original string if the envrionment variable is not defined correctly" name="Environment Variable Extraction extractEnvVariable (original tests) should return the original string if the envrionment variable is not defined correctly" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable (original tests) should return the original string if environment variable is not set" name="Environment Variable Extraction extractEnvVariable (original tests) should return the original string if environment variable is not set" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable (original tests) should return the original string if it does not contain an environment variable" name="Environment Variable Extraction extractEnvVariable (original tests) should return the original string if it does not contain an environment variable" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable (original tests) should handle empty strings" name="Environment Variable Extraction extractEnvVariable (original tests) should handle empty strings" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable (original tests) should handle strings without variable format" name="Environment Variable Extraction extractEnvVariable (original tests) should handle strings without variable format" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable (original tests) should not process multiple variable formats" name="Environment Variable Extraction extractEnvVariable (original tests) should not process multiple variable formats" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable function should extract environment variables from exact matches" name="Environment Variable Extraction extractEnvVariable function should extract environment variables from exact matches" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable function should extract environment variables from strings with prefixes" name="Environment Variable Extraction extractEnvVariable function should extract environment variables from strings with prefixes" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable function should extract environment variables from strings with suffixes" name="Environment Variable Extraction extractEnvVariable function should extract environment variables from strings with suffixes" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable function should extract environment variables from strings with both prefixes and suffixes" name="Environment Variable Extraction extractEnvVariable function should extract environment variables from strings with both prefixes and suffixes" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable function should not match invalid patterns" name="Environment Variable Extraction extractEnvVariable function should not match invalid patterns" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable should extract environment variable values" name="Environment Variable Extraction extractEnvVariable should extract environment variable values" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable should return the original string if environment variable is not found" name="Environment Variable Extraction extractEnvVariable should return the original string if environment variable is not found" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable should return the original string if no environment variable pattern is found" name="Environment Variable Extraction extractEnvVariable should return the original string if no environment variable pattern is found" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable space trimming should extract the value when string contains only an environment variable with surrounding whitespace" name="Environment Variable Extraction extractEnvVariable space trimming should extract the value when string contains only an environment variable with surrounding whitespace" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable space trimming should preserve content when variable is part of a larger string" name="Environment Variable Extraction extractEnvVariable space trimming should preserve content when variable is part of a larger string" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable space trimming should not handle multiple variables" name="Environment Variable Extraction extractEnvVariable space trimming should not handle multiple variables" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable space trimming should handle undefined variables" name="Environment Variable Extraction extractEnvVariable space trimming should handle undefined variables" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction extractEnvVariable space trimming should handle mixed content correctly" name="Environment Variable Extraction extractEnvVariable space trimming should handle mixed content correctly" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="convertJsonSchemaToZod" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.194" tests="39">
+    <testcase classname="convertJsonSchemaToZod primitive types should convert string schema" name="convertJsonSchemaToZod primitive types should convert string schema" time="0.028">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod primitive types should convert string enum schema" name="convertJsonSchemaToZod primitive types should convert string enum schema" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod primitive types should convert number schema" name="convertJsonSchemaToZod primitive types should convert number schema" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod primitive types should convert boolean schema" name="convertJsonSchemaToZod primitive types should convert boolean schema" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod array types should convert array of strings schema" name="convertJsonSchemaToZod array types should convert array of strings schema" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod array types should convert array of numbers schema" name="convertJsonSchemaToZod array types should convert array of numbers schema" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod object types should convert simple object schema" name="convertJsonSchemaToZod object types should convert simple object schema" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod object types should handle required fields" name="convertJsonSchemaToZod object types should handle required fields" time="0.014">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod object types should handle nested objects" name="convertJsonSchemaToZod object types should handle nested objects" time="0.003">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod object types should handle objects with arrays" name="convertJsonSchemaToZod object types should handle objects with arrays" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod edge cases should handle empty object schema" name="convertJsonSchemaToZod edge cases should handle empty object schema" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod edge cases should handle unknown types as unknown" name="convertJsonSchemaToZod edge cases should handle unknown types as unknown" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod edge cases should handle empty enum arrays as regular strings" name="convertJsonSchemaToZod edge cases should handle empty enum arrays as regular strings" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod complex schemas should handle complex nested schema" name="convertJsonSchemaToZod complex schemas should handle complex nested schema" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod schema descriptions should preserve top-level description" name="convertJsonSchemaToZod schema descriptions should preserve top-level description" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod schema descriptions should preserve field descriptions" name="convertJsonSchemaToZod schema descriptions should preserve field descriptions" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod schema descriptions should preserve descriptions in nested objects" name="convertJsonSchemaToZod schema descriptions should preserve descriptions in nested objects" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod schema descriptions should preserve descriptions in arrays" name="convertJsonSchemaToZod schema descriptions should preserve descriptions in arrays" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod schema descriptions should preserve descriptions in enums" name="convertJsonSchemaToZod schema descriptions should preserve descriptions in enums" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod schema descriptions should preserve descriptions in a complex schema" name="convertJsonSchemaToZod schema descriptions should preserve descriptions in a complex schema" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod additionalProperties handling should allow any additional properties when additionalProperties is true" name="convertJsonSchemaToZod additionalProperties handling should allow any additional properties when additionalProperties is true" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod additionalProperties handling should validate additional properties according to schema when additionalProperties is an object" name="convertJsonSchemaToZod additionalProperties handling should validate additional properties according to schema when additionalProperties is an object" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod additionalProperties handling should strip additional properties when additionalProperties is false or not specified" name="convertJsonSchemaToZod additionalProperties handling should strip additional properties when additionalProperties is false or not specified" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod additionalProperties handling should handle complex nested objects with additionalProperties" name="convertJsonSchemaToZod additionalProperties handling should handle complex nested objects with additionalProperties" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod empty object handling should return undefined for empty object schemas when allowEmptyObject is false" name="convertJsonSchemaToZod empty object handling should return undefined for empty object schemas when allowEmptyObject is false" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod empty object handling should return zod schema for empty object schemas when allowEmptyObject is true" name="convertJsonSchemaToZod empty object handling should return zod schema for empty object schemas when allowEmptyObject is true" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod empty object handling should return zod schema for empty object schemas by default" name="convertJsonSchemaToZod empty object handling should return zod schema for empty object schemas by default" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod empty object handling should still convert non-empty object schemas regardless of allowEmptyObject setting" name="convertJsonSchemaToZod empty object handling should still convert non-empty object schemas regardless of allowEmptyObject setting" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod dropFields option should drop specified fields from the schema" name="convertJsonSchemaToZod dropFields option should drop specified fields from the schema" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod dropFields option should drop fields from nested schemas" name="convertJsonSchemaToZod dropFields option should drop fields from nested schemas" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod dropFields option should handle dropping fields that are not present in the schema" name="convertJsonSchemaToZod dropFields option should handle dropping fields that are not present in the schema" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod dropFields option should handle complex schemas with dropped fields" name="convertJsonSchemaToZod dropFields option should handle complex schemas with dropped fields" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod dropFields option should preserve other options when using dropFields" name="convertJsonSchemaToZod dropFields option should preserve other options when using dropFields" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod transformOneOfAnyOf option should transform oneOf to a Zod union" name="convertJsonSchemaToZod transformOneOfAnyOf option should transform oneOf to a Zod union" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod transformOneOfAnyOf option should transform anyOf to a Zod union" name="convertJsonSchemaToZod transformOneOfAnyOf option should transform anyOf to a Zod union" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod transformOneOfAnyOf option should handle object schemas in oneOf" name="convertJsonSchemaToZod transformOneOfAnyOf option should handle object schemas in oneOf" time="0.001">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod transformOneOfAnyOf option should handle schemas without type in oneOf/anyOf" name="convertJsonSchemaToZod transformOneOfAnyOf option should handle schemas without type in oneOf/anyOf" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod transformOneOfAnyOf option should handle nested oneOf/anyOf" name="convertJsonSchemaToZod transformOneOfAnyOf option should handle nested oneOf/anyOf" time="0">
+    </testcase>
+    <testcase classname="convertJsonSchemaToZod transformOneOfAnyOf option should work with dropFields option" name="convertJsonSchemaToZod transformOneOfAnyOf option should work with dropFields option" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="bedrockInputParser" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.278" tests="10">
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-3-7-sonnet model" name="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-3-7-sonnet model" time="0.011">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-sonnet-4 model" name="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-sonnet-4 model" time="0">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-opus-5 model" name="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-opus-5 model" time="0.001">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-haiku-6 model" name="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-haiku-6 model" time="0">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-4-sonnet model" name="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-4-sonnet model" time="0.001">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-4.5-sonnet model" name="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-4.5-sonnet model" time="0">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-4-7-sonnet model" name="bedrockInputParser Model Matching for Reasoning Configuration should match anthropic.claude-4-7-sonnet model" time="0">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should not match non-Claude models" name="bedrockInputParser Model Matching for Reasoning Configuration should not match non-Claude models" time="0">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should respect explicit thinking configuration" name="bedrockInputParser Model Matching for Reasoning Configuration should respect explicit thinking configuration" time="0.001">
+    </testcase>
+    <testcase classname="bedrockInputParser Model Matching for Reasoning Configuration should respect custom thinking budget" name="bedrockInputParser Model Matching for Reasoning Configuration should respect custom thinking budget" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="MIME Type Regex Patterns" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.295" tests="131">
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-c&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-c&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0.002">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-c++&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-c++&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/csv&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/csv&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/html&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/html&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-java&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-java&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/json&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/json&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/markdown&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/markdown&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/pdf&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/pdf&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-php&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-php&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.presentationml.presentation&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.presentationml.presentation&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-python&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-python&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-script.python&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-script.python&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-ruby&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-ruby&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-tex&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-tex&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/plain&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/plain&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/css&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/css&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/vtt&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/vtt&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/jpeg&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/jpeg&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/javascript&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/javascript&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/gif&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/gif&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/png&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/png&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/heic&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/heic&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/heif&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/heif&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-tar&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/x-tar&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/typescript&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/typescript&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/xml&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/xml&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/zip&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/zip&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/svg&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/svg&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/svg+xml&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/svg+xml&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/x-msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/x-ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/x-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-dos_ms_excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/x-dos_ms_excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/xls&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/xls&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-xls&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/x-xls&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should match one of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-unknown&quot; should not match any of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;text/x-unknown&quot; should not match any of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/unknown&quot; should not match any of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;application/unknown&quot; should not match any of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/bmp&quot; should not match any of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;image/bmp&quot; should not match any of the supported regex patterns in supportedMimeTypes" time="0.006">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;audio/mp3&quot; should not match any of the supported regex patterns in supportedMimeTypes" name="MIME Type Regex Patterns &quot;audio/mp3&quot; should not match any of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-c&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-c&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-c++&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-c++&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/csv&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/csv&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/html&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/html&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-java&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-java&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/json&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/json&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/markdown&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/markdown&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/pdf&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/pdf&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-php&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-php&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.presentationml.presentation&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.presentationml.presentation&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-python&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-python&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-script.python&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-script.python&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-ruby&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-ruby&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-tex&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/x-tex&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/plain&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/plain&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/css&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/css&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/jpeg&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;image/jpeg&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/javascript&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;text/javascript&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/gif&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;image/gif&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/png&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;image/png&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/heic&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;image/heic&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;image/heif&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;image/heif&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-tar&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/x-tar&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/typescript&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/typescript&quot; should be supported by codeInterpreterMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/xml&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/xml&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/zip&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/zip&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.ms-excel&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.ms-excel&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/msexcel&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/msexcel&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-msexcel&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/x-msexcel&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-ms-excel&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/x-ms-excel&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-excel&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/x-excel&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-dos_ms_excel&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/x-dos_ms_excel&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/xls&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/xls&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/x-xls&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/x-xls&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should be supported by codeInterpreterMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should be supported by codeInterpreterMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-c&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-c&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-c++&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-c++&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot; should be supported by retrievalMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/html&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/html&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-java&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-java&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/json&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;application/json&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/markdown&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/markdown&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/pdf&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;application/pdf&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-php&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-php&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.presentationml.presentation&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;application/vnd.openxmlformats-officedocument.presentationml.presentation&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-python&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-python&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-script.python&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-script.python&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-ruby&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-ruby&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/x-tex&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/x-tex&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Type Regex Patterns &quot;text/plain&quot; should be supported by retrievalMimeTypes" name="MIME Type Regex Patterns &quot;text/plain&quot; should be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/csv&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/csv&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;text/css&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;text/css&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;image/jpeg&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;image/jpeg&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;text/javascript&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;text/javascript&quot; should not be supported by retrievalMimeTypes" time="0.002">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;image/gif&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;image/gif&quot; should not be supported by retrievalMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;image/png&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;image/png&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;image/heic&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;image/heic&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;image/heif&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;image/heif&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/x-tar&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/x-tar&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/typescript&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/typescript&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/xml&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/xml&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/zip&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/zip&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/vnd.ms-excel&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/vnd.ms-excel&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/msexcel&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/msexcel&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/x-msexcel&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/x-msexcel&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/x-ms-excel&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/x-ms-excel&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/x-excel&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/x-excel&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/x-dos_ms_excel&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/x-dos_ms_excel&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/xls&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/xls&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/x-xls&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/x-xls&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="MIME Types Exclusive to Code Interpreter &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should not be supported by retrievalMimeTypes" name="MIME Types Exclusive to Code Interpreter &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should not be supported by retrievalMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/vnd.ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/vnd.ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/x-msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/x-msexcel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/x-ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/x-ms-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/x-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/x-excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/x-dos_ms_excel&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/x-dos_ms_excel&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/xls&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/xls&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0.001">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/x-xls&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/x-xls&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should match one of the supported regex patterns in supportedMimeTypes" name="Testing Excel MIME types &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot; should match one of the supported regex patterns in supportedMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing Excel MIME types Excel MIME types should match the regex pattern in excelMimeTypes" name="Testing Excel MIME types Excel MIME types should match the regex pattern in excelMimeTypes" time="0">
+    </testcase>
+    <testcase classname="Testing `fileConfig` checkType function should return true for supported MIME types" name="Testing `fileConfig` checkType function should return true for supported MIME types" time="0">
+    </testcase>
+    <testcase classname="Testing `fileConfig` checkType function should return false for unsupported MIME types" name="Testing `fileConfig` checkType function should return false for unsupported MIME types" time="0.001">
+    </testcase>
+    <testcase classname="mergeFileConfig merges minimal update correctly" name="mergeFileConfig merges minimal update correctly" time="0.002">
+    </testcase>
+    <testcase classname="mergeFileConfig overrides default endpoint with full new configuration" name="mergeFileConfig overrides default endpoint with full new configuration" time="0">
+    </testcase>
+    <testcase classname="mergeFileConfig adds new endpoint configuration correctly" name="mergeFileConfig adds new endpoint configuration correctly" time="0.001">
+    </testcase>
+    <testcase classname="mergeFileConfig disables an endpoint and sets numeric fields to 0 and empties supportedMimeTypes" name="mergeFileConfig disables an endpoint and sets numeric fields to 0 and empties supportedMimeTypes" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="replaceSpecialVars" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.343" tests="10">
+    <testcase classname="replaceSpecialVars should return the original text if text is empty" name="replaceSpecialVars should return the original text if text is empty" time="0.003">
+    </testcase>
+    <testcase classname="replaceSpecialVars should replace {{current_date}} with the current date" name="replaceSpecialVars should replace {{current_date}} with the current date" time="0">
+    </testcase>
+    <testcase classname="replaceSpecialVars should replace {{current_datetime}} with the current datetime" name="replaceSpecialVars should replace {{current_datetime}} with the current datetime" time="0">
+    </testcase>
+    <testcase classname="replaceSpecialVars should replace {{iso_datetime}} with the ISO datetime" name="replaceSpecialVars should replace {{iso_datetime}} with the ISO datetime" time="0.001">
+    </testcase>
+    <testcase classname="replaceSpecialVars should replace {{current_user}} with the user name if provided" name="replaceSpecialVars should replace {{current_user}} with the user name if provided" time="0">
+    </testcase>
+    <testcase classname="replaceSpecialVars should not replace {{current_user}} if user is not provided" name="replaceSpecialVars should not replace {{current_user}} if user is not provided" time="0">
+    </testcase>
+    <testcase classname="replaceSpecialVars should not replace {{current_user}} if user has no name" name="replaceSpecialVars should not replace {{current_user}} if user has no name" time="0">
+    </testcase>
+    <testcase classname="replaceSpecialVars should handle multiple replacements in the same text" name="replaceSpecialVars should handle multiple replacements in the same text" time="0">
+    </testcase>
+    <testcase classname="replaceSpecialVars should be case-insensitive when replacing variables" name="replaceSpecialVars should be case-insensitive when replacing variables" time="0">
+    </testcase>
+    <testcase classname="replaceSpecialVars should confirm all specialVariables from config.ts get parsed" name="replaceSpecialVars should confirm all specialVariables from config.ts get parsed" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="web.ts" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.369" tests="24">
+    <testcase classname="web.ts extractWebSearchEnvVars should return empty array if config is undefined" name="web.ts extractWebSearchEnvVars should return empty array if config is undefined" time="0.003">
+    </testcase>
+    <testcase classname="web.ts extractWebSearchEnvVars should extract environment variable names from config values" name="web.ts extractWebSearchEnvVars should extract environment variable names from config values" time="0">
+    </testcase>
+    <testcase classname="web.ts extractWebSearchEnvVars should only extract variables for keys that exist in the config" name="web.ts extractWebSearchEnvVars should only extract variables for keys that exist in the config" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should return authenticated=true when all required categories are authenticated" name="web.ts loadWebSearchAuth should return authenticated=true when all required categories are authenticated" time="0.002">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should return authenticated=false when a required category is not authenticated" name="web.ts loadWebSearchAuth should return authenticated=false when a required category is not authenticated" time="0.001">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should handle exceptions from loadAuthValues" name="web.ts loadWebSearchAuth should handle exceptions from loadAuthValues" time="0.002">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should correctly identify user-provided vs system-defined auth" name="web.ts loadWebSearchAuth should correctly identify user-provided vs system-defined auth" time="0.001">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should handle optional fields correctly" name="web.ts loadWebSearchAuth should handle optional fields correctly" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should preserve safeSearch setting from webSearchConfig" name="web.ts loadWebSearchAuth should preserve safeSearch setting from webSearchConfig" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should set the correct service types in authResult" name="web.ts loadWebSearchAuth should set the correct service types in authResult" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should check all services if none are specified" name="web.ts loadWebSearchAuth should check all services if none are specified" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should correctly identify authTypes based on specific configurations" name="web.ts loadWebSearchAuth should correctly identify authTypes based on specific configurations" time="0.001">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should handle custom variable names in environment variables" name="web.ts loadWebSearchAuth should handle custom variable names in environment variables" time="0.001">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should always return authTypes array with exactly 3 categories" name="web.ts loadWebSearchAuth should always return authTypes array with exactly 3 categories" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth should maintain authTypes array structure even when authentication fails" name="web.ts loadWebSearchAuth should maintain authTypes array structure even when authentication fails" time="0.001">
+    </testcase>
+    <testcase classname="web.ts webSearchAuth should have the expected structure" name="web.ts webSearchAuth should have the expected structure" time="0">
+    </testcase>
+    <testcase classname="web.ts webSearchAuth should mark required keys with value 1" name="web.ts webSearchAuth should mark required keys with value 1" time="0">
+    </testcase>
+    <testcase classname="web.ts webSearchAuth should mark optional keys with value 0" name="web.ts webSearchAuth should mark optional keys with value 0" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth with specific services should only check the specified searchProvider" name="web.ts loadWebSearchAuth with specific services should only check the specified searchProvider" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth with specific services should only check the specified scraperType" name="web.ts loadWebSearchAuth with specific services should only check the specified scraperType" time="0.001">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth with specific services should only check the specified rerankerType" name="web.ts loadWebSearchAuth with specific services should only check the specified rerankerType" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth with specific services should handle invalid specified service gracefully" name="web.ts loadWebSearchAuth with specific services should handle invalid specified service gracefully" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth with specific services should fail authentication when specified service is not authenticated but others are" name="web.ts loadWebSearchAuth with specific services should fail authentication when specified service is not authenticated but others are" time="0">
+    </testcase>
+    <testcase classname="web.ts loadWebSearchAuth with specific services should check all services if none are specified" name="web.ts loadWebSearchAuth with specific services should check all services if none are specified" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="generateDynamicSchema" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.368" tests="35">
+    <testcase classname="generateDynamicSchema should generate a schema for number settings with range" name="generateDynamicSchema should generate a schema for number settings with range" time="0.004">
+    </testcase>
+    <testcase classname="generateDynamicSchema should generate a schema for boolean settings" name="generateDynamicSchema should generate a schema for boolean settings" time="0">
+    </testcase>
+    <testcase classname="generateDynamicSchema should generate a schema for string settings" name="generateDynamicSchema should generate a schema for string settings" time="0.001">
+    </testcase>
+    <testcase classname="generateDynamicSchema should generate a schema for enum settings" name="generateDynamicSchema should generate a schema for enum settings" time="0">
+    </testcase>
+    <testcase classname="generateDynamicSchema should fail for incorrect enum value" name="generateDynamicSchema should fail for incorrect enum value" time="0">
+    </testcase>
+    <testcase classname="generateDynamicSchema should generate a schema for array settings" name="generateDynamicSchema should generate a schema for array settings" time="0.002">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should throw error for Conversation optionType" name="validateSettingDefinitions should throw error for Conversation optionType" time="0.027">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should throw error for Model optionType" name="validateSettingDefinitions should throw error for Model optionType" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should not throw error for valid settings" name="validateSettingDefinitions should not throw error for valid settings" time="0.001">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should throw error for invalid columns configuration" name="validateSettingDefinitions should throw error for invalid columns configuration" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should correctly handle columnSpan defaulting based on columns" name="validateSettingDefinitions should correctly handle columnSpan defaulting based on columns" time="0.001">
+    </testcase>
+    <testcase classname="validateSettingDefinitions label should default to key if not explicitly set" name="validateSettingDefinitions label should default to key if not explicitly set" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should throw error for negative minText or maxText" name="validateSettingDefinitions should throw error for negative minText or maxText" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should throw error for optionType &quot;conversation&quot; not matching schema" name="validateSettingDefinitions should throw error for optionType &quot;conversation&quot; not matching schema" time="0.001">
+    </testcase>
+    <testcase classname="validateSettingDefinitions columnSpan defaults based on columns and label defaults to key if not set" name="validateSettingDefinitions columnSpan defaults based on columns and label defaults to key if not set" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions throws error if columns value is out of range" name="validateSettingDefinitions throws error if columns value is out of range" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions slider component range validation" name="validateSettingDefinitions slider component range validation" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions slider component with enum type requires at least 2 options" name="validateSettingDefinitions slider component with enum type requires at least 2 options" time="0.001">
+    </testcase>
+    <testcase classname="validateSettingDefinitions checkbox component must have 1-2 options if options are provided" name="validateSettingDefinitions checkbox component must have 1-2 options if options are provided" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions dropdown component requires at least 2 options" name="validateSettingDefinitions dropdown component requires at least 2 options" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions validate minText and maxText constraints" name="validateSettingDefinitions validate minText and maxText constraints" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions validate optionType constraint with tConversationSchema" name="validateSettingDefinitions validate optionType constraint with tConversationSchema" time="0.001">
+    </testcase>
+    <testcase classname="validateSettingDefinitions correct handling of boolean settings with defaults" name="validateSettingDefinitions correct handling of boolean settings with defaults" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions number slider without default uses middle of range" name="validateSettingDefinitions number slider without default uses middle of range" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should validate minTags and maxTags constraints" name="validateSettingDefinitions should validate minTags and maxTags constraints" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should ensure default values for tags are arrays" name="validateSettingDefinitions should ensure default values for tags are arrays" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions array settings without defaults should not throw if constraints are met" name="validateSettingDefinitions array settings without defaults should not throw if constraints are met" time="0">
+    </testcase>
+    <testcase classname="validateSettingDefinitions should ensure maxTags is respected for default array values" name="validateSettingDefinitions should ensure maxTags is respected for default array values" time="0.001">
+    </testcase>
+    <testcase classname="Settings Validation and Schema Generation validateSettingDefinitions does not throw for valid configuration" name="Settings Validation and Schema Generation validateSettingDefinitions does not throw for valid configuration" time="0">
+    </testcase>
+    <testcase classname="Settings Validation and Schema Generation validateSettingDefinitions throws for invalid type in settings" name="Settings Validation and Schema Generation validateSettingDefinitions throws for invalid type in settings" time="0">
+    </testcase>
+    <testcase classname="Settings Validation and Schema Generation validateSettingDefinitions throws for missing required fields" name="Settings Validation and Schema Generation validateSettingDefinitions throws for missing required fields" time="0">
+    </testcase>
+    <testcase classname="Settings Validation and Schema Generation validateSettingDefinitions throws for default value out of range" name="Settings Validation and Schema Generation validateSettingDefinitions throws for default value out of range" time="0.001">
+    </testcase>
+    <testcase classname="Settings Validation and Schema Generation validateSettingDefinitions throws for enum setting with incorrect default" name="Settings Validation and Schema Generation validateSettingDefinitions throws for enum setting with incorrect default" time="0">
+    </testcase>
+    <testcase classname="Settings Validation and Schema Generation generateDynamicSchema generates a schema that validates correct input" name="Settings Validation and Schema Generation generateDynamicSchema generates a schema that validates correct input" time="0">
+    </testcase>
+    <testcase classname="Settings Validation and Schema Generation generateDynamicSchema generates a schema that catches invalid input and provides detailed errors" name="Settings Validation and Schema Generation generateDynamicSchema generates a schema that catches invalid input and provides detailed errors" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="FunctionSignature" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.402" tests="63">
+    <testcase classname="FunctionSignature creates a function signature and converts to JSON tool" name="FunctionSignature creates a function signature and converts to JSON tool" time="0.003">
+    </testcase>
+    <testcase classname="ActionRequest should make a GET request" name="ActionRequest should make a GET request" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles GET requests" name="ActionRequest ActionRequest handles GET requests" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles POST requests" name="ActionRequest ActionRequest handles POST requests" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles PUT requests" name="ActionRequest ActionRequest handles PUT requests" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles DELETE requests" name="ActionRequest ActionRequest handles DELETE requests" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles PATCH requests" name="ActionRequest ActionRequest handles PATCH requests" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest throws an error for unsupported HTTP methods" name="ActionRequest ActionRequest throws an error for unsupported HTTP methods" time="0.03">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest replaces path parameters with values from toolInput" name="ActionRequest ActionRequest replaces path parameters with values from toolInput" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles GET requests with header and query parameters" name="ActionRequest ActionRequest handles GET requests with header and query parameters" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles GET requests with header and path parameters" name="ActionRequest ActionRequest handles GET requests with header and path parameters" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles POST requests with body, header and query parameters" name="ActionRequest ActionRequest handles POST requests with body, header and query parameters" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles PUT requests with body, header and query parameters" name="ActionRequest ActionRequest handles PUT requests with body, header and query parameters" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles PATCH requests with body, header and query parameters" name="ActionRequest ActionRequest handles PATCH requests with body, header and query parameters" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest handles DELETE requests with body, header and query parameters" name="ActionRequest ActionRequest handles DELETE requests with body, header and query parameters" time="0">
+    </testcase>
+    <testcase classname="ActionRequest throws an error for unsupported HTTP method" name="ActionRequest throws an error for unsupported HTTP method" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest Concurrent Execution maintains isolated state between concurrent executions with different parameters" name="ActionRequest ActionRequest Concurrent Execution maintains isolated state between concurrent executions with different parameters" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest Concurrent Execution maintains isolated authentication state between concurrent executions" name="ActionRequest ActionRequest Concurrent Execution maintains isolated authentication state between concurrent executions" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest Concurrent Execution handles mixed authentication types concurrently" name="ActionRequest ActionRequest Concurrent Execution handles mixed authentication types concurrently" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest Concurrent Execution maintains parameter integrity during concurrent path parameter replacement" name="ActionRequest ActionRequest Concurrent Execution maintains parameter integrity during concurrent path parameter replacement" time="0.001">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest Concurrent Execution preserves original ActionRequest state after multiple executions" name="ActionRequest ActionRequest Concurrent Execution preserves original ActionRequest state after multiple executions" time="0">
+    </testcase>
+    <testcase classname="ActionRequest ActionRequest Concurrent Execution shares immutable configuration between executors from the same ActionRequest" name="ActionRequest ActionRequest Concurrent Execution shares immutable configuration between executors from the same ActionRequest" time="0">
+    </testcase>
+    <testcase classname="Authentication Handling correctly sets Basic Auth header" name="Authentication Handling correctly sets Basic Auth header" time="0">
+    </testcase>
+    <testcase classname="Authentication Handling correctly sets Bearer token" name="Authentication Handling correctly sets Bearer token" time="0">
+    </testcase>
+    <testcase classname="Authentication Handling correctly sets API Key" name="Authentication Handling correctly sets API Key" time="0">
+    </testcase>
+    <testcase classname="resolveRef correctly resolves $ref references in the OpenAPI spec" name="resolveRef correctly resolves $ref references in the OpenAPI spec" time="0">
+    </testcase>
+    <testcase classname="resolveRef general cases resolves schema refs correctly" name="resolveRef general cases resolves schema refs correctly" time="0">
+    </testcase>
+    <testcase classname="resolveRef general cases resolves parameter refs correctly, then schema within parameter" name="resolveRef general cases resolves parameter refs correctly, then schema within parameter" time="0.002">
+    </testcase>
+    <testcase classname="resolveRef general cases resolves requestBody refs correctly, then schema within requestBody" name="resolveRef general cases resolves requestBody refs correctly, then schema within requestBody" time="0.001">
+    </testcase>
+    <testcase classname="openapiToFunction converts OpenAPI spec to function signatures and request builders" name="openapiToFunction converts OpenAPI spec to function signatures and request builders" time="0">
+    </testcase>
+    <testcase classname="openapiToFunction openapiToFunction with $ref resolution correctly converts OpenAPI spec to function signatures and request builders, resolving $ref references" name="openapiToFunction openapiToFunction with $ref resolution correctly converts OpenAPI spec to function signatures and request builders, resolving $ref references" time="0.001">
+    </testcase>
+    <testcase classname="validateAndParseOpenAPISpec validates a correct OpenAPI spec successfully" name="validateAndParseOpenAPISpec validates a correct OpenAPI spec successfully" time="0">
+    </testcase>
+    <testcase classname="validateAndParseOpenAPISpec returns an error for spec with no servers" name="validateAndParseOpenAPISpec returns an error for spec with no servers" time="0">
+    </testcase>
+    <testcase classname="validateAndParseOpenAPISpec returns an error for spec with empty server URL" name="validateAndParseOpenAPISpec returns an error for spec with empty server URL" time="0">
+    </testcase>
+    <testcase classname="validateAndParseOpenAPISpec returns an error for spec with no paths" name="validateAndParseOpenAPISpec returns an error for spec with no paths" time="0">
+    </testcase>
+    <testcase classname="validateAndParseOpenAPISpec detects missing components in spec" name="validateAndParseOpenAPISpec detects missing components in spec" time="0">
+    </testcase>
+    <testcase classname="validateAndParseOpenAPISpec handles invalid spec formats" name="validateAndParseOpenAPISpec handles invalid spec formats" time="0">
+    </testcase>
+    <testcase classname="validateAndParseOpenAPISpec handles YAML spec and correctly converts to Function Signatures" name="validateAndParseOpenAPISpec handles YAML spec and correctly converts to Function Signatures" time="0.002">
+    </testcase>
+    <testcase classname="createURL correctly combines domain and path" name="createURL correctly combines domain and path" time="0">
+    </testcase>
+    <testcase classname="createURL handles domain with trailing slash" name="createURL handles domain with trailing slash" time="0">
+    </testcase>
+    <testcase classname="createURL handles path with leading slash" name="createURL handles path with leading slash" time="0">
+    </testcase>
+    <testcase classname="createURL handles domain with trailing slash and path with leading slash" name="createURL handles domain with trailing slash and path with leading slash" time="0">
+    </testcase>
+    <testcase classname="createURL handles domain without trailing slash and path without leading slash" name="createURL handles domain without trailing slash and path without leading slash" time="0">
+    </testcase>
+    <testcase classname="createURL handles empty path" name="createURL handles empty path" time="0">
+    </testcase>
+    <testcase classname="createURL handles domain with subdirectory" name="createURL handles domain with subdirectory" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas getWeatherOpenapiSpec generates correct Zod schema for GetCurrentWeather" name="createURL openapiToFunction zodSchemas getWeatherOpenapiSpec generates correct Zod schema for GetCurrentWeather" time="0.001">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas getWeatherOpenapiSpec validates correct data for GetCurrentWeather" name="createURL openapiToFunction zodSchemas getWeatherOpenapiSpec validates correct data for GetCurrentWeather" time="0.001">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas getWeatherOpenapiSpec throws error for invalid data for GetCurrentWeather" name="createURL openapiToFunction zodSchemas getWeatherOpenapiSpec throws error for invalid data for GetCurrentWeather" time="0.001">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas whimsicalOpenapiSpec generates correct Zod schema for postRenderFlowchart" name="createURL openapiToFunction zodSchemas whimsicalOpenapiSpec generates correct Zod schema for postRenderFlowchart" time="0.001">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas whimsicalOpenapiSpec validates correct data for postRenderFlowchart" name="createURL openapiToFunction zodSchemas whimsicalOpenapiSpec validates correct data for postRenderFlowchart" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas whimsicalOpenapiSpec throws error for invalid data for postRenderFlowchart" name="createURL openapiToFunction zodSchemas whimsicalOpenapiSpec throws error for invalid data for postRenderFlowchart" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec generates correct Zod schema for searchAbstracts" name="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec generates correct Zod schema for searchAbstracts" time="0.001">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec validates correct data for searchAbstracts" name="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec validates correct data for searchAbstracts" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec throws error for invalid data for searchAbstracts" name="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec throws error for invalid data for searchAbstracts" time="0.001">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec generates correct Zod schema for getFullText" name="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec generates correct Zod schema for getFullText" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec generates correct Zod schema for saveCitation" name="createURL openapiToFunction zodSchemas scholarAIOpenapiSpec generates correct Zod schema for saveCitation" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas for SWAPI getPeople schema does not generate Zod schema for getPeople (no parameters)" name="createURL openapiToFunction zodSchemas for SWAPI getPeople schema does not generate Zod schema for getPeople (no parameters)" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas for SWAPI getPeople schema validates correct data for getPeople" name="createURL openapiToFunction zodSchemas for SWAPI getPeople schema validates correct data for getPeople" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas for SWAPI getPeople schema does not throw for invalid data for getPeople" name="createURL openapiToFunction zodSchemas for SWAPI getPeople schema does not throw for invalid data for getPeople" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas for SWAPI getPersonById schema generates correct Zod schema for getPersonById" name="createURL openapiToFunction zodSchemas for SWAPI getPersonById schema generates correct Zod schema for getPersonById" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas for SWAPI getPersonById schema validates correct data for getPersonById" name="createURL openapiToFunction zodSchemas for SWAPI getPersonById schema validates correct data for getPersonById" time="0">
+    </testcase>
+    <testcase classname="createURL openapiToFunction zodSchemas for SWAPI getPersonById schema throws error for invalid data for getPersonById" name="createURL openapiToFunction zodSchemas for SWAPI getPersonById schema throws error for invalid data for getPersonById" time="0.001">
+    </testcase>
+    <testcase classname="createURL openapiToFunction parameter refs resolution correctly resolves $ref for parameters" name="createURL openapiToFunction parameter refs resolution correctly resolves $ref for parameters" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="validateAzureGroups" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:45" time="1.407" tests="21">
+    <testcase classname="validateAzureGroups should validate a correct configuration" name="validateAzureGroups should validate a correct configuration" time="0.004">
+    </testcase>
+    <testcase classname="validateAzureGroups should return invalid for a configuration missing deploymentName at the model level where required" name="validateAzureGroups should return invalid for a configuration missing deploymentName at the model level where required" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups should return invalid for a configuration with a boolean model where group lacks deploymentName and version" name="validateAzureGroups should return invalid for a configuration with a boolean model where group lacks deploymentName and version" time="0">
+    </testcase>
+    <testcase classname="validateAzureGroups should allow a boolean model when group has both deploymentName and version" name="validateAzureGroups should allow a boolean model when group has both deploymentName and version" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups should validate correctly when optional fields are missing" name="validateAzureGroups should validate correctly when optional fields are missing" time="0">
+    </testcase>
+    <testcase classname="validateAzureGroups should return invalid for configurations with incorrect types" name="validateAzureGroups should return invalid for configurations with incorrect types" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups should correctly handle a mix of valid and invalid model configurations" name="validateAzureGroups should correctly handle a mix of valid and invalid model configurations" time="0">
+    </testcase>
+    <testcase classname="validateAzureGroups should return invalid for configuration missing required fields at the group level" name="validateAzureGroups should return invalid for configuration missing required fields at the group level" time="0">
+    </testcase>
+    <testcase classname="validateAzureGroups for Serverless Configurations should validate a correct serverless configuration" name="validateAzureGroups for Serverless Configurations should validate a correct serverless configuration" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups for Serverless Configurations should return invalid for a serverless configuration missing baseURL" name="validateAzureGroups for Serverless Configurations should return invalid for a serverless configuration missing baseURL" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups for Serverless Configurations should throw an error when environment variable for apiKey is not set" name="validateAzureGroups for Serverless Configurations should throw an error when environment variable for apiKey is not set" time="0.014">
+    </testcase>
+    <testcase classname="validateAzureGroups for Serverless Configurations should correctly extract environment variables and prepare serverless config" name="validateAzureGroups for Serverless Configurations should correctly extract environment variables and prepare serverless config" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups for Serverless Configurations should ensure serverless flag triggers appropriate validations and mappings" name="validateAzureGroups for Serverless Configurations should ensure serverless flag triggers appropriate validations and mappings" time="0">
+    </testcase>
+    <testcase classname="validateAzureGroups with modelGroupMap and groupMap should provide a valid modelGroupMap and groupMap for a correct configuration" name="validateAzureGroups with modelGroupMap and groupMap should provide a valid modelGroupMap and groupMap for a correct configuration" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups with modelGroupMap and groupMap should not allow duplicate group names" name="validateAzureGroups with modelGroupMap and groupMap should not allow duplicate group names" time="0">
+    </testcase>
+    <testcase classname="validateAzureGroups with modelGroupMap and groupMap should not allow duplicate models across groups" name="validateAzureGroups with modelGroupMap and groupMap should not allow duplicate models across groups" time="0">
+    </testcase>
+    <testcase classname="validateAzureGroups with modelGroupMap and groupMap should throw an error if environment variables are set but not configured" name="validateAzureGroups with modelGroupMap and groupMap should throw an error if environment variables are set but not configured" time="0.001">
+    </testcase>
+    <testcase classname="validateAzureGroups with modelGroupMap and groupMap should list all expected models in both modelGroupMap and groupMap" name="validateAzureGroups with modelGroupMap and groupMap should list all expected models in both modelGroupMap and groupMap" time="0.004">
+    </testcase>
+    <testcase classname="mapGroupToAzureConfig should successfully map non-serverless group configuration" name="mapGroupToAzureConfig should successfully map non-serverless group configuration" time="0">
+    </testcase>
+    <testcase classname="mapGroupToAzureConfig should successfully map serverless group configuration" name="mapGroupToAzureConfig should successfully map serverless group configuration" time="0">
+    </testcase>
+    <testcase classname="mapGroupToAzureConfig should throw error for nonexistent group name" name="mapGroupToAzureConfig should throw error for nonexistent group name" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>

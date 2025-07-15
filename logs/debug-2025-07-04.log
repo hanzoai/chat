@@ -1,0 +1,32 @@
+2025-07-04T03:28:08.064Z info: [Optional] Redis not initialized.
+2025-07-04T23:20:37.122Z info: [Optional] Redis not initialized.
+2025-07-04T23:20:38.719Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-07-04T23:20:38.798Z info: Connected to MongoDB
+2025-07-04T23:20:38.878Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "invalid_type",
+      "expected": "array",
+      "received": "undefi... [truncated]
+2025-07-04T23:20:38.879Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-07-04T23:20:38.879Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-07-04T23:20:38.879Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-07-04T23:20:38.879Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-07-04T23:20:38.879Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-07-04T23:20:38.880Z warn: Default value for CREDS_KEY is being used.
+2025-07-04T23:20:38.880Z warn: Default value for CREDS_IV is being used.
+2025-07-04T23:20:38.880Z warn: Default value for JWT_SECRET is being used.
+2025-07-04T23:20:38.880Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-07-04T23:20:38.880Z info: Please replace any default secret values.
+2025-07-04T23:20:38.880Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-07-04T23:20:38.886Z warn: RAG API is either not running or not reachable at http://chat-rag-api:8000, you may experience errors with file uploads.
+2025-07-04T23:20:38.897Z info: No changes needed for 'USER' role permissions
+2025-07-04T23:20:38.898Z info: No changes needed for 'ADMIN' role permissions
+2025-07-04T23:20:38.898Z info: Turnstile is DISABLED (no siteKey provided).
+2025-07-04T23:20:38.920Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it

@@ -1,0 +1,7 @@
+npm error Lifecycle script `backend:dev` failed with error:
+npm error workspace @hanzochat/chat-frontend@v0.7.8
+npm error location /Users/z/work/hanzo/chat/client
+npm error Missing script: "backend:dev"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@hanzochat/chat-frontend@v0.7.8
