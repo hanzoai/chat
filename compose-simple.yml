@@ -184,6 +184,26 @@ services:
     networks:
       - hanzo-network
 
+  # Hanzo Runtime API (Mock for testing)
+  runtime:
+    image: node:20-alpine
+    container_name: hanzo-runtime
+    ports:
+      - "3003:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+    volumes:
+      - ./runtime-mock.js:/app/server.js:ro
+    command: ["node", "/app/server.js"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hanzo-network
+
 
 volumes:
   postgres_data:
