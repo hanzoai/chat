@@ -19,18 +19,27 @@ COMPOSE_FILE := docker-compose.hanzo.yml
 
 # Default target
 help:
-	@echo "$(BLUE)Hanzo AI Chat Stack Management$(NC)"
+	@echo "$(BLUE)Hanzo AI Platform - Complete Stack Management$(NC)"
 	@echo ""
-	@echo "$(YELLOW)Quick Start:$(NC)"
-	@echo "  $(GREEN)make deploy$(NC)     - Build and start the entire Hanzo stack"
+	@echo "$(YELLOW)🚀 Quick Start:$(NC)"
+	@echo "  $(GREEN)make platform$(NC)   - Start the COMPLETE Hanzo AI Platform"
+	@echo "  $(GREEN)make deploy$(NC)     - Build and start the entire stack"
+	@echo ""
+	@echo "$(YELLOW)📋 Platform Services:$(NC)"
+	@echo "  • Cloud Dashboard: http://localhost:3000 (AI platform management)"
+	@echo "  • Chat Interface:  http://localhost:3081 (AI chat)"
+	@echo "  • IAM Dashboard:   http://localhost:8000 (identity management)"
+	@echo "  • Router API:      http://localhost:4000 (LLM gateway)"
 	@echo ""
 	@echo "$(YELLOW)Development:$(NC)"
 	@echo "  $(GREEN)make up$(NC)         - Start all services"
 	@echo "  $(GREEN)make down$(NC)       - Stop all services"
 	@echo "  $(GREEN)make restart$(NC)    - Restart all services"
 	@echo "  $(GREEN)make logs$(NC)       - View logs (all services)"
+	@echo "  $(GREEN)make logs-cloud$(NC) - View cloud service logs"
+	@echo "  $(GREEN)make logs-iam$(NC)   - View IAM service logs"
 	@echo "  $(GREEN)make logs-chat$(NC)  - View chat service logs"
-	@echo "  $(GREEN)make logs-router$(NC) - View Hanzo Router logs"
+	@echo "  $(GREEN)make logs-router$(NC) - View router logs"
 	@echo "  $(GREEN)make status$(NC)     - Check service health"
 	@echo ""
 	@echo "$(YELLOW)Building:$(NC)"
@@ -46,19 +55,27 @@ help:
 	@echo "  $(GREEN)make backup$(NC)     - Backup all data"
 	@echo "  $(GREEN)make restore$(NC)    - Restore from backup"
 
+# Start complete platform with all services
+platform:
+	@echo "$(BLUE)🚀 Starting Complete Hanzo AI Platform...$(NC)"
+	@./start-hanzo.sh
+
 # Quick deploy - builds and starts everything
 deploy: check-env build
-	@echo "$(BLUE)🚀 Deploying Hanzo AI Chat Stack...$(NC)"
-	@docker compose -f $(COMPOSE_FILE) up -d
+	@echo "$(BLUE)🚀 Deploying Hanzo AI Platform...$(NC)"
+	@docker compose up -d
 	@echo "$(GREEN)✅ Deployment complete!$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Access points:$(NC)"
-	@echo "  Chat UI:        http://localhost:3081"
-	@echo "  Hanzo Router:   http://localhost:4000"
-	@echo "  Router Admin:   http://localhost:4000/ui"
+	@echo "  Cloud Dashboard: http://localhost:3000"
+	@echo "  Chat Interface:  http://localhost:3081"
+	@echo "  IAM Dashboard:   http://localhost:8000"
+	@echo "  Router API:      http://localhost:4000"
 	@echo ""
 	@echo "$(YELLOW)Default credentials:$(NC)"
-	@echo "  Master Key:     sk-hanzo-master-key"
+	@echo "  Email:          admin@hanzo.ai"
+	@echo "  Password:       demo1234"
+	@echo "  Router Key:     sk-hanzo-master-key"
 	@echo ""
 	@$(MAKE) wait-healthy
 
@@ -118,6 +135,15 @@ logs-chat:
 
 logs-router:
 	@docker compose -f $(COMPOSE_FILE) logs -f router
+
+logs-cloud:
+	@docker compose -f $(COMPOSE_FILE) logs -f cloud
+
+logs-iam:
+	@docker compose -f $(COMPOSE_FILE) logs -f iam
+
+logs-services:
+	@docker compose -f $(COMPOSE_FILE) logs -f services
 
 # Check service health
 status:
