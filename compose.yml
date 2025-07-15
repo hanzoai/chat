@@ -133,6 +133,7 @@ services:
       DEBUG: ${DEBUG:-false}
     volumes:
       - ./config.yaml:/app/config.yaml:ro
+      - ./mcp:/app/mcp:ro
     command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "${ROUTER_WORKERS:-4}"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health/readiness"]
@@ -408,6 +409,10 @@ services:
       
       # MCP Integration
       MCP_ENABLED: true
+      
+      # Tool/Function Calling
+      TOOLS_ENABLED: true
+      FUNCTIONS_ENABLED: true
       
       # Logging
       DEBUG_LOGGING: ${DEBUG:-false}
