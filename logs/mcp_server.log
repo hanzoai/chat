@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/runpy.py", line 163, in _run_module_as_main
+    mod_name, _Error)
+  File "/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/runpy.py", line 119, in _get_module_details
+    code = loader.get_code(mod_name)
+  File "/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/pkgutil.py", line 281, in get_code
+    self.code = compile(source, self.filename, 'exec')
+  File "/Users/z/work/hanzo/mcp/hanzo_mcp/cli.py", line 19
+    def main() -> None:
+               ^
+SyntaxError: invalid syntax

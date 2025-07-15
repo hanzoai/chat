@@ -1,11 +1,30 @@
 # LiteLLM Makefile
 # Simple Makefile for running tests and basic development tasks
 
-.PHONY: help test test-unit test-integration test-unit-helm lint format install-dev install-proxy-dev install-test-deps install-helm-unittest check-circular-imports check-import-safety
+.PHONY: help test test-unit test-integration test-unit-helm lint format install-dev install-proxy-dev install-test-deps install-helm-unittest check-circular-imports check-import-safety up down logs restart status clean test-platform
+
+# Default compose file for platform
+COMPOSE_FILE := compose-simple.yml
+
+# Colors for output
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+RED := \033[0;31m
+NC := \033[0m # No Color
 
 # Default target
 help:
-	@echo "Available commands:"
+	@echo "$(GREEN)=== Hanzo AI Platform ===$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Platform Management:$(NC)"
+	@echo "  $(GREEN)make up$(NC)         - Start all services"
+	@echo "  $(GREEN)make down$(NC)       - Stop all services"
+	@echo "  $(GREEN)make logs$(NC)       - View logs (all services)"
+	@echo "  $(GREEN)make restart$(NC)    - Restart all services"
+	@echo "  $(GREEN)make status$(NC)     - Check service status"
+	@echo "  $(GREEN)make clean$(NC)      - Stop services and remove volumes"
+	@echo ""
+	@echo "$(YELLOW)Development Commands:$(NC)"
 	@echo "  make install-dev        - Install development dependencies"
 	@echo "  make install-proxy-dev  - Install proxy development dependencies"
 	@echo "  make install-dev-ci     - Install dev dependencies (CI-compatible, pins OpenAI)"
@@ -21,6 +40,7 @@ help:
 	@echo "  make check-circular-imports - Check for circular imports"
 	@echo "  make check-import-safety - Check import safety"
 	@echo "  make test               - Run all tests"
+	@echo "  make test-platform      - Test platform services (health & API)"
 	@echo "  make test-unit          - Run unit tests (tests/test_litellm)"
 	@echo "  make test-integration   - Run integration tests"
 	@echo "  make test-unit-helm     - Run helm unit tests"
@@ -101,3 +121,87 @@ test-llm-translation-single: install-test-deps
 	poetry run pytest tests/llm_translation/$(FILE) \
 		--junitxml=test-results/junit.xml \
 		-v --tb=short --maxfail=100 --timeout=300
+
+# =================================
+# Platform Management Commands
+# =================================
+
+# Start all services
+up:
+	@echo "$(GREEN)🚀 Starting Hanzo AI Platform...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) up -d --remove-orphans
+	@echo "$(YELLOW)⏳ Waiting for services to be ready...$(NC)"
+	@sleep 5
+	@docker start hanzo-chat 2>/dev/null || true
+	@echo ""
+	@echo "$(GREEN)✅ Platform is starting!$(NC)"
+	@echo ""
+	@echo "$(YELLOW)📋 Access Points:$(NC)"
+	@echo "  • Chat Interface:  http://localhost:3081"
+	@echo "  • Router API:      http://localhost:4000"
+	@echo "  • Runtime API:     http://localhost:3003"
+	@echo "  • Meilisearch:     http://localhost:7700"
+	@echo ""
+	@echo "$(YELLOW)🔑 Router API Key:$(NC) sk-hanzo-master-key"
+	@echo ""
+	@echo "Run '$(GREEN)make test$(NC)' to verify everything is working"
+
+# Stop all services
+down:
+	@echo "$(RED)⏹️  Stopping Hanzo AI Platform...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) down
+	@echo "$(GREEN)✅ All services stopped$(NC)"
+
+# View logs
+logs:
+	@docker compose -f $(COMPOSE_FILE) logs -f
+
+# View chat logs specifically
+logs-chat:
+	@docker compose -f $(COMPOSE_FILE) logs -f chat
+
+# View router logs specifically
+logs-router:
+	@docker compose -f $(COMPOSE_FILE) logs -f router
+
+# Restart all services
+restart:
+	@echo "$(YELLOW)🔄 Restarting services...$(NC)"
+	@$(MAKE) down
+	@$(MAKE) up
+
+# Check status
+status:
+	@echo "$(YELLOW)📊 Service Status:$(NC)"
+	@docker compose -f $(COMPOSE_FILE) ps
+
+# Clean everything (including volumes)
+clean:
+	@echo "$(RED)🧹 Cleaning up everything...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) down -v --remove-orphans
+	@echo "$(GREEN)✅ Cleanup complete$(NC)"
+
+# Test platform services
+test-platform:
+	@echo "$(YELLOW)🧪 Testing Hanzo AI Platform...$(NC)"
+	@echo ""
+	@echo -n "$(YELLOW)Router Health:$(NC) "
+	@curl -s http://localhost:4000/health >/dev/null 2>&1 && echo "$(GREEN)✅ OK$(NC)" || echo "$(RED)❌ Failed$(NC)"
+	@echo -n "$(YELLOW)Chat Health:$(NC)   "
+	@curl -s http://localhost:3081/health >/dev/null 2>&1 && echo "$(GREEN)✅ OK$(NC)" || echo "$(RED)❌ Failed$(NC)"
+	@echo -n "$(YELLOW)Search Health:$(NC) "
+	@curl -s http://localhost:7700/health >/dev/null 2>&1 && echo "$(GREEN)✅ OK$(NC)" || echo "$(RED)❌ Failed$(NC)"
+	@echo -n "$(YELLOW)Runtime Health:$(NC) "
+	@curl -s http://localhost:3003/api/health >/dev/null 2>&1 && echo "$(GREEN)✅ OK$(NC)" || echo "$(RED)❌ Failed$(NC)"
+	@echo ""
+	@echo -n "$(YELLOW)Router API Test (Anthropic):$(NC) "
+	@curl -s -X POST http://localhost:4000/v1/chat/completions \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer sk-hanzo-master-key" \
+		-d '{"model": "hanzo-zen-1", "messages": [{"role": "user", "content": "Say OK"}], "max_tokens": 5}' \
+		2>/dev/null | grep -q "OK" && echo "$(GREEN)✅ Working$(NC)" || echo "$(RED)❌ Failed$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Available Models:$(NC)"
+	@curl -s http://localhost:4000/v1/models -H "Authorization: Bearer sk-hanzo-master-key" 2>/dev/null | jq -r '.data[].id' | head -5 | sed 's/^/  • /'
+	@echo ""
+	@docker compose -f $(COMPOSE_FILE) ps --format "table {{.Name}}\t{{.Status}}"
