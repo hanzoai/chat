@@ -1,0 +1,3 @@
+2025-06-28T15:35:37.951Z info: [Optional] Redis not initialized.
+2025-06-28T15:35:39.502Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-28T15:36:09.559Z error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017

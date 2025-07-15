@@ -1,0 +1,30 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/z/work/hanzo/chat/api/logs/.124163c776d287793643ac0e08ac1d35d67ad894-audit.json",
+    "files": [
+        {
+            "date": 1750445956924,
+            "name": "/Users/z/work/hanzo/chat/api/logs/meiliSync-2025-06-20.log",
+            "hash": "51d506456c60274a60e2e6197a49e0966da2e1e238b8fb8cef8136f1d952a343"
+        },
+        {
+            "date": 1750715217126,
+            "name": "/Users/z/work/hanzo/chat/api/logs/meiliSync-2025-06-23.log",
+            "hash": "eefd101956289b5a247a47f1aec91352f5684a84b31dc8e19dc549f51a4ba63e"
+        },
+        {
+            "date": 1750881342909,
+            "name": "/Users/z/work/hanzo/chat/api/logs/meiliSync-2025-06-25.log",
+            "hash": "fd78498ce5291decfc88ad9ddfd907ca76afde01eb72a34c6cbf60d39f032a99"
+        },
+        {
+            "date": 1750950598678,
+            "name": "/Users/z/work/hanzo/chat/api/logs/meiliSync-2025-06-26.log",
+            "hash": "b17c37d900a8ce69443f0d517d1ddad686a978a9a2beee330fa3cd34cdf34ca2"
+        }
+    ],
+    "hashType": "sha256"
+}

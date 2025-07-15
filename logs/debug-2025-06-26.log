@@ -1,0 +1,693 @@
+2025-06-26T01:31:09.831Z info: [Optional] Redis not initialized.
+2025-06-26T01:31:11.431Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T01:31:11.686Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+... [truncated]
+2025-06-26T01:31:11.687Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T01:31:11.688Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T01:31:11.688Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T01:31:11.688Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T01:31:11.688Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T01:31:11.700Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T01:31:11.714Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T01:55:33.528Z info: [Optional] Redis not initialized.
+2025-06-26T01:55:34.908Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T01:55:35.230Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+... [truncated]
+2025-06-26T01:55:35.231Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T01:55:35.232Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T01:55:35.232Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T01:55:35.232Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T01:55:35.232Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T01:55:35.254Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T01:55:35.272Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T03:15:23.431Z info: [Optional] Redis not initialized.
+2025-06-26T03:15:24.653Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T03:15:24.943Z error: Config file YAML format is invalid: ENOENT: no such file or directory, open '/app/chat.yaml'
+2025-06-26T03:15:24.944Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T03:15:24.944Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T03:15:24.944Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T03:15:24.944Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T03:15:24.944Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T03:15:24.972Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T03:15:24.990Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T03:23:09.631Z info: [Optional] Redis not initialized.
+2025-06-26T03:23:10.681Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T03:23:10.889Z error: Config file YAML format is invalid: ENOENT: no such file or directory, open '/app/chat.yaml'
+2025-06-26T03:23:10.890Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T03:23:10.890Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T03:23:10.890Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T03:23:10.890Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T03:23:10.890Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T03:23:10.899Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T03:23:10.910Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:15:57.734Z info: [Optional] Redis not initialized.
+2025-06-26T17:15:59.017Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:15:59.090Z info: Connected to MongoDB
+2025-06-26T17:15:59.090Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:15:59.192Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:15:59.193Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:15:59.193Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:15:59.193Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:15:59.193Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:15:59.193Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:15:59.193Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:15:59.193Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:15:59.193Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:15:59.194Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:15:59.194Z info: Please replace any default secret values.
+2025-06-26T17:15:59.194Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:15:59.202Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:15:59.211Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:15:59.213Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:00.173Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:00.891Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:00.937Z info: Connected to MongoDB
+2025-06-26T17:16:00.937Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:01.013Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:01.013Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:01.014Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:01.014Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:01.014Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:01.014Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:01.014Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:01.014Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:01.014Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:01.014Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:01.015Z info: Please replace any default secret values.
+2025-06-26T17:16:01.015Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:01.023Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:01.032Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:01.034Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:01.034Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:02.169Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:02.946Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:02.999Z info: Connected to MongoDB
+2025-06-26T17:16:03.000Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:03.078Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:03.078Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:03.079Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:03.079Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:03.079Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:03.079Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:03.079Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:03.079Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:03.079Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:03.079Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:03.079Z info: Please replace any default secret values.
+2025-06-26T17:16:03.080Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:03.089Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:03.099Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:03.101Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:03.101Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:04.306Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:05.059Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:05.109Z info: Connected to MongoDB
+2025-06-26T17:16:05.109Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:05.186Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:05.186Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:05.187Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:05.187Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:05.187Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:05.187Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:05.187Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:05.187Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:05.187Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:05.187Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:05.187Z info: Please replace any default secret values.
+2025-06-26T17:16:05.188Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:05.193Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:05.202Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:05.203Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:05.204Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:06.905Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:07.648Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:07.695Z info: Connected to MongoDB
+2025-06-26T17:16:07.696Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:07.771Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:07.772Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:07.772Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:07.772Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:07.772Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:07.772Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:07.772Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:07.773Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:07.773Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:07.773Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:07.773Z info: Please replace any default secret values.
+2025-06-26T17:16:07.773Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:07.779Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:07.787Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:07.789Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:07.789Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:10.188Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:10.892Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:10.940Z info: Connected to MongoDB
+2025-06-26T17:16:10.941Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:11.010Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:11.011Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:11.011Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:11.011Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:11.011Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:11.011Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:11.011Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:11.012Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:11.012Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:11.012Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:11.012Z info: Please replace any default secret values.
+2025-06-26T17:16:11.012Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:11.022Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:11.033Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:11.034Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:11.034Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:15.101Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:15.976Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:16.027Z info: Connected to MongoDB
+2025-06-26T17:16:16.028Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:16.108Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:16.109Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:16.110Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:16.110Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:16.110Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:16.110Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:16.110Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:16.111Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:16.111Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:16.111Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:16.111Z info: Please replace any default secret values.
+2025-06-26T17:16:16.111Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:16.118Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:16.130Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:16.132Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:16.133Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:23.349Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:24.085Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:24.134Z info: Connected to MongoDB
+2025-06-26T17:16:24.135Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:24.207Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:24.208Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:24.208Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:24.208Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:24.208Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:24.208Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:24.209Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:24.209Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:24.209Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:24.209Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:24.209Z info: Please replace any default secret values.
+2025-06-26T17:16:24.209Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:24.218Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:24.229Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:24.230Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:24.231Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:16:37.822Z info: [Optional] Redis not initialized.
+2025-06-26T17:16:38.539Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:16:38.586Z info: Connected to MongoDB
+2025-06-26T17:16:38.586Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:16:38.660Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:16:38.661Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:38.661Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:38.661Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:16:38.661Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:38.661Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:16:38.661Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:16:38.662Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:16:38.662Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:16:38.662Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:16:38.662Z info: Please replace any default secret values.
+2025-06-26T17:16:38.662Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:16:38.672Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:16:38.681Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:16:38.682Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:16:38.683Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:22:59.072Z info: [Optional] Redis not initialized.
+2025-06-26T17:23:00.375Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:23:00.449Z info: Connected to MongoDB
+2025-06-26T17:23:00.450Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:23:00.530Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:23:00.530Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:23:00.531Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:23:00.531Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:23:00.531Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:23:00.531Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:23:00.531Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:23:00.531Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:23:00.531Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:23:00.532Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:23:00.532Z info: Please replace any default secret values.
+2025-06-26T17:23:00.532Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:23:00.547Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:23:00.566Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:23:00.567Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:23:00.568Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:23:00.575Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T17:23:00.707Z debug: [MEILI_SYNC:meili-index-sync] Creating initial flow state
+2025-06-26T17:23:00.717Z info: [indexSync] Messages are fully synced: 0/0
+2025-06-26T17:23:00.720Z info: [indexSync] Conversations are fully synced: 0/0
+2025-06-26T17:23:00.721Z debug: [indexSync] No sync was needed
+2025-06-26T17:27:30.738Z error: invalid signature
+2025-06-26T17:30:14.574Z info: Cleaning up FlowStateManager intervals...
+2025-06-26T17:31:18.074Z info: [Optional] Redis not initialized.
+2025-06-26T17:31:18.922Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:31:18.976Z info: Connected to MongoDB
+2025-06-26T17:31:18.976Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:31:19.064Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:31:19.065Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:31:19.065Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:31:19.065Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:31:19.065Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:31:19.065Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:31:19.065Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:31:19.065Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:31:19.066Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:31:19.066Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:31:19.066Z info: Please replace any default secret values.
+2025-06-26T17:31:19.066Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:31:19.076Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:31:19.085Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:31:19.086Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:31:19.086Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:31:19.091Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T17:31:19.229Z debug: [MEILI_SYNC:meili-index-sync] Creating initial flow state
+2025-06-26T17:31:19.237Z info: [indexSync] Messages are fully synced: 0/0
+2025-06-26T17:31:19.240Z info: [indexSync] Conversations are fully synced: 0/0
+2025-06-26T17:31:19.241Z debug: [indexSync] No sync was needed
+2025-06-26T17:33:25.074Z info: Cleaning up FlowStateManager intervals...
+2025-06-26T17:33:26.423Z info: [Optional] Redis not initialized.
+2025-06-26T17:33:27.757Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T17:33:27.828Z info: Connected to MongoDB
+2025-06-26T17:33:27.828Z info: [indexSync] Starting index synchronization check...
+2025-06-26T17:33:27.923Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "agents"
+      ],
+     ... [truncated]
+2025-06-26T17:33:27.924Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T17:33:27.924Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T17:33:27.924Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T17:33:27.924Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T17:33:27.924Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T17:33:27.925Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T17:33:27.925Z warn: Default value for CREDS_IV is being used.
+2025-06-26T17:33:27.925Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T17:33:27.925Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T17:33:27.925Z info: Please replace any default secret values.
+2025-06-26T17:33:27.925Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T17:33:27.940Z info: RAG API is running and reachable at http://rag_api:8000.
+2025-06-26T17:33:27.949Z info: No changes needed for 'USER' role permissions
+2025-06-26T17:33:27.951Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T17:33:27.951Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T17:33:27.960Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T17:33:28.083Z debug: [MEILI_SYNC:meili-index-sync] Creating initial flow state
+2025-06-26T17:33:28.107Z info: [indexSync] Messages are fully synced: 0/0
+2025-06-26T17:33:28.109Z info: [indexSync] Conversations are fully synced: 0/0
+2025-06-26T17:33:28.109Z debug: [indexSync] No sync was needed
+2025-06-26T17:34:31.074Z info: [Optional] Redis not initialized.
+2025-06-26T17:34:50.129Z info: [Optional] Redis not initialized.
+2025-06-26T17:35:18.173Z error: invalid signature
+2025-06-26T17:35:50.795Z info: [Login] [Login successful] [Username: wow@this.com] [Request-IP: 172.19.0.1]
+2025-06-26T17:51:00.792Z info: Cleaning up FlowStateManager intervals...
+2025-06-26T22:07:32.432Z info: [Optional] Redis not initialized.
+2025-06-26T22:07:33.299Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T22:07:33.357Z info: Connected to MongoDB
+2025-06-26T22:07:33.450Z error: Config file YAML format is invalid: ENOENT: no such file or directory, open '/app/chat.yaml'
+2025-06-26T22:07:33.450Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T22:07:33.451Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T22:07:33.451Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T22:07:33.451Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T22:07:33.451Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T22:07:33.451Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T22:07:33.452Z warn: Default value for CREDS_IV is being used.
+2025-06-26T22:07:33.452Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T22:07:33.452Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T22:07:33.452Z info: Please replace any default secret values.
+2025-06-26T22:07:33.452Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T22:07:33.455Z warn: RAG API is either not running or not reachable at http://rag_api:8000, you may experience errors with file uploads.
+2025-06-26T22:07:33.466Z info: No changes needed for 'USER' role permissions
+2025-06-26T22:07:33.468Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T22:07:33.468Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T22:07:33.474Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T22:10:46.962Z debug: [indexSync] Clearing sync timeouts before exiting...
+2025-06-26T22:16:12.989Z info: [Optional] Redis not initialized.
+2025-06-26T22:16:14.250Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T22:16:14.326Z info: Connected to MongoDB
+2025-06-26T22:16:14.437Z error: Config file YAML format is invalid: ENOENT: no such file or directory, open '/app/chat.yaml'
+2025-06-26T22:16:14.437Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T22:16:14.437Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T22:16:14.438Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T22:16:14.438Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T22:16:14.438Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T22:16:14.438Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T22:16:14.439Z warn: Default value for CREDS_IV is being used.
+2025-06-26T22:16:14.439Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T22:16:14.439Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T22:16:14.439Z info: Please replace any default secret values.
+2025-06-26T22:16:14.439Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T22:16:14.447Z warn: RAG API is either not running or not reachable at http://rag_api:8000, you may experience errors with file uploads.
+2025-06-26T22:16:14.468Z info: No changes needed for 'USER' role permissions
+2025-06-26T22:16:14.471Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T22:16:14.470Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T22:16:14.477Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T22:23:49.648Z debug: [indexSync] Clearing sync timeouts before exiting...
+2025-06-26T22:23:50.616Z info: [Optional] Redis not initialized.
+2025-06-26T22:23:51.460Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T22:23:51.517Z info: Connected to MongoDB
+2025-06-26T22:23:51.593Z error: Config file YAML format is invalid: ENOENT: no such file or directory, open '/app/chat.yaml'
+2025-06-26T22:23:51.594Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T22:23:51.594Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T22:23:51.594Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T22:23:51.594Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T22:23:51.594Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T22:23:51.594Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T22:23:51.595Z warn: Default value for CREDS_IV is being used.
+2025-06-26T22:23:51.595Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T22:23:51.595Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T22:23:51.595Z info: Please replace any default secret values.
+2025-06-26T22:23:51.595Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T22:23:51.603Z warn: RAG API is either not running or not reachable at http://rag_api:8000, you may experience errors with file uploads.
+2025-06-26T22:23:51.615Z info: No changes needed for 'USER' role permissions
+2025-06-26T22:23:51.616Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T22:23:51.617Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T22:23:51.621Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T22:30:21.762Z debug: [indexSync] Clearing sync timeouts before exiting...
+2025-06-26T22:30:22.649Z info: [Optional] Redis not initialized.
+2025-06-26T22:30:23.511Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T22:30:23.574Z info: Connected to MongoDB
+2025-06-26T22:30:23.713Z error: Config file YAML format is invalid: ENOENT: no such file or directory, open '/app/chat.yaml'
+2025-06-26T22:30:23.714Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T22:30:23.714Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T22:30:23.714Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T22:30:23.714Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T22:30:23.714Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T22:30:23.714Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T22:30:23.715Z warn: Default value for CREDS_IV is being used.
+2025-06-26T22:30:23.715Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T22:30:23.715Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T22:30:23.715Z info: Please replace any default secret values.
+2025-06-26T22:30:23.715Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T22:30:23.721Z warn: RAG API is either not running or not reachable at http://rag_api:8000, you may experience errors with file uploads.
+2025-06-26T22:30:23.734Z info: No changes needed for 'USER' role permissions
+2025-06-26T22:30:23.736Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T22:30:23.736Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T22:30:23.742Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T22:30:36.687Z error: Passport Local Strategy - User Not Found
+2025-06-26T22:30:36.687Z debug: [requireLocalAuth] Error: No user
+2025-06-26T22:30:36.687Z error: [Login] [Login failed] [Username: woo@this.com] [Request-IP: 172.19.0.1]
+2025-06-26T22:31:50.134Z error: Passport Local Strategy - User Not Found
+2025-06-26T22:31:50.135Z debug: [requireLocalAuth] Error: No user
+2025-06-26T22:31:50.134Z error: [Login] [Login failed] [Username: wow@this.com] [Request-IP: 172.19.0.1]
+2025-06-26T22:31:52.577Z error: Passport Local Strategy - User Not Found
+2025-06-26T22:31:52.578Z debug: [requireLocalAuth] Error: No user
+2025-06-26T22:31:52.577Z error: [Login] [Login failed] [Username: wow@this.com] [Request-IP: 172.19.0.1]
+2025-06-26T22:31:55.269Z error: Passport Local Strategy - User Not Found
+2025-06-26T22:31:55.269Z debug: [requireLocalAuth] Error: No user
+2025-06-26T22:31:55.269Z error: [Login] [Login failed] [Username: wow@this.com] [Request-IP: 172.19.0.1]
+2025-06-26T22:31:56.391Z error: Passport Local Strategy - User Not Found
+2025-06-26T22:31:56.391Z debug: [requireLocalAuth] Error: No user
+2025-06-26T22:31:56.391Z error: [Login] [Login failed] [Username: wow@this.com] [Request-IP: 172.19.0.1]
+2025-06-26T22:32:48.398Z info: [Optional] Redis not initialized.
+2025-06-26T22:33:46.707Z info: [Optional] Redis not initialized.
+2025-06-26T22:48:11.975Z info: [Optional] Redis not initialized.
+2025-06-26T22:55:48.192Z info: [Optional] Redis not initialized.
+2025-06-26T22:56:00.491Z info: [Login] [Login successful] [Username: wow@this.com] [Request-IP: 172.19.0.1]
+2025-06-26T22:56:46.061Z debug: [indexSync] Clearing sync timeouts before exiting...
+2025-06-26T22:56:47.070Z info: [Optional] Redis not initialized.
+2025-06-26T22:56:47.890Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T22:56:47.946Z info: Connected to MongoDB
+2025-06-26T22:56:48.039Z error: Config file YAML format is invalid: ENOENT: no such file or directory, open '/app/chat.yaml'
+2025-06-26T22:56:48.040Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T22:56:48.040Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T22:56:48.040Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T22:56:48.040Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T22:56:48.040Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T22:56:48.040Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T22:56:48.041Z warn: Default value for CREDS_IV is being used.
+2025-06-26T22:56:48.041Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T22:56:48.041Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T22:56:48.041Z info: Please replace any default secret values.
+2025-06-26T22:56:48.041Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T22:56:48.044Z warn: RAG API is either not running or not reachable at http://rag_api:8000, you may experience errors with file uploads.
+2025-06-26T22:56:48.053Z info: No changes needed for 'USER' role permissions
+2025-06-26T22:56:48.055Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T22:56:48.055Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T22:56:48.060Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T22:57:01.902Z debug: [indexSync] Clearing sync timeouts before exiting...
+2025-06-26T22:57:03.387Z info: [Optional] Redis not initialized.
+2025-06-26T22:57:04.262Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T22:57:04.316Z info: Connected to MongoDB
+2025-06-26T22:57:04.409Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "invalid_type",
+      "expected": "array",
+      "received": "undefi... [truncated]
+2025-06-26T22:57:04.410Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T22:57:04.411Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T22:57:04.411Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T22:57:04.411Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T22:57:04.411Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T22:57:04.411Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T22:57:04.411Z warn: Default value for CREDS_IV is being used.
+2025-06-26T22:57:04.412Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T22:57:04.412Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T22:57:04.412Z info: Please replace any default secret values.
+2025-06-26T22:57:04.412Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T22:57:04.420Z warn: RAG API is either not running or not reachable at http://rag_api:8000, you may experience errors with file uploads.
+2025-06-26T22:57:04.430Z info: No changes needed for 'USER' role permissions
+2025-06-26T22:57:04.432Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T22:57:04.432Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T22:57:04.440Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T22:57:24.981Z info: [Optional] Redis not initialized.
+2025-06-26T23:04:27.223Z info: [Optional] Redis not initialized.
+2025-06-26T23:10:48.312Z info: [Optional] Redis not initialized.
+2025-06-26T23:12:04.998Z debug: [indexSync] Clearing sync timeouts before exiting...
+2025-06-26T23:12:05.774Z info: [Optional] Redis not initialized.
+2025-06-26T23:12:06.535Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T23:12:06.588Z info: Connected to MongoDB
+2025-06-26T23:12:06.672Z error: Invalid custom config file at /app/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "invalid_type",
+      "expected": "array",
+      "received": "undefi... [truncated]
+2025-06-26T23:12:06.673Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T23:12:06.673Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T23:12:06.673Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T23:12:06.673Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T23:12:06.673Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T23:12:06.674Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T23:12:06.674Z warn: Default value for CREDS_IV is being used.
+2025-06-26T23:12:06.674Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T23:12:06.674Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T23:12:06.674Z info: Please replace any default secret values.
+2025-06-26T23:12:06.675Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T23:12:11.692Z warn: RAG API is either not running or not reachable at http://rag_api:8000, you may experience errors with file uploads.
+2025-06-26T23:12:11.709Z info: No changes needed for 'USER' role permissions
+2025-06-26T23:12:11.711Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T23:12:11.711Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T23:12:11.720Z info: Server listening on all interfaces at port 3080. Use http://localhost:3080 to access it
+2025-06-26T23:18:04.488Z info: [Optional] Redis not initialized.
+2025-06-26T23:39:31.693Z info: [Optional] Redis not initialized.
+2025-06-26T23:40:54.863Z debug: [indexSync] Clearing sync timeouts before exiting...

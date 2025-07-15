@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="185" failures="0" errors="0" time="16.638">
+  <testsuite name="sanitizeModelName" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="0.98" tests="20">
+    <testcase classname="sanitizeModelName removes periods from the model name" name="sanitizeModelName removes periods from the model name" time="0.003">
+    </testcase>
+    <testcase classname="sanitizeModelName leaves model name unchanged if no periods are present" name="sanitizeModelName leaves model name unchanged if no periods are present" time="0">
+    </testcase>
+    <testcase classname="genAzureEndpoint generates correct endpoint URL" name="genAzureEndpoint generates correct endpoint URL" time="0">
+    </testcase>
+    <testcase classname="genAzureChatCompletion prefers model name over deployment name when both are provided and feature enabled" name="genAzureChatCompletion prefers model name over deployment name when both are provided and feature enabled" time="0.001">
+    </testcase>
+    <testcase classname="genAzureChatCompletion uses deployment name when model name is not provided" name="genAzureChatCompletion uses deployment name when model name is not provided" time="0">
+    </testcase>
+    <testcase classname="genAzureChatCompletion uses model name when deployment name is not provided and feature enabled" name="genAzureChatCompletion uses model name when deployment name is not provided and feature enabled" time="0">
+    </testcase>
+    <testcase classname="genAzureChatCompletion throws error if neither deployment name nor model name is provided" name="genAzureChatCompletion throws error if neither deployment name nor model name is provided" time="0.009">
+    </testcase>
+    <testcase classname="genAzureChatCompletion ignores model name and uses deployment name when feature is disabled" name="genAzureChatCompletion ignores model name and uses deployment name when feature is disabled" time="0">
+    </testcase>
+    <testcase classname="genAzureChatCompletion sanitizes model name when used in URL" name="genAzureChatCompletion sanitizes model name when used in URL" time="0">
+    </testcase>
+    <testcase classname="genAzureChatCompletion updates client with sanitized model name when provided and feature enabled" name="genAzureChatCompletion updates client with sanitized model name when provided and feature enabled" time="0">
+    </testcase>
+    <testcase classname="genAzureChatCompletion does not update client when model name is not provided" name="genAzureChatCompletion does not update client when model name is not provided" time="0">
+    </testcase>
+    <testcase classname="genAzureChatCompletion does not update client when feature is disabled" name="genAzureChatCompletion does not update client when feature is disabled" time="0.001">
+    </testcase>
+    <testcase classname="getAzureCredentials retrieves Azure OpenAI API credentials from environment variables" name="getAzureCredentials retrieves Azure OpenAI API credentials from environment variables" time="0">
+    </testcase>
+    <testcase classname="constructAzureURL replaces both placeholders when both properties are provided" name="constructAzureURL replaces both placeholders when both properties are provided" time="0">
+    </testcase>
+    <testcase classname="constructAzureURL replaces only INSTANCE_NAME when only azureOpenAIApiInstanceName is provided" name="constructAzureURL replaces only INSTANCE_NAME when only azureOpenAIApiInstanceName is provided" time="0">
+    </testcase>
+    <testcase classname="constructAzureURL replaces only DEPLOYMENT_NAME when only azureOpenAIApiDeploymentName is provided" name="constructAzureURL replaces only DEPLOYMENT_NAME when only azureOpenAIApiDeploymentName is provided" time="0">
+    </testcase>
+    <testcase classname="constructAzureURL does not replace any placeholders when azure object is empty" name="constructAzureURL does not replace any placeholders when azure object is empty" time="0">
+    </testcase>
+    <testcase classname="constructAzureURL returns baseURL as is when `azureOptions` object is not provided" name="constructAzureURL returns baseURL as is when `azureOptions` object is not provided" time="0">
+    </testcase>
+    <testcase classname="constructAzureURL returns baseURL as is when no placeholders are set" name="constructAzureURL returns baseURL as is when no placeholders are set" time="0.001">
+    </testcase>
+    <testcase classname="constructAzureURL returns regular Azure OpenAI baseURL with placeholders set" name="constructAzureURL returns regular Azure OpenAI baseURL with placeholders set" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="sanitizeFilename" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:16" time="0.114" tests="13">
+    <testcase classname="sanitizeFilename removes directory components (1/2)" name="sanitizeFilename removes directory components (1/2)" time="0.001">
+    </testcase>
+    <testcase classname="sanitizeFilename removes directory components (2/2)" name="sanitizeFilename removes directory components (2/2)" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename replaces non-alphanumeric characters" name="sanitizeFilename replaces non-alphanumeric characters" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename preserves dots and hyphens" name="sanitizeFilename preserves dots and hyphens" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename prepends underscore to filenames starting with a dot" name="sanitizeFilename prepends underscore to filenames starting with a dot" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename truncates long filenames" name="sanitizeFilename truncates long filenames" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename handles filenames with no extension" name="sanitizeFilename handles filenames with no extension" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename handles empty input" name="sanitizeFilename handles empty input" time="0.001">
+    </testcase>
+    <testcase classname="sanitizeFilename handles input with only special characters" name="sanitizeFilename handles input with only special characters" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename with real crypto truncates long filenames with real crypto" name="sanitizeFilename with real crypto truncates long filenames with real crypto" time="0.004">
+    </testcase>
+    <testcase classname="sanitizeFilename with real crypto handles filenames with no extension with real crypto" name="sanitizeFilename with real crypto handles filenames with no extension with real crypto" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename with real crypto generates unique suffixes for identical long filenames" name="sanitizeFilename with real crypto generates unique suffixes for identical long filenames" time="0">
+    </testcase>
+    <testcase classname="sanitizeFilename with real crypto real crypto produces valid hex strings" name="sanitizeFilename with real crypto real crypto produces valid hex strings" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="Environment Variable Extraction (MCP)" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="1.542" tests="30">
+    <testcase classname="Environment Variable Extraction (MCP) StdioOptionsSchema should transform environment variables in the env field" name="Environment Variable Extraction (MCP) StdioOptionsSchema should transform environment variables in the env field" time="0.004">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) StdioOptionsSchema should handle undefined env field" name="Environment Variable Extraction (MCP) StdioOptionsSchema should handle undefined env field" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should validate a valid streamable-http configuration" name="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should validate a valid streamable-http configuration" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should reject websocket URLs" name="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should reject websocket URLs" time="0.027">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should reject secure websocket URLs" name="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should reject secure websocket URLs" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should require type field to be set explicitly" name="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should require type field to be set explicitly" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should validate headers as record of strings" name="Environment Variable Extraction (MCP) StreamableHTTPOptionsSchema should validate headers as record of strings" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should create a deep clone of the input object" name="Environment Variable Extraction (MCP) processMCPEnv should create a deep clone of the input object" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process environment variables in env field" name="Environment Variable Extraction (MCP) processMCPEnv should process environment variables in env field" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process user ID in headers field" name="Environment Variable Extraction (MCP) processMCPEnv should process user ID in headers field" time="0.011">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should handle null or undefined input" name="Environment Variable Extraction (MCP) processMCPEnv should handle null or undefined input" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should not modify objects without env or headers" name="Environment Variable Extraction (MCP) processMCPEnv should not modify objects without env or headers" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should ensure different users with same starting config get separate values" name="Environment Variable Extraction (MCP) processMCPEnv should ensure different users with same starting config get separate values" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process headers in streamable-http options" name="Environment Variable Extraction (MCP) processMCPEnv should process headers in streamable-http options" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should maintain streamable-http type in processed options" name="Environment Variable Extraction (MCP) processMCPEnv should maintain streamable-http type in processed options" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process dynamic user fields in headers" name="Environment Variable Extraction (MCP) processMCPEnv should process dynamic user fields in headers" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should handle missing user fields gracefully" name="Environment Variable Extraction (MCP) processMCPEnv should handle missing user fields gracefully" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process user fields in env variables" name="Environment Variable Extraction (MCP) processMCPEnv should process user fields in env variables" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process user fields in URL" name="Environment Variable Extraction (MCP) processMCPEnv should process user fields in URL" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should handle boolean user fields" name="Environment Variable Extraction (MCP) processMCPEnv should handle boolean user fields" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should not process sensitive fields like password" name="Environment Variable Extraction (MCP) processMCPEnv should not process sensitive fields like password" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should handle multiple occurrences of the same placeholder" name="Environment Variable Extraction (MCP) processMCPEnv should handle multiple occurrences of the same placeholder" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should support both id and _id properties for CHAT_USER_ID" name="Environment Variable Extraction (MCP) processMCPEnv should support both id and _id properties for CHAT_USER_ID" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process customUserVars in env field" name="Environment Variable Extraction (MCP) processMCPEnv should process customUserVars in env field" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process customUserVars in headers field" name="Environment Variable Extraction (MCP) processMCPEnv should process customUserVars in headers field" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should process customUserVars in URL field" name="Environment Variable Extraction (MCP) processMCPEnv should process customUserVars in URL field" time="0">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should prioritize customUserVars over user fields and system env vars if placeholders are the same (though not recommended)" name="Environment Variable Extraction (MCP) processMCPEnv should prioritize customUserVars over user fields and system env vars if placeholders are the same (though not recommended)" time="0.009">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should handle customUserVars with no matching placeholders" name="Environment Variable Extraction (MCP) processMCPEnv should handle customUserVars with no matching placeholders" time="0.001">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should handle placeholders with no matching customUserVars (falling back to user/system vars)" name="Environment Variable Extraction (MCP) processMCPEnv should handle placeholders with no matching customUserVars (falling back to user/system vars)" time="0.002">
+    </testcase>
+    <testcase classname="Environment Variable Extraction (MCP) processMCPEnv should correctly process a mix of all variable types" name="Environment Variable Extraction (MCP) processMCPEnv should correctly process a mix of all variable types" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="Tokenizer" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="1.517" tests="9">
+    <testcase classname="Tokenizer should be a singleton (same instance)" name="Tokenizer should be a singleton (same instance)" time="0.007">
+    </testcase>
+    <testcase classname="Tokenizer getTokenizer should create an encoder for an explicit model name (e.g., &quot;gpt-4&quot;)" name="Tokenizer getTokenizer should create an encoder for an explicit model name (e.g., &quot;gpt-4&quot;)" time="0.12">
+    </testcase>
+    <testcase classname="Tokenizer getTokenizer should create an encoder for a known encoding (e.g., &quot;cl100k_base&quot;)" name="Tokenizer getTokenizer should create an encoder for a known encoding (e.g., &quot;cl100k_base&quot;)" time="0.036">
+    </testcase>
+    <testcase classname="Tokenizer getTokenizer should return cached tokenizer if previously fetched" name="Tokenizer getTokenizer should return cached tokenizer if previously fetched" time="0">
+    </testcase>
+    <testcase classname="Tokenizer freeAndResetAllEncoders should free all encoders and reset tokenizerCallsCount to 1" name="Tokenizer freeAndResetAllEncoders should free all encoders and reset tokenizerCallsCount to 1" time="0.039">
+    </testcase>
+    <testcase classname="Tokenizer freeAndResetAllEncoders should catch and log errors if freeing fails" name="Tokenizer freeAndResetAllEncoders should catch and log errors if freeing fails" time="0.001">
+    </testcase>
+    <testcase classname="Tokenizer getTokenCount should return the number of tokens in the given text" name="Tokenizer getTokenCount should return the number of tokens in the given text" time="0.05">
+    </testcase>
+    <testcase classname="Tokenizer getTokenCount should reset encoders if an error is thrown" name="Tokenizer getTokenCount should reset encoders if an error is thrown" time="0.202">
+    </testcase>
+    <testcase classname="Tokenizer getTokenCount should reset tokenizers after 25 calls" name="Tokenizer getTokenCount should reset tokenizers after 25 calls" time="0.137">
+    </testcase>
+  </testsuite>
+  <testsuite name="extractChatParams" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="1.577" tests="10">
+    <testcase classname="extractChatParams should return defaults when options is undefined" name="extractChatParams should return defaults when options is undefined" time="0.003">
+    </testcase>
+    <testcase classname="extractChatParams should return defaults when options is null" name="extractChatParams should return defaults when options is null" time="0">
+    </testcase>
+    <testcase classname="extractChatParams should extract all Chat params and leave model options" name="extractChatParams should extract all Chat params and leave model options" time="0">
+    </testcase>
+    <testcase classname="extractChatParams should handle null values for Chat params" name="extractChatParams should handle null values for Chat params" time="0">
+    </testcase>
+    <testcase classname="extractChatParams should use default for resendFiles when not provided" name="extractChatParams should use default for resendFiles when not provided" time="0.001">
+    </testcase>
+    <testcase classname="extractChatParams should handle empty options object" name="extractChatParams should handle empty options object" time="0">
+    </testcase>
+    <testcase classname="extractChatParams should only extract known Chat params" name="extractChatParams should only extract known Chat params" time="0">
+    </testcase>
+    <testcase classname="extractChatParams should not mutate the original options object" name="extractChatParams should not mutate the original options object" time="0">
+    </testcase>
+    <testcase classname="extractChatParams should handle undefined values for optional Chat params" name="extractChatParams should handle undefined values for optional Chat params" time="0.001">
+    </testcase>
+    <testcase classname="extractChatParams should handle mixed null and undefined values" name="extractChatParams should handle mixed null and undefined values" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="isEnabled" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:16" time="0.041" tests="12">
+    <testcase classname="isEnabled should return true when input is &quot;true&quot;" name="isEnabled should return true when input is &quot;true&quot;" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return true when input is &quot;TRUE&quot;" name="isEnabled should return true when input is &quot;TRUE&quot;" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return true when input is true" name="isEnabled should return true when input is true" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is &quot;false&quot;" name="isEnabled should return false when input is &quot;false&quot;" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is false" name="isEnabled should return false when input is false" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is null" name="isEnabled should return false when input is null" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is undefined" name="isEnabled should return false when input is undefined" time="0.004">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is an empty string" name="isEnabled should return false when input is an empty string" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is a whitespace string" name="isEnabled should return false when input is a whitespace string" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is a number" name="isEnabled should return false when input is a number" time="0.001">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is an object" name="isEnabled should return false when input is an object" time="0">
+    </testcase>
+    <testcase classname="isEnabled should return false when input is an array" name="isEnabled should return false when input is an array" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="resolveHeaders" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="1.599" tests="20">
+    <testcase classname="resolveHeaders should return empty object when headers is undefined" name="resolveHeaders should return empty object when headers is undefined" time="0.002">
+    </testcase>
+    <testcase classname="resolveHeaders should return empty object when headers is null" name="resolveHeaders should return empty object when headers is null" time="0.002">
+    </testcase>
+    <testcase classname="resolveHeaders should return empty object when headers is empty" name="resolveHeaders should return empty object when headers is empty" time="0.001">
+    </testcase>
+    <testcase classname="resolveHeaders should process environment variables in headers" name="resolveHeaders should process environment variables in headers" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should process user ID placeholder when user has id" name="resolveHeaders should process user ID placeholder when user has id" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should not process user ID placeholder when user is undefined" name="resolveHeaders should not process user ID placeholder when user is undefined" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should not process user ID placeholder when user has no id" name="resolveHeaders should not process user ID placeholder when user has no id" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should process full user object placeholders" name="resolveHeaders should process full user object placeholders" time="0.002">
+    </testcase>
+    <testcase classname="resolveHeaders should handle missing user fields gracefully" name="resolveHeaders should handle missing user fields gracefully" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should process custom user variables" name="resolveHeaders should process custom user variables" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should prioritize custom user variables over user fields" name="resolveHeaders should prioritize custom user variables over user fields" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should handle boolean user fields" name="resolveHeaders should handle boolean user fields" time="0.001">
+    </testcase>
+    <testcase classname="resolveHeaders should handle multiple occurrences of the same placeholder" name="resolveHeaders should handle multiple occurrences of the same placeholder" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should handle mixed variable types in the same headers object" name="resolveHeaders should handle mixed variable types in the same headers object" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should not modify the original headers object" name="resolveHeaders should not modify the original headers object" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should handle special characters in custom variable names" name="resolveHeaders should handle special characters in custom variable names" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should replace all allowed user field placeholders" name="resolveHeaders should replace all allowed user field placeholders" time="0.001">
+    </testcase>
+    <testcase classname="resolveHeaders should handle multiple placeholders in one value" name="resolveHeaders should handle multiple placeholders in one value" time="0.001">
+    </testcase>
+    <testcase classname="resolveHeaders should leave unknown placeholders unchanged" name="resolveHeaders should leave unknown placeholders unchanged" time="0">
+    </testcase>
+    <testcase classname="resolveHeaders should handle a mix of all types" name="resolveHeaders should handle a mix of all types" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="primeResources" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="1.643" tests="23">
+    <testcase classname="primeResources when OCR is enabled and tool_resources has OCR file_ids should fetch OCR files and include them in attachments" name="primeResources when OCR is enabled and tool_resources has OCR file_ids should fetch OCR files and include them in attachments" time="0.004">
+    </testcase>
+    <testcase classname="primeResources when OCR is disabled should not fetch OCR files even if tool_resources has OCR file_ids" name="primeResources when OCR is disabled should not fetch OCR files even if tool_resources has OCR file_ids" time="0.001">
+    </testcase>
+    <testcase classname="primeResources when attachments are provided should process files with fileIdentifier as execute_code resources" name="primeResources when attachments are provided should process files with fileIdentifier as execute_code resources" time="0">
+    </testcase>
+    <testcase classname="primeResources when attachments are provided should process embedded files as file_search resources" name="primeResources when attachments are provided should process embedded files as file_search resources" time="0">
+    </testcase>
+    <testcase classname="primeResources when attachments are provided should process image files in requestFileSet as image_edit resources" name="primeResources when attachments are provided should process image files in requestFileSet as image_edit resources" time="0.001">
+    </testcase>
+    <testcase classname="primeResources when attachments are provided should not process image files not in requestFileSet" name="primeResources when attachments are provided should not process image files not in requestFileSet" time="0">
+    </testcase>
+    <testcase classname="primeResources when attachments are provided should not process image files without height and width" name="primeResources when attachments are provided should not process image files without height and width" time="0">
+    </testcase>
+    <testcase classname="primeResources when attachments are provided should filter out null files from attachments" name="primeResources when attachments are provided should filter out null files from attachments" time="0.001">
+    </testcase>
+    <testcase classname="primeResources when attachments are provided should merge existing tool_resources with new files" name="primeResources when attachments are provided should merge existing tool_resources with new files" time="0">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should include both OCR files and attachment files" name="primeResources when both OCR and attachments are provided should include both OCR files and attachment files" time="0">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should prevent duplicate files when same file exists in OCR and attachments" name="primeResources when both OCR and attachments are provided should prevent duplicate files when same file exists in OCR and attachments" time="0.001">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should still categorize duplicate files for tool_resources" name="primeResources when both OCR and attachments are provided should still categorize duplicate files for tool_resources" time="0.004">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should handle multiple duplicate files" name="primeResources when both OCR and attachments are provided should handle multiple duplicate files" time="0">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should handle files without file_id gracefully" name="primeResources when both OCR and attachments are provided should handle files without file_id gracefully" time="0.001">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should prevent duplicates from existing tool_resources" name="primeResources when both OCR and attachments are provided should prevent duplicates from existing tool_resources" time="0">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should handle duplicates within attachments array" name="primeResources when both OCR and attachments are provided should handle duplicates within attachments array" time="0">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should prevent duplicates across different tool_resource categories" name="primeResources when both OCR and attachments are provided should prevent duplicates across different tool_resource categories" time="0">
+    </testcase>
+    <testcase classname="primeResources when both OCR and attachments are provided should handle complex scenario with OCR, existing tool_resources, and attachments" name="primeResources when both OCR and attachments are provided should handle complex scenario with OCR, existing tool_resources, and attachments" time="0">
+    </testcase>
+    <testcase classname="primeResources error handling should handle errors gracefully and log them" name="primeResources error handling should handle errors gracefully and log them" time="0.001">
+    </testcase>
+    <testcase classname="primeResources error handling should handle promise rejection in attachments" name="primeResources error handling should handle promise rejection in attachments" time="0">
+    </testcase>
+    <testcase classname="primeResources edge cases should handle missing app.locals gracefully" name="primeResources edge cases should handle missing app.locals gracefully" time="0">
+    </testcase>
+    <testcase classname="primeResources edge cases should handle undefined tool_resources" name="primeResources edge cases should handle undefined tool_resources" time="0">
+    </testcase>
+    <testcase classname="primeResources edge cases should handle empty requestFileSet" name="primeResources edge cases should handle empty requestFileSet" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="normalizeServerName" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:16" time="0.109" tests="4">
+    <testcase classname="normalizeServerName should not modify server names that already match the pattern" name="normalizeServerName should not modify server names that already match the pattern" time="0">
+    </testcase>
+    <testcase classname="normalizeServerName should normalize server names with non-ASCII characters" name="normalizeServerName should normalize server names with non-ASCII characters" time="0">
+    </testcase>
+    <testcase classname="normalizeServerName should normalize server names with special characters" name="normalizeServerName should normalize server names with special characters" time="0">
+    </testcase>
+    <testcase classname="normalizeServerName should trim leading and trailing underscores" name="normalizeServerName should trim leading and trailing underscores" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="MistralOCR Service" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="1.662" tests="20">
+    <testcase classname="MistralOCR Service uploadDocumentToMistral should upload a document to Mistral API using file streaming" name="MistralOCR Service uploadDocumentToMistral should upload a document to Mistral API using file streaming" time="0.004">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadDocumentToMistral should handle errors during document upload" name="MistralOCR Service uploadDocumentToMistral should handle errors during document upload" time="0.016">
+    </testcase>
+    <testcase classname="MistralOCR Service getSignedUrl should fetch signed URL from Mistral API" name="MistralOCR Service getSignedUrl should fetch signed URL from Mistral API" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service getSignedUrl should handle errors when fetching signed URL" name="MistralOCR Service getSignedUrl should handle errors when fetching signed URL" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service performOCR should perform OCR using Mistral API (document_url)" name="MistralOCR Service performOCR should perform OCR using Mistral API (document_url)" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service performOCR should perform OCR using Mistral API (image_url)" name="MistralOCR Service performOCR should perform OCR using Mistral API (image_url)" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service performOCR should handle errors during OCR processing" name="MistralOCR Service performOCR should handle errors during OCR processing" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should process OCR for a file with standard configuration" name="MistralOCR Service uploadMistralOCR should process OCR for a file with standard configuration" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should process OCR for an image file and use image_url type" name="MistralOCR Service uploadMistralOCR should process OCR for an image file and use image_url type" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should process variable references in configuration" name="MistralOCR Service uploadMistralOCR should process variable references in configuration" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should fall back to default values when variables are not properly formatted" name="MistralOCR Service uploadMistralOCR should fall back to default values when variables are not properly formatted" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should handle API errors during OCR process" name="MistralOCR Service uploadMistralOCR should handle API errors during OCR process" time="0.008">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should handle single page documents without page numbering" name="MistralOCR Service uploadMistralOCR should handle single page documents without page numbering" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should use literal values in configuration when provided directly" name="MistralOCR Service uploadMistralOCR should use literal values in configuration when provided directly" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR should handle empty configuration values and use defaults" name="MistralOCR Service uploadMistralOCR should handle empty configuration values and use defaults" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded baseURL when only apiKey is an env var" name="MistralOCR Service uploadMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded baseURL when only apiKey is an env var" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded apiKey when only baseURL is an env var" name="MistralOCR Service uploadMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded apiKey when only baseURL is an env var" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadAzureMistralOCR should process OCR using Azure Mistral with base64 encoding" name="MistralOCR Service uploadAzureMistralOCR should process OCR using Azure Mistral with base64 encoding" time="0.001">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadAzureMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded baseURL when only apiKey is an env var" name="MistralOCR Service uploadAzureMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded baseURL when only apiKey is an env var" time="0">
+    </testcase>
+    <testcase classname="MistralOCR Service uploadAzureMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded apiKey when only baseURL is an env var" name="MistralOCR Service uploadAzureMistralOCR Mixed env var and hardcoded configuration should preserve hardcoded apiKey when only baseURL is an env var" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="createAxiosInstance" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:16" time="0.615" tests="6">
+    <testcase classname="createAxiosInstance creates an axios instance without proxy when no proxy env is set" name="createAxiosInstance creates an axios instance without proxy when no proxy env is set" time="0.001">
+    </testcase>
+    <testcase classname="createAxiosInstance configures proxy correctly with hostname and protocol" name="createAxiosInstance configures proxy correctly with hostname and protocol" time="0">
+    </testcase>
+    <testcase classname="createAxiosInstance configures proxy correctly with hostname, protocol and port" name="createAxiosInstance configures proxy correctly with hostname, protocol and port" time="0">
+    </testcase>
+    <testcase classname="createAxiosInstance handles proxy URLs with authentication" name="createAxiosInstance handles proxy URLs with authentication" time="0.001">
+    </testcase>
+    <testcase classname="createAxiosInstance throws error when proxy URL is invalid" name="createAxiosInstance throws error when proxy URL is invalid" time="0.007">
+    </testcase>
+    <testcase classname="createAxiosInstance handles edge case proxy URLs correctly" name="createAxiosInstance handles edge case proxy URLs correctly" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="tempChatRetention" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="1.832" tests="12">
+    <testcase classname="tempChatRetention getTempChatRetentionHours should return default retention hours when no config or env var is set" name="tempChatRetention getTempChatRetentionHours should return default retention hours when no config or env var is set" time="0.003">
+    </testcase>
+    <testcase classname="tempChatRetention getTempChatRetentionHours should use environment variable when set" name="tempChatRetention getTempChatRetentionHours should use environment variable when set" time="0">
+    </testcase>
+    <testcase classname="tempChatRetention getTempChatRetentionHours should use config value when set" name="tempChatRetention getTempChatRetentionHours should use config value when set" time="0">
+    </testcase>
+    <testcase classname="tempChatRetention getTempChatRetentionHours should prioritize config over environment variable" name="tempChatRetention getTempChatRetentionHours should prioritize config over environment variable" time="0.001">
+    </testcase>
+    <testcase classname="tempChatRetention getTempChatRetentionHours should enforce minimum retention period" name="tempChatRetention getTempChatRetentionHours should enforce minimum retention period" time="0.003">
+    </testcase>
+    <testcase classname="tempChatRetention getTempChatRetentionHours should enforce maximum retention period" name="tempChatRetention getTempChatRetentionHours should enforce maximum retention period" time="0.001">
+    </testcase>
+    <testcase classname="tempChatRetention getTempChatRetentionHours should handle invalid environment variable" name="tempChatRetention getTempChatRetentionHours should handle invalid environment variable" time="0">
+    </testcase>
+    <testcase classname="tempChatRetention getTempChatRetentionHours should handle invalid config value" name="tempChatRetention getTempChatRetentionHours should handle invalid config value" time="0.001">
+    </testcase>
+    <testcase classname="tempChatRetention createTempChatExpirationDate should create expiration date with default retention period" name="tempChatRetention createTempChatExpirationDate should create expiration date with default retention period" time="0">
+    </testcase>
+    <testcase classname="tempChatRetention createTempChatExpirationDate should create expiration date with custom retention period" name="tempChatRetention createTempChatExpirationDate should create expiration date with custom retention period" time="0.001">
+    </testcase>
+    <testcase classname="tempChatRetention createTempChatExpirationDate should return a Date object" name="tempChatRetention createTempChatExpirationDate should return a Date object" time="0">
+    </testcase>
+    <testcase classname="tempChatRetention createTempChatExpirationDate should return a future date" name="tempChatRetention createTempChatExpirationDate should return a future date" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="FlowStateManager" errors="0" failures="0" skipped="0" timestamp="2025-06-26T19:28:15" time="15.407" tests="6">
+    <testcase classname="FlowStateManager Concurrency Tests should handle concurrent flow creation and return same result" name="FlowStateManager Concurrency Tests should handle concurrent flow creation and return same result" time="2.258">
+    </testcase>
+    <testcase classname="FlowStateManager Concurrency Tests should handle flow timeout correctly" name="FlowStateManager Concurrency Tests should handle flow timeout correctly" time="2.272">
+    </testcase>
+    <testcase classname="FlowStateManager Concurrency Tests should maintain flow state consistency under high concurrency" name="FlowStateManager Concurrency Tests should maintain flow state consistency under high concurrency" time="2.254">
+    </testcase>
+    <testcase classname="FlowStateManager Concurrency Tests should handle race conditions in flow completion" name="FlowStateManager Concurrency Tests should handle race conditions in flow completion" time="2.256">
+    </testcase>
+    <testcase classname="FlowStateManager Concurrency Tests should handle concurrent flow monitoring" name="FlowStateManager Concurrency Tests should handle concurrent flow monitoring" time="2.254">
+    </testcase>
+    <testcase classname="FlowStateManager Concurrency Tests should handle concurrent success and failure attempts" name="FlowStateManager Concurrency Tests should handle concurrent success and failure attempts" time="2.255">
+    </testcase>
+  </testsuite>
+</testsuites>

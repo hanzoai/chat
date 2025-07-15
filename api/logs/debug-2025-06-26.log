@@ -1,0 +1,115 @@
+2025-06-26T15:10:34.209Z info: [Optional] Redis not initialized.
+2025-06-26T15:10:35.166Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T16:21:35.171Z info: [Optional] Redis not initialized.
+2025-06-26T16:21:36.574Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T16:22:06.626Z error: connect ECONNREFUSED 127.0.0.1:27017
+2025-06-26T16:23:03.561Z info: [Optional] Redis not initialized.
+2025-06-26T16:23:04.255Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T16:23:04.300Z info: Connected to MongoDB
+2025-06-26T16:23:04.301Z info: [indexSync] Starting index synchronization check...
+2025-06-26T16:23:04.420Z error: Invalid custom config file at /Users/z/work/hanzo/chat/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "ag... [truncated]
+2025-06-26T16:23:04.420Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T16:23:04.420Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T16:23:04.420Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T16:23:04.421Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T16:23:04.421Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T16:23:04.421Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T16:23:04.421Z warn: Default value for CREDS_IV is being used.
+2025-06-26T16:23:04.421Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T16:23:04.421Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T16:23:04.421Z info: Please replace any default secret values.
+2025-06-26T16:23:04.421Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T16:23:04.421Z warn: RAG API is either not running or not reachable at undefined, you may experience errors with file uploads.
+2025-06-26T16:23:04.429Z info: No changes needed for 'USER' role permissions
+2025-06-26T16:23:04.431Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T16:23:04.431Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T16:24:16.068Z info: [Optional] Redis not initialized.
+2025-06-26T16:24:17.688Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T16:24:17.756Z info: Connected to MongoDB
+2025-06-26T16:24:17.757Z info: [indexSync] Starting index synchronization check...
+2025-06-26T16:24:17.811Z error: Invalid custom config file at /Users/z/work/hanzo/chat/chat.yaml:
+{
+  "issues": [
+    {
+      "code": "unrecognized_keys",
+      "keys": [
+        "ag... [truncated]
+2025-06-26T16:24:17.812Z debug: Web search serperApiKey: Using environment variable SERPER_API_KEY (not set in environment, user provided value)
+2025-06-26T16:24:17.812Z debug: Web search firecrawlApiKey: Using environment variable FIRECRAWL_API_KEY (not set in environment, user provided value)
+2025-06-26T16:24:17.812Z debug: Web search firecrawlApiUrl: Using environment variable FIRECRAWL_API_URL (not set in environment, user provided value)
+2025-06-26T16:24:17.812Z debug: Web search jinaApiKey: Using environment variable JINA_API_KEY (not set in environment, user provided value)
+2025-06-26T16:24:17.812Z debug: Web search cohereApiKey: Using environment variable COHERE_API_KEY (not set in environment, user provided value)
+2025-06-26T16:24:17.812Z warn: Default value for CREDS_KEY is being used.
+2025-06-26T16:24:17.812Z warn: Default value for CREDS_IV is being used.
+2025-06-26T16:24:17.812Z warn: Default value for JWT_SECRET is being used.
+2025-06-26T16:24:17.812Z warn: Default value for JWT_REFRESH_SECRET is being used.
+2025-06-26T16:24:17.812Z info: Please replace any default secret values.
+2025-06-26T16:24:17.812Z info: ​
+
+    For your convenience, use this tool to generate your own secret values:
+    https://www.hanzo.ai/toolkit/creds_generator
+
+    ​
+2025-06-26T16:24:17.812Z warn: RAG API is either not running or not reachable at undefined, you may experience errors with file uploads.
+2025-06-26T16:24:17.823Z info: No changes needed for 'USER' role permissions
+2025-06-26T16:24:17.825Z info: No changes needed for 'ADMIN' role permissions
+2025-06-26T16:24:17.825Z info: Turnstile is DISABLED (no siteKey provided).
+2025-06-26T16:24:17.832Z info: Server listening at http://localhost:3080
+2025-06-26T16:24:18.010Z debug: [MEILI_SYNC:meili-index-sync] Creating initial flow state
+2025-06-26T16:24:18.020Z info: [indexSync] Messages are fully synced: 0/0
+2025-06-26T16:24:18.023Z info: [indexSync] Conversations are fully synced: 0/0
+2025-06-26T16:24:18.024Z debug: [indexSync] No sync was needed
+2025-06-26T16:24:37.105Z error: invalid signature
+2025-06-26T17:16:21.631Z info: Cleaning up FlowStateManager intervals...
+2025-06-26T17:28:31.428Z info: [Optional] Redis not initialized.
+2025-06-26T19:16:07.812Z info: [Optional] Redis not initialized.
+2025-06-26T19:16:09.408Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T19:16:39.465Z error: connect ECONNREFUSED 127.0.0.1:27017
+2025-06-26T19:28:57.619Z info: [Optional] Redis not initialized.
+2025-06-26T19:28:58.798Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:18:29.425Z info: [Optional] Redis not initialized.
+2025-06-26T21:18:30.678Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:19:00.734Z error: getaddrinfo ENOTFOUND mongodb
+2025-06-26T21:20:04.085Z info: [Optional] Redis not initialized.
+2025-06-26T21:20:04.788Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:20:34.832Z error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017
+2025-06-26T21:35:21.338Z info: [Optional] Redis not initialized.
+2025-06-26T21:35:22.746Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:35:52.803Z error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017
+2025-06-26T21:39:16.497Z info: [Optional] Redis not initialized.
+2025-06-26T21:39:17.655Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:39:47.696Z error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017
+2025-06-26T21:43:04.982Z info: [Optional] Redis not initialized.
+2025-06-26T21:43:06.587Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:43:07.208Z info: [Optional] Redis not initialized.
+2025-06-26T21:43:07.990Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:43:09.790Z info: [Optional] Redis not initialized.
+2025-06-26T21:43:10.572Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:43:12.993Z info: [Optional] Redis not initialized.
+2025-06-26T21:43:14.084Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:43:16.627Z info: [Optional] Redis not initialized.
+2025-06-26T21:43:17.383Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:43:19.449Z info: [Optional] Redis not initialized.
+2025-06-26T21:43:20.212Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:43:34.812Z info: [Optional] Redis not initialized.
+2025-06-26T21:43:36.179Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-26T21:43:50.258Z error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017
+2025-06-26T21:44:17.565Z info: [Optional] Redis not initialized.
+2025-06-26T21:44:18.322Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-27T03:16:07.463Z info: [Optional] Redis not initialized.
+2025-06-27T03:16:08.973Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-27T03:16:17.650Z debug: [indexSync] Clearing sync timeouts before exiting...
+2025-06-27T03:19:09.423Z info: [Optional] Redis not initialized.
+2025-06-27T03:19:10.741Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-27T03:19:15.742Z debug: [indexSync] Clearing sync timeouts before exiting...
