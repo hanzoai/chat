@@ -1,0 +1,3 @@
+2025-06-27T18:46:02.321Z info: [Optional] Redis not initialized.
+2025-06-27T18:46:03.818Z info: [Optional] IoRedis not initialized for rate limiters.
+2025-06-27T18:46:23.237Z debug: [indexSync] Clearing sync timeouts before exiting...
