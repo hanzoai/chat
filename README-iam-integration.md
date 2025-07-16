@@ -29,17 +29,20 @@ The Hanzo Chat stack now includes **Hanzo IAM** (Identity & Access Management) a
 
 ## Default Users
 
-Two users are pre-configured in IAM:
+**Note**: The system starts with no pre-configured users. You must create your first account.
 
-1. **Admin User**
-   - Email: `admin@hanzo.ai`
-   - Password: `demo1234`
-   - Role: Global Admin
+### Creating Users
 
-2. **Demo User**
-   - Email: `hattori@hanzo.ai`
-   - Password: `demo1234`
-   - Role: Regular User
+1. **Via Chat Registration** (Recommended)
+   - Navigate to http://localhost:3081
+   - Click "Sign up" to create your account
+   - First user can be given admin privileges
+
+2. **Via IAM Dashboard**
+   - Access http://localhost:8000 after creating first admin
+   - Use IAM interface to create additional users
+
+For detailed setup instructions, see [DEMO_SETUP.md](./DEMO_SETUP.md)
 
 ## Accessing Services
 
