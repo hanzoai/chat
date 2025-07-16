@@ -1,0 +1,85 @@
+# Hanzo Chat - Clean LibreChat Makefile
+# Uses external Hanzo API at api.hanzo.ai
+
+.PHONY: help up down restart logs status clean setup
+
+# Default target
+help:
+	@echo "Hanzo Chat - Clean LibreChat Commands"
+	@echo ""
+	@echo "Setup & Configuration:"
+	@echo "  make setup      - Initial setup (copy env file)"
+	@echo "  make config     - Edit configuration"
+	@echo ""
+	@echo "Service Management:"
+	@echo "  make up         - Start all services"
+	@echo "  make down       - Stop all services"
+	@echo "  make restart    - Restart all services"
+	@echo "  make logs       - View logs (all services)"
+	@echo "  make status     - Check service status"
+	@echo "  make clean      - Stop services and remove volumes"
+	@echo ""
+	@echo "Development:"
+	@echo "  make dev        - Start in development mode"
+	@echo "  make build      - Build containers"
+	@echo ""
+
+# Setup environment
+setup:
+	@if [ ! -f .env ]; then \
+		echo "Creating .env from .env.hanzo-cloud..."; \
+		cp .env.hanzo-cloud .env; \
+		echo "✅ Created .env file"; \
+		echo "⚠️  Please edit .env and add your Hanzo API key"; \
+	else \
+		echo "⚠️  .env already exists. Skipping..."; \
+	fi
+
+# Edit configuration
+config:
+	@${EDITOR:-nano} .env
+
+# Start all services
+up:
+	@echo "🚀 Starting Hanzo Chat..."
+	@docker compose -f docker-compose.hanzo-clean.yml up -d
+	@echo ""
+	@echo "✅ Hanzo Chat is running!"
+	@echo ""
+	@echo "🌐 Access at: http://localhost:3081"
+	@echo "📝 Register your first account to get started"
+	@echo ""
+
+# Stop all services
+down:
+	@echo "⏹️  Stopping Hanzo Chat..."
+	@docker compose -f docker-compose.hanzo-clean.yml down
+	@echo "✅ All services stopped"
+
+# Restart services
+restart: down up
+
+# View logs
+logs:
+	@docker compose -f docker-compose.hanzo-clean.yml logs -f
+
+# Check status
+status:
+	@echo "📊 Service Status:"
+	@docker compose -f docker-compose.hanzo-clean.yml ps
+
+# Clean everything
+clean:
+	@echo "🧹 Cleaning up..."
+	@docker compose -f docker-compose.hanzo-clean.yml down -v
+	@echo "✅ Removed all containers and volumes"
+
+# Development mode
+dev:
+	@echo "🔧 Starting in development mode..."
+	@docker compose -f docker-compose.hanzo-clean.yml up
+
+# Build containers
+build:
+	@echo "🔨 Building containers..."
+	@docker compose -f docker-compose.hanzo-clean.yml build
