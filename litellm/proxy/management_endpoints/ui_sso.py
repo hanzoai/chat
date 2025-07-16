@@ -83,6 +83,7 @@ async def google_login(request: Request, source: Optional[str] = None, key: Opti
     microsoft_client_id = os.getenv("MICROSOFT_CLIENT_ID", None)
     google_client_id = os.getenv("GOOGLE_CLIENT_ID", None)
     generic_client_id = os.getenv("GENERIC_CLIENT_ID", None)
+    hanzo_iam_client_id = os.getenv("HANZO_IAM_CLIENT_ID", None)
 
     ####### Check if UI is disabled #######
     _disable_ui_flag = os.getenv("DISABLE_ADMIN_UI")
@@ -96,10 +97,11 @@ async def google_login(request: Request, source: Optional[str] = None, key: Opti
         microsoft_client_id is not None
         or google_client_id is not None
         or generic_client_id is not None
+        or hanzo_iam_client_id is not None
     ):
         if premium_user is not True:
             raise ProxyException(
-                message="You must be a LiteLLM Enterprise user to use SSO. If you have a license please set `LITELLM_LICENSE` in your env. If you want to obtain a license meet with us here: https://calendly.com/d/4mp-gd3-k5k/litellm-1-1-onboarding-chat You are seeing this error message because You set one of `MICROSOFT_CLIENT_ID`, `GOOGLE_CLIENT_ID`, or `GENERIC_CLIENT_ID` in your env. Please unset this",
+                message="You must be a Hanzo Router Enterprise user to use SSO. If you have a license please set `ROUTER_LICENSE` in your env. If you want to obtain a license meet with us here: https://hanzo.ai/contact You are seeing this error message because You set one of `MICROSOFT_CLIENT_ID`, `GOOGLE_CLIENT_ID`, `GENERIC_CLIENT_ID`, or `HANZO_IAM_CLIENT_ID` in your env. Please unset this",
                 type=ProxyErrorTypes.auth_error,
                 param="premium_user",
                 code=status.HTTP_403_FORBIDDEN,
@@ -129,6 +131,7 @@ async def google_login(request: Request, source: Optional[str] = None, key: Opti
             microsoft_client_id=microsoft_client_id,
             google_client_id=google_client_id,
             generic_client_id=generic_client_id,
+            hanzo_iam_client_id=hanzo_iam_client_id,
         )
         is True
     ):
@@ -138,6 +141,7 @@ async def google_login(request: Request, source: Optional[str] = None, key: Opti
             microsoft_client_id=microsoft_client_id,
             google_client_id=google_client_id,
             generic_client_id=generic_client_id,
+            hanzo_iam_client_id=hanzo_iam_client_id,
             state=cli_state,
         )
     elif ui_username is not None:
@@ -555,11 +559,12 @@ async def auth_callback(request: Request, state: Optional[str] = None):  # noqa:
     microsoft_client_id = os.getenv("MICROSOFT_CLIENT_ID", None)
     google_client_id = os.getenv("GOOGLE_CLIENT_ID", None)
     generic_client_id = os.getenv("GENERIC_CLIENT_ID", None)
+    hanzo_iam_client_id = os.getenv("HANZO_IAM_CLIENT_ID", None)
     received_response: Optional[dict] = None
     # get url from request
     if master_key is None:
         raise ProxyException(
-            message="Master Key not set for Proxy. Please set Master Key to use Admin UI. Set `LITELLM_MASTER_KEY` in .env or set general_settings:master_key in config.yaml.  https://docs.litellm.ai/docs/proxy/virtual_keys. If set, use `--detailed_debug` to debug issue.",
+            message="Master Key not set for Proxy. Please set Master Key to use Admin UI. Set `ROUTER_MASTER_KEY` in .env or set general_settings:master_key in config.yaml.  https://docs.hanzo.ai/router/virtual_keys. If set, use `--detailed_debug` to debug issue.",
             type=ProxyErrorTypes.auth_error,
             param="master_key",
             code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -589,6 +594,12 @@ async def auth_callback(request: Request, state: Optional[str] = None):  # noqa:
             generic_client_id=generic_client_id,
             redirect_url=redirect_url,
             sso_jwt_handler=sso_jwt_handler,
+        )
+    elif hanzo_iam_client_id is not None:
+        result = await HanzoIAMSSOHandler.get_hanzo_iam_callback_response(
+            request=request,
+            hanzo_iam_client_id=hanzo_iam_client_id,
+            redirect_url=redirect_url,
         )
 
     if result is None:
@@ -988,6 +999,7 @@ class SSOAuthenticationHandler:
         google_client_id: Optional[str] = None,
         microsoft_client_id: Optional[str] = None,
         generic_client_id: Optional[str] = None,
+        hanzo_iam_client_id: Optional[str] = None,
         state: Optional[str] = None,
     ) -> Optional[RedirectResponse]:
         """
@@ -998,6 +1010,7 @@ class SSOAuthenticationHandler:
             google_client_id (Optional[str], optional): The Google Client ID. Defaults to None.
             microsoft_client_id (Optional[str], optional): The Microsoft Client ID. Defaults to None.
             generic_client_id (Optional[str], optional): The Generic Client ID. Defaults to None.
+            hanzo_iam_client_id (Optional[str], optional): The Hanzo IAM Client ID. Defaults to None.
 
         Returns:
             RedirectResponse: The redirect response from the SSO provider
@@ -1121,6 +1134,33 @@ class SSOAuthenticationHandler:
                         uuid.uuid4().hex
                     )  # set state param for okta - required
                 return await generic_sso.get_login_redirect(**redirect_params)  # type: ignore
+        elif hanzo_iam_client_id is not None:
+            from fastapi_sso.sso.generic import create_provider
+            
+            hanzo_iam_client_secret = os.getenv("HANZO_IAM_CLIENT_SECRET", None)
+            hanzo_iam_server_url = os.getenv("HANZO_IAM_SERVER_URL", "http://localhost:9003")
+            
+            if hanzo_iam_client_secret is None:
+                raise ProxyException(
+                    message="HANZO_IAM_CLIENT_SECRET not set. Set it in .env file",
+                    type=ProxyErrorTypes.auth_error,
+                    param="HANZO_IAM_CLIENT_SECRET",
+                    code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+            
+            # Create a generic SSO provider for Hanzo IAM
+            hanzo_iam_sso = create_provider(
+                name="hanzo-iam",
+                client_id=hanzo_iam_client_id,
+                client_secret=hanzo_iam_client_secret,
+                authorize_endpoint=f"{hanzo_iam_server_url}/login/oauth/authorize",
+                access_token_endpoint=f"{hanzo_iam_server_url}/api/login",
+                redirect_uri=redirect_url,
+                scope=["read", "profile", "email", "openid"],
+                grant_type="authorization_code",
+            )
+            with hanzo_iam_sso:
+                return await hanzo_iam_sso.get_login_redirect(state=state)
         raise ValueError(
             "Unknown SSO provider. Please setup SSO with client IDs https://docs.litellm.ai/docs/proxy/admin_ui_sso"
         )
@@ -1130,11 +1170,13 @@ class SSOAuthenticationHandler:
         google_client_id: Optional[str] = None,
         microsoft_client_id: Optional[str] = None,
         generic_client_id: Optional[str] = None,
+        hanzo_iam_client_id: Optional[str] = None,
     ) -> bool:
         if (
             google_client_id is not None
             or microsoft_client_id is not None
             or generic_client_id is not None
+            or hanzo_iam_client_id is not None
         ):
             return True
         return False
@@ -1698,6 +1740,76 @@ class GoogleSSOHandler:
         return result or {}
 
 
+class HanzoIAMSSOHandler:
+    """
+    Handles Hanzo IAM SSO callback response and returns a CustomOpenID object
+    """
+
+    @staticmethod
+    async def get_hanzo_iam_callback_response(
+        request: Request,
+        hanzo_iam_client_id: str,
+        redirect_url: str,
+        return_raw_sso_response: bool = False,
+    ) -> Union[OpenID, dict]:
+        """
+        Get the Hanzo IAM SSO callback response
+
+        Args:
+            return_raw_sso_response: If True, return the raw SSO response
+        """
+        from fastapi_sso.sso.generic import create_provider
+
+        hanzo_iam_client_secret = os.getenv("HANZO_IAM_CLIENT_SECRET", None)
+        hanzo_iam_server_url = os.getenv("HANZO_IAM_SERVER_URL", "http://localhost:9003")
+        
+        if hanzo_iam_client_secret is None:
+            raise ProxyException(
+                message="HANZO_IAM_CLIENT_SECRET not set. Set it in .env file",
+                type=ProxyErrorTypes.auth_error,
+                param="HANZO_IAM_CLIENT_SECRET",
+                code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # Create a generic SSO provider for Hanzo IAM (Casdoor)
+        hanzo_iam_sso = create_provider(
+            name="hanzo-iam",
+            client_id=hanzo_iam_client_id,
+            client_secret=hanzo_iam_client_secret,
+            authorize_endpoint=f"{hanzo_iam_server_url}/login/oauth/authorize",
+            access_token_endpoint=f"{hanzo_iam_server_url}/api/login",
+            redirect_uri=redirect_url,
+            scope=["read", "profile", "email", "openid"],
+            grant_type="authorization_code",
+        )
+
+        # if user is trying to get the raw sso response for debugging, return the raw sso response
+        if return_raw_sso_response:
+            return (
+                await hanzo_iam_sso.verify_and_process(
+                    request=request,
+                    convert_response=False,  # type: ignore
+                )
+                or {}
+            )
+
+        result = await hanzo_iam_sso.verify_and_process(request)
+        
+        # Convert Casdoor response to CustomOpenID format
+        if result and isinstance(result, dict):
+            return CustomOpenID(
+                id=result.get("name", result.get("id")),
+                email=result.get("email"),
+                display_name=result.get("displayName", result.get("name")),
+                first_name=result.get("firstName"),
+                last_name=result.get("lastName"),
+                provider="hanzo-iam",
+                team_ids=[],  # Can be extended to map Casdoor organizations/groups to teams
+            )
+        
+        return result or {}
+
+
 @router.get("/sso/debug/login", tags=["experimental"], include_in_schema=False)
 async def debug_sso_login(request: Request):
     """
@@ -1716,10 +1828,11 @@ async def debug_sso_login(request: Request):
         microsoft_client_id is not None
         or google_client_id is not None
         or generic_client_id is not None
+        or hanzo_iam_client_id is not None
     ):
         if premium_user is not True:
             raise ProxyException(
-                message="You must be a LiteLLM Enterprise user to use SSO. If you have a license please set `LITELLM_LICENSE` in your env. If you want to obtain a license meet with us here: https://calendly.com/d/4mp-gd3-k5k/litellm-1-1-onboarding-chat You are seeing this error message because You set one of `MICROSOFT_CLIENT_ID`, `GOOGLE_CLIENT_ID`, or `GENERIC_CLIENT_ID` in your env. Please unset this",
+                message="You must be a Hanzo Router Enterprise user to use SSO. If you have a license please set `ROUTER_LICENSE` in your env. If you want to obtain a license meet with us here: https://hanzo.ai/contact You are seeing this error message because You set one of `MICROSOFT_CLIENT_ID`, `GOOGLE_CLIENT_ID`, `GENERIC_CLIENT_ID`, or `HANZO_IAM_CLIENT_ID` in your env. Please unset this",
                 type=ProxyErrorTypes.auth_error,
                 param="premium_user",
                 code=status.HTTP_403_FORBIDDEN,
@@ -1737,6 +1850,7 @@ async def debug_sso_login(request: Request):
             microsoft_client_id=microsoft_client_id,
             google_client_id=google_client_id,
             generic_client_id=generic_client_id,
+            hanzo_iam_client_id=hanzo_iam_client_id,
         )
         is True
     ):
@@ -1745,6 +1859,7 @@ async def debug_sso_login(request: Request):
             microsoft_client_id=microsoft_client_id,
             google_client_id=google_client_id,
             generic_client_id=generic_client_id,
+            hanzo_iam_client_id=hanzo_iam_client_id,
         )
 
 
@@ -1784,6 +1899,7 @@ async def debug_sso_callback(request: Request):
     microsoft_client_id = os.getenv("MICROSOFT_CLIENT_ID", None)
     google_client_id = os.getenv("GOOGLE_CLIENT_ID", None)
     generic_client_id = os.getenv("GENERIC_CLIENT_ID", None)
+    hanzo_iam_client_id = os.getenv("HANZO_IAM_CLIENT_ID", None)
 
     redirect_url = os.getenv("PROXY_BASE_URL", str(request.base_url))
     if redirect_url.endswith("/"):
@@ -1814,6 +1930,13 @@ async def debug_sso_callback(request: Request):
             generic_client_id=generic_client_id,
             redirect_url=redirect_url,
             sso_jwt_handler=sso_jwt_handler,
+        )
+    elif hanzo_iam_client_id is not None:
+        result = await HanzoIAMSSOHandler.get_hanzo_iam_callback_response(
+            request=request,
+            hanzo_iam_client_id=hanzo_iam_client_id,
+            redirect_url=redirect_url,
+            return_raw_sso_response=True,
         )
 
     # If result is None, return a basic error message

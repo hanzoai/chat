@@ -85,8 +85,9 @@ This is the complete Hanzo AI platform running locally, mirroring our production
 ## 🔑 Default Credentials
 
 ### IAM Users
-- **Admin**: admin@hanzo.ai / demo1234
-- **Demo**: hattori@hanzo.ai / demo1234
+- **Registration Required**: The system starts with no users. Please register your first account.
+- **Demo Setup**: See [DEMO_SETUP.md](./DEMO_SETUP.md) for creating demo accounts
+- **Quick Start**: Visit http://localhost:3081 and click "Sign up" to create your first account
 
 ### Service Keys
 - **Router Master Key**: sk-hanzo-master-key
