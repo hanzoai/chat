@@ -1,0 +1,33 @@
+# Hanzo Chat - LibreChat Fork
+FROM ghcr.io/danny-avila/librechat:latest
+
+# Install additional dependencies if needed
+USER root
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy custom configuration
+COPY librechat.example.yaml /app/librechat.yaml
+
+# Copy custom branding assets
+COPY client/dist/assets/favicon* /app/client/public/assets/
+COPY client/dist/favicon.ico /app/client/public/
+
+# Set environment defaults
+ENV HOST=0.0.0.0
+ENV PORT=3080
+ENV APP_TITLE="Hanzo AI Chat"
+ENV CUSTOM_FOOTER="Powered by Hanzo AI"
+
+# Use the app user
+USER node
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3080/health || exit 1
+
+EXPOSE 3080
+
+# Start the application
+CMD ["npm", "run", "backend:prod"]
