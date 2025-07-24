@@ -109,3 +109,43 @@ frontend.log
 mongod.log
 logs/
 *.log
+
+# Build artifacts
+dist/
+build/
+coverage/
+*.orig
+client/dist/
+packages/*/dist/
+packages/*/coverage/
+client/coverage/
+api/logs/
+
+# Temporary files
+uploads/temp/
+images/
+.nyc_output/
+junit.xml
+test-results/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env.*
+!.env.example
+!.env.hanzo-cloud
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+tests/**/*.wav
+tests/**/*.mp3
+tests/**/*.png
+tests/**/*.jpg
