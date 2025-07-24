@@ -1,18 +1,28 @@
 #!/bin/bash
 # Initialize demo user for Hanzo Chat
-# This script runs when the chat container starts
+# Run this after docker compose up
 
-echo "🚀 Checking for demo user initialization..."
+echo "🚀 Initializing Hanzo Chat demo user..."
+echo "📧 Email: hattori@hanzo.ai"
+echo "🔑 Password: demo1234"
+echo ""
 
-# Wait for MongoDB to be ready
-until mongosh --host mongodb:27017 --username hanzo --password ${MONGO_PASSWORD:-hanzo123} --authenticationDatabase admin --eval "db.adminCommand('ping')" > /dev/null 2>&1; do
-  echo "⏳ Waiting for MongoDB to be ready..."
-  sleep 2
-done
+# Wait for services to be ready
+echo "⏳ Waiting for services to be ready..."
+sleep 5
 
-echo "✅ MongoDB is ready"
+# Run the seed script inside a temporary container
+docker run --rm \
+  --network chat_hanzo-network \
+  -e MONGO_URI="mongodb://hanzo:hanzo123@hanzo-mongodb:27017/HanzoChat?authSource=admin" \
+  -v "$PWD/scripts:/scripts" \
+  -w /scripts \
+  node:18-alpine sh -c "
+    npm install mongoose bcryptjs
+    node seed_demo_user.js
+  "
 
-# Run the seed script
-node /app/scripts/seed_demo_user.js
-
-echo "✅ Demo user initialization complete"
+echo ""
+echo "✅ Demo user initialization complete!"
+echo "🌐 Access Hanzo Chat at: http://localhost:3081"
+echo "📧 Login with: hattori@hanzo.ai / demo1234"
