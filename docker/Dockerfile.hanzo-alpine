@@ -1,0 +1,17 @@
+# Hanzo Chat - Alpine version
+FROM ghcr.io/danny-avila/librechat:latest
+
+# Set environment defaults
+ENV HOST=0.0.0.0
+ENV PORT=3080
+ENV APP_TITLE="Hanzo AI Chat"
+ENV CUSTOM_FOOTER="Powered by Hanzo AI"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3080/health || exit 1
+
+EXPOSE 3080
+
+# Start the application
+CMD ["npm", "run", "backend:prod"]
