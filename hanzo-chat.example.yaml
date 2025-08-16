@@ -1,5 +1,5 @@
 # For more information, see the Configuration Guide:
-# https://www.librechat.ai/docs/configuration/librechat_yaml
+# https://docs.hanzo.ai/chat/configuration
 
 # Configuration version (required)
 version: 1.2.1
@@ -12,7 +12,7 @@ cache: true
 
 # Custom interface configuration
 interface:
-  customWelcome: "Welcome to LibreChat! Enjoy your experience."
+  customWelcome: "Welcome to Hanzo Chat! Enjoy your AI-powered conversation experience."
   # MCP Servers UI configuration
   mcpServers:
     placeholder: 'MCP Servers'
@@ -22,25 +22,25 @@ interface:
   fileSearch: true
   # Privacy policy settings
   privacyPolicy:
-    externalUrl: 'https://librechat.ai/privacy-policy'
+    externalUrl: 'https://hanzo.ai/privacy'
     openNewTab: true
 
   # Terms of service
   termsOfService:
-    externalUrl: 'https://librechat.ai/tos'
+    externalUrl: 'https://hanzo.ai/terms'
     openNewTab: true
     modalAcceptance: true
-    modalTitle: "Terms of Service for LibreChat"
+    modalTitle: "Terms of Service for Hanzo Chat"
     modalContent: |
-      # Terms and Conditions for LibreChat
+      # Terms and Conditions for Hanzo Chat
 
       *Effective Date: February 18, 2024*
 
-      Welcome to LibreChat, the informational website for the open-source AI chat platform, available at https://librechat.ai. These Terms of Service ("Terms") govern your use of our website and the services we offer. By accessing or using the Website, you agree to be bound by these Terms and our Privacy Policy, accessible at https://librechat.ai//privacy.
+      Welcome to Hanzo Chat, the AI-powered conversation platform by Hanzo AI, available at https://chat.hanzo.ai. These Terms of Service ("Terms") govern your use of our website and the services we offer. By accessing or using the Website, you agree to be bound by these Terms and our Privacy Policy, accessible at https://hanzo.ai/privacy.
 
       ## 1. Ownership
 
-      Upon purchasing a package from LibreChat, you are granted the right to download and use the code for accessing an admin panel for LibreChat. While you own the downloaded code, you are expressly prohibited from reselling, redistributing, or otherwise transferring the code to third parties without explicit permission from LibreChat.
+      Upon purchasing a package from Hanzo Chat, you are granted the right to download and use the code for accessing an admin panel for Hanzo Chat. While you own the downloaded code, you are expressly prohibited from reselling, redistributing, or otherwise transferring the code to third parties without explicit permission from Hanzo AI.
 
       ## 2. User Data
 
@@ -64,7 +64,7 @@ interface:
 
       ## 7. Contact Information
 
-      If you have any questions about these Terms, please contact us at contact@librechat.ai.
+      If you have any questions about these Terms, please contact us at support@hanzo.ai.
 
       By using the Website, you acknowledge that you have read these Terms of Service and agree to be bound by them.
 
@@ -134,7 +134,8 @@ registration:
 actions:
   allowedDomains:
     - "swapi.dev"
-    - "librechat.ai"
+    - "hanzo.ai"
+    - "chat.hanzo.ai"
     - "google.com"
 
 # Example MCP Servers Object Structure
@@ -156,8 +157,8 @@ actions:
 #     args:
 #       - -y
 #       - "@modelcontextprotocol/server-filesystem"
-#       - /home/user/LibreChat/
-#     iconPath: /home/user/LibreChat/client/public/assets/logo.svg
+#       - /home/user/hanzo-chat/
+#     iconPath: /home/user/hanzo-chat/client/public/assets/hanzo-logo.svg
 #   mcp-obsidian:
 #     command: npx
 #     args:
@@ -313,7 +314,7 @@ endpoints:
 #     maxHeight: 1900  # Maximum height for resized images (default: 1900)
 #     quality: 0.92  # JPEG quality for compression (0.0-1.0, default: 0.92)
 # # See the Custom Configuration Guide for more information on Assistants Config:
-# # https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/assistants_endpoint
+# # https://docs.hanzo.ai/chat/configuration/assistants_endpoint
 
 # Memory configuration for user memories
 # memory:
