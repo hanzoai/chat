@@ -5,15 +5,8 @@ FROM ghcr.io/danny-avila/librechat:latest
 COPY scripts/seed_demo_user.js /app/scripts/
 COPY docker/entrypoint-with-demo.sh /app/
 
-# Install mongosh for the initialization script
+# Node.js should already be available in the base LibreChat image
 USER root
-RUN apt-get update && apt-get install -y gnupg wget && \
-    wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | apt-key add - && \
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list && \
-    apt-get update && \
-    apt-get install -y mongodb-mongosh && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 RUN chmod +x /app/entrypoint-with-demo.sh
 

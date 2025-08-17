@@ -57,13 +57,7 @@ export type MCPTool = z.infer<typeof t.ToolSchema>;
 export type MCPToolListResponse = z.infer<typeof t.ListToolsResultSchema>;
 export type ToolContentPart = t.TextContent | t.ImageContent | t.EmbeddedResource | t.AudioContent;
 export type ImageContent = Extract<ToolContentPart, { type: 'image' }>;
-export type MCPToolCallResponse =
-  | undefined
-  | {
-      _meta?: Record<string, unknown>;
-      content?: Array<ToolContentPart>;
-      isError?: boolean;
-    };
+export type MCPToolCallResponse = z.infer<typeof t.CallToolResultSchema>;
 
 export type Provider = 'google' | 'anthropic' | 'openAI';
 
