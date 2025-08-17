@@ -163,4 +163,4 @@ make db-import FILE=backup.json
 
 - Documentation: https://docs.hanzo.ai
 - Issues: https://github.com/hanzoai/chat/issues
-- Discord: https://discord.gg/hanzoai
+- Discord: https://discord.gg/hanzoai# CI Test
