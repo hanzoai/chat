@@ -820,8 +820,8 @@ export class MCPManager {
             authConfig: config?.customUserVars
               ? Object.entries(config.customUserVars).map(([key, value]) => ({
                   authField: key,
-                  label: value.title || key,
-                  description: value.description || '',
+                  label: (value as { title?: string; description?: string }).title || key,
+                  description: (value as { title?: string; description?: string }).description || '',
                 }))
               : undefined,
           };
@@ -928,7 +928,7 @@ export class MCPManager {
         this.updateUserLastActivity(userId);
       }
       this.checkIdleConnections();
-      return formatToolContent(result as t.MCPToolCallResponse, provider);
+      return formatToolContent(result, provider);
     } catch (error) {
       // Log with context and re-throw or handle as needed
       logger.error(`${logPrefix}[${toolName}] Tool call failed`, error);
