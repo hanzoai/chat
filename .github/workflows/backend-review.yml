@@ -24,9 +24,9 @@ jobs:
       BAN_INTERVAL: ${{ secrets.BAN_INTERVAL }}
       NODE_ENV: CI
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
