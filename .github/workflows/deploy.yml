@@ -17,10 +17,10 @@ jobs:
     steps:
       # checkout the repo
       - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 'Login via Azure CLI'
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
