@@ -40,7 +40,6 @@ RUN \
 COPY --chown=node:node . .
 
 RUN NODE_OPTIONS="--max-old-space-size=4096" npm run frontend && \
-    npm prune --production && \
     npm cache clean --force
 
 RUN mkdir -p /app/client/public/images /app/api/logs
