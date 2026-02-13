@@ -38,7 +38,7 @@ RUN \
 
 COPY --chown=node:node . .
 
-RUN NODE_OPTIONS="--max-old-space-size=2048" npm run frontend && \
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run frontend && \
     npm prune --production && \
     npm cache clean --force
 
