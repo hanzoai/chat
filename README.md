@@ -44,7 +44,7 @@ make dev-full
 ```
 ┌─────────────────────────┐     ┌─────────────────────────┐
 │     Hanzo Chat UI       │────▶│   api.hanzo.ai          │
-│   (LibreChat Fork)      │     │   (or local router)     │
+│   (Hanzo Chat)          │     │   (or local router)     │
 │    localhost:3081       │     │                         │
 └─────────────────────────┘     │  • 100+ AI Models       │
             │                   │  • MCP Tools            │
@@ -119,7 +119,7 @@ make backup     # Backup database
 ## Features
 
 - 🤖 **100+ AI Models** via Hanzo Router
-- 💬 **Clean UI** based on LibreChat
+- 💬 **Clean Chat UI** with modern design
 - 🔍 **Full-Text Search** with Meilisearch
 - 📝 **Persistent Chat History**
 - 🛠️ **MCP Tools** for enhanced capabilities
