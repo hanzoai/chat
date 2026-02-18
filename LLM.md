@@ -1,89 +1,96 @@
-# CLAUDE.md
+# Hanzo Chat
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Fork of LibreChat v0.8.0-rc2. AI chat interface with multi-model support,
+MCP integration, agents, and RAG. Live at **chat.hanzo.ai**.
 
-## Development Commands
+**Repo**: `github.com/hanzoai/chat`
+**Package**: `@hanzochat/chat`
+**Runtime**: Node.js 20 (Alpine)
 
-### Installation
-- `make install-dev` - Install core development dependencies
-- `make install-proxy-dev` - Install proxy development dependencies with full feature set
-- `make install-test-deps` - Install all test dependencies
+## Branding
 
-### Testing
-- `make test` - Run all tests
-- `make test-unit` - Run unit tests (tests/test_litellm) with 4 parallel workers
-- `make test-integration` - Run integration tests (excludes unit tests)
-- `pytest tests/` - Direct pytest execution
+- Hanzo red `#fd4444` replaces OpenAI green `#10a37f` (Tailwind, CSS vars, emails)
+- APP_TITLE: `Hanzo Chat`
+- CUSTOM_FOOTER: `Powered by Hanzo AI`
+- Hanzo geometric H logo throughout
+- 34 language files updated
 
-### Code Quality
-- `make lint` - Run all linting (Ruff, MyPy, Black, circular imports, import safety)
-- `make format` - Apply Black code formatting
-- `make lint-ruff` - Run Ruff linting only
-- `make lint-mypy` - Run MyPy type checking only
+## Commands
 
-### Single Test Files
-- `poetry run pytest tests/path/to/test_file.py -v` - Run specific test file
-- `poetry run pytest tests/path/to/test_file.py::test_function -v` - Run specific test
+```bash
+# Install (NOT npm ci -- workspace peer deps break it)
+npm install          # .npmrc has legacy-peer-deps=true
 
-## Architecture Overview
+# Build
+npm run build:packages   # Build data-provider, data-schemas, api, client-package
+npm run frontend         # Build all packages + client
 
-LiteLLM is a unified interface for 100+ LLM providers with two main components:
+# Dev
+npm run backend:dev      # API server (nodemon, port 3080)
+npm run frontend:dev     # Client dev server
 
-### Core Library (`litellm/`)
-- **Main entry point**: `litellm/main.py` - Contains core completion() function
-- **Provider implementations**: `litellm/llms/` - Each provider has its own subdirectory
-- **Router system**: `litellm/router.py` + `litellm/router_utils/` - Load balancing and fallback logic
-- **Type definitions**: `litellm/types/` - Pydantic models and type hints
-- **Integrations**: `litellm/integrations/` - Third-party observability, caching, logging
-- **Caching**: `litellm/caching/` - Multiple cache backends (Redis, in-memory, S3, etc.)
+# Test
+npm run test:all         # All workspace tests
+npm run test:client      # Client tests
+npm run test:api         # API tests
+npm run e2e              # Playwright e2e tests
 
-### Proxy Server (`litellm/proxy/`)
-- **Main server**: `proxy_server.py` - FastAPI application
-- **Authentication**: `auth/` - API key management, JWT, OAuth2
-- **Database**: `db/` - Prisma ORM with PostgreSQL/SQLite support
-- **Management endpoints**: `management_endpoints/` - Admin APIs for keys, teams, models
-- **Pass-through endpoints**: `pass_through_endpoints/` - Provider-specific API forwarding
-- **Guardrails**: `guardrails/` - Safety and content filtering hooks
-- **UI Dashboard**: Served from `_experimental/out/` (Next.js build)
+# Lint/Format
+npm run lint             # ESLint
+npm run format           # Prettier
+```
 
-## Key Patterns
+## Workspace Structure
 
-### Provider Implementation
-- Providers inherit from base classes in `litellm/llms/base.py`
-- Each provider has transformation functions for input/output formatting
-- Support both sync and async operations
-- Handle streaming responses and function calling
+```
+api/                 # Express backend (port 3080)
+  server/            # Entry point, routes, controllers, middleware
+  models/            # Mongoose models (MongoDB)
+client/              # React frontend (Vite)
+  src/components/    # UI components
+  src/routes/        # Client-side routing
+  src/store/         # State management
+packages/
+  data-provider/     # Shared data layer (librechat-data-provider)
+  data-schemas/      # Validation schemas
+  api/               # API client package (@librechat/api)
+  client/            # Shared client components
+  agents/            # Agent definitions
+  mcp/               # MCP server integration
+```
 
-### Error Handling
-- Provider-specific exceptions mapped to OpenAI-compatible errors
-- Fallback logic handled by Router system
-- Comprehensive logging through `litellm/_logging.py`
+## Configuration
 
-### Configuration
-- YAML config files for proxy server (see `proxy/example_config_yaml/`)
-- Environment variables for API keys and settings
-- Database schema managed via Prisma (`proxy/schema.prisma`)
+- `librechat.yaml` (or ConfigMap `chat-config` -> `/app/librechat.yaml`)
+- `hanzo-chat.example.yaml` - Hanzo-specific example config
+- `.env` for secrets
 
-## Development Notes
+Key env vars:
+```
+OPENAI_BASE_URL=http://llm.hanzo.svc.cluster.local:4000/v1  # Internal LLM gateway
+MONGO_URI=                  # MongoDB connection
+JWT_SECRET=                 # Auth token signing
+CREDS_KEY= CREDS_IV=        # Credential encryption
+```
 
-### Code Style
-- Uses Black formatter, Ruff linter, MyPy type checker
-- Pydantic v2 for data validation
-- Async/await patterns throughout
-- Type hints required for all public APIs
+## K8s Deployment
 
-### Testing Strategy
-- Unit tests in `tests/test_litellm/`
-- Integration tests for each provider in `tests/llm_translation/`
-- Proxy tests in `tests/proxy_unit_tests/`
-- Load tests in `tests/load_tests/`
+- 2 replicas, port 3080
+- Ingress: `chat.hanzo.ai` + `hanzo.chat` (separate TLS certs)
+- Secret: `chat-secrets` (MONGO_URI, JWT_SECRET, CREDS_KEY/IV)
+- CI: `docker-publish.yml` -> `hanzoai/chat:latest` on Docker Hub
+- Image: `hanzoai/chat:latest` (amd64 only)
 
-### Database Migrations
-- Prisma handles schema migrations
-- Migration files auto-generated with `prisma migrate dev`
-- Always test migrations against both PostgreSQL and SQLite
+## Docker Build Notes
 
-### Enterprise Features
-- Enterprise-specific code in `enterprise/` directory
-- Optional features enabled via environment variables
-- Separate licensing and authentication for enterprise features
+- Uses `npm install` not `npm ci` (workspace peer dep issues)
+- `--max-old-space-size=4096` for client build
+- jemalloc preloaded for memory efficiency
+- `uv` bundled for MCP server support
+- `dompurify` must be in `client/package.json` (externalized by bundler)
+
+## Internal Package Names
+
+These are kept as-is from upstream (npm deps, not worth renaming):
+- `@librechat/api`, `librechat-data-provider`
+- Functions: `extractLibreChatParams`, `importLibreChatConvo`
