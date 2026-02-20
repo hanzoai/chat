@@ -53,7 +53,7 @@ function processModelSpecs(endpoints, _modelSpecs, interfaceConfig) {
     if (!endpoint) {
       logger.warn(`Model spec with endpoint "${spec.preset.endpoint}" was skipped: Endpoint not found in configuration. The \`endpoint\` value must exactly match either a system-defined endpoint or a custom endpoint defined by the user.
 
-For more information, see the documentation at https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/model_specs#endpoint`);
+For more information, see the documentation at https://hanzo.ai/docs/chat/configuration/librechat_yaml/object_structure/model_specs#endpoint`);
       continue;
     }
 

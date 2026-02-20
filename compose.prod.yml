@@ -12,14 +12,32 @@ services:
     environment:
       # Production settings
       NODE_ENV: production
+      DOMAIN_CLIENT: https://hanzo.chat
+      DOMAIN_SERVER: https://hanzo.chat
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
-      
-      # Use production API
+
+      # All AI requests go through Hanzo API gateway
       OPENAI_BASE_URL: https://api.hanzo.ai/v1
-      
+
       # Production secrets (use real values)
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      CREDS_KEY: ${CREDS_KEY:?CREDS_KEY is required}
+      CREDS_IV: ${CREDS_IV:?CREDS_IV is required}
       OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+
+      # Hanzo IAM OpenID Connect
+      OPENID_CLIENT_ID: ${OPENID_CLIENT_ID:?OPENID_CLIENT_ID is required}
+      OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET:?OPENID_CLIENT_SECRET is required}
+      OPENID_ISSUER: https://hanzo.id
+      OPENID_SESSION_SECRET: ${OPENID_SESSION_SECRET:?OPENID_SESSION_SECRET is required}
+      OPENID_SCOPE: openid profile email
+      OPENID_CALLBACK_URL: /oauth/openid/callback
+      OPENID_BUTTON_LABEL: Log in with Hanzo
+      OPENID_IMAGE_URL: https://hanzo.ai/logo/icon.svg
+      OPENID_USERNAME_CLAIM: name
+      OPENID_NAME_CLAIM: name
+      OPENID_USE_PKCE: "true"
     labels:
       # Traefik routing
       - "traefik.enable=true"

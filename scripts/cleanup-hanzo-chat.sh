@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🧹 Cleaning up Hanzo Chat to restore clean LibreChat structure..."
+echo "🧹 Cleaning up Hanzo Chat to restore clean Hanzo Chat structure..."
 echo "This will remove all embedded LiteLLM proxy code and configure for api.hanzo.ai"
 echo ""
 
@@ -37,8 +37,8 @@ rm -rf meili_data*/ data-node/ logs/ .pytest_cache/ .ruff_cache/ 2>/dev/null
 rm -rf __pycache__/ .mypy_cache/ .coverage htmlcov/ 2>/dev/null
 rm -f *.log *.db *.sqlite 2>/dev/null
 
-# Remove deployment specific files that aren't LibreChat
-echo "🗑️  Removing non-LibreChat deployment files..."
+# Remove deployment specific files that aren't Hanzo Chat
+echo "🗑️  Removing non-Hanzo Chat deployment files..."
 rm -rf deploy/ helm/ vercel/ railway/ k8s/ terraform/ 2>/dev/null
 rm -f netlify.toml vercel.json fly.toml render.yaml 2>/dev/null
 
@@ -52,7 +52,7 @@ find . -type f -name ".coverage" -delete 2>/dev/null || true
 find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 
 echo ""
-echo "✅ Cleanup complete! Your Hanzo Chat now has a clean LibreChat structure."
+echo "✅ Cleanup complete! Your Hanzo Chat now has a clean Hanzo Chat structure."
 echo ""
 echo "📝 Next steps:"
 echo "1. Update .env to use api.hanzo.ai:"
@@ -60,8 +60,8 @@ echo "   OPENAI_BASE_URL=https://api.hanzo.ai/v1"
 echo "   OPENAI_API_KEY=your-hanzo-api-key"
 echo ""
 echo "2. The following core directories remain:"
-echo "   - api/          (LibreChat API)"
-echo "   - client/       (LibreChat frontend)"  
+echo "   - api/          (Hanzo Chat API)"
+echo "   - client/       (Hanzo Chat frontend)"  
 echo "   - packages/     (Shared packages)"
 echo "   - config/       (Configuration)"
 echo "   - e2e/          (End-to-end tests)"

@@ -11,7 +11,7 @@ const bcrypt = require('bcryptjs');
 // MongoDB connection URL from environment or default
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://hanzo:hanzo123@localhost:27017/HanzoChat?authSource=admin';
 
-// User schema (matching LibreChat's schema)
+// User schema (matching Hanzo Chat's schema)
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
