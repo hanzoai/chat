@@ -1,10 +1,10 @@
 {
   "name": "@librechat/client",
   "version": "0.4.52",
-  "description": "React components for LibreChat",
+  "description": "React components for Hanzo Chat",
   "repository": {
     "type": "git",
-    "url": "https://github.com/danny-avila/LibreChat"
+    "url": "https://github.com/hanzoai/chat"
   },
   "main": "dist/index.js",
   "module": "dist/index.es.js",

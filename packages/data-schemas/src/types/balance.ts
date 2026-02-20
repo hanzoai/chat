@@ -9,4 +9,7 @@ export interface IBalance extends Document {
   refillIntervalUnit: 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
   lastRefill: Date;
   refillAmount: number;
+  // Credit expiry
+  expiresAt?: Date;
+  creditsGrantedAt?: Date;
 }

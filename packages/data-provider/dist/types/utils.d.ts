@@ -3,3 +3,8 @@ export declare const envVarRegex: RegExp;
 export declare function extractVariableName(value: string): string | null;
 /** Extracts the value of an environment variable from a string. */
 export declare function extractEnvVariable(value: string): string;
+/**
+ * Normalize the endpoint name to system-expected value.
+ * @param name
+ */
+export declare function normalizeEndpointName(name?: string): string;

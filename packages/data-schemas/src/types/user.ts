@@ -52,6 +52,10 @@ export interface BalanceConfig {
   refillIntervalValue?: number;
   refillIntervalUnit?: string;
   refillAmount?: number;
+  /** Number of days after which signup credits expire (0 = no expiry) */
+  creditExpiryDays?: number;
+  /** Minimum balance (in tokenCredits) below which requests are blocked */
+  minBalance?: number;
 }
 
 export interface CreateUserRequest extends Partial<IUser> {

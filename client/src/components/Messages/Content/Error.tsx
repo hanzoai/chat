@@ -100,10 +100,23 @@ const errorMessages = {
   },
   token_balance: (json: TTokenBalance) => {
     const { balance, tokenCost, promptTokens, generations } = json;
-    const message = `Insufficient Funds! Balance: ${balance}. Prompt tokens: ${promptTokens}. Cost: ${tokenCost}.`;
+    // Convert tokenCredits to USD: 1,000,000 tokenCredits = $1 USD
+    const balanceUsd = (balance / 1000000).toFixed(4);
+    const costUsd = (tokenCost / 1000000).toFixed(4);
+    const message = `Insufficient balance. Your balance is $${balanceUsd} USD, but this request costs $${costUsd} USD (${promptTokens} prompt tokens). Please add funds to continue.`;
     return (
       <>
         {message}
+        <br />
+        <br />
+        <a
+          href="https://hanzo.ai/billing"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-hanzo-red underline"
+        >
+          Add funds to your Hanzo account
+        </a>
         {generations && (
           <>
             <br />

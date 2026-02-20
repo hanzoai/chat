@@ -36,6 +36,16 @@ const balanceSchema = new Schema<t.IBalance>({
     type: Number,
     default: 0,
   },
+  // Credit expiry: date when signup credits expire
+  expiresAt: {
+    type: Date,
+    default: null,
+  },
+  // When credits were initially granted
+  creditsGrantedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 export default balanceSchema;

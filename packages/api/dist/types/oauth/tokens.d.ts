@@ -1,5 +1,5 @@
-import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
-import type { TokenMethods } from '@hanzochat/data-schemas';
+import { TokenExchangeMethodEnum } from 'librechat-data-provider';
+import type { TokenMethods } from '@librechat/data-schemas';
 export declare function createHandleOAuthToken({ findToken, updateToken, createToken, }: {
     findToken: TokenMethods['findToken'];
     updateToken: TokenMethods['updateToken'];
@@ -72,3 +72,4 @@ export declare function getAccessToken({ code, userId, identifier, client_url, r
     refresh_token?: string;
     refresh_token_expires_in?: number;
 }>;
+//# sourceMappingURL=tokens.d.ts.map

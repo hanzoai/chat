@@ -1,4 +1,4 @@
-import type { TCustomConfig } from '@hanzochat/data-provider';
+import type { AppConfig } from '@librechat/data-schemas';
 /**
  * Default retention period for temporary chats in hours
  */
@@ -13,13 +13,14 @@ export declare const MIN_RETENTION_HOURS = 1;
 export declare const MAX_RETENTION_HOURS = 8760;
 /**
  * Gets the temporary chat retention period from environment variables or config
- * @param config - The custom configuration object
+ * @param interfaceConfig - The custom configuration object
  * @returns The retention period in hours
  */
-export declare function getTempChatRetentionHours(config?: Partial<TCustomConfig> | null): number;
+export declare function getTempChatRetentionHours(interfaceConfig?: AppConfig['interfaceConfig'] | null): number;
 /**
  * Creates an expiration date for temporary chats
- * @param config - The custom configuration object
+ * @param interfaceConfig - The custom configuration object
  * @returns The expiration date
  */
-export declare function createTempChatExpirationDate(config?: Partial<TCustomConfig>): Date;
+export declare function createTempChatExpirationDate(interfaceConfig?: AppConfig['interfaceConfig']): Date;
+//# sourceMappingURL=tempChatRetention.d.ts.map

@@ -1,11 +1,4 @@
 import type { TAzureGroups, TAzureGroupMap, TValidatedAzureConfig, TAzureConfigValidationResult } from '../src/config';
-export declare const deprecatedAzureVariables: {
-    key: string;
-    description: string;
-}[];
-export declare const conflictingAzureVariables: {
-    key: string;
-}[];
 export declare function validateAzureGroups(configs: TAzureGroups): TAzureConfigValidationResult;
 type AzureOptions = {
     azureOpenAIApiKey: string;

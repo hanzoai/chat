@@ -6,4 +6,6 @@ export interface BalanceUpdateFields {
   refillIntervalUnit?: string;
   refillAmount?: number;
   lastRefill?: Date;
+  expiresAt?: Date;
+  creditsGrantedAt?: Date;
 }
