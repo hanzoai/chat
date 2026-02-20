@@ -1,7 +1,7 @@
 apiVersion: v2
 name: librechat
-description: A Helm chart for LibreChat
-icon: https://www.librechat.ai/librechat_alt.svg
+description: A Helm chart for Hanzo Chat
+icon: https://hanzo.ai/favicon.ico
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -22,10 +22,10 @@ version: 1.8.10
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 
-# renovate: image=ghcr.io/danny-avila/librechat
+# renovate: image=ghcr.io/hanzoai/chat
 appVersion: "v0.8.0-rc2"
 
-home: https://www.librechat.ai
+home: https://hanzo.ai
 
 dependencies:
   - name: mongodb

@@ -1,5 +1,5 @@
-# Hanzo Chat - LibreChat Fork
-FROM ghcr.io/danny-avila/librechat:latest
+# Hanzo Chat
+FROM ghcr.io/hanzoai/chat:latest
 
 # Install additional dependencies if needed
 USER root

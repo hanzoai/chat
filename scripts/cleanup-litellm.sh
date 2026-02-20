@@ -20,7 +20,7 @@ DIRS_TO_REMOVE=(
     "model_prices_and_context_window.json"
     "proxy_server_config.yaml"
     "cost_tracking.json"
-    "ui"  # If this is the LiteLLM UI, not LibreChat UI
+    "ui"  # If this is the LiteLLM UI, not Hanzo Chat UI
 )
 
 # Python test directories that are LiteLLM specific
