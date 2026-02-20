@@ -28,7 +28,20 @@ export declare namespace Agents {
             detail?: ImageDetail;
         };
     };
-    type MessageContentComplex = ReasoningContentText | AgentUpdate | MessageContentText | MessageContentImageUrl | (Record<string, any> & {
+    type MessageContentVideoUrl = {
+        type: ContentTypes.VIDEO_URL;
+        video_url: {
+            url: string;
+        };
+    };
+    type MessageContentInputAudio = {
+        type: ContentTypes.INPUT_AUDIO;
+        input_audio: {
+            data: string;
+            format: string;
+        };
+    };
+    type MessageContentComplex = ReasoningContentText | AgentUpdate | MessageContentText | MessageContentImageUrl | MessageContentVideoUrl | MessageContentInputAudio | (Record<string, any> & {
         type?: ContentTypes | string;
     }) | (Record<string, any> & {
         type?: never;
@@ -144,11 +157,37 @@ export declare namespace Agents {
         type: StepTypes;
         id: string;
         runId?: string;
+        agentId?: string;
         index: number;
         stepIndex?: number;
+        /** Group ID for parallel content - parts with same groupId are displayed in columns */
+        groupId?: number;
         stepDetails: StepDetails;
         usage: null | object;
     };
+    /** Content part for aggregated message content */
+    interface ContentPart {
+        type: string;
+        text?: string;
+        [key: string]: unknown;
+    }
+    /** User message metadata for rebuilding submission on reconnect */
+    interface UserMessageMeta {
+        messageId: string;
+        parentMessageId?: string;
+        conversationId?: string;
+        text?: string;
+    }
+    /** State data sent to reconnecting clients */
+    interface ResumeState {
+        runSteps: RunStep[];
+        /** Aggregated content parts - can be MessageContentComplex[] or ContentPart[] */
+        aggregatedContent?: MessageContentComplex[];
+        userMessage?: UserMessageMeta;
+        responseMessageId?: string;
+        conversationId?: string;
+        sender?: string;
+    }
     /**
      * Represents a run step delta i.e. any changed fields on a run step during
      * streaming.
@@ -239,7 +278,7 @@ export declare namespace Agents {
         type: ContentTypes.THINK;
         think: string;
     };
-    type ContentType = ContentTypes.THINK | ContentTypes.TEXT | ContentTypes.IMAGE_URL | string;
+    type ContentType = ContentTypes.THINK | ContentTypes.TEXT | ContentTypes.IMAGE_URL | ContentTypes.VIDEO_URL | ContentTypes.INPUT_AUDIO | string;
 }
 export type ToolCallResult = {
     user: string;
@@ -303,14 +342,14 @@ export type ActionMetadataRuntime = ActionMetadata & {
     oauth_token_expires_at?: Date;
 };
 export type MCP = {
-    mcp_id: string;
+    serverName: string;
     metadata: MCPMetadata;
 } & ({
     assistant_id: string;
     agent_id?: never;
 } | {
     assistant_id?: never;
-    agent_id: string;
+    agent_id?: string;
 });
 export type MCPMetadata = Omit<ActionMetadata, 'auth'> & {
     name?: string;
@@ -330,6 +369,45 @@ export type AgentToolType = {
     agent_id?: never;
 } | {
     assistant_id?: never;
-    agent_id: string;
+    agent_id?: string;
 });
 export type ToolMetadata = TPlugin;
+export interface BaseMessage {
+    content: string;
+    role?: string;
+    [key: string]: unknown;
+}
+export interface BaseGraphState {
+    [key: string]: unknown;
+}
+export type GraphEdge = {
+    /** Agent ID, use a list for multiple sources */
+    from: string | string[];
+    /** Agent ID, use a list for multiple destinations */
+    to: string | string[];
+    description?: string;
+    /** Can return boolean or specific destination(s) */
+    condition?: (state: BaseGraphState) => boolean | string | string[];
+    /** 'handoff' creates tools for dynamic routing, 'direct' creates direct edges, which also allow parallel execution */
+    edgeType?: 'handoff' | 'direct';
+    /**
+     * For direct edges: Optional prompt to add when transitioning through this edge.
+     * String prompts can include variables like {results} which will be replaced with
+     * messages from startIndex onwards. When {results} is used, excludeResults defaults to true.
+     *
+     * For handoff edges: Description for the input parameter that the handoff tool accepts,
+     * allowing the supervisor to pass specific instructions/context to the transferred agent.
+     */
+    prompt?: string | ((messages: BaseMessage[], runStartIndex: number) => string | undefined);
+    /**
+     * When true, excludes messages from startIndex when adding prompt.
+     * Automatically set to true when {results} variable is used in prompt.
+     */
+    excludeResults?: boolean;
+    /**
+     * For handoff edges: Customizes the parameter name for the handoff input.
+     * Defaults to "instructions" if not specified.
+     * Only applies when prompt is provided for handoff edges.
+     */
+    promptKey?: string;
+};

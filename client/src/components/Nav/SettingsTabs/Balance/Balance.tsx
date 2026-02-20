@@ -22,6 +22,7 @@ function Balance() {
     refillAmount,
     refillIntervalUnit,
     refillIntervalValue,
+    expiresAt,
   } = balanceData ?? {};
 
   // Check that all auto-refill props are present
@@ -34,7 +35,7 @@ function Balance() {
   return (
     <div className="flex flex-col gap-4 p-4 text-sm text-text-primary">
       {/* Token credits display */}
-      <TokenCreditsItem tokenCredits={tokenCredits} />
+      <TokenCreditsItem tokenCredits={tokenCredits} expiresAt={expiresAt} />
 
       {/* Auto-refill display */}
       {autoRefillEnabled ? (

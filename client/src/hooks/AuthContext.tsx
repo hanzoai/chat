@@ -146,7 +146,8 @@ const AuthContextProvider = ({
           if (authConfig?.test === true) {
             return;
           }
-          navigate('/login');
+          // Let the root route show the landing page instead of forcing /login
+          setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
         }
       },
       onError: (error) => {
@@ -154,7 +155,8 @@ const AuthContextProvider = ({
         if (authConfig?.test === true) {
           return;
         }
-        navigate('/login');
+        // Let the root route show the landing page instead of forcing /login
+        setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
       },
     });
   }, []);

@@ -1,7 +1,7 @@
 {
   "name": "@librechat/data-schemas",
   "version": "0.0.36",
-  "description": "Mongoose schemas and models for LibreChat",
+  "description": "Mongoose schemas and models for Hanzo Chat",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.es.js",
@@ -28,14 +28,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/danny-avila/LibreChat"
+    "url": "git+https://github.com/hanzoai/chat.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/danny-avila/LibreChat/issues"
+    "url": "https://github.com/hanzoai/chat/issues"
   },
-  "homepage": "https://librechat.ai",
+  "homepage": "https://hanzo.ai/chat",
   "devDependencies": {
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-commonjs": "^29.0.0",
@@ -57,6 +57,10 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.0.4"
   },
+  "dependencies": {
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
   "peerDependencies": {
     "jsonwebtoken": "^9.0.2",
     "klona": "^2.0.6",
@@ -76,6 +80,6 @@
     "mongoose",
     "schema",
     "typescript",
-    "librechat"
+    "hanzo-chat"
   ]
 }

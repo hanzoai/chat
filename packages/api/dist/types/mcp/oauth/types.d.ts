@@ -17,6 +17,12 @@ export interface OAuthMetadata {
     token_endpoint_auth_methods_supported?: string[];
     /** Code challenge methods supported */
     code_challenge_methods_supported?: string[];
+    /** Dynamic client registration endpoint (RFC 7591) */
+    registration_endpoint?: string;
+    /** Revocation endpoint */
+    revocation_endpoint?: string;
+    /** Revocation endpoint auth methods supported */
+    revocation_endpoint_auth_methods_supported?: string[];
 }
 export interface OAuthProtectedResourceMetadata {
     /** Resource identifier */
@@ -89,3 +95,4 @@ export interface ExtendedOAuthTokens extends OAuthTokens {
     /** Refresh token expiry in seconds (non-standard, some providers include this) */
     refresh_token_expires_in?: number;
 }
+//# sourceMappingURL=types.d.ts.map

@@ -4,7 +4,6 @@ export interface IConversation extends Document {
     title?: string;
     user?: string;
     messages?: Types.ObjectId[];
-    agentOptions?: unknown;
     endpoint?: string;
     endpointType?: string;
     model?: string;
@@ -26,6 +25,7 @@ export interface IConversation extends Document {
     promptCache?: boolean;
     thinking?: boolean;
     thinkingBudget?: number;
+    effort?: string;
     system?: string;
     resendFiles?: boolean;
     imageDetail?: string;
@@ -42,6 +42,12 @@ export interface IConversation extends Document {
     maxContextTokens?: number;
     max_tokens?: number;
     reasoning_effort?: string;
+    reasoning_summary?: string;
+    verbosity?: string;
+    useResponsesApi?: boolean;
+    web_search?: boolean;
+    disableStreaming?: boolean;
+    fileTokenLimit?: number;
     files?: string[];
     expiredAt?: Date;
     createdAt?: Date;

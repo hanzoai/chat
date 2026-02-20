@@ -1,5 +1,7 @@
-import { Document } from 'mongoose';
-import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
+import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import type { DeepPartial } from 'librechat-data-provider';
+import type { Document } from 'mongoose';
+import { CursorPaginationParams } from '~/common';
 export interface IRole extends Document {
     name: string;
     permissions: {
@@ -7,9 +9,10 @@ export interface IRole extends Document {
             [Permissions.USE]?: boolean;
         };
         [PermissionTypes.PROMPTS]?: {
-            [Permissions.SHARED_GLOBAL]?: boolean;
             [Permissions.USE]?: boolean;
             [Permissions.CREATE]?: boolean;
+            [Permissions.SHARE]?: boolean;
+            [Permissions.SHARE_PUBLIC]?: boolean;
         };
         [PermissionTypes.MEMORIES]?: {
             [Permissions.USE]?: boolean;
@@ -18,9 +21,10 @@ export interface IRole extends Document {
             [Permissions.READ]?: boolean;
         };
         [PermissionTypes.AGENTS]?: {
-            [Permissions.SHARED_GLOBAL]?: boolean;
             [Permissions.USE]?: boolean;
             [Permissions.CREATE]?: boolean;
+            [Permissions.SHARE]?: boolean;
+            [Permissions.SHARE_PUBLIC]?: boolean;
         };
         [PermissionTypes.MULTI_CONVO]?: {
             [Permissions.USE]?: boolean;
@@ -34,5 +38,45 @@ export interface IRole extends Document {
         [PermissionTypes.WEB_SEARCH]?: {
             [Permissions.USE]?: boolean;
         };
+        [PermissionTypes.PEOPLE_PICKER]?: {
+            [Permissions.VIEW_USERS]?: boolean;
+            [Permissions.VIEW_GROUPS]?: boolean;
+            [Permissions.VIEW_ROLES]?: boolean;
+        };
+        [PermissionTypes.MARKETPLACE]?: {
+            [Permissions.USE]?: boolean;
+        };
+        [PermissionTypes.FILE_SEARCH]?: {
+            [Permissions.USE]?: boolean;
+        };
+        [PermissionTypes.FILE_CITATIONS]?: {
+            [Permissions.USE]?: boolean;
+        };
+        [PermissionTypes.MCP_SERVERS]?: {
+            [Permissions.USE]?: boolean;
+            [Permissions.CREATE]?: boolean;
+            [Permissions.SHARE]?: boolean;
+            [Permissions.SHARE_PUBLIC]?: boolean;
+        };
+        [PermissionTypes.REMOTE_AGENTS]?: {
+            [Permissions.USE]?: boolean;
+            [Permissions.CREATE]?: boolean;
+            [Permissions.SHARE]?: boolean;
+            [Permissions.SHARE_PUBLIC]?: boolean;
+        };
     };
+}
+export type RolePermissions = IRole['permissions'];
+export type RolePermissionsInput = DeepPartial<RolePermissions>;
+export interface CreateRoleRequest {
+    name: string;
+    permissions: RolePermissionsInput;
+}
+export interface UpdateRoleRequest {
+    name?: string;
+    permissions?: RolePermissionsInput;
+}
+export interface RoleFilterOptions extends CursorPaginationParams {
+    search?: string;
+    hasPermission?: string;
 }

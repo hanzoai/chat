@@ -1,9 +1,15 @@
-import type { MCPOptions } from '@hanzochat/data-provider';
+import { type MCPOptions } from 'librechat-data-provider';
 import type { FlowStateManager } from '~/flow/manager';
 import type { OAuthClientInformation, MCPOAuthFlowMetadata, MCPOAuthTokens } from './types';
 export declare class MCPOAuthHandler {
     private static readonly FLOW_TYPE;
     private static readonly FLOW_TTL;
+    private static getForcedTokenEndpointAuthMethod;
+    private static resolveTokenEndpointAuthMethod;
+    /**
+     * Creates a fetch function with custom headers injected
+     */
+    private static createOAuthFetch;
     /**
      * Discovers OAuth metadata from the server
      */
@@ -15,7 +21,7 @@ export declare class MCPOAuthHandler {
     /**
      * Initiates the OAuth flow for an MCP server
      */
-    static initiateOAuthFlow(serverName: string, serverUrl: string, userId: string, config: MCPOptions['oauth'] | undefined): Promise<{
+    static initiateOAuthFlow(serverName: string, serverUrl: string, userId: string, oauthHeaders: Record<string, string>, config?: MCPOptions['oauth']): Promise<{
         authorizationUrl: string;
         flowId: string;
         flowMetadata: MCPOAuthFlowMetadata;
@@ -23,7 +29,7 @@ export declare class MCPOAuthHandler {
     /**
      * Completes the OAuth flow by exchanging the authorization code for tokens
      */
-    static completeOAuthFlow(flowId: string, authorizationCode: string, flowManager: FlowStateManager<MCPOAuthTokens>): Promise<MCPOAuthTokens>;
+    static completeOAuthFlow(flowId: string, authorizationCode: string, flowManager: FlowStateManager<MCPOAuthTokens>, oauthHeaders: Record<string, string>): Promise<MCPOAuthTokens>;
     /**
      * Gets the OAuth flow metadata
      */
@@ -42,11 +48,27 @@ export declare class MCPOAuthHandler {
      */
     private static getDefaultRedirectUri;
     /**
+     * Processes and logs a token refresh response from an OAuth server.
+     * Normalizes the response to MCPOAuthTokens format and logs debug info about refresh token rotation.
+     */
+    private static processRefreshResponse;
+    /**
      * Refreshes OAuth tokens using a refresh token
      */
     static refreshOAuthTokens(refreshToken: string, metadata: {
         serverName: string;
         serverUrl?: string;
         clientInfo?: OAuthClientInformation;
-    }, config?: MCPOptions['oauth']): Promise<MCPOAuthTokens>;
+    }, oauthHeaders: Record<string, string>, config?: MCPOptions['oauth']): Promise<MCPOAuthTokens>;
+    /**
+     * Revokes OAuth tokens at the authorization server (RFC 7009)
+     */
+    static revokeOAuthToken(serverName: string, token: string, tokenType: 'refresh' | 'access', metadata: {
+        serverUrl: string;
+        clientId: string;
+        clientSecret: string;
+        revocationEndpoint?: string;
+        revocationEndpointAuthMethodsSupported?: string[];
+    }, oauthHeaders?: Record<string, string>): Promise<void>;
 }
+//# sourceMappingURL=handler.d.ts.map
