@@ -1,4 +1,4 @@
-# Default values for librechat.
+# Default values for Hanzo Chat.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -19,7 +19,7 @@ global:
     existingSecretName: "librechat-credentials-env"
     # Used for Setting the Right Key, can be something like AZURE_API_KEY, if Azure OpenAI is used
     existingSecretApiKey: OPENAI_API_KEY
-    # Optionally add extra globally accessible environment variables here. These can be referenced under ConfigEnv to make them accessible inside LibreChat
+    # Optionally add extra globally accessible environment variables here. These can be referenced under ConfigEnv to make them accessible inside Hanzo Chat
     # env:
     #  - name: API_KEY
     #    valueFrom:
@@ -48,7 +48,7 @@ librechat:
     # - MEILI_MASTER_KEY
   existingSecretName: "librechat-credentials-env"
   
-  # For adding a custom config yaml-file you can set the contents in this var. See https://www.librechat.ai/docs/configuration/librechat_yaml/example
+  # For adding a custom config yaml-file you can set the contents in this var.
   configYamlContent: ""
   # configYamlContent: |
   #   version: 1.0.8
@@ -117,7 +117,7 @@ librechat-rag-api:
 
 
 image:
-  repository: danny-avila/librechat
+  repository: hanzoai/chat
   registry: ghcr.io
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -141,7 +141,7 @@ serviceAccount:
   name: ""
 
 lifecycle: {}
-# # base for adding a custom banner // see https://github.com/danny-avila/LibreChat/pull/3952 for an example
+# # base for adding a custom banner
 #   postStart:
 #     exec:
 #       command: ["/bin/sh", "-c", "npm run update-banner <displayFrom(Format: yyyy-mm-ddTHH:MM:SSZ)> <displayTo(Format: yyyy-mm-ddTHH:MM:SSZ)> <message> <isPublic(true/false)>"]
@@ -294,7 +294,7 @@ mongodb:
   auth:
     enabled: false
   databases:
-   - LibreChat
+   - HanzoChat
 #  persistence: 
 #    size: 8Gi
 
