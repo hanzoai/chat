@@ -27,23 +27,26 @@ jobs:
       NODE_OPTIONS: '--max-old-space-size=${{ secrets.NODE_MAX_OLD_SPACE_SIZE || 6144 }}'
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - name: Use Node.js 20.x
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Data Provider Package
-        run: npm run build:data-provider
+        run: pnpm run build:data-provider
 
       - name: Install Data Schemas Package
-        run: npm run build:data-schemas
+        run: pnpm run build:data-schemas
 
       - name: Install API Package
-        run: npm run build:api
+        run: pnpm run build:api
 
       - name: Create empty auth.json file
         run: |
@@ -53,7 +56,7 @@ jobs:
       - name: Check for Circular dependency in rollup
         working-directory: ./packages/data-provider
         run: |
-          output=$(npm run rollup:api)
+          output=$(pnpm run rollup:api)
           echo "$output"
           if echo "$output" | grep -q "Circular dependency"; then
             echo "Error: Circular dependency detected!"
@@ -64,13 +67,13 @@ jobs:
         run: cp api/test/.env.test.example api/test/.env.test
 
       - name: Run unit tests
-        run: cd api && npm run test:ci
+        run: cd api && pnpm run test:ci
 
       - name: Run librechat-data-provider unit tests
-        run: cd packages/data-provider && npm run test:ci
+        run: cd packages/data-provider && pnpm run test:ci
 
       - name: Run @librechat/data-schemas unit tests
-        run: cd packages/data-schemas && npm run test:ci
+        run: cd packages/data-schemas && pnpm run test:ci
 
       - name: Run @librechat/api unit tests
-        run: cd packages/api && npm run test:ci
+        run: cd packages/api && pnpm run test:ci
