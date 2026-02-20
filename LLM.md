@@ -1,6 +1,6 @@
 # Hanzo Chat
 
-Fork of LibreChat v0.8.0-rc2. AI chat interface with multi-model support,
+Based on LibreChat v0.8.0-rc2. AI chat interface with multi-model support,
 MCP integration, agents, and RAG. Live at **chat.hanzo.ai**.
 
 **Repo**: `github.com/hanzoai/chat`
@@ -92,5 +92,24 @@ CREDS_KEY= CREDS_IV=        # Credential encryption
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
-- `@librechat/api`, `librechat-data-provider`
+- `@librechat/api`, `@librechat/client`, `@librechat/data-schemas`, `librechat-data-provider`, `@librechat/agents`
 - Functions: `extractLibreChatParams`, `importLibreChatConvo`
+- Type names: `LibreChatKeys`, `LibreChatParams`
+- Config filename: `librechat.yaml` (upstream convention)
+- Env var: `LIBRECHAT_LOG_DIR`
+
+## Branding Cleanup Log
+
+All user-visible `LibreChat` / `librechat.ai` references replaced with Hanzo equivalents:
+- All `librechat.ai` URLs -> `hanzo.ai/docs/chat/...`
+- `code.librechat.ai` -> `hanzo.ai/docs/chat/code-interpreter/...`
+- package.json repo URLs -> `github.com/hanzoai/chat`
+- package.json homepages -> `hanzo.ai/chat`
+- package.json descriptions -> "Hanzo Chat"
+- Help/FAQ default URL -> `hanzo.ai/chat`
+- Docker Compose MongoDB DB name -> `HanzoChat`
+- GitHub workflow repo refs -> `hanzoai/chat`
+- MCP User-Agent -> `HanzoChat-MCP-Client`
+- JSDoc comments: LibreChat -> Hanzo Chat
+- Log messages: LibreChat -> Hanzo Chat
+- Helm chart URLs -> hanzo.ai/docs/chat/...

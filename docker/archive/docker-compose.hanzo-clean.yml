@@ -1,4 +1,4 @@
-# Hanzo AI Chat - Clean LibreChat Deployment
+# Hanzo AI Chat - Clean Deployment
 # Uses external Hanzo API at api.hanzo.ai
 
 version: '3.8'
@@ -43,7 +43,7 @@ services:
     networks:
       - hanzo-network
 
-  # Hanzo Chat (LibreChat)
+  # Hanzo Chat
   chat:
     build:
       context: .
