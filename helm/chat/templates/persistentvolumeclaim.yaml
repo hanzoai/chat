@@ -1,0 +1,16 @@
+{{- if .Values.chat.imageVolume.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hanzo-chat.fullname" $ }}-images
+spec:
+  accessModes:
+    - {{ .Values.chat.imageVolume.accessModes }}
+{{- if .Values.chat.imageVolume.storageClassName }}
+  storageClassName: {{ .Values.chat.imageVolume.storageClassName }}
+{{- end }}          
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.chat.imageVolume.size }}
+{{- end }}

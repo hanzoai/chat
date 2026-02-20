@@ -1,0 +1,4 @@
+
+{{ if hasKey .Values.env }}
+  {{ fail "The Value env has been renamed and moved to hanzo-chat.configEnv. Refer to https://hanzo.ai/docs/chat/helm_chart#migrate for more information" }}
+{{ end }}
