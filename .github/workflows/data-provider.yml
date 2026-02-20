@@ -22,11 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - uses: actions/setup-node@v6
         with:
           node-version: 20
-      - run: cd packages/data-provider && npm ci
-      - run: cd packages/data-provider && npm run build
+          cache: 'pnpm'
+      - run: cd packages/data-provider && pnpm install --frozen-lockfile
+      - run: cd packages/data-provider && pnpm run build
 
   publish-npm:
     needs: build
@@ -34,14 +38,18 @@ jobs:
     environment: publish  # Must match npm trusted publisher config
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - uses: actions/setup-node@v6
         with:
           node-version: 20
+          cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
-      
+
       - name: Update npm for OIDC support
         run: npm install -g npm@latest  # Must be 11.5.1+ for provenance
-      
-      - run: cd packages/data-provider && npm ci
-      - run: cd packages/data-provider && npm run build
+
+      - run: cd packages/data-provider && pnpm install --frozen-lockfile
+      - run: cd packages/data-provider && pnpm run build
       - run: cd packages/data-provider && npm publish --provenance

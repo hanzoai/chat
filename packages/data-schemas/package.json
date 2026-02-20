@@ -64,7 +64,7 @@
   "peerDependencies": {
     "jsonwebtoken": "^9.0.2",
     "klona": "^2.0.6",
-    "librechat-data-provider": "*",
+    "librechat-data-provider": "workspace:*",
     "lodash": "^4.17.23",
     "meilisearch": "^0.38.0",
     "mongoose": "^8.12.1",
