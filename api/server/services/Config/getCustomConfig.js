@@ -12,7 +12,7 @@ const getLogStores = require('~/cache/getLogStores');
  * */
 async function getCustomConfig() {
   const cache = getLogStores(CacheKeys.STATIC_CONFIG);
-  return (await cache.get(CacheKeys.LIBRECHAT_YAML_CONFIG)) || (await loadCustomConfig());
+  return (await cache.get(CacheKeys.CHAT_YAML_CONFIG)) || (await loadCustomConfig());
 }
 
 /**

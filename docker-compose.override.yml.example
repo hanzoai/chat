@@ -1,4 +1,4 @@
-# Please consult our docs for more info: https://www.librechat.ai/docs/configuration/docker_override
+# Please consult our docs for more info: https://hanzo.ai/docs/chat/configuration/docker_override
 
 # TO USE THIS FILE, FIRST UNCOMMENT THE LINE ('services:')
 
@@ -15,24 +15,24 @@
 #   api:
 #     volumes:
 #     - type: bind
-#       source: ./librechat.yaml
-#       target: /app/librechat.yaml
+#       source: ./chat.yaml
+#       target: /app/chat.yaml
 #     image: ghcr.io/hanzoai/chat:latest
 
 # ---------------------------------------------------
 
 # services:
 
-# # USE LIBRECHAT CONFIG FILE
+# # USE CHAT CONFIG FILE
 #   api:
 #     volumes:
 #     - type: bind
-#       source: ./librechat.yaml
-#       target: /app/librechat.yaml
+#       source: ./chat.yaml
+#       target: /app/chat.yaml
 
 # # LOCAL BUILD
 #   api:
-#     image: librechat
+#     image: hanzo-chat
 #     build:
 #       context: .
 #       target: node

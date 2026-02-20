@@ -61,7 +61,7 @@ packages/
 
 ## Configuration
 
-- `librechat.yaml` (or ConfigMap `chat-config` -> `/app/librechat.yaml`)
+- `chat.yaml` (or ConfigMap `chat-config` -> `/app/chat.yaml`)
 - `hanzo-chat.example.yaml` - Hanzo-specific example config
 - `.env` for secrets
 
@@ -95,12 +95,21 @@ These are kept as-is from upstream (npm deps, not worth renaming):
 - `@librechat/api`, `@librechat/client`, `@librechat/data-schemas`, `librechat-data-provider`, `@librechat/agents`
 - Functions: `extractLibreChatParams`, `importLibreChatConvo`
 - Type names: `LibreChatKeys`, `LibreChatParams`
-- Config filename: `librechat.yaml` (upstream convention)
-- Env var: `LIBRECHAT_LOG_DIR`
+- Env var: `LIBRECHAT_LOG_DIR` (kept for backward compat)
+- MCP template vars: `LIBRECHAT_USER_*` (internal protocol identifiers)
 
 ## Branding Cleanup Log
 
 All user-visible `LibreChat` / `librechat.ai` references replaced with Hanzo equivalents:
+- Config file: `librechat.yaml` -> `chat.yaml` (renamed Feb 2026)
+- Config loading: `defaultConfigPath` -> `chat.yaml`
+- Cache key: `LIBRECHAT_YAML_CONFIG` -> `CHAT_YAML_CONFIG`
+- Docker volumes: `./librechat.yaml:/app/librechat.yaml` -> `./chat.yaml:/app/chat.yaml`
+- Helm charts: `helm/librechat/` -> `helm/chat/`, all template refs updated
+- Helm values keys: `librechat` -> `chat`
+- Dockerfile: `Dockerfile.librechat` -> `Dockerfile.chat`
+- Translation keys: `com_agents_by_librechat` -> `com_agents_by_hanzo`
+- Translation keys: `com_ui_librechat_code_*` -> `com_ui_hanzo_code_*`
 - All `librechat.ai` URLs -> `hanzo.ai/docs/chat/...`
 - `code.librechat.ai` -> `hanzo.ai/docs/chat/code-interpreter/...`
 - package.json repo URLs -> `github.com/hanzoai/chat`
@@ -113,3 +122,11 @@ All user-visible `LibreChat` / `librechat.ai` references replaced with Hanzo equ
 - JSDoc comments: LibreChat -> Hanzo Chat
 - Log messages: LibreChat -> Hanzo Chat
 - Helm chart URLs -> hanzo.ai/docs/chat/...
+
+## Zen Model Integration
+
+14 Zen models configured in `chat.yaml` under `endpoints.custom` (Hanzo endpoint):
+- zen4 series (9): zen4, zen4-ultra, zen4-pro, zen4-max, zen4-mini, zen4-thinking, zen4-coder, zen4-coder-pro, zen4-coder-flash
+- zen3 series (5): zen3-omni, zen3-vl, zen3-nano, zen3-guard, zen3-embedding
+- Default title/summary model: zen4-mini
+- All routed through api.hanzo.ai/v1

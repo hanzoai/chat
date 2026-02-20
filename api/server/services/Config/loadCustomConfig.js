@@ -15,7 +15,7 @@ const {
 const getLogStores = require('~/cache/getLogStores');
 
 const projectRoot = path.resolve(__dirname, '..', '..', '..', '..');
-const defaultConfigPath = path.resolve(projectRoot, 'librechat.yaml');
+const defaultConfigPath = path.resolve(projectRoot, 'chat.yaml');
 
 let i = 0;
 
@@ -45,7 +45,7 @@ async function loadCustomConfig(printConfig = true) {
     if (!customConfig) {
       i === 0 &&
         logger.info(
-          'Custom config file missing or YAML format invalid.\n\nCheck out the latest config file guide for configurable options and features.\nhttps://hanzo.ai/docs/chat/configuration/librechat_yaml\n\n',
+          'Custom config file missing or YAML format invalid.\n\nCheck out the latest config file guide for configurable options and features.\nhttps://hanzo.ai/docs/chat/configuration/chat_yaml\n\n',
         );
       i === 0 && i++;
       return null;
@@ -80,7 +80,7 @@ Please specify a correct \`imageOutputType\` value (case-sensitive).
       - ${EImageOutputType.WEBP}
       
       Refer to the latest config file guide for more information:
-      https://hanzo.ai/docs/chat/configuration/librechat_yaml`,
+      https://hanzo.ai/docs/chat/configuration/chat_yaml`,
     );
   }
   if (!result.success) {
@@ -121,7 +121,7 @@ https://hanzo.ai/docs/chat/configuration/stt_tts`);
 
   if (customConfig.cache) {
     const cache = getLogStores(CacheKeys.STATIC_CONFIG);
-    await cache.set(CacheKeys.LIBRECHAT_YAML_CONFIG, customConfig);
+    await cache.set(CacheKeys.CHAT_YAML_CONFIG, customConfig);
   }
 
   if (result.data.modelSpecs) {

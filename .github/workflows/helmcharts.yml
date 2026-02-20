@@ -27,13 +27,13 @@ jobs:
         uses: azure/setup-helm@v4
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      
+
       - name: Build Subchart Deps
         run: |
-          cd helm/librechat
-          helm dependency build  
-          cd ../librechat-rag-api
-          helm dependency build      
+          cd helm/chat
+          helm dependency build
+          cd ../chat-rag-api
+          helm dependency build
 
       - name: Get Chart Version
         id: chart-version
@@ -50,26 +50,26 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Run Helm OCI Charts Releaser
-      # This is for the librechat chart
-      - name: Release Helm OCI Charts for librechat
+      # This is for the hanzo-chat chart
+      - name: Release Helm OCI Charts for hanzo-chat
         uses: appany/helm-oci-chart-releaser@v0.5.0
         with:
-          name: librechat
-          repository: ${{ github.actor }}/librechat-chart
+          name: hanzo-chat
+          repository: ${{ github.actor }}/hanzo-chat-chart
           tag: ${{ steps.chart-version.outputs.CHART_VERSION }}
-          path: helm/librechat
+          path: helm/chat
           registry: ghcr.io
           registry_username: ${{ github.actor }}
           registry_password: ${{ secrets.GITHUB_TOKEN }}
-      
-      # this is for the librechat-rag-api chart
-      - name: Release Helm OCI Charts for librechat-rag-api
+
+      # This is for the chat-rag-api chart
+      - name: Release Helm OCI Charts for chat-rag-api
         uses: appany/helm-oci-chart-releaser@v0.5.0
         with:
-          name: librechat-rag-api
-          repository: ${{ github.actor }}/librechat-chart
+          name: chat-rag-api
+          repository: ${{ github.actor }}/hanzo-chat-chart
           tag: ${{ steps.chart-version.outputs.CHART_VERSION }}
-          path: helm/librechat-rag-api
+          path: helm/chat-rag-api
           registry: ghcr.io
           registry_username: ${{ github.actor }}
           registry_password: ${{ secrets.GITHUB_TOKEN }}

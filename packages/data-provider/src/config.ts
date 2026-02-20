@@ -1163,9 +1163,9 @@ export enum CacheKeys {
    */
   TOKEN_CONFIG = 'TOKEN_CONFIG',
   /**
-   * Key for the librechat yaml config cache.
+   * Key for the chat yaml config cache.
    */
-  LIBRECHAT_YAML_CONFIG = 'LIBRECHAT_YAML_CONFIG',
+  CHAT_YAML_CONFIG = 'CHAT_YAML_CONFIG',
   /**
    * Key for the static config namespace.
    */
@@ -1482,7 +1482,7 @@ export enum TTSProviders {
 export enum Constants {
   /** Key for the app's version. */
   VERSION = 'v0.8.0-rc2',
-  /** Key for the Custom Config's version (librechat.yaml). */
+  /** Key for the Custom Config's version (chat.yaml). */
   CONFIG_VERSION = '1.2.8',
   /** Standard value for the first message's `parentMessageId` value, to indicate no parent exists. */
   NO_PARENT = '00000000-0000-0000-0000-000000000000',

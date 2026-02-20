@@ -157,6 +157,78 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section className="border-t border-gray-800 py-24">
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+            Simple, transparent pricing
+          </h2>
+          <p className="mb-12 text-lg text-gray-400">
+            Pay only for what you use. No subscriptions, no surprises.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-blue-500/30 bg-blue-500/5 p-8">
+              <div className="mb-2 text-sm font-medium uppercase tracking-wider text-blue-400">
+                Free to start
+              </div>
+              <div className="mb-4 text-4xl font-bold">$5</div>
+              <p className="mb-6 text-gray-400">
+                in free credits on signup
+              </p>
+              <ul className="space-y-3 text-left text-sm text-gray-300">
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  Access to all models — GPT-4o, Claude, Gemini, and more
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  MCP tools, file uploads, and team workspaces
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  No credit card required
+                </li>
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-gray-700 bg-gray-800/30 p-8">
+              <div className="mb-2 text-sm font-medium uppercase tracking-wider text-gray-400">
+                Pay as you go
+              </div>
+              <div className="mb-4 text-4xl font-bold">Top up anytime</div>
+              <p className="mb-6 text-gray-400">
+                Only pay for the tokens you use
+              </p>
+              <ul className="space-y-3 text-left text-sm text-gray-300">
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  GPT-4o — ~$2.50 / million input tokens
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  Claude Sonnet — ~$3 / million input tokens
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  Hundreds of messages per dollar on nano models
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="border-t border-gray-800 py-24">
         <div className="mx-auto max-w-4xl px-6 text-center">
