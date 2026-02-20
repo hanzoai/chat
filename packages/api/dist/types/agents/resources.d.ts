@@ -1,15 +1,19 @@
-import type { AgentToolResources, TFile } from '@hanzochat/data-provider';
+import type { AgentToolResources, TFile } from 'librechat-data-provider';
+import type { IMongoFile, AppConfig, IUser } from '@librechat/data-schemas';
 import type { FilterQuery, QueryOptions, ProjectionType } from 'mongoose';
-import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { Request as ServerRequest } from 'express';
 /**
  * Function type for retrieving files from the database
  * @param filter - MongoDB filter query for files
  * @param _sortOptions - Sorting options (currently unused)
  * @param selectFields - Field selection options
+ * @param options - Additional options including userId and agentId for access control
  * @returns Promise resolving to array of files
  */
-export type TGetFiles = (filter: FilterQuery<IMongoFile>, _sortOptions: ProjectionType<IMongoFile> | null | undefined, selectFields: QueryOptions<IMongoFile> | null | undefined) => Promise<Array<TFile>>;
+export type TGetFiles = (filter: FilterQuery<IMongoFile>, _sortOptions: ProjectionType<IMongoFile> | null | undefined, selectFields: QueryOptions<IMongoFile> | null | undefined, options?: {
+    userId?: string;
+    agentId?: string;
+}) => Promise<Array<TFile>>;
 /**
  * Primes resources for agent execution by processing attachments and tool resources
  * This function:
@@ -19,20 +23,26 @@ export type TGetFiles = (filter: FilterQuery<IMongoFile>, _sortOptions: Projecti
  * 4. Prevents duplicate files across all sources
  *
  * @param params - Parameters object
- * @param params.req - Express request object containing app configuration
+ * @param params.req - Express request object
+ * @param params.appConfig - Application configuration object
  * @param params.getFiles - Function to retrieve files from database
  * @param params.requestFileSet - Set of file IDs from the current request
  * @param params.attachments - Promise resolving to array of attachment files
  * @param params.tool_resources - Existing tool resources for the agent
  * @returns Promise resolving to processed attachments and updated tool resources
  */
-export declare const primeResources: ({ req, getFiles, requestFileSet, attachments: _attachments, tool_resources: _tool_resources, }: {
-    req: ServerRequest;
+export declare const primeResources: ({ req, appConfig, getFiles, requestFileSet, attachments: _attachments, tool_resources: _tool_resources, agentId, }: {
+    req: ServerRequest & {
+        user?: IUser;
+    };
+    appConfig?: AppConfig;
     requestFileSet: Set<string>;
     attachments: Promise<Array<TFile | null>> | undefined;
     tool_resources: AgentToolResources | undefined;
     getFiles: TGetFiles;
+    agentId?: string;
 }) => Promise<{
     attachments: Array<TFile | undefined> | undefined;
     tool_resources: AgentToolResources | undefined;
 }>;
+//# sourceMappingURL=resources.d.ts.map

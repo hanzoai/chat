@@ -84,6 +84,9 @@ export declare const conversationPreset: {
     thinkingBudget: {
         type: NumberConstructor;
     };
+    effort: {
+        type: StringConstructor;
+    };
     system: {
         type: StringConstructor;
     };
@@ -137,8 +140,28 @@ export declare const conversationPreset: {
     max_tokens: {
         type: NumberConstructor;
     };
-    /** omni models only */
+    useResponsesApi: {
+        type: BooleanConstructor;
+    };
+    /** OpenAI Responses API / Anthropic API / Google API */
+    web_search: {
+        type: BooleanConstructor;
+    };
+    disableStreaming: {
+        type: BooleanConstructor;
+    };
+    fileTokenLimit: {
+        type: NumberConstructor;
+    };
+    /** Reasoning models only */
     reasoning_effort: {
+        type: StringConstructor;
+    };
+    reasoning_summary: {
+        type: StringConstructor;
+    };
+    /** Verbosity control */
+    verbosity: {
         type: StringConstructor;
     };
 };

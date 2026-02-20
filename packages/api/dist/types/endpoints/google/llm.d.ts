@@ -1,5 +1,8 @@
-import type { GoogleClientOptions, VertexAIClientOptions } from '@hanzochat/agents';
+import { Providers } from '@librechat/agents';
+import type { GoogleAIToolType } from '@langchain/google-common';
 import type * as t from '~/types';
+/** Known Google/Vertex AI parameters that map directly to the client config */
+export declare const knownGoogleParams: Set<string>;
 export declare function getSafetySettings(model?: string): Array<{
     category: string;
     threshold: string;
@@ -11,9 +14,12 @@ export declare function getSafetySettings(model?: string): Array<{
  * @param credentials - Either a JSON string or an object containing Google keys
  * @param options - The same shape as the "GoogleClient" constructor options
  */
-export declare function getGoogleConfig(credentials: string | t.GoogleCredentials | undefined, options?: t.GoogleConfigOptions): {
+export declare function getGoogleConfig(credentials: string | t.GoogleCredentials | undefined, options?: t.GoogleConfigOptions, acceptRawApiKey?: boolean): {
+    /** @type {GoogleAIToolType[]} */
+    tools: GoogleAIToolType[];
     /** @type {Providers.GOOGLE | Providers.VERTEXAI} */
-    provider: "google" | "vertexai";
+    provider: Providers.VERTEXAI | Providers.GOOGLE;
     /** @type {GoogleClientOptions | VertexAIClientOptions} */
-    llmConfig: GoogleClientOptions | VertexAIClientOptions;
+    llmConfig: import("@langchain/google-vertexai").ChatVertexAIInput;
 };
+//# sourceMappingURL=llm.d.ts.map

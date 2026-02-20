@@ -1,4 +1,4 @@
-import type { PluginAuthMethods } from '@hanzochat/data-schemas';
+import type { PluginAuthMethods } from '@librechat/data-schemas';
 export interface GetPluginAuthMapParams {
     userId: string;
     pluginKeys: string[];
@@ -11,3 +11,4 @@ export type PluginAuthMap = Record<string, Record<string, string>>;
  * @returns A map where keys are pluginKeys and values are objects of authField:decryptedValue pairs
  */
 export declare function getPluginAuthMap({ userId, pluginKeys, throwError, findPluginAuthsByKeys, }: GetPluginAuthMapParams): Promise<PluginAuthMap>;
+//# sourceMappingURL=auth.d.ts.map

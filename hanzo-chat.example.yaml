@@ -27,7 +27,10 @@ cache: true
 
 # Custom interface configuration
 interface:
-  customWelcome: 'Welcome to Hanzo Chat'
+  customWelcome: "Welcome to Hanzo Chat! Enjoy your AI-powered conversation experience."
+  # MCP Servers UI configuration
+  mcpServers:
+    placeholder: 'MCP Servers'
   # Enable/disable file search as a chatarea selection (default: true)
   # Note: This setting does not disable the Agents File Search Capability.
   # To disable the Agents Capability, see the Agents Endpoint configuration instead.
@@ -204,7 +207,8 @@ balance:
 actions:
   allowedDomains:
     - 'swapi.dev'
-    - 'librechat.ai'
+    - 'hanzo.ai'
+    - 'chat.hanzo.ai'
     - 'google.com'
     # - 'http://10.225.26.25:7894'  # Internal IP with protocol/port (uncomment if needed)
 

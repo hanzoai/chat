@@ -16,3 +16,4 @@ export interface GenericClient {
         azureOpenAIApiDeploymentName?: string;
     };
 }
+//# sourceMappingURL=azure.d.ts.map

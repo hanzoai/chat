@@ -1,5 +1,5 @@
 {
-  "name": "@librechat/backend",
+  "name": "@hanzochat/backend",
   "version": "v0.8.3-rc1",
   "description": "",
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danny-avila/LibreChat.git"
+    "url": "git+https://github.com/hanzoai/chat.git"
   },
   "keywords": [],
   "author": "",
@@ -30,9 +30,9 @@
     "~/*": "./*"
   },
   "bugs": {
-    "url": "https://github.com/danny-avila/LibreChat/issues"
+    "url": "https://github.com/hanzoai/chat/issues"
   },
-  "homepage": "https://librechat.ai",
+  "homepage": "https://hanzo.ai/chat",
   "dependencies": {
     "@anthropic-ai/vertex-sdk": "^0.14.3",
     "@aws-sdk/client-bedrock-runtime": "^3.980.0",

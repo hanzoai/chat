@@ -1,16 +1,1626 @@
-import jwt from 'jsonwebtoken';
-import { webcrypto } from 'node:crypto';
-import mongoose, { Schema } from 'mongoose';
-import { FileSources, Constants, PermissionTypes, Permissions, SystemRoles, roleDefaults } from '@hanzochat/data-provider';
-import _ from 'lodash';
-import { MeiliSearch } from 'meilisearch';
-import path from 'path';
+import { EModelEndpoint, agentsEndpointSchema, memorySchema, removeNullishValues, SafeSearchTypes, normalizeEndpointName, defaultAssistantsVersion, Capabilities, assistantEndpointSchema, validateAzureGroups, mapModelToAzureConfig, extractEnvVariable, envVarRegex, OCRStrategy, getConfigDefaults, FileSources, FileContext, Constants, PermissionTypes, Permissions, SystemRoles, parseTextParts, ResourceType, PrincipalType, PrincipalModel, roleDefaults, ErrorTypes, EToolResources, AccessRoleIds } from 'librechat-data-provider';
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import { klona } from 'klona';
-import traverse from 'traverse';
+import path$1 from 'path';
+import require$$0 from 'fs';
+import require$$2 from 'os';
+import require$$3 from 'crypto';
+import jwt from 'jsonwebtoken';
+import crypto$1 from 'node:crypto';
+import mongoose, { Schema, Types } from 'mongoose';
+import _ from 'lodash';
+import { MeiliSearch } from 'meilisearch';
 import { nanoid } from 'nanoid';
 
+/**
+ * Sets up the Agents configuration from the config (`librechat.yaml`) file.
+ * If no agents config is defined, uses the provided defaults or parses empty object.
+ *
+ * @param config - The loaded custom configuration.
+ * @param [defaultConfig] - Default configuration from getConfigDefaults.
+ * @returns The Agents endpoint configuration.
+ */
+function agentsConfigSetup(config, defaultConfig) {
+    var _a;
+    const agentsConfig = (_a = config === null || config === void 0 ? void 0 : config.endpoints) === null || _a === void 0 ? void 0 : _a[EModelEndpoint.agents];
+    if (!agentsConfig) {
+        return defaultConfig || agentsEndpointSchema.parse({});
+    }
+    const parsedConfig = agentsEndpointSchema.parse(agentsConfig);
+    return parsedConfig;
+}
+
+const hasValidAgent = (agent) => !!agent &&
+    (('id' in agent && !!agent.id) ||
+        ('provider' in agent && 'model' in agent && !!agent.provider && !!agent.model));
+const isDisabled = (config) => !config || config.disabled === true;
+function loadMemoryConfig(config) {
+    var _a;
+    if (!config)
+        return undefined;
+    if (isDisabled(config))
+        return config;
+    if (!hasValidAgent(config.agent)) {
+        return { ...config, disabled: true };
+    }
+    const charLimit = (_a = memorySchema.shape.charLimit.safeParse(config.charLimit).data) !== null && _a !== void 0 ? _a : 10000;
+    return { ...config, charLimit };
+}
+function isMemoryEnabled(config) {
+    if (isDisabled(config))
+        return false;
+    return hasValidAgent(config.agent);
+}
+
+/**
+ * Loads the default interface object.
+ * @param params - The loaded custom configuration.
+ * @param params.config - The loaded custom configuration.
+ * @param params.configDefaults - The custom configuration default values.
+ * @returns default interface object.
+ */
+async function loadDefaultInterface({ config, configDefaults, }) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+    const { interface: interfaceConfig } = config !== null && config !== void 0 ? config : {};
+    const { interface: defaults } = configDefaults;
+    const hasModelSpecs = ((_c = (_b = (_a = config === null || config === void 0 ? void 0 : config.modelSpecs) === null || _a === void 0 ? void 0 : _a.list) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) > 0;
+    const includesAddedEndpoints = ((_f = (_e = (_d = config === null || config === void 0 ? void 0 : config.modelSpecs) === null || _d === void 0 ? void 0 : _d.addedEndpoints) === null || _e === void 0 ? void 0 : _e.length) !== null && _f !== void 0 ? _f : 0) > 0;
+    const memoryConfig = config === null || config === void 0 ? void 0 : config.memory;
+    const memoryEnabled = isMemoryEnabled(memoryConfig);
+    /** Only disable memories if memory config is present but disabled/invalid */
+    const shouldDisableMemories = memoryConfig && !memoryEnabled;
+    const loadedInterface = removeNullishValues({
+        // UI elements - use schema defaults
+        endpointsMenu: (_g = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.endpointsMenu) !== null && _g !== void 0 ? _g : (hasModelSpecs ? false : defaults.endpointsMenu),
+        modelSelect: (_h = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.modelSelect) !== null && _h !== void 0 ? _h : (hasModelSpecs ? includesAddedEndpoints : defaults.modelSelect),
+        parameters: (_j = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.parameters) !== null && _j !== void 0 ? _j : (hasModelSpecs ? false : defaults.parameters),
+        presets: (_k = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.presets) !== null && _k !== void 0 ? _k : (hasModelSpecs ? false : defaults.presets),
+        sidePanel: (_l = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.sidePanel) !== null && _l !== void 0 ? _l : defaults.sidePanel,
+        privacyPolicy: (_m = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.privacyPolicy) !== null && _m !== void 0 ? _m : defaults.privacyPolicy,
+        termsOfService: (_o = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.termsOfService) !== null && _o !== void 0 ? _o : defaults.termsOfService,
+        mcpServers: (_p = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.mcpServers) !== null && _p !== void 0 ? _p : defaults.mcpServers,
+        customWelcome: (_q = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.customWelcome) !== null && _q !== void 0 ? _q : defaults.customWelcome,
+        // Permissions - only include if explicitly configured
+        bookmarks: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.bookmarks,
+        memories: shouldDisableMemories ? false : interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.memories,
+        prompts: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.prompts,
+        multiConvo: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.multiConvo,
+        agents: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.agents,
+        temporaryChat: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.temporaryChat,
+        runCode: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.runCode,
+        webSearch: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.webSearch,
+        fileSearch: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.fileSearch,
+        fileCitations: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.fileCitations,
+        peoplePicker: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.peoplePicker,
+        marketplace: interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.marketplace,
+    });
+    return loadedInterface;
+}
+
+/**
+ * ESM-native object traversal utility
+ * Simplified implementation focused on the forEach use case
+ */
+function isObject(value) {
+    if (value === null || typeof value !== 'object') {
+        return false;
+    }
+    // Treat these built-in types as leaf nodes, not objects to traverse
+    if (value instanceof Date)
+        return false;
+    if (value instanceof RegExp)
+        return false;
+    if (value instanceof Error)
+        return false;
+    if (value instanceof URL)
+        return false;
+    // Check for Buffer (Node.js)
+    if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value))
+        return false;
+    // Check for TypedArrays and ArrayBuffer
+    if (ArrayBuffer.isView(value))
+        return false;
+    if (value instanceof ArrayBuffer)
+        return false;
+    if (value instanceof SharedArrayBuffer)
+        return false;
+    // Check for other built-in types that shouldn't be traversed
+    if (value instanceof Promise)
+        return false;
+    if (value instanceof WeakMap)
+        return false;
+    if (value instanceof WeakSet)
+        return false;
+    if (value instanceof Map)
+        return false;
+    if (value instanceof Set)
+        return false;
+    // Check if it's a primitive wrapper object
+    const stringTag = Object.prototype.toString.call(value);
+    if (stringTag === '[object Boolean]' ||
+        stringTag === '[object Number]' ||
+        stringTag === '[object String]') {
+        return false;
+    }
+    return true;
+}
+// Helper to safely set a property on an object or array
+function setProperty(obj, key, value) {
+    if (Array.isArray(obj) && typeof key === 'number') {
+        obj[key] = value;
+    }
+    else if (!Array.isArray(obj) && typeof key === 'string') {
+        obj[key] = value;
+    }
+    else if (!Array.isArray(obj) && typeof key === 'number') {
+        // Handle numeric keys on objects
+        obj[key] = value;
+    }
+}
+// Helper to safely delete a property from an object
+function deleteProperty(obj, key) {
+    if (Array.isArray(obj) && typeof key === 'number') {
+        // For arrays, we should use splice, but this is handled in remove()
+        // This function is only called for non-array deletion
+        return;
+    }
+    if (!Array.isArray(obj)) {
+        delete obj[key];
+    }
+}
+function forEach(obj, callback) {
+    const visited = new WeakSet();
+    function walk(node, path = [], parent) {
+        // Check for circular references
+        let circular = null;
+        if (isObject(node)) {
+            if (visited.has(node)) {
+                // Find the circular reference in the parent chain
+                let p = parent;
+                while (p) {
+                    if (p.node === node) {
+                        circular = p;
+                        break;
+                    }
+                    p = p.parent;
+                }
+                return; // Skip circular references
+            }
+            visited.add(node);
+        }
+        const key = path.length > 0 ? path[path.length - 1] : undefined;
+        const isRoot = path.length === 0;
+        const level = path.length;
+        // Determine if this is a leaf node
+        const isLeaf = !isObject(node) ||
+            (Array.isArray(node) && node.length === 0) ||
+            Object.keys(node).length === 0;
+        // Create context
+        const context = {
+            node,
+            path: [...path],
+            parent,
+            key,
+            isLeaf,
+            notLeaf: !isLeaf,
+            isRoot,
+            notRoot: !isRoot,
+            level,
+            circular,
+            update(value) {
+                if (!isRoot && parent && key !== undefined && isObject(parent.node)) {
+                    setProperty(parent.node, key, value);
+                }
+                this.node = value;
+            },
+            remove() {
+                if (!isRoot && parent && key !== undefined && isObject(parent.node)) {
+                    if (Array.isArray(parent.node) && typeof key === 'number') {
+                        parent.node.splice(key, 1);
+                    }
+                    else {
+                        deleteProperty(parent.node, key);
+                    }
+                }
+            },
+        };
+        // Call the callback with the context
+        callback.call(context, node);
+        // Traverse children if not circular and is an object
+        if (!circular && isObject(node) && !isLeaf) {
+            if (Array.isArray(node)) {
+                for (let i = 0; i < node.length; i++) {
+                    walk(node[i], [...path, i], context);
+                }
+            }
+            else {
+                for (const [childKey, childValue] of Object.entries(node)) {
+                    walk(childValue, [...path, childKey], context);
+                }
+            }
+        }
+    }
+    walk(obj);
+}
+// Main traverse function that returns an object with forEach method
+function traverse(obj) {
+    return {
+        forEach(callback) {
+            forEach(obj, callback);
+        },
+    };
+}
+
+const SPLAT_SYMBOL = Symbol.for('splat');
+const MESSAGE_SYMBOL = Symbol.for('message');
+const CONSOLE_JSON_STRING_LENGTH = parseInt(process.env.CONSOLE_JSON_STRING_LENGTH || '', 10) || 255;
+const DEBUG_MESSAGE_LENGTH = parseInt(process.env.DEBUG_MESSAGE_LENGTH || '', 10) || 150;
+const sensitiveKeys = [
+    /^(sk-)[^\s]+/, // OpenAI API key pattern
+    /(Bearer )[^\s]+/, // Header: Bearer token pattern
+    /(api-key:? )[^\s]+/, // Header: API key pattern
+    /(key=)[^\s]+/, // URL query param: sensitive key pattern (Google)
+];
+/**
+ * Determines if a given value string is sensitive and returns matching regex patterns.
+ *
+ * @param valueStr - The value string to check.
+ * @returns An array of regex patterns that match the value string.
+ */
+function getMatchingSensitivePatterns(valueStr) {
+    if (valueStr) {
+        // Filter and return all regex patterns that match the value string
+        return sensitiveKeys.filter((regex) => regex.test(valueStr));
+    }
+    return [];
+}
+/**
+ * Redacts sensitive information from a console message and trims it to a specified length if provided.
+ * @param str - The console message to be redacted.
+ * @param trimLength - The optional length at which to trim the redacted message.
+ * @returns The redacted and optionally trimmed console message.
+ */
+function redactMessage(str, trimLength) {
+    if (!str) {
+        return '';
+    }
+    const patterns = getMatchingSensitivePatterns(str);
+    patterns.forEach((pattern) => {
+        str = str.replace(pattern, '$1[REDACTED]');
+    });
+    return str;
+}
+/**
+ * Redacts sensitive information from log messages if the log level is 'error'.
+ * Note: Intentionally mutates the object.
+ * @param info - The log information object.
+ * @returns The modified log information object.
+ */
+const redactFormat = winston.format((info) => {
+    if (info.level === 'error') {
+        // Type guard to ensure message is a string
+        if (typeof info.message === 'string') {
+            info.message = redactMessage(info.message);
+        }
+        // Handle MESSAGE_SYMBOL with type safety
+        const symbolValue = info[MESSAGE_SYMBOL];
+        if (typeof symbolValue === 'string') {
+            info[MESSAGE_SYMBOL] = redactMessage(symbolValue);
+        }
+    }
+    return info;
+});
+/**
+ * Truncates long strings, especially base64 image data, within log messages.
+ *
+ * @param value - The value to be inspected and potentially truncated.
+ * @param length - The length at which to truncate the value. Default: 100.
+ * @returns The truncated or original value.
+ */
+const truncateLongStrings = (value, length = 100) => {
+    if (typeof value === 'string') {
+        return value.length > length ? value.substring(0, length) + '... [truncated]' : value;
+    }
+    return value;
+};
+/**
+ * An array mapping function that truncates long strings (objects converted to JSON strings).
+ * @param item - The item to be condensed.
+ * @returns The condensed item.
+ */
+const condenseArray = (item) => {
+    if (typeof item === 'string') {
+        return truncateLongStrings(JSON.stringify(item));
+    }
+    else if (typeof item === 'object') {
+        return truncateLongStrings(JSON.stringify(item));
+    }
+    return item;
+};
+/**
+ * Formats log messages for debugging purposes.
+ * - Truncates long strings within log messages.
+ * - Condenses arrays by truncating long strings and objects as strings within array items.
+ * - Redacts sensitive information from log messages if the log level is 'error'.
+ * - Converts log information object to a formatted string.
+ *
+ * @param options - The options for formatting log messages.
+ * @returns The formatted log message.
+ */
+const debugTraverse = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+    if (!message) {
+        return `${timestamp} ${level}`;
+    }
+    // Type-safe version of the CJS logic: !message?.trim || typeof message !== 'string'
+    if (typeof message !== 'string' || !message.trim) {
+        return `${timestamp} ${level}: ${JSON.stringify(message)}`;
+    }
+    const msgParts = [
+        `${timestamp} ${level}: ${truncateLongStrings(message.trim(), DEBUG_MESSAGE_LENGTH)}`,
+    ];
+    try {
+        if (level !== 'debug') {
+            return msgParts[0];
+        }
+        if (!metadata) {
+            return msgParts[0];
+        }
+        // Type-safe access to SPLAT_SYMBOL using bracket notation
+        const metadataRecord = metadata;
+        const splatArray = metadataRecord[SPLAT_SYMBOL];
+        const debugValue = Array.isArray(splatArray) ? splatArray[0] : undefined;
+        if (!debugValue) {
+            return msgParts[0];
+        }
+        if (debugValue && Array.isArray(debugValue)) {
+            msgParts.push(`\n${JSON.stringify(debugValue.map(condenseArray))}`);
+            return msgParts.join('');
+        }
+        if (typeof debugValue !== 'object') {
+            msgParts.push(` ${debugValue}`);
+            return msgParts.join('');
+        }
+        msgParts.push('\n{');
+        const copy = klona(metadata);
+        try {
+            const traversal = traverse(copy);
+            traversal.forEach(function (value) {
+                var _a;
+                if (typeof (this === null || this === void 0 ? void 0 : this.key) === 'symbol') {
+                    return;
+                }
+                let _parentKey = '';
+                const parent = this.parent;
+                if (typeof (parent === null || parent === void 0 ? void 0 : parent.key) !== 'symbol' && (parent === null || parent === void 0 ? void 0 : parent.key) !== undefined) {
+                    _parentKey = String(parent.key);
+                }
+                const parentKey = `${parent && parent.notRoot ? _parentKey + '.' : ''}`;
+                const tabs = `${parent && parent.notRoot ? '    ' : '  '}`;
+                const currentKey = (_a = this === null || this === void 0 ? void 0 : this.key) !== null && _a !== void 0 ? _a : 'unknown';
+                if (this.isLeaf && typeof value === 'string') {
+                    const truncatedText = truncateLongStrings(value);
+                    msgParts.push(`\n${tabs}${parentKey}${currentKey}: ${JSON.stringify(truncatedText)},`);
+                }
+                else if (this.notLeaf && Array.isArray(value) && value.length > 0) {
+                    const currentMessage = `\n${tabs}// ${value.length} ${String(currentKey).replace(/s$/, '')}(s)`;
+                    this.update(currentMessage);
+                    msgParts.push(currentMessage);
+                    const stringifiedArray = value.map(condenseArray);
+                    msgParts.push(`\n${tabs}${parentKey}${currentKey}: [${stringifiedArray}],`);
+                }
+                else if (this.isLeaf && typeof value === 'function') {
+                    msgParts.push(`\n${tabs}${parentKey}${currentKey}: function,`);
+                }
+                else if (this.isLeaf) {
+                    msgParts.push(`\n${tabs}${parentKey}${currentKey}: ${value},`);
+                }
+            });
+        }
+        catch (e) {
+            const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+            msgParts.push(`\n[LOGGER TRAVERSAL ERROR] ${errorMessage}`);
+        }
+        msgParts.push('\n}');
+        return msgParts.join('');
+    }
+    catch (e) {
+        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+        msgParts.push(`\n[LOGGER PARSING ERROR] ${errorMessage}`);
+        return msgParts.join('');
+    }
+});
+/**
+ * Truncates long string values in JSON log objects.
+ * Prevents outputting extremely long values (e.g., base64, blobs).
+ */
+const jsonTruncateFormat = winston.format((info) => {
+    const truncateLongStrings = (str, maxLength) => str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+    const seen = new WeakSet();
+    const truncateObject = (obj) => {
+        if (typeof obj !== 'object' || obj === null) {
+            return obj;
+        }
+        // Handle circular references - now with proper object type
+        if (seen.has(obj)) {
+            return '[Circular]';
+        }
+        seen.add(obj);
+        if (Array.isArray(obj)) {
+            return obj.map((item) => truncateObject(item));
+        }
+        // We know this is an object at this point
+        const objectRecord = obj;
+        const newObj = {};
+        Object.entries(objectRecord).forEach(([key, value]) => {
+            if (typeof value === 'string') {
+                newObj[key] = truncateLongStrings(value, CONSOLE_JSON_STRING_LENGTH);
+            }
+            else {
+                newObj[key] = truncateObject(value);
+            }
+        });
+        return newObj;
+    };
+    return truncateObject(info);
+});
+
+/**
+ * Determine the log directory in a cross-compatible way.
+ * Priority:
+ * 1. LIBRECHAT_LOG_DIR environment variable
+ * 2. If running within Hanzo Chat monorepo (when cwd ends with /api), use api/logs
+ * 3. If api/logs exists relative to cwd, use that (for running from project root)
+ * 4. Otherwise, use logs directory relative to process.cwd()
+ *
+ * This avoids using __dirname which is not available in ESM modules
+ */
+const getLogDirectory = () => {
+    if (process.env.LIBRECHAT_LOG_DIR) {
+        return process.env.LIBRECHAT_LOG_DIR;
+    }
+    const cwd = process.cwd();
+    // Check if we're running from within the api directory
+    if (cwd.endsWith('/api') || cwd.endsWith('\\api')) {
+        return path$1.join(cwd, 'logs');
+    }
+    // Check if api/logs exists relative to current directory (running from project root)
+    // We'll just use the path and let the file system create it if needed
+    const apiLogsPath = path$1.join(cwd, 'api', 'logs');
+    // For Hanzo Chat project structure, use api/logs
+    // For external consumers, they should set LIBRECHAT_LOG_DIR
+    if (cwd.includes('LibreChat') || cwd.includes('hanzo/chat') || cwd.includes('hanzo-chat')) {
+        return apiLogsPath;
+    }
+    // Default to logs directory relative to current working directory
+    return path$1.join(cwd, 'logs');
+};
+
+const logDir$1 = getLogDirectory();
+const { NODE_ENV: NODE_ENV$1, DEBUG_LOGGING: DEBUG_LOGGING$1, CONSOLE_JSON, DEBUG_CONSOLE } = process.env;
+const useConsoleJson = typeof CONSOLE_JSON === 'string' && CONSOLE_JSON.toLowerCase() === 'true';
+const useDebugConsole = typeof DEBUG_CONSOLE === 'string' && DEBUG_CONSOLE.toLowerCase() === 'true';
+const useDebugLogging$1 = typeof DEBUG_LOGGING$1 === 'string' && DEBUG_LOGGING$1.toLowerCase() === 'true';
+const levels$1 = {
+    error: 0,
+    warn: 1,
+    info: 2,
+    http: 3,
+    verbose: 4,
+    debug: 5,
+    activity: 6,
+    silly: 7,
+};
+winston.addColors({
+    info: 'green',
+    warn: 'italic yellow',
+    error: 'red',
+    debug: 'blue',
+});
+const level$1 = () => {
+    const env = NODE_ENV$1 || 'development';
+    return env === 'development' ? 'debug' : 'warn';
+};
+const fileFormat$1 = winston.format.combine(redactFormat(), winston.format.timestamp({ format: () => new Date().toISOString() }), winston.format.errors({ stack: true }), winston.format.splat());
+const transports$1 = [
+    new winston.transports.DailyRotateFile({
+        level: 'error',
+        filename: `${logDir$1}/error-%DATE%.log`,
+        datePattern: 'YYYY-MM-DD',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+        format: winston.format.combine(fileFormat$1, winston.format.json()),
+    }),
+];
+if (useDebugLogging$1) {
+    transports$1.push(new winston.transports.DailyRotateFile({
+        level: 'debug',
+        filename: `${logDir$1}/debug-%DATE%.log`,
+        datePattern: 'YYYY-MM-DD',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+        format: winston.format.combine(fileFormat$1, debugTraverse),
+    }));
+}
+const consoleFormat$1 = winston.format.combine(redactFormat(), winston.format.colorize({ all: true }), winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston.format.printf((info) => {
+    const message = `${info.timestamp} ${info.level}: ${info.message}`;
+    return info.level.includes('error') ? redactMessage(message) : message;
+}));
+let consoleLogLevel = 'info';
+if (useDebugConsole) {
+    consoleLogLevel = 'debug';
+}
+// Add console transport
+if (useDebugConsole) {
+    transports$1.push(new winston.transports.Console({
+        level: consoleLogLevel,
+        format: useConsoleJson
+            ? winston.format.combine(fileFormat$1, jsonTruncateFormat(), winston.format.json())
+            : winston.format.combine(fileFormat$1, debugTraverse),
+    }));
+}
+else if (useConsoleJson) {
+    transports$1.push(new winston.transports.Console({
+        level: consoleLogLevel,
+        format: winston.format.combine(fileFormat$1, jsonTruncateFormat(), winston.format.json()),
+    }));
+}
+else {
+    transports$1.push(new winston.transports.Console({
+        level: consoleLogLevel,
+        format: consoleFormat$1,
+    }));
+}
+// Create logger
+const logger$1 = winston.createLogger({
+    level: level$1(),
+    levels: levels$1,
+    transports: transports$1,
+});
+
+/**
+ * Loads and maps the Cloudflare Turnstile configuration.
+ *
+ * Expected config structure:
+ *
+ * turnstile:
+ *   siteKey: "your-site-key-here"
+ *   options:
+ *     language: "auto"    // "auto" or an ISO 639-1 language code (e.g. en)
+ *     size: "normal"      // Options: "normal", "compact", "flexible", or "invisible"
+ *
+ * @param config - The loaded custom configuration.
+ * @param configDefaults - The custom configuration default values.
+ * @returns The mapped Turnstile configuration.
+ */
+function loadTurnstileConfig(config, configDefaults) {
+    var _a, _b;
+    const { turnstile: customTurnstile } = config !== null && config !== void 0 ? config : {};
+    const { turnstile: defaults } = configDefaults;
+    const loadedTurnstile = removeNullishValues({
+        siteKey: (_a = customTurnstile === null || customTurnstile === void 0 ? void 0 : customTurnstile.siteKey) !== null && _a !== void 0 ? _a : defaults === null || defaults === void 0 ? void 0 : defaults.siteKey,
+        options: (_b = customTurnstile === null || customTurnstile === void 0 ? void 0 : customTurnstile.options) !== null && _b !== void 0 ? _b : defaults === null || defaults === void 0 ? void 0 : defaults.options,
+    });
+    const enabled = Boolean(loadedTurnstile.siteKey);
+    if (enabled) {
+        logger$1.debug('Turnstile is ENABLED with configuration:\n' + JSON.stringify(loadedTurnstile, null, 2));
+    }
+    else {
+        logger$1.debug('Turnstile is DISABLED (no siteKey provided).');
+    }
+    return loadedTurnstile;
+}
+
+const webSearchAuth = {
+    providers: {
+        serper: {
+            serperApiKey: 1,
+        },
+        searxng: {
+            searxngInstanceUrl: 1,
+            /** Optional (0) */
+            searxngApiKey: 0,
+        },
+    },
+    scrapers: {
+        firecrawl: {
+            firecrawlApiKey: 1,
+            /** Optional (0) */
+            firecrawlApiUrl: 0,
+            firecrawlVersion: 0,
+        },
+        serper: {
+            serperApiKey: 1,
+        },
+    },
+    rerankers: {
+        jina: {
+            jinaApiKey: 1,
+            /** Optional (0) */
+            jinaApiUrl: 0,
+        },
+        cohere: { cohereApiKey: 1 },
+    },
+};
+/**
+ * Extracts all unique API keys from the webSearchAuth configuration object
+ */
+function getWebSearchKeys() {
+    const keysSet = new Set();
+    // Iterate through each category (providers, scrapers, rerankers)
+    for (const category of Object.keys(webSearchAuth)) {
+        const categoryObj = webSearchAuth[category];
+        // Iterate through each service within the category
+        for (const service of Object.keys(categoryObj)) {
+            const serviceObj = categoryObj[service];
+            // Extract the API keys from the service and add to set for deduplication
+            for (const key of Object.keys(serviceObj)) {
+                keysSet.add(key);
+            }
+        }
+    }
+    return Array.from(keysSet);
+}
+const webSearchKeys = getWebSearchKeys();
+function loadWebSearchConfig(config) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    const serperApiKey = (_a = config === null || config === void 0 ? void 0 : config.serperApiKey) !== null && _a !== void 0 ? _a : '${SERPER_API_KEY}';
+    const searxngInstanceUrl = (_b = config === null || config === void 0 ? void 0 : config.searxngInstanceUrl) !== null && _b !== void 0 ? _b : '${SEARXNG_INSTANCE_URL}';
+    const searxngApiKey = (_c = config === null || config === void 0 ? void 0 : config.searxngApiKey) !== null && _c !== void 0 ? _c : '${SEARXNG_API_KEY}';
+    const firecrawlApiKey = (_d = config === null || config === void 0 ? void 0 : config.firecrawlApiKey) !== null && _d !== void 0 ? _d : '${FIRECRAWL_API_KEY}';
+    const firecrawlApiUrl = (_e = config === null || config === void 0 ? void 0 : config.firecrawlApiUrl) !== null && _e !== void 0 ? _e : '${FIRECRAWL_API_URL}';
+    const firecrawlVersion = (_f = config === null || config === void 0 ? void 0 : config.firecrawlVersion) !== null && _f !== void 0 ? _f : '${FIRECRAWL_VERSION}';
+    const jinaApiKey = (_g = config === null || config === void 0 ? void 0 : config.jinaApiKey) !== null && _g !== void 0 ? _g : '${JINA_API_KEY}';
+    const jinaApiUrl = (_h = config === null || config === void 0 ? void 0 : config.jinaApiUrl) !== null && _h !== void 0 ? _h : '${JINA_API_URL}';
+    const cohereApiKey = (_j = config === null || config === void 0 ? void 0 : config.cohereApiKey) !== null && _j !== void 0 ? _j : '${COHERE_API_KEY}';
+    const safeSearch = (_k = config === null || config === void 0 ? void 0 : config.safeSearch) !== null && _k !== void 0 ? _k : SafeSearchTypes.MODERATE;
+    return {
+        ...config,
+        safeSearch,
+        jinaApiKey,
+        jinaApiUrl,
+        cohereApiKey,
+        serperApiKey,
+        searxngApiKey,
+        firecrawlApiKey,
+        firecrawlApiUrl,
+        firecrawlVersion,
+        searxngInstanceUrl,
+    };
+}
+
+/**
+ * Sets up Model Specs from the config (`librechat.yaml`) file.
+ * @param [endpoints] - The loaded custom configuration for endpoints.
+ * @param [modelSpecs] - The loaded custom configuration for model specs.
+ * @param [interfaceConfig] - The loaded interface configuration.
+ * @returns The processed model specs, if any.
+ */
+function processModelSpecs(endpoints, _modelSpecs, interfaceConfig) {
+    var _a, _b, _c, _d;
+    if (!_modelSpecs) {
+        return undefined;
+    }
+    const list = _modelSpecs.list;
+    const modelSpecs = [];
+    const customEndpoints = (_a = endpoints === null || endpoints === void 0 ? void 0 : endpoints[EModelEndpoint.custom]) !== null && _a !== void 0 ? _a : [];
+    if ((interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.modelSelect) !== true && ((_c = (_b = _modelSpecs.addedEndpoints) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) > 0) {
+        logger$1.warn(`To utilize \`addedEndpoints\`, which allows provider/model selections alongside model specs, set \`modelSelect: true\` in the interface configuration.
+
+      Example:
+      \`\`\`yaml
+      interface:
+        modelSelect: true
+      \`\`\`
+      `);
+    }
+    if (!list || list.length === 0) {
+        return undefined;
+    }
+    for (const spec of list) {
+        const currentEndpoint = (_d = spec.preset) === null || _d === void 0 ? void 0 : _d.endpoint;
+        if (!currentEndpoint) {
+            logger$1.warn('A model spec is missing the `endpoint` field within its `preset`. Skipping model spec...');
+            continue;
+        }
+        if (EModelEndpoint[currentEndpoint] && currentEndpoint !== EModelEndpoint.custom) {
+            modelSpecs.push(spec);
+            continue;
+        }
+        else if (currentEndpoint === EModelEndpoint.custom) {
+            logger$1.warn(`Model Spec with endpoint "${currentEndpoint}" is not supported. You must specify the name of the custom endpoint (case-sensitive, as defined in your config). Skipping model spec...`);
+            continue;
+        }
+        const normalizedName = normalizeEndpointName(currentEndpoint);
+        const endpoint = customEndpoints.find((customEndpoint) => normalizedName === normalizeEndpointName(customEndpoint.name));
+        if (!endpoint) {
+            logger$1.warn(`Model spec with endpoint "${currentEndpoint}" was skipped: Endpoint not found in configuration. The \`endpoint\` value must exactly match either a system-defined endpoint or a custom endpoint defined by the user.
+
+For more information, see the documentation at https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/model_specs#endpoint`);
+            continue;
+        }
+        modelSpecs.push({
+            ...spec,
+            preset: {
+                ...spec.preset,
+                endpoint: normalizedName,
+            },
+        });
+    }
+    return {
+        ..._modelSpecs,
+        list: modelSpecs,
+    };
+}
+
+/**
+ * Sets up the minimum, default Assistants configuration if Azure OpenAI Assistants option is enabled.
+ * @returns The Assistants endpoint configuration.
+ */
+function azureAssistantsDefaults() {
+    return {
+        capabilities: [Capabilities.tools, Capabilities.actions, Capabilities.code_interpreter],
+        version: defaultAssistantsVersion.azureAssistants,
+    };
+}
+/**
+ * Sets up the Assistants configuration from the config (`librechat.yaml`) file.
+ * @param config - The loaded custom configuration.
+ * @param assistantsEndpoint - The Assistants endpoint name.
+ * - The previously loaded assistants configuration from Azure OpenAI Assistants option.
+ * @param [prevConfig]
+ * @returns The Assistants endpoint configuration.
+ */
+function assistantsConfigSetup(config, assistantsEndpoint, prevConfig = {}) {
+    var _a, _b, _c, _d, _e;
+    const assistantsConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[assistantsEndpoint];
+    const parsedConfig = assistantEndpointSchema.parse(assistantsConfig);
+    if (((_b = assistantsConfig === null || assistantsConfig === void 0 ? void 0 : assistantsConfig.supportedIds) === null || _b === void 0 ? void 0 : _b.length) && ((_c = assistantsConfig.excludedIds) === null || _c === void 0 ? void 0 : _c.length)) {
+        logger$1.warn(`Configuration conflict: The '${assistantsEndpoint}' endpoint has both 'supportedIds' and 'excludedIds' defined. The 'excludedIds' will be ignored.`);
+    }
+    if ((assistantsConfig === null || assistantsConfig === void 0 ? void 0 : assistantsConfig.privateAssistants) &&
+        (((_d = assistantsConfig.supportedIds) === null || _d === void 0 ? void 0 : _d.length) || ((_e = assistantsConfig.excludedIds) === null || _e === void 0 ? void 0 : _e.length))) {
+        logger$1.warn(`Configuration conflict: The '${assistantsEndpoint}' endpoint has both 'privateAssistants' and 'supportedIds' or 'excludedIds' defined. The 'supportedIds' and 'excludedIds' will be ignored.`);
+    }
+    return {
+        ...prevConfig,
+        retrievalModels: parsedConfig.retrievalModels,
+        disableBuilder: parsedConfig.disableBuilder,
+        pollIntervalMs: parsedConfig.pollIntervalMs,
+        supportedIds: parsedConfig.supportedIds,
+        capabilities: parsedConfig.capabilities,
+        excludedIds: parsedConfig.excludedIds,
+        privateAssistants: parsedConfig.privateAssistants,
+        timeoutMs: parsedConfig.timeoutMs,
+        streamRate: parsedConfig.streamRate,
+        titlePrompt: parsedConfig.titlePrompt,
+        titleMethod: parsedConfig.titleMethod,
+        titleModel: parsedConfig.titleModel,
+        titleEndpoint: parsedConfig.titleEndpoint,
+        titlePromptTemplate: parsedConfig.titlePromptTemplate,
+    };
+}
+
+/**
+ * Sets up the Azure OpenAI configuration from the config (`librechat.yaml`) file.
+ * @param config - The loaded custom configuration.
+ * @returns The Azure OpenAI configuration.
+ */
+function azureConfigSetup(config) {
+    var _a, _b, _c;
+    const azureConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[EModelEndpoint.azureOpenAI];
+    if (!azureConfig) {
+        throw new Error('Azure OpenAI configuration is missing.');
+    }
+    const { groups, ...azureConfiguration } = azureConfig;
+    const { isValid, modelNames, modelGroupMap, groupMap, errors } = validateAzureGroups(groups);
+    if (!isValid) {
+        const errorString = errors.join('\n');
+        const errorMessage = 'Invalid Azure OpenAI configuration:\n' + errorString;
+        logger$1.error(errorMessage);
+        throw new Error(errorMessage);
+    }
+    const assistantModels = [];
+    const assistantGroups = new Set();
+    for (const modelName of modelNames) {
+        mapModelToAzureConfig({ modelName, modelGroupMap, groupMap });
+        const groupName = (_b = modelGroupMap === null || modelGroupMap === void 0 ? void 0 : modelGroupMap[modelName]) === null || _b === void 0 ? void 0 : _b.group;
+        const modelGroup = groupMap === null || groupMap === void 0 ? void 0 : groupMap[groupName];
+        const supportsAssistants = (modelGroup === null || modelGroup === void 0 ? void 0 : modelGroup.assistants) || ((_c = modelGroup === null || modelGroup === void 0 ? void 0 : modelGroup[modelName]) === null || _c === void 0 ? void 0 : _c.assistants);
+        if (supportsAssistants) {
+            assistantModels.push(modelName);
+            if (!assistantGroups.has(groupName)) {
+                assistantGroups.add(groupName);
+            }
+        }
+    }
+    if (azureConfiguration.assistants && assistantModels.length === 0) {
+        throw new Error('No Azure models are configured to support assistants. Please remove the `assistants` field or configure at least one model to support assistants.');
+    }
+    if (azureConfiguration.assistants &&
+        process.env.ENDPOINTS &&
+        !process.env.ENDPOINTS.includes(EModelEndpoint.azureAssistants)) {
+        logger$1.warn(`Azure Assistants are configured, but the endpoint will not be accessible as it's not included in the ENDPOINTS environment variable.
+      Please add the value "${EModelEndpoint.azureAssistants}" to the ENDPOINTS list if expected.`);
+    }
+    return {
+        errors,
+        isValid,
+        groupMap,
+        modelNames,
+        modelGroupMap,
+        assistantModels,
+        assistantGroups: Array.from(assistantGroups),
+        ...azureConfiguration,
+    };
+}
+
+/**
+ * Default Vertex AI models available through Google Cloud
+ * These are the standard Anthropic model names as served by Vertex AI
+ */
+const defaultVertexModels = [
+    'claude-sonnet-4-20250514',
+    'claude-3-7-sonnet-20250219',
+    'claude-3-5-sonnet-v2@20241022',
+    'claude-3-5-sonnet@20240620',
+    'claude-3-5-haiku@20241022',
+    'claude-3-opus@20240229',
+    'claude-3-haiku@20240307',
+];
+/**
+ * Processes models configuration and creates deployment name mapping
+ * Similar to Azure's model mapping logic
+ * @param models - The models configuration (can be array or object)
+ * @param defaultDeploymentName - Optional default deployment name
+ * @returns Object containing modelNames array and modelDeploymentMap
+ */
+function processVertexModels(models, defaultDeploymentName) {
+    const modelNames = [];
+    const modelDeploymentMap = {};
+    if (!models) {
+        // No models specified, use defaults
+        for (const model of defaultVertexModels) {
+            modelNames.push(model);
+            modelDeploymentMap[model] = model; // Default: model name = deployment name
+        }
+        return { modelNames, modelDeploymentMap };
+    }
+    if (Array.isArray(models)) {
+        // Legacy format: simple array of model names
+        for (const modelName of models) {
+            modelNames.push(modelName);
+            // If a default deployment name is provided, use it for all models
+            // Otherwise, model name is the deployment name
+            modelDeploymentMap[modelName] = defaultDeploymentName || modelName;
+        }
+    }
+    else {
+        // New format: object with model names as keys and config as values
+        for (const [modelName, modelConfig] of Object.entries(models)) {
+            modelNames.push(modelName);
+            if (typeof modelConfig === 'boolean') {
+                // Model is set to true/false - use default deployment name or model name
+                modelDeploymentMap[modelName] = defaultDeploymentName || modelName;
+            }
+            else if (modelConfig === null || modelConfig === void 0 ? void 0 : modelConfig.deploymentName) {
+                // Model has its own deployment name specified
+                modelDeploymentMap[modelName] = modelConfig.deploymentName;
+            }
+            else {
+                // Model is an object but no deployment name - use default or model name
+                modelDeploymentMap[modelName] = defaultDeploymentName || modelName;
+            }
+        }
+    }
+    return { modelNames, modelDeploymentMap };
+}
+/**
+ * Validates and processes Vertex AI configuration
+ * @param vertexConfig - The Vertex AI configuration object
+ * @returns Validated configuration with errors if any
+ */
+function validateVertexConfig(vertexConfig) {
+    if (!vertexConfig) {
+        return null;
+    }
+    const errors = [];
+    // Extract and validate environment variables
+    // projectId is optional - will be auto-detected from service key if not provided
+    const projectId = vertexConfig.projectId ? extractEnvVariable(vertexConfig.projectId) : undefined;
+    const region = extractEnvVariable(vertexConfig.region || 'us-east5');
+    const serviceKeyFile = vertexConfig.serviceKeyFile
+        ? extractEnvVariable(vertexConfig.serviceKeyFile)
+        : undefined;
+    const defaultDeploymentName = vertexConfig.deploymentName
+        ? extractEnvVariable(vertexConfig.deploymentName)
+        : undefined;
+    // Check for unresolved environment variables
+    if (projectId && envVarRegex.test(projectId)) {
+        errors.push(`Vertex AI projectId environment variable "${vertexConfig.projectId}" was not found.`);
+    }
+    if (envVarRegex.test(region)) {
+        errors.push(`Vertex AI region environment variable "${vertexConfig.region}" was not found.`);
+    }
+    if (serviceKeyFile && envVarRegex.test(serviceKeyFile)) {
+        errors.push(`Vertex AI serviceKeyFile environment variable "${vertexConfig.serviceKeyFile}" was not found.`);
+    }
+    if (defaultDeploymentName && envVarRegex.test(defaultDeploymentName)) {
+        errors.push(`Vertex AI deploymentName environment variable "${vertexConfig.deploymentName}" was not found.`);
+    }
+    // Process models and create deployment mapping
+    const { modelNames, modelDeploymentMap } = processVertexModels(vertexConfig.models, defaultDeploymentName);
+    // Note: projectId is optional - if not provided, it will be auto-detected from the service key file
+    const isValid = errors.length === 0;
+    return {
+        enabled: vertexConfig.enabled !== false,
+        projectId,
+        region,
+        serviceKeyFile,
+        deploymentName: defaultDeploymentName,
+        models: vertexConfig.models,
+        modelNames,
+        modelDeploymentMap,
+        isValid,
+        errors,
+    };
+}
+/**
+ * Sets up the Vertex AI configuration from the config (`librechat.yaml`) file.
+ * Similar to azureConfigSetup, this processes and validates the Vertex AI configuration.
+ * @param config - The loaded custom configuration.
+ * @returns The validated Vertex AI configuration or null if not configured.
+ */
+function vertexConfigSetup(config) {
+    var _a, _b;
+    const anthropicConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[EModelEndpoint.anthropic];
+    if (!(anthropicConfig === null || anthropicConfig === void 0 ? void 0 : anthropicConfig.vertex)) {
+        return null;
+    }
+    const vertexConfig = anthropicConfig.vertex;
+    // Skip if explicitly disabled (enabled: false)
+    // When vertex config exists, it's enabled by default unless explicitly set to false
+    if (vertexConfig.enabled === false) {
+        return null;
+    }
+    const validatedConfig = validateVertexConfig(vertexConfig);
+    if (!validatedConfig) {
+        return null;
+    }
+    if (!validatedConfig.isValid) {
+        const errorString = validatedConfig.errors.join('\n');
+        const errorMessage = 'Invalid Vertex AI configuration:\n' + errorString;
+        logger$1.error(errorMessage);
+        throw new Error(errorMessage);
+    }
+    logger$1.info('Vertex AI configuration loaded successfully', {
+        projectId: validatedConfig.projectId,
+        region: validatedConfig.region,
+        modelCount: ((_b = validatedConfig.modelNames) === null || _b === void 0 ? void 0 : _b.length) || 0,
+        models: validatedConfig.modelNames,
+    });
+    return validatedConfig;
+}
+
+/**
+ * Loads custom config endpoints
+ * @param [config]
+ * @param [agentsDefaults]
+ */
+const loadEndpoints = (config, agentsDefaults) => {
+    var _a;
+    const loadedEndpoints = {};
+    const endpoints = config === null || config === void 0 ? void 0 : config.endpoints;
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[EModelEndpoint.azureOpenAI]) {
+        loadedEndpoints[EModelEndpoint.azureOpenAI] = azureConfigSetup(config);
+    }
+    if ((_a = endpoints === null || endpoints === void 0 ? void 0 : endpoints[EModelEndpoint.azureOpenAI]) === null || _a === void 0 ? void 0 : _a.assistants) {
+        loadedEndpoints[EModelEndpoint.azureAssistants] = azureAssistantsDefaults();
+    }
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[EModelEndpoint.azureAssistants]) {
+        loadedEndpoints[EModelEndpoint.azureAssistants] = assistantsConfigSetup(config, EModelEndpoint.azureAssistants, loadedEndpoints[EModelEndpoint.azureAssistants]);
+    }
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[EModelEndpoint.assistants]) {
+        loadedEndpoints[EModelEndpoint.assistants] = assistantsConfigSetup(config, EModelEndpoint.assistants, loadedEndpoints[EModelEndpoint.assistants]);
+    }
+    loadedEndpoints[EModelEndpoint.agents] = agentsConfigSetup(config, agentsDefaults);
+    // Handle Anthropic endpoint with Vertex AI configuration
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[EModelEndpoint.anthropic]) {
+        const anthropicConfig = endpoints[EModelEndpoint.anthropic];
+        const vertexConfig = vertexConfigSetup(config);
+        loadedEndpoints[EModelEndpoint.anthropic] = {
+            ...anthropicConfig,
+            // If Vertex AI is enabled, use the visible model names from vertex config
+            // Otherwise, use the models array from anthropic config
+            ...((vertexConfig === null || vertexConfig === void 0 ? void 0 : vertexConfig.modelNames) && { models: vertexConfig.modelNames }),
+            // Attach validated Vertex AI config if present
+            ...(vertexConfig && { vertexConfig }),
+        };
+    }
+    const endpointKeys = [
+        EModelEndpoint.openAI,
+        EModelEndpoint.google,
+        EModelEndpoint.custom,
+        EModelEndpoint.bedrock,
+    ];
+    endpointKeys.forEach((key) => {
+        const currentKey = key;
+        if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[currentKey]) {
+            loadedEndpoints[currentKey] = endpoints[currentKey];
+        }
+    });
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints.all) {
+        loadedEndpoints.all = endpoints.all;
+    }
+    return loadedEndpoints;
+};
+
+function loadOCRConfig(config) {
+    var _a, _b, _c, _d;
+    if (!config)
+        return;
+    const baseURL = (_a = config === null || config === void 0 ? void 0 : config.baseURL) !== null && _a !== void 0 ? _a : '';
+    const apiKey = (_b = config === null || config === void 0 ? void 0 : config.apiKey) !== null && _b !== void 0 ? _b : '';
+    const mistralModel = (_c = config === null || config === void 0 ? void 0 : config.mistralModel) !== null && _c !== void 0 ? _c : '';
+    return {
+        apiKey,
+        baseURL,
+        mistralModel,
+        strategy: (_d = config === null || config === void 0 ? void 0 : config.strategy) !== null && _d !== void 0 ? _d : OCRStrategy.MISTRAL_OCR,
+    };
+}
+
+/**
+ * Loads custom config and initializes app-wide variables.
+ * @function AppService
+ */
+const AppService = async (params) => {
+    var _a, _b, _c, _d, _e, _f;
+    const { config, paths, systemTools } = params || {};
+    if (!config) {
+        throw new Error('Config is required');
+    }
+    const configDefaults = getConfigDefaults();
+    const ocr = loadOCRConfig(config.ocr);
+    const webSearch = loadWebSearchConfig(config.webSearch);
+    const memory = loadMemoryConfig(config.memory);
+    const filteredTools = config.filteredTools;
+    const includedTools = config.includedTools;
+    const fileStrategy = ((_a = config.fileStrategy) !== null && _a !== void 0 ? _a : configDefaults.fileStrategy);
+    const startBalance = process.env.START_BALANCE;
+    const balance = (_b = config.balance) !== null && _b !== void 0 ? _b : {
+        enabled: ((_c = process.env.CHECK_BALANCE) === null || _c === void 0 ? void 0 : _c.toLowerCase().trim()) === 'true',
+        startBalance: startBalance ? parseInt(startBalance, 10) : undefined,
+    };
+    const transactions = (_d = config.transactions) !== null && _d !== void 0 ? _d : configDefaults.transactions;
+    const imageOutputType = (_e = config === null || config === void 0 ? void 0 : config.imageOutputType) !== null && _e !== void 0 ? _e : configDefaults.imageOutputType;
+    process.env.CDN_PROVIDER = fileStrategy;
+    const availableTools = systemTools;
+    const mcpServersConfig = config.mcpServers || null;
+    const mcpSettings = config.mcpSettings || null;
+    const actions = config.actions;
+    const registration = (_f = config.registration) !== null && _f !== void 0 ? _f : configDefaults.registration;
+    const interfaceConfig = await loadDefaultInterface({ config, configDefaults });
+    const turnstileConfig = loadTurnstileConfig(config, configDefaults);
+    const speech = config.speech;
+    const defaultConfig = {
+        ocr,
+        paths,
+        config,
+        memory,
+        speech,
+        balance,
+        actions,
+        transactions,
+        mcpConfig: mcpServersConfig,
+        mcpSettings,
+        webSearch,
+        fileStrategy,
+        registration,
+        filteredTools,
+        includedTools,
+        availableTools,
+        imageOutputType,
+        interfaceConfig,
+        turnstileConfig,
+        fileStrategies: config.fileStrategies,
+    };
+    const agentsDefaults = agentsConfigSetup(config);
+    if (!Object.keys(config).length) {
+        const appConfig = {
+            ...defaultConfig,
+            endpoints: {
+                [EModelEndpoint.agents]: agentsDefaults,
+            },
+        };
+        return appConfig;
+    }
+    const loadedEndpoints = loadEndpoints(config, agentsDefaults);
+    const appConfig = {
+        ...defaultConfig,
+        fileConfig: config === null || config === void 0 ? void 0 : config.fileConfig,
+        secureImageLinks: config === null || config === void 0 ? void 0 : config.secureImageLinks,
+        modelSpecs: processModelSpecs(config === null || config === void 0 ? void 0 : config.endpoints, config.modelSpecs, interfaceConfig),
+        endpoints: loadedEndpoints,
+    };
+    return appConfig;
+};
+
+/**
+ * Common role combinations
+ */
+var RoleBits;
+(function (RoleBits) {
+    /** 0001 = 1 */
+    RoleBits[RoleBits["VIEWER"] = 1] = "VIEWER";
+    /** 0011 = 3 */
+    RoleBits[RoleBits["EDITOR"] = 3] = "EDITOR";
+    /** 0111 = 7 */
+    RoleBits[RoleBits["MANAGER"] = 7] = "MANAGER";
+    /** 1111 = 15 */
+    RoleBits[RoleBits["OWNER"] = 15] = "OWNER";
+})(RoleBits || (RoleBits = {}));
+
+var main = {exports: {}};
+
+var version$1 = "16.6.1";
+var require$$4 = {
+	version: version$1};
+
+const fs = require$$0;
+const path = path$1;
+const os = require$$2;
+const crypto = require$$3;
+const packageJson = require$$4;
+
+const version = packageJson.version;
+
+const LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
+
+// Parse src into an Object
+function parse (src) {
+  const obj = {};
+
+  // Convert buffer to string
+  let lines = src.toString();
+
+  // Convert line breaks to same format
+  lines = lines.replace(/\r\n?/mg, '\n');
+
+  let match;
+  while ((match = LINE.exec(lines)) != null) {
+    const key = match[1];
+
+    // Default undefined or null to empty string
+    let value = (match[2] || '');
+
+    // Remove whitespace
+    value = value.trim();
+
+    // Check if double quoted
+    const maybeQuote = value[0];
+
+    // Remove surrounding quotes
+    value = value.replace(/^(['"`])([\s\S]*)\1$/mg, '$2');
+
+    // Expand newlines if double quoted
+    if (maybeQuote === '"') {
+      value = value.replace(/\\n/g, '\n');
+      value = value.replace(/\\r/g, '\r');
+    }
+
+    // Add to object
+    obj[key] = value;
+  }
+
+  return obj
+}
+
+function _parseVault (options) {
+  options = options || {};
+
+  const vaultPath = _vaultPath(options);
+  options.path = vaultPath; // parse .env.vault
+  const result = DotenvModule.configDotenv(options);
+  if (!result.parsed) {
+    const err = new Error(`MISSING_DATA: Cannot parse ${vaultPath} for an unknown reason`);
+    err.code = 'MISSING_DATA';
+    throw err
+  }
+
+  // handle scenario for comma separated keys - for use with key rotation
+  // example: DOTENV_KEY="dotenv://:key_1234@dotenvx.com/vault/.env.vault?environment=prod,dotenv://:key_7890@dotenvx.com/vault/.env.vault?environment=prod"
+  const keys = _dotenvKey(options).split(',');
+  const length = keys.length;
+
+  let decrypted;
+  for (let i = 0; i < length; i++) {
+    try {
+      // Get full key
+      const key = keys[i].trim();
+
+      // Get instructions for decrypt
+      const attrs = _instructions(result, key);
+
+      // Decrypt
+      decrypted = DotenvModule.decrypt(attrs.ciphertext, attrs.key);
+
+      break
+    } catch (error) {
+      // last key
+      if (i + 1 >= length) {
+        throw error
+      }
+      // try next key
+    }
+  }
+
+  // Parse decrypted .env string
+  return DotenvModule.parse(decrypted)
+}
+
+function _warn (message) {
+  console.log(`[dotenv@${version}][WARN] ${message}`);
+}
+
+function _debug (message) {
+  console.log(`[dotenv@${version}][DEBUG] ${message}`);
+}
+
+function _log (message) {
+  console.log(`[dotenv@${version}] ${message}`);
+}
+
+function _dotenvKey (options) {
+  // prioritize developer directly setting options.DOTENV_KEY
+  if (options && options.DOTENV_KEY && options.DOTENV_KEY.length > 0) {
+    return options.DOTENV_KEY
+  }
+
+  // secondary infra already contains a DOTENV_KEY environment variable
+  if (process.env.DOTENV_KEY && process.env.DOTENV_KEY.length > 0) {
+    return process.env.DOTENV_KEY
+  }
+
+  // fallback to empty string
+  return ''
+}
+
+function _instructions (result, dotenvKey) {
+  // Parse DOTENV_KEY. Format is a URI
+  let uri;
+  try {
+    uri = new URL(dotenvKey);
+  } catch (error) {
+    if (error.code === 'ERR_INVALID_URL') {
+      const err = new Error('INVALID_DOTENV_KEY: Wrong format. Must be in valid uri format like dotenv://:key_1234@dotenvx.com/vault/.env.vault?environment=development');
+      err.code = 'INVALID_DOTENV_KEY';
+      throw err
+    }
+
+    throw error
+  }
+
+  // Get decrypt key
+  const key = uri.password;
+  if (!key) {
+    const err = new Error('INVALID_DOTENV_KEY: Missing key part');
+    err.code = 'INVALID_DOTENV_KEY';
+    throw err
+  }
+
+  // Get environment
+  const environment = uri.searchParams.get('environment');
+  if (!environment) {
+    const err = new Error('INVALID_DOTENV_KEY: Missing environment part');
+    err.code = 'INVALID_DOTENV_KEY';
+    throw err
+  }
+
+  // Get ciphertext payload
+  const environmentKey = `DOTENV_VAULT_${environment.toUpperCase()}`;
+  const ciphertext = result.parsed[environmentKey]; // DOTENV_VAULT_PRODUCTION
+  if (!ciphertext) {
+    const err = new Error(`NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment ${environmentKey} in your .env.vault file.`);
+    err.code = 'NOT_FOUND_DOTENV_ENVIRONMENT';
+    throw err
+  }
+
+  return { ciphertext, key }
+}
+
+function _vaultPath (options) {
+  let possibleVaultPath = null;
+
+  if (options && options.path && options.path.length > 0) {
+    if (Array.isArray(options.path)) {
+      for (const filepath of options.path) {
+        if (fs.existsSync(filepath)) {
+          possibleVaultPath = filepath.endsWith('.vault') ? filepath : `${filepath}.vault`;
+        }
+      }
+    } else {
+      possibleVaultPath = options.path.endsWith('.vault') ? options.path : `${options.path}.vault`;
+    }
+  } else {
+    possibleVaultPath = path.resolve(process.cwd(), '.env.vault');
+  }
+
+  if (fs.existsSync(possibleVaultPath)) {
+    return possibleVaultPath
+  }
+
+  return null
+}
+
+function _resolveHome (envPath) {
+  return envPath[0] === '~' ? path.join(os.homedir(), envPath.slice(1)) : envPath
+}
+
+function _configVault (options) {
+  const debug = Boolean(options && options.debug);
+  const quiet = options && 'quiet' in options ? options.quiet : true;
+
+  if (debug || !quiet) {
+    _log('Loading env from encrypted .env.vault');
+  }
+
+  const parsed = DotenvModule._parseVault(options);
+
+  let processEnv = process.env;
+  if (options && options.processEnv != null) {
+    processEnv = options.processEnv;
+  }
+
+  DotenvModule.populate(processEnv, parsed, options);
+
+  return { parsed }
+}
+
+function configDotenv (options) {
+  const dotenvPath = path.resolve(process.cwd(), '.env');
+  let encoding = 'utf8';
+  const debug = Boolean(options && options.debug);
+  const quiet = options && 'quiet' in options ? options.quiet : true;
+
+  if (options && options.encoding) {
+    encoding = options.encoding;
+  } else {
+    if (debug) {
+      _debug('No encoding is specified. UTF-8 is used by default');
+    }
+  }
+
+  let optionPaths = [dotenvPath]; // default, look for .env
+  if (options && options.path) {
+    if (!Array.isArray(options.path)) {
+      optionPaths = [_resolveHome(options.path)];
+    } else {
+      optionPaths = []; // reset default
+      for (const filepath of options.path) {
+        optionPaths.push(_resolveHome(filepath));
+      }
+    }
+  }
+
+  // Build the parsed data in a temporary object (because we need to return it).  Once we have the final
+  // parsed data, we will combine it with process.env (or options.processEnv if provided).
+  let lastError;
+  const parsedAll = {};
+  for (const path of optionPaths) {
+    try {
+      // Specifying an encoding returns a string instead of a buffer
+      const parsed = DotenvModule.parse(fs.readFileSync(path, { encoding }));
+
+      DotenvModule.populate(parsedAll, parsed, options);
+    } catch (e) {
+      if (debug) {
+        _debug(`Failed to load ${path} ${e.message}`);
+      }
+      lastError = e;
+    }
+  }
+
+  let processEnv = process.env;
+  if (options && options.processEnv != null) {
+    processEnv = options.processEnv;
+  }
+
+  DotenvModule.populate(processEnv, parsedAll, options);
+
+  if (debug || !quiet) {
+    const keysCount = Object.keys(parsedAll).length;
+    const shortPaths = [];
+    for (const filePath of optionPaths) {
+      try {
+        const relative = path.relative(process.cwd(), filePath);
+        shortPaths.push(relative);
+      } catch (e) {
+        if (debug) {
+          _debug(`Failed to load ${filePath} ${e.message}`);
+        }
+        lastError = e;
+      }
+    }
+
+    _log(`injecting env (${keysCount}) from ${shortPaths.join(',')}`);
+  }
+
+  if (lastError) {
+    return { parsed: parsedAll, error: lastError }
+  } else {
+    return { parsed: parsedAll }
+  }
+}
+
+// Populates process.env from .env file
+function config (options) {
+  // fallback to original dotenv if DOTENV_KEY is not set
+  if (_dotenvKey(options).length === 0) {
+    return DotenvModule.configDotenv(options)
+  }
+
+  const vaultPath = _vaultPath(options);
+
+  // dotenvKey exists but .env.vault file does not exist
+  if (!vaultPath) {
+    _warn(`You set DOTENV_KEY but you are missing a .env.vault file at ${vaultPath}. Did you forget to build it?`);
+
+    return DotenvModule.configDotenv(options)
+  }
+
+  return DotenvModule._configVault(options)
+}
+
+function decrypt$1 (encrypted, keyStr) {
+  const key = Buffer.from(keyStr.slice(-64), 'hex');
+  let ciphertext = Buffer.from(encrypted, 'base64');
+
+  const nonce = ciphertext.subarray(0, 12);
+  const authTag = ciphertext.subarray(-16);
+  ciphertext = ciphertext.subarray(12, -16);
+
+  try {
+    const aesgcm = crypto.createDecipheriv('aes-256-gcm', key, nonce);
+    aesgcm.setAuthTag(authTag);
+    return `${aesgcm.update(ciphertext)}${aesgcm.final()}`
+  } catch (error) {
+    const isRange = error instanceof RangeError;
+    const invalidKeyLength = error.message === 'Invalid key length';
+    const decryptionFailed = error.message === 'Unsupported state or unable to authenticate data';
+
+    if (isRange || invalidKeyLength) {
+      const err = new Error('INVALID_DOTENV_KEY: It must be 64 characters long (or more)');
+      err.code = 'INVALID_DOTENV_KEY';
+      throw err
+    } else if (decryptionFailed) {
+      const err = new Error('DECRYPTION_FAILED: Please check your DOTENV_KEY');
+      err.code = 'DECRYPTION_FAILED';
+      throw err
+    } else {
+      throw error
+    }
+  }
+}
+
+// Populate process.env with parsed values
+function populate (processEnv, parsed, options = {}) {
+  const debug = Boolean(options && options.debug);
+  const override = Boolean(options && options.override);
+
+  if (typeof parsed !== 'object') {
+    const err = new Error('OBJECT_REQUIRED: Please check the processEnv argument being passed to populate');
+    err.code = 'OBJECT_REQUIRED';
+    throw err
+  }
+
+  // Set process.env
+  for (const key of Object.keys(parsed)) {
+    if (Object.prototype.hasOwnProperty.call(processEnv, key)) {
+      if (override === true) {
+        processEnv[key] = parsed[key];
+      }
+
+      if (debug) {
+        if (override === true) {
+          _debug(`"${key}" is already defined and WAS overwritten`);
+        } else {
+          _debug(`"${key}" is already defined and was NOT overwritten`);
+        }
+      }
+    } else {
+      processEnv[key] = parsed[key];
+    }
+  }
+}
+
+const DotenvModule = {
+  configDotenv,
+  _configVault,
+  _parseVault,
+  config,
+  decrypt: decrypt$1,
+  parse,
+  populate
+};
+
+main.exports.configDotenv = DotenvModule.configDotenv;
+main.exports._configVault = DotenvModule._configVault;
+main.exports._parseVault = DotenvModule._parseVault;
+main.exports.config = DotenvModule.config;
+main.exports.decrypt = DotenvModule.decrypt;
+main.exports.parse = DotenvModule.parse;
+main.exports.populate = DotenvModule.populate;
+
+main.exports = DotenvModule;
+
+var mainExports = main.exports;
+
+// ../config.js accepts options via environment variables
+const options = {};
+
+if (process.env.DOTENV_CONFIG_ENCODING != null) {
+  options.encoding = process.env.DOTENV_CONFIG_ENCODING;
+}
+
+if (process.env.DOTENV_CONFIG_PATH != null) {
+  options.path = process.env.DOTENV_CONFIG_PATH;
+}
+
+if (process.env.DOTENV_CONFIG_QUIET != null) {
+  options.quiet = process.env.DOTENV_CONFIG_QUIET;
+}
+
+if (process.env.DOTENV_CONFIG_DEBUG != null) {
+  options.debug = process.env.DOTENV_CONFIG_DEBUG;
+}
+
+if (process.env.DOTENV_CONFIG_OVERRIDE != null) {
+  options.override = process.env.DOTENV_CONFIG_OVERRIDE;
+}
+
+if (process.env.DOTENV_CONFIG_DOTENV_KEY != null) {
+  options.DOTENV_KEY = process.env.DOTENV_CONFIG_DOTENV_KEY;
+}
+
+var envOptions = options;
+
+const re = /^dotenv_config_(encoding|path|quiet|debug|override|DOTENV_KEY)=(.+)$/;
+
+var cliOptions = function optionMatcher (args) {
+  const options = args.reduce(function (acc, cur) {
+    const matches = cur.match(re);
+    if (matches) {
+      acc[matches[1]] = matches[2];
+    }
+    return acc
+  }, {});
+
+  if (!('quiet' in options)) {
+    options.quiet = 'true';
+  }
+
+  return options
+};
+
+(function () {
+  mainExports.config(
+    Object.assign(
+      {},
+      envOptions,
+      cliOptions(process.argv)
+    )
+  );
+})();
+
+var _a, _b;
+const { webcrypto } = crypto$1;
+/** Use hex decoding for both key and IV for legacy methods */
+const key = Buffer.from((_a = process.env.CREDS_KEY) !== null && _a !== void 0 ? _a : '', 'hex');
+const iv = Buffer.from((_b = process.env.CREDS_IV) !== null && _b !== void 0 ? _b : '', 'hex');
+const algorithm = 'AES-CBC';
 async function signPayload({ payload, secret, expirationTime, }) {
     return jwt.sign(payload, secret, { expiresIn: expirationTime });
 }
@@ -18,6 +1628,130 @@ async function hashToken(str) {
     const data = new TextEncoder().encode(str);
     const hashBuffer = await webcrypto.subtle.digest('SHA-256', data);
     return Buffer.from(hashBuffer).toString('hex');
+}
+/** --- Legacy v1/v2 Setup: AES-CBC with fixed key and IV --- */
+/**
+ * Encrypts a value using AES-CBC
+ * @param value - The plaintext to encrypt
+ * @returns The encrypted string in hex format
+ */
+async function encrypt(value) {
+    const cryptoKey = await webcrypto.subtle.importKey('raw', key, { name: algorithm }, false, [
+        'encrypt',
+    ]);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(value);
+    const encryptedBuffer = await webcrypto.subtle.encrypt({ name: algorithm, iv: iv }, cryptoKey, data);
+    return Buffer.from(encryptedBuffer).toString('hex');
+}
+/**
+ * Decrypts an encrypted value using AES-CBC
+ * @param encryptedValue - The encrypted string in hex format
+ * @returns The decrypted plaintext
+ */
+async function decrypt(encryptedValue) {
+    const cryptoKey = await webcrypto.subtle.importKey('raw', key, { name: algorithm }, false, [
+        'decrypt',
+    ]);
+    const encryptedBuffer = Buffer.from(encryptedValue, 'hex');
+    const decryptedBuffer = await webcrypto.subtle.decrypt({ name: algorithm, iv: iv }, cryptoKey, encryptedBuffer);
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBuffer);
+}
+/** --- v2: AES-CBC with a random IV per encryption --- */
+/**
+ * Encrypts a value using AES-CBC with a random IV per encryption
+ * @param value - The plaintext to encrypt
+ * @returns The encrypted string with IV prepended (iv:ciphertext format)
+ */
+async function encryptV2(value) {
+    const gen_iv = webcrypto.getRandomValues(new Uint8Array(16));
+    const cryptoKey = await webcrypto.subtle.importKey('raw', key, { name: algorithm }, false, [
+        'encrypt',
+    ]);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(value);
+    const encryptedBuffer = await webcrypto.subtle.encrypt({ name: algorithm, iv: gen_iv }, cryptoKey, data);
+    return Buffer.from(gen_iv).toString('hex') + ':' + Buffer.from(encryptedBuffer).toString('hex');
+}
+/**
+ * Decrypts an encrypted value using AES-CBC with random IV
+ * @param encryptedValue - The encrypted string in iv:ciphertext format
+ * @returns The decrypted plaintext
+ */
+async function decryptV2(encryptedValue) {
+    var _a;
+    const parts = encryptedValue.split(':');
+    if (parts.length === 1) {
+        return parts[0];
+    }
+    const gen_iv = Buffer.from((_a = parts.shift()) !== null && _a !== void 0 ? _a : '', 'hex');
+    const encrypted = parts.join(':');
+    const cryptoKey = await webcrypto.subtle.importKey('raw', key, { name: algorithm }, false, [
+        'decrypt',
+    ]);
+    const encryptedBuffer = Buffer.from(encrypted, 'hex');
+    const decryptedBuffer = await webcrypto.subtle.decrypt({ name: algorithm, iv: gen_iv }, cryptoKey, encryptedBuffer);
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBuffer);
+}
+/** --- v3: AES-256-CTR using Node's crypto functions --- */
+const algorithm_v3 = 'aes-256-ctr';
+/**
+ * Encrypts a value using AES-256-CTR.
+ * Note: AES-256 requires a 32-byte key. Ensure that process.env.CREDS_KEY is a 64-character hex string.
+ * @param value - The plaintext to encrypt.
+ * @returns The encrypted string with a "v3:" prefix.
+ */
+function encryptV3(value) {
+    if (key.length !== 32) {
+        throw new Error(`Invalid key length: expected 32 bytes, got ${key.length} bytes`);
+    }
+    const iv_v3 = crypto$1.randomBytes(16);
+    const cipher = crypto$1.createCipheriv(algorithm_v3, key, iv_v3);
+    const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
+    return `v3:${iv_v3.toString('hex')}:${encrypted.toString('hex')}`;
+}
+/**
+ * Decrypts an encrypted value using AES-256-CTR.
+ * @param encryptedValue - The encrypted string with "v3:" prefix.
+ * @returns The decrypted plaintext.
+ */
+function decryptV3(encryptedValue) {
+    const parts = encryptedValue.split(':');
+    if (parts[0] !== 'v3') {
+        throw new Error('Not a v3 encrypted value');
+    }
+    const iv_v3 = Buffer.from(parts[1], 'hex');
+    const encryptedText = Buffer.from(parts.slice(2).join(':'), 'hex');
+    const decipher = crypto$1.createDecipheriv(algorithm_v3, key, iv_v3);
+    const decrypted = Buffer.concat([decipher.update(encryptedText), decipher.final()]);
+    return decrypted.toString('utf8');
+}
+/**
+ * Generates random values as a hex string
+ * @param length - The number of random bytes to generate
+ * @returns The random values as a hex string
+ */
+async function getRandomValues(length) {
+    if (!Number.isInteger(length) || length <= 0) {
+        throw new Error('Length must be a positive integer');
+    }
+    const randomValues = new Uint8Array(length);
+    webcrypto.getRandomValues(randomValues);
+    return Buffer.from(randomValues).toString('hex');
+}
+/**
+ * Computes SHA-256 hash for the given input.
+ * @param input - The input to hash.
+ * @returns The SHA-256 hash of the input.
+ */
+async function hashBackupCode(input) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await webcrypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 // Define the Auth sub-schema with type-safety.
@@ -130,8 +1864,13 @@ const agentSchema = new Schema({
     end_after_tools: {
         type: Boolean,
     },
+    /** @deprecated Use edges instead */
     agent_ids: {
         type: [String],
+    },
+    edges: {
+        type: [{ type: Schema.Types.Mixed }],
+        default: [],
     },
     isCollaborative: {
         type: Boolean,
@@ -154,9 +1893,116 @@ const agentSchema = new Schema({
         type: [Schema.Types.Mixed],
         default: [],
     },
+    category: {
+        type: String,
+        trim: true,
+        index: true,
+        default: 'general',
+    },
+    support_contact: {
+        type: Schema.Types.Mixed,
+        default: undefined,
+    },
+    is_promoted: {
+        type: Boolean,
+        default: false,
+        index: true,
+    },
+    /** MCP server names extracted from tools for efficient querying */
+    mcpServerNames: {
+        type: [String],
+        default: [],
+        index: true,
+    },
+    /** Per-tool configuration (defer_loading, allowed_callers) */
+    tool_options: {
+        type: Schema.Types.Mixed,
+        default: undefined,
+    },
 }, {
     timestamps: true,
 });
+agentSchema.index({ updatedAt: -1, _id: 1 });
+agentSchema.index({ 'edges.to': 1 });
+
+const agentApiKeySchema = new Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true,
+    },
+    name: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 100,
+    },
+    keyHash: {
+        type: String,
+        required: true,
+        select: false,
+        index: true,
+    },
+    keyPrefix: {
+        type: String,
+        required: true,
+        index: true,
+    },
+    lastUsedAt: {
+        type: Date,
+    },
+    expiresAt: {
+        type: Date,
+    },
+}, { timestamps: true });
+agentApiKeySchema.index({ userId: 1, name: 1 });
+/**
+ * TTL index for automatic cleanup of expired keys.
+ * MongoDB deletes documents when expiresAt passes (expireAfterSeconds: 0 means immediate).
+ * Note: Expired keys are permanently removed, not soft-deleted.
+ * If audit trails are needed, remove this index and check expiration programmatically.
+ */
+agentApiKeySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+const agentCategorySchema = new Schema({
+    value: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true,
+        index: true,
+    },
+    label: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    description: {
+        type: String,
+        trim: true,
+        default: '',
+    },
+    order: {
+        type: Number,
+        default: 0,
+        index: true,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+        index: true,
+    },
+    custom: {
+        type: Boolean,
+        default: false,
+    },
+}, {
+    timestamps: true,
+});
+agentCategorySchema.index({ isActive: 1, order: 1 });
+agentCategorySchema.index({ order: 1, label: 1 });
 
 const assistantSchema = new Schema({
     user: {
@@ -225,6 +2071,16 @@ const balanceSchema = new Schema({
         type: Number,
         default: 0,
     },
+    // Credit expiry: date when signup credits expire
+    expiresAt: {
+        type: Date,
+        default: null,
+    },
+    // When credits were initially granted
+    creditsGrantedAt: {
+        type: Date,
+        default: null,
+    },
 });
 
 const bannerSchema = new Schema({
@@ -250,6 +2106,10 @@ const bannerSchema = new Schema({
         default: 'banner',
     },
     isPublic: {
+        type: Boolean,
+        default: false,
+    },
+    persistable: {
         type: Boolean,
         default: false,
     },
@@ -296,7 +2156,6 @@ conversationTag.index({ tag: 1, user: 1 }, { unique: true });
 
 // @ts-ignore
 const conversationPreset = {
-    // endpoint: [azureOpenAI, openAI, anthropic, chatGPTBrowser]
     endpoint: {
         type: String,
         default: null,
@@ -305,7 +2164,7 @@ const conversationPreset = {
     endpointType: {
         type: String,
     },
-    // for azureOpenAI, openAI, chatGPTBrowser only
+    // for azureOpenAI, openAI only
     model: {
         type: String,
         required: false,
@@ -378,6 +2237,9 @@ const conversationPreset = {
     thinkingBudget: {
         type: Number,
     },
+    effort: {
+        type: String,
+    },
     system: {
         type: String,
     },
@@ -425,8 +2287,28 @@ const conversationPreset = {
     max_tokens: {
         type: Number,
     },
-    /** omni models only */
+    useResponsesApi: {
+        type: Boolean,
+    },
+    /** OpenAI Responses API / Anthropic API / Google API */
+    web_search: {
+        type: Boolean,
+    },
+    disableStreaming: {
+        type: Boolean,
+    },
+    fileTokenLimit: {
+        type: Number,
+    },
+    /** Reasoning models only */
     reasoning_effort: {
+        type: String,
+    },
+    reasoning_summary: {
+        type: String,
+    },
+    /** Verbosity control */
+    verbosity: {
         type: String,
     },
 };
@@ -447,11 +2329,9 @@ const convoSchema = new Schema({
     user: {
         type: String,
         index: true,
+        meiliIndex: true,
     },
     messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
-    agentOptions: {
-        type: Schema.Types.Mixed,
-    },
     ...conversationPreset,
     agent_id: {
         type: String,
@@ -471,6 +2351,8 @@ const convoSchema = new Schema({
 convoSchema.index({ expiredAt: 1 }, { expireAfterSeconds: 0 });
 convoSchema.index({ createdAt: 1, updatedAt: 1 });
 convoSchema.index({ conversationId: 1, user: 1 }, { unique: true });
+// index for MeiliSearch sync operations
+convoSchema.index({ _meiliIndex: 1, expiredAt: 1 });
 
 const file = new Schema({
     user: {
@@ -482,6 +2364,10 @@ const file = new Schema({
     conversationId: {
         type: String,
         ref: 'Conversation',
+        index: true,
+    },
+    messageId: {
+        type: String,
         index: true,
     },
     file_id: {
@@ -547,6 +2433,7 @@ const file = new Schema({
     timestamps: true,
 });
 file.index({ createdAt: 1, updatedAt: 1 });
+file.index({ filename: 1, conversationId: 1, context: 1 }, { unique: true, partialFilterExpression: { context: FileContext.execute_code } });
 
 const keySchema = new Schema({
     userId: {
@@ -587,6 +2474,7 @@ const messageSchema = new Schema({
         index: true,
         required: true,
         default: null,
+        meiliIndex: true,
     },
     model: {
         type: String,
@@ -666,25 +2554,6 @@ const messageSchema = new Schema({
         default: false,
     },
     files: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
-    plugin: {
-        type: {
-            latest: {
-                type: String,
-                required: false,
-            },
-            inputs: {
-                type: [mongoose.Schema.Types.Mixed],
-                required: false,
-                default: undefined,
-            },
-            outputs: {
-                type: String,
-                required: false,
-            },
-        },
-        default: undefined,
-    },
-    plugins: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
     content: {
         type: [{ type: mongoose.Schema.Types.Mixed }],
         default: undefined,
@@ -697,6 +2566,7 @@ const messageSchema = new Schema({
     iconURL: {
         type: String,
     },
+    metadata: { type: mongoose.Schema.Types.Mixed },
     attachments: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
     /*
     attachments: {
@@ -723,10 +2593,16 @@ const messageSchema = new Schema({
     expiredAt: {
         type: Date,
     },
+    addedConvo: {
+        type: Boolean,
+        default: undefined,
+    },
 }, { timestamps: true });
 messageSchema.index({ expiredAt: 1 }, { expireAfterSeconds: 0 });
 messageSchema.index({ createdAt: 1 });
 messageSchema.index({ messageId: 1, user: 1 }, { unique: true });
+// index for MeiliSearch sync operations
+messageSchema.index({ _meiliIndex: 1, expiredAt: 1 });
 
 const pluginAuthSchema = new Schema({
     authField: {
@@ -769,10 +2645,6 @@ const presetSchema = new Schema({
         type: Number,
     },
     ...conversationPreset,
-    agentOptions: {
-        type: mongoose.Schema.Types.Mixed,
-        default: null,
-    },
 }, { timestamps: true });
 
 const projectSchema = new Schema({
@@ -881,68 +2753,75 @@ const promptGroupSchema = new Schema({
 });
 promptGroupSchema.index({ createdAt: 1, updatedAt: 1 });
 
-// Create a sub-schema for permissions. Notice we disable _id for this subdocument.
+/**
+ * Uses a sub-schema for permissions. Notice we disable `_id` for this subdocument.
+ */
 const rolePermissionsSchema = new Schema({
     [PermissionTypes.BOOKMARKS]: {
-        [Permissions.USE]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
     },
     [PermissionTypes.PROMPTS]: {
-        [Permissions.SHARED_GLOBAL]: { type: Boolean, default: false },
-        [Permissions.USE]: { type: Boolean, default: true },
-        [Permissions.CREATE]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
+        [Permissions.CREATE]: { type: Boolean },
+        [Permissions.SHARE]: { type: Boolean },
+        [Permissions.SHARE_PUBLIC]: { type: Boolean },
     },
     [PermissionTypes.MEMORIES]: {
-        [Permissions.USE]: { type: Boolean, default: true },
-        [Permissions.CREATE]: { type: Boolean, default: true },
-        [Permissions.UPDATE]: { type: Boolean, default: true },
-        [Permissions.READ]: { type: Boolean, default: true },
-        [Permissions.OPT_OUT]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
+        [Permissions.CREATE]: { type: Boolean },
+        [Permissions.UPDATE]: { type: Boolean },
+        [Permissions.READ]: { type: Boolean },
+        [Permissions.OPT_OUT]: { type: Boolean },
     },
     [PermissionTypes.AGENTS]: {
-        [Permissions.SHARED_GLOBAL]: { type: Boolean, default: false },
-        [Permissions.USE]: { type: Boolean, default: true },
-        [Permissions.CREATE]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
+        [Permissions.CREATE]: { type: Boolean },
+        [Permissions.SHARE]: { type: Boolean },
+        [Permissions.SHARE_PUBLIC]: { type: Boolean },
     },
     [PermissionTypes.MULTI_CONVO]: {
-        [Permissions.USE]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
     },
     [PermissionTypes.TEMPORARY_CHAT]: {
-        [Permissions.USE]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
     },
     [PermissionTypes.RUN_CODE]: {
-        [Permissions.USE]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
     },
     [PermissionTypes.WEB_SEARCH]: {
-        [Permissions.USE]: { type: Boolean, default: true },
+        [Permissions.USE]: { type: Boolean },
+    },
+    [PermissionTypes.PEOPLE_PICKER]: {
+        [Permissions.VIEW_USERS]: { type: Boolean },
+        [Permissions.VIEW_GROUPS]: { type: Boolean },
+        [Permissions.VIEW_ROLES]: { type: Boolean },
+    },
+    [PermissionTypes.MARKETPLACE]: {
+        [Permissions.USE]: { type: Boolean },
+    },
+    [PermissionTypes.FILE_SEARCH]: {
+        [Permissions.USE]: { type: Boolean },
+    },
+    [PermissionTypes.FILE_CITATIONS]: {
+        [Permissions.USE]: { type: Boolean },
+    },
+    [PermissionTypes.MCP_SERVERS]: {
+        [Permissions.USE]: { type: Boolean },
+        [Permissions.CREATE]: { type: Boolean },
+        [Permissions.SHARE]: { type: Boolean },
+        [Permissions.SHARE_PUBLIC]: { type: Boolean },
+    },
+    [PermissionTypes.REMOTE_AGENTS]: {
+        [Permissions.USE]: { type: Boolean },
+        [Permissions.CREATE]: { type: Boolean },
+        [Permissions.SHARE]: { type: Boolean },
+        [Permissions.SHARE_PUBLIC]: { type: Boolean },
     },
 }, { _id: false });
 const roleSchema = new Schema({
     name: { type: String, required: true, unique: true, index: true },
     permissions: {
         type: rolePermissionsSchema,
-        default: () => ({
-            [PermissionTypes.BOOKMARKS]: { [Permissions.USE]: true },
-            [PermissionTypes.PROMPTS]: {
-                [Permissions.SHARED_GLOBAL]: false,
-                [Permissions.USE]: true,
-                [Permissions.CREATE]: true,
-            },
-            [PermissionTypes.MEMORIES]: {
-                [Permissions.USE]: true,
-                [Permissions.CREATE]: true,
-                [Permissions.UPDATE]: true,
-                [Permissions.READ]: true,
-            },
-            [PermissionTypes.AGENTS]: {
-                [Permissions.SHARED_GLOBAL]: false,
-                [Permissions.USE]: true,
-                [Permissions.CREATE]: true,
-            },
-            [PermissionTypes.MULTI_CONVO]: { [Permissions.USE]: true },
-            [PermissionTypes.TEMPORARY_CHAT]: { [Permissions.USE]: true },
-            [PermissionTypes.RUN_CODE]: { [Permissions.USE]: true },
-            [PermissionTypes.WEB_SEARCH]: { [Permissions.USE]: true },
-        }),
     },
 });
 
@@ -981,11 +2860,17 @@ const shareSchema = new Schema({
         type: String,
         index: true,
     },
+    targetMessageId: {
+        type: String,
+        required: false,
+        index: true,
+    },
     isPublic: {
         type: Boolean,
         default: true,
     },
 }, { timestamps: true });
+shareSchema.index({ conversationId: 1, user: 1, targetMessageId: 1 });
 
 const tokenSchema = new Schema({
     userId: {
@@ -1075,6 +2960,7 @@ const transactionSchema = new Schema({
     },
     model: {
         type: String,
+        index: true,
     },
     context: {
         type: String,
@@ -1132,6 +3018,7 @@ const userSchema = new Schema({
         trim: true,
         minlength: 8,
         maxlength: 128,
+        select: false,
     },
     avatar: {
         type: String,
@@ -1195,9 +3082,11 @@ const userSchema = new Schema({
     },
     totpSecret: {
         type: String,
+        select: false,
     },
     backupCodes: {
         type: [BackupCodeSchema],
+        select: false,
     },
     refreshToken: {
         type: [SessionSchema],
@@ -1218,6 +3107,22 @@ const userSchema = new Schema({
             },
         },
         default: {},
+    },
+    favorites: {
+        type: [
+            {
+                _id: false,
+                agentId: String, // for agent
+                model: String, // for model
+                endpoint: String, // for model
+            },
+        ],
+        default: [],
+    },
+    /** Field for external source identification (for consistency with TPrincipal schema) */
+    idOnTheSource: {
+        type: String,
+        sparse: true,
     },
 }, { timestamps: true });
 
@@ -1250,6 +3155,96 @@ const MemoryEntrySchema = new Schema({
     },
 });
 
+const groupSchema = new Schema({
+    name: {
+        type: String,
+        required: true,
+        index: true,
+    },
+    description: {
+        type: String,
+        required: false,
+    },
+    email: {
+        type: String,
+        required: false,
+        index: true,
+    },
+    avatar: {
+        type: String,
+        required: false,
+    },
+    memberIds: [
+        {
+            type: String,
+            required: false,
+        },
+    ],
+    source: {
+        type: String,
+        enum: ['local', 'entra'],
+        default: 'local',
+    },
+    /** External ID (e.g., Entra ID) */
+    idOnTheSource: {
+        type: String,
+        sparse: true,
+        index: true,
+        required: function () {
+            return this.source !== 'local';
+        },
+    },
+}, { timestamps: true });
+groupSchema.index({ idOnTheSource: 1, source: 1 }, {
+    unique: true,
+    partialFilterExpression: { idOnTheSource: { $exists: true } },
+});
+groupSchema.index({ memberIds: 1 });
+
+/**
+ * Checks if the connected MongoDB deployment supports transactions
+ * This requires a MongoDB replica set configuration
+ *
+ * @returns True if transactions are supported, false otherwise
+ */
+const supportsTransactions = async (mongoose) => {
+    var _a;
+    try {
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+            await ((_a = mongoose.connection.db) === null || _a === void 0 ? void 0 : _a.collection('__transaction_test__').findOne({}, { session }));
+            await session.abortTransaction();
+            logger$1.debug('MongoDB transactions are supported');
+            return true;
+        }
+        catch (transactionError) {
+            logger$1.debug('MongoDB transactions not supported (transaction error):', (transactionError === null || transactionError === void 0 ? void 0 : transactionError.message) || 'Unknown error');
+            return false;
+        }
+        finally {
+            await session.endSession();
+        }
+    }
+    catch (error) {
+        logger$1.debug('MongoDB transactions not supported (session error):', (error === null || error === void 0 ? void 0 : error.message) || 'Unknown error');
+        return false;
+    }
+};
+/**
+ * Gets whether the current MongoDB deployment supports transactions
+ * Caches the result for performance
+ *
+ * @returns True if transactions are supported, false otherwise
+ */
+const getTransactionSupport = async (mongoose, transactionSupportCache) => {
+    let transactionsSupported = false;
+    if (transactionSupportCache === null) {
+        transactionsSupported = await supportsTransactions(mongoose);
+    }
+    return transactionsSupported;
+};
+
 /**
  * Creates or returns the User model using the provided mongoose instance and schema
  */
@@ -1278,11 +3273,11 @@ function createBalanceModel(mongoose) {
     return mongoose.models.Balance || mongoose.model('Balance', balanceSchema);
 }
 
-const logDir$1 = path.join(__dirname, '..', '..', '..', 'api', 'logs');
-const { NODE_ENV: NODE_ENV$1, DEBUG_LOGGING: DEBUG_LOGGING$1 = 'false' } = process.env;
-const useDebugLogging$1 = (typeof DEBUG_LOGGING$1 === 'string' && DEBUG_LOGGING$1.toLowerCase() === 'true') ||
-    DEBUG_LOGGING$1 === 'true';
-const levels$1 = {
+const logDir = getLogDirectory();
+const { NODE_ENV, DEBUG_LOGGING = 'false' } = process.env;
+const useDebugLogging = (typeof DEBUG_LOGGING === 'string' && DEBUG_LOGGING.toLowerCase() === 'true') ||
+    DEBUG_LOGGING === 'true';
+const levels = {
     error: 0,
     warn: 1,
     info: 2,
@@ -1298,33 +3293,33 @@ winston.addColors({
     error: 'red',
     debug: 'blue',
 });
-const level$1 = () => {
-    const env = NODE_ENV$1 || 'development';
+const level = () => {
+    const env = NODE_ENV || 'development';
     const isDevelopment = env === 'development';
     return isDevelopment ? 'debug' : 'warn';
 };
-const fileFormat$1 = winston.format.combine(winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston.format.errors({ stack: true }), winston.format.splat());
-const logLevel = useDebugLogging$1 ? 'debug' : 'error';
-const transports$1 = [
+const fileFormat = winston.format.combine(winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston.format.errors({ stack: true }), winston.format.splat());
+const logLevel = useDebugLogging ? 'debug' : 'error';
+const transports = [
     new winston.transports.DailyRotateFile({
         level: logLevel,
-        filename: `${logDir$1}/meiliSync-%DATE%.log`,
+        filename: `${logDir}/meiliSync-%DATE%.log`,
         datePattern: 'YYYY-MM-DD',
         zippedArchive: true,
         maxSize: '20m',
         maxFiles: '14d',
-        format: fileFormat$1,
+        format: fileFormat,
     }),
 ];
-const consoleFormat$1 = winston.format.combine(winston.format.colorize({ all: true }), winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`));
-transports$1.push(new winston.transports.Console({
+const consoleFormat = winston.format.combine(winston.format.colorize({ all: true }), winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`));
+transports.push(new winston.transports.Console({
     level: 'info',
-    format: consoleFormat$1,
+    format: consoleFormat,
 }));
-const logger$1 = winston.createLogger({
-    level: level$1(),
-    levels: levels$1,
-    transports: transports$1,
+const logger = winston.createLogger({
+    level: level(),
+    levels,
+    transports,
 });
 
 // Environment flags
@@ -1343,26 +3338,6 @@ const getSyncConfig = () => ({
     batchSize: parseInt(process.env.MEILI_SYNC_BATCH_SIZE || '100', 10),
     delayMs: parseInt(process.env.MEILI_SYNC_DELAY_MS || '100', 10),
 });
-/**
- * Local implementation of parseTextParts to avoid dependency on @hanzochat/data-provider
- * Extracts text content from an array of content items
- */
-const parseTextParts = (content) => {
-    if (!Array.isArray(content)) {
-        return '';
-    }
-    return content
-        .filter((item) => item.type === 'text' && typeof item.text === 'string')
-        .map((item) => item.text)
-        .join(' ')
-        .trim();
-};
-/**
- * Local implementation to handle Bing convoId conversion
- */
-const cleanUpPrimaryKeyValue = (value) => {
-    return value.replace(/--/g, '|');
-};
 /**
  * Validates the required options for configuring the mongoMeili plugin.
  */
@@ -1406,8 +3381,8 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
          * Get the current sync progress
          */
         static async getSyncProgress() {
-            const totalDocuments = await this.countDocuments();
-            const indexedDocuments = await this.countDocuments({ _meiliIndex: true });
+            const totalDocuments = await this.countDocuments({ expiredAt: null });
+            const indexedDocuments = await this.countDocuments({ expiredAt: null, _meiliIndex: true });
             return {
                 totalProcessed: indexedDocuments,
                 totalDocuments,
@@ -1415,92 +3390,84 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
             };
         }
         /**
-         * Synchronizes the data between the MongoDB collection and the MeiliSearch index.
-         * Now uses streaming and batching to reduce memory usage.
-         */
-        static async syncWithMeili(options) {
+         * Synchronizes data between the MongoDB collection and the MeiliSearch index by
+         * incrementally indexing only documents where `expiredAt` is `null` and `_meiliIndex` is not `true`
+         * (i.e., non-expired documents that have not yet been indexed, including those with missing or null `_meiliIndex`).
+         * */
+        static async syncWithMeili() {
+            const startTime = Date.now();
+            const { batchSize, delayMs } = syncConfig;
+            const collectionName = primaryKey === 'messageId' ? 'messages' : 'conversations';
+            logger.info(`[syncWithMeili] Starting sync for ${collectionName} with batch size ${batchSize}`);
+            // Get approximate total count for raw estimation, the sync should not overcome this number
+            const approxTotalCount = await this.estimatedDocumentCount();
+            logger.info(`[syncWithMeili] Approximate total number of all ${collectionName}: ${approxTotalCount}`);
             try {
-                const startTime = Date.now();
-                const { batchSize, delayMs } = syncConfig;
-                logger$1.info(`[syncWithMeili] Starting sync for ${primaryKey === 'messageId' ? 'messages' : 'conversations'} with batch size ${batchSize}`);
-                // Build query with resume capability
-                const query = {};
-                if (options === null || options === void 0 ? void 0 : options.resumeFromId) {
-                    query._id = { $gt: options.resumeFromId };
-                }
-                // Get total count for progress tracking
-                const totalCount = await this.countDocuments(query);
-                let processedCount = 0;
                 // First, handle documents that need to be removed from Meili
+                logger.info(`[syncWithMeili] Starting cleanup of Meili index ${index.uid} before sync`);
                 await this.cleanupMeiliIndex(index, primaryKey, batchSize, delayMs);
-                // Process MongoDB documents in batches using cursor
-                const cursor = this.find(query)
-                    .select(attributesToIndex.join(' ') + ' _meiliIndex')
-                    .sort({ _id: 1 })
-                    .batchSize(batchSize)
-                    .cursor();
-                const format = (doc) => _.omitBy(_.pick(doc, attributesToIndex), (v, k) => k.startsWith('$'));
-                let documentBatch = [];
-                let updateOps = [];
-                // Process documents in streaming fashion
-                for await (const doc of cursor) {
-                    const typedDoc = doc.toObject();
-                    const formatted = format(typedDoc);
-                    // Check if document needs indexing
-                    if (!typedDoc._meiliIndex) {
-                        documentBatch.push(formatted);
-                        updateOps.push({
-                            updateOne: {
-                                filter: { _id: typedDoc._id },
-                                update: { $set: { _meiliIndex: true } },
-                            },
-                        });
-                    }
-                    processedCount++;
-                    // Process batch when it reaches the configured size
-                    if (documentBatch.length >= batchSize) {
-                        await this.processSyncBatch(index, documentBatch, updateOps);
-                        documentBatch = [];
-                        updateOps = [];
-                        // Log progress
-                        const progress = Math.round((processedCount / totalCount) * 100);
-                        logger$1.info(`[syncWithMeili] Progress: ${progress}% (${processedCount}/${totalCount})`);
-                        // Add delay to prevent overwhelming resources
-                        if (delayMs > 0) {
-                            await new Promise((resolve) => setTimeout(resolve, delayMs));
-                        }
-                    }
-                }
-                // Process remaining documents
-                if (documentBatch.length > 0) {
-                    await this.processSyncBatch(index, documentBatch, updateOps);
-                }
-                const duration = Date.now() - startTime;
-                logger$1.info(`[syncWithMeili] Completed sync for ${primaryKey === 'messageId' ? 'messages' : 'conversations'} in ${duration}ms`);
+                logger.info(`[syncWithMeili] Completed cleanup of Meili index: ${index.uid}`);
             }
             catch (error) {
-                logger$1.error('[syncWithMeili] Error during sync:', error);
+                logger.error('[syncWithMeili] Error during cleanup Meili before sync:', error);
                 throw error;
             }
+            let processedCount = 0;
+            let hasMore = true;
+            while (hasMore) {
+                const query = {
+                    expiredAt: null,
+                    _meiliIndex: { $ne: true },
+                };
+                try {
+                    const documents = await this.find(query)
+                        .select(attributesToIndex.join(' ') + ' _meiliIndex')
+                        .limit(batchSize)
+                        .lean();
+                    // Check if there are more documents to process
+                    if (documents.length === 0) {
+                        logger.info('[syncWithMeili] No more documents to process');
+                        break;
+                    }
+                    // Process the batch
+                    await this.processSyncBatch(index, documents);
+                    processedCount += documents.length;
+                    logger.info(`[syncWithMeili] Processed: ${processedCount}`);
+                    if (documents.length < batchSize) {
+                        hasMore = false;
+                    }
+                    // Add delay to prevent overwhelming resources
+                    if (hasMore && delayMs > 0) {
+                        await new Promise((resolve) => setTimeout(resolve, delayMs));
+                    }
+                }
+                catch (error) {
+                    logger.error('[syncWithMeili] Error processing documents batch:', error);
+                    throw error;
+                }
+            }
+            const duration = Date.now() - startTime;
+            logger.info(`[syncWithMeili] Completed sync for ${collectionName}. Processed ${processedCount} documents in ${duration}ms`);
         }
         /**
          * Process a batch of documents for syncing
          */
-        static async processSyncBatch(index, documents, updateOps) {
+        static async processSyncBatch(index, documents) {
             if (documents.length === 0) {
                 return;
             }
+            // Format documents for MeiliSearch
+            const formattedDocs = documents.map((doc) => _.omitBy(_.pick(doc, attributesToIndex), (_v, k) => k.startsWith('$')));
             try {
                 // Add documents to MeiliSearch
-                await index.addDocuments(documents);
+                await index.addDocumentsInBatches(formattedDocs);
                 // Update MongoDB to mark documents as indexed
-                if (updateOps.length > 0) {
-                    await this.collection.bulkWrite(updateOps);
-                }
+                const docsIds = documents.map((doc) => doc._id);
+                await this.updateMany({ _id: { $in: docsIds } }, { $set: { _meiliIndex: true } });
             }
             catch (error) {
-                logger$1.error('[processSyncBatch] Error processing batch:', error);
-                // Don't throw - allow sync to continue with other documents
+                logger.error('[processSyncBatch] Error processing batch:', error);
+                throw error;
             }
         }
         /**
@@ -1525,10 +3492,14 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
                     // Delete documents that don't exist in MongoDB
                     const toDelete = meiliIds.filter((id) => !existingIds.has(id));
                     if (toDelete.length > 0) {
-                        await Promise.all(toDelete.map((id) => index.deleteDocument(id)));
-                        logger$1.debug(`[cleanupMeiliIndex] Deleted ${toDelete.length} orphaned documents`);
+                        await index.deleteDocuments(toDelete.map(String));
+                        logger.debug(`[cleanupMeiliIndex] Deleted ${toDelete.length} orphaned documents`);
                     }
-                    offset += batchSize;
+                    // if fetch documents request returns less documents than limit, all documents are processed
+                    if (batch.results.length < batchSize) {
+                        break;
+                    }
+                    offset += batchSize - toDelete.length;
                     // Add delay between batches
                     if (delayMs > 0) {
                         await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -1536,7 +3507,7 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
                 }
             }
             catch (error) {
-                logger$1.error('[cleanupMeiliIndex] Error during cleanup:', error);
+                logger.error('[cleanupMeiliIndex] Error during cleanup:', error);
             }
         }
         /**
@@ -1552,7 +3523,7 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
             const data = await index.search(q, params);
             if (populate) {
                 const query = {};
-                query[primaryKey] = _.map(data.hits, (hit) => cleanUpPrimaryKeyValue(hit[primaryKey]));
+                query[primaryKey] = _.map(data.hits, (hit) => hit[primaryKey]);
                 const projection = Object.keys(this.schema.obj).reduce((results, key) => {
                     if (!key.startsWith('$')) {
                         results[key] = 1;
@@ -1595,6 +3566,10 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
          * Adds the current document to the MeiliSearch index with retry logic
          */
         async addObjectToMeili(next) {
+            // If this conversation or message has a TTL, don't index it
+            if (!_.isNil(this.expiredAt)) {
+                return next();
+            }
             const object = this.preprocessObjectForIndex();
             const maxRetries = 3;
             let retryCount = 0;
@@ -1606,7 +3581,7 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
                 catch (error) {
                     retryCount++;
                     if (retryCount >= maxRetries) {
-                        logger$1.error('[addObjectToMeili] Error adding document to Meili after retries:', error);
+                        logger.error('[addObjectToMeili] Error adding document to Meili after retries:', error);
                         return next();
                     }
                     // Exponential backoff
@@ -1617,7 +3592,7 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
                 await this.collection.updateMany({ _id: this._id }, { $set: { _meiliIndex: true } });
             }
             catch (error) {
-                logger$1.error('[addObjectToMeili] Error updating _meiliIndex field:', error);
+                logger.error('[addObjectToMeili] Error updating _meiliIndex field:', error);
                 return next();
             }
             next();
@@ -1632,7 +3607,7 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
                 next();
             }
             catch (error) {
-                logger$1.error('[updateObjectToMeili] Error updating document in Meili:', error);
+                logger.error('[updateObjectToMeili] Error updating document in Meili:', error);
                 return next();
             }
         }
@@ -1647,7 +3622,7 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
                 next();
             }
             catch (error) {
-                logger$1.error('[deleteObjectFromMeili] Error deleting document from Meili:', error);
+                logger.error('[deleteObjectFromMeili] Error deleting document from Meili:', error);
                 return next();
             }
         }
@@ -1739,24 +3714,34 @@ function mongoMeili(schema, options) {
     (async () => {
         try {
             await index.getRawInfo();
-            logger$1.debug(`[mongoMeili] Index ${indexName} already exists`);
+            logger.debug(`[mongoMeili] Index ${indexName} already exists`);
         }
         catch (error) {
             const errorCode = error === null || error === void 0 ? void 0 : error.code;
             if (errorCode === 'index_not_found') {
                 try {
-                    logger$1.info(`[mongoMeili] Creating new index: ${indexName}`);
+                    logger.info(`[mongoMeili] Creating new index: ${indexName}`);
                     await client.createIndex(indexName, { primaryKey });
-                    logger$1.info(`[mongoMeili] Successfully created index: ${indexName}`);
+                    logger.info(`[mongoMeili] Successfully created index: ${indexName}`);
                 }
                 catch (createError) {
                     // Index might have been created by another instance
-                    logger$1.debug(`[mongoMeili] Index ${indexName} may already exist:`, createError);
+                    logger.debug(`[mongoMeili] Index ${indexName} may already exist:`, createError);
                 }
             }
             else {
-                logger$1.error(`[mongoMeili] Error checking index ${indexName}:`, error);
+                logger.error(`[mongoMeili] Error checking index ${indexName}:`, error);
             }
+        }
+        // Configure index settings to make 'user' field filterable
+        try {
+            await index.updateSettings({
+                filterableAttributes: ['user'],
+            });
+            logger.debug(`[mongoMeili] Updated index ${indexName} settings to make 'user' filterable`);
+        }
+        catch (settingsError) {
+            logger.error(`[mongoMeili] Error updating index settings for ${indexName}:`, settingsError);
         }
     })();
     // Collect attributes from the schema that should be indexed
@@ -1766,6 +3751,12 @@ function mongoMeili(schema, options) {
             return schemaValue.meiliIndex ? [...results, key] : results;
         }, []),
     ];
+    // CRITICAL: Always include 'user' field for proper filtering
+    // This ensures existing deployments can filter by user after migration
+    if (schema.obj.user && !attributesToIndex.includes('user')) {
+        attributesToIndex.push('user');
+        logger.debug(`[mongoMeili] Added 'user' field to ${indexName} index attributes`);
+    }
     schema.loadClass(createMeiliMongooseModel({ index, attributesToIndex, syncOptions }));
     // Register Mongoose hooks
     schema.post('save', function (doc, next) {
@@ -1818,7 +3809,7 @@ function mongoMeili(schema, options) {
         }
         catch (error) {
             if (meiliEnabled) {
-                logger$1.error('[MeiliMongooseModel.deleteMany] There was an issue deleting conversation indexes upon deletion. Next startup may be slow due to syncing.', error);
+                logger.error('[MeiliMongooseModel.deleteMany] There was an issue deleting conversation indexes upon deletion. Next startup may trigger syncing.', error);
             }
             return next();
         }
@@ -1838,7 +3829,7 @@ function mongoMeili(schema, options) {
                 meiliDoc = await client.index('convos').getDocument(doc.conversationId);
             }
             catch (error) {
-                logger$1.debug('[MeiliMongooseModel.findOneAndUpdate] Convo not found in MeiliSearch and will index ' +
+                logger.debug('[MeiliMongooseModel.findOneAndUpdate] Convo not found in MeiliSearch and will index ' +
                     doc.conversationId, error);
             }
         }
@@ -1887,6 +3878,48 @@ function createMessageModel(mongoose) {
  */
 function createAgentModel(mongoose) {
     return mongoose.models.Agent || mongoose.model('Agent', agentSchema);
+}
+
+function createAgentApiKeyModel(mongoose) {
+    return (mongoose.models.AgentApiKey || mongoose.model('AgentApiKey', agentApiKeySchema));
+}
+
+/**
+ * Creates or returns the AgentCategory model using the provided mongoose instance and schema
+ */
+function createAgentCategoryModel(mongoose) {
+    return (mongoose.models.AgentCategory ||
+        mongoose.model('AgentCategory', agentCategorySchema));
+}
+
+const mcpServerSchema = new Schema({
+    serverName: {
+        type: String,
+        index: true,
+        unique: true,
+        required: true,
+    },
+    config: {
+        type: Schema.Types.Mixed,
+        required: true,
+        // Config contains: title, description, url, oauth, etc.
+    },
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true,
+    },
+}, {
+    timestamps: true,
+});
+mcpServerSchema.index({ updatedAt: -1, _id: 1 });
+
+/**
+ * Creates or returns the MCPServer model using the provided mongoose instance and schema
+ */
+function createMCPServerModel(mongoose) {
+    return (mongoose.models.MCPServer || mongoose.model('MCPServer', mcpServerSchema));
 }
 
 /**
@@ -2000,6 +4033,108 @@ function createMemoryModel(mongoose) {
     return mongoose.models.MemoryEntry || mongoose.model('MemoryEntry', MemoryEntrySchema);
 }
 
+const accessRoleSchema = new Schema({
+    accessRoleId: {
+        type: String,
+        required: true,
+        index: true,
+        unique: true,
+    },
+    name: {
+        type: String,
+        required: true,
+    },
+    description: String,
+    resourceType: {
+        type: String,
+        enum: ['agent', 'project', 'file', 'promptGroup', 'mcpServer', 'remoteAgent'],
+        required: true,
+        default: 'agent',
+    },
+    permBits: {
+        type: Number,
+        required: true,
+    },
+}, { timestamps: true });
+
+/**
+ * Creates or returns the AccessRole model using the provided mongoose instance and schema
+ */
+function createAccessRoleModel(mongoose) {
+    return (mongoose.models.AccessRole || mongoose.model('AccessRole', accessRoleSchema));
+}
+
+const aclEntrySchema = new Schema({
+    principalType: {
+        type: String,
+        enum: Object.values(PrincipalType),
+        required: true,
+    },
+    principalId: {
+        type: Schema.Types.Mixed, // Can be ObjectId for users/groups or String for roles
+        refPath: 'principalModel',
+        required: function () {
+            return this.principalType !== PrincipalType.PUBLIC;
+        },
+        index: true,
+    },
+    principalModel: {
+        type: String,
+        enum: Object.values(PrincipalModel),
+        required: function () {
+            return this.principalType !== PrincipalType.PUBLIC;
+        },
+    },
+    resourceType: {
+        type: String,
+        enum: Object.values(ResourceType),
+        required: true,
+    },
+    resourceId: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        index: true,
+    },
+    permBits: {
+        type: Number,
+        default: 1,
+    },
+    roleId: {
+        type: Schema.Types.ObjectId,
+        ref: 'AccessRole',
+    },
+    inheritedFrom: {
+        type: Schema.Types.ObjectId,
+        sparse: true,
+        index: true,
+    },
+    grantedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+    },
+    grantedAt: {
+        type: Date,
+        default: Date.now,
+    },
+}, { timestamps: true });
+aclEntrySchema.index({ principalId: 1, principalType: 1, resourceType: 1, resourceId: 1 });
+aclEntrySchema.index({ resourceId: 1, principalType: 1, principalId: 1 });
+aclEntrySchema.index({ principalId: 1, permBits: 1, resourceType: 1 });
+
+/**
+ * Creates or returns the AclEntry model using the provided mongoose instance and schema
+ */
+function createAclEntryModel(mongoose) {
+    return mongoose.models.AclEntry || mongoose.model('AclEntry', aclEntrySchema);
+}
+
+/**
+ * Creates or returns the Group model using the provided mongoose instance and schema
+ */
+function createGroupModel(mongoose) {
+    return mongoose.models.Group || mongoose.model('Group', groupSchema);
+}
+
 /**
  * Creates all database models for all collections
  */
@@ -2012,6 +4147,9 @@ function createModels(mongoose) {
         Conversation: createConversationModel(mongoose),
         Message: createMessageModel(mongoose),
         Agent: createAgentModel(mongoose),
+        AgentApiKey: createAgentApiKeyModel(mongoose),
+        AgentCategory: createAgentCategoryModel(mongoose),
+        MCPServer: createMCPServerModel(mongoose),
         Role: createRoleModel(mongoose),
         Action: createActionModel(mongoose),
         Assistant: createAssistantModel(mongoose),
@@ -2028,17 +4166,409 @@ function createModels(mongoose) {
         SharedLink: createSharedLinkModel(mongoose),
         ToolCall: createToolCallModel(mongoose),
         MemoryEntry: createMemoryModel(mongoose),
+        AccessRole: createAccessRoleModel(mongoose),
+        AclEntry: createAclEntryModel(mongoose),
+        Group: createGroupModel(mongoose),
     };
 }
 
+class SessionError extends Error {
+    constructor(message, code = 'SESSION_ERROR') {
+        super(message);
+        this.name = 'SessionError';
+        this.code = code;
+    }
+}
+/** Default refresh token expiry: 7 days in milliseconds */
+const DEFAULT_REFRESH_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 * 7;
+// Factory function that takes mongoose instance and returns the methods
+function createSessionMethods(mongoose) {
+    /**
+     * Creates a new session for a user
+     */
+    async function createSession(userId, options = {}) {
+        var _a;
+        if (!userId) {
+            throw new SessionError('User ID is required', 'INVALID_USER_ID');
+        }
+        const expiresIn = (_a = options.expiresIn) !== null && _a !== void 0 ? _a : DEFAULT_REFRESH_TOKEN_EXPIRY;
+        try {
+            const Session = mongoose.models.Session;
+            const currentSession = new Session({
+                user: userId,
+                expiration: options.expiration || new Date(Date.now() + expiresIn),
+            });
+            const refreshToken = await generateRefreshToken(currentSession);
+            return { session: currentSession, refreshToken };
+        }
+        catch (error) {
+            logger$1.error('[createSession] Error creating session:', error);
+            throw new SessionError('Failed to create session', 'CREATE_SESSION_FAILED');
+        }
+    }
+    /**
+     * Finds a session by various parameters
+     */
+    async function findSession(params, options = { lean: true }) {
+        try {
+            const Session = mongoose.models.Session;
+            const query = {};
+            if (!params.refreshToken && !params.userId && !params.sessionId) {
+                throw new SessionError('At least one search parameter is required', 'INVALID_SEARCH_PARAMS');
+            }
+            if (params.refreshToken) {
+                const tokenHash = await hashToken(params.refreshToken);
+                query.refreshTokenHash = tokenHash;
+            }
+            if (params.userId) {
+                query.user = params.userId;
+            }
+            if (params.sessionId) {
+                const sessionId = typeof params.sessionId === 'object' &&
+                    params.sessionId !== null &&
+                    'sessionId' in params.sessionId
+                    ? params.sessionId.sessionId
+                    : params.sessionId;
+                if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+                    throw new SessionError('Invalid session ID format', 'INVALID_SESSION_ID');
+                }
+                query._id = sessionId;
+            }
+            // Add expiration check to only return valid sessions
+            query.expiration = { $gt: new Date() };
+            const sessionQuery = Session.findOne(query);
+            if (options.lean) {
+                return (await sessionQuery.lean());
+            }
+            return await sessionQuery.exec();
+        }
+        catch (error) {
+            logger$1.error('[findSession] Error finding session:', error);
+            throw new SessionError('Failed to find session', 'FIND_SESSION_FAILED');
+        }
+    }
+    /**
+     * Updates session expiration
+     */
+    async function updateExpiration(session, newExpiration, options = {}) {
+        var _a;
+        const expiresIn = (_a = options.expiresIn) !== null && _a !== void 0 ? _a : DEFAULT_REFRESH_TOKEN_EXPIRY;
+        try {
+            const Session = mongoose.models.Session;
+            const sessionDoc = typeof session === 'string' ? await Session.findById(session) : session;
+            if (!sessionDoc) {
+                throw new SessionError('Session not found', 'SESSION_NOT_FOUND');
+            }
+            sessionDoc.expiration = newExpiration || new Date(Date.now() + expiresIn);
+            return await sessionDoc.save();
+        }
+        catch (error) {
+            logger$1.error('[updateExpiration] Error updating session:', error);
+            throw new SessionError('Failed to update session expiration', 'UPDATE_EXPIRATION_FAILED');
+        }
+    }
+    /**
+     * Deletes a session by refresh token or session ID
+     */
+    async function deleteSession(params) {
+        try {
+            const Session = mongoose.models.Session;
+            if (!params.refreshToken && !params.sessionId) {
+                throw new SessionError('Either refreshToken or sessionId is required', 'INVALID_DELETE_PARAMS');
+            }
+            const query = {};
+            if (params.refreshToken) {
+                query.refreshTokenHash = await hashToken(params.refreshToken);
+            }
+            if (params.sessionId) {
+                query._id = params.sessionId;
+            }
+            const result = await Session.deleteOne(query);
+            if (result.deletedCount === 0) {
+                logger$1.warn('[deleteSession] No session found to delete');
+            }
+            return result;
+        }
+        catch (error) {
+            logger$1.error('[deleteSession] Error deleting session:', error);
+            throw new SessionError('Failed to delete session', 'DELETE_SESSION_FAILED');
+        }
+    }
+    /**
+     * Deletes all sessions for a user
+     */
+    async function deleteAllUserSessions(userId, options = {}) {
+        try {
+            const Session = mongoose.models.Session;
+            if (!userId) {
+                throw new SessionError('User ID is required', 'INVALID_USER_ID');
+            }
+            const userIdString = typeof userId === 'object' && userId !== null ? userId.userId : userId;
+            if (!mongoose.Types.ObjectId.isValid(userIdString)) {
+                throw new SessionError('Invalid user ID format', 'INVALID_USER_ID_FORMAT');
+            }
+            const query = { user: userIdString };
+            if (options.excludeCurrentSession && options.currentSessionId) {
+                query._id = { $ne: options.currentSessionId };
+            }
+            const result = await Session.deleteMany(query);
+            if (result.deletedCount && result.deletedCount > 0) {
+                logger$1.debug(`[deleteAllUserSessions] Deleted ${result.deletedCount} sessions for user ${userIdString}.`);
+            }
+            return result;
+        }
+        catch (error) {
+            logger$1.error('[deleteAllUserSessions] Error deleting user sessions:', error);
+            throw new SessionError('Failed to delete user sessions', 'DELETE_ALL_SESSIONS_FAILED');
+        }
+    }
+    /**
+     * Generates a refresh token for a session
+     */
+    async function generateRefreshToken(session) {
+        if (!session || !session.user) {
+            throw new SessionError('Invalid session object', 'INVALID_SESSION');
+        }
+        try {
+            const expiresIn = session.expiration
+                ? session.expiration.getTime()
+                : Date.now() + DEFAULT_REFRESH_TOKEN_EXPIRY;
+            if (!session.expiration) {
+                session.expiration = new Date(expiresIn);
+            }
+            const refreshToken = await signPayload({
+                payload: {
+                    id: session.user,
+                    sessionId: session._id,
+                },
+                secret: process.env.JWT_REFRESH_SECRET,
+                expirationTime: Math.floor((expiresIn - Date.now()) / 1000),
+            });
+            session.refreshTokenHash = await hashToken(refreshToken);
+            await session.save();
+            return refreshToken;
+        }
+        catch (error) {
+            logger$1.error('[generateRefreshToken] Error generating refresh token:', error);
+            throw new SessionError('Failed to generate refresh token', 'GENERATE_TOKEN_FAILED');
+        }
+    }
+    /**
+     * Counts active sessions for a user
+     */
+    async function countActiveSessions(userId) {
+        try {
+            const Session = mongoose.models.Session;
+            if (!userId) {
+                throw new SessionError('User ID is required', 'INVALID_USER_ID');
+            }
+            return await Session.countDocuments({
+                user: userId,
+                expiration: { $gt: new Date() },
+            });
+        }
+        catch (error) {
+            logger$1.error('[countActiveSessions] Error counting active sessions:', error);
+            throw new SessionError('Failed to count active sessions', 'COUNT_SESSIONS_FAILED');
+        }
+    }
+    return {
+        findSession,
+        SessionError,
+        deleteSession,
+        createSession,
+        updateExpiration,
+        countActiveSessions,
+        generateRefreshToken,
+        deleteAllUserSessions,
+    };
+}
+
+// Factory function that takes mongoose instance and returns the methods
+function createTokenMethods(mongoose) {
+    /**
+     * Creates a new Token instance.
+     */
+    async function createToken(tokenData) {
+        try {
+            const Token = mongoose.models.Token;
+            const currentTime = new Date();
+            const expiresAt = new Date(currentTime.getTime() + tokenData.expiresIn * 1000);
+            const newTokenData = {
+                ...tokenData,
+                createdAt: currentTime,
+                expiresAt,
+            };
+            return await Token.create(newTokenData);
+        }
+        catch (error) {
+            logger$1.debug('An error occurred while creating token:', error);
+            throw error;
+        }
+    }
+    /**
+     * Updates a Token document that matches the provided query.
+     */
+    async function updateToken(query, updateData) {
+        try {
+            const Token = mongoose.models.Token;
+            const dataToUpdate = { ...updateData };
+            if ((updateData === null || updateData === void 0 ? void 0 : updateData.expiresIn) !== undefined) {
+                dataToUpdate.expiresAt = new Date(Date.now() + updateData.expiresIn * 1000);
+            }
+            return await Token.findOneAndUpdate(query, dataToUpdate, { new: true });
+        }
+        catch (error) {
+            logger$1.debug('An error occurred while updating token:', error);
+            throw error;
+        }
+    }
+    /**
+     * Deletes all Token documents that match the provided token, user ID, or email.
+     * Email is automatically normalized to lowercase for case-insensitive matching.
+     */
+    async function deleteTokens(query) {
+        try {
+            const Token = mongoose.models.Token;
+            const conditions = [];
+            if (query.userId !== undefined) {
+                conditions.push({ userId: query.userId });
+            }
+            if (query.token !== undefined) {
+                conditions.push({ token: query.token });
+            }
+            if (query.email !== undefined) {
+                conditions.push({ email: query.email.trim().toLowerCase() });
+            }
+            if (query.identifier !== undefined) {
+                conditions.push({ identifier: query.identifier });
+            }
+            /**
+             * If no conditions are specified, throw an error to prevent accidental deletion of all tokens
+             */
+            if (conditions.length === 0) {
+                throw new Error('At least one query parameter must be provided');
+            }
+            return await Token.deleteMany({
+                $or: conditions,
+            });
+        }
+        catch (error) {
+            logger$1.debug('An error occurred while deleting tokens:', error);
+            throw error;
+        }
+    }
+    /**
+     * Finds a Token document that matches the provided query.
+     * Email is automatically normalized to lowercase for case-insensitive matching.
+     */
+    async function findToken(query, options) {
+        try {
+            const Token = mongoose.models.Token;
+            const conditions = [];
+            if (query.userId) {
+                conditions.push({ userId: query.userId });
+            }
+            if (query.token) {
+                conditions.push({ token: query.token });
+            }
+            if (query.email) {
+                conditions.push({ email: query.email.trim().toLowerCase() });
+            }
+            if (query.identifier) {
+                conditions.push({ identifier: query.identifier });
+            }
+            const token = await Token.findOne({ $and: conditions }, null, options).lean();
+            return token;
+        }
+        catch (error) {
+            logger$1.debug('An error occurred while finding token:', error);
+            throw error;
+        }
+    }
+    // Return all methods
+    return {
+        findToken,
+        createToken,
+        updateToken,
+        deleteTokens,
+    };
+}
+
+// Factory function that takes mongoose instance and returns the methods
+function createRoleMethods(mongoose) {
+    /**
+     * Initialize default roles in the system.
+     * Creates the default roles (ADMIN, USER) if they don't exist in the database.
+     * Updates existing roles with new permission types if they're missing.
+     */
+    async function initializeRoles() {
+        var _a, _b;
+        const Role = mongoose.models.Role;
+        for (const roleName of [SystemRoles.ADMIN, SystemRoles.USER]) {
+            let role = await Role.findOne({ name: roleName });
+            const defaultPerms = roleDefaults[roleName].permissions;
+            if (!role) {
+                role = new Role(roleDefaults[roleName]);
+            }
+            else {
+                const permissions = (_b = (_a = role.toObject()) === null || _a === void 0 ? void 0 : _a.permissions) !== null && _b !== void 0 ? _b : {};
+                role.permissions = role.permissions || {};
+                for (const permType of Object.keys(defaultPerms)) {
+                    if (permissions[permType] == null || Object.keys(permissions[permType]).length === 0) {
+                        role.permissions[permType] = defaultPerms[permType];
+                    }
+                }
+            }
+            await role.save();
+        }
+    }
+    /**
+     * List all roles in the system (for testing purposes)
+     * Returns an array of all roles with their names and permissions
+     */
+    async function listRoles() {
+        const Role = mongoose.models.Role;
+        return await Role.find({}).select('name permissions').lean();
+    }
+    // Return all methods you want to expose
+    return {
+        listRoles,
+        initializeRoles,
+    };
+}
+
+/** Default JWT session expiry: 15 minutes in milliseconds */
+const DEFAULT_SESSION_EXPIRY = 1000 * 60 * 15;
 /** Factory function that takes mongoose instance and returns the methods */
 function createUserMethods(mongoose) {
     /**
+     * Normalizes email fields in search criteria to lowercase and trimmed.
+     * Handles both direct email fields and $or arrays containing email conditions.
+     */
+    function normalizeEmailInCriteria(criteria) {
+        const normalized = { ...criteria };
+        if (typeof normalized.email === 'string') {
+            normalized.email = normalized.email.trim().toLowerCase();
+        }
+        if (Array.isArray(normalized.$or)) {
+            normalized.$or = normalized.$or.map((condition) => {
+                if (typeof condition.email === 'string') {
+                    return { ...condition, email: condition.email.trim().toLowerCase() };
+                }
+                return condition;
+            });
+        }
+        return normalized;
+    }
+    /**
      * Search for a single user based on partial data and return matching user document as plain object.
+     * Email fields in searchCriteria are automatically normalized to lowercase for case-insensitive matching.
      */
     async function findUser(searchCriteria, fieldsToSelect) {
         const User = mongoose.models.User;
-        const query = User.findOne(searchCriteria);
+        const normalizedCriteria = normalizeEmailInCriteria(searchCriteria);
+        const query = User.findOne(normalizedCriteria);
         if (fieldsToSelect) {
             query.select(fieldsToSelect);
         }
@@ -2067,20 +4597,28 @@ function createUserMethods(mongoose) {
         const user = await User.create(userData);
         // If balance is enabled, create or update a balance record for the user
         if ((balanceConfig === null || balanceConfig === void 0 ? void 0 : balanceConfig.enabled) && (balanceConfig === null || balanceConfig === void 0 ? void 0 : balanceConfig.startBalance)) {
-            const update = {
-                $inc: { tokenCredits: balanceConfig.startBalance },
+            const now = new Date();
+            const setFields = {
+                creditsGrantedAt: now,
             };
+            // Set credit expiry if configured
+            if (balanceConfig.creditExpiryDays && balanceConfig.creditExpiryDays > 0) {
+                const expiresAt = new Date(now.getTime() + balanceConfig.creditExpiryDays * 24 * 60 * 60 * 1000);
+                setFields.expiresAt = expiresAt;
+            }
             if (balanceConfig.autoRefillEnabled &&
                 balanceConfig.refillIntervalValue != null &&
                 balanceConfig.refillIntervalUnit != null &&
                 balanceConfig.refillAmount != null) {
-                update.$set = {
-                    autoRefillEnabled: true,
-                    refillIntervalValue: balanceConfig.refillIntervalValue,
-                    refillIntervalUnit: balanceConfig.refillIntervalUnit,
-                    refillAmount: balanceConfig.refillAmount,
-                };
+                setFields.autoRefillEnabled = true;
+                setFields.refillIntervalValue = balanceConfig.refillIntervalValue;
+                setFields.refillIntervalUnit = balanceConfig.refillIntervalUnit;
+                setFields.refillAmount = balanceConfig.refillAmount;
             }
+            const update = {
+                $inc: { tokenCredits: balanceConfig.startBalance },
+                $set: setFields,
+            };
             await Balance.findOneAndUpdate({ user: user._id }, update, {
                 upsert: true,
                 new: true,
@@ -2135,23 +4673,14 @@ function createUserMethods(mongoose) {
     }
     /**
      * Generates a JWT token for a given user.
+     * @param user - The user object
+     * @param expiresIn - Optional expiry time in milliseconds. Default: 15 minutes
      */
-    async function generateToken(user) {
+    async function generateToken(user, expiresIn) {
         if (!user) {
             throw new Error('No user provided');
         }
-        let expires = 1000 * 60 * 15;
-        if (process.env.SESSION_EXPIRY !== undefined && process.env.SESSION_EXPIRY !== '') {
-            try {
-                const evaluated = eval(process.env.SESSION_EXPIRY);
-                if (evaluated) {
-                    expires = evaluated;
-                }
-            }
-            catch (error) {
-                console.warn('Invalid SESSION_EXPIRY expression, using default:', error);
-            }
-        }
+        const expires = expiresIn !== null && expiresIn !== void 0 ? expiresIn : DEFAULT_SESSION_EXPIRY;
         return await signPayload({
             payload: {
                 id: user._id,
@@ -2185,649 +4714,533 @@ function createUserMethods(mongoose) {
             runValidators: true,
         }).lean());
     }
-    // Return all methods
+    /**
+     * Search for users by pattern matching on name, email, or username (case-insensitive)
+     * @param searchPattern - The pattern to search for
+     * @param limit - Maximum number of results to return
+     * @param fieldsToSelect - The fields to include or exclude in the returned documents
+     * @returns Array of matching user documents
+     */
+    const searchUsers = async function ({ searchPattern, limit = 20, fieldsToSelect = null, }) {
+        if (!searchPattern || searchPattern.trim().length === 0) {
+            return [];
+        }
+        const regex = new RegExp(searchPattern.trim(), 'i');
+        const User = mongoose.models.User;
+        const query = User.find({
+            $or: [{ email: regex }, { name: regex }, { username: regex }],
+        }).limit(limit * 2); // Get more results to allow for relevance sorting
+        if (fieldsToSelect) {
+            query.select(fieldsToSelect);
+        }
+        const users = await query.lean();
+        // Score results by relevance
+        const exactRegex = new RegExp(`^${searchPattern.trim()}$`, 'i');
+        const startsWithPattern = searchPattern.trim().toLowerCase();
+        const scoredUsers = users.map((user) => {
+            const searchableFields = [user.name, user.email, user.username].filter(Boolean);
+            let maxScore = 0;
+            for (const field of searchableFields) {
+                const fieldLower = field.toLowerCase();
+                let score = 0;
+                // Exact match gets highest score
+                if (exactRegex.test(field)) {
+                    score = 100;
+                }
+                // Starts with query gets high score
+                else if (fieldLower.startsWith(startsWithPattern)) {
+                    score = 80;
+                }
+                // Contains query gets medium score
+                else if (fieldLower.includes(startsWithPattern)) {
+                    score = 50;
+                }
+                // Default score for regex match
+                else {
+                    score = 10;
+                }
+                maxScore = Math.max(maxScore, score);
+            }
+            return { ...user, _searchScore: maxScore };
+        });
+        /** Top results sorted by relevance */
+        return scoredUsers
+            .sort((a, b) => b._searchScore - a._searchScore)
+            .slice(0, limit)
+            .map((user) => {
+            // Remove the search score from final results
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { _searchScore, ...userWithoutScore } = user;
+            return userWithoutScore;
+        });
+    };
+    /**
+     * Updates the plugins for a user based on the action specified (install/uninstall).
+     * @param userId - The user ID whose plugins are to be updated
+     * @param plugins - The current plugins array
+     * @param pluginKey - The key of the plugin to install or uninstall
+     * @param action - The action to perform, 'install' or 'uninstall'
+     * @returns The result of the update operation or null if action is invalid
+     */
+    async function updateUserPlugins(userId, plugins, pluginKey, action) {
+        const userPlugins = plugins !== null && plugins !== void 0 ? plugins : [];
+        if (action === 'install') {
+            return updateUser(userId, { plugins: [...userPlugins, pluginKey] });
+        }
+        if (action === 'uninstall') {
+            return updateUser(userId, {
+                plugins: userPlugins.filter((plugin) => plugin !== pluginKey),
+            });
+        }
+        return null;
+    }
     return {
         findUser,
         countUsers,
         createUser,
         updateUser,
+        searchUsers,
         getUserById,
-        deleteUserById,
         generateToken,
+        deleteUserById,
+        updateUserPlugins,
         toggleUserMemories,
     };
 }
 
-const SPLAT_SYMBOL = Symbol.for('splat');
-const MESSAGE_SYMBOL = Symbol.for('message');
-const CONSOLE_JSON_STRING_LENGTH = parseInt(process.env.CONSOLE_JSON_STRING_LENGTH || '', 10) || 255;
-const sensitiveKeys = [
-    /^(sk-)[^\s]+/, // OpenAI API key pattern
-    /(Bearer )[^\s]+/, // Header: Bearer token pattern
-    /(api-key:? )[^\s]+/, // Header: API key pattern
-    /(key=)[^\s]+/, // URL query param: sensitive key pattern (Google)
-];
-/**
- * Determines if a given value string is sensitive and returns matching regex patterns.
- *
- * @param valueStr - The value string to check.
- * @returns An array of regex patterns that match the value string.
- */
-function getMatchingSensitivePatterns(valueStr) {
-    if (valueStr) {
-        // Filter and return all regex patterns that match the value string
-        return sensitiveKeys.filter((regex) => regex.test(valueStr));
-    }
-    return [];
-}
-/**
- * Redacts sensitive information from a console message and trims it to a specified length if provided.
- * @param str - The console message to be redacted.
- * @param trimLength - The optional length at which to trim the redacted message.
- * @returns The redacted and optionally trimmed console message.
- */
-function redactMessage(str, trimLength) {
-    if (!str) {
-        return '';
-    }
-    const patterns = getMatchingSensitivePatterns(str);
-    patterns.forEach((pattern) => {
-        str = str.replace(pattern, '$1[REDACTED]');
-    });
-    return str;
-}
-/**
- * Redacts sensitive information from log messages if the log level is 'error'.
- * Note: Intentionally mutates the object.
- * @param info - The log information object.
- * @returns The modified log information object.
- */
-const redactFormat = winston.format((info) => {
-    // Guard against undefined info
-    if (!info) {
-        return info;
-    }
-    if (info.level === 'error') {
-        // Type guard to ensure message is a string
-        if (typeof info.message === 'string') {
-            info.message = redactMessage(info.message);
-        }
-        // Handle MESSAGE_SYMBOL with type safety
-        const symbolValue = info[MESSAGE_SYMBOL];
-        if (typeof symbolValue === 'string') {
-            info[MESSAGE_SYMBOL] = redactMessage(symbolValue);
-        }
-    }
-    return info;
-});
-/**
- * Truncates long strings, especially base64 image data, within log messages.
- *
- * @param value - The value to be inspected and potentially truncated.
- * @param length - The length at which to truncate the value. Default: 100.
- * @returns The truncated or original value.
- */
-const truncateLongStrings = (value, length = 100) => {
-    if (typeof value === 'string') {
-        return value.length > length ? value.substring(0, length) + '... [truncated]' : value;
-    }
-    return value;
-};
-/**
- * An array mapping function that truncates long strings (objects converted to JSON strings).
- * @param item - The item to be condensed.
- * @returns The condensed item.
- */
-const condenseArray = (item) => {
-    if (typeof item === 'string') {
-        return truncateLongStrings(JSON.stringify(item));
-    }
-    else if (typeof item === 'object') {
-        return truncateLongStrings(JSON.stringify(item));
-    }
-    return item;
-};
-/**
- * Formats log messages for debugging purposes.
- * - Truncates long strings within log messages.
- * - Condenses arrays by truncating long strings and objects as strings within array items.
- * - Redacts sensitive information from log messages if the log level is 'error'.
- * - Converts log information object to a formatted string.
- *
- * @param options - The options for formatting log messages.
- * @returns The formatted log message.
- */
-const debugTraverse = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-    if (!message) {
-        return `${timestamp} ${level}`;
-    }
-    // Type-safe version of the CJS logic: !message?.trim || typeof message !== 'string'
-    if (typeof message !== 'string' || !message.trim) {
-        return `${timestamp} ${level}: ${JSON.stringify(message)}`;
-    }
-    let msg = `${timestamp} ${level}: ${truncateLongStrings(message.trim(), 150)}`;
-    try {
-        if (level !== 'debug') {
-            return msg;
-        }
-        if (!metadata) {
-            return msg;
-        }
-        // Type-safe access to SPLAT_SYMBOL using bracket notation
-        const metadataRecord = metadata;
-        const splatArray = metadataRecord[SPLAT_SYMBOL];
-        const debugValue = Array.isArray(splatArray) ? splatArray[0] : undefined;
-        if (!debugValue) {
-            return msg;
-        }
-        if (debugValue && Array.isArray(debugValue)) {
-            msg += `\n${JSON.stringify(debugValue.map(condenseArray))}`;
-            return msg;
-        }
-        if (typeof debugValue !== 'object') {
-            return (msg += ` ${debugValue}`);
-        }
-        msg += '\n{';
-        const copy = klona(metadata);
-        traverse(copy).forEach(function (value) {
-            var _a;
-            if (typeof (this === null || this === void 0 ? void 0 : this.key) === 'symbol') {
-                return;
-            }
-            let _parentKey = '';
-            const parent = this.parent;
-            if (typeof (parent === null || parent === void 0 ? void 0 : parent.key) !== 'symbol' && (parent === null || parent === void 0 ? void 0 : parent.key)) {
-                _parentKey = parent.key;
-            }
-            const parentKey = `${parent && parent.notRoot ? _parentKey + '.' : ''}`;
-            const tabs = `${parent && parent.notRoot ? '    ' : '  '}`;
-            const currentKey = (_a = this === null || this === void 0 ? void 0 : this.key) !== null && _a !== void 0 ? _a : 'unknown';
-            if (this.isLeaf && typeof value === 'string') {
-                const truncatedText = truncateLongStrings(value);
-                msg += `\n${tabs}${parentKey}${currentKey}: ${JSON.stringify(truncatedText)},`;
-            }
-            else if (this.notLeaf && Array.isArray(value) && value.length > 0) {
-                const currentMessage = `\n${tabs}// ${value.length} ${currentKey.replace(/s$/, '')}(s)`;
-                this.update(currentMessage, true);
-                msg += currentMessage;
-                const stringifiedArray = value.map(condenseArray);
-                msg += `\n${tabs}${parentKey}${currentKey}: [${stringifiedArray}],`;
-            }
-            else if (this.isLeaf && typeof value === 'function') {
-                msg += `\n${tabs}${parentKey}${currentKey}: function,`;
-            }
-            else if (this.isLeaf) {
-                msg += `\n${tabs}${parentKey}${currentKey}: ${value},`;
-            }
-        });
-        msg += '\n}';
-        return msg;
-    }
-    catch (e) {
-        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-        return (msg += `\n[LOGGER PARSING ERROR] ${errorMessage}`);
-    }
-});
-/**
- * Truncates long string values in JSON log objects.
- * Prevents outputting extremely long values (e.g., base64, blobs).
- */
-const jsonTruncateFormat = winston.format((info) => {
-    const truncateLongStrings = (str, maxLength) => str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
-    const seen = new WeakSet();
-    const truncateObject = (obj) => {
-        if (typeof obj !== 'object' || obj === null) {
-            return obj;
-        }
-        // Handle circular references - now with proper object type
-        if (seen.has(obj)) {
-            return '[Circular]';
-        }
-        seen.add(obj);
-        if (Array.isArray(obj)) {
-            return obj.map((item) => truncateObject(item));
-        }
-        // We know this is an object at this point
-        const objectRecord = obj;
-        const newObj = {};
-        Object.entries(objectRecord).forEach(([key, value]) => {
-            if (typeof value === 'string') {
-                newObj[key] = truncateLongStrings(value, CONSOLE_JSON_STRING_LENGTH);
-            }
-            else {
-                newObj[key] = truncateObject(value);
-            }
-        });
-        return newObj;
-    };
-    return truncateObject(info);
-});
-
-const logDir = path.join(__dirname, '..', '..', '..', 'api', 'logs');
-const { NODE_ENV, DEBUG_LOGGING, CONSOLE_JSON, DEBUG_CONSOLE } = process.env;
-const useConsoleJson = typeof CONSOLE_JSON === 'string' && CONSOLE_JSON.toLowerCase() === 'true';
-const useDebugConsole = typeof DEBUG_CONSOLE === 'string' && DEBUG_CONSOLE.toLowerCase() === 'true';
-const useDebugLogging = typeof DEBUG_LOGGING === 'string' && DEBUG_LOGGING.toLowerCase() === 'true';
-const levels = {
-    error: 0,
-    warn: 1,
-    info: 2,
-    http: 3,
-    verbose: 4,
-    debug: 5,
-    activity: 6,
-    silly: 7,
-};
-winston.addColors({
-    info: 'green',
-    warn: 'italic yellow',
-    error: 'red',
-    debug: 'blue',
-});
-const level = () => {
-    const env = NODE_ENV || 'development';
-    return env === 'development' ? 'debug' : 'warn';
-};
-const fileFormat = winston.format.combine(redactFormat(), winston.format.timestamp({ format: () => new Date().toISOString() }), winston.format.errors({ stack: true }), winston.format.splat());
-const transports = [
-    new winston.transports.DailyRotateFile({
-        level: 'error',
-        filename: `${logDir}/error-%DATE%.log`,
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '14d',
-        format: fileFormat,
-    }),
-];
-if (useDebugLogging) {
-    transports.push(new winston.transports.DailyRotateFile({
-        level: 'debug',
-        filename: `${logDir}/debug-%DATE%.log`,
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '14d',
-        format: winston.format.combine(fileFormat, debugTraverse),
-    }));
-}
-const consoleFormat = winston.format.combine(redactFormat(), winston.format.colorize({ all: true }), winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston.format.printf((info) => {
-    const message = `${info.timestamp} ${info.level}: ${info.message}`;
-    return info.level.includes('error') ? redactMessage(message) : message;
-}));
-let consoleLogLevel = 'info';
-if (useDebugConsole) {
-    consoleLogLevel = 'debug';
-}
-// Add console transport
-if (useDebugConsole) {
-    transports.push(new winston.transports.Console({
-        level: consoleLogLevel,
-        format: useConsoleJson
-            ? winston.format.combine(fileFormat, jsonTruncateFormat(), winston.format.json())
-            : winston.format.combine(fileFormat, debugTraverse),
-    }));
-}
-else if (useConsoleJson) {
-    transports.push(new winston.transports.Console({
-        level: consoleLogLevel,
-        format: winston.format.combine(fileFormat, jsonTruncateFormat(), winston.format.json()),
-    }));
-}
-else {
-    transports.push(new winston.transports.Console({
-        level: consoleLogLevel,
-        format: consoleFormat,
-    }));
-}
-// Create logger
-const logger = winston.createLogger({
-    level: level(),
-    levels,
-    transports,
-});
-
-var _a;
-class SessionError extends Error {
-    constructor(message, code = 'SESSION_ERROR') {
-        super(message);
-        this.name = 'SessionError';
-        this.code = code;
-    }
-}
-const { REFRESH_TOKEN_EXPIRY } = (_a = process.env) !== null && _a !== void 0 ? _a : {};
-const expires = REFRESH_TOKEN_EXPIRY ? eval(REFRESH_TOKEN_EXPIRY) : 1000 * 60 * 60 * 24 * 7; // 7 days default
-// Factory function that takes mongoose instance and returns the methods
-function createSessionMethods(mongoose) {
+/** Factory function that takes mongoose instance and returns the key methods */
+function createKeyMethods(mongoose) {
     /**
-     * Creates a new session for a user
+     * Retrieves and decrypts the key value for a given user identified by userId and identifier name.
+     * @param params - The parameters object
+     * @param params.userId - The unique identifier for the user
+     * @param params.name - The name associated with the key
+     * @returns The decrypted key value
+     * @throws Error if the key is not found or if there is a problem during key retrieval
+     * @description This function searches for a user's key in the database using their userId and name.
+     *              If found, it decrypts the value of the key and returns it. If no key is found, it throws
+     *              an error indicating that there is no user key available.
      */
-    async function createSession(userId, options = {}) {
-        if (!userId) {
-            throw new SessionError('User ID is required', 'INVALID_USER_ID');
+    async function getUserKey(params) {
+        const { userId, name } = params;
+        const Key = mongoose.models.Key;
+        const keyValue = (await Key.findOne({ userId, name }).lean());
+        if (!keyValue) {
+            throw new Error(JSON.stringify({
+                type: ErrorTypes.NO_USER_KEY,
+            }));
         }
+        return await decrypt(keyValue.value);
+    }
+    /**
+     * Retrieves, decrypts, and parses the key values for a given user identified by userId and name.
+     * @param params - The parameters object
+     * @param params.userId - The unique identifier for the user
+     * @param params.name - The name associated with the key
+     * @returns The decrypted and parsed key values
+     * @throws Error if the key is invalid or if there is a problem during key value parsing
+     * @description This function retrieves a user's encrypted key using their userId and name, decrypts it,
+     *              and then attempts to parse the decrypted string into a JSON object. If the parsing fails,
+     *              it throws an error indicating that the user key is invalid.
+     */
+    async function getUserKeyValues(params) {
+        const { userId, name } = params;
+        const userValues = await getUserKey({ userId, name });
         try {
-            const Session = mongoose.models.Session;
-            const currentSession = new Session({
-                user: userId,
-                expiration: options.expiration || new Date(Date.now() + expires),
-            });
-            const refreshToken = await generateRefreshToken(currentSession);
-            return { session: currentSession, refreshToken };
+            return JSON.parse(userValues);
         }
-        catch (error) {
-            logger.error('[createSession] Error creating session:', error);
-            throw new SessionError('Failed to create session', 'CREATE_SESSION_FAILED');
+        catch (e) {
+            logger$1.error('[getUserKeyValues]', e);
+            throw new Error(JSON.stringify({
+                type: ErrorTypes.INVALID_USER_KEY,
+            }));
         }
     }
     /**
-     * Finds a session by various parameters
+     * Retrieves the expiry information of a user's key identified by userId and name.
+     * @param params - The parameters object
+     * @param params.userId - The unique identifier for the user
+     * @param params.name - The name associated with the key
+     * @returns The expiry date of the key or null if the key doesn't exist
+     * @description This function fetches a user's key from the database using their userId and name and
+     *              returns its expiry date. If the key is not found, it returns null for the expiry date.
      */
-    async function findSession(params, options = { lean: true }) {
-        try {
-            const Session = mongoose.models.Session;
-            const query = {};
-            if (!params.refreshToken && !params.userId && !params.sessionId) {
-                throw new SessionError('At least one search parameter is required', 'INVALID_SEARCH_PARAMS');
-            }
-            if (params.refreshToken) {
-                const tokenHash = await hashToken(params.refreshToken);
-                query.refreshTokenHash = tokenHash;
-            }
-            if (params.userId) {
-                query.user = params.userId;
-            }
-            if (params.sessionId) {
-                const sessionId = typeof params.sessionId === 'object' &&
-                    params.sessionId !== null &&
-                    'sessionId' in params.sessionId
-                    ? params.sessionId.sessionId
-                    : params.sessionId;
-                if (!mongoose.Types.ObjectId.isValid(sessionId)) {
-                    throw new SessionError('Invalid session ID format', 'INVALID_SESSION_ID');
-                }
-                query._id = sessionId;
-            }
-            // Add expiration check to only return valid sessions
-            query.expiration = { $gt: new Date() };
-            const sessionQuery = Session.findOne(query);
-            if (options.lean) {
-                return (await sessionQuery.lean());
-            }
-            return await sessionQuery.exec();
+    async function getUserKeyExpiry(params) {
+        const { userId, name } = params;
+        const Key = mongoose.models.Key;
+        const keyValue = (await Key.findOne({ userId, name }).lean());
+        if (!keyValue) {
+            return { expiresAt: null };
         }
-        catch (error) {
-            logger.error('[findSession] Error finding session:', error);
-            throw new SessionError('Failed to find session', 'FIND_SESSION_FAILED');
-        }
+        return { expiresAt: keyValue.expiresAt || 'never' };
     }
     /**
-     * Updates session expiration
+     * Updates or inserts a new key for a given user identified by userId and name, with a specified value and expiry date.
+     * @param params - The parameters object
+     * @param params.userId - The unique identifier for the user
+     * @param params.name - The name associated with the key
+     * @param params.value - The value to be encrypted and stored as the key's value
+     * @param params.expiresAt - The expiry date for the key [optional]
+     * @returns The updated or newly inserted key document
+     * @description This function either updates an existing user key or inserts a new one into the database,
+     *              after encrypting the provided value. It sets the provided expiry date for the key (or unsets for no expiry).
      */
-    async function updateExpiration(session, newExpiration) {
-        try {
-            const Session = mongoose.models.Session;
-            const sessionDoc = typeof session === 'string' ? await Session.findById(session) : session;
-            if (!sessionDoc) {
-                throw new SessionError('Session not found', 'SESSION_NOT_FOUND');
-            }
-            sessionDoc.expiration = newExpiration || new Date(Date.now() + expires);
-            return await sessionDoc.save();
+    async function updateUserKey(params) {
+        const { userId, name, value, expiresAt = null } = params;
+        const Key = mongoose.models.Key;
+        const encryptedValue = await encrypt(value);
+        const updateObject = {
+            userId,
+            name,
+            value: encryptedValue,
+        };
+        const updateQuery = {
+            $set: updateObject,
+        };
+        if (expiresAt) {
+            updateObject.expiresAt = new Date(expiresAt);
         }
-        catch (error) {
-            logger.error('[updateExpiration] Error updating session:', error);
-            throw new SessionError('Failed to update session expiration', 'UPDATE_EXPIRATION_FAILED');
+        else {
+            updateQuery.$unset = { expiresAt: '' };
         }
+        return await Key.findOneAndUpdate({ userId, name }, updateQuery, {
+            upsert: true,
+            new: true,
+        }).lean();
     }
     /**
-     * Deletes a session by refresh token or session ID
+     * Deletes a key or all keys for a given user identified by userId, optionally based on a specified name.
+     * @param params - The parameters object
+     * @param params.userId - The unique identifier for the user
+     * @param params.name - The name associated with the key to delete. If not provided and all is true, deletes all keys
+     * @param params.all - Whether to delete all keys for the user
+     * @returns The result of the deletion operation
+     * @description This function deletes a specific key or all keys for a user from the database.
+     *              If a name is provided and all is false, it deletes only the key with that name.
+     *              If all is true, it ignores the name and deletes all keys for the user.
      */
-    async function deleteSession(params) {
-        try {
-            const Session = mongoose.models.Session;
-            if (!params.refreshToken && !params.sessionId) {
-                throw new SessionError('Either refreshToken or sessionId is required', 'INVALID_DELETE_PARAMS');
-            }
-            const query = {};
-            if (params.refreshToken) {
-                query.refreshTokenHash = await hashToken(params.refreshToken);
-            }
-            if (params.sessionId) {
-                query._id = params.sessionId;
-            }
-            const result = await Session.deleteOne(query);
-            if (result.deletedCount === 0) {
-                logger.warn('[deleteSession] No session found to delete');
-            }
-            return result;
+    async function deleteUserKey(params) {
+        const { userId, name, all = false } = params;
+        const Key = mongoose.models.Key;
+        if (all) {
+            return await Key.deleteMany({ userId });
         }
-        catch (error) {
-            logger.error('[deleteSession] Error deleting session:', error);
-            throw new SessionError('Failed to delete session', 'DELETE_SESSION_FAILED');
-        }
-    }
-    /**
-     * Deletes all sessions for a user
-     */
-    async function deleteAllUserSessions(userId, options = {}) {
-        try {
-            const Session = mongoose.models.Session;
-            if (!userId) {
-                throw new SessionError('User ID is required', 'INVALID_USER_ID');
-            }
-            const userIdString = typeof userId === 'object' && userId !== null ? userId.userId : userId;
-            if (!mongoose.Types.ObjectId.isValid(userIdString)) {
-                throw new SessionError('Invalid user ID format', 'INVALID_USER_ID_FORMAT');
-            }
-            const query = { user: userIdString };
-            if (options.excludeCurrentSession && options.currentSessionId) {
-                query._id = { $ne: options.currentSessionId };
-            }
-            const result = await Session.deleteMany(query);
-            if (result.deletedCount && result.deletedCount > 0) {
-                logger.debug(`[deleteAllUserSessions] Deleted ${result.deletedCount} sessions for user ${userIdString}.`);
-            }
-            return result;
-        }
-        catch (error) {
-            logger.error('[deleteAllUserSessions] Error deleting user sessions:', error);
-            throw new SessionError('Failed to delete user sessions', 'DELETE_ALL_SESSIONS_FAILED');
-        }
-    }
-    /**
-     * Generates a refresh token for a session
-     */
-    async function generateRefreshToken(session) {
-        if (!session || !session.user) {
-            throw new SessionError('Invalid session object', 'INVALID_SESSION');
-        }
-        try {
-            const expiresIn = session.expiration ? session.expiration.getTime() : Date.now() + expires;
-            if (!session.expiration) {
-                session.expiration = new Date(expiresIn);
-            }
-            const refreshToken = await signPayload({
-                payload: {
-                    id: session.user,
-                    sessionId: session._id,
-                },
-                secret: process.env.JWT_REFRESH_SECRET,
-                expirationTime: Math.floor((expiresIn - Date.now()) / 1000),
-            });
-            session.refreshTokenHash = await hashToken(refreshToken);
-            await session.save();
-            return refreshToken;
-        }
-        catch (error) {
-            logger.error('[generateRefreshToken] Error generating refresh token:', error);
-            throw new SessionError('Failed to generate refresh token', 'GENERATE_TOKEN_FAILED');
-        }
-    }
-    /**
-     * Counts active sessions for a user
-     */
-    async function countActiveSessions(userId) {
-        try {
-            const Session = mongoose.models.Session;
-            if (!userId) {
-                throw new SessionError('User ID is required', 'INVALID_USER_ID');
-            }
-            return await Session.countDocuments({
-                user: userId,
-                expiration: { $gt: new Date() },
-            });
-        }
-        catch (error) {
-            logger.error('[countActiveSessions] Error counting active sessions:', error);
-            throw new SessionError('Failed to count active sessions', 'COUNT_SESSIONS_FAILED');
-        }
+        return await Key.findOneAndDelete({ userId, name }).lean();
     }
     return {
-        findSession,
-        SessionError,
-        deleteSession,
-        createSession,
-        updateExpiration,
-        countActiveSessions,
-        generateRefreshToken,
-        deleteAllUserSessions,
+        getUserKey,
+        updateUserKey,
+        deleteUserKey,
+        getUserKeyValues,
+        getUserKeyExpiry,
     };
 }
 
-// Factory function that takes mongoose instance and returns the methods
-function createTokenMethods(mongoose) {
+/** Factory function that takes mongoose instance and returns the file methods */
+function createFileMethods(mongoose) {
     /**
-     * Creates a new Token instance.
+     * Finds a file by its file_id with additional query options.
+     * @param file_id - The unique identifier of the file
+     * @param options - Query options for filtering, projection, etc.
+     * @returns A promise that resolves to the file document or null
      */
-    async function createToken(tokenData) {
+    async function findFileById(file_id, options = {}) {
+        const File = mongoose.models.File;
+        return File.findOne({ file_id, ...options }).lean();
+    }
+    /**
+     * Retrieves files matching a given filter, sorted by the most recently updated.
+     * @param filter - The filter criteria to apply
+     * @param _sortOptions - Optional sort parameters
+     * @param selectFields - Fields to include/exclude in the query results. Default excludes the 'text' field
+     * @param options - Additional query options (userId, agentId for ACL)
+     * @returns A promise that resolves to an array of file documents
+     */
+    async function getFiles(filter, _sortOptions, selectFields) {
+        const File = mongoose.models.File;
+        const sortOptions = { updatedAt: -1, ..._sortOptions };
+        const query = File.find(filter);
+        if (selectFields != null) {
+            query.select(selectFields);
+        }
+        else {
+            query.select({ text: 0 });
+        }
+        return await query.sort(sortOptions).lean();
+    }
+    /**
+     * Retrieves tool files (files that are embedded or have a fileIdentifier) from an array of file IDs.
+     * Note: execute_code files are handled separately by getCodeGeneratedFiles.
+     * @param fileIds - Array of file_id strings to search for
+     * @param toolResourceSet - Optional filter for tool resources
+     * @returns Files that match the criteria
+     */
+    async function getToolFilesByIds(fileIds, toolResourceSet) {
+        if (!fileIds || !fileIds.length || !(toolResourceSet === null || toolResourceSet === void 0 ? void 0 : toolResourceSet.size)) {
+            return [];
+        }
         try {
-            const Token = mongoose.models.Token;
-            const currentTime = new Date();
-            const expiresAt = new Date(currentTime.getTime() + tokenData.expiresIn * 1000);
-            const newTokenData = {
-                ...tokenData,
-                createdAt: currentTime,
-                expiresAt,
+            const orConditions = [];
+            if (toolResourceSet.has(EToolResources.context)) {
+                orConditions.push({ text: { $exists: true, $ne: null }, context: FileContext.agents });
+            }
+            if (toolResourceSet.has(EToolResources.file_search)) {
+                orConditions.push({ embedded: true });
+            }
+            // If no conditions to match, return empty
+            if (orConditions.length === 0) {
+                return [];
+            }
+            const filter = {
+                file_id: { $in: fileIds },
+                context: { $ne: FileContext.execute_code },
+                $or: orConditions,
             };
-            return await Token.create(newTokenData);
+            const selectFields = { text: 0 };
+            const sortOptions = { updatedAt: -1 };
+            const results = await getFiles(filter, sortOptions, selectFields);
+            return results !== null && results !== void 0 ? results : [];
         }
         catch (error) {
-            logger.debug('An error occurred while creating token:', error);
-            throw error;
+            logger$1.error('[getToolFilesByIds] Error retrieving tool files:', error);
+            throw new Error('Error retrieving tool files');
         }
     }
     /**
-     * Updates a Token document that matches the provided query.
+     * Retrieves files generated by code execution for a given conversation.
+     * These files are stored locally with fileIdentifier metadata for code env re-upload.
+     *
+     * @param conversationId - The conversation ID to search for
+     * @param messageIds - Array of messageIds to filter by (for linear thread filtering).
+     *   While technically optional, this function returns empty if not provided.
+     *   This is intentional: code-generated files must be filtered by thread to avoid
+     *   including files from other branches of a conversation.
+     * @returns Files generated by code execution in the conversation, filtered by messageIds
      */
-    async function updateToken(query, updateData) {
+    async function getCodeGeneratedFiles(conversationId, messageIds) {
+        if (!conversationId) {
+            return [];
+        }
+        /**
+         * Return early if messageIds not provided - this is intentional behavior.
+         * Code-generated files must be filtered by thread messageIds to ensure we only
+         * return files relevant to the current conversation branch, not orphaned files
+         * from other branches or deleted messages.
+         */
+        if (!messageIds || messageIds.length === 0) {
+            return [];
+        }
         try {
-            const Token = mongoose.models.Token;
-            return await Token.findOneAndUpdate(query, updateData, { new: true });
+            const filter = {
+                conversationId,
+                context: FileContext.execute_code,
+                messageId: { $exists: true, $in: messageIds },
+                'metadata.fileIdentifier': { $exists: true },
+            };
+            const selectFields = { text: 0 };
+            const sortOptions = { createdAt: 1 };
+            const results = await getFiles(filter, sortOptions, selectFields);
+            return results !== null && results !== void 0 ? results : [];
         }
         catch (error) {
-            logger.debug('An error occurred while updating token:', error);
-            throw error;
+            logger$1.error('[getCodeGeneratedFiles] Error retrieving code generated files:', error);
+            return [];
         }
     }
     /**
-     * Deletes all Token documents that match the provided token, user ID, or email.
+     * Retrieves user-uploaded execute_code files (not code-generated) by their file IDs.
+     * These are files with fileIdentifier metadata but context is NOT execute_code (e.g., agents or message_attachment).
+     * File IDs should be collected from message.files arrays in the current thread.
+     * @param fileIds - Array of file IDs to fetch (from message.files in the thread)
+     * @returns User-uploaded execute_code files
      */
-    async function deleteTokens(query) {
+    async function getUserCodeFiles(fileIds) {
+        if (!fileIds || fileIds.length === 0) {
+            return [];
+        }
         try {
-            const Token = mongoose.models.Token;
-            return await Token.deleteMany({
-                $or: [
-                    { userId: query.userId },
-                    { token: query.token },
-                    { email: query.email },
-                    { identifier: query.identifier },
-                ],
-            });
+            const filter = {
+                file_id: { $in: fileIds },
+                context: { $ne: FileContext.execute_code },
+                'metadata.fileIdentifier': { $exists: true },
+            };
+            const selectFields = { text: 0 };
+            const sortOptions = { createdAt: 1 };
+            const results = await getFiles(filter, sortOptions, selectFields);
+            return results !== null && results !== void 0 ? results : [];
         }
         catch (error) {
-            logger.debug('An error occurred while deleting tokens:', error);
-            throw error;
+            logger$1.error('[getUserCodeFiles] Error retrieving user code files:', error);
+            return [];
         }
     }
     /**
-     * Finds a Token document that matches the provided query.
+     * Atomically claims a file_id for a code-execution output by compound key.
+     * Uses $setOnInsert so concurrent calls for the same (filename, conversationId)
+     * converge on a single record instead of creating duplicates.
      */
-    async function findToken(query) {
-        try {
-            const Token = mongoose.models.Token;
-            const conditions = [];
-            if (query.userId) {
-                conditions.push({ userId: query.userId });
-            }
-            if (query.token) {
-                conditions.push({ token: query.token });
-            }
-            if (query.email) {
-                conditions.push({ email: query.email });
-            }
-            if (query.identifier) {
-                conditions.push({ identifier: query.identifier });
-            }
-            const token = await Token.findOne({
-                $and: conditions,
-            }).lean();
-            return token;
+    async function claimCodeFile(data) {
+        const File = mongoose.models.File;
+        const result = await File.findOneAndUpdate({
+            filename: data.filename,
+            conversationId: data.conversationId,
+            context: FileContext.execute_code,
+        }, { $setOnInsert: { file_id: data.file_id, user: data.user } }, { upsert: true, new: true }).lean();
+        if (!result) {
+            throw new Error(`[claimCodeFile] Failed to claim file "${data.filename}" for conversation ${data.conversationId}`);
         }
-        catch (error) {
-            logger.debug('An error occurred while finding token:', error);
-            throw error;
-        }
+        return result;
     }
-    // Return all methods
+    /**
+     * Creates a new file with a TTL of 1 hour.
+     * @param data - The file data to be created, must contain file_id
+     * @param disableTTL - Whether to disable the TTL
+     * @returns A promise that resolves to the created file document
+     */
+    async function createFile(data, disableTTL) {
+        const File = mongoose.models.File;
+        const fileData = {
+            ...data,
+            expiresAt: new Date(Date.now() + 3600 * 1000),
+        };
+        if (disableTTL) {
+            delete fileData.expiresAt;
+        }
+        return File.findOneAndUpdate({ file_id: data.file_id }, fileData, {
+            new: true,
+            upsert: true,
+        }).lean();
+    }
+    /**
+     * Updates a file identified by file_id with new data and removes the TTL.
+     * @param data - The data to update, must contain file_id
+     * @returns A promise that resolves to the updated file document
+     */
+    async function updateFile(data) {
+        const File = mongoose.models.File;
+        const { file_id, ...update } = data;
+        const updateOperation = {
+            $set: update,
+            $unset: { expiresAt: '' },
+        };
+        return File.findOneAndUpdate({ file_id }, updateOperation, {
+            new: true,
+        }).lean();
+    }
+    /**
+     * Increments the usage of a file identified by file_id.
+     * @param data - The data to update, must contain file_id and the increment value for usage
+     * @returns A promise that resolves to the updated file document
+     */
+    async function updateFileUsage(data) {
+        const File = mongoose.models.File;
+        const { file_id, inc = 1 } = data;
+        const updateOperation = {
+            $inc: { usage: inc },
+            $unset: { expiresAt: '', temp_file_id: '' },
+        };
+        return File.findOneAndUpdate({ file_id }, updateOperation, {
+            new: true,
+        }).lean();
+    }
+    /**
+     * Deletes a file identified by file_id.
+     * @param file_id - The unique identifier of the file to delete
+     * @returns A promise that resolves to the deleted file document or null
+     */
+    async function deleteFile(file_id) {
+        const File = mongoose.models.File;
+        return File.findOneAndDelete({ file_id }).lean();
+    }
+    /**
+     * Deletes a file identified by a filter.
+     * @param filter - The filter criteria to apply
+     * @returns A promise that resolves to the deleted file document or null
+     */
+    async function deleteFileByFilter(filter) {
+        const File = mongoose.models.File;
+        return File.findOneAndDelete(filter).lean();
+    }
+    /**
+     * Deletes multiple files identified by an array of file_ids.
+     * @param file_ids - The unique identifiers of the files to delete
+     * @param user - Optional user ID to filter by
+     * @returns A promise that resolves to the result of the deletion operation
+     */
+    async function deleteFiles(file_ids, user) {
+        const File = mongoose.models.File;
+        let deleteQuery = { file_id: { $in: file_ids } };
+        if (user) {
+            deleteQuery = { user: user };
+        }
+        return File.deleteMany(deleteQuery);
+    }
+    /**
+     * Batch updates files with new signed URLs in MongoDB
+     * @param updates - Array of updates in the format { file_id, filepath }
+     */
+    async function batchUpdateFiles(updates) {
+        if (!updates || updates.length === 0) {
+            return;
+        }
+        const File = mongoose.models.File;
+        const bulkOperations = updates.map((update) => ({
+            updateOne: {
+                filter: { file_id: update.file_id },
+                update: { $set: { filepath: update.filepath } },
+            },
+        }));
+        const result = await File.bulkWrite(bulkOperations);
+        logger$1.info(`Updated ${result.modifiedCount} files with new S3 URLs`);
+    }
+    /**
+     * Updates usage tracking for multiple files.
+     * Processes files and optional fileIds, updating their usage count in the database.
+     *
+     * @param files - Array of file objects to process
+     * @param fileIds - Optional array of file IDs to process
+     * @returns Array of updated file documents (with null results filtered out)
+     */
+    async function updateFilesUsage(files, fileIds) {
+        const promises = [];
+        const seen = new Set();
+        for (const file of files) {
+            const { file_id } = file;
+            if (seen.has(file_id)) {
+                continue;
+            }
+            seen.add(file_id);
+            promises.push(updateFileUsage({ file_id }));
+        }
+        if (!fileIds) {
+            const results = await Promise.all(promises);
+            return results.filter((result) => result != null);
+        }
+        for (const file_id of fileIds) {
+            if (seen.has(file_id)) {
+                continue;
+            }
+            seen.add(file_id);
+            promises.push(updateFileUsage({ file_id }));
+        }
+        const results = await Promise.all(promises);
+        return results.filter((result) => result != null);
+    }
     return {
-        findToken,
-        createToken,
-        updateToken,
-        deleteTokens,
-    };
-}
-
-// Factory function that takes mongoose instance and returns the methods
-function createRoleMethods(mongoose) {
-    /**
-     * Initialize default roles in the system.
-     * Creates the default roles (ADMIN, USER) if they don't exist in the database.
-     * Updates existing roles with new permission types if they're missing.
-     */
-    async function initializeRoles() {
-        const Role = mongoose.models.Role;
-        for (const roleName of [SystemRoles.ADMIN, SystemRoles.USER]) {
-            let role = await Role.findOne({ name: roleName });
-            const defaultPerms = roleDefaults[roleName].permissions;
-            if (!role) {
-                // Create new role if it doesn't exist.
-                role = new Role(roleDefaults[roleName]);
-            }
-            else {
-                // Ensure role.permissions is defined.
-                role.permissions = role.permissions || {};
-                // For each permission type in defaults, add it if missing.
-                for (const permType of Object.keys(defaultPerms)) {
-                    if (role.permissions[permType] == null) {
-                        role.permissions[permType] = defaultPerms[permType];
-                    }
-                }
-            }
-            await role.save();
-        }
-    }
-    /**
-     * List all roles in the system (for testing purposes)
-     * Returns an array of all roles with their names and permissions
-     */
-    async function listRoles() {
-        const Role = mongoose.models.Role;
-        return await Role.find({}).select('name permissions').lean();
-    }
-    // Return all methods you want to expose
-    return {
-        listRoles,
-        initializeRoles,
+        findFileById,
+        getFiles,
+        getToolFilesByIds,
+        getCodeGeneratedFiles,
+        getUserCodeFiles,
+        claimCodeFile,
+        createFile,
+        updateFile,
+        updateFileUsage,
+        deleteFile,
+        deleteFiles,
+        deleteFileByFilter,
+        batchUpdateFiles,
+        updateFilesUsage,
     };
 }
 
@@ -2839,7 +5252,6 @@ const formatDate = (date) => {
 };
 // Factory function that takes mongoose instance and returns the methods
 function createMemoryMethods(mongoose) {
-    const MemoryEntry = mongoose.models.MemoryEntry;
     /**
      * Creates a new memory entry for a user
      * Throws an error if a memory with the same key already exists
@@ -2849,6 +5261,7 @@ function createMemoryMethods(mongoose) {
             if ((key === null || key === void 0 ? void 0 : key.toLowerCase()) === 'nothing') {
                 return { ok: false };
             }
+            const MemoryEntry = mongoose.models.MemoryEntry;
             const existingMemory = await MemoryEntry.findOne({ userId, key });
             if (existingMemory) {
                 throw new Error('Memory with this key already exists');
@@ -2874,6 +5287,7 @@ function createMemoryMethods(mongoose) {
             if ((key === null || key === void 0 ? void 0 : key.toLowerCase()) === 'nothing') {
                 return { ok: false };
             }
+            const MemoryEntry = mongoose.models.MemoryEntry;
             await MemoryEntry.findOneAndUpdate({ userId, key }, {
                 value,
                 tokenCount,
@@ -2893,6 +5307,7 @@ function createMemoryMethods(mongoose) {
      */
     async function deleteMemory({ userId, key }) {
         try {
+            const MemoryEntry = mongoose.models.MemoryEntry;
             const result = await MemoryEntry.findOneAndDelete({ userId, key });
             return { ok: !!result };
         }
@@ -2905,6 +5320,7 @@ function createMemoryMethods(mongoose) {
      */
     async function getAllUserMemories(userId) {
         try {
+            const MemoryEntry = mongoose.models.MemoryEntry;
             return (await MemoryEntry.find({ userId }).lean());
         }
         catch (error) {
@@ -2940,7 +5356,7 @@ function createMemoryMethods(mongoose) {
             return { withKeys, withoutKeys, totalTokens };
         }
         catch (error) {
-            logger.error('Failed to get formatted memories:', error);
+            logger$1.error('Failed to get formatted memories:', error);
             return { withKeys: '', withoutKeys: '', totalTokens: 0 };
         }
     }
@@ -2950,6 +5366,1653 @@ function createMemoryMethods(mongoose) {
         deleteMemory,
         getAllUserMemories,
         getFormattedMemories,
+    };
+}
+
+function createAgentCategoryMethods(mongoose) {
+    /**
+     * Get all active categories sorted by order
+     * @returns Array of active categories
+     */
+    async function getActiveCategories() {
+        const AgentCategory = mongoose.models.AgentCategory;
+        return await AgentCategory.find({ isActive: true }).sort({ order: 1, label: 1 }).lean();
+    }
+    /**
+     * Get categories with agent counts
+     * @returns Categories with agent counts
+     */
+    async function getCategoriesWithCounts() {
+        const Agent = mongoose.models.Agent;
+        const categoryCounts = await Agent.aggregate([
+            { $match: { category: { $exists: true, $ne: null } } },
+            { $group: { _id: '$category', count: { $sum: 1 } } },
+        ]);
+        const countMap = new Map(categoryCounts.map((c) => [c._id, c.count]));
+        const categories = await getActiveCategories();
+        return categories.map((category) => ({
+            ...category,
+            agentCount: countMap.get(category.value) || 0,
+        }));
+    }
+    /**
+     * Get valid category values for Agent model validation
+     * @returns Array of valid category values
+     */
+    async function getValidCategoryValues() {
+        const AgentCategory = mongoose.models.AgentCategory;
+        return await AgentCategory.find({ isActive: true }).distinct('value').lean();
+    }
+    /**
+     * Seed initial categories from existing constants
+     * @param categories - Array of category data to seed
+     * @returns Bulk write result
+     */
+    async function seedCategories(categories) {
+        const AgentCategory = mongoose.models.AgentCategory;
+        const operations = categories.map((category, index) => ({
+            updateOne: {
+                filter: { value: category.value },
+                update: {
+                    $setOnInsert: {
+                        value: category.value,
+                        label: category.label || category.value,
+                        description: category.description || '',
+                        order: category.order || index,
+                        isActive: true,
+                        custom: category.custom || false,
+                    },
+                },
+                upsert: true,
+            },
+        }));
+        return await AgentCategory.bulkWrite(operations);
+    }
+    /**
+     * Find a category by value
+     * @param value - The category value to search for
+     * @returns The category document or null
+     */
+    async function findCategoryByValue(value) {
+        const AgentCategory = mongoose.models.AgentCategory;
+        return await AgentCategory.findOne({ value }).lean();
+    }
+    /**
+     * Create a new category
+     * @param categoryData - The category data to create
+     * @returns The created category
+     */
+    async function createCategory(categoryData) {
+        const AgentCategory = mongoose.models.AgentCategory;
+        const category = await AgentCategory.create(categoryData);
+        return category.toObject();
+    }
+    /**
+     * Update a category by value
+     * @param value - The category value to update
+     * @param updateData - The data to update
+     * @returns The updated category or null
+     */
+    async function updateCategory(value, updateData) {
+        const AgentCategory = mongoose.models.AgentCategory;
+        return await AgentCategory.findOneAndUpdate({ value }, { $set: updateData }, { new: true, runValidators: true }).lean();
+    }
+    /**
+     * Delete a category by value
+     * @param value - The category value to delete
+     * @returns Whether the deletion was successful
+     */
+    async function deleteCategory(value) {
+        const AgentCategory = mongoose.models.AgentCategory;
+        const result = await AgentCategory.deleteOne({ value });
+        return result.deletedCount > 0;
+    }
+    /**
+     * Find a category by ID
+     * @param id - The category ID to search for
+     * @returns The category document or null
+     */
+    async function findCategoryById(id) {
+        const AgentCategory = mongoose.models.AgentCategory;
+        return await AgentCategory.findById(id).lean();
+    }
+    /**
+     * Get all categories (active and inactive)
+     * @returns Array of all categories
+     */
+    async function getAllCategories() {
+        const AgentCategory = mongoose.models.AgentCategory;
+        return await AgentCategory.find({}).sort({ order: 1, label: 1 }).lean();
+    }
+    /**
+     * Ensure default categories exist and update them if they don't have localization keys
+     * @returns Promise<boolean> - true if categories were created/updated, false if no changes
+     */
+    async function ensureDefaultCategories() {
+        const AgentCategory = mongoose.models.AgentCategory;
+        const defaultCategories = [
+            {
+                value: 'general',
+                label: 'com_agents_category_general',
+                description: 'com_agents_category_general_description',
+                order: 0,
+            },
+            {
+                value: 'hr',
+                label: 'com_agents_category_hr',
+                description: 'com_agents_category_hr_description',
+                order: 1,
+            },
+            {
+                value: 'rd',
+                label: 'com_agents_category_rd',
+                description: 'com_agents_category_rd_description',
+                order: 2,
+            },
+            {
+                value: 'finance',
+                label: 'com_agents_category_finance',
+                description: 'com_agents_category_finance_description',
+                order: 3,
+            },
+            {
+                value: 'it',
+                label: 'com_agents_category_it',
+                description: 'com_agents_category_it_description',
+                order: 4,
+            },
+            {
+                value: 'sales',
+                label: 'com_agents_category_sales',
+                description: 'com_agents_category_sales_description',
+                order: 5,
+            },
+            {
+                value: 'aftersales',
+                label: 'com_agents_category_aftersales',
+                description: 'com_agents_category_aftersales_description',
+                order: 6,
+            },
+        ];
+        const existingCategories = await getAllCategories();
+        const existingCategoryMap = new Map(existingCategories.map((cat) => [cat.value, cat]));
+        const updates = [];
+        let created = 0;
+        for (const defaultCategory of defaultCategories) {
+            const existingCategory = existingCategoryMap.get(defaultCategory.value);
+            if (existingCategory) {
+                const isNotCustom = !existingCategory.custom;
+                const needsLocalization = !existingCategory.label.startsWith('com_');
+                if (isNotCustom && needsLocalization) {
+                    updates.push({
+                        value: defaultCategory.value,
+                        label: defaultCategory.label,
+                        description: defaultCategory.description,
+                    });
+                }
+            }
+            else {
+                await createCategory({
+                    ...defaultCategory,
+                    isActive: true,
+                    custom: false,
+                });
+                created++;
+            }
+        }
+        if (updates.length > 0) {
+            const bulkOps = updates.map((update) => ({
+                updateOne: {
+                    filter: { value: update.value, custom: { $ne: true } },
+                    update: {
+                        $set: {
+                            label: update.label,
+                            description: update.description,
+                        },
+                    },
+                },
+            }));
+            await AgentCategory.bulkWrite(bulkOps, { ordered: false });
+        }
+        return updates.length > 0 || created > 0;
+    }
+    return {
+        getActiveCategories,
+        getCategoriesWithCounts,
+        getValidCategoryValues,
+        seedCategories,
+        findCategoryByValue,
+        createCategory,
+        updateCategory,
+        deleteCategory,
+        findCategoryById,
+        getAllCategories,
+        ensureDefaultCategories,
+    };
+}
+
+const API_KEY_PREFIX = 'sk-';
+const API_KEY_LENGTH = 32;
+function createAgentApiKeyMethods(mongoose) {
+    async function generateApiKey() {
+        const randomPart = await getRandomValues(API_KEY_LENGTH);
+        const key = `${API_KEY_PREFIX}${randomPart}`;
+        const keyHash = await hashToken(key);
+        const keyPrefix = key.slice(0, 8);
+        return { key, keyHash, keyPrefix };
+    }
+    async function createAgentApiKey(data) {
+        try {
+            const AgentApiKey = mongoose.models.AgentApiKey;
+            const { key, keyHash, keyPrefix } = await generateApiKey();
+            const apiKeyDoc = await AgentApiKey.create({
+                userId: data.userId,
+                name: data.name,
+                keyHash,
+                keyPrefix,
+                expiresAt: data.expiresAt || undefined,
+            });
+            return {
+                id: apiKeyDoc._id.toString(),
+                name: apiKeyDoc.name,
+                keyPrefix,
+                key,
+                createdAt: apiKeyDoc.createdAt,
+                expiresAt: apiKeyDoc.expiresAt,
+            };
+        }
+        catch (error) {
+            logger$1.error('[createAgentApiKey] Error creating API key:', error);
+            throw error;
+        }
+    }
+    async function validateAgentApiKey(apiKey) {
+        try {
+            const AgentApiKey = mongoose.models.AgentApiKey;
+            const keyHash = await hashToken(apiKey);
+            const keyDoc = (await AgentApiKey.findOne({ keyHash }).lean());
+            if (!keyDoc) {
+                return null;
+            }
+            if (keyDoc.expiresAt && new Date(keyDoc.expiresAt) < new Date()) {
+                return null;
+            }
+            await AgentApiKey.updateOne({ _id: keyDoc._id }, { $set: { lastUsedAt: new Date() } });
+            return {
+                userId: keyDoc.userId,
+                keyId: keyDoc._id,
+            };
+        }
+        catch (error) {
+            logger$1.error('[validateAgentApiKey] Error validating API key:', error);
+            return null;
+        }
+    }
+    async function listAgentApiKeys(userId) {
+        try {
+            const AgentApiKey = mongoose.models.AgentApiKey;
+            const keys = (await AgentApiKey.find({ userId })
+                .sort({ createdAt: -1 })
+                .lean());
+            return keys.map((key) => ({
+                id: key._id.toString(),
+                name: key.name,
+                keyPrefix: key.keyPrefix,
+                lastUsedAt: key.lastUsedAt,
+                expiresAt: key.expiresAt,
+                createdAt: key.createdAt,
+            }));
+        }
+        catch (error) {
+            logger$1.error('[listAgentApiKeys] Error listing API keys:', error);
+            throw error;
+        }
+    }
+    async function deleteAgentApiKey(keyId, userId) {
+        try {
+            const AgentApiKey = mongoose.models.AgentApiKey;
+            const result = await AgentApiKey.deleteOne({ _id: keyId, userId });
+            return result.deletedCount > 0;
+        }
+        catch (error) {
+            logger$1.error('[deleteAgentApiKey] Error deleting API key:', error);
+            throw error;
+        }
+    }
+    async function deleteAllAgentApiKeys(userId) {
+        try {
+            const AgentApiKey = mongoose.models.AgentApiKey;
+            const result = await AgentApiKey.deleteMany({ userId });
+            return result.deletedCount;
+        }
+        catch (error) {
+            logger$1.error('[deleteAllAgentApiKeys] Error deleting all API keys:', error);
+            throw error;
+        }
+    }
+    async function getAgentApiKeyById(keyId, userId) {
+        try {
+            const AgentApiKey = mongoose.models.AgentApiKey;
+            const keyDoc = (await AgentApiKey.findOne({
+                _id: keyId,
+                userId,
+            }).lean());
+            if (!keyDoc) {
+                return null;
+            }
+            return {
+                id: keyDoc._id.toString(),
+                name: keyDoc.name,
+                keyPrefix: keyDoc.keyPrefix,
+                lastUsedAt: keyDoc.lastUsedAt,
+                expiresAt: keyDoc.expiresAt,
+                createdAt: keyDoc.createdAt,
+            };
+        }
+        catch (error) {
+            logger$1.error('[getAgentApiKeyById] Error getting API key:', error);
+            throw error;
+        }
+    }
+    return {
+        createAgentApiKey,
+        validateAgentApiKey,
+        listAgentApiKeys,
+        deleteAgentApiKey,
+        deleteAllAgentApiKeys,
+        getAgentApiKeyById,
+    };
+}
+
+const NORMALIZED_LIMIT_DEFAULT = 20;
+const MAX_CREATE_RETRIES = 5;
+const RETRY_BASE_DELAY_MS = 25;
+/**
+ * Helper to check if an error is a MongoDB duplicate key error.
+ * Since serverName is the only unique index on MCPServer, any E11000 error
+ * during creation is necessarily a serverName collision.
+ */
+function isDuplicateKeyError(error) {
+    if (error && typeof error === 'object' && 'code' in error) {
+        const mongoError = error;
+        return mongoError.code === 11000;
+    }
+    return false;
+}
+/**
+ * Escapes special regex characters in a string so they are treated literally.
+ */
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+/**
+ * Generates a URL-friendly server name from a title.
+ * Converts to lowercase, replaces spaces with hyphens, removes special characters.
+ */
+function generateServerNameFromTitle(title) {
+    const slug = title
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special chars except spaces and hyphens
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Remove consecutive hyphens
+        .replace(/^-|-$/g, ''); // Trim leading/trailing hyphens
+    return slug || 'mcp-server'; // Fallback if empty
+}
+function createMCPServerMethods(mongoose) {
+    /**
+     * Finds the next available server name by checking for duplicates.
+     * If baseName exists, returns baseName-2, baseName-3, etc.
+     */
+    async function findNextAvailableServerName(baseName) {
+        const MCPServer = mongoose.models.MCPServer;
+        // Find all servers with matching base name pattern (baseName or baseName-N)
+        const escapedBaseName = escapeRegex(baseName);
+        const existing = await MCPServer.find({
+            serverName: { $regex: `^${escapedBaseName}(-\\d+)?$` },
+        })
+            .select('serverName')
+            .lean();
+        if (existing.length === 0) {
+            return baseName;
+        }
+        // Extract numbers from existing names
+        const numbers = existing.map((s) => {
+            const match = s.serverName.match(/-(\d+)$/);
+            return match ? parseInt(match[1], 10) : 1;
+        });
+        const maxNumber = Math.max(...numbers);
+        return `${baseName}-${maxNumber + 1}`;
+    }
+    /**
+     * Create a new MCP server with retry logic for handling race conditions.
+     * When multiple requests try to create servers with the same title simultaneously,
+     * they may get the same serverName from findNextAvailableServerName() before any
+     * creates the record (TOCTOU race condition). This is handled by retrying with
+     * exponential backoff when a duplicate key error occurs.
+     * @param data - Object containing config (with title, description, url, etc.) and author
+     * @returns The created MCP server document
+     */
+    async function createMCPServer(data) {
+        const MCPServer = mongoose.models.MCPServer;
+        let lastError;
+        for (let attempt = 0; attempt < MAX_CREATE_RETRIES; attempt++) {
+            try {
+                // Generate serverName from title, with fallback to nanoid if no title
+                // Important: regenerate on each attempt to get fresh available name
+                let serverName;
+                if (data.config.title) {
+                    const baseSlug = generateServerNameFromTitle(data.config.title);
+                    serverName = await findNextAvailableServerName(baseSlug);
+                }
+                else {
+                    serverName = `mcp-${nanoid(16)}`;
+                }
+                const newServer = await MCPServer.create({
+                    serverName,
+                    config: data.config,
+                    author: data.author,
+                });
+                return newServer.toObject();
+            }
+            catch (error) {
+                lastError = error;
+                // Only retry on duplicate key errors (serverName collision)
+                if (isDuplicateKeyError(error) && attempt < MAX_CREATE_RETRIES - 1) {
+                    // Exponential backoff: 10ms, 20ms, 40ms
+                    const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+                    logger$1.debug(`[createMCPServer] Duplicate serverName detected, retrying (attempt ${attempt + 2}/${MAX_CREATE_RETRIES}) after ${delay}ms`);
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+                    continue;
+                }
+                // Not a duplicate key error or out of retries - throw immediately
+                throw error;
+            }
+        }
+        // Should not reach here, but TypeScript requires a return
+        throw lastError;
+    }
+    /**
+     * Find an MCP server by serverName
+     * @param serverName - The unique server name identifier
+     * @returns The MCP server document or null
+     */
+    async function findMCPServerByServerName(serverName) {
+        const MCPServer = mongoose.models.MCPServer;
+        return await MCPServer.findOne({ serverName }).lean();
+    }
+    /**
+     * Find an MCP server by MongoDB ObjectId
+     * @param _id - The MongoDB ObjectId
+     * @returns The MCP server document or null
+     */
+    async function findMCPServerByObjectId(_id) {
+        const MCPServer = mongoose.models.MCPServer;
+        return await MCPServer.findById(_id).lean();
+    }
+    /**
+     * Find MCP servers by author
+     * @param authorId - The author's ObjectId or string
+     * @returns Array of MCP server documents
+     */
+    async function findMCPServersByAuthor(authorId) {
+        const MCPServer = mongoose.models.MCPServer;
+        return await MCPServer.find({ author: authorId }).sort({ updatedAt: -1 }).lean();
+    }
+    /**
+     * Get a paginated list of MCP servers by IDs with filtering and search
+     * @param ids - Array of ObjectIds to include
+     * @param otherParams - Additional filter parameters (e.g., search)
+     * @param limit - Page size limit (null for no pagination)
+     * @param after - Cursor for pagination
+     * @returns Paginated list of MCP servers
+     */
+    async function getListMCPServersByIds({ ids = [], otherParams = {}, limit = null, after = null, }) {
+        const MCPServer = mongoose.models.MCPServer;
+        const isPaginated = limit !== null && limit !== undefined;
+        const normalizedLimit = isPaginated
+            ? Math.min(Math.max(1, parseInt(String(limit)) || NORMALIZED_LIMIT_DEFAULT), 100)
+            : null;
+        // Build base query combining accessible servers with other filters
+        const baseQuery = { ...otherParams, _id: { $in: ids } };
+        // Add cursor condition
+        if (after) {
+            try {
+                const cursor = JSON.parse(Buffer.from(after, 'base64').toString('utf8'));
+                const { updatedAt, _id } = cursor;
+                const cursorCondition = {
+                    $or: [
+                        { updatedAt: { $lt: new Date(updatedAt) } },
+                        { updatedAt: new Date(updatedAt), _id: { $gt: new mongoose.Types.ObjectId(_id) } },
+                    ],
+                };
+                // Merge cursor condition with base query
+                if (Object.keys(baseQuery).length > 0) {
+                    baseQuery.$and = [{ ...baseQuery }, cursorCondition];
+                    // Remove the original conditions from baseQuery to avoid duplication
+                    Object.keys(baseQuery).forEach((key) => {
+                        if (key !== '$and') {
+                            delete baseQuery[key];
+                        }
+                    });
+                }
+            }
+            catch (error) {
+                // Invalid cursor, ignore
+                logger$1.warn('[getListMCPServersByIds] Invalid cursor provided', error);
+            }
+        }
+        if (normalizedLimit === null) {
+            // No pagination - return all matching servers
+            const servers = await MCPServer.find(baseQuery).sort({ updatedAt: -1, _id: 1 }).lean();
+            return {
+                data: servers,
+                has_more: false,
+                after: null,
+            };
+        }
+        // Paginated query - assign to const to help TypeScript
+        const servers = await MCPServer.find(baseQuery)
+            .sort({ updatedAt: -1, _id: 1 })
+            .limit(normalizedLimit + 1)
+            .lean();
+        const hasMore = servers.length > normalizedLimit;
+        const data = hasMore ? servers.slice(0, normalizedLimit) : servers;
+        let nextCursor = null;
+        if (hasMore && data.length > 0) {
+            const lastItem = data[data.length - 1];
+            nextCursor = Buffer.from(JSON.stringify({
+                updatedAt: lastItem.updatedAt,
+                _id: lastItem._id,
+            })).toString('base64');
+        }
+        return {
+            data,
+            has_more: hasMore,
+            after: nextCursor,
+        };
+    }
+    /**
+     * Update an MCP server
+     * @param serverName - The MCP server ID
+     * @param updateData - Object containing config to update
+     * @returns The updated MCP server document or null
+     */
+    async function updateMCPServer(serverName, updateData) {
+        const MCPServer = mongoose.models.MCPServer;
+        return await MCPServer.findOneAndUpdate({ serverName }, { $set: updateData }, { new: true, runValidators: true }).lean();
+    }
+    /**
+     * Delete an MCP server
+     * @param serverName - The MCP server ID
+     * @returns The deleted MCP server document or null
+     */
+    async function deleteMCPServer(serverName) {
+        const MCPServer = mongoose.models.MCPServer;
+        return await MCPServer.findOneAndDelete({ serverName }).lean();
+    }
+    /**
+     * Get MCP servers by their serverName strings
+     * @param names - Array of serverName strings to fetch
+     * @returns Object containing array of MCP server documents
+     */
+    async function getListMCPServersByNames({ names = [] }) {
+        if (names.length === 0) {
+            return { data: [] };
+        }
+        const MCPServer = mongoose.models.MCPServer;
+        const servers = await MCPServer.find({ serverName: { $in: names } }).lean();
+        return { data: servers };
+    }
+    return {
+        createMCPServer,
+        findMCPServerByServerName,
+        findMCPServerByObjectId,
+        findMCPServersByAuthor,
+        getListMCPServersByIds,
+        getListMCPServersByNames,
+        updateMCPServer,
+        deleteMCPServer,
+    };
+}
+
+// Factory function that takes mongoose instance and returns the methods
+function createPluginAuthMethods(mongoose) {
+    /**
+     * Finds a single plugin auth entry by userId and authField (and optionally pluginKey)
+     */
+    async function findOnePluginAuth({ userId, authField, pluginKey, }) {
+        try {
+            const PluginAuth = mongoose.models.PluginAuth;
+            return await PluginAuth.findOne({
+                userId,
+                authField,
+                ...(pluginKey && { pluginKey }),
+            }).lean();
+        }
+        catch (error) {
+            throw new Error(`Failed to find plugin auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    /**
+     * Finds multiple plugin auth entries by userId and pluginKeys
+     */
+    async function findPluginAuthsByKeys({ userId, pluginKeys, }) {
+        try {
+            if (!pluginKeys || pluginKeys.length === 0) {
+                return [];
+            }
+            const PluginAuth = mongoose.models.PluginAuth;
+            return await PluginAuth.find({
+                userId,
+                pluginKey: { $in: pluginKeys },
+            }).lean();
+        }
+        catch (error) {
+            throw new Error(`Failed to find plugin auths: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    /**
+     * Updates or creates a plugin auth entry
+     */
+    async function updatePluginAuth({ userId, authField, pluginKey, value, }) {
+        try {
+            const PluginAuth = mongoose.models.PluginAuth;
+            const existingAuth = await PluginAuth.findOne({ userId, pluginKey, authField }).lean();
+            if (existingAuth) {
+                return await PluginAuth.findOneAndUpdate({ userId, pluginKey, authField }, { $set: { value } }, { new: true, upsert: true }).lean();
+            }
+            else {
+                const newPluginAuth = await new PluginAuth({
+                    userId,
+                    authField,
+                    value,
+                    pluginKey,
+                });
+                await newPluginAuth.save();
+                return newPluginAuth.toObject();
+            }
+        }
+        catch (error) {
+            throw new Error(`Failed to update plugin auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    /**
+     * Deletes plugin auth entries based on provided parameters
+     */
+    async function deletePluginAuth({ userId, authField, pluginKey, all = false, }) {
+        try {
+            const PluginAuth = mongoose.models.PluginAuth;
+            if (all) {
+                const filter = { userId };
+                if (pluginKey) {
+                    filter.pluginKey = pluginKey;
+                }
+                return await PluginAuth.deleteMany(filter);
+            }
+            if (!authField) {
+                throw new Error('authField is required when all is false');
+            }
+            return await PluginAuth.deleteOne({ userId, authField });
+        }
+        catch (error) {
+            throw new Error(`Failed to delete plugin auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    /**
+     * Deletes all plugin auth entries for a user
+     */
+    async function deleteAllUserPluginAuths(userId) {
+        try {
+            const PluginAuth = mongoose.models.PluginAuth;
+            return await PluginAuth.deleteMany({ userId });
+        }
+        catch (error) {
+            throw new Error(`Failed to delete all user plugin auths: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    return {
+        findOnePluginAuth,
+        findPluginAuthsByKeys,
+        updatePluginAuth,
+        deletePluginAuth,
+        deleteAllUserPluginAuths,
+    };
+}
+
+function createAccessRoleMethods(mongoose) {
+    /**
+     * Find an access role by its ID
+     * @param roleId - The role ID
+     * @returns The role document or null if not found
+     */
+    async function findRoleById(roleId) {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.findById(roleId).lean();
+    }
+    /**
+     * Find an access role by its unique identifier
+     * @param accessRoleId - The unique identifier (e.g., "agent_viewer")
+     * @returns The role document or null if not found
+     */
+    async function findRoleByIdentifier(accessRoleId) {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.findOne({ accessRoleId }).lean();
+    }
+    /**
+     * Find all access roles for a specific resource type
+     * @param resourceType - The type of resource ('agent', 'project', 'file')
+     * @returns Array of role documents
+     */
+    async function findRolesByResourceType(resourceType) {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.find({ resourceType }).lean();
+    }
+    /**
+     * Find an access role by resource type and permission bits
+     * @param resourceType - The type of resource
+     * @param permBits - The permission bits (use PermissionBits or RoleBits enum)
+     * @returns The role document or null if not found
+     */
+    async function findRoleByPermissions(resourceType, permBits) {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.findOne({ resourceType, permBits }).lean();
+    }
+    /**
+     * Create a new access role
+     * @param roleData - Role data (accessRoleId, name, description, resourceType, permBits)
+     * @returns The created role document
+     */
+    async function createRole(roleData) {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.create(roleData);
+    }
+    /**
+     * Update an existing access role
+     * @param accessRoleId - The unique identifier of the role to update
+     * @param updateData - Data to update
+     * @returns The updated role document or null if not found
+     */
+    async function updateRole(accessRoleId, updateData) {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.findOneAndUpdate({ accessRoleId }, { $set: updateData }, { new: true }).lean();
+    }
+    /**
+     * Delete an access role
+     * @param accessRoleId - The unique identifier of the role to delete
+     * @returns The result of the delete operation
+     */
+    async function deleteRole(accessRoleId) {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.deleteOne({ accessRoleId });
+    }
+    /**
+     * Get all predefined roles
+     * @returns Array of all role documents
+     */
+    async function getAllRoles() {
+        const AccessRole = mongoose.models.AccessRole;
+        return await AccessRole.find().lean();
+    }
+    /**
+     * Seed default roles if they don't exist
+     * @returns Object containing created roles
+     */
+    async function seedDefaultRoles() {
+        const AccessRole = mongoose.models.AccessRole;
+        const defaultRoles = [
+            {
+                accessRoleId: AccessRoleIds.AGENT_VIEWER,
+                name: 'com_ui_role_viewer',
+                description: 'com_ui_role_viewer_desc',
+                resourceType: ResourceType.AGENT,
+                permBits: RoleBits.VIEWER,
+            },
+            {
+                accessRoleId: AccessRoleIds.AGENT_EDITOR,
+                name: 'com_ui_role_editor',
+                description: 'com_ui_role_editor_desc',
+                resourceType: ResourceType.AGENT,
+                permBits: RoleBits.EDITOR,
+            },
+            {
+                accessRoleId: AccessRoleIds.AGENT_OWNER,
+                name: 'com_ui_role_owner',
+                description: 'com_ui_role_owner_desc',
+                resourceType: ResourceType.AGENT,
+                permBits: RoleBits.OWNER,
+            },
+            {
+                accessRoleId: AccessRoleIds.PROMPTGROUP_VIEWER,
+                name: 'com_ui_role_viewer',
+                description: 'com_ui_role_viewer_desc',
+                resourceType: ResourceType.PROMPTGROUP,
+                permBits: RoleBits.VIEWER,
+            },
+            {
+                accessRoleId: AccessRoleIds.PROMPTGROUP_EDITOR,
+                name: 'com_ui_role_editor',
+                description: 'com_ui_role_editor_desc',
+                resourceType: ResourceType.PROMPTGROUP,
+                permBits: RoleBits.EDITOR,
+            },
+            {
+                accessRoleId: AccessRoleIds.PROMPTGROUP_OWNER,
+                name: 'com_ui_role_owner',
+                description: 'com_ui_role_owner_desc',
+                resourceType: ResourceType.PROMPTGROUP,
+                permBits: RoleBits.OWNER,
+            },
+            {
+                accessRoleId: AccessRoleIds.MCPSERVER_VIEWER,
+                name: 'com_ui_mcp_server_role_viewer',
+                description: 'com_ui_mcp_server_role_viewer_desc',
+                resourceType: ResourceType.MCPSERVER,
+                permBits: RoleBits.VIEWER,
+            },
+            {
+                accessRoleId: AccessRoleIds.MCPSERVER_EDITOR,
+                name: 'com_ui_mcp_server_role_editor',
+                description: 'com_ui_mcp_server_role_editor_desc',
+                resourceType: ResourceType.MCPSERVER,
+                permBits: RoleBits.EDITOR,
+            },
+            {
+                accessRoleId: AccessRoleIds.MCPSERVER_OWNER,
+                name: 'com_ui_mcp_server_role_owner',
+                description: 'com_ui_mcp_server_role_owner_desc',
+                resourceType: ResourceType.MCPSERVER,
+                permBits: RoleBits.OWNER,
+            },
+            {
+                accessRoleId: AccessRoleIds.REMOTE_AGENT_VIEWER,
+                name: 'com_ui_remote_agent_role_viewer',
+                description: 'com_ui_remote_agent_role_viewer_desc',
+                resourceType: ResourceType.REMOTE_AGENT,
+                permBits: RoleBits.VIEWER,
+            },
+            {
+                accessRoleId: AccessRoleIds.REMOTE_AGENT_EDITOR,
+                name: 'com_ui_remote_agent_role_editor',
+                description: 'com_ui_remote_agent_role_editor_desc',
+                resourceType: ResourceType.REMOTE_AGENT,
+                permBits: RoleBits.EDITOR,
+            },
+            {
+                accessRoleId: AccessRoleIds.REMOTE_AGENT_OWNER,
+                name: 'com_ui_remote_agent_role_owner',
+                description: 'com_ui_remote_agent_role_owner_desc',
+                resourceType: ResourceType.REMOTE_AGENT,
+                permBits: RoleBits.OWNER,
+            },
+        ];
+        const result = {};
+        for (const role of defaultRoles) {
+            const upsertedRole = await AccessRole.findOneAndUpdate({ accessRoleId: role.accessRoleId }, { $setOnInsert: role }, { upsert: true, new: true }).lean();
+            result[role.accessRoleId] = upsertedRole;
+        }
+        return result;
+    }
+    /**
+     * Helper to get the appropriate role for a set of permissions
+     * @param resourceType - The type of resource
+     * @param permBits - The permission bits
+     * @returns The matching role or null if none found
+     */
+    async function getRoleForPermissions(resourceType, permBits) {
+        const AccessRole = mongoose.models.AccessRole;
+        const exactMatch = await AccessRole.findOne({ resourceType, permBits }).lean();
+        if (exactMatch) {
+            return exactMatch;
+        }
+        /** If no exact match, the closest role without exceeding permissions */
+        const roles = await AccessRole.find({ resourceType }).sort({ permBits: -1 }).lean();
+        return roles.find((role) => (role.permBits & permBits) === role.permBits) || null;
+    }
+    return {
+        createRole,
+        updateRole,
+        deleteRole,
+        getAllRoles,
+        findRoleById,
+        seedDefaultRoles,
+        findRoleByIdentifier,
+        getRoleForPermissions,
+        findRoleByPermissions,
+        findRolesByResourceType,
+    };
+}
+
+function createUserGroupMethods(mongoose) {
+    /**
+     * Find a group by its ID
+     * @param groupId - The group ID
+     * @param projection - Optional projection of fields to return
+     * @param session - Optional MongoDB session for transactions
+     * @returns The group document or null if not found
+     */
+    async function findGroupById(groupId, projection = {}, session) {
+        const Group = mongoose.models.Group;
+        const query = Group.findOne({ _id: groupId }, projection);
+        if (session) {
+            query.session(session);
+        }
+        return await query.lean();
+    }
+    /**
+     * Find a group by its external ID (e.g., Entra ID)
+     * @param idOnTheSource - The external ID
+     * @param source - The source ('entra' or 'local')
+     * @param projection - Optional projection of fields to return
+     * @param session - Optional MongoDB session for transactions
+     * @returns The group document or null if not found
+     */
+    async function findGroupByExternalId(idOnTheSource, source = 'entra', projection = {}, session) {
+        const Group = mongoose.models.Group;
+        const query = Group.findOne({ idOnTheSource, source }, projection);
+        if (session) {
+            query.session(session);
+        }
+        return await query.lean();
+    }
+    /**
+     * Find groups by name pattern (case-insensitive partial match)
+     * @param namePattern - The name pattern to search for
+     * @param source - Optional source filter ('entra', 'local', or null for all)
+     * @param limit - Maximum number of results to return
+     * @param session - Optional MongoDB session for transactions
+     * @returns Array of matching groups
+     */
+    async function findGroupsByNamePattern(namePattern, source = null, limit = 20, session) {
+        const Group = mongoose.models.Group;
+        const regex = new RegExp(namePattern, 'i');
+        const query = {
+            $or: [{ name: regex }, { email: regex }, { description: regex }],
+        };
+        if (source) {
+            query.source = source;
+        }
+        const dbQuery = Group.find(query).limit(limit);
+        if (session) {
+            dbQuery.session(session);
+        }
+        return await dbQuery.lean();
+    }
+    /**
+     * Find all groups a user is a member of by their ID or idOnTheSource
+     * @param userId - The user ID
+     * @param session - Optional MongoDB session for transactions
+     * @returns Array of groups the user is a member of
+     */
+    async function findGroupsByMemberId(userId, session) {
+        const User = mongoose.models.User;
+        const Group = mongoose.models.Group;
+        const userQuery = User.findById(userId, 'idOnTheSource');
+        if (session) {
+            userQuery.session(session);
+        }
+        const user = (await userQuery.lean());
+        if (!user) {
+            return [];
+        }
+        const userIdOnTheSource = user.idOnTheSource || userId.toString();
+        const query = Group.find({ memberIds: userIdOnTheSource });
+        if (session) {
+            query.session(session);
+        }
+        return await query.lean();
+    }
+    /**
+     * Create a new group
+     * @param groupData - Group data including name, source, and optional idOnTheSource
+     * @param session - Optional MongoDB session for transactions
+     * @returns The created group
+     */
+    async function createGroup(groupData, session) {
+        const Group = mongoose.models.Group;
+        const options = session ? { session } : {};
+        return await Group.create([groupData], options).then((groups) => groups[0]);
+    }
+    /**
+     * Update or create a group by external ID
+     * @param idOnTheSource - The external ID
+     * @param source - The source ('entra' or 'local')
+     * @param updateData - Data to update or set if creating
+     * @param session - Optional MongoDB session for transactions
+     * @returns The updated or created group
+     */
+    async function upsertGroupByExternalId(idOnTheSource, source, updateData, session) {
+        const Group = mongoose.models.Group;
+        const options = {
+            new: true,
+            upsert: true,
+            ...(session ? { session } : {}),
+        };
+        return await Group.findOneAndUpdate({ idOnTheSource, source }, { $set: updateData }, options);
+    }
+    /**
+     * Add a user to a group
+     * Only updates Group.memberIds (one-way relationship)
+     * Note: memberIds stores idOnTheSource values, not ObjectIds
+     *
+     * @param userId - The user ID
+     * @param groupId - The group ID to add
+     * @param session - Optional MongoDB session for transactions
+     * @returns The user and updated group documents
+     */
+    async function addUserToGroup(userId, groupId, session) {
+        const User = mongoose.models.User;
+        const Group = mongoose.models.Group;
+        const options = { new: true, ...(session ? { session } : {}) };
+        const user = (await User.findById(userId, 'idOnTheSource', options).lean());
+        if (!user) {
+            throw new Error(`User not found: ${userId}`);
+        }
+        const userIdOnTheSource = user.idOnTheSource || userId.toString();
+        const updatedGroup = await Group.findByIdAndUpdate(groupId, { $addToSet: { memberIds: userIdOnTheSource } }, options).lean();
+        return { user: user, group: updatedGroup };
+    }
+    /**
+     * Remove a user from a group
+     * Only updates Group.memberIds (one-way relationship)
+     * Note: memberIds stores idOnTheSource values, not ObjectIds
+     *
+     * @param userId - The user ID
+     * @param groupId - The group ID to remove
+     * @param session - Optional MongoDB session for transactions
+     * @returns The user and updated group documents
+     */
+    async function removeUserFromGroup(userId, groupId, session) {
+        const User = mongoose.models.User;
+        const Group = mongoose.models.Group;
+        const options = { new: true, ...(session ? { session } : {}) };
+        const user = (await User.findById(userId, 'idOnTheSource', options).lean());
+        if (!user) {
+            throw new Error(`User not found: ${userId}`);
+        }
+        const userIdOnTheSource = user.idOnTheSource || userId.toString();
+        const updatedGroup = await Group.findByIdAndUpdate(groupId, { $pull: { memberIds: userIdOnTheSource } }, options).lean();
+        return { user: user, group: updatedGroup };
+    }
+    /**
+     * Get all groups a user is a member of
+     * @param userId - The user ID
+     * @param session - Optional MongoDB session for transactions
+     * @returns Array of group documents
+     */
+    async function getUserGroups(userId, session) {
+        return await findGroupsByMemberId(userId, session);
+    }
+    /**
+     * Get a list of all principal identifiers for a user (user ID + group IDs + public)
+     * For use in permission checks
+     * @param params - Parameters object
+     * @param params.userId - The user ID
+     * @param params.role - Optional user role (if not provided, will query from DB)
+     * @param session - Optional MongoDB session for transactions
+     * @returns Array of principal objects with type and id
+     */
+    async function getUserPrincipals(params, session) {
+        const { userId, role } = params;
+        /** `userId` must be an `ObjectId` for USER principal since ACL entries store `ObjectId`s */
+        const userObjectId = typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
+        const principals = [
+            { principalType: PrincipalType.USER, principalId: userObjectId },
+        ];
+        // If role is not provided, query user to get it
+        let userRole = role;
+        if (userRole === undefined) {
+            const User = mongoose.models.User;
+            const query = User.findById(userId).select('role');
+            if (session) {
+                query.session(session);
+            }
+            const user = await query.lean();
+            userRole = user === null || user === void 0 ? void 0 : user.role;
+        }
+        // Add role as a principal if user has one
+        if (userRole && userRole.trim()) {
+            principals.push({ principalType: PrincipalType.ROLE, principalId: userRole });
+        }
+        const userGroups = await getUserGroups(userId, session);
+        if (userGroups && userGroups.length > 0) {
+            userGroups.forEach((group) => {
+                principals.push({ principalType: PrincipalType.GROUP, principalId: group._id });
+            });
+        }
+        principals.push({ principalType: PrincipalType.PUBLIC });
+        return principals;
+    }
+    /**
+     * Sync a user's Entra ID group memberships
+     * @param userId - The user ID
+     * @param entraGroups - Array of Entra groups with id and name
+     * @param session - Optional MongoDB session for transactions
+     * @returns The updated user with new group memberships
+     */
+    async function syncUserEntraGroups(userId, entraGroups, session) {
+        var _a;
+        const User = mongoose.models.User;
+        const Group = mongoose.models.Group;
+        const query = User.findById(userId, { idOnTheSource: 1 });
+        if (session) {
+            query.session(session);
+        }
+        const user = (await query.lean());
+        if (!user) {
+            throw new Error(`User not found: ${userId}`);
+        }
+        /** Get user's idOnTheSource for storing in group.memberIds */
+        const userIdOnTheSource = user.idOnTheSource || userId.toString();
+        const entraIdMap = new Map();
+        const addedGroups = [];
+        const removedGroups = [];
+        for (const entraGroup of entraGroups) {
+            entraIdMap.set(entraGroup.id, true);
+            let group = await findGroupByExternalId(entraGroup.id, 'entra', {}, session);
+            if (!group) {
+                group = await createGroup({
+                    name: entraGroup.name,
+                    description: entraGroup.description,
+                    email: entraGroup.email,
+                    idOnTheSource: entraGroup.id,
+                    source: 'entra',
+                    memberIds: [userIdOnTheSource],
+                }, session);
+                addedGroups.push(group);
+            }
+            else if (!((_a = group.memberIds) === null || _a === void 0 ? void 0 : _a.includes(userIdOnTheSource))) {
+                const { group: updatedGroup } = await addUserToGroup(userId, group._id, session);
+                if (updatedGroup) {
+                    addedGroups.push(updatedGroup);
+                }
+            }
+        }
+        const groupsQuery = Group.find({ source: 'entra', memberIds: userIdOnTheSource }, { _id: 1, idOnTheSource: 1 });
+        if (session) {
+            groupsQuery.session(session);
+        }
+        const existingGroups = (await groupsQuery.lean());
+        for (const group of existingGroups) {
+            if (group.idOnTheSource && !entraIdMap.has(group.idOnTheSource)) {
+                const { group: removedGroup } = await removeUserFromGroup(userId, group._id, session);
+                if (removedGroup) {
+                    removedGroups.push(removedGroup);
+                }
+            }
+        }
+        const userQuery = User.findById(userId);
+        if (session) {
+            userQuery.session(session);
+        }
+        const updatedUser = await userQuery.lean();
+        if (!updatedUser) {
+            throw new Error(`User not found after update: ${userId}`);
+        }
+        return {
+            user: updatedUser,
+            addedGroups,
+            removedGroups,
+        };
+    }
+    /**
+     * Calculate relevance score for a search result
+     * @param item - The search result item
+     * @param searchPattern - The search pattern
+     * @returns Relevance score (0-100)
+     */
+    function calculateRelevanceScore(item, searchPattern) {
+        const exactRegex = new RegExp(`^${searchPattern}$`, 'i');
+        const startsWithPattern = searchPattern.toLowerCase();
+        /** Get searchable text based on type */
+        const searchableFields = item.type === PrincipalType.USER
+            ? [item.name, item.email, item.username].filter(Boolean)
+            : [item.name, item.email, item.description].filter(Boolean);
+        let maxScore = 0;
+        for (const field of searchableFields) {
+            if (!field)
+                continue;
+            const fieldLower = field.toLowerCase();
+            let score = 0;
+            /** Exact match gets highest score */
+            if (exactRegex.test(field)) {
+                score = 100;
+            }
+            else if (fieldLower.startsWith(startsWithPattern)) {
+                /** Starts with query gets high score */
+                score = 80;
+            }
+            else if (fieldLower.includes(startsWithPattern)) {
+                /** Contains query gets medium score */
+                score = 50;
+            }
+            else {
+                /** Default score for regex match */
+                score = 10;
+            }
+            maxScore = Math.max(maxScore, score);
+        }
+        return maxScore;
+    }
+    /**
+     * Sort principals by relevance score and type priority
+     * @param results - Array of results with _searchScore property
+     * @returns Sorted array
+     */
+    function sortPrincipalsByRelevance(results) {
+        return results.sort((a, b) => {
+            if (b._searchScore !== a._searchScore) {
+                return (b._searchScore || 0) - (a._searchScore || 0);
+            }
+            if (a.type !== b.type) {
+                return a.type === PrincipalType.USER ? -1 : 1;
+            }
+            const aName = a.name || a.email || '';
+            const bName = b.name || b.email || '';
+            return aName.localeCompare(bName);
+        });
+    }
+    /**
+     * Transform user object to TPrincipalSearchResult format
+     * @param user - User object from database
+     * @returns Transformed user result
+     */
+    function transformUserToTPrincipalSearchResult(user) {
+        return {
+            id: user.id,
+            type: PrincipalType.USER,
+            name: user.name || user.email,
+            email: user.email,
+            username: user.username,
+            avatar: user.avatar,
+            provider: user.provider,
+            source: 'local',
+            idOnTheSource: user.idOnTheSource || user.id,
+        };
+    }
+    /**
+     * Transform group object to TPrincipalSearchResult format
+     * @param group - Group object from database
+     * @returns Transformed group result
+     */
+    function transformGroupToTPrincipalSearchResult(group) {
+        var _a, _b;
+        return {
+            id: (_a = group._id) === null || _a === void 0 ? void 0 : _a.toString(),
+            type: PrincipalType.GROUP,
+            name: group.name,
+            email: group.email,
+            avatar: group.avatar,
+            description: group.description,
+            source: group.source || 'local',
+            memberCount: group.memberIds ? group.memberIds.length : 0,
+            idOnTheSource: group.idOnTheSource || ((_b = group._id) === null || _b === void 0 ? void 0 : _b.toString()),
+        };
+    }
+    /**
+     * Search for principals (users and groups) by pattern matching on name/email
+     * Returns combined results in TPrincipalSearchResult format without sorting
+     * @param searchPattern - The pattern to search for
+     * @param limitPerType - Maximum number of results to return
+     * @param typeFilter - Optional array of types to filter by, or null for all types
+     * @param session - Optional MongoDB session for transactions
+     * @returns Array of principals in TPrincipalSearchResult format
+     */
+    async function searchPrincipals(searchPattern, limitPerType = 10, typeFilter = null, session) {
+        if (!searchPattern || searchPattern.trim().length === 0) {
+            return [];
+        }
+        const trimmedPattern = searchPattern.trim();
+        const promises = [];
+        if (!typeFilter || typeFilter.includes(PrincipalType.USER)) {
+            /** Note: searchUsers is imported from ~/models and needs to be passed in or implemented */
+            const userFields = 'name email username avatar provider idOnTheSource';
+            /** For now, we'll use a direct query instead of searchUsers */
+            const User = mongoose.models.User;
+            const regex = new RegExp(trimmedPattern, 'i');
+            const userQuery = User.find({
+                $or: [{ name: regex }, { email: regex }, { username: regex }],
+            })
+                .select(userFields)
+                .limit(limitPerType);
+            if (session) {
+                userQuery.session(session);
+            }
+            promises.push(userQuery.lean().then((users) => users.map((user) => {
+                var _a;
+                const userWithId = user;
+                return transformUserToTPrincipalSearchResult({
+                    id: ((_a = userWithId._id) === null || _a === void 0 ? void 0 : _a.toString()) || '',
+                    name: userWithId.name,
+                    email: userWithId.email,
+                    username: userWithId.username,
+                    avatar: userWithId.avatar,
+                    provider: userWithId.provider,
+                });
+            })));
+        }
+        else {
+            promises.push(Promise.resolve([]));
+        }
+        if (!typeFilter || typeFilter.includes(PrincipalType.GROUP)) {
+            promises.push(findGroupsByNamePattern(trimmedPattern, null, limitPerType, session).then((groups) => groups.map(transformGroupToTPrincipalSearchResult)));
+        }
+        else {
+            promises.push(Promise.resolve([]));
+        }
+        if (!typeFilter || typeFilter.includes(PrincipalType.ROLE)) {
+            const Role = mongoose.models.Role;
+            if (Role) {
+                const regex = new RegExp(trimmedPattern, 'i');
+                const roleQuery = Role.find({ name: regex }).select('name').limit(limitPerType);
+                if (session) {
+                    roleQuery.session(session);
+                }
+                promises.push(roleQuery.lean().then((roles) => roles.map((role) => ({
+                    /** Role name as ID */
+                    id: role.name,
+                    type: PrincipalType.ROLE,
+                    name: role.name,
+                    source: 'local',
+                    idOnTheSource: role.name,
+                }))));
+            }
+        }
+        else {
+            promises.push(Promise.resolve([]));
+        }
+        const results = await Promise.all(promises);
+        const combined = results.flat();
+        return combined;
+    }
+    return {
+        findGroupById,
+        findGroupByExternalId,
+        findGroupsByNamePattern,
+        findGroupsByMemberId,
+        createGroup,
+        upsertGroupByExternalId,
+        addUserToGroup,
+        removeUserFromGroup,
+        getUserGroups,
+        getUserPrincipals,
+        syncUserEntraGroups,
+        searchPrincipals,
+        calculateRelevanceScore,
+        sortPrincipalsByRelevance,
+    };
+}
+
+function createAclEntryMethods(mongoose) {
+    /**
+     * Find ACL entries for a specific principal (user or group)
+     * @param principalType - The type of principal ('user', 'group')
+     * @param principalId - The ID of the principal
+     * @param resourceType - Optional filter by resource type
+     * @returns Array of ACL entries
+     */
+    async function findEntriesByPrincipal(principalType, principalId, resourceType) {
+        const AclEntry = mongoose.models.AclEntry;
+        const query = { principalType, principalId };
+        if (resourceType) {
+            query.resourceType = resourceType;
+        }
+        return await AclEntry.find(query).lean();
+    }
+    /**
+     * Find ACL entries for a specific resource
+     * @param resourceType - The type of resource ('agent', 'project', 'file')
+     * @param resourceId - The ID of the resource
+     * @returns Array of ACL entries
+     */
+    async function findEntriesByResource(resourceType, resourceId) {
+        const AclEntry = mongoose.models.AclEntry;
+        return await AclEntry.find({ resourceType, resourceId }).lean();
+    }
+    /**
+     * Find all ACL entries for a set of principals (including public)
+     * @param principalsList - List of principals, each containing { principalType, principalId }
+     * @param resourceType - The type of resource
+     * @param resourceId - The ID of the resource
+     * @returns Array of matching ACL entries
+     */
+    async function findEntriesByPrincipalsAndResource(principalsList, resourceType, resourceId) {
+        const AclEntry = mongoose.models.AclEntry;
+        const principalsQuery = principalsList.map((p) => ({
+            principalType: p.principalType,
+            ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),
+        }));
+        return await AclEntry.find({
+            $or: principalsQuery,
+            resourceType,
+            resourceId,
+        }).lean();
+    }
+    /**
+     * Check if a set of principals has a specific permission on a resource
+     * @param principalsList - List of principals, each containing { principalType, principalId }
+     * @param resourceType - The type of resource
+     * @param resourceId - The ID of the resource
+     * @param permissionBit - The permission bit to check (use PermissionBits enum)
+     * @returns Whether any of the principals has the permission
+     */
+    async function hasPermission(principalsList, resourceType, resourceId, permissionBit) {
+        const AclEntry = mongoose.models.AclEntry;
+        const principalsQuery = principalsList.map((p) => ({
+            principalType: p.principalType,
+            ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),
+        }));
+        const entry = await AclEntry.findOne({
+            $or: principalsQuery,
+            resourceType,
+            resourceId,
+            permBits: { $bitsAllSet: permissionBit },
+        }).lean();
+        return !!entry;
+    }
+    /**
+     * Get the combined effective permissions for a set of principals on a resource
+     * @param principalsList - List of principals, each containing { principalType, principalId }
+     * @param resourceType - The type of resource
+     * @param resourceId - The ID of the resource
+     * @returns {Promise<number>} Effective permission bitmask
+     */
+    async function getEffectivePermissions(principalsList, resourceType, resourceId) {
+        const aclEntries = await findEntriesByPrincipalsAndResource(principalsList, resourceType, resourceId);
+        let effectiveBits = 0;
+        for (const entry of aclEntries) {
+            effectiveBits |= entry.permBits;
+        }
+        return effectiveBits;
+    }
+    /**
+     * Get effective permissions for multiple resources in a single query (BATCH)
+     * Returns a map of resourceId → effectivePermissionBits
+     *
+     * @param principalsList - List of principals (user + groups + public)
+     * @param resourceType - The type of resource ('MCPSERVER', 'AGENT', etc.)
+     * @param resourceIds - Array of resource IDs to check
+     * @returns {Promise<Map<string, number>>} Map of resourceId → permission bits
+     *
+     * @example
+     * const principals = await getUserPrincipals({ userId, role });
+     * const serverIds = [id1, id2, id3];
+     * const permMap = await getEffectivePermissionsForResources(
+     *   principals,
+     *   ResourceType.MCPSERVER,
+     *   serverIds
+     * );
+     * // permMap.get(id1.toString()) → 7 (VIEW|EDIT|DELETE)
+     */
+    async function getEffectivePermissionsForResources(principalsList, resourceType, resourceIds) {
+        if (!Array.isArray(resourceIds) || resourceIds.length === 0) {
+            return new Map();
+        }
+        const AclEntry = mongoose.models.AclEntry;
+        const principalsQuery = principalsList.map((p) => ({
+            principalType: p.principalType,
+            ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),
+        }));
+        // Batch query for all resources at once
+        const aclEntries = await AclEntry.find({
+            $or: principalsQuery,
+            resourceType,
+            resourceId: { $in: resourceIds },
+        }).lean();
+        // Compute effective permissions per resource
+        const permissionsMap = new Map();
+        for (const entry of aclEntries) {
+            const rid = entry.resourceId.toString();
+            const currentBits = permissionsMap.get(rid) || 0;
+            permissionsMap.set(rid, currentBits | entry.permBits);
+        }
+        return permissionsMap;
+    }
+    /**
+     * Grant permission to a principal for a resource
+     * @param principalType - The type of principal ('user', 'group', 'public')
+     * @param principalId - The ID of the principal (null for 'public')
+     * @param resourceType - The type of resource
+     * @param resourceId - The ID of the resource
+     * @param permBits - The permission bits to grant
+     * @param grantedBy - The ID of the user granting the permission
+     * @param session - Optional MongoDB session for transactions
+     * @param roleId - Optional role ID to associate with this permission
+     * @returns The created or updated ACL entry
+     */
+    async function grantPermission(principalType, principalId, resourceType, resourceId, permBits, grantedBy, session, roleId) {
+        const AclEntry = mongoose.models.AclEntry;
+        const query = {
+            principalType,
+            resourceType,
+            resourceId,
+        };
+        if (principalType !== PrincipalType.PUBLIC) {
+            query.principalId =
+                typeof principalId === 'string' && principalType !== PrincipalType.ROLE
+                    ? new Types.ObjectId(principalId)
+                    : principalId;
+            if (principalType === PrincipalType.USER) {
+                query.principalModel = PrincipalModel.USER;
+            }
+            else if (principalType === PrincipalType.GROUP) {
+                query.principalModel = PrincipalModel.GROUP;
+            }
+            else if (principalType === PrincipalType.ROLE) {
+                query.principalModel = PrincipalModel.ROLE;
+            }
+        }
+        const update = {
+            $set: {
+                permBits,
+                grantedBy,
+                grantedAt: new Date(),
+                ...(roleId && { roleId }),
+            },
+        };
+        const options = {
+            upsert: true,
+            new: true,
+            ...(session ? { session } : {}),
+        };
+        return await AclEntry.findOneAndUpdate(query, update, options);
+    }
+    /**
+     * Revoke permissions from a principal for a resource
+     * @param principalType - The type of principal ('user', 'group', 'public')
+     * @param principalId - The ID of the principal (null for 'public')
+     * @param resourceType - The type of resource
+     * @param resourceId - The ID of the resource
+     * @param session - Optional MongoDB session for transactions
+     * @returns The result of the delete operation
+     */
+    async function revokePermission(principalType, principalId, resourceType, resourceId, session) {
+        const AclEntry = mongoose.models.AclEntry;
+        const query = {
+            principalType,
+            resourceType,
+            resourceId,
+        };
+        if (principalType !== PrincipalType.PUBLIC) {
+            query.principalId =
+                typeof principalId === 'string' && principalType !== PrincipalType.ROLE
+                    ? new Types.ObjectId(principalId)
+                    : principalId;
+        }
+        const options = session ? { session } : {};
+        return await AclEntry.deleteOne(query, options);
+    }
+    /**
+     * Modify existing permission bits for a principal on a resource
+     * @param principalType - The type of principal ('user', 'group', 'public')
+     * @param principalId - The ID of the principal (null for 'public')
+     * @param resourceType - The type of resource
+     * @param resourceId - The ID of the resource
+     * @param addBits - Permission bits to add
+     * @param removeBits - Permission bits to remove
+     * @param session - Optional MongoDB session for transactions
+     * @returns The updated ACL entry
+     */
+    async function modifyPermissionBits(principalType, principalId, resourceType, resourceId, addBits, removeBits, session) {
+        const AclEntry = mongoose.models.AclEntry;
+        const query = {
+            principalType,
+            resourceType,
+            resourceId,
+        };
+        if (principalType !== PrincipalType.PUBLIC) {
+            query.principalId =
+                typeof principalId === 'string' && principalType !== PrincipalType.ROLE
+                    ? new Types.ObjectId(principalId)
+                    : principalId;
+        }
+        const update = {};
+        if (addBits) {
+            update.$bit = { permBits: { or: addBits } };
+        }
+        if (removeBits) {
+            if (!update.$bit)
+                update.$bit = {};
+            const bitUpdate = update.$bit;
+            bitUpdate.permBits = { ...bitUpdate.permBits, and: ~removeBits };
+        }
+        const options = {
+            new: true,
+            ...(session ? { session } : {}),
+        };
+        return await AclEntry.findOneAndUpdate(query, update, options);
+    }
+    /**
+     * Find all resources of a specific type that a set of principals has access to
+     * @param principalsList - List of principals, each containing { principalType, principalId }
+     * @param resourceType - The type of resource
+     * @param requiredPermBit - Required permission bit (use PermissionBits enum)
+     * @returns Array of resource IDs
+     */
+    async function findAccessibleResources(principalsList, resourceType, requiredPermBit) {
+        const AclEntry = mongoose.models.AclEntry;
+        const principalsQuery = principalsList.map((p) => ({
+            principalType: p.principalType,
+            ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),
+        }));
+        const entries = await AclEntry.find({
+            $or: principalsQuery,
+            resourceType,
+            permBits: { $bitsAllSet: requiredPermBit },
+        }).distinct('resourceId');
+        return entries;
+    }
+    return {
+        findEntriesByPrincipal,
+        findEntriesByResource,
+        findEntriesByPrincipalsAndResource,
+        hasPermission,
+        getEffectivePermissions,
+        getEffectivePermissionsForResources,
+        grantPermission,
+        revokePermission,
+        modifyPermissionBits,
+        findAccessibleResources,
     };
 }
 
@@ -3011,6 +7074,68 @@ function anonymizeMessages(messages, newConvoId) {
         };
     });
 }
+/**
+ * Filter messages up to and including the target message (branch-specific)
+ * Similar to getMessagesUpToTargetLevel from fork utilities
+ */
+function getMessagesUpToTarget(messages, targetMessageId) {
+    var _a, _b;
+    if (!messages || messages.length === 0) {
+        return [];
+    }
+    // If only one message and it's the target, return it
+    if (messages.length === 1 && ((_a = messages[0]) === null || _a === void 0 ? void 0 : _a.messageId) === targetMessageId) {
+        return messages;
+    }
+    // Create a map of parentMessageId to children messages
+    const parentToChildrenMap = new Map();
+    for (const message of messages) {
+        const parentId = message.parentMessageId || Constants.NO_PARENT;
+        if (!parentToChildrenMap.has(parentId)) {
+            parentToChildrenMap.set(parentId, []);
+        }
+        (_b = parentToChildrenMap.get(parentId)) === null || _b === void 0 ? void 0 : _b.push(message);
+    }
+    // Find the target message
+    const targetMessage = messages.find((msg) => msg.messageId === targetMessageId);
+    if (!targetMessage) {
+        // If target not found, return all messages for backwards compatibility
+        return messages;
+    }
+    const visited = new Set();
+    const rootMessages = parentToChildrenMap.get(Constants.NO_PARENT) || [];
+    let currentLevel = rootMessages.length > 0 ? [...rootMessages] : [targetMessage];
+    const results = new Set(currentLevel);
+    // Check if the target message is at the root level
+    if (currentLevel.some((msg) => msg.messageId === targetMessageId) &&
+        targetMessage.parentMessageId === Constants.NO_PARENT) {
+        return Array.from(results);
+    }
+    // Iterate level by level until the target is found
+    let targetFound = false;
+    while (!targetFound && currentLevel.length > 0) {
+        const nextLevel = [];
+        for (const node of currentLevel) {
+            if (visited.has(node.messageId)) {
+                continue;
+            }
+            visited.add(node.messageId);
+            const children = parentToChildrenMap.get(node.messageId) || [];
+            for (const child of children) {
+                if (visited.has(child.messageId)) {
+                    continue;
+                }
+                nextLevel.push(child);
+                results.add(child);
+                if (child.messageId === targetMessageId) {
+                    targetFound = true;
+                }
+            }
+        }
+        currentLevel = nextLevel;
+    }
+    return Array.from(results);
+}
 /** Factory function that takes mongoose instance and returns the methods */
 function createShareMethods(mongoose) {
     /**
@@ -3029,6 +7154,11 @@ function createShareMethods(mongoose) {
             if (!(share === null || share === void 0 ? void 0 : share.conversationId) || !share.isPublic) {
                 return null;
             }
+            /** Filtered messages based on targetMessageId if present (branch-specific sharing) */
+            let messagesToShare = share.messages;
+            if (share.targetMessageId) {
+                messagesToShare = getMessagesUpToTarget(share.messages, share.targetMessageId);
+            }
             const newConvoId = anonymizeConvoId(share.conversationId);
             const result = {
                 shareId: share.shareId || shareId,
@@ -3037,12 +7167,12 @@ function createShareMethods(mongoose) {
                 createdAt: share.createdAt,
                 updatedAt: share.updatedAt,
                 conversationId: newConvoId,
-                messages: anonymizeMessages(share.messages, newConvoId),
+                messages: anonymizeMessages(messagesToShare, newConvoId),
             };
             return result;
         }
         catch (error) {
-            logger.error('[getSharedMessages] Error getting share link', {
+            logger$1.error('[getSharedMessages] Error getting share link', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 shareId,
             });
@@ -3068,7 +7198,9 @@ function createShareMethods(mongoose) {
             }
             if (search && search.trim()) {
                 try {
-                    const searchResults = await Conversation.meiliSearch(search);
+                    const searchResults = await Conversation.meiliSearch(search, {
+                        filter: `user = "${user}"`,
+                    });
                     if (!((_a = searchResults === null || searchResults === void 0 ? void 0 : searchResults.hits) === null || _a === void 0 ? void 0 : _a.length)) {
                         return {
                             links: [],
@@ -3080,7 +7212,7 @@ function createShareMethods(mongoose) {
                     query['conversationId'] = { $in: conversationIds };
                 }
                 catch (searchError) {
-                    logger.error('[getSharedLinks] Meilisearch error', {
+                    logger$1.error('[getSharedLinks] Meilisearch error', {
                         error: searchError instanceof Error ? searchError.message : 'Unknown error',
                         user,
                     });
@@ -3116,7 +7248,7 @@ function createShareMethods(mongoose) {
             };
         }
         catch (error) {
-            logger.error('[getSharedLinks] Error getting shares', {
+            logger$1.error('[getSharedLinks] Error getting shares', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 user,
             });
@@ -3136,7 +7268,7 @@ function createShareMethods(mongoose) {
             };
         }
         catch (error) {
-            logger.error('[deleteAllSharedLinks] Error deleting shared links', {
+            logger$1.error('[deleteAllSharedLinks] Error deleting shared links', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 user,
             });
@@ -3144,9 +7276,33 @@ function createShareMethods(mongoose) {
         }
     }
     /**
+     * Delete shared links by conversation ID
+     */
+    async function deleteConvoSharedLink(user, conversationId) {
+        if (!user || !conversationId) {
+            throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
+        }
+        try {
+            const SharedLink = mongoose.models.SharedLink;
+            const result = await SharedLink.deleteMany({ user, conversationId });
+            return {
+                message: 'Shared links deleted successfully',
+                deletedCount: result.deletedCount,
+            };
+        }
+        catch (error) {
+            logger$1.error('[deleteConvoSharedLink] Error deleting shared links', {
+                error: error instanceof Error ? error.message : 'Unknown error',
+                user,
+                conversationId,
+            });
+            throw new ShareServiceError('Error deleting shared links', 'SHARE_DELETE_ERROR');
+        }
+    }
+    /**
      * Create a new shared link for a conversation
      */
-    async function createSharedLink(user, conversationId) {
+    async function createSharedLink(user, conversationId, targetMessageId) {
         if (!user || !conversationId) {
             throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
         }
@@ -3155,20 +7311,30 @@ function createShareMethods(mongoose) {
             const SharedLink = mongoose.models.SharedLink;
             const Conversation = mongoose.models.Conversation;
             const [existingShare, conversationMessages] = await Promise.all([
-                SharedLink.findOne({ conversationId, user, isPublic: true })
+                SharedLink.findOne({
+                    conversationId,
+                    user,
+                    isPublic: true,
+                    ...(targetMessageId && { targetMessageId }),
+                })
                     .select('-_id -__v -user')
                     .lean(),
                 Message.find({ conversationId, user }).sort({ createdAt: 1 }).lean(),
             ]);
             if (existingShare && existingShare.isPublic) {
-                logger.error('[createSharedLink] Share already exists', {
+                logger$1.error('[createSharedLink] Share already exists', {
                     user,
                     conversationId,
+                    targetMessageId,
                 });
                 throw new ShareServiceError('Share already exists', 'SHARE_EXISTS');
             }
             else if (existingShare) {
-                await SharedLink.deleteOne({ conversationId, user });
+                await SharedLink.deleteOne({
+                    conversationId,
+                    user,
+                    ...(targetMessageId && { targetMessageId }),
+                });
             }
             const conversation = (await Conversation.findOne({ conversationId, user }).lean());
             // Check if user owns the conversation
@@ -3187,6 +7353,7 @@ function createShareMethods(mongoose) {
                 messages: conversationMessages,
                 title,
                 user,
+                ...(targetMessageId && { targetMessageId }),
             });
             return { shareId, conversationId };
         }
@@ -3194,10 +7361,11 @@ function createShareMethods(mongoose) {
             if (error instanceof ShareServiceError) {
                 throw error;
             }
-            logger.error('[createSharedLink] Error creating shared link', {
+            logger$1.error('[createSharedLink] Error creating shared link', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 user,
                 conversationId,
+                targetMessageId,
             });
             throw new ShareServiceError('Error creating shared link', 'SHARE_CREATE_ERROR');
         }
@@ -3220,7 +7388,7 @@ function createShareMethods(mongoose) {
             return { shareId: share.shareId || null, success: true };
         }
         catch (error) {
-            logger.error('[getSharedLink] Error getting shared link', {
+            logger$1.error('[getSharedLink] Error getting shared link', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 user,
                 conversationId,
@@ -3265,7 +7433,7 @@ function createShareMethods(mongoose) {
             return { shareId: newShareId, conversationId: updatedShare.conversationId };
         }
         catch (error) {
-            logger.error('[updateSharedLink] Error updating shared link', {
+            logger$1.error('[updateSharedLink] Error updating shared link', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 user,
                 shareId,
@@ -3293,7 +7461,7 @@ function createShareMethods(mongoose) {
             };
         }
         catch (error) {
-            logger.error('[deleteSharedLink] Error deleting shared link', {
+            logger$1.error('[deleteSharedLink] Error deleting shared link', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 user,
                 shareId,
@@ -3310,107 +7478,13 @@ function createShareMethods(mongoose) {
         deleteSharedLink,
         getSharedMessages,
         deleteAllSharedLinks,
-    };
-}
-
-// Factory function that takes mongoose instance and returns the methods
-function createPluginAuthMethods(mongoose) {
-    const PluginAuth = mongoose.models.PluginAuth;
-    /**
-     * Finds a single plugin auth entry by userId and authField
-     */
-    async function findOnePluginAuth({ userId, authField, }) {
-        try {
-            return await PluginAuth.findOne({ userId, authField }).lean();
-        }
-        catch (error) {
-            throw new Error(`Failed to find plugin auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-    /**
-     * Finds multiple plugin auth entries by userId and pluginKeys
-     */
-    async function findPluginAuthsByKeys({ userId, pluginKeys, }) {
-        try {
-            if (!pluginKeys || pluginKeys.length === 0) {
-                return [];
-            }
-            return await PluginAuth.find({
-                userId,
-                pluginKey: { $in: pluginKeys },
-            }).lean();
-        }
-        catch (error) {
-            throw new Error(`Failed to find plugin auths: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-    /**
-     * Updates or creates a plugin auth entry
-     */
-    async function updatePluginAuth({ userId, authField, pluginKey, value, }) {
-        try {
-            const existingAuth = await PluginAuth.findOne({ userId, pluginKey, authField }).lean();
-            if (existingAuth) {
-                return await PluginAuth.findOneAndUpdate({ userId, pluginKey, authField }, { $set: { value } }, { new: true, upsert: true }).lean();
-            }
-            else {
-                const newPluginAuth = await new PluginAuth({
-                    userId,
-                    authField,
-                    value,
-                    pluginKey,
-                });
-                await newPluginAuth.save();
-                return newPluginAuth.toObject();
-            }
-        }
-        catch (error) {
-            throw new Error(`Failed to update plugin auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-    /**
-     * Deletes plugin auth entries based on provided parameters
-     */
-    async function deletePluginAuth({ userId, authField, pluginKey, all = false, }) {
-        try {
-            if (all) {
-                const filter = { userId };
-                if (pluginKey) {
-                    filter.pluginKey = pluginKey;
-                }
-                return await PluginAuth.deleteMany(filter);
-            }
-            if (!authField) {
-                throw new Error('authField is required when all is false');
-            }
-            return await PluginAuth.deleteOne({ userId, authField });
-        }
-        catch (error) {
-            throw new Error(`Failed to delete plugin auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-    /**
-     * Deletes all plugin auth entries for a user
-     */
-    async function deleteAllUserPluginAuths(userId) {
-        try {
-            return await PluginAuth.deleteMany({ userId });
-        }
-        catch (error) {
-            throw new Error(`Failed to delete all user plugin auths: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-    return {
-        findOnePluginAuth,
-        findPluginAuthsByKeys,
-        updatePluginAuth,
-        deletePluginAuth,
-        deleteAllUserPluginAuths,
+        deleteConvoSharedLink,
     };
 }
 
 /**
  * Creates all database methods for all collections
+ * @param mongoose - Mongoose instance
  */
 function createMethods(mongoose) {
     return {
@@ -3418,11 +7492,19 @@ function createMethods(mongoose) {
         ...createSessionMethods(mongoose),
         ...createTokenMethods(mongoose),
         ...createRoleMethods(mongoose),
+        ...createKeyMethods(mongoose),
+        ...createFileMethods(mongoose),
         ...createMemoryMethods(mongoose),
+        ...createAgentCategoryMethods(mongoose),
+        ...createAgentApiKeyMethods(mongoose),
+        ...createMCPServerMethods(mongoose),
+        ...createAccessRoleMethods(mongoose),
+        ...createUserGroupMethods(mongoose),
+        ...createAclEntryMethods(mongoose),
         ...createShareMethods(mongoose),
         ...createPluginAuthMethods(mongoose),
     };
 }
 
-export { Action as actionSchema, agentSchema, assistantSchema, balanceSchema, bannerSchema, categoriesSchema, conversationTag as conversationTagSchema, convoSchema, createMethods, createModels, file as fileSchema, hashToken, keySchema, logger, logger$1 as meiliLogger, MemoryEntrySchema as memorySchema, messageSchema, pluginAuthSchema, presetSchema, projectSchema, promptGroupSchema, promptSchema, roleSchema, sessionSchema, shareSchema, signPayload, tokenSchema, toolCallSchema, transactionSchema, userSchema };
+export { AppService, DEFAULT_REFRESH_TOKEN_EXPIRY, DEFAULT_SESSION_EXPIRY, RoleBits, Action as actionSchema, agentApiKeySchema, agentCategorySchema, agentSchema, agentsConfigSetup, assistantSchema, balanceSchema, bannerSchema, categoriesSchema, conversationTag as conversationTagSchema, convoSchema, createMethods, createModels, decrypt, decryptV2, decryptV3, defaultVertexModels, encrypt, encryptV2, encryptV3, file as fileSchema, getRandomValues, getTransactionSupport, getWebSearchKeys, groupSchema, hashBackupCode, hashToken, keySchema, loadDefaultInterface, loadTurnstileConfig, loadWebSearchConfig, logger$1 as logger, logger as meiliLogger, MemoryEntrySchema as memorySchema, messageSchema, pluginAuthSchema, presetSchema, processModelSpecs, projectSchema, promptGroupSchema, promptSchema, roleSchema, sessionSchema, shareSchema, signPayload, supportsTransactions, tokenSchema, toolCallSchema, transactionSchema, userSchema, validateVertexConfig, vertexConfigSetup, webSearchAuth, webSearchKeys };
 //# sourceMappingURL=index.es.js.map

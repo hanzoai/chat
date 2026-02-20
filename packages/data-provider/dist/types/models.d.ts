@@ -8,10 +8,28 @@ export type TModelSpec = {
     order?: number;
     default?: boolean;
     description?: string;
+    /**
+     * Optional group name for organizing specs in the UI selector.
+     * - If it matches an endpoint name (e.g., "openAI", "groq"), the spec appears nested under that endpoint
+     * - If it's a custom name (doesn't match any endpoint), it creates a separate collapsible group
+     * - If omitted, the spec appears as a standalone item at the top level
+     */
+    group?: string;
+    /**
+     * Optional icon URL for the group this spec belongs to.
+     * Only needs to be set on one spec per group - the first one found with a groupIcon will be used.
+     * Can be a URL or an endpoint name to use its icon.
+     */
+    groupIcon?: string | EModelEndpoint;
     showIconInMenu?: boolean;
     showIconInHeader?: boolean;
     iconURL?: string | EModelEndpoint;
     authType?: AuthType;
+    webSearch?: boolean;
+    fileSearch?: boolean;
+    executeCode?: boolean;
+    artifacts?: string | boolean;
+    mcpServers?: string[];
 };
 export declare const tModelSpecSchema: z.ZodObject<{
     name: z.ZodString;
@@ -76,20 +94,21 @@ export declare const tModelSpecSchema: z.ZodObject<{
         userLabel: z.ZodOptional<z.ZodString>;
         model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-        temperature: z.ZodOptional<z.ZodNumber>;
+        temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
         topP: z.ZodOptional<z.ZodNumber>;
         topK: z.ZodOptional<z.ZodNumber>;
         top_p: z.ZodOptional<z.ZodNumber>;
         frequency_penalty: z.ZodOptional<z.ZodNumber>;
         presence_penalty: z.ZodOptional<z.ZodNumber>;
         parentMessageId: z.ZodOptional<z.ZodString>;
-        maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+        maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
         maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
         max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
         promptCache: z.ZodOptional<z.ZodBoolean>;
         system: z.ZodOptional<z.ZodString>;
         thinking: z.ZodOptional<z.ZodBoolean>;
         thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+        stream: z.ZodOptional<z.ZodBoolean>;
         artifacts: z.ZodOptional<z.ZodString>;
         context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -126,7 +145,13 @@ export declare const tModelSpecSchema: z.ZodObject<{
         resendFiles: z.ZodOptional<z.ZodBoolean>;
         file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ImageDetail>>;
-        reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>;
+        reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>>;
+        reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningSummary>>>;
+        verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").Verbosity>>>;
+        useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+        effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AnthropicEffort>>>;
+        web_search: z.ZodOptional<z.ZodBoolean>;
+        disableStreaming: z.ZodOptional<z.ZodBoolean>;
         assistant_id: z.ZodOptional<z.ZodString>;
         agent_id: z.ZodOptional<z.ZodString>;
         region: z.ZodOptional<z.ZodString>;
@@ -189,23 +214,8 @@ export declare const tModelSpecSchema: z.ZodObject<{
         spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
         resendImages: z.ZodOptional<z.ZodBoolean>;
-        agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-            agent: z.ZodDefault<z.ZodString>;
-            skipCompletion: z.ZodDefault<z.ZodBoolean>;
-            model: z.ZodString;
-            temperature: z.ZodDefault<z.ZodNumber>;
-        }, "strip", z.ZodTypeAny, {
-            model: string;
-            temperature: number;
-            agent: string;
-            skipCompletion: boolean;
-        }, {
-            model: string;
-            temperature?: number | undefined;
-            agent?: string | undefined;
-            skipCompletion?: boolean | undefined;
-        }>>>;
         chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     } & {
         conversationId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -241,20 +251,21 @@ export declare const tModelSpecSchema: z.ZodObject<{
         userLabel?: string | undefined;
         model?: string | null | undefined;
         promptPrefix?: string | null | undefined;
-        temperature?: number | undefined;
+        temperature?: number | null | undefined;
         topP?: number | undefined;
         topK?: number | undefined;
         top_p?: number | undefined;
         frequency_penalty?: number | undefined;
         presence_penalty?: number | undefined;
         parentMessageId?: string | undefined;
-        maxOutputTokens?: number | undefined;
+        maxOutputTokens?: number | null | undefined;
         maxContextTokens?: number | undefined;
         max_tokens?: number | undefined;
         promptCache?: boolean | undefined;
         system?: string | undefined;
         thinking?: boolean | undefined;
         thinkingBudget?: number | undefined;
+        stream?: boolean | undefined;
         artifacts?: string | undefined;
         context?: string | null | undefined;
         examples?: {
@@ -269,7 +280,13 @@ export declare const tModelSpecSchema: z.ZodObject<{
         resendFiles?: boolean | undefined;
         file_ids?: string[] | undefined;
         imageDetail?: import("./schemas").ImageDetail | undefined;
-        reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+        reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+        reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+        verbosity?: import("./schemas").Verbosity | null | undefined;
+        useResponsesApi?: boolean | undefined;
+        effort?: import("./schemas").AnthropicEffort | null | undefined;
+        web_search?: boolean | undefined;
+        disableStreaming?: boolean | undefined;
         assistant_id?: string | undefined;
         agent_id?: string | undefined;
         region?: string | undefined;
@@ -308,13 +325,8 @@ export declare const tModelSpecSchema: z.ZodObject<{
         spec?: string | null | undefined;
         iconURL?: string | null | undefined;
         expiredAt?: string | null | undefined;
+        fileTokenLimit?: number | undefined;
         resendImages?: boolean | undefined;
-        agentOptions?: {
-            model: string;
-            temperature: number;
-            agent: string;
-            skipCompletion: boolean;
-        } | null | undefined;
         chatGptLabel?: string | null | undefined;
         presetId?: string | null | undefined;
         defaultPreset?: boolean | undefined;
@@ -346,20 +358,21 @@ export declare const tModelSpecSchema: z.ZodObject<{
         userLabel?: string | undefined;
         model?: string | null | undefined;
         promptPrefix?: string | null | undefined;
-        temperature?: number | undefined;
+        temperature?: number | null | undefined;
         topP?: number | undefined;
         topK?: number | undefined;
         top_p?: number | undefined;
         frequency_penalty?: number | undefined;
         presence_penalty?: number | undefined;
         parentMessageId?: string | undefined;
-        maxOutputTokens?: string | number | undefined;
+        maxOutputTokens?: string | number | null | undefined;
         maxContextTokens?: string | number | undefined;
         max_tokens?: string | number | undefined;
         promptCache?: boolean | undefined;
         system?: string | undefined;
         thinking?: boolean | undefined;
         thinkingBudget?: string | number | undefined;
+        stream?: boolean | undefined;
         artifacts?: string | undefined;
         context?: string | null | undefined;
         examples?: {
@@ -374,7 +387,13 @@ export declare const tModelSpecSchema: z.ZodObject<{
         resendFiles?: boolean | undefined;
         file_ids?: string[] | undefined;
         imageDetail?: import("./schemas").ImageDetail | undefined;
-        reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+        reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+        reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+        verbosity?: import("./schemas").Verbosity | null | undefined;
+        useResponsesApi?: boolean | undefined;
+        effort?: import("./schemas").AnthropicEffort | null | undefined;
+        web_search?: boolean | undefined;
+        disableStreaming?: boolean | undefined;
         assistant_id?: string | undefined;
         agent_id?: string | undefined;
         region?: string | undefined;
@@ -413,13 +432,8 @@ export declare const tModelSpecSchema: z.ZodObject<{
         spec?: string | null | undefined;
         iconURL?: string | null | undefined;
         expiredAt?: string | null | undefined;
+        fileTokenLimit?: string | number | undefined;
         resendImages?: boolean | undefined;
-        agentOptions?: {
-            model: string;
-            temperature?: number | undefined;
-            agent?: string | undefined;
-            skipCompletion?: boolean | undefined;
-        } | null | undefined;
         chatGptLabel?: string | null | undefined;
         presetId?: string | null | undefined;
         defaultPreset?: boolean | undefined;
@@ -428,10 +442,17 @@ export declare const tModelSpecSchema: z.ZodObject<{
     order: z.ZodOptional<z.ZodNumber>;
     default: z.ZodOptional<z.ZodBoolean>;
     description: z.ZodOptional<z.ZodString>;
+    group: z.ZodOptional<z.ZodString>;
+    groupIcon: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
     showIconInMenu: z.ZodOptional<z.ZodBoolean>;
     showIconInHeader: z.ZodOptional<z.ZodBoolean>;
     iconURL: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
     authType: z.ZodOptional<z.ZodNativeEnum<typeof AuthType>>;
+    webSearch: z.ZodOptional<z.ZodBoolean>;
+    fileSearch: z.ZodOptional<z.ZodBoolean>;
+    executeCode: z.ZodOptional<z.ZodBoolean>;
+    artifacts: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodBoolean]>>;
+    mcpServers: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     name: string;
     label: string;
@@ -462,20 +483,21 @@ export declare const tModelSpecSchema: z.ZodObject<{
         userLabel?: string | undefined;
         model?: string | null | undefined;
         promptPrefix?: string | null | undefined;
-        temperature?: number | undefined;
+        temperature?: number | null | undefined;
         topP?: number | undefined;
         topK?: number | undefined;
         top_p?: number | undefined;
         frequency_penalty?: number | undefined;
         presence_penalty?: number | undefined;
         parentMessageId?: string | undefined;
-        maxOutputTokens?: number | undefined;
+        maxOutputTokens?: number | null | undefined;
         maxContextTokens?: number | undefined;
         max_tokens?: number | undefined;
         promptCache?: boolean | undefined;
         system?: string | undefined;
         thinking?: boolean | undefined;
         thinkingBudget?: number | undefined;
+        stream?: boolean | undefined;
         artifacts?: string | undefined;
         context?: string | null | undefined;
         examples?: {
@@ -490,7 +512,13 @@ export declare const tModelSpecSchema: z.ZodObject<{
         resendFiles?: boolean | undefined;
         file_ids?: string[] | undefined;
         imageDetail?: import("./schemas").ImageDetail | undefined;
-        reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+        reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+        reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+        verbosity?: import("./schemas").Verbosity | null | undefined;
+        useResponsesApi?: boolean | undefined;
+        effort?: import("./schemas").AnthropicEffort | null | undefined;
+        web_search?: boolean | undefined;
+        disableStreaming?: boolean | undefined;
         assistant_id?: string | undefined;
         agent_id?: string | undefined;
         region?: string | undefined;
@@ -529,25 +557,27 @@ export declare const tModelSpecSchema: z.ZodObject<{
         spec?: string | null | undefined;
         iconURL?: string | null | undefined;
         expiredAt?: string | null | undefined;
+        fileTokenLimit?: number | undefined;
         resendImages?: boolean | undefined;
-        agentOptions?: {
-            model: string;
-            temperature: number;
-            agent: string;
-            skipCompletion: boolean;
-        } | null | undefined;
         chatGptLabel?: string | null | undefined;
         presetId?: string | null | undefined;
         defaultPreset?: boolean | undefined;
         order?: number | undefined;
     };
     description?: string | undefined;
+    artifacts?: string | boolean | undefined;
     iconURL?: string | undefined;
     order?: number | undefined;
     default?: boolean | undefined;
+    group?: string | undefined;
+    groupIcon?: string | undefined;
     showIconInMenu?: boolean | undefined;
     showIconInHeader?: boolean | undefined;
     authType?: AuthType | undefined;
+    webSearch?: boolean | undefined;
+    fileSearch?: boolean | undefined;
+    executeCode?: boolean | undefined;
+    mcpServers?: string[] | undefined;
 }, {
     name: string;
     label: string;
@@ -578,20 +608,21 @@ export declare const tModelSpecSchema: z.ZodObject<{
         userLabel?: string | undefined;
         model?: string | null | undefined;
         promptPrefix?: string | null | undefined;
-        temperature?: number | undefined;
+        temperature?: number | null | undefined;
         topP?: number | undefined;
         topK?: number | undefined;
         top_p?: number | undefined;
         frequency_penalty?: number | undefined;
         presence_penalty?: number | undefined;
         parentMessageId?: string | undefined;
-        maxOutputTokens?: string | number | undefined;
+        maxOutputTokens?: string | number | null | undefined;
         maxContextTokens?: string | number | undefined;
         max_tokens?: string | number | undefined;
         promptCache?: boolean | undefined;
         system?: string | undefined;
         thinking?: boolean | undefined;
         thinkingBudget?: string | number | undefined;
+        stream?: boolean | undefined;
         artifacts?: string | undefined;
         context?: string | null | undefined;
         examples?: {
@@ -606,7 +637,13 @@ export declare const tModelSpecSchema: z.ZodObject<{
         resendFiles?: boolean | undefined;
         file_ids?: string[] | undefined;
         imageDetail?: import("./schemas").ImageDetail | undefined;
-        reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+        reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+        reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+        verbosity?: import("./schemas").Verbosity | null | undefined;
+        useResponsesApi?: boolean | undefined;
+        effort?: import("./schemas").AnthropicEffort | null | undefined;
+        web_search?: boolean | undefined;
+        disableStreaming?: boolean | undefined;
         assistant_id?: string | undefined;
         agent_id?: string | undefined;
         region?: string | undefined;
@@ -645,25 +682,27 @@ export declare const tModelSpecSchema: z.ZodObject<{
         spec?: string | null | undefined;
         iconURL?: string | null | undefined;
         expiredAt?: string | null | undefined;
+        fileTokenLimit?: string | number | undefined;
         resendImages?: boolean | undefined;
-        agentOptions?: {
-            model: string;
-            temperature?: number | undefined;
-            agent?: string | undefined;
-            skipCompletion?: boolean | undefined;
-        } | null | undefined;
         chatGptLabel?: string | null | undefined;
         presetId?: string | null | undefined;
         defaultPreset?: boolean | undefined;
         order?: number | undefined;
     };
     description?: string | undefined;
+    artifacts?: string | boolean | undefined;
     iconURL?: string | undefined;
     order?: number | undefined;
     default?: boolean | undefined;
+    group?: string | undefined;
+    groupIcon?: string | undefined;
     showIconInMenu?: boolean | undefined;
     showIconInHeader?: boolean | undefined;
     authType?: AuthType | undefined;
+    webSearch?: boolean | undefined;
+    fileSearch?: boolean | undefined;
+    executeCode?: boolean | undefined;
+    mcpServers?: string[] | undefined;
 }>;
 export declare const specsConfigSchema: z.ZodObject<{
     enforce: z.ZodDefault<z.ZodBoolean>;
@@ -731,20 +770,21 @@ export declare const specsConfigSchema: z.ZodObject<{
             userLabel: z.ZodOptional<z.ZodString>;
             model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-            temperature: z.ZodOptional<z.ZodNumber>;
+            temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
             topP: z.ZodOptional<z.ZodNumber>;
             topK: z.ZodOptional<z.ZodNumber>;
             top_p: z.ZodOptional<z.ZodNumber>;
             frequency_penalty: z.ZodOptional<z.ZodNumber>;
             presence_penalty: z.ZodOptional<z.ZodNumber>;
             parentMessageId: z.ZodOptional<z.ZodString>;
-            maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+            maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
             maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
             max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
             promptCache: z.ZodOptional<z.ZodBoolean>;
             system: z.ZodOptional<z.ZodString>;
             thinking: z.ZodOptional<z.ZodBoolean>;
             thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+            stream: z.ZodOptional<z.ZodBoolean>;
             artifacts: z.ZodOptional<z.ZodString>;
             context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -781,7 +821,13 @@ export declare const specsConfigSchema: z.ZodObject<{
             resendFiles: z.ZodOptional<z.ZodBoolean>;
             file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ImageDetail>>;
-            reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>;
+            reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>>;
+            reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningSummary>>>;
+            verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").Verbosity>>>;
+            useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+            effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AnthropicEffort>>>;
+            web_search: z.ZodOptional<z.ZodBoolean>;
+            disableStreaming: z.ZodOptional<z.ZodBoolean>;
             assistant_id: z.ZodOptional<z.ZodString>;
             agent_id: z.ZodOptional<z.ZodString>;
             region: z.ZodOptional<z.ZodString>;
@@ -844,23 +890,8 @@ export declare const specsConfigSchema: z.ZodObject<{
             spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
             resendImages: z.ZodOptional<z.ZodBoolean>;
-            agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-                agent: z.ZodDefault<z.ZodString>;
-                skipCompletion: z.ZodDefault<z.ZodBoolean>;
-                model: z.ZodString;
-                temperature: z.ZodDefault<z.ZodNumber>;
-            }, "strip", z.ZodTypeAny, {
-                model: string;
-                temperature: number;
-                agent: string;
-                skipCompletion: boolean;
-            }, {
-                model: string;
-                temperature?: number | undefined;
-                agent?: string | undefined;
-                skipCompletion?: boolean | undefined;
-            }>>>;
             chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         } & {
             conversationId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -896,20 +927,21 @@ export declare const specsConfigSchema: z.ZodObject<{
             userLabel?: string | undefined;
             model?: string | null | undefined;
             promptPrefix?: string | null | undefined;
-            temperature?: number | undefined;
+            temperature?: number | null | undefined;
             topP?: number | undefined;
             topK?: number | undefined;
             top_p?: number | undefined;
             frequency_penalty?: number | undefined;
             presence_penalty?: number | undefined;
             parentMessageId?: string | undefined;
-            maxOutputTokens?: number | undefined;
+            maxOutputTokens?: number | null | undefined;
             maxContextTokens?: number | undefined;
             max_tokens?: number | undefined;
             promptCache?: boolean | undefined;
             system?: string | undefined;
             thinking?: boolean | undefined;
             thinkingBudget?: number | undefined;
+            stream?: boolean | undefined;
             artifacts?: string | undefined;
             context?: string | null | undefined;
             examples?: {
@@ -924,7 +956,13 @@ export declare const specsConfigSchema: z.ZodObject<{
             resendFiles?: boolean | undefined;
             file_ids?: string[] | undefined;
             imageDetail?: import("./schemas").ImageDetail | undefined;
-            reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+            reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+            reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+            verbosity?: import("./schemas").Verbosity | null | undefined;
+            useResponsesApi?: boolean | undefined;
+            effort?: import("./schemas").AnthropicEffort | null | undefined;
+            web_search?: boolean | undefined;
+            disableStreaming?: boolean | undefined;
             assistant_id?: string | undefined;
             agent_id?: string | undefined;
             region?: string | undefined;
@@ -963,13 +1001,8 @@ export declare const specsConfigSchema: z.ZodObject<{
             spec?: string | null | undefined;
             iconURL?: string | null | undefined;
             expiredAt?: string | null | undefined;
+            fileTokenLimit?: number | undefined;
             resendImages?: boolean | undefined;
-            agentOptions?: {
-                model: string;
-                temperature: number;
-                agent: string;
-                skipCompletion: boolean;
-            } | null | undefined;
             chatGptLabel?: string | null | undefined;
             presetId?: string | null | undefined;
             defaultPreset?: boolean | undefined;
@@ -1001,20 +1034,21 @@ export declare const specsConfigSchema: z.ZodObject<{
             userLabel?: string | undefined;
             model?: string | null | undefined;
             promptPrefix?: string | null | undefined;
-            temperature?: number | undefined;
+            temperature?: number | null | undefined;
             topP?: number | undefined;
             topK?: number | undefined;
             top_p?: number | undefined;
             frequency_penalty?: number | undefined;
             presence_penalty?: number | undefined;
             parentMessageId?: string | undefined;
-            maxOutputTokens?: string | number | undefined;
+            maxOutputTokens?: string | number | null | undefined;
             maxContextTokens?: string | number | undefined;
             max_tokens?: string | number | undefined;
             promptCache?: boolean | undefined;
             system?: string | undefined;
             thinking?: boolean | undefined;
             thinkingBudget?: string | number | undefined;
+            stream?: boolean | undefined;
             artifacts?: string | undefined;
             context?: string | null | undefined;
             examples?: {
@@ -1029,7 +1063,13 @@ export declare const specsConfigSchema: z.ZodObject<{
             resendFiles?: boolean | undefined;
             file_ids?: string[] | undefined;
             imageDetail?: import("./schemas").ImageDetail | undefined;
-            reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+            reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+            reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+            verbosity?: import("./schemas").Verbosity | null | undefined;
+            useResponsesApi?: boolean | undefined;
+            effort?: import("./schemas").AnthropicEffort | null | undefined;
+            web_search?: boolean | undefined;
+            disableStreaming?: boolean | undefined;
             assistant_id?: string | undefined;
             agent_id?: string | undefined;
             region?: string | undefined;
@@ -1068,13 +1108,8 @@ export declare const specsConfigSchema: z.ZodObject<{
             spec?: string | null | undefined;
             iconURL?: string | null | undefined;
             expiredAt?: string | null | undefined;
+            fileTokenLimit?: string | number | undefined;
             resendImages?: boolean | undefined;
-            agentOptions?: {
-                model: string;
-                temperature?: number | undefined;
-                agent?: string | undefined;
-                skipCompletion?: boolean | undefined;
-            } | null | undefined;
             chatGptLabel?: string | null | undefined;
             presetId?: string | null | undefined;
             defaultPreset?: boolean | undefined;
@@ -1083,10 +1118,17 @@ export declare const specsConfigSchema: z.ZodObject<{
         order: z.ZodOptional<z.ZodNumber>;
         default: z.ZodOptional<z.ZodBoolean>;
         description: z.ZodOptional<z.ZodString>;
+        group: z.ZodOptional<z.ZodString>;
+        groupIcon: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
         showIconInMenu: z.ZodOptional<z.ZodBoolean>;
         showIconInHeader: z.ZodOptional<z.ZodBoolean>;
         iconURL: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
         authType: z.ZodOptional<z.ZodNativeEnum<typeof AuthType>>;
+        webSearch: z.ZodOptional<z.ZodBoolean>;
+        fileSearch: z.ZodOptional<z.ZodBoolean>;
+        executeCode: z.ZodOptional<z.ZodBoolean>;
+        artifacts: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodBoolean]>>;
+        mcpServers: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         name: string;
         label: string;
@@ -1117,20 +1159,21 @@ export declare const specsConfigSchema: z.ZodObject<{
             userLabel?: string | undefined;
             model?: string | null | undefined;
             promptPrefix?: string | null | undefined;
-            temperature?: number | undefined;
+            temperature?: number | null | undefined;
             topP?: number | undefined;
             topK?: number | undefined;
             top_p?: number | undefined;
             frequency_penalty?: number | undefined;
             presence_penalty?: number | undefined;
             parentMessageId?: string | undefined;
-            maxOutputTokens?: number | undefined;
+            maxOutputTokens?: number | null | undefined;
             maxContextTokens?: number | undefined;
             max_tokens?: number | undefined;
             promptCache?: boolean | undefined;
             system?: string | undefined;
             thinking?: boolean | undefined;
             thinkingBudget?: number | undefined;
+            stream?: boolean | undefined;
             artifacts?: string | undefined;
             context?: string | null | undefined;
             examples?: {
@@ -1145,7 +1188,13 @@ export declare const specsConfigSchema: z.ZodObject<{
             resendFiles?: boolean | undefined;
             file_ids?: string[] | undefined;
             imageDetail?: import("./schemas").ImageDetail | undefined;
-            reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+            reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+            reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+            verbosity?: import("./schemas").Verbosity | null | undefined;
+            useResponsesApi?: boolean | undefined;
+            effort?: import("./schemas").AnthropicEffort | null | undefined;
+            web_search?: boolean | undefined;
+            disableStreaming?: boolean | undefined;
             assistant_id?: string | undefined;
             agent_id?: string | undefined;
             region?: string | undefined;
@@ -1184,25 +1233,27 @@ export declare const specsConfigSchema: z.ZodObject<{
             spec?: string | null | undefined;
             iconURL?: string | null | undefined;
             expiredAt?: string | null | undefined;
+            fileTokenLimit?: number | undefined;
             resendImages?: boolean | undefined;
-            agentOptions?: {
-                model: string;
-                temperature: number;
-                agent: string;
-                skipCompletion: boolean;
-            } | null | undefined;
             chatGptLabel?: string | null | undefined;
             presetId?: string | null | undefined;
             defaultPreset?: boolean | undefined;
             order?: number | undefined;
         };
         description?: string | undefined;
+        artifacts?: string | boolean | undefined;
         iconURL?: string | undefined;
         order?: number | undefined;
         default?: boolean | undefined;
+        group?: string | undefined;
+        groupIcon?: string | undefined;
         showIconInMenu?: boolean | undefined;
         showIconInHeader?: boolean | undefined;
         authType?: AuthType | undefined;
+        webSearch?: boolean | undefined;
+        fileSearch?: boolean | undefined;
+        executeCode?: boolean | undefined;
+        mcpServers?: string[] | undefined;
     }, {
         name: string;
         label: string;
@@ -1233,20 +1284,21 @@ export declare const specsConfigSchema: z.ZodObject<{
             userLabel?: string | undefined;
             model?: string | null | undefined;
             promptPrefix?: string | null | undefined;
-            temperature?: number | undefined;
+            temperature?: number | null | undefined;
             topP?: number | undefined;
             topK?: number | undefined;
             top_p?: number | undefined;
             frequency_penalty?: number | undefined;
             presence_penalty?: number | undefined;
             parentMessageId?: string | undefined;
-            maxOutputTokens?: string | number | undefined;
+            maxOutputTokens?: string | number | null | undefined;
             maxContextTokens?: string | number | undefined;
             max_tokens?: string | number | undefined;
             promptCache?: boolean | undefined;
             system?: string | undefined;
             thinking?: boolean | undefined;
             thinkingBudget?: string | number | undefined;
+            stream?: boolean | undefined;
             artifacts?: string | undefined;
             context?: string | null | undefined;
             examples?: {
@@ -1261,7 +1313,13 @@ export declare const specsConfigSchema: z.ZodObject<{
             resendFiles?: boolean | undefined;
             file_ids?: string[] | undefined;
             imageDetail?: import("./schemas").ImageDetail | undefined;
-            reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+            reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+            reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+            verbosity?: import("./schemas").Verbosity | null | undefined;
+            useResponsesApi?: boolean | undefined;
+            effort?: import("./schemas").AnthropicEffort | null | undefined;
+            web_search?: boolean | undefined;
+            disableStreaming?: boolean | undefined;
             assistant_id?: string | undefined;
             agent_id?: string | undefined;
             region?: string | undefined;
@@ -1300,25 +1358,27 @@ export declare const specsConfigSchema: z.ZodObject<{
             spec?: string | null | undefined;
             iconURL?: string | null | undefined;
             expiredAt?: string | null | undefined;
+            fileTokenLimit?: string | number | undefined;
             resendImages?: boolean | undefined;
-            agentOptions?: {
-                model: string;
-                temperature?: number | undefined;
-                agent?: string | undefined;
-                skipCompletion?: boolean | undefined;
-            } | null | undefined;
             chatGptLabel?: string | null | undefined;
             presetId?: string | null | undefined;
             defaultPreset?: boolean | undefined;
             order?: number | undefined;
         };
         description?: string | undefined;
+        artifacts?: string | boolean | undefined;
         iconURL?: string | undefined;
         order?: number | undefined;
         default?: boolean | undefined;
+        group?: string | undefined;
+        groupIcon?: string | undefined;
         showIconInMenu?: boolean | undefined;
         showIconInHeader?: boolean | undefined;
         authType?: AuthType | undefined;
+        webSearch?: boolean | undefined;
+        fileSearch?: boolean | undefined;
+        executeCode?: boolean | undefined;
+        mcpServers?: string[] | undefined;
     }>, "many">;
     addedEndpoints: z.ZodOptional<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>, "many">>;
 }, "strip", z.ZodTypeAny, {
@@ -1354,20 +1414,21 @@ export declare const specsConfigSchema: z.ZodObject<{
             userLabel?: string | undefined;
             model?: string | null | undefined;
             promptPrefix?: string | null | undefined;
-            temperature?: number | undefined;
+            temperature?: number | null | undefined;
             topP?: number | undefined;
             topK?: number | undefined;
             top_p?: number | undefined;
             frequency_penalty?: number | undefined;
             presence_penalty?: number | undefined;
             parentMessageId?: string | undefined;
-            maxOutputTokens?: number | undefined;
+            maxOutputTokens?: number | null | undefined;
             maxContextTokens?: number | undefined;
             max_tokens?: number | undefined;
             promptCache?: boolean | undefined;
             system?: string | undefined;
             thinking?: boolean | undefined;
             thinkingBudget?: number | undefined;
+            stream?: boolean | undefined;
             artifacts?: string | undefined;
             context?: string | null | undefined;
             examples?: {
@@ -1382,7 +1443,13 @@ export declare const specsConfigSchema: z.ZodObject<{
             resendFiles?: boolean | undefined;
             file_ids?: string[] | undefined;
             imageDetail?: import("./schemas").ImageDetail | undefined;
-            reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+            reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+            reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+            verbosity?: import("./schemas").Verbosity | null | undefined;
+            useResponsesApi?: boolean | undefined;
+            effort?: import("./schemas").AnthropicEffort | null | undefined;
+            web_search?: boolean | undefined;
+            disableStreaming?: boolean | undefined;
             assistant_id?: string | undefined;
             agent_id?: string | undefined;
             region?: string | undefined;
@@ -1421,25 +1488,27 @@ export declare const specsConfigSchema: z.ZodObject<{
             spec?: string | null | undefined;
             iconURL?: string | null | undefined;
             expiredAt?: string | null | undefined;
+            fileTokenLimit?: number | undefined;
             resendImages?: boolean | undefined;
-            agentOptions?: {
-                model: string;
-                temperature: number;
-                agent: string;
-                skipCompletion: boolean;
-            } | null | undefined;
             chatGptLabel?: string | null | undefined;
             presetId?: string | null | undefined;
             defaultPreset?: boolean | undefined;
             order?: number | undefined;
         };
         description?: string | undefined;
+        artifacts?: string | boolean | undefined;
         iconURL?: string | undefined;
         order?: number | undefined;
         default?: boolean | undefined;
+        group?: string | undefined;
+        groupIcon?: string | undefined;
         showIconInMenu?: boolean | undefined;
         showIconInHeader?: boolean | undefined;
         authType?: AuthType | undefined;
+        webSearch?: boolean | undefined;
+        fileSearch?: boolean | undefined;
+        executeCode?: boolean | undefined;
+        mcpServers?: string[] | undefined;
     }[];
     addedEndpoints?: string[] | undefined;
 }, {
@@ -1473,20 +1542,21 @@ export declare const specsConfigSchema: z.ZodObject<{
             userLabel?: string | undefined;
             model?: string | null | undefined;
             promptPrefix?: string | null | undefined;
-            temperature?: number | undefined;
+            temperature?: number | null | undefined;
             topP?: number | undefined;
             topK?: number | undefined;
             top_p?: number | undefined;
             frequency_penalty?: number | undefined;
             presence_penalty?: number | undefined;
             parentMessageId?: string | undefined;
-            maxOutputTokens?: string | number | undefined;
+            maxOutputTokens?: string | number | null | undefined;
             maxContextTokens?: string | number | undefined;
             max_tokens?: string | number | undefined;
             promptCache?: boolean | undefined;
             system?: string | undefined;
             thinking?: boolean | undefined;
             thinkingBudget?: string | number | undefined;
+            stream?: boolean | undefined;
             artifacts?: string | undefined;
             context?: string | null | undefined;
             examples?: {
@@ -1501,7 +1571,13 @@ export declare const specsConfigSchema: z.ZodObject<{
             resendFiles?: boolean | undefined;
             file_ids?: string[] | undefined;
             imageDetail?: import("./schemas").ImageDetail | undefined;
-            reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+            reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+            reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+            verbosity?: import("./schemas").Verbosity | null | undefined;
+            useResponsesApi?: boolean | undefined;
+            effort?: import("./schemas").AnthropicEffort | null | undefined;
+            web_search?: boolean | undefined;
+            disableStreaming?: boolean | undefined;
             assistant_id?: string | undefined;
             agent_id?: string | undefined;
             region?: string | undefined;
@@ -1540,25 +1616,27 @@ export declare const specsConfigSchema: z.ZodObject<{
             spec?: string | null | undefined;
             iconURL?: string | null | undefined;
             expiredAt?: string | null | undefined;
+            fileTokenLimit?: string | number | undefined;
             resendImages?: boolean | undefined;
-            agentOptions?: {
-                model: string;
-                temperature?: number | undefined;
-                agent?: string | undefined;
-                skipCompletion?: boolean | undefined;
-            } | null | undefined;
             chatGptLabel?: string | null | undefined;
             presetId?: string | null | undefined;
             defaultPreset?: boolean | undefined;
             order?: number | undefined;
         };
         description?: string | undefined;
+        artifacts?: string | boolean | undefined;
         iconURL?: string | undefined;
         order?: number | undefined;
         default?: boolean | undefined;
+        group?: string | undefined;
+        groupIcon?: string | undefined;
         showIconInMenu?: boolean | undefined;
         showIconInHeader?: boolean | undefined;
         authType?: AuthType | undefined;
+        webSearch?: boolean | undefined;
+        fileSearch?: boolean | undefined;
+        executeCode?: boolean | undefined;
+        mcpServers?: string[] | undefined;
     }[];
     enforce?: boolean | undefined;
     prioritize?: boolean | undefined;

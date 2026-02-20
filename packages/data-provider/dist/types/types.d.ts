@@ -1,13 +1,12 @@
-import type OpenAI from 'openai';
 import type { InfiniteData } from '@tanstack/react-query';
-import type { TBanner, TMessage, TResPlugin, TSharedLink, TConversation, EModelEndpoint, TConversationTag, TAttachment } from './schemas';
+import type { TConversationTag, EModelEndpoint, TConversation, TSharedLink, TAttachment, TMessage, TBanner } from './schemas';
 import type { SettingDefinition } from './generate';
 import type { TMinimalFeedback } from './feedback';
+import type { ContentTypes } from './types/runs';
 import type { Agent } from './types/assistants';
-export type TOpenAIMessage = OpenAI.Chat.ChatCompletionMessageParam;
 export * from './schemas';
 export type TMessages = TMessage[];
-export type TEndpointOption = Pick<TConversation, 'endpoint' | 'endpointType' | 'model' | 'modelLabel' | 'chatGptLabel' | 'promptPrefix' | 'temperature' | 'topP' | 'topK' | 'top_p' | 'frequency_penalty' | 'presence_penalty' | 'maxOutputTokens' | 'maxContextTokens' | 'max_tokens' | 'maxTokens' | 'resendFiles' | 'imageDetail' | 'reasoning_effort' | 'instructions' | 'additional_instructions' | 'append_current_datetime' | 'tools' | 'stop' | 'region' | 'additionalModelRequestFields' | 'promptCache' | 'thinking' | 'thinkingBudget' | 'assistant_id' | 'agent_id' | 'iconURL' | 'greeting' | 'spec' | 'artifacts' | 'file_ids' | 'system' | 'examples' | 'context'> & {
+export type TEndpointOption = Pick<TConversation, 'endpoint' | 'endpointType' | 'model' | 'modelLabel' | 'chatGptLabel' | 'promptPrefix' | 'temperature' | 'topP' | 'topK' | 'top_p' | 'frequency_penalty' | 'presence_penalty' | 'maxOutputTokens' | 'maxContextTokens' | 'max_tokens' | 'maxTokens' | 'resendFiles' | 'imageDetail' | 'reasoning_effort' | 'verbosity' | 'instructions' | 'additional_instructions' | 'append_current_datetime' | 'tools' | 'stop' | 'region' | 'additionalModelRequestFields' | 'promptCache' | 'thinking' | 'thinkingBudget' | 'effort' | 'assistant_id' | 'agent_id' | 'iconURL' | 'greeting' | 'spec' | 'artifacts' | 'file_ids' | 'system' | 'examples' | 'context'> & {
     modelDisplayLabel?: string;
     key?: string | null;
     /** @deprecated Assistants API */
@@ -27,30 +26,43 @@ export type TEphemeralAgent = {
     web_search?: boolean;
     file_search?: boolean;
     execute_code?: boolean;
+    artifacts?: string;
 };
 export type TPayload = Partial<TMessage> & Partial<TEndpointOption> & {
     isContinued: boolean;
+    isRegenerate?: boolean;
     conversationId: string | null;
     messages?: TMessages;
     isTemporary: boolean;
     ephemeralAgent?: TEphemeralAgent | null;
+    editedContent?: TEditedContent | null;
+    /** Added conversation for multi-convo feature */
+    addedConvo?: TConversation;
+};
+export type TEditedContent = {
+    index: number;
+    type: ContentTypes.THINK;
+    [ContentTypes.THINK]: string;
+} | {
+    index: number;
+    type: ContentTypes.TEXT;
+    [ContentTypes.TEXT]: string;
 };
 export type TSubmission = {
-    artifacts?: string;
-    plugin?: TResPlugin;
-    plugins?: TResPlugin[];
     userMessage: TMessage;
     isEdited?: boolean;
     isContinued?: boolean;
     isTemporary: boolean;
     messages: TMessage[];
     isRegenerate?: boolean;
-    isResubmission?: boolean;
     initialResponse?: TMessage;
     conversation: Partial<TConversation>;
     endpointOption: TEndpointOption;
     clientTimestamp?: string;
     ephemeralAgent?: TEphemeralAgent | null;
+    editedContent?: TEditedContent | null;
+    /** Added conversation for multi-convo feature */
+    addedConvo?: TConversation;
 };
 export type EventSubmission = Omit<TSubmission, 'initialResponse'> & {
     initialResponse: TMessage;
@@ -58,7 +70,7 @@ export type EventSubmission = Omit<TSubmission, 'initialResponse'> & {
 export type TPluginAction = {
     pluginKey: string;
     action: 'install' | 'uninstall';
-    auth?: Partial<Record<string, string>>;
+    auth?: Partial<Record<string, string>> | null;
     isEntityTool?: boolean;
 };
 export type GroupedConversations = [key: string, TConversation[]][];
@@ -66,12 +78,17 @@ export type TUpdateUserPlugins = {
     isEntityTool?: boolean;
     pluginKey: string;
     action: string;
-    auth?: Partial<Record<string, string | null>>;
+    auth?: Partial<Record<string, string | null>> | null;
 };
 export type TCategory = {
     id?: string;
     value: string;
     label: string;
+    description?: string;
+    custom?: boolean;
+};
+export type TMarketplaceCategory = TCategory & {
+    count: number;
 };
 export type TError = {
     message: string;
@@ -127,6 +144,29 @@ export type TUpdateUserKeyRequest = {
     name: string;
     value: string;
     expiresAt: string;
+};
+export type TAgentApiKeyCreateRequest = {
+    name: string;
+    expiresAt?: string | null;
+};
+export type TAgentApiKeyCreateResponse = {
+    id: string;
+    name: string;
+    key: string;
+    keyPrefix: string;
+    createdAt: string;
+    expiresAt?: string;
+};
+export type TAgentApiKeyListItem = {
+    id: string;
+    name: string;
+    keyPrefix: string;
+    lastUsedAt?: string;
+    expiresAt?: string;
+    createdAt: string;
+};
+export type TAgentApiKeyListResponse = {
+    keys: TAgentApiKeyListItem[];
 };
 export type TUpdateConversationRequest = {
     conversationId: string;
@@ -216,7 +256,7 @@ export type TConfig = {
     capabilities?: string[];
     customParams?: {
         defaultParamsEndpoint?: string;
-        paramDefinitions?: SettingDefinition[];
+        paramDefinitions?: Partial<SettingDefinition>[];
     };
 };
 export type TEndpointsConfig = Record<EModelEndpoint | string, TConfig | null | undefined> | undefined;
@@ -274,6 +314,13 @@ export type TVerify2FATempResponse = {
     token?: string;
     user?: TUser;
     message?: string;
+};
+/**
+ * Request for disabling 2FA.
+ */
+export type TDisable2FARequest = {
+    token?: string;
+    backupCode?: string;
 };
 /**
  * Response from disabling 2FA.
@@ -371,8 +418,10 @@ export type TPromptsWithFilterRequest = {
 };
 export type TPromptGroupsWithFilterRequest = {
     category: string;
-    pageNumber: string;
-    pageSize: string | number;
+    pageNumber?: string;
+    pageSize?: string | number;
+    limit?: string | number;
+    cursor?: string;
     before?: string | null;
     after?: string | null;
     order?: 'asc' | 'desc';
@@ -384,6 +433,8 @@ export type PromptGroupListResponse = {
     pageNumber: string;
     pageSize: string | number;
     pages: string | number;
+    has_more: boolean;
+    after: string | null;
 };
 export type PromptGroupListData = InfiniteData<PromptGroupListResponse>;
 export type TCreatePromptResponse = {
@@ -463,4 +514,6 @@ export type TBalanceResponse = {
     refillIntervalUnit?: 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
     lastRefill?: Date;
     refillAmount?: number;
+    expiresAt?: Date;
+    creditsGrantedAt?: Date;
 };

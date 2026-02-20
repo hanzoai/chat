@@ -3,7 +3,7 @@ const { Balance } = require('~/db/models');
 async function balanceController(req, res) {
   const balanceData = await Balance.findOne(
     { user: req.user.id },
-    '-_id tokenCredits autoRefillEnabled refillIntervalValue refillIntervalUnit lastRefill refillAmount',
+    '-_id tokenCredits autoRefillEnabled refillIntervalValue refillIntervalUnit lastRefill refillAmount expiresAt creditsGrantedAt',
   ).lean();
 
   if (!balanceData) {
@@ -16,6 +16,11 @@ async function balanceController(req, res) {
     delete balanceData.refillIntervalUnit;
     delete balanceData.lastRefill;
     delete balanceData.refillAmount;
+  }
+
+  // If credits have expired, report zero balance
+  if (balanceData.expiresAt && new Date(balanceData.expiresAt) < new Date()) {
+    balanceData.tokenCredits = 0;
   }
 
   res.status(200).json(balanceData);

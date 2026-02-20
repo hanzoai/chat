@@ -53,3 +53,4 @@ export declare function constructAzureURL({ baseURL, azureOptions, }: {
     baseURL: string;
     azureOptions?: AzureOptions;
 }): string;
+//# sourceMappingURL=azure.d.ts.map

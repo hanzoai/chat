@@ -11,3 +11,4 @@ export declare function safeStringify(obj: unknown, maxLength?: number): string;
  * @returns Stringified headers with sensitive data masked
  */
 export declare function logHeaders(headers: Headers | undefined | null): string;
+//# sourceMappingURL=openid.d.ts.map

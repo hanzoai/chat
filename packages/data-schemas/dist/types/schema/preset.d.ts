@@ -26,6 +26,7 @@ export interface IPreset extends Document {
     promptCache?: boolean;
     thinking?: boolean;
     thinkingBudget?: number;
+    effort?: string;
     system?: string;
     resendFiles?: boolean;
     imageDetail?: string;
@@ -42,7 +43,12 @@ export interface IPreset extends Document {
     maxContextTokens?: number;
     max_tokens?: number;
     reasoning_effort?: string;
-    agentOptions?: unknown;
+    reasoning_summary?: string;
+    verbosity?: string;
+    useResponsesApi?: boolean;
+    web_search?: boolean;
+    disableStreaming?: boolean;
+    fileTokenLimit?: number;
 }
 declare const presetSchema: Schema<IPreset>;
 export default presetSchema;

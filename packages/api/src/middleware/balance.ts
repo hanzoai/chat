@@ -28,6 +28,12 @@ function buildUpdateFields(
   if (!userRecord) {
     updateFields.user = userId;
     updateFields.tokenCredits = config.startBalance;
+    // Set credit grant timestamp and expiry for new users
+    const now = new Date();
+    updateFields.creditsGrantedAt = now;
+    if (config.creditExpiryDays && config.creditExpiryDays > 0) {
+      updateFields.expiresAt = new Date(now.getTime() + config.creditExpiryDays * 24 * 60 * 60 * 1000);
+    }
   }
 
   if (userRecord?.tokenCredits == null && config.startBalance != null) {

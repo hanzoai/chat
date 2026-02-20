@@ -1,4 +1,5 @@
 import type { InfiniteData } from '@tanstack/react-query';
+import type * as p from '../accessPermissions';
 import type * as a from '../types/agents';
 import type * as s from '../schemas';
 import type * as t from '../types';
@@ -76,6 +77,21 @@ export type AllPromptGroupsFilterRequest = {
 };
 export type AllPromptGroupsResponse = t.TPromptGroup[];
 export type ConversationTagsResponse = s.TConversationTag[];
+export type MCPTool = {
+    name: string;
+    pluginKey: string;
+    description: string;
+};
+export type MCPServer = {
+    name: string;
+    icon: string;
+    authenticated: boolean;
+    authConfig: s.TPluginAuthConfig[];
+    tools: MCPTool[];
+};
+export type MCPServersResponse = {
+    servers: Record<string, MCPServer>;
+};
 export type VerifyToolAuthParams = {
     toolId: string;
 };
@@ -99,4 +115,55 @@ export type MemoriesResponse = {
     totalTokens: number;
     tokenLimit: number | null;
     usagePercentage: number | null;
+};
+export type PrincipalSearchParams = {
+    q: string;
+    limit?: number;
+    types?: Array<p.PrincipalType.USER | p.PrincipalType.GROUP | p.PrincipalType.ROLE>;
+};
+export type PrincipalSearchResponse = {
+    query: string;
+    limit: number;
+    types?: Array<p.PrincipalType.USER | p.PrincipalType.GROUP | p.PrincipalType.ROLE>;
+    results: p.TPrincipalSearchResult[];
+    count: number;
+    sources: {
+        local: number;
+        entra: number;
+    };
+};
+export type AccessRole = {
+    accessRoleId: p.AccessRoleIds;
+    name: string;
+    description: string;
+    permBits: number;
+};
+export type AccessRolesResponse = AccessRole[];
+export interface MCPServerStatus {
+    requiresOAuth: boolean;
+    connectionState: 'disconnected' | 'connecting' | 'connected' | 'error';
+}
+export interface MCPConnectionStatusResponse {
+    success: boolean;
+    connectionStatus: Record<string, MCPServerStatus>;
+}
+export interface MCPServerConnectionStatusResponse {
+    success: boolean;
+    serverName: string;
+    requiresOAuth: boolean;
+    connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
+}
+export interface MCPAuthValuesResponse {
+    success: boolean;
+    serverName: string;
+    authValueFlags: Record<string, boolean>;
+}
+export type GraphTokenParams = {
+    scopes: string;
+};
+export type GraphTokenResponse = {
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+    scope: string;
 };

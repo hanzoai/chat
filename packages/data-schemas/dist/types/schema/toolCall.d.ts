@@ -1,5 +1,5 @@
 import { Schema, Document, Types } from 'mongoose';
-import type { TAttachment } from '@hanzochat/data-provider';
+import type { TAttachment } from 'librechat-data-provider';
 export interface IToolCallData extends Document {
     conversationId: string;
     messageId: string;

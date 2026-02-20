@@ -918,6 +918,10 @@ export const balanceSchema = z.object({
     .optional()
     .default('days'),
   refillAmount: z.number().optional().default(10000),
+  /** Number of days after which signup credits expire (0 = no expiry) */
+  creditExpiryDays: z.number().optional().default(0),
+  /** Minimum balance (in tokenCredits) below which requests are blocked */
+  minBalance: z.number().optional().default(0),
 });
 
 export const transactionsSchema = z.object({

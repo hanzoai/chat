@@ -21,12 +21,14 @@ export declare enum QueryKeys {
     assistant = "assistant",
     agents = "agents",
     agent = "agent",
-    endpointsConfigOverride = "endpointsConfigOverride",
     files = "files",
     fileConfig = "fileConfig",
     tools = "tools",
     toolAuth = "toolAuth",
     toolCalls = "toolCalls",
+    mcpTools = "mcpTools",
+    mcpConnectionStatus = "mcpConnectionStatus",
+    mcpAuthValues = "mcpAuthValues",
     agentTools = "agentTools",
     actions = "actions",
     assistantDocs = "assistantDocs",
@@ -41,15 +43,30 @@ export declare enum QueryKeys {
     promptGroup = "promptGroup",
     categories = "categories",
     randomPrompts = "randomPrompts",
+    agentCategories = "agentCategories",
+    marketplaceAgents = "marketplaceAgents",
     roles = "roles",
     conversationTags = "conversationTags",
     health = "health",
     userTerms = "userTerms",
     banner = "banner",
     memories = "memories",
-    brandConfig = "brandConfig"
+    principalSearch = "principalSearch",
+    accessRoles = "accessRoles",
+    resourcePermissions = "resourcePermissions",
+    effectivePermissions = "effectivePermissions",
+    graphToken = "graphToken",
+    mcpServers = "mcpServers",
+    mcpServer = "mcpServer",
+    activeJobs = "activeJobs",
+    agentApiKeys = "agentApiKeys"
 }
+export declare const DynamicQueryKeys: {
+    readonly agentFiles: (agentId: string) => readonly ["agentFiles", string];
+};
 export declare enum MutationKeys {
+    createAgentApiKey = "createAgentApiKey",
+    deleteAgentApiKey = "deleteAgentApiKey",
     fileUpload = "fileUpload",
     fileDelete = "fileDelete",
     updatePreset = "updatePreset",

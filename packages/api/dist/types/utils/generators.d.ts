@@ -23,3 +23,4 @@ export declare function createStreamEventHandlers(res: ServerResponse): {
     on_reasoning_delta: (event: ServerSentEvent) => void;
 };
 export declare function createHandleLLMNewToken(streamRate: number): () => Promise<void>;
+//# sourceMappingURL=generators.d.ts.map

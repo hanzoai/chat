@@ -5,19 +5,31 @@ import * as ag from './types/agents';
 import * as m from './types/mutations';
 import * as q from './types/queries';
 import * as f from './types/files';
+import * as mcp from './types/mcpServers';
 import * as config from './config';
 import * as s from './schemas';
 import * as r from './roles';
+import * as permissions from './accessPermissions';
 export declare function revokeUserKey(name: string): Promise<unknown>;
 export declare function revokeAllUserKeys(): Promise<unknown>;
 export declare function deleteUser(): Promise<s.TPreset>;
+export type FavoriteItem = {
+    agentId?: string;
+    model?: string;
+    endpoint?: string;
+};
+export declare function getFavorites(): Promise<FavoriteItem[]>;
+export declare function updateFavorites(favorites: FavoriteItem[]): Promise<FavoriteItem[]>;
 export declare function getSharedMessages(shareId: string): Promise<t.TSharedMessagesResponse>;
 export declare const listSharedLinks: (params: q.SharedLinksListParams) => Promise<q.SharedLinksResponse>;
 export declare function getSharedLink(conversationId: string): Promise<t.TSharedLinkGetResponse>;
-export declare function createSharedLink(conversationId: string): Promise<t.TSharedLinkResponse>;
+export declare function createSharedLink(conversationId: string, targetMessageId?: string): Promise<t.TSharedLinkResponse>;
 export declare function updateSharedLink(shareId: string): Promise<t.TSharedLinkResponse>;
 export declare function deleteSharedLink(shareId: string): Promise<m.TDeleteSharedLinkResponse>;
 export declare function updateUserKey(payload: t.TUpdateUserKeyRequest): Promise<any>;
+export declare function getAgentApiKeys(): Promise<t.TAgentApiKeyListResponse>;
+export declare function createAgentApiKey(payload: t.TAgentApiKeyCreateRequest): Promise<t.TAgentApiKeyCreateResponse>;
+export declare function deleteAgentApiKey(id: string): Promise<void>;
 export declare function getPresets(): Promise<s.TPreset[]>;
 export declare function createPreset(payload: s.TPreset): Promise<s.TPreset>;
 export declare function updatePreset(payload: s.TPreset): Promise<s.TPreset>;
@@ -37,6 +49,17 @@ export declare const verifyEmail: (payload: t.TVerifyEmail) => Promise<t.VerifyE
 export declare const resendVerificationEmail: (payload: t.TResendVerificationEmail) => Promise<t.VerifyEmailResponse>;
 export declare const getAvailablePlugins: () => Promise<s.TPlugin[]>;
 export declare const updateUserPlugins: (payload: t.TUpdateUserPlugins) => Promise<any>;
+export declare const reinitializeMCPServer: (serverName: string) => Promise<any>;
+export declare const bindMCPOAuth: (serverName: string) => Promise<{
+    success: boolean;
+}>;
+export declare const bindActionOAuth: (actionId: string) => Promise<{
+    success: boolean;
+}>;
+export declare const getMCPConnectionStatus: () => Promise<q.MCPConnectionStatusResponse>;
+export declare const getMCPServerConnectionStatus: (serverName: string) => Promise<q.MCPServerConnectionStatusResponse>;
+export declare const getMCPAuthValues: (serverName: string) => Promise<q.MCPAuthValuesResponse>;
+export declare function cancelMCPOAuth(serverName: string): Promise<m.CancelMCPOAuthResponse>;
 export declare const getStartupConfig: () => Promise<config.TStartupConfig & {
     mcpCustomUserVars?: Record<string, {
         title: string;
@@ -45,7 +68,6 @@ export declare const getStartupConfig: () => Promise<config.TStartupConfig & {
 }>;
 export declare const getAIEndpoints: () => Promise<t.TEndpointsConfig>;
 export declare const getModels: () => Promise<t.TModelsConfig>;
-export declare const getEndpointsConfigOverride: () => Promise<unknown | boolean>;
 export declare const createAssistant: ({ version, ...data }: a.AssistantCreateParams) => Promise<a.Assistant>;
 export declare const getAssistantById: ({ endpoint, assistant_id, version, }: {
     endpoint: s.AssistantsEndpoint;
@@ -66,6 +88,7 @@ export declare function getAssistantDocs({ endpoint, version, }: {
     version: number | string;
 }): Promise<a.AssistantDocument[]>;
 export declare const getAvailableTools: (_endpoint: s.AssistantsEndpoint | s.EModelEndpoint.agents, version?: number | string) => Promise<s.TPlugin[]>;
+export declare const getMCPTools: () => Promise<q.MCPServersResponse>;
 export declare const getVerifyAgentToolAuth: (params: q.VerifyToolAuthParams) => Promise<q.VerifyToolAuthResponse>;
 export declare const callTool: <T extends m.ToolId>({ toolId, toolParams, }: {
     toolId: T;
@@ -73,6 +96,7 @@ export declare const callTool: <T extends m.ToolId>({ toolId, toolParams, }: {
 }) => Promise<m.ToolCallResponse>;
 export declare const getToolCalls: (params: q.GetToolCallParams) => Promise<q.ToolCallResults>;
 export declare const getFiles: () => Promise<f.TFile[]>;
+export declare const getAgentFiles: (agentId: string) => Promise<f.TFile[]>;
 export declare const getFileConfig: () => Promise<f.FileConfig>;
 export declare const uploadImage: (data: FormData, signal?: AbortSignal | null) => Promise<f.TFileUpload>;
 export declare const uploadFile: (data: FormData, signal?: AbortSignal | null) => Promise<f.TFileUpload>;
@@ -86,6 +110,9 @@ export declare const deleteAction: ({ assistant_id, action_id, model, version, e
  */
 export declare const createAgent: ({ ...data }: a.AgentCreateParams) => Promise<a.Agent>;
 export declare const getAgentById: ({ agent_id }: {
+    agent_id: string;
+}) => Promise<a.Agent>;
+export declare const getExpandedAgentById: ({ agent_id }: {
     agent_id: string;
 }) => Promise<a.Agent>;
 export declare const updateAgent: ({ agent_id, data, }: {
@@ -102,9 +129,50 @@ export declare const revertAgentVersion: ({ agent_id, version_index, }: {
     agent_id: string;
     version_index: number;
 }) => Promise<a.Agent>;
+/**
+ * Get agent categories with counts for marketplace tabs
+ */
+export declare const getAgentCategories: () => Promise<t.TMarketplaceCategory[]>;
+/**
+ * Unified marketplace agents endpoint with query string controls
+ */
+export declare const getMarketplaceAgents: (params: {
+    requiredPermission: number;
+    category?: string;
+    search?: string;
+    limit?: number;
+    cursor?: string;
+    promoted?: 0 | 1;
+}) => Promise<a.AgentListResponse>;
 export declare const getAvailableAgentTools: () => Promise<s.TPlugin[]>;
 export declare const updateAgentAction: (data: m.UpdateAgentActionVariables) => Promise<m.UpdateAgentActionResponse>;
 export declare const deleteAgentAction: ({ agent_id, action_id, }: m.DeleteAgentActionVariables) => Promise<void>;
+/**
+ * MCP Servers
+ */
+/**
+ *
+ * Ensure and List loaded mcp server configs from the cache Enriched with effective permissions.
+ */
+export declare const getMCPServers: () => Promise<mcp.MCPServersListResponse>;
+/**
+ * Get a single MCP server by ID
+ */
+export declare const getMCPServer: (serverName: string) => Promise<mcp.MCPServerDBObjectResponse>;
+/**
+ * Create a new MCP server
+ */
+export declare const createMCPServer: (data: mcp.MCPServerCreateParams) => Promise<mcp.MCPServerDBObjectResponse>;
+/**
+ * Update an existing MCP server
+ */
+export declare const updateMCPServer: (serverName: string, data: mcp.MCPServerUpdateParams) => Promise<mcp.MCPServerDBObjectResponse>;
+/**
+ * Delete an MCP server
+ */
+export declare const deleteMCPServer: (serverName: string) => Promise<{
+    success: boolean;
+}>;
 /**
  * Imports a conversations file.
  *
@@ -141,6 +209,7 @@ export declare const listMessages: (params?: q.MessagesListParams) => Promise<q.
 export declare function updateMessage(payload: t.TUpdateMessageRequest): Promise<unknown>;
 export declare function updateMessageContent(payload: t.TUpdateMessageContent): Promise<unknown>;
 export declare const editArtifact: ({ messageId, ...params }: m.TEditArtifactRequest) => Promise<m.TEditArtifactResponse>;
+export declare const branchMessage: (payload: m.TBranchMessageRequest) => Promise<m.TBranchMessageResponse>;
 export declare function getMessagesByConvoId(conversationId: string): Promise<s.TMessage[]>;
 export declare function getPrompt(id: string): Promise<{
     prompt: t.TPrompt;
@@ -150,6 +219,7 @@ export declare function getAllPromptGroups(): Promise<q.AllPromptGroupsResponse>
 export declare function getPromptGroups(filter: t.TPromptGroupsWithFilterRequest): Promise<t.PromptGroupListResponse>;
 export declare function getPromptGroup(id: string): Promise<t.TPromptGroup>;
 export declare function createPrompt(payload: t.TCreatePrompt): Promise<t.TCreatePromptResponse>;
+export declare function addPromptToGroup(groupId: string, payload: t.TCreatePrompt): Promise<t.TCreatePromptResponse>;
 export declare function updatePromptGroup(variables: t.TUpdatePromptGroupVariables): Promise<t.TUpdatePromptGroupResponse>;
 export declare function deletePrompt(payload: t.TDeletePromptVariables): Promise<t.TDeletePromptResponse>;
 export declare function makePromptProduction(id: string): Promise<t.TMakePromptProductionResponse>;
@@ -161,6 +231,10 @@ export declare function getRole(roleName: string): Promise<r.TRole>;
 export declare function updatePromptPermissions(variables: m.UpdatePromptPermVars): Promise<m.UpdatePermResponse>;
 export declare function updateAgentPermissions(variables: m.UpdateAgentPermVars): Promise<m.UpdatePermResponse>;
 export declare function updateMemoryPermissions(variables: m.UpdateMemoryPermVars): Promise<m.UpdatePermResponse>;
+export declare function updatePeoplePickerPermissions(variables: m.UpdatePeoplePickerPermVars): Promise<m.UpdatePermResponse>;
+export declare function updateMCPServersPermissions(variables: m.UpdateMCPServersPermVars): Promise<m.UpdatePermResponse>;
+export declare function updateRemoteAgentsPermissions(variables: m.UpdateRemoteAgentsPermVars): Promise<m.UpdatePermResponse>;
+export declare function updateMarketplacePermissions(variables: m.UpdateMarketplacePermVars): Promise<m.UpdatePermResponse>;
 export declare function getConversationTags(): Promise<t.TConversationTagsResponse>;
 export declare function createConversationTag(payload: t.TConversationTagRequest): Promise<t.TConversationTagResponse>;
 export declare function updateConversationTag(tag: string, payload: t.TConversationTagRequest): Promise<t.TConversationTagResponse>;
@@ -175,7 +249,7 @@ export declare function updateFeedback(conversationId: string, messageId: string
 export declare function enableTwoFactor(): Promise<t.TEnable2FAResponse>;
 export declare function verifyTwoFactor(payload: t.TVerify2FARequest): Promise<t.TVerify2FAResponse>;
 export declare function confirmTwoFactor(payload: t.TVerify2FARequest): Promise<t.TVerify2FAResponse>;
-export declare function disableTwoFactor(): Promise<t.TDisable2FAResponse>;
+export declare function disableTwoFactor(payload?: t.TDisable2FARequest): Promise<t.TDisable2FAResponse>;
 export declare function regenerateBackupCodes(): Promise<t.TRegenerateBackupCodesResponse>;
 export declare function verifyTwoFactorTemp(payload: t.TVerify2FATempRequest): Promise<t.TVerify2FATempResponse>;
 export declare const getMemories: () => Promise<q.MemoriesResponse>;
@@ -196,3 +270,15 @@ export declare const createMemory: (data: {
     created: boolean;
     memory: q.TUserMemory;
 }>;
+export declare function searchPrincipals(params: q.PrincipalSearchParams): Promise<q.PrincipalSearchResponse>;
+export declare function getAccessRoles(resourceType: permissions.ResourceType): Promise<q.AccessRolesResponse>;
+export declare function getResourcePermissions(resourceType: permissions.ResourceType, resourceId: string): Promise<permissions.TGetResourcePermissionsResponse>;
+export declare function updateResourcePermissions(resourceType: permissions.ResourceType, resourceId: string, data: permissions.TUpdateResourcePermissionsRequest): Promise<permissions.TUpdateResourcePermissionsResponse>;
+export declare function getEffectivePermissions(resourceType: permissions.ResourceType, resourceId: string): Promise<permissions.TEffectivePermissionsResponse>;
+export declare function getAllEffectivePermissions(resourceType: permissions.ResourceType): Promise<permissions.TAllEffectivePermissionsResponse>;
+export declare function getGraphApiToken(params: q.GraphTokenParams): Promise<q.GraphTokenResponse>;
+export declare function getDomainServerBaseUrl(): string;
+export interface ActiveJobsResponse {
+    activeJobIds: string[];
+}
+export declare const getActiveJobs: () => Promise<ActiveJobsResponse>;

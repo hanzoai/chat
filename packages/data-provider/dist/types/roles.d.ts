@@ -16,17 +16,20 @@ export declare const roleSchema: z.ZodObject<{
     name: z.ZodString;
     permissions: z.ZodObject<{
         PROMPTS: z.ZodObject<{
-            SHARED_GLOBAL: z.ZodDefault<z.ZodBoolean>;
             USE: z.ZodDefault<z.ZodBoolean>;
             CREATE: z.ZodDefault<z.ZodBoolean>;
+            SHARE: z.ZodDefault<z.ZodBoolean>;
+            SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            SHARED_GLOBAL: boolean;
             USE: boolean;
             CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
         }, {
-            SHARED_GLOBAL?: boolean | undefined;
             USE?: boolean | undefined;
             CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         }>;
         BOOKMARKS: z.ZodObject<{
             USE: z.ZodDefault<z.ZodBoolean>;
@@ -55,17 +58,20 @@ export declare const roleSchema: z.ZodObject<{
             OPT_OUT?: boolean | undefined;
         }>;
         AGENTS: z.ZodObject<{
-            SHARED_GLOBAL: z.ZodDefault<z.ZodBoolean>;
             USE: z.ZodDefault<z.ZodBoolean>;
             CREATE: z.ZodDefault<z.ZodBoolean>;
+            SHARE: z.ZodDefault<z.ZodBoolean>;
+            SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            SHARED_GLOBAL: boolean;
             USE: boolean;
             CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
         }, {
-            SHARED_GLOBAL?: boolean | undefined;
             USE?: boolean | undefined;
             CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         }>;
         MULTI_CONVO: z.ZodObject<{
             USE: z.ZodDefault<z.ZodBoolean>;
@@ -95,19 +101,87 @@ export declare const roleSchema: z.ZodObject<{
         }, {
             USE?: boolean | undefined;
         }>;
-    }, "strip", z.ZodTypeAny, {
-        PROMPTS: {
-            SHARED_GLOBAL: boolean;
+        PEOPLE_PICKER: z.ZodObject<{
+            VIEW_USERS: z.ZodDefault<z.ZodBoolean>;
+            VIEW_GROUPS: z.ZodDefault<z.ZodBoolean>;
+            VIEW_ROLES: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            VIEW_USERS: boolean;
+            VIEW_GROUPS: boolean;
+            VIEW_ROLES: boolean;
+        }, {
+            VIEW_USERS?: boolean | undefined;
+            VIEW_GROUPS?: boolean | undefined;
+            VIEW_ROLES?: boolean | undefined;
+        }>;
+        MARKETPLACE: z.ZodObject<{
+            USE: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            USE: boolean;
+        }, {
+            USE?: boolean | undefined;
+        }>;
+        FILE_SEARCH: z.ZodObject<{
+            USE: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            USE: boolean;
+        }, {
+            USE?: boolean | undefined;
+        }>;
+        FILE_CITATIONS: z.ZodObject<{
+            USE: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            USE: boolean;
+        }, {
+            USE?: boolean | undefined;
+        }>;
+        MCP_SERVERS: z.ZodObject<{
+            USE: z.ZodDefault<z.ZodBoolean>;
+            CREATE: z.ZodDefault<z.ZodBoolean>;
+            SHARE: z.ZodDefault<z.ZodBoolean>;
+            SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
             USE: boolean;
             CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
+        }, {
+            USE?: boolean | undefined;
+            CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
+        }>;
+        REMOTE_AGENTS: z.ZodObject<{
+            USE: z.ZodDefault<z.ZodBoolean>;
+            CREATE: z.ZodDefault<z.ZodBoolean>;
+            SHARE: z.ZodDefault<z.ZodBoolean>;
+            SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            USE: boolean;
+            CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
+        }, {
+            USE?: boolean | undefined;
+            CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        PROMPTS: {
+            USE: boolean;
+            CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
         };
         BOOKMARKS: {
             USE: boolean;
         };
         AGENTS: {
-            SHARED_GLOBAL: boolean;
             USE: boolean;
             CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
         };
         MEMORIES: {
             USE: boolean;
@@ -128,19 +202,47 @@ export declare const roleSchema: z.ZodObject<{
         WEB_SEARCH: {
             USE: boolean;
         };
+        PEOPLE_PICKER: {
+            VIEW_USERS: boolean;
+            VIEW_GROUPS: boolean;
+            VIEW_ROLES: boolean;
+        };
+        MARKETPLACE: {
+            USE: boolean;
+        };
+        FILE_SEARCH: {
+            USE: boolean;
+        };
+        FILE_CITATIONS: {
+            USE: boolean;
+        };
+        MCP_SERVERS: {
+            USE: boolean;
+            CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
+        };
+        REMOTE_AGENTS: {
+            USE: boolean;
+            CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
+        };
     }, {
         PROMPTS: {
-            SHARED_GLOBAL?: boolean | undefined;
             USE?: boolean | undefined;
             CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         };
         BOOKMARKS: {
             USE?: boolean | undefined;
         };
         AGENTS: {
-            SHARED_GLOBAL?: boolean | undefined;
             USE?: boolean | undefined;
             CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         };
         MEMORIES: {
             USE?: boolean | undefined;
@@ -160,23 +262,51 @@ export declare const roleSchema: z.ZodObject<{
         };
         WEB_SEARCH: {
             USE?: boolean | undefined;
+        };
+        PEOPLE_PICKER: {
+            VIEW_USERS?: boolean | undefined;
+            VIEW_GROUPS?: boolean | undefined;
+            VIEW_ROLES?: boolean | undefined;
+        };
+        MARKETPLACE: {
+            USE?: boolean | undefined;
+        };
+        FILE_SEARCH: {
+            USE?: boolean | undefined;
+        };
+        FILE_CITATIONS: {
+            USE?: boolean | undefined;
+        };
+        MCP_SERVERS: {
+            USE?: boolean | undefined;
+            CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
+        };
+        REMOTE_AGENTS: {
+            USE?: boolean | undefined;
+            CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         };
     }>;
 }, "strip", z.ZodTypeAny, {
     name: string;
     permissions: {
         PROMPTS: {
-            SHARED_GLOBAL: boolean;
             USE: boolean;
             CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
         };
         BOOKMARKS: {
             USE: boolean;
         };
         AGENTS: {
-            SHARED_GLOBAL: boolean;
             USE: boolean;
             CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
         };
         MEMORIES: {
             USE: boolean;
@@ -197,22 +327,50 @@ export declare const roleSchema: z.ZodObject<{
         WEB_SEARCH: {
             USE: boolean;
         };
+        PEOPLE_PICKER: {
+            VIEW_USERS: boolean;
+            VIEW_GROUPS: boolean;
+            VIEW_ROLES: boolean;
+        };
+        MARKETPLACE: {
+            USE: boolean;
+        };
+        FILE_SEARCH: {
+            USE: boolean;
+        };
+        FILE_CITATIONS: {
+            USE: boolean;
+        };
+        MCP_SERVERS: {
+            USE: boolean;
+            CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
+        };
+        REMOTE_AGENTS: {
+            USE: boolean;
+            CREATE: boolean;
+            SHARE: boolean;
+            SHARE_PUBLIC: boolean;
+        };
     };
 }, {
     name: string;
     permissions: {
         PROMPTS: {
-            SHARED_GLOBAL?: boolean | undefined;
             USE?: boolean | undefined;
             CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         };
         BOOKMARKS: {
             USE?: boolean | undefined;
         };
         AGENTS: {
-            SHARED_GLOBAL?: boolean | undefined;
             USE?: boolean | undefined;
             CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         };
         MEMORIES: {
             USE?: boolean | undefined;
@@ -232,6 +390,32 @@ export declare const roleSchema: z.ZodObject<{
         };
         WEB_SEARCH: {
             USE?: boolean | undefined;
+        };
+        PEOPLE_PICKER: {
+            VIEW_USERS?: boolean | undefined;
+            VIEW_GROUPS?: boolean | undefined;
+            VIEW_ROLES?: boolean | undefined;
+        };
+        MARKETPLACE: {
+            USE?: boolean | undefined;
+        };
+        FILE_SEARCH: {
+            USE?: boolean | undefined;
+        };
+        FILE_CITATIONS: {
+            USE?: boolean | undefined;
+        };
+        MCP_SERVERS: {
+            USE?: boolean | undefined;
+            CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
+        };
+        REMOTE_AGENTS: {
+            USE?: boolean | undefined;
+            CREATE?: boolean | undefined;
+            SHARE?: boolean | undefined;
+            SHARE_PUBLIC?: boolean | undefined;
         };
     };
 }>;
@@ -241,17 +425,19 @@ export declare const roleDefaults: {
         name: SystemRoles.ADMIN;
         permissions: {
             PROMPTS: {
-                SHARED_GLOBAL: boolean;
                 USE: boolean;
                 CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
             };
             BOOKMARKS: {
                 USE: boolean;
             };
             AGENTS: {
-                SHARED_GLOBAL: boolean;
                 USE: boolean;
                 CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
             };
             MEMORIES: {
                 USE: boolean;
@@ -271,6 +457,32 @@ export declare const roleDefaults: {
             };
             WEB_SEARCH: {
                 USE: boolean;
+            };
+            PEOPLE_PICKER: {
+                VIEW_USERS: boolean;
+                VIEW_GROUPS: boolean;
+                VIEW_ROLES: boolean;
+            };
+            MARKETPLACE: {
+                USE: boolean;
+            };
+            FILE_SEARCH: {
+                USE: boolean;
+            };
+            FILE_CITATIONS: {
+                USE: boolean;
+            };
+            MCP_SERVERS: {
+                USE: boolean;
+                CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
+            };
+            REMOTE_AGENTS: {
+                USE: boolean;
+                CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
             };
         };
     };
@@ -278,17 +490,19 @@ export declare const roleDefaults: {
         name: SystemRoles.USER;
         permissions: {
             PROMPTS: {
-                SHARED_GLOBAL: boolean;
                 USE: boolean;
                 CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
             };
             BOOKMARKS: {
                 USE: boolean;
             };
             AGENTS: {
-                SHARED_GLOBAL: boolean;
                 USE: boolean;
                 CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
             };
             MEMORIES: {
                 USE: boolean;
@@ -308,6 +522,32 @@ export declare const roleDefaults: {
             };
             WEB_SEARCH: {
                 USE: boolean;
+            };
+            PEOPLE_PICKER: {
+                VIEW_USERS: boolean;
+                VIEW_GROUPS: boolean;
+                VIEW_ROLES: boolean;
+            };
+            MARKETPLACE: {
+                USE: boolean;
+            };
+            FILE_SEARCH: {
+                USE: boolean;
+            };
+            FILE_CITATIONS: {
+                USE: boolean;
+            };
+            MCP_SERVERS: {
+                USE: boolean;
+                CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
+            };
+            REMOTE_AGENTS: {
+                USE: boolean;
+                CREATE: boolean;
+                SHARE: boolean;
+                SHARE_PUBLIC: boolean;
             };
         };
     };

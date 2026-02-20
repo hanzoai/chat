@@ -27,3 +27,10 @@ export declare const isUserProvided: (value?: string) => boolean;
  * @param values
  */
 export declare function optionalChainWithEmptyCheck(...values: (string | number | undefined)[]): string | number | undefined;
+/**
+ * Escapes special characters in a string for use in a regular expression.
+ * @param str - The string to escape.
+ * @returns The escaped string safe for use in RegExp.
+ */
+export declare function escapeRegExp(str: string): string;
+//# sourceMappingURL=common.d.ts.map
