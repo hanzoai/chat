@@ -145,7 +145,7 @@ describe('checkWebSearchConfig', () => {
 
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'More info: https://www.librechat.ai/docs/configuration/librechat_yaml/web_search',
+          'More info: https://hanzo.ai/docs/chat/configuration/librechat_yaml/web_search',
         ),
       );
     });

@@ -1,5 +1,5 @@
 # Hanzo Chat - Alpine version
-FROM ghcr.io/danny-avila/librechat:latest
+FROM ghcr.io/hanzoai/chat:latest
 
 # Set environment defaults
 ENV HOST=0.0.0.0

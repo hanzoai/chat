@@ -1,11 +1,11 @@
 # Hanzo Chat with Demo User
-FROM ghcr.io/danny-avila/librechat:latest
+FROM ghcr.io/hanzoai/chat:latest
 
 # Copy demo user initialization script
 COPY scripts/seed_demo_user.js /app/scripts/
 COPY docker/entrypoint-with-demo.sh /app/
 
-# Node.js should already be available in the base LibreChat image
+# Node.js should already be available in the base Hanzo Chat image
 USER root
 
 RUN chmod +x /app/entrypoint-with-demo.sh
