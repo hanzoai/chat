@@ -1,5 +1,5 @@
 {
-  "name": "@librechat/frontend",
+  "name": "@hanzochat/frontend",
   "version": "v0.8.0-rc2",
   "description": "",
   "type": "module",
@@ -18,15 +18,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danny-avila/LibreChat.git"
+    "url": "git+https://github.com/hanzoai/chat.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/danny-avila/LibreChat/issues"
+    "url": "https://github.com/hanzoai/chat/issues"
   },
-  "homepage": "https://librechat.ai",
+  "homepage": "https://hanzo.ai/chat",
   "dependencies": {
     "@ariakit/react": "^0.4.15",
     "@ariakit/react-core": "^0.4.17",

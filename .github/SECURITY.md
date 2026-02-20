@@ -1,8 +1,8 @@
 # Security Policy
 
-At LibreChat, we prioritize the security of our project and value the contributions of security researchers in helping us improve the security of our codebase. If you discover a security vulnerability within our project, we appreciate your responsible disclosure. Please follow the guidelines below to report any vulnerabilities to us:
+At Hanzo, we prioritize the security of our project and value the contributions of security researchers in helping us improve the security of our codebase. If you discover a security vulnerability within our project, we appreciate your responsible disclosure. Please follow the guidelines below to report any vulnerabilities to us:
 
-**Note: Only report sensitive vulnerability details via the appropriate private communication channels mentioned below. Public channels, such as GitHub issues and Discord, should be used for initiating contact and establishing private communication channels.**
+**Note: Only report sensitive vulnerability details via the appropriate private communication channels mentioned below. Public channels, such as GitHub issues, should be used for initiating contact and establishing private communication channels.**
 
 ## Communication Channels
 
@@ -12,7 +12,7 @@ When reporting a security vulnerability, you have the following options to reach
 
 - **Option 2: GitHub Issues**: You can initiate first contact via GitHub Issues. However, please note that initial contact through GitHub Issues should not include any sensitive details.
 
-- **Option 3: Discord Server**: You can join our [Discord community](https://discord.librechat.ai) and initiate first contact in the `#issues` channel. However, please ensure that initial contact through Discord does not include any sensitive details.
+- **Option 3: Email**: You can reach us at security@hanzo.ai for security-related reports.
 
 _After the initial contact, we will establish a private communication channel for further discussion._
 
@@ -26,10 +26,10 @@ We strive to acknowledge vulnerability reports within 72 hours and will keep you
 
 ## Security Updates and Patching
 
-We are committed to maintaining the security of our open-source project, LibreChat, and promptly addressing any identified vulnerabilities. To ensure the security of our project, we adhere to the following practices:
+We are committed to maintaining the security of our open-source project, Hanzo Chat, and promptly addressing any identified vulnerabilities. To ensure the security of our project, we adhere to the following practices:
 
 - We prioritize security updates for the current major release of our software.
-- We actively monitor the GitHub Security Advisory system and the `#issues` channel on Discord for any vulnerability reports.
+- We actively monitor the GitHub Security Advisory system for any vulnerability reports.
 - We promptly review and validate reported vulnerabilities and take appropriate actions to address them.
 - We release security patches and updates in a timely manner to mitigate any identified vulnerabilities.
 
@@ -39,11 +39,11 @@ Please note that as a security-conscious community, we may not always disclose d
 
 This security policy applies to the following GitHub repository:
 
-- Repository: [LibreChat](https://github.librechat.ai)
+- Repository: [Hanzo Chat](https://github.com/hanzoai/chat)
 
 ## Contact
 
-If you have any questions or concerns regarding the security of our project, please join our [Discord community](https://discord.librechat.ai) and report them in the appropriate channel. You can also reach out to us by [opening an issue](https://github.com/danny-avila/LibreChat/issues/new) on GitHub. Please note that the response time may vary depending on the nature and severity of the inquiry.
+If you have any questions or concerns regarding the security of our project, please reach out to us at security@hanzo.ai or by [opening an issue](https://github.com/hanzoai/chat/issues/new) on GitHub. Please note that the response time may vary depending on the nature and severity of the inquiry.
 
 ## Acknowledgments
 
@@ -51,9 +51,7 @@ We would like to express our gratitude to the security researchers and community
 
 ## Bug Bounty Program
 
-We currently do not have a bug bounty program in place. However, we welcome and appreciate any
-
- security-related contributions through pull requests (PRs) that address vulnerabilities in our codebase. We believe in the power of collaboration to improve the security of our project and invite you to join us in making it more robust.
+We currently do not have a bug bounty program in place. However, we welcome and appreciate any security-related contributions through pull requests (PRs) that address vulnerabilities in our codebase. We believe in the power of collaboration to improve the security of our project and invite you to join us in making it more robust.
 
 **Reference**
 - https://cheatsheetseries.owasp.org/cheatsheets/Vulnerability_Disclosure_Cheat_Sheet.html

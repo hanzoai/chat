@@ -34,7 +34,7 @@ librechat:
     # - MEILI_MASTER_KEY
   existingSecretName: "librechat-credentials-env"
   
-  # For adding a custom config yaml-file you can set the contents in this var. See https://www.librechat.ai/docs/configuration/librechat_yaml/example
+  # For adding a custom config yaml-file you can set the contents in this var. See https://hanzo.ai/docs/chat/configuration/librechat_yaml/example
   configYamlContent: ""
   # configYamlContent: |
   #   version: 1.0.8
@@ -44,12 +44,12 @@ librechat:
   #   interface:
   #     # Privacy policy settings
   #     privacyPolicy:
-  #       externalUrl: 'https://librechat.ai/privacy-policy'
+  #       externalUrl: 'https://hanzo.ai/privacy-policy'
   #       openNewTab: true
 
   #     # Terms of service
   #     termsOfService:
-  #       externalUrl: 'https://librechat.ai/tos'
+  #       externalUrl: 'https://hanzo.ai/tos'
   #       openNewTab: true
 
   #   registration:
@@ -104,7 +104,7 @@ librechat-rag-api:
 
 
 image:
-  repository: danny-avila/librechat
+  repository: hanzoai/chat
   registry: ghcr.io
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -117,7 +117,7 @@ fullnameOverride: ""
 
 
 lifecycle: {}
-# # base for adding a custom banner // see https://github.com/danny-avila/LibreChat/pull/3952 for an example
+# # base for adding a custom banner
 #   postStart:
 #     exec:
 #       command: ["/bin/sh", "-c", "npm run update-banner <displayFrom(Format: yyyy-mm-ddTHH:MM:SSZ)> <displayTo(Format: yyyy-mm-ddTHH:MM:SSZ)> <message> <isPublic(true/false)>"]
@@ -207,7 +207,7 @@ tolerations: []
 
 affinity: {}
 
-# Strategy for LibreChat deployment updates
+# Strategy for Hanzo Chat deployment updates
 updateStrategy:
   type: RollingUpdate
 
@@ -217,7 +217,7 @@ mongodb:
   auth:
     enabled: false
   databases:
-   - LibreChat
+   - HanzoChat
 #  persistence: 
 #    size: 8Gi
 
