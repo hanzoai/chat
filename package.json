@@ -2,7 +2,7 @@
   "name": "@hanzochat/chat",
   "version": "v0.8.3-rc1",
   "description": "Chat - Unified interface to Agents, LLMs, MCPs and any AI model or OpenAPI documented API with full RAG stack",
-  "packageManager": "npm@11.10.0",
+  "packageManager": "pnpm@10.27.0",
   "workspaces": [
     "api",
     "client",
