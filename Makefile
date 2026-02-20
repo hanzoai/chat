@@ -223,6 +223,10 @@ db-seed:
 	@echo "$(GREEN)Seeding database...$(NC)"
 	@docker compose exec chat npm run seed
 
+db-seed-agents:
+	@echo "$(GREEN)Seeding team agents...$(NC)"
+	@docker compose exec chat npm run seed:agents
+
 db-reset:
 	@echo "$(RED)Resetting database...$(NC)"
 	@docker compose exec mongodb mongosh -u hanzo -p hanzo123 HanzoChat --eval "db.dropDatabase()"
