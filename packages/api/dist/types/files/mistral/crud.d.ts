@@ -1,18 +1,7 @@
-import type { TCustomConfig } from '@hanzochat/data-provider';
-import type { Request as ServerRequest } from 'express';
-import type { MistralFileUploadResponse, MistralSignedUrlResponse, MistralOCRUploadResult, OCRResult } from '~/types';
+import type { MistralFileUploadResponse, MistralSignedUrlResponse, MistralOCRUploadResult, ServerRequest, OCRResult } from '~/types';
 /** Helper type for OCR request context */
 interface OCRContext {
-    req: Pick<ServerRequest, 'user' | 'app'> & {
-        user?: {
-            id: string;
-        };
-        app: {
-            locals?: {
-                ocr?: TCustomConfig['ocr'];
-            };
-        };
-    };
+    req: ServerRequest;
     file: Express.Multer.File;
     loadAuthValues: (params: {
         userId: string;
@@ -58,6 +47,19 @@ export declare function performOCR({ url, apiKey, model, baseURL, documentType, 
     documentType?: 'document_url' | 'image_url';
 }): Promise<OCRResult>;
 /**
+ * Deletes a file from Mistral API
+ * @param params Delete parameters
+ * @param params.fileId The file ID to delete
+ * @param params.apiKey Mistral API key
+ * @param params.baseURL Mistral API base URL
+ * @returns Promise that resolves when the file is deleted
+ */
+export declare function deleteMistralFile({ fileId, apiKey, baseURL, }: {
+    fileId: string;
+    apiKey: string;
+    baseURL?: string;
+}): Promise<void>;
+/**
  * Uploads a file to the Mistral OCR API and processes the OCR result.
  *
  * @param params - The params object.
@@ -76,6 +78,7 @@ export declare const uploadMistralOCR: (context: OCRContext) => Promise<MistralO
  * @param params - The params object.
  * @param params.req - The request object from Express. It should have a `user` property with an `id`
  *                       representing the user
+ * @param params.appConfig - Application configuration object
  * @param params.file - The file object, which is part of the request. The file object should
  *                                     have a `mimetype` property that tells us the file type
  * @param params.loadAuthValues - Function to load authentication values
@@ -83,4 +86,19 @@ export declare const uploadMistralOCR: (context: OCRContext) => Promise<MistralO
  *                       along with the `filename` and `bytes` properties.
  */
 export declare const uploadAzureMistralOCR: (context: OCRContext) => Promise<MistralOCRUploadResult>;
+/**
+ * Use Google Vertex AI Mistral OCR API to process the OCR result.
+ *
+ * @param params - The params object.
+ * @param params.req - The request object from Express. It should have a `user` property with an `id`
+ *                       representing the user
+ * @param params.appConfig - Application configuration object
+ * @param params.file - The file object, which is part of the request. The file object should
+ *                                     have a `mimetype` property that tells us the file type
+ * @param params.loadAuthValues - Function to load authentication values
+ * @returns - The result object containing the processed `text` and `images` (not currently used),
+ *                       along with the `filename` and `bytes` properties.
+ */
+export declare const uploadGoogleVertexMistralOCR: (context: OCRContext) => Promise<MistralOCRUploadResult>;
 export {};
+//# sourceMappingURL=crud.d.ts.map

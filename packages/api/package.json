@@ -2,7 +2,7 @@
   "name": "@librechat/api",
   "version": "1.7.23",
   "type": "commonjs",
-  "description": "MCP services for LibreChat",
+  "description": "MCP services for Hanzo Chat",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "types": "./dist/types/index.d.ts",
@@ -36,14 +36,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danny-avila/LibreChat.git"
+    "url": "git+https://github.com/hanzoai/chat.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/danny-avila/LibreChat/issues"
+    "url": "https://github.com/hanzoai/chat/issues"
   },
-  "homepage": "https://librechat.ai",
+  "homepage": "https://hanzo.ai/chat",
   "devDependencies": {
     "@babel/preset-env": "^7.21.5",
     "@babel/preset-react": "^7.18.6",

@@ -58,12 +58,12 @@ librechat:
   #   interface:
   #     # Privacy policy settings
   #     privacyPolicy:
-  #       externalUrl: 'https://librechat.ai/privacy-policy'
+  #       externalUrl: 'https://hanzo.ai/privacy-policy'
   #       openNewTab: true
 
   #     # Terms of service
   #     termsOfService:
-  #       externalUrl: 'https://librechat.ai/tos'
+  #       externalUrl: 'https://hanzo.ai/tos'
   #       openNewTab: true
 
   #   registration:

@@ -682,4 +682,7 @@ export type TBalanceResponse = {
   refillIntervalUnit?: 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
   lastRefill?: Date;
   refillAmount?: number;
+  // Credit expiry
+  expiresAt?: Date;
+  creditsGrantedAt?: Date;
 };

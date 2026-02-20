@@ -68,6 +68,15 @@ interface:
 registration:
   socialLogins: ['openid', 'github', 'google', 'discord']
 
+# Prepaid billing: $5 free signup credit with 30-day expiry
+# 1,000,000 tokenCredits = $1 USD, so $5 = 5,000,000 tokenCredits
+# Minimum balance of $1 (1,000,000 tokenCredits) required to send requests
+balance:
+  enabled: true
+  startBalance: 5000000
+  creditExpiryDays: 30
+  minBalance: 1000000
+
 actions:
   allowedDomains:
     - "hanzo.ai"

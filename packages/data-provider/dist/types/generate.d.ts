@@ -155,20 +155,21 @@ export declare const generateOpenAISchema: (customOpenAI: OpenAISettings) => z.Z
     userLabel: z.ZodOptional<z.ZodString>;
     model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    temperature: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     topP: z.ZodOptional<z.ZodNumber>;
     topK: z.ZodOptional<z.ZodNumber>;
     top_p: z.ZodOptional<z.ZodNumber>;
     frequency_penalty: z.ZodOptional<z.ZodNumber>;
     presence_penalty: z.ZodOptional<z.ZodNumber>;
     parentMessageId: z.ZodOptional<z.ZodString>;
-    maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
     maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     promptCache: z.ZodOptional<z.ZodBoolean>;
     system: z.ZodOptional<z.ZodString>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    stream: z.ZodOptional<z.ZodBoolean>;
     artifacts: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -207,7 +208,13 @@ export declare const generateOpenAISchema: (customOpenAI: OpenAISettings) => z.Z
     resendFiles: z.ZodOptional<z.ZodBoolean>;
     file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ImageDetail>>;
-    reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>;
+    reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>>;
+    reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningSummary>>>;
+    verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").Verbosity>>>;
+    useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+    effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AnthropicEffort>>>;
+    web_search: z.ZodOptional<z.ZodBoolean>;
+    disableStreaming: z.ZodOptional<z.ZodBoolean>;
     assistant_id: z.ZodOptional<z.ZodString>;
     agent_id: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
@@ -270,28 +277,13 @@ export declare const generateOpenAISchema: (customOpenAI: OpenAISettings) => z.Z
     spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     resendImages: z.ZodOptional<z.ZodBoolean>;
-    agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        agent: z.ZodDefault<z.ZodString>;
-        skipCompletion: z.ZodDefault<z.ZodBoolean>;
-        model: z.ZodString;
-        temperature: z.ZodDefault<z.ZodNumber>;
-    }, "strip", z.ZodTypeAny, {
-        model: string;
-        temperature: number;
-        agent: string;
-        skipCompletion: boolean;
-    }, {
-        model: string;
-        temperature?: number | undefined;
-        agent?: string | undefined;
-        skipCompletion?: boolean | undefined;
-    }>>>;
     chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "model" | "promptPrefix" | "temperature" | "top_p" | "frequency_penalty" | "presence_penalty" | "maxContextTokens" | "resendFiles" | "imageDetail" | "chatGptLabel">, "strip", z.ZodTypeAny, {
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     top_p?: number | undefined;
     frequency_penalty?: number | undefined;
     presence_penalty?: number | undefined;
@@ -302,7 +294,7 @@ export declare const generateOpenAISchema: (customOpenAI: OpenAISettings) => z.Z
 }, {
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     top_p?: number | undefined;
     frequency_penalty?: number | undefined;
     presence_penalty?: number | undefined;
@@ -324,7 +316,7 @@ export declare const generateOpenAISchema: (customOpenAI: OpenAISettings) => z.Z
 }, {
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     top_p?: number | undefined;
     frequency_penalty?: number | undefined;
     presence_penalty?: number | undefined;
@@ -396,20 +388,21 @@ export declare const generateGoogleSchema: (customGoogle: GoogleSettings) => z.Z
     userLabel: z.ZodOptional<z.ZodString>;
     model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    temperature: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     topP: z.ZodOptional<z.ZodNumber>;
     topK: z.ZodOptional<z.ZodNumber>;
     top_p: z.ZodOptional<z.ZodNumber>;
     frequency_penalty: z.ZodOptional<z.ZodNumber>;
     presence_penalty: z.ZodOptional<z.ZodNumber>;
     parentMessageId: z.ZodOptional<z.ZodString>;
-    maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
     maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     promptCache: z.ZodOptional<z.ZodBoolean>;
     system: z.ZodOptional<z.ZodString>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    stream: z.ZodOptional<z.ZodBoolean>;
     artifacts: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -448,7 +441,13 @@ export declare const generateGoogleSchema: (customGoogle: GoogleSettings) => z.Z
     resendFiles: z.ZodOptional<z.ZodBoolean>;
     file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ImageDetail>>;
-    reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>;
+    reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>>;
+    reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningSummary>>>;
+    verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").Verbosity>>>;
+    useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+    effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AnthropicEffort>>>;
+    web_search: z.ZodOptional<z.ZodBoolean>;
+    disableStreaming: z.ZodOptional<z.ZodBoolean>;
     assistant_id: z.ZodOptional<z.ZodString>;
     agent_id: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
@@ -511,32 +510,17 @@ export declare const generateGoogleSchema: (customGoogle: GoogleSettings) => z.Z
     spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     resendImages: z.ZodOptional<z.ZodBoolean>;
-    agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        agent: z.ZodDefault<z.ZodString>;
-        skipCompletion: z.ZodDefault<z.ZodBoolean>;
-        model: z.ZodString;
-        temperature: z.ZodDefault<z.ZodNumber>;
-    }, "strip", z.ZodTypeAny, {
-        model: string;
-        temperature: number;
-        agent: string;
-        skipCompletion: boolean;
-    }, {
-        model: string;
-        temperature?: number | undefined;
-        agent?: string | undefined;
-        skipCompletion?: boolean | undefined;
-    }>>>;
     chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "model" | "modelLabel" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "examples">, "strip", z.ZodTypeAny, {
     model?: string | null | undefined;
     modelLabel?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: number | undefined;
+    maxOutputTokens?: number | null | undefined;
     maxContextTokens?: number | undefined;
     examples?: {
         input: {
@@ -550,10 +534,10 @@ export declare const generateGoogleSchema: (customGoogle: GoogleSettings) => z.Z
     model?: string | null | undefined;
     modelLabel?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: string | number | undefined;
+    maxOutputTokens?: string | number | null | undefined;
     maxContextTokens?: string | number | undefined;
     examples?: {
         input: {
@@ -584,10 +568,10 @@ export declare const generateGoogleSchema: (customGoogle: GoogleSettings) => z.Z
     model?: string | null | undefined;
     modelLabel?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: string | number | undefined;
+    maxOutputTokens?: string | number | null | undefined;
     maxContextTokens?: string | number | undefined;
     examples?: {
         input: {

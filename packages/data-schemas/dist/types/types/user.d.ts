@@ -1,4 +1,5 @@
-import { Document, Types } from 'mongoose';
+import type { Document, Types } from 'mongoose';
+import { CursorPaginationParams } from '~/common';
 export interface IUser extends Document {
     name?: string;
     username?: string;
@@ -16,7 +17,7 @@ export interface IUser extends Document {
     githubId?: string;
     discordId?: string;
     appleId?: string;
-    plugins?: unknown[];
+    plugins?: string[];
     twoFactorEnabled?: boolean;
     totpSecret?: string;
     backupCodes?: Array<{
@@ -32,8 +33,15 @@ export interface IUser extends Document {
     personalization?: {
         memories?: boolean;
     };
+    favorites?: Array<{
+        agentId?: string;
+        model?: string;
+        endpoint?: string;
+    }>;
     createdAt?: Date;
     updatedAt?: Date;
+    /** Field for external source identification (for consistency with TPrincipal schema) */
+    idOnTheSource?: string;
 }
 export interface BalanceConfig {
     enabled?: boolean;
@@ -42,17 +50,39 @@ export interface BalanceConfig {
     refillIntervalValue?: number;
     refillIntervalUnit?: string;
     refillAmount?: number;
+    /** Number of days after which signup credits expire (0 = no expiry) */
+    creditExpiryDays?: number;
+    /** Minimum balance (in tokenCredits) below which requests are blocked */
+    minBalance?: number;
 }
-export interface UserCreateData extends Partial<IUser> {
+export interface CreateUserRequest extends Partial<IUser> {
     email: string;
 }
-export interface UserUpdateResult {
+export interface UpdateUserRequest {
+    name?: string;
+    username?: string;
+    email?: string;
+    role?: string;
+    emailVerified?: boolean;
+    avatar?: string;
+    plugins?: string[];
+    twoFactorEnabled?: boolean;
+    termsAccepted?: boolean;
+    personalization?: {
+        memories?: boolean;
+    };
+}
+export interface UserDeleteResult {
     deletedCount: number;
     message: string;
 }
-export interface UserSearchCriteria {
-    email?: string;
-    username?: string;
+export interface UserFilterOptions extends CursorPaginationParams {
+    _id?: Types.ObjectId | string;
+    search?: string;
+    role?: string;
+    emailVerified?: boolean;
+    provider?: string;
+    twoFactorEnabled?: boolean;
     googleId?: string;
     facebookId?: string;
     openidId?: string;
@@ -61,7 +91,8 @@ export interface UserSearchCriteria {
     githubId?: string;
     discordId?: string;
     appleId?: string;
-    _id?: Types.ObjectId | string;
+    createdAfter?: string;
+    createdBefore?: string;
 }
 export interface UserQueryOptions {
     fieldsToSelect?: string | string[] | null;

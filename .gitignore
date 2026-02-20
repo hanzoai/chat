@@ -173,3 +173,11 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
+
+# Hanzo-specific
+CLAUDE.md
+!.env.hanzo-cloud
+tests/**/*.wav
+tests/**/*.mp3
+tests/**/*.png
+tests/**/*.jpg

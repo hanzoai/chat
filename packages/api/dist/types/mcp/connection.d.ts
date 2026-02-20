@@ -2,16 +2,19 @@ import { EventEmitter } from 'events';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { MCPOAuthTokens } from './oauth/types';
 import type * as t from './types';
+interface MCPConnectionParams {
+    serverName: string;
+    serverConfig: t.MCPOptions;
+    userId?: string;
+    oauthTokens?: MCPOAuthTokens | null;
+    useSSRFProtection?: boolean;
+}
 export declare class MCPConnection extends EventEmitter {
-    private readonly options;
-    private static instance;
     client: Client;
+    private options;
     private transport;
     private connectionState;
     private connectPromise;
-    private lastError;
-    private lastConfigUpdate;
-    private readonly CONFIG_TTL;
     private readonly MAX_RECONNECT_ATTEMPTS;
     readonly serverName: string;
     private shouldStopReconnecting;
@@ -20,83 +23,95 @@ export declare class MCPConnection extends EventEmitter {
     private reconnectAttempts;
     private readonly userId?;
     private lastPingTime;
+    private lastConnectionCheckAt;
     private oauthTokens?;
+    private requestHeaders?;
     private oauthRequired;
+    private readonly useSSRFProtection;
     iconPath?: string;
     timeout?: number;
     url?: string;
-    constructor(serverName: string, options: t.MCPOptions, userId?: string, oauthTokens?: MCPOAuthTokens | null);
+    /**
+     * Timestamp when this connection was created.
+     * Used to detect if connection is stale compared to updated config.
+     */
+    readonly createdAt: number;
+    setRequestHeaders(headers: Record<string, string> | null): void;
+    getRequestHeaders(): Record<string, string> | null | undefined;
+    constructor(params: MCPConnectionParams);
     /** Helper to generate consistent log prefixes */
     private getLogPrefix;
-    static getInstance(serverName: string, options: t.MCPOptions, userId?: string): MCPConnection;
-    static getExistingInstance(): MCPConnection | null;
-    static destroyInstance(): Promise<void>;
+    /**
+     * Factory function to create fetch functions without capturing the entire `this` context.
+     * This helps prevent memory leaks by only passing necessary dependencies.
+     *
+     * @param getHeaders Function to retrieve request headers
+     * @param timeout Timeout value for the agent (in milliseconds)
+     * @returns A fetch function that merges headers appropriately
+     */
+    private createFetchFunction;
     private emitError;
     private constructTransport;
     private setupEventListeners;
     private handleReconnection;
     private subscribeToResources;
-    private invalidateCache;
     connectClient(): Promise<void>;
     private setupTransportDebugHandlers;
     connect(): Promise<void>;
     private setupTransportErrorHandlers;
     disconnect(): Promise<void>;
     fetchResources(): Promise<t.MCPResource[]>;
-    fetchTools(): Promise<import("zod").objectOutputType<{
-        name: import("zod").ZodString;
-        title: import("zod").ZodOptional<import("zod").ZodString>;
-    } & {
-        description: import("zod").ZodOptional<import("zod").ZodString>;
-        inputSchema: import("zod").ZodObject<{
-            type: import("zod").ZodLiteral<"object">;
-            properties: import("zod").ZodOptional<import("zod").ZodObject<{}, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{}, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{}, import("zod").ZodTypeAny, "passthrough">>>;
-            required: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString, "many">>;
-        }, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{
-            type: import("zod").ZodLiteral<"object">;
-            properties: import("zod").ZodOptional<import("zod").ZodObject<{}, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{}, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{}, import("zod").ZodTypeAny, "passthrough">>>;
-            required: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString, "many">>;
-        }, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{
-            type: import("zod").ZodLiteral<"object">;
-            properties: import("zod").ZodOptional<import("zod").ZodObject<{}, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{}, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{}, import("zod").ZodTypeAny, "passthrough">>>;
-            required: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString, "many">>;
-        }, import("zod").ZodTypeAny, "passthrough">>;
-        outputSchema: import("zod").ZodOptional<import("zod").ZodObject<{
-            type: import("zod").ZodLiteral<"object">;
-            properties: import("zod").ZodOptional<import("zod").ZodObject<{}, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{}, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{}, import("zod").ZodTypeAny, "passthrough">>>;
-            required: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString, "many">>;
-        }, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{
-            type: import("zod").ZodLiteral<"object">;
-            properties: import("zod").ZodOptional<import("zod").ZodObject<{}, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{}, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{}, import("zod").ZodTypeAny, "passthrough">>>;
-            required: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString, "many">>;
-        }, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{
-            type: import("zod").ZodLiteral<"object">;
-            properties: import("zod").ZodOptional<import("zod").ZodObject<{}, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{}, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{}, import("zod").ZodTypeAny, "passthrough">>>;
-            required: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString, "many">>;
-        }, import("zod").ZodTypeAny, "passthrough">>>;
-        annotations: import("zod").ZodOptional<import("zod").ZodObject<{
-            title: import("zod").ZodOptional<import("zod").ZodString>;
-            readOnlyHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            destructiveHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            idempotentHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            openWorldHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-        }, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{
-            title: import("zod").ZodOptional<import("zod").ZodString>;
-            readOnlyHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            destructiveHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            idempotentHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            openWorldHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-        }, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{
-            title: import("zod").ZodOptional<import("zod").ZodString>;
-            readOnlyHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            destructiveHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            idempotentHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-            openWorldHint: import("zod").ZodOptional<import("zod").ZodBoolean>;
-        }, import("zod").ZodTypeAny, "passthrough">>>;
-        _meta: import("zod").ZodOptional<import("zod").ZodObject<{}, "passthrough", import("zod").ZodTypeAny, import("zod").objectOutputType<{}, import("zod").ZodTypeAny, "passthrough">, import("zod").objectInputType<{}, import("zod").ZodTypeAny, "passthrough">>>;
-    }, import("zod").ZodTypeAny, "passthrough">[]>;
+    fetchTools(): Promise<{
+        inputSchema: {
+            [x: string]: unknown;
+            type: "object";
+            properties?: Record<string, object> | undefined;
+            required?: string[] | undefined;
+        };
+        name: string;
+        description?: string | undefined;
+        outputSchema?: {
+            [x: string]: unknown;
+            type: "object";
+            properties?: Record<string, object> | undefined;
+            required?: string[] | undefined;
+        } | undefined;
+        annotations?: {
+            title?: string | undefined;
+            readOnlyHint?: boolean | undefined;
+            destructiveHint?: boolean | undefined;
+            idempotentHint?: boolean | undefined;
+            openWorldHint?: boolean | undefined;
+        } | undefined;
+        execution?: {
+            taskSupport?: "optional" | "required" | "forbidden" | undefined;
+        } | undefined;
+        _meta?: Record<string, unknown> | undefined;
+        icons?: {
+            src: string;
+            mimeType?: string | undefined;
+            sizes?: string[] | undefined;
+            theme?: "light" | "dark" | undefined;
+        }[] | undefined;
+        title?: string | undefined;
+    }[]>;
     fetchPrompts(): Promise<t.MCPPrompt[]>;
     isConnected(): Promise<boolean>;
     setOAuthTokens(tokens: MCPOAuthTokens): void;
+    /**
+     * Check if this connection is stale compared to config update time.
+     * A connection is stale if it was created before the config was updated.
+     *
+     * @param configUpdatedAt - Unix timestamp (ms) when config was last updated
+     * @returns true if connection was created before config update, false otherwise
+     */
+    isStale(configUpdatedAt: number): boolean;
     private isOAuthError;
+    /**
+     * Checks if an error indicates rate limiting (HTTP 429).
+     * Rate limited requests should stop reconnection attempts to avoid making the situation worse.
+     */
+    private isRateLimitError;
 }
+export {};
+//# sourceMappingURL=connection.d.ts.map

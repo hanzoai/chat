@@ -5,6 +5,22 @@ const { logViolation } = require('~/cache');
 const { getMultiplier } = require('./tx');
 const { Balance } = require('~/db/models');
 
+/**
+ * Default minimum balance in tokenCredits.
+ * Overridden by HANZO_MIN_BALANCE env var (in USD, converted to tokenCredits).
+ * 1,000,000 tokenCredits = $1 USD.
+ */
+function getMinBalance() {
+  const envVal = process.env.HANZO_MIN_BALANCE;
+  if (envVal != null && envVal !== '') {
+    const usd = parseFloat(envVal);
+    if (!isNaN(usd) && usd > 0) {
+      return Math.round(usd * 1000000);
+    }
+  }
+  return 0;
+}
+
 function isInvalidDate(date) {
   return isNaN(date);
 }
@@ -36,6 +52,19 @@ const checkBalanceRecord = async function ({
     };
   }
   let balance = record.tokenCredits;
+
+  // Check if credits have expired
+  if (record.expiresAt && new Date(record.expiresAt) < new Date()) {
+    logger.debug('[Balance.check] Credits expired', { user, expiresAt: record.expiresAt });
+    balance = 0;
+  }
+
+  // Enforce minimum balance threshold
+  const minBalance = getMinBalance();
+  if (minBalance > 0 && balance < minBalance) {
+    logger.debug('[Balance.check] Below minimum balance', { user, balance, minBalance });
+    return { canSpend: false, balance, tokenCost };
+  }
 
   logger.debug('[Balance.check] Initial state', {
     user,

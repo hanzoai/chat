@@ -14,3 +14,4 @@ export declare function sendEvent(res: ServerResponse, event: ServerSentEvent): 
  * @param message - The error message.
  */
 export declare function handleError(res: ServerResponse, message: string): void;
+//# sourceMappingURL=events.d.ts.map

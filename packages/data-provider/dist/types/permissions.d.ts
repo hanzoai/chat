@@ -34,13 +34,36 @@ export declare enum PermissionTypes {
     /**
      * Type for using the "Web Search" feature
      */
-    WEB_SEARCH = "WEB_SEARCH"
+    WEB_SEARCH = "WEB_SEARCH",
+    /**
+     * Type for People Picker Permissions
+     */
+    PEOPLE_PICKER = "PEOPLE_PICKER",
+    /**
+     * Type for Marketplace Permissions
+     */
+    MARKETPLACE = "MARKETPLACE",
+    /**
+     * Type for using the "File Search" feature
+     */
+    FILE_SEARCH = "FILE_SEARCH",
+    /**
+     * Type for using the "File Citations" feature in agents
+     */
+    FILE_CITATIONS = "FILE_CITATIONS",
+    /**
+     * Type for MCP Server Permissions
+     */
+    MCP_SERVERS = "MCP_SERVERS",
+    /**
+     * Type for Remote Agent (API) Permissions
+     */
+    REMOTE_AGENTS = "REMOTE_AGENTS"
 }
 /**
  * Enum for Role-Based Access Control Constants
  */
 export declare enum Permissions {
-    SHARED_GLOBAL = "SHARED_GLOBAL",
     USE = "USE",
     CREATE = "CREATE",
     UPDATE = "UPDATE",
@@ -48,20 +71,28 @@ export declare enum Permissions {
     READ_AUTHOR = "READ_AUTHOR",
     SHARE = "SHARE",
     /** Can disable if desired */
-    OPT_OUT = "OPT_OUT"
+    OPT_OUT = "OPT_OUT",
+    VIEW_USERS = "VIEW_USERS",
+    VIEW_GROUPS = "VIEW_GROUPS",
+    VIEW_ROLES = "VIEW_ROLES",
+    /** Can share resources publicly (with everyone) */
+    SHARE_PUBLIC = "SHARE_PUBLIC"
 }
 export declare const promptPermissionsSchema: z.ZodObject<{
-    SHARED_GLOBAL: z.ZodDefault<z.ZodBoolean>;
     USE: z.ZodDefault<z.ZodBoolean>;
     CREATE: z.ZodDefault<z.ZodBoolean>;
+    SHARE: z.ZodDefault<z.ZodBoolean>;
+    SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    SHARED_GLOBAL: boolean;
     USE: boolean;
     CREATE: boolean;
+    SHARE: boolean;
+    SHARE_PUBLIC: boolean;
 }, {
-    SHARED_GLOBAL?: boolean | undefined;
     USE?: boolean | undefined;
     CREATE?: boolean | undefined;
+    SHARE?: boolean | undefined;
+    SHARE_PUBLIC?: boolean | undefined;
 }>;
 export type TPromptPermissions = z.infer<typeof promptPermissionsSchema>;
 export declare const bookmarkPermissionsSchema: z.ZodObject<{
@@ -93,17 +124,20 @@ export declare const memoryPermissionsSchema: z.ZodObject<{
 }>;
 export type TMemoryPermissions = z.infer<typeof memoryPermissionsSchema>;
 export declare const agentPermissionsSchema: z.ZodObject<{
-    SHARED_GLOBAL: z.ZodDefault<z.ZodBoolean>;
     USE: z.ZodDefault<z.ZodBoolean>;
     CREATE: z.ZodDefault<z.ZodBoolean>;
+    SHARE: z.ZodDefault<z.ZodBoolean>;
+    SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    SHARED_GLOBAL: boolean;
     USE: boolean;
     CREATE: boolean;
+    SHARE: boolean;
+    SHARE_PUBLIC: boolean;
 }, {
-    SHARED_GLOBAL?: boolean | undefined;
     USE?: boolean | undefined;
     CREATE?: boolean | undefined;
+    SHARE?: boolean | undefined;
+    SHARE_PUBLIC?: boolean | undefined;
 }>;
 export type TAgentPermissions = z.infer<typeof agentPermissionsSchema>;
 export declare const multiConvoPermissionsSchema: z.ZodObject<{
@@ -138,19 +172,94 @@ export declare const webSearchPermissionsSchema: z.ZodObject<{
     USE?: boolean | undefined;
 }>;
 export type TWebSearchPermissions = z.infer<typeof webSearchPermissionsSchema>;
+export declare const peoplePickerPermissionsSchema: z.ZodObject<{
+    VIEW_USERS: z.ZodDefault<z.ZodBoolean>;
+    VIEW_GROUPS: z.ZodDefault<z.ZodBoolean>;
+    VIEW_ROLES: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    VIEW_USERS: boolean;
+    VIEW_GROUPS: boolean;
+    VIEW_ROLES: boolean;
+}, {
+    VIEW_USERS?: boolean | undefined;
+    VIEW_GROUPS?: boolean | undefined;
+    VIEW_ROLES?: boolean | undefined;
+}>;
+export type TPeoplePickerPermissions = z.infer<typeof peoplePickerPermissionsSchema>;
+export declare const marketplacePermissionsSchema: z.ZodObject<{
+    USE: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    USE: boolean;
+}, {
+    USE?: boolean | undefined;
+}>;
+export type TMarketplacePermissions = z.infer<typeof marketplacePermissionsSchema>;
+export declare const fileSearchPermissionsSchema: z.ZodObject<{
+    USE: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    USE: boolean;
+}, {
+    USE?: boolean | undefined;
+}>;
+export type TFileSearchPermissions = z.infer<typeof fileSearchPermissionsSchema>;
+export declare const fileCitationsPermissionsSchema: z.ZodObject<{
+    USE: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    USE: boolean;
+}, {
+    USE?: boolean | undefined;
+}>;
+export type TFileCitationsPermissions = z.infer<typeof fileCitationsPermissionsSchema>;
+export declare const mcpServersPermissionsSchema: z.ZodObject<{
+    USE: z.ZodDefault<z.ZodBoolean>;
+    CREATE: z.ZodDefault<z.ZodBoolean>;
+    SHARE: z.ZodDefault<z.ZodBoolean>;
+    SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    USE: boolean;
+    CREATE: boolean;
+    SHARE: boolean;
+    SHARE_PUBLIC: boolean;
+}, {
+    USE?: boolean | undefined;
+    CREATE?: boolean | undefined;
+    SHARE?: boolean | undefined;
+    SHARE_PUBLIC?: boolean | undefined;
+}>;
+export type TMcpServersPermissions = z.infer<typeof mcpServersPermissionsSchema>;
+export declare const remoteAgentsPermissionsSchema: z.ZodObject<{
+    USE: z.ZodDefault<z.ZodBoolean>;
+    CREATE: z.ZodDefault<z.ZodBoolean>;
+    SHARE: z.ZodDefault<z.ZodBoolean>;
+    SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    USE: boolean;
+    CREATE: boolean;
+    SHARE: boolean;
+    SHARE_PUBLIC: boolean;
+}, {
+    USE?: boolean | undefined;
+    CREATE?: boolean | undefined;
+    SHARE?: boolean | undefined;
+    SHARE_PUBLIC?: boolean | undefined;
+}>;
+export type TRemoteAgentsPermissions = z.infer<typeof remoteAgentsPermissionsSchema>;
 export declare const permissionsSchema: z.ZodObject<{
     PROMPTS: z.ZodObject<{
-        SHARED_GLOBAL: z.ZodDefault<z.ZodBoolean>;
         USE: z.ZodDefault<z.ZodBoolean>;
         CREATE: z.ZodDefault<z.ZodBoolean>;
+        SHARE: z.ZodDefault<z.ZodBoolean>;
+        SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        SHARED_GLOBAL: boolean;
         USE: boolean;
         CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
     }, {
-        SHARED_GLOBAL?: boolean | undefined;
         USE?: boolean | undefined;
         CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
     }>;
     BOOKMARKS: z.ZodObject<{
         USE: z.ZodDefault<z.ZodBoolean>;
@@ -179,17 +288,20 @@ export declare const permissionsSchema: z.ZodObject<{
         OPT_OUT?: boolean | undefined;
     }>;
     AGENTS: z.ZodObject<{
-        SHARED_GLOBAL: z.ZodDefault<z.ZodBoolean>;
         USE: z.ZodDefault<z.ZodBoolean>;
         CREATE: z.ZodDefault<z.ZodBoolean>;
+        SHARE: z.ZodDefault<z.ZodBoolean>;
+        SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        SHARED_GLOBAL: boolean;
         USE: boolean;
         CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
     }, {
-        SHARED_GLOBAL?: boolean | undefined;
         USE?: boolean | undefined;
         CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
     }>;
     MULTI_CONVO: z.ZodObject<{
         USE: z.ZodDefault<z.ZodBoolean>;
@@ -219,19 +331,87 @@ export declare const permissionsSchema: z.ZodObject<{
     }, {
         USE?: boolean | undefined;
     }>;
-}, "strip", z.ZodTypeAny, {
-    PROMPTS: {
-        SHARED_GLOBAL: boolean;
+    PEOPLE_PICKER: z.ZodObject<{
+        VIEW_USERS: z.ZodDefault<z.ZodBoolean>;
+        VIEW_GROUPS: z.ZodDefault<z.ZodBoolean>;
+        VIEW_ROLES: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        VIEW_USERS: boolean;
+        VIEW_GROUPS: boolean;
+        VIEW_ROLES: boolean;
+    }, {
+        VIEW_USERS?: boolean | undefined;
+        VIEW_GROUPS?: boolean | undefined;
+        VIEW_ROLES?: boolean | undefined;
+    }>;
+    MARKETPLACE: z.ZodObject<{
+        USE: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        USE: boolean;
+    }, {
+        USE?: boolean | undefined;
+    }>;
+    FILE_SEARCH: z.ZodObject<{
+        USE: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        USE: boolean;
+    }, {
+        USE?: boolean | undefined;
+    }>;
+    FILE_CITATIONS: z.ZodObject<{
+        USE: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        USE: boolean;
+    }, {
+        USE?: boolean | undefined;
+    }>;
+    MCP_SERVERS: z.ZodObject<{
+        USE: z.ZodDefault<z.ZodBoolean>;
+        CREATE: z.ZodDefault<z.ZodBoolean>;
+        SHARE: z.ZodDefault<z.ZodBoolean>;
+        SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
         USE: boolean;
         CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
+    }, {
+        USE?: boolean | undefined;
+        CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
+    }>;
+    REMOTE_AGENTS: z.ZodObject<{
+        USE: z.ZodDefault<z.ZodBoolean>;
+        CREATE: z.ZodDefault<z.ZodBoolean>;
+        SHARE: z.ZodDefault<z.ZodBoolean>;
+        SHARE_PUBLIC: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        USE: boolean;
+        CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
+    }, {
+        USE?: boolean | undefined;
+        CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    PROMPTS: {
+        USE: boolean;
+        CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
     };
     BOOKMARKS: {
         USE: boolean;
     };
     AGENTS: {
-        SHARED_GLOBAL: boolean;
         USE: boolean;
         CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
     };
     MEMORIES: {
         USE: boolean;
@@ -252,19 +432,47 @@ export declare const permissionsSchema: z.ZodObject<{
     WEB_SEARCH: {
         USE: boolean;
     };
+    PEOPLE_PICKER: {
+        VIEW_USERS: boolean;
+        VIEW_GROUPS: boolean;
+        VIEW_ROLES: boolean;
+    };
+    MARKETPLACE: {
+        USE: boolean;
+    };
+    FILE_SEARCH: {
+        USE: boolean;
+    };
+    FILE_CITATIONS: {
+        USE: boolean;
+    };
+    MCP_SERVERS: {
+        USE: boolean;
+        CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
+    };
+    REMOTE_AGENTS: {
+        USE: boolean;
+        CREATE: boolean;
+        SHARE: boolean;
+        SHARE_PUBLIC: boolean;
+    };
 }, {
     PROMPTS: {
-        SHARED_GLOBAL?: boolean | undefined;
         USE?: boolean | undefined;
         CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
     };
     BOOKMARKS: {
         USE?: boolean | undefined;
     };
     AGENTS: {
-        SHARED_GLOBAL?: boolean | undefined;
         USE?: boolean | undefined;
         CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
     };
     MEMORIES: {
         USE?: boolean | undefined;
@@ -284,5 +492,31 @@ export declare const permissionsSchema: z.ZodObject<{
     };
     WEB_SEARCH: {
         USE?: boolean | undefined;
+    };
+    PEOPLE_PICKER: {
+        VIEW_USERS?: boolean | undefined;
+        VIEW_GROUPS?: boolean | undefined;
+        VIEW_ROLES?: boolean | undefined;
+    };
+    MARKETPLACE: {
+        USE?: boolean | undefined;
+    };
+    FILE_SEARCH: {
+        USE?: boolean | undefined;
+    };
+    FILE_CITATIONS: {
+        USE?: boolean | undefined;
+    };
+    MCP_SERVERS: {
+        USE?: boolean | undefined;
+        CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
+    };
+    REMOTE_AGENTS: {
+        USE?: boolean | undefined;
+        CREATE?: boolean | undefined;
+        SHARE?: boolean | undefined;
+        SHARE_PUBLIC?: boolean | undefined;
     };
 }>;

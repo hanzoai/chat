@@ -1,5 +1,5 @@
 import { SettingsConfiguration } from './generate';
-export declare const chat: {
+export declare const librechat: {
     modelLabel: {
         readonly key: "modelLabel";
         readonly label: "com_endpoint_custom_name";
@@ -47,6 +47,18 @@ export declare const chat: {
         readonly placeholder: "com_endpoint_openai_prompt_prefix_placeholder";
         readonly placeholderCode: true;
         readonly optionType: "model";
+    };
+    fileTokenLimit: {
+        readonly key: "fileTokenLimit";
+        readonly label: "com_ui_file_token_limit";
+        readonly labelCode: true;
+        readonly description: "com_ui_file_token_limit_desc";
+        readonly descriptionCode: true;
+        readonly placeholder: "com_nav_theme_system";
+        readonly placeholderCode: true;
+        readonly type: "number";
+        readonly component: "input";
+        readonly columnSpan: 2;
     };
 };
 export declare const paramSettings: Record<string, SettingsConfiguration | undefined>;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FileConfig } from './types/files';
+import type { EndpointFileConfig, FileConfig } from './types/files';
 export declare const supportsFiles: {
     openAI: boolean;
     google: boolean;
@@ -20,11 +20,27 @@ export declare const excelMimeTypes: RegExp;
 export declare const textMimeTypes: RegExp;
 export declare const applicationMimeTypes: RegExp;
 export declare const imageMimeTypes: RegExp;
+export declare const audioMimeTypes: RegExp;
+export declare const videoMimeTypes: RegExp;
+export declare const defaultOCRMimeTypes: RegExp[];
+export declare const defaultTextMimeTypes: RegExp[];
+export declare const defaultSTTMimeTypes: RegExp[];
 export declare const supportedMimeTypes: RegExp[];
 export declare const codeInterpreterMimeTypes: RegExp[];
 export declare const codeTypeMapping: {
     [key: string]: string;
 };
+/** Maps image extensions to MIME types for formats browsers may not recognize */
+export declare const imageTypeMapping: {
+    [key: string]: string;
+};
+/**
+ * Infers the MIME type from a file's extension when the browser doesn't recognize it
+ * @param fileName - The name of the file including extension
+ * @param currentType - The current MIME type reported by the browser (may be empty)
+ * @returns The inferred MIME type if browser didn't provide one, otherwise the original type
+ */
+export declare function inferMimeType(fileName: string, currentType: string): string;
 export declare const retrievalMimeTypes: RegExp[];
 export declare const megabyte: number;
 /** Helper function to get megabytes value */
@@ -52,6 +68,13 @@ export declare const fileConfig: {
             supportedMimeTypes: RegExp[];
             disabled: boolean;
         };
+        anthropic: {
+            fileLimit: number;
+            fileSizeLimit: number;
+            totalSizeLimit: number;
+            supportedMimeTypes: RegExp[];
+            disabled: boolean;
+        };
         default: {
             fileLimit: number;
             fileSizeLimit: number;
@@ -62,11 +85,21 @@ export declare const fileConfig: {
     };
     serverFileSizeLimit: number;
     avatarSizeLimit: number;
+    fileTokenLimit: number;
     clientImageResize: {
         enabled: boolean;
         maxWidth: number;
         maxHeight: number;
         quality: number;
+    };
+    ocr: {
+        supportedMimeTypes: RegExp[];
+    };
+    text: {
+        supportedMimeTypes: RegExp[];
+    };
+    stt: {
+        supportedMimeTypes: RegExp[];
     };
     checkType: (fileType: string, supportedTypes?: RegExp[]) => boolean;
 };
@@ -111,6 +144,7 @@ export declare const fileConfigSchema: z.ZodObject<{
     }>>>;
     serverFileSizeLimit: z.ZodOptional<z.ZodNumber>;
     avatarSizeLimit: z.ZodOptional<z.ZodNumber>;
+    fileTokenLimit: z.ZodOptional<z.ZodNumber>;
     imageGeneration: z.ZodOptional<z.ZodObject<{
         percentage: z.ZodOptional<z.ZodNumber>;
         px: z.ZodOptional<z.ZodNumber>;
@@ -137,6 +171,20 @@ export declare const fileConfigSchema: z.ZodObject<{
         maxHeight?: number | undefined;
         quality?: number | undefined;
     }>>;
+    ocr: z.ZodOptional<z.ZodObject<{
+        supportedMimeTypes: z.ZodOptional<z.ZodEffects<z.ZodOptional<z.ZodArray<z.ZodAny, "many">>, any[] | undefined, any[] | undefined>>;
+    }, "strip", z.ZodTypeAny, {
+        supportedMimeTypes?: any[] | undefined;
+    }, {
+        supportedMimeTypes?: any[] | undefined;
+    }>>;
+    text: z.ZodOptional<z.ZodObject<{
+        supportedMimeTypes: z.ZodOptional<z.ZodEffects<z.ZodOptional<z.ZodArray<z.ZodAny, "many">>, any[] | undefined, any[] | undefined>>;
+    }, "strip", z.ZodTypeAny, {
+        supportedMimeTypes?: any[] | undefined;
+    }, {
+        supportedMimeTypes?: any[] | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     endpoints?: Record<string, {
         disabled?: boolean | undefined;
@@ -147,6 +195,7 @@ export declare const fileConfigSchema: z.ZodObject<{
     }> | undefined;
     serverFileSizeLimit?: number | undefined;
     avatarSizeLimit?: number | undefined;
+    fileTokenLimit?: number | undefined;
     imageGeneration?: {
         percentage?: number | undefined;
         px?: number | undefined;
@@ -156,6 +205,12 @@ export declare const fileConfigSchema: z.ZodObject<{
         maxWidth?: number | undefined;
         maxHeight?: number | undefined;
         quality?: number | undefined;
+    } | undefined;
+    ocr?: {
+        supportedMimeTypes?: any[] | undefined;
+    } | undefined;
+    text?: {
+        supportedMimeTypes?: any[] | undefined;
     } | undefined;
 }, {
     endpoints?: Record<string, {
@@ -167,6 +222,7 @@ export declare const fileConfigSchema: z.ZodObject<{
     }> | undefined;
     serverFileSizeLimit?: number | undefined;
     avatarSizeLimit?: number | undefined;
+    fileTokenLimit?: number | undefined;
     imageGeneration?: {
         percentage?: number | undefined;
         px?: number | undefined;
@@ -177,7 +233,19 @@ export declare const fileConfigSchema: z.ZodObject<{
         maxHeight?: number | undefined;
         quality?: number | undefined;
     } | undefined;
+    ocr?: {
+        supportedMimeTypes?: any[] | undefined;
+    } | undefined;
+    text?: {
+        supportedMimeTypes?: any[] | undefined;
+    } | undefined;
 }>;
+export type TFileConfig = z.infer<typeof fileConfigSchema>;
 /** Helper function to safely convert string patterns to RegExp objects */
 export declare const convertStringsToRegex: (patterns: string[]) => RegExp[];
+export declare function getEndpointFileConfig(params: {
+    fileConfig?: FileConfig | null;
+    endpoint?: string | null;
+    endpointType?: string | null;
+}): EndpointFileConfig;
 export declare function mergeFileConfig(dynamic: z.infer<typeof fileConfigSchema> | undefined): FileConfig;

@@ -70,3 +70,4 @@ export interface MistralOCRUploadResult {
     text: string;
     images: string[];
 }
+//# sourceMappingURL=mistral.d.ts.map

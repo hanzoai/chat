@@ -3,6 +3,8 @@ export declare class SessionError extends Error {
     code: string;
     constructor(message: string, code?: string);
 }
+/** Default refresh token expiry: 7 days in milliseconds */
+export declare const DEFAULT_REFRESH_TOKEN_EXPIRY: number;
 export declare function createSessionMethods(mongoose: typeof import('mongoose')): {
     findSession: (params: t.SessionSearchParams, options?: t.SessionQueryOptions) => Promise<t.ISession | null>;
     SessionError: typeof SessionError;
@@ -10,7 +12,7 @@ export declare function createSessionMethods(mongoose: typeof import('mongoose')
         deletedCount?: number;
     }>;
     createSession: (userId: string, options?: t.CreateSessionOptions) => Promise<t.SessionResult>;
-    updateExpiration: (session: t.ISession | string, newExpiration?: Date) => Promise<t.ISession>;
+    updateExpiration: (session: t.ISession | string, newExpiration?: Date, options?: t.UpdateExpirationOptions) => Promise<t.ISession>;
     countActiveSessions: (userId: string) => Promise<number>;
     generateRefreshToken: (session: t.ISession) => Promise<string>;
     deleteAllUserSessions: (userId: string | {

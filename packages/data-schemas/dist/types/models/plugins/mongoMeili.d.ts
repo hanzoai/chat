@@ -1,4 +1,4 @@
-import type { SearchResponse, Index } from 'meilisearch';
+import type { SearchResponse, SearchParams, Index } from 'meilisearch';
 import type { CallbackWithoutResultAndOptionalError, Document, Schema, Model } from 'mongoose';
 import type { IConversation, IMessage } from '~/types';
 interface MongoMeiliOptions {
@@ -32,23 +32,12 @@ interface _DocumentWithMeiliIndex extends Document {
 }
 export type DocumentWithMeiliIndex = _DocumentWithMeiliIndex & IConversation & Partial<IMessage>;
 export interface SchemaWithMeiliMethods extends Model<DocumentWithMeiliIndex> {
-    syncWithMeili(options?: {
-        resumeFromId?: string;
-    }): Promise<void>;
+    syncWithMeili(): Promise<void>;
     getSyncProgress(): Promise<SyncProgress>;
-    processSyncBatch(index: Index<MeiliIndexable>, documents: Array<Record<string, unknown>>, updateOps: Array<{
-        updateOne: {
-            filter: Record<string, unknown>;
-            update: {
-                $set: {
-                    _meiliIndex: boolean;
-                };
-            };
-        };
-    }>): Promise<void>;
+    processSyncBatch(index: Index<MeiliIndexable>, documents: Array<Record<string, unknown>>): Promise<void>;
     cleanupMeiliIndex(index: Index<MeiliIndexable>, primaryKey: string, batchSize: number, delayMs: number): Promise<void>;
     setMeiliIndexSettings(settings: Record<string, unknown>): Promise<unknown>;
-    meiliSearch(q: string, params?: Record<string, unknown>, populate?: boolean): Promise<SearchResponse<MeiliIndexable, Record<string, unknown>>>;
+    meiliSearch(q: string, params?: SearchParams, populate?: boolean): Promise<SearchResponse<MeiliIndexable, Record<string, unknown>>>;
 }
 /**
  * Mongoose plugin to synchronize MongoDB collections with a MeiliSearch index.

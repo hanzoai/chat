@@ -1,6 +1,9 @@
-import type { StreamEventData, ToolEndCallback, EventHandler, LLMConfig } from '@hanzochat/agents';
-import type { TAttachment } from '@hanzochat/data-provider';
-import type { ObjectId, MemoryMethods } from '@hanzochat/data-schemas';
+/** Memories */
+import { z } from 'zod';
+import { Tools } from 'librechat-data-provider';
+import type { StreamEventData, ToolEndCallback, EventHandler, LLMConfig } from '@librechat/agents';
+import type { ObjectId, MemoryMethods, IUser } from '@librechat/data-schemas';
+import type { TAttachment, MemoryArtifact } from 'librechat-data-provider';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { Response as ServerResponse } from 'express';
 type RequiredMemoryMethods = Pick<MemoryMethods, 'setMemory' | 'deleteMemory' | 'getFormattedMemories'>;
@@ -11,12 +14,31 @@ export interface MemoryConfig {
     tokenLimit?: number;
 }
 export declare const memoryInstructions = "The system automatically stores important user information and can update or delete memories based on user requests, enabling dynamic memory management.";
+/**
+ * Creates a memory tool instance with user context
+ */
+export declare const createMemoryTool: ({ userId, setMemory, validKeys, tokenLimit, totalTokens, }: {
+    userId: string | ObjectId;
+    setMemory: MemoryMethods["setMemory"];
+    validKeys?: string[];
+    tokenLimit?: number;
+    totalTokens?: number;
+}) => import("@langchain/core/tools").DynamicStructuredTool<z.ZodObject<{
+    key: z.ZodString;
+    value: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    value: string;
+    key: string;
+}, {
+    value: string;
+    key: string;
+}>, any, any, (string | undefined)[] | (string | Record<Tools.memory, MemoryArtifact>)[]>;
 export declare class BasicToolEndHandler implements EventHandler {
     private callback?;
     constructor(callback?: ToolEndCallback);
     handle(event: string, data: StreamEventData | undefined, metadata?: Record<string, unknown>): void;
 }
-export declare function processMemory({ res, userId, setMemory, deleteMemory, messages, memory, messageId, conversationId, validKeys, instructions, llmConfig, tokenLimit, totalTokens, }: {
+export declare function processMemory({ res, userId, setMemory, deleteMemory, messages, memory, messageId, conversationId, validKeys, instructions, llmConfig, tokenLimit, totalTokens, streamId, user, }: {
     res: ServerResponse;
     setMemory: MemoryMethods['setMemory'];
     deleteMemory: MemoryMethods['deleteMemory'];
@@ -30,24 +52,31 @@ export declare function processMemory({ res, userId, setMemory, deleteMemory, me
     tokenLimit?: number;
     totalTokens?: number;
     llmConfig?: Partial<LLMConfig>;
+    streamId?: string | null;
+    user?: IUser;
 }): Promise<(TAttachment | null)[] | undefined>;
-export declare function createMemoryProcessor({ res, userId, messageId, memoryMethods, conversationId, config, }: {
+export declare function createMemoryProcessor({ res, userId, messageId, memoryMethods, conversationId, config, streamId, user, }: {
     res: ServerResponse;
     messageId: string;
     conversationId: string;
     userId: string | ObjectId;
     memoryMethods: RequiredMemoryMethods;
     config?: MemoryConfig;
+    streamId?: string | null;
+    user?: IUser;
 }): Promise<[string, (messages: BaseMessage[]) => Promise<(TAttachment | null)[] | undefined>]>;
 /**
  * Creates a memory callback for handling memory artifacts
  * @param params - The parameters object
  * @param params.res - The server response object
  * @param params.artifactPromises - Array to collect artifact promises
+ * @param params.streamId - The stream ID for resumable mode, or null for standard mode
  * @returns The memory callback function
  */
-export declare function createMemoryCallback({ res, artifactPromises, }: {
+export declare function createMemoryCallback({ res, artifactPromises, streamId, }: {
     res: ServerResponse;
     artifactPromises: Promise<Partial<TAttachment> | null>[];
+    streamId?: string | null;
 }): ToolEndCallback;
 export {};
+//# sourceMappingURL=memory.d.ts.map
