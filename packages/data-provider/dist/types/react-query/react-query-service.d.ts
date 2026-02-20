@@ -1,7 +1,12 @@
 import type { UseQueryOptions, UseMutationResult, QueryObserverResult } from '@tanstack/react-query';
+import { MCPServerConnectionStatusResponse } from '../types/queries';
 import * as m from '../types/mutations';
+import * as q from '../types/queries';
 import * as s from '../schemas';
 import * as t from '../types';
+import * as permissions from '../accessPermissions';
+import { ResourceType } from '../accessPermissions';
+export { hasPermissions } from '../accessPermissions';
 export declare const useGetSharedMessages: (shareId: string, config?: UseQueryOptions<t.TSharedMessagesResponse>) => QueryObserverResult<t.TSharedMessagesResponse>;
 export declare const useGetSharedLinkQuery: (conversationId: string, config?: UseQueryOptions<t.TSharedLinkGetResponse>) => QueryObserverResult<t.TSharedLinkGetResponse>;
 export declare const useGetConversationByIdQuery: (id: string, config?: UseQueryOptions<s.TConversation>) => QueryObserverResult<s.TConversation>;
@@ -24,5 +29,27 @@ export declare const useRequestPasswordResetMutation: () => UseMutationResult<t.
 export declare const useResetPasswordMutation: () => UseMutationResult<unknown, unknown, t.TResetPassword, unknown>;
 export declare const useAvailablePluginsQuery: <TData = s.TPlugin[]>(config?: UseQueryOptions<s.TPlugin[], unknown, TData>) => QueryObserverResult<TData>;
 export declare const useUpdateUserPluginsMutation: (_options?: m.UpdatePluginAuthOptions) => UseMutationResult<t.TUser, unknown, t.TUpdateUserPlugins, unknown>;
+export declare const useReinitializeMCPServerMutation: () => UseMutationResult<{
+    success: boolean;
+    message: string;
+    serverName: string;
+    oauthRequired?: boolean;
+    oauthUrl?: string;
+}, unknown, string, unknown>;
+export declare const useCancelMCPOAuthMutation: () => UseMutationResult<m.CancelMCPOAuthResponse, unknown, string, unknown>;
 export declare const useGetCustomConfigSpeechQuery: (config?: UseQueryOptions<t.TCustomConfigSpeechResponse>) => QueryObserverResult<t.TCustomConfigSpeechResponse>;
 export declare const useUpdateFeedbackMutation: (conversationId: string, messageId: string) => UseMutationResult<t.TUpdateFeedbackResponse, Error, t.TUpdateFeedbackRequest>;
+export declare const useSearchPrincipalsQuery: (params: q.PrincipalSearchParams, config?: UseQueryOptions<q.PrincipalSearchResponse>) => QueryObserverResult<q.PrincipalSearchResponse>;
+export declare const useGetAccessRolesQuery: (resourceType: ResourceType, config?: UseQueryOptions<q.AccessRolesResponse>) => QueryObserverResult<q.AccessRolesResponse>;
+export declare const useGetResourcePermissionsQuery: (resourceType: ResourceType, resourceId: string, config?: UseQueryOptions<permissions.TGetResourcePermissionsResponse>) => QueryObserverResult<permissions.TGetResourcePermissionsResponse>;
+export declare const useUpdateResourcePermissionsMutation: () => UseMutationResult<permissions.TUpdateResourcePermissionsResponse, Error, {
+    resourceType: ResourceType;
+    resourceId: string;
+    data: permissions.TUpdateResourcePermissionsRequest;
+}>;
+export declare const useGetEffectivePermissionsQuery: (resourceType: ResourceType, resourceId: string, config?: UseQueryOptions<permissions.TEffectivePermissionsResponse>) => QueryObserverResult<permissions.TEffectivePermissionsResponse>;
+export declare const useGetAllEffectivePermissionsQuery: (resourceType: ResourceType, config?: UseQueryOptions<permissions.TAllEffectivePermissionsResponse>) => QueryObserverResult<permissions.TAllEffectivePermissionsResponse>;
+export declare const useMCPServerConnectionStatusQuery: (serverName: string, config?: UseQueryOptions<MCPServerConnectionStatusResponse>) => QueryObserverResult<MCPServerConnectionStatusResponse>;
+export declare const useGetAgentApiKeysQuery: (config?: UseQueryOptions<t.TAgentApiKeyListResponse>) => QueryObserverResult<t.TAgentApiKeyListResponse>;
+export declare const useCreateAgentApiKeyMutation: () => UseMutationResult<t.TAgentApiKeyCreateResponse, unknown, t.TAgentApiKeyCreateRequest>;
+export declare const useDeleteAgentApiKeyMutation: () => UseMutationResult<void, unknown, string>;

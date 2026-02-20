@@ -50,15 +50,34 @@ function AccountSettings() {
           {user?.email ?? localize('com_nav_user')}
         </div>
         <DropdownMenuSeparator />
-        {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (
-          <>
-            <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
-              {localize('com_nav_balance')}:{' '}
-              {new Intl.NumberFormat().format(Math.round(balanceQuery.data.tokenCredits))}
-            </div>
-            <DropdownMenuSeparator />
-          </>
-        )}
+        {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (() => {
+          const credits = balanceQuery.data.tokenCredits;
+          const usd = (credits / 1000000).toFixed(2);
+          const isLow = credits > 0 && credits < 2000000;
+          const isExpired = balanceQuery.data.expiresAt
+            ? new Date(balanceQuery.data.expiresAt) < new Date()
+            : false;
+          const isEmpty = credits === 0 || isExpired;
+          return (
+            <>
+              <div
+                className={`ml-3 mr-2 py-2 text-sm ${
+                  isEmpty
+                    ? 'text-red-600 dark:text-red-400'
+                    : isLow
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-token-text-secondary'
+                }`}
+                role="note"
+              >
+                {localize('com_nav_balance')}: ${usd} USD
+                {isEmpty && ' (depleted)'}
+                {isLow && !isEmpty && ' (low)'}
+              </div>
+              <DropdownMenuSeparator />
+            </>
+          );
+        })()}
         <Select.SelectItem
           value=""
           onClick={() => setShowFiles(true)}

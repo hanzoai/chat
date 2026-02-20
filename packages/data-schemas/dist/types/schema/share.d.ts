@@ -5,6 +5,7 @@ export interface ISharedLink extends Document {
     user?: string;
     messages?: Types.ObjectId[];
     shareId?: string;
+    targetMessageId?: string;
     isPublic: boolean;
     createdAt?: Date;
     updatedAt?: Date;
