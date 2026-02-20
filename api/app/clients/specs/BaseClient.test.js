@@ -2,6 +2,14 @@ const { Constants } = require('librechat-data-provider');
 const { initializeFakeClient } = require('./FakeClient');
 
 jest.mock('~/db/connect');
+jest.mock('~/server/services/Config', () => ({
+  getAppConfig: jest.fn().mockResolvedValue({
+    // Default app config for tests
+    paths: { uploads: '/tmp' },
+    fileStrategy: 'local',
+    memory: { disabled: false },
+  }),
+}));
 jest.mock('~/models', () => ({
   User: jest.fn(),
   Key: jest.fn(),
@@ -33,9 +41,9 @@ jest.mock('~/models', () => ({
 const { getConvo, saveConvo } = require('~/models');
 
 jest.mock('@librechat/agents', () => {
-  const { Providers } = jest.requireActual('@librechat/agents');
+  const actual = jest.requireActual('@librechat/agents');
   return {
-    Providers,
+    ...actual,
     ChatOpenAI: jest.fn().mockImplementation(() => {
       return {};
     }),
@@ -579,6 +587,8 @@ describe('BaseClient', () => {
       expect(onStart).toHaveBeenCalledWith(
         expect.objectContaining({ text: 'Hello, world!' }),
         expect.any(String),
+        /** `isNewConvo` */
+        true,
       );
     });
 

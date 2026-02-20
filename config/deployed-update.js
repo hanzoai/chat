@@ -36,12 +36,12 @@ const shouldRebase = process.argv.includes('--rebase');
   }
 
   console.purple('Removing previously made Docker container...');
-  const downCommand = 'sudo docker-compose -f ./deploy-compose.yml down';
+  const downCommand = 'sudo docker compose -f ./deploy-compose.yml down';
   console.orange(downCommand);
   execSync(downCommand, { stdio: 'inherit' });
 
-  console.purple('Removing all tags for Hanzo Chat `deployed` images...');
-  const repositories = ['ghcr.io/hanzoai/chat', 'hanzoai-chat-client'];
+  console.purple('Removing all tags for LibreChat `deployed` images...');
+  const repositories = ['ghcr.io/danny-avila/librechat-dev-api', 'librechat-client'];
   repositories.forEach((repo) => {
     const tags = execSync(`sudo docker images ${repo} -q`, { encoding: 'utf8' })
       .split('\n')
@@ -53,16 +53,16 @@ const shouldRebase = process.argv.includes('--rebase');
     });
   });
 
-  console.purple('Pulling latest Hanzo Chat images...');
-  const pullCommand = 'sudo docker-compose -f ./deploy-compose.yml pull api';
+  console.purple('Pulling latest LibreChat images...');
+  const pullCommand = 'sudo docker compose -f ./deploy-compose.yml pull api';
   console.orange(pullCommand);
   execSync(pullCommand, { stdio: 'inherit' });
 
-  let startCommand = 'sudo docker-compose -f ./deploy-compose.yml up -d';
-  console.green('Your Hanzo Chat app is now up to date! Start the app with the following command:');
+  let startCommand = 'sudo docker compose -f ./deploy-compose.yml up -d';
+  console.green('Your LibreChat app is now up to date! Start the app with the following command:');
   console.purple(startCommand);
   console.orange(
-    'Note: it\'s also recommended to clear your browser cookies and localStorage for Hanzo Chat to assure a fully clean installation.',
+    "Note: it's also recommended to clear your browser cookies and localStorage for LibreChat to assure a fully clean installation.",
   );
-  console.orange('Also: Don\'t worry, your data is safe :)');
+  console.orange("Also: Don't worry, your data is safe :)");
 })();
