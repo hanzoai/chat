@@ -1,7 +1,8 @@
 {
-  "name": "@hanzochat/chat",
-  "version": "v0.8.0-rc2",
-  "description": "Chat - Unified interface to Agents, LLMs, MCPs and any AI model or OpenAPI documented API with full RAG stack",
+  "name": "HanzoChat",
+  "version": "v0.8.3-rc1",
+  "description": "",
+  "packageManager": "npm@11.10.0",
   "workspaces": [
     "api",
     "client",
@@ -15,6 +16,7 @@
     "user-stats": "node config/user-stats.js",
     "rebuild:package-lock": "node config/packages",
     "reinstall": "node config/update.js -l -g",
+    "smart-reinstall": "node config/smart-reinstall.js",
     "b:reinstall": "bun config/update.js -b -l -g",
     "reinstall:docker": "node config/update.js -d -g",
     "update:local": "node config/update.js -l",
@@ -26,9 +28,6 @@
     "start:deployed": "docker compose -f ./deploy-compose.yml up -d || docker-compose -f ./deploy-compose.yml up -d",
     "stop:deployed": "docker compose -f ./deploy-compose.yml down || docker-compose -f ./deploy-compose.yml down",
     "upgrade": "node config/upgrade.js",
-    "seed": "node scripts/seed_demo_user.js && node scripts/seed_team_agents.js",
-    "seed:user": "node scripts/seed_demo_user.js",
-    "seed:agents": "node scripts/seed_team_agents.js",
     "create-user": "node config/create-user.js",
     "invite-user": "node config/invite-user.js",
     "list-users": "node config/list-users.js",
@@ -41,6 +40,7 @@
     "backend": "cross-env NODE_ENV=production node api/server/index.js",
     "backend:inspect": "cross-env NODE_ENV=production node --inspect api/server/index.js",
     "backend:dev": "cross-env NODE_ENV=development npx nodemon api/server/index.js",
+    "backend:experimental": "cross-env NODE_ENV=production node api/server/experimental.js",
     "backend:stop": "node config/stop-backend.js",
     "build:data-provider": "cd packages/data-provider && npm run build",
     "build:api": "cd packages/api && npm run build",
@@ -48,6 +48,7 @@
     "build:client": "cd client && npm run build",
     "build:client-package": "cd packages/client && npm run build",
     "build:packages": "npm run build:data-provider && npm run build:data-schemas && npm run build:api && npm run build:client-package",
+    "build": "npx turbo run build",
     "frontend": "npm run build:data-provider && npm run build:data-schemas && npm run build:api && npm run build:client-package && cd client && npm run build",
     "frontend:ci": "npm run build:data-provider && npm run build:client-package && cd client && npm run build:ci",
     "frontend:dev": "cd client && npm run dev",
@@ -85,18 +86,24 @@
     "b:balance": "bun config/add-balance.js",
     "b:list-balances": "bun config/list-balances.js",
     "reset-terms": "node config/reset-terms.js",
-    "flush-cache": "node config/flush-cache.js"
+    "flush-cache": "node config/flush-cache.js",
+    "migrate:agent-permissions:dry-run": "node config/migrate-agent-permissions.js --dry-run",
+    "migrate:agent-permissions": "node config/migrate-agent-permissions.js",
+    "migrate:agent-permissions:batch": "node config/migrate-agent-permissions.js --batch-size=50",
+    "migrate:prompt-permissions:dry-run": "node config/migrate-prompt-permissions.js --dry-run",
+    "migrate:prompt-permissions": "node config/migrate-prompt-permissions.js",
+    "migrate:prompt-permissions:batch": "node config/migrate-prompt-permissions.js --batch-size=50"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hanzoai/chat.git"
   },
-  "author": "Hanzo Industries Inc <dev@hanzo.ai>",
+  "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/hanzoai/chat/issues"
   },
-  "homepage": "https://hanzo.ai/",
+  "homepage": "https://hanzo.ai/chat",
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",
     "@eslint/compat": "^1.2.6",
@@ -124,6 +131,7 @@
     "lint-staged": "^15.4.3",
     "prettier": "^3.5.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "turbo": "^2.8.7",
     "typescript-eslint": "^8.24.0"
   },
   "overrides": {
@@ -131,14 +139,14 @@
     "@librechat/agents": {
       "@langchain/anthropic": {
         "@anthropic-ai/sdk": "0.73.0",
-        "fast-xml-parser": "5.3.4"
+        "fast-xml-parser": "5.3.6"
       },
       "@anthropic-ai/sdk": "0.73.0",
-      "fast-xml-parser": "5.3.4"
+      "fast-xml-parser": "5.3.6"
     },
     "axios": "1.12.1",
     "elliptic": "^6.6.1",
-    "fast-xml-parser": "5.3.4",
+    "fast-xml-parser": "5.3.6",
     "form-data": "^4.0.4",
     "tslib": "^2.8.1",
     "mdast-util-gfm-autolink-literal": "2.0.0",
@@ -156,10 +164,8 @@
       "micromark-extension-math": {
         "katex": "^0.16.21"
       }
-    }
-  },
-  "dependencies": {
-    "mongodb": "^6.20.0"
+    },
+    "langsmith": "0.4.12"
   },
   "nodemonConfig": {
     "ignore": [
