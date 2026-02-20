@@ -38,7 +38,10 @@ RUN \
     npm config set fetch-retry-maxtimeout 600000 ; \
     npm config set fetch-retries 5 ; \
     npm config set fetch-retry-mintimeout 15000 ; \
-    npm install --no-audit
+    npm install --no-audit ; \
+    # Ensure transitive deps are available in workspace subdirs
+    cd api && npm install compressible @opentelemetry/core @opentelemetry/api @opentelemetry/sdk-trace-base @opentelemetry/exporter-trace-otlp-http --no-save 2>/dev/null || true ; \
+    cd /app
 
 COPY --chown=node:node . .
 
