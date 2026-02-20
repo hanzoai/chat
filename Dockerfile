@@ -39,9 +39,9 @@ RUN \
     npm config set fetch-retries 5 ; \
     npm config set fetch-retry-mintimeout 15000 ; \
     npm install --no-audit ; \
-    # Ensure transitive deps are available in workspace subdirs
-    cd api && npm install compressible @opentelemetry/core @opentelemetry/api @opentelemetry/sdk-trace-base @opentelemetry/exporter-trace-otlp-http --no-save 2>/dev/null || true ; \
-    cd /app
+    # Hoist ALL dependencies to root — npm workspaces sometimes fail to resolve
+    # transitive deps in nested node_modules. This ensures everything is available.
+    npm dedupe 2>/dev/null || true
 
 COPY --chown=node:node . .
 
