@@ -1,16 +1,18 @@
-import { chat } from '@hanzochat/data-provider';
-import type { DynamicSettingProps } from '@hanzochat/data-provider';
-type ChatKeys = keyof typeof chat;
-type ChatParams = {
-    modelOptions: Omit<NonNullable<DynamicSettingProps['conversation']>, ChatKeys>;
+import { librechat } from 'librechat-data-provider';
+import type { DynamicSettingProps } from 'librechat-data-provider';
+type LibreChatKeys = keyof typeof librechat;
+type LibreChatParams = {
+    modelOptions: Omit<NonNullable<DynamicSettingProps['conversation']>, LibreChatKeys>;
     resendFiles: boolean;
     promptPrefix?: string | null;
     maxContextTokens?: number;
+    fileTokenLimit?: number;
     modelLabel?: string | null;
 };
 /**
- * Separates Chat-specific parameters from model options
+ * Separates LibreChat-specific parameters from model options
  * @param options - The combined options object
  */
-export declare function extractChatParams(options?: DynamicSettingProps['conversation']): ChatParams;
+export declare function extractLibreChatParams(options?: DynamicSettingProps['conversation']): LibreChatParams;
 export {};
+//# sourceMappingURL=llm.d.ts.map

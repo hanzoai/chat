@@ -57,7 +57,10 @@ declare class RequestExecutor {
     constructor(config: RequestConfig);
     setParams(params: Record<string, unknown>): this;
     setAuth(metadata: ActionMetadataRuntime): Promise<this>;
-    execute(): Promise<import("axios").AxiosResponse<any, any>>;
+    execute(options?: {
+        httpAgent?: unknown;
+        httpsAgent?: unknown;
+    }): Promise<import("axios").AxiosResponse<any, any, {}>>;
     getConfig(): RequestConfig;
 }
 export declare class ActionRequest {
@@ -72,7 +75,7 @@ export declare class ActionRequest {
     createExecutor(): RequestExecutor;
     setParams(params: Record<string, unknown>): RequestExecutor;
     setAuth(metadata: ActionMetadata): Promise<RequestExecutor>;
-    execute(): Promise<import("axios").AxiosResponse<any, any>>;
+    execute(): Promise<import("axios").AxiosResponse<any, any, {}>>;
 }
 export declare function resolveRef<T extends OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject | OpenAPIV3.RequestBodyObject>(obj: T, components?: OpenAPIV3.ComponentsObject): Exclude<T, OpenAPIV3.ReferenceObject>;
 /**
@@ -87,7 +90,27 @@ export type ValidationResult = {
     status: boolean;
     message: string;
     spec?: OpenAPIV3.Document;
+    serverUrl?: string;
 };
+/**
+ * Extracts domain from URL (protocol + hostname).
+ * @param url - URL to extract from
+ * @returns Protocol and hostname (e.g., "https://example.com")
+ */
+export declare function extractDomainFromUrl(url: string): string;
+export type DomainValidationResult = {
+    isValid: boolean;
+    message?: string;
+    normalizedSpecDomain?: string;
+    normalizedClientDomain?: string;
+};
+/**
+ * Validates client domain matches OpenAPI spec server URL domain (SSRF prevention).
+ * @param clientProvidedDomain - Domain from client (with/without protocol)
+ * @param specServerUrl - Server URL from OpenAPI spec
+ * @returns Validation result with normalized domains
+ */
+export declare function validateActionDomain(clientProvidedDomain: string, specServerUrl: string): DomainValidationResult;
 /**
  * Validates and parses an OpenAPI spec.
  */

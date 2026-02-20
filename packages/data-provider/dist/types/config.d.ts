@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ZodError } from 'zod';
-import type { TModelsConfig } from './types';
+import type { TEndpointsConfig, TModelsConfig, TConfig } from './types';
 import { EModelEndpoint } from './schemas';
 import { TSpecsConfig } from './models';
 import { FileSources } from './types/files';
@@ -12,6 +12,22 @@ export declare enum SettingsViews {
     advanced = "advanced"
 }
 export declare const fileSourceSchema: z.ZodNativeEnum<typeof FileSources>;
+export declare const fileStrategiesSchema: z.ZodOptional<z.ZodObject<{
+    default: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+    avatar: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+    image: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+    document: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+}, "strip", z.ZodTypeAny, {
+    default?: FileSources | undefined;
+    avatar?: FileSources | undefined;
+    image?: FileSources | undefined;
+    document?: FileSources | undefined;
+}, {
+    default?: FileSources | undefined;
+    avatar?: FileSources | undefined;
+    image?: FileSources | undefined;
+    document?: FileSources | undefined;
+}>>;
 type SchemaShape<T> = T extends z.ZodObject<infer U> ? U : never;
 type DefaultValue<T> = T extends z.ZodDefault<z.ZodTypeAny> ? ReturnType<T['_def']['defaultValue']> : undefined;
 type ExtractDefaults<T> = {
@@ -42,7 +58,6 @@ export declare const azureBaseSchema: z.ZodObject<{
     assistants: z.ZodOptional<z.ZodBoolean>;
     addParams: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     dropParams: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    forcePrompt: z.ZodOptional<z.ZodBoolean>;
     version: z.ZodOptional<z.ZodString>;
     baseURL: z.ZodOptional<z.ZodString>;
     additionalHeaders: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
@@ -56,7 +71,6 @@ export declare const azureBaseSchema: z.ZodObject<{
     serverless?: boolean | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
     additionalHeaders?: Record<string, any> | undefined;
 }, {
     apiKey: string;
@@ -68,7 +82,6 @@ export declare const azureBaseSchema: z.ZodObject<{
     serverless?: boolean | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
     additionalHeaders?: Record<string, any> | undefined;
 }>;
 export type TAzureBaseSchema = z.infer<typeof azureBaseSchema>;
@@ -109,7 +122,6 @@ export declare const azureGroupSchema: z.ZodIntersection<z.ZodObject<{
     assistants: z.ZodOptional<z.ZodBoolean>;
     addParams: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     dropParams: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    forcePrompt: z.ZodOptional<z.ZodBoolean>;
     version: z.ZodOptional<z.ZodString>;
     baseURL: z.ZodOptional<z.ZodString>;
     additionalHeaders: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
@@ -123,7 +135,6 @@ export declare const azureGroupSchema: z.ZodIntersection<z.ZodObject<{
     serverless?: boolean | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
     additionalHeaders?: Record<string, any> | undefined;
 }, {
     apiKey: string;
@@ -135,7 +146,6 @@ export declare const azureGroupSchema: z.ZodIntersection<z.ZodObject<{
     serverless?: boolean | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
     additionalHeaders?: Record<string, any> | undefined;
 }>>;
 export declare const azureGroupConfigsSchema: z.ZodArray<z.ZodIntersection<z.ZodObject<{
@@ -175,7 +185,6 @@ export declare const azureGroupConfigsSchema: z.ZodArray<z.ZodIntersection<z.Zod
     assistants: z.ZodOptional<z.ZodBoolean>;
     addParams: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     dropParams: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    forcePrompt: z.ZodOptional<z.ZodBoolean>;
     version: z.ZodOptional<z.ZodString>;
     baseURL: z.ZodOptional<z.ZodString>;
     additionalHeaders: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
@@ -189,7 +198,6 @@ export declare const azureGroupConfigsSchema: z.ZodArray<z.ZodIntersection<z.Zod
     serverless?: boolean | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
     additionalHeaders?: Record<string, any> | undefined;
 }, {
     apiKey: string;
@@ -201,7 +209,6 @@ export declare const azureGroupConfigsSchema: z.ZodArray<z.ZodIntersection<z.Zod
     serverless?: boolean | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
     additionalHeaders?: Record<string, any> | undefined;
 }>>, "many">;
 export type TAzureGroup = z.infer<typeof azureGroupSchema>;
@@ -215,8 +222,10 @@ export type TAzureGroupMap = Record<string, (TAzureBaseSchema & {
 }) | undefined>;
 export type TValidatedAzureConfig = {
     modelNames: string[];
-    modelGroupMap: TAzureModelGroupMap;
     groupMap: TAzureGroupMap;
+    assistantModels?: string[];
+    assistantGroups?: string[];
+    modelGroupMap: TAzureModelGroupMap;
 };
 export type TAzureConfigValidationResult = TValidatedAzureConfig & {
     isValid: boolean;
@@ -231,12 +240,15 @@ export declare enum Capabilities {
 }
 export declare enum AgentCapabilities {
     hide_sequential_outputs = "hide_sequential_outputs",
+    programmatic_tools = "programmatic_tools",
     end_after_tools = "end_after_tools",
+    deferred_tools = "deferred_tools",
     execute_code = "execute_code",
     file_search = "file_search",
     web_search = "web_search",
     artifacts = "artifacts",
     actions = "actions",
+    context = "context",
     tools = "tools",
     chain = "chain",
     ocr = "ocr"
@@ -250,16 +262,28 @@ export declare const baseEndpointSchema: z.ZodObject<{
     baseURL: z.ZodOptional<z.ZodString>;
     titlePrompt: z.ZodOptional<z.ZodString>;
     titleModel: z.ZodOptional<z.ZodString>;
+    titleConvo: z.ZodOptional<z.ZodBoolean>;
+    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+    titleEndpoint: z.ZodOptional<z.ZodString>;
+    titlePromptTemplate: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     baseURL?: string | undefined;
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
 }, {
     baseURL?: string | undefined;
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
 }>;
 export type TBaseEndpoint = z.infer<typeof baseEndpointSchema>;
 export declare const bedrockEndpointSchema: z.ZodObject<{
@@ -267,26 +291,48 @@ export declare const bedrockEndpointSchema: z.ZodObject<{
     baseURL: z.ZodOptional<z.ZodString>;
     titlePrompt: z.ZodOptional<z.ZodString>;
     titleModel: z.ZodOptional<z.ZodString>;
+    titleConvo: z.ZodOptional<z.ZodBoolean>;
+    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+    titleEndpoint: z.ZodOptional<z.ZodString>;
+    titlePromptTemplate: z.ZodOptional<z.ZodString>;
 } & {
     availableRegions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    models: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    inferenceProfiles: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     baseURL?: string | undefined;
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
+    models?: string[] | undefined;
     availableRegions?: string[] | undefined;
+    inferenceProfiles?: Record<string, string> | undefined;
 }, {
     baseURL?: string | undefined;
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
+    models?: string[] | undefined;
     availableRegions?: string[] | undefined;
+    inferenceProfiles?: Record<string, string> | undefined;
 }>;
 export declare const assistantEndpointSchema: z.ZodObject<{
     streamRate: z.ZodOptional<z.ZodNumber>;
     baseURL: z.ZodOptional<z.ZodString>;
     titlePrompt: z.ZodOptional<z.ZodString>;
     titleModel: z.ZodOptional<z.ZodString>;
+    titleConvo: z.ZodOptional<z.ZodBoolean>;
+    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+    titleEndpoint: z.ZodOptional<z.ZodString>;
+    titlePromptTemplate: z.ZodOptional<z.ZodString>;
 } & {
     disableBuilder: z.ZodOptional<z.ZodBoolean>;
     pollIntervalMs: z.ZodOptional<z.ZodNumber>;
@@ -299,20 +345,33 @@ export declare const assistantEndpointSchema: z.ZodObject<{
     capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof Capabilities>, "many">>>;
     apiKey: z.ZodOptional<z.ZodString>;
     models: z.ZodOptional<z.ZodObject<{
-        default: z.ZodArray<z.ZodString, "many">;
+        default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+            name: z.ZodString;
+            description: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            description?: string | undefined;
+        }, {
+            name: string;
+            description?: string | undefined;
+        }>]>, "many">;
         fetch: z.ZodOptional<z.ZodBoolean>;
         userIdQuery: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     }, {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     }>>;
-    titleConvo: z.ZodOptional<z.ZodBoolean>;
-    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>;
     headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
 }, "strip", z.ZodTypeAny, {
     version: string | number;
@@ -324,13 +383,18 @@ export declare const assistantEndpointSchema: z.ZodObject<{
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
     models?: {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     } | undefined;
-    titleConvo?: boolean | undefined;
-    titleMethod?: "completion" | "functions" | undefined;
     disableBuilder?: boolean | undefined;
     pollIntervalMs?: number | undefined;
     timeoutMs?: number | undefined;
@@ -345,13 +409,18 @@ export declare const assistantEndpointSchema: z.ZodObject<{
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
     models?: {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     } | undefined;
-    titleConvo?: boolean | undefined;
-    titleMethod?: "completion" | "functions" | undefined;
     disableBuilder?: boolean | undefined;
     pollIntervalMs?: number | undefined;
     timeoutMs?: number | undefined;
@@ -368,19 +437,33 @@ export declare const agentsEndpointSchema: z.ZodDefault<z.ZodObject<{
     baseURL: z.ZodOptional<z.ZodString>;
     titlePrompt: z.ZodOptional<z.ZodString>;
     titleModel: z.ZodOptional<z.ZodString>;
+    titleConvo: z.ZodOptional<z.ZodBoolean>;
+    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+    titleEndpoint: z.ZodOptional<z.ZodString>;
+    titlePromptTemplate: z.ZodOptional<z.ZodString>;
 } & {
     recursionLimit: z.ZodOptional<z.ZodNumber>;
     disableBuilder: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
     maxRecursionLimit: z.ZodOptional<z.ZodNumber>;
+    maxCitations: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    maxCitationsPerFile: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    minRelevanceScore: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     allowedProviders: z.ZodOptional<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>, "many">>;
     capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof AgentCapabilities>, "many">>>;
 }, "strip", z.ZodTypeAny, {
     disableBuilder: boolean;
     capabilities: AgentCapabilities[];
+    maxCitations: number;
+    maxCitationsPerFile: number;
+    minRelevanceScore: number;
     baseURL?: string | undefined;
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
     recursionLimit?: number | undefined;
     maxRecursionLimit?: number | undefined;
     allowedProviders?: string[] | undefined;
@@ -389,10 +472,17 @@ export declare const agentsEndpointSchema: z.ZodDefault<z.ZodObject<{
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
     disableBuilder?: boolean | undefined;
     capabilities?: AgentCapabilities[] | undefined;
     recursionLimit?: number | undefined;
     maxRecursionLimit?: number | undefined;
+    maxCitations?: number | undefined;
+    maxCitationsPerFile?: number | undefined;
+    minRelevanceScore?: number | undefined;
     allowedProviders?: string[] | undefined;
 }>>;
 export type TAgentsEndpoint = z.infer<typeof agentsEndpointSchema>;
@@ -400,33 +490,50 @@ export declare const endpointSchema: z.ZodObject<{
     streamRate: z.ZodOptional<z.ZodNumber>;
     titlePrompt: z.ZodOptional<z.ZodString>;
     titleModel: z.ZodOptional<z.ZodString>;
+    titleConvo: z.ZodOptional<z.ZodBoolean>;
+    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+    titleEndpoint: z.ZodOptional<z.ZodString>;
+    titlePromptTemplate: z.ZodOptional<z.ZodString>;
 } & {
     name: z.ZodEffects<z.ZodString, string, string>;
     apiKey: z.ZodString;
     baseURL: z.ZodString;
     models: z.ZodObject<{
-        default: z.ZodArray<z.ZodString, "many">;
+        default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+            name: z.ZodString;
+            description: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            description?: string | undefined;
+        }, {
+            name: string;
+            description?: string | undefined;
+        }>]>, "many">;
         fetch: z.ZodOptional<z.ZodBoolean>;
         userIdQuery: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     }, {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     }>;
-    titleConvo: z.ZodOptional<z.ZodBoolean>;
-    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>;
     summarize: z.ZodOptional<z.ZodBoolean>;
     summaryModel: z.ZodOptional<z.ZodString>;
-    forcePrompt: z.ZodOptional<z.ZodBoolean>;
+    iconURL: z.ZodOptional<z.ZodString>;
     modelDisplayLabel: z.ZodOptional<z.ZodString>;
     headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     addParams: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     dropParams: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    customParams: z.ZodObject<{
+    customParams: z.ZodOptional<z.ZodObject<{
         defaultParamsEndpoint: z.ZodDefault<z.ZodString>;
         paramDefinitions: z.ZodOptional<z.ZodArray<z.ZodRecord<z.ZodString, z.ZodAny>, "many">>;
     }, "strict", z.ZodTypeAny, {
@@ -435,7 +542,7 @@ export declare const endpointSchema: z.ZodObject<{
     }, {
         defaultParamsEndpoint?: string | undefined;
         paramDefinitions?: Record<string, any>[] | undefined;
-    }>;
+    }>>;
     customOrder: z.ZodOptional<z.ZodNumber>;
     directEndpoint: z.ZodOptional<z.ZodBoolean>;
     titleMessageRole: z.ZodOptional<z.ZodString>;
@@ -444,26 +551,31 @@ export declare const endpointSchema: z.ZodObject<{
     baseURL: string;
     name: string;
     models: {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     };
-    customParams: {
-        defaultParamsEndpoint: string;
-        paramDefinitions?: Record<string, any>[] | undefined;
-    };
+    iconURL?: string | undefined;
     headers?: Record<string, any> | undefined;
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
-    titleConvo?: boolean | undefined;
-    titleMethod?: "completion" | "functions" | undefined;
     summarize?: boolean | undefined;
     summaryModel?: string | undefined;
     modelDisplayLabel?: string | undefined;
+    customParams?: {
+        defaultParamsEndpoint: string;
+        paramDefinitions?: Record<string, any>[] | undefined;
+    } | undefined;
     customOrder?: number | undefined;
     directEndpoint?: boolean | undefined;
     titleMessageRole?: string | undefined;
@@ -472,26 +584,31 @@ export declare const endpointSchema: z.ZodObject<{
     baseURL: string;
     name: string;
     models: {
-        default: string[];
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
         fetch?: boolean | undefined;
         userIdQuery?: boolean | undefined;
     };
-    customParams: {
-        defaultParamsEndpoint?: string | undefined;
-        paramDefinitions?: Record<string, any>[] | undefined;
-    };
+    iconURL?: string | undefined;
     headers?: Record<string, any> | undefined;
     streamRate?: number | undefined;
     titlePrompt?: string | undefined;
     titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
     addParams?: Record<string, any> | undefined;
     dropParams?: string[] | undefined;
-    forcePrompt?: boolean | undefined;
-    titleConvo?: boolean | undefined;
-    titleMethod?: "completion" | "functions" | undefined;
     summarize?: boolean | undefined;
     summaryModel?: string | undefined;
     modelDisplayLabel?: string | undefined;
+    customParams?: {
+        defaultParamsEndpoint?: string | undefined;
+        paramDefinitions?: Record<string, any>[] | undefined;
+    } | undefined;
     customOrder?: number | undefined;
     directEndpoint?: boolean | undefined;
     titleMessageRole?: string | undefined;
@@ -535,7 +652,6 @@ export declare const azureEndpointSchema: z.ZodIntersection<z.ZodObject<{
         assistants: z.ZodOptional<z.ZodBoolean>;
         addParams: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
         dropParams: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-        forcePrompt: z.ZodOptional<z.ZodBoolean>;
         version: z.ZodOptional<z.ZodString>;
         baseURL: z.ZodOptional<z.ZodString>;
         additionalHeaders: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
@@ -549,7 +665,6 @@ export declare const azureEndpointSchema: z.ZodIntersection<z.ZodObject<{
         serverless?: boolean | undefined;
         addParams?: Record<string, any> | undefined;
         dropParams?: string[] | undefined;
-        forcePrompt?: boolean | undefined;
         additionalHeaders?: Record<string, any> | undefined;
     }, {
         apiKey: string;
@@ -561,7 +676,6 @@ export declare const azureEndpointSchema: z.ZodIntersection<z.ZodObject<{
         serverless?: boolean | undefined;
         addParams?: Record<string, any> | undefined;
         dropParams?: string[] | undefined;
-        forcePrompt?: boolean | undefined;
         additionalHeaders?: Record<string, any> | undefined;
     }>>, "many">;
     plugins: z.ZodOptional<z.ZodBoolean>;
@@ -584,7 +698,6 @@ export declare const azureEndpointSchema: z.ZodIntersection<z.ZodObject<{
         serverless?: boolean | undefined;
         addParams?: Record<string, any> | undefined;
         dropParams?: string[] | undefined;
-        forcePrompt?: boolean | undefined;
         additionalHeaders?: Record<string, any> | undefined;
     })[];
     assistants?: boolean | undefined;
@@ -607,37 +720,207 @@ export declare const azureEndpointSchema: z.ZodIntersection<z.ZodObject<{
         serverless?: boolean | undefined;
         addParams?: Record<string, any> | undefined;
         dropParams?: string[] | undefined;
-        forcePrompt?: boolean | undefined;
         additionalHeaders?: Record<string, any> | undefined;
     })[];
     assistants?: boolean | undefined;
     plugins?: boolean | undefined;
 }>, z.ZodObject<{
     streamRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    titlePrompt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     titleModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
-    titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>>;
+    titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>>;
+    titlePromptTemplate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     summarize: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
     summaryModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     customOrder: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
     streamRate?: number | undefined;
+    titlePrompt?: string | undefined;
     titleModel?: string | undefined;
     titleConvo?: boolean | undefined;
-    titleMethod?: "completion" | "functions" | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titlePromptTemplate?: string | undefined;
     summarize?: boolean | undefined;
     summaryModel?: string | undefined;
     customOrder?: number | undefined;
 }, {
     streamRate?: number | undefined;
+    titlePrompt?: string | undefined;
     titleModel?: string | undefined;
     titleConvo?: boolean | undefined;
-    titleMethod?: "completion" | "functions" | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titlePromptTemplate?: string | undefined;
     summarize?: boolean | undefined;
     summaryModel?: string | undefined;
     customOrder?: number | undefined;
 }>>;
 export type TAzureConfig = Omit<z.infer<typeof azureEndpointSchema>, 'groups'> & TAzureConfigValidationResult;
+/**
+ * Vertex AI model configuration - similar to Azure model config
+ * Allows specifying deployment name for each model
+ */
+export declare const vertexModelConfigSchema: z.ZodUnion<[z.ZodObject<{
+    /** The actual model ID/deployment name used by Vertex AI API */
+    deploymentName: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    deploymentName?: string | undefined;
+}, {
+    deploymentName?: string | undefined;
+}>, z.ZodBoolean]>;
+export type TVertexModelConfig = z.infer<typeof vertexModelConfigSchema>;
+/**
+ * Vertex AI configuration schema for Anthropic models served via Google Cloud Vertex AI.
+ * Similar to Azure configuration, this allows running Anthropic models through Google Cloud.
+ */
+export declare const vertexAISchema: z.ZodObject<{
+    /** Enable Vertex AI mode for Anthropic (defaults to true when vertex config is present) */
+    enabled: z.ZodOptional<z.ZodBoolean>;
+    /** Google Cloud Project ID (optional - auto-detected from service key file if not provided) */
+    projectId: z.ZodOptional<z.ZodString>;
+    /** Vertex AI region (e.g., 'us-east5', 'europe-west1') */
+    region: z.ZodDefault<z.ZodString>;
+    /** Optional: Path to service account key file */
+    serviceKeyFile: z.ZodOptional<z.ZodString>;
+    /** Optional: Default deployment name for all models (can be overridden per model) */
+    deploymentName: z.ZodOptional<z.ZodString>;
+    /** Optional: Available models - can be string array or object with deploymentName mapping */
+    models: z.ZodOptional<z.ZodUnion<[z.ZodArray<z.ZodString, "many">, z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodObject<{
+        /** The actual model ID/deployment name used by Vertex AI API */
+        deploymentName: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        deploymentName?: string | undefined;
+    }, {
+        deploymentName?: string | undefined;
+    }>, z.ZodBoolean]>>]>>;
+}, "strip", z.ZodTypeAny, {
+    region: string;
+    enabled?: boolean | undefined;
+    deploymentName?: string | undefined;
+    projectId?: string | undefined;
+    serviceKeyFile?: string | undefined;
+    models?: string[] | Record<string, boolean | {
+        deploymentName?: string | undefined;
+    }> | undefined;
+}, {
+    enabled?: boolean | undefined;
+    deploymentName?: string | undefined;
+    region?: string | undefined;
+    projectId?: string | undefined;
+    serviceKeyFile?: string | undefined;
+    models?: string[] | Record<string, boolean | {
+        deploymentName?: string | undefined;
+    }> | undefined;
+}>;
+export type TVertexAISchema = z.infer<typeof vertexAISchema>;
+export type TVertexModelMap = Record<string, string>;
+/**
+ * Validated Vertex AI configuration result
+ */
+export type TVertexAIConfig = TVertexAISchema & {
+    isValid: boolean;
+    errors: string[];
+    modelNames?: string[];
+    modelDeploymentMap?: TVertexModelMap;
+};
+/**
+ * Anthropic endpoint schema with optional Vertex AI configuration.
+ * Extends baseEndpointSchema with Vertex AI support.
+ */
+export declare const anthropicEndpointSchema: z.ZodObject<{
+    streamRate: z.ZodOptional<z.ZodNumber>;
+    baseURL: z.ZodOptional<z.ZodString>;
+    titlePrompt: z.ZodOptional<z.ZodString>;
+    titleModel: z.ZodOptional<z.ZodString>;
+    titleConvo: z.ZodOptional<z.ZodBoolean>;
+    titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+    titleEndpoint: z.ZodOptional<z.ZodString>;
+    titlePromptTemplate: z.ZodOptional<z.ZodString>;
+} & {
+    /** Vertex AI configuration for running Anthropic models on Google Cloud */
+    vertex: z.ZodOptional<z.ZodObject<{
+        /** Enable Vertex AI mode for Anthropic (defaults to true when vertex config is present) */
+        enabled: z.ZodOptional<z.ZodBoolean>;
+        /** Google Cloud Project ID (optional - auto-detected from service key file if not provided) */
+        projectId: z.ZodOptional<z.ZodString>;
+        /** Vertex AI region (e.g., 'us-east5', 'europe-west1') */
+        region: z.ZodDefault<z.ZodString>;
+        /** Optional: Path to service account key file */
+        serviceKeyFile: z.ZodOptional<z.ZodString>;
+        /** Optional: Default deployment name for all models (can be overridden per model) */
+        deploymentName: z.ZodOptional<z.ZodString>;
+        /** Optional: Available models - can be string array or object with deploymentName mapping */
+        models: z.ZodOptional<z.ZodUnion<[z.ZodArray<z.ZodString, "many">, z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodObject<{
+            /** The actual model ID/deployment name used by Vertex AI API */
+            deploymentName: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            deploymentName?: string | undefined;
+        }, {
+            deploymentName?: string | undefined;
+        }>, z.ZodBoolean]>>]>>;
+    }, "strip", z.ZodTypeAny, {
+        region: string;
+        enabled?: boolean | undefined;
+        deploymentName?: string | undefined;
+        projectId?: string | undefined;
+        serviceKeyFile?: string | undefined;
+        models?: string[] | Record<string, boolean | {
+            deploymentName?: string | undefined;
+        }> | undefined;
+    }, {
+        enabled?: boolean | undefined;
+        deploymentName?: string | undefined;
+        region?: string | undefined;
+        projectId?: string | undefined;
+        serviceKeyFile?: string | undefined;
+        models?: string[] | Record<string, boolean | {
+            deploymentName?: string | undefined;
+        }> | undefined;
+    }>>;
+    /** Optional: List of available models */
+    models: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    baseURL?: string | undefined;
+    streamRate?: number | undefined;
+    titlePrompt?: string | undefined;
+    titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
+    models?: string[] | undefined;
+    vertex?: {
+        region: string;
+        enabled?: boolean | undefined;
+        deploymentName?: string | undefined;
+        projectId?: string | undefined;
+        serviceKeyFile?: string | undefined;
+        models?: string[] | Record<string, boolean | {
+            deploymentName?: string | undefined;
+        }> | undefined;
+    } | undefined;
+}, {
+    baseURL?: string | undefined;
+    streamRate?: number | undefined;
+    titlePrompt?: string | undefined;
+    titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
+    models?: string[] | undefined;
+    vertex?: {
+        enabled?: boolean | undefined;
+        deploymentName?: string | undefined;
+        region?: string | undefined;
+        projectId?: string | undefined;
+        serviceKeyFile?: string | undefined;
+        models?: string[] | Record<string, boolean | {
+            deploymentName?: string | undefined;
+        }> | undefined;
+    } | undefined;
+}>;
+export type TAnthropicEndpoint = z.infer<typeof anthropicEndpointSchema>;
 declare const ttsOpenaiSchema: z.ZodObject<{
     url: z.ZodOptional<z.ZodString>;
     apiKey: z.ZodString;
@@ -867,15 +1150,47 @@ declare const termsOfServiceSchema: z.ZodObject<{
     modalContent?: string | string[] | undefined;
 }>;
 export type TTermsOfService = z.infer<typeof termsOfServiceSchema>;
-declare const mcpServersSchema: z.ZodObject<{
+declare const localizedStringSchema: z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
+export type LocalizedString = z.infer<typeof localizedStringSchema>;
+declare const mcpServersSchema: z.ZodOptional<z.ZodObject<{
     placeholder: z.ZodOptional<z.ZodString>;
+    use: z.ZodOptional<z.ZodBoolean>;
+    create: z.ZodOptional<z.ZodBoolean>;
+    share: z.ZodOptional<z.ZodBoolean>;
+    public: z.ZodOptional<z.ZodBoolean>;
+    trustCheckbox: z.ZodOptional<z.ZodObject<{
+        label: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+        subLabel: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+    }, "strip", z.ZodTypeAny, {
+        label?: string | Record<string, string> | undefined;
+        subLabel?: string | Record<string, string> | undefined;
+    }, {
+        label?: string | Record<string, string> | undefined;
+        subLabel?: string | Record<string, string> | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     placeholder?: string | undefined;
+    use?: boolean | undefined;
+    create?: boolean | undefined;
+    share?: boolean | undefined;
+    public?: boolean | undefined;
+    trustCheckbox?: {
+        label?: string | Record<string, string> | undefined;
+        subLabel?: string | Record<string, string> | undefined;
+    } | undefined;
 }, {
     placeholder?: string | undefined;
-}>;
+    use?: boolean | undefined;
+    create?: boolean | undefined;
+    share?: boolean | undefined;
+    public?: boolean | undefined;
+    trustCheckbox?: {
+        label?: string | Record<string, string> | undefined;
+        subLabel?: string | Record<string, string> | undefined;
+    } | undefined;
+}>>;
 export type TMcpServersConfig = z.infer<typeof mcpServersSchema>;
-export declare const intefaceSchema: z.ZodDefault<z.ZodObject<{
+export declare const interfaceSchema: z.ZodDefault<z.ZodObject<{
     privacyPolicy: z.ZodOptional<z.ZodObject<{
         externalUrl: z.ZodOptional<z.ZodString>;
         openNewTab: z.ZodOptional<z.ZodBoolean>;
@@ -906,13 +1221,43 @@ export declare const intefaceSchema: z.ZodDefault<z.ZodObject<{
         modalContent?: string | string[] | undefined;
     }>>;
     customWelcome: z.ZodOptional<z.ZodString>;
-    mcpServers: z.ZodOptional<z.ZodObject<{
+    mcpServers: z.ZodOptional<z.ZodOptional<z.ZodObject<{
         placeholder: z.ZodOptional<z.ZodString>;
+        use: z.ZodOptional<z.ZodBoolean>;
+        create: z.ZodOptional<z.ZodBoolean>;
+        share: z.ZodOptional<z.ZodBoolean>;
+        public: z.ZodOptional<z.ZodBoolean>;
+        trustCheckbox: z.ZodOptional<z.ZodObject<{
+            label: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+            subLabel: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+        }, "strip", z.ZodTypeAny, {
+            label?: string | Record<string, string> | undefined;
+            subLabel?: string | Record<string, string> | undefined;
+        }, {
+            label?: string | Record<string, string> | undefined;
+            subLabel?: string | Record<string, string> | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         placeholder?: string | undefined;
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+        trustCheckbox?: {
+            label?: string | Record<string, string> | undefined;
+            subLabel?: string | Record<string, string> | undefined;
+        } | undefined;
     }, {
         placeholder?: string | undefined;
-    }>>;
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+        trustCheckbox?: {
+            label?: string | Record<string, string> | undefined;
+            subLabel?: string | Record<string, string> | undefined;
+        } | undefined;
+    }>>>;
     endpointsMenu: z.ZodOptional<z.ZodBoolean>;
     modelSelect: z.ZodOptional<z.ZodBoolean>;
     parameters: z.ZodOptional<z.ZodBoolean>;
@@ -921,16 +1266,92 @@ export declare const intefaceSchema: z.ZodDefault<z.ZodObject<{
     bookmarks: z.ZodOptional<z.ZodBoolean>;
     memories: z.ZodOptional<z.ZodBoolean>;
     presets: z.ZodOptional<z.ZodBoolean>;
-    prompts: z.ZodOptional<z.ZodBoolean>;
-    agents: z.ZodOptional<z.ZodBoolean>;
+    prompts: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodObject<{
+        use: z.ZodOptional<z.ZodBoolean>;
+        create: z.ZodOptional<z.ZodBoolean>;
+        share: z.ZodOptional<z.ZodBoolean>;
+        public: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    }, {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    }>]>>;
+    agents: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodObject<{
+        use: z.ZodOptional<z.ZodBoolean>;
+        create: z.ZodOptional<z.ZodBoolean>;
+        share: z.ZodOptional<z.ZodBoolean>;
+        public: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    }, {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    }>]>>;
     temporaryChat: z.ZodOptional<z.ZodBoolean>;
     temporaryChatRetention: z.ZodOptional<z.ZodNumber>;
     runCode: z.ZodOptional<z.ZodBoolean>;
     webSearch: z.ZodOptional<z.ZodBoolean>;
+    peoplePicker: z.ZodOptional<z.ZodObject<{
+        users: z.ZodOptional<z.ZodBoolean>;
+        groups: z.ZodOptional<z.ZodBoolean>;
+        roles: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        users?: boolean | undefined;
+        groups?: boolean | undefined;
+        roles?: boolean | undefined;
+    }, {
+        users?: boolean | undefined;
+        groups?: boolean | undefined;
+        roles?: boolean | undefined;
+    }>>;
+    marketplace: z.ZodOptional<z.ZodObject<{
+        use: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        use?: boolean | undefined;
+    }, {
+        use?: boolean | undefined;
+    }>>;
+    fileSearch: z.ZodOptional<z.ZodBoolean>;
+    fileCitations: z.ZodOptional<z.ZodBoolean>;
+    remoteAgents: z.ZodOptional<z.ZodObject<{
+        use: z.ZodOptional<z.ZodBoolean>;
+        create: z.ZodOptional<z.ZodBoolean>;
+        share: z.ZodOptional<z.ZodBoolean>;
+        public: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    }, {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     webSearch?: boolean | undefined;
     mcpServers?: {
         placeholder?: string | undefined;
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+        trustCheckbox?: {
+            label?: string | Record<string, string> | undefined;
+            subLabel?: string | Record<string, string> | undefined;
+        } | undefined;
     } | undefined;
     privacyPolicy?: {
         externalUrl?: string | undefined;
@@ -952,15 +1373,49 @@ export declare const intefaceSchema: z.ZodDefault<z.ZodObject<{
     bookmarks?: boolean | undefined;
     memories?: boolean | undefined;
     presets?: boolean | undefined;
-    prompts?: boolean | undefined;
-    agents?: boolean | undefined;
+    prompts?: boolean | {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    } | undefined;
+    agents?: boolean | {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    } | undefined;
     temporaryChat?: boolean | undefined;
     temporaryChatRetention?: number | undefined;
     runCode?: boolean | undefined;
+    peoplePicker?: {
+        users?: boolean | undefined;
+        groups?: boolean | undefined;
+        roles?: boolean | undefined;
+    } | undefined;
+    marketplace?: {
+        use?: boolean | undefined;
+    } | undefined;
+    fileSearch?: boolean | undefined;
+    fileCitations?: boolean | undefined;
+    remoteAgents?: {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    } | undefined;
 }, {
     webSearch?: boolean | undefined;
     mcpServers?: {
         placeholder?: string | undefined;
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+        trustCheckbox?: {
+            label?: string | Record<string, string> | undefined;
+            subLabel?: string | Record<string, string> | undefined;
+        } | undefined;
     } | undefined;
     privacyPolicy?: {
         externalUrl?: string | undefined;
@@ -982,14 +1437,41 @@ export declare const intefaceSchema: z.ZodDefault<z.ZodObject<{
     bookmarks?: boolean | undefined;
     memories?: boolean | undefined;
     presets?: boolean | undefined;
-    prompts?: boolean | undefined;
-    agents?: boolean | undefined;
+    prompts?: boolean | {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    } | undefined;
+    agents?: boolean | {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    } | undefined;
     temporaryChat?: boolean | undefined;
     temporaryChatRetention?: number | undefined;
     runCode?: boolean | undefined;
+    peoplePicker?: {
+        users?: boolean | undefined;
+        groups?: boolean | undefined;
+        roles?: boolean | undefined;
+    } | undefined;
+    marketplace?: {
+        use?: boolean | undefined;
+    } | undefined;
+    fileSearch?: boolean | undefined;
+    fileCitations?: boolean | undefined;
+    remoteAgents?: {
+        use?: boolean | undefined;
+        create?: boolean | undefined;
+        share?: boolean | undefined;
+        public?: boolean | undefined;
+    } | undefined;
 }>>;
-export type TInterfaceConfig = z.infer<typeof intefaceSchema>;
+export type TInterfaceConfig = z.infer<typeof interfaceSchema>;
 export type TBalanceConfig = z.infer<typeof balanceSchema>;
+export type TTransactionsConfig = z.infer<typeof transactionsSchema>;
 export declare const turnstileOptionsSchema: z.ZodDefault<z.ZodObject<{
     language: z.ZodDefault<z.ZodString>;
     size: z.ZodDefault<z.ZodEnum<["normal", "compact", "flexible", "invisible"]>>;
@@ -1032,6 +1514,7 @@ export type TStartupConfig = {
     interface?: TInterfaceConfig;
     turnstile?: TTurnstileConfig;
     balance?: TBalanceConfig;
+    transactions?: TTransactionsConfig;
     discordLoginEnabled: boolean;
     facebookLoginEnabled: boolean;
     githubLoginEnabled: boolean;
@@ -1061,15 +1544,22 @@ export type TStartupConfig = {
     helpAndFaqURL: string;
     customFooter?: string;
     modelSpecs?: TSpecsConfig;
+    modelDescriptions?: Record<string, Record<string, string>>;
     sharedLinksEnabled: boolean;
     publicSharedLinksEnabled: boolean;
     analyticsGtmId?: string;
     instanceProjectId: string;
     bundlerURL?: string;
     staticBundlerURL?: string;
+    sharePointFilePickerEnabled?: boolean;
+    sharePointBaseUrl?: string;
+    sharePointPickerGraphScope?: string;
+    sharePointPickerSharePointScope?: string;
+    openidReuseTokens?: boolean;
+    minPasswordLength?: number;
     webSearch?: {
         searchProvider?: SearchProviders;
-        scraperType?: ScraperTypes;
+        scraperProvider?: ScraperProviders;
         rerankerType?: RerankerTypes;
     };
     mcpServers?: Record<string, {
@@ -1077,13 +1567,19 @@ export type TStartupConfig = {
             title: string;
             description: string;
         }>;
+        chatMenu?: boolean;
+        isOAuth?: boolean;
+        startup?: boolean;
+        iconPath?: string;
     }>;
     mcpPlaceholder?: string;
+    conversationImportMaxFileSize?: number;
 };
 export declare enum OCRStrategy {
     MISTRAL_OCR = "mistral_ocr",
     CUSTOM_OCR = "custom_ocr",
-    AZURE_MISTRAL_OCR = "azure_mistral_ocr"
+    AZURE_MISTRAL_OCR = "azure_mistral_ocr",
+    VERTEXAI_MISTRAL_OCR = "vertexai_mistral_ocr"
 }
 export declare enum SearchCategories {
     PROVIDERS = "providers",
@@ -1094,7 +1590,7 @@ export declare enum SearchProviders {
     SERPER = "serper",
     SEARXNG = "searxng"
 }
-export declare enum ScraperTypes {
+export declare enum ScraperProviders {
     FIRECRAWL = "firecrawl",
     SERPER = "serper"
 }
@@ -1109,39 +1605,200 @@ export declare enum SafeSearchTypes {
 }
 export declare const webSearchSchema: z.ZodObject<{
     serperApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    searxngInstanceUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    searxngApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     firecrawlApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     firecrawlApiUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    firecrawlVersion: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     jinaApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    jinaApiUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     cohereApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     searchProvider: z.ZodOptional<z.ZodNativeEnum<typeof SearchProviders>>;
-    scraperType: z.ZodOptional<z.ZodNativeEnum<typeof ScraperTypes>>;
+    scraperProvider: z.ZodOptional<z.ZodNativeEnum<typeof ScraperProviders>>;
     rerankerType: z.ZodOptional<z.ZodNativeEnum<typeof RerankerTypes>>;
     scraperTimeout: z.ZodOptional<z.ZodNumber>;
     safeSearch: z.ZodDefault<z.ZodNativeEnum<typeof SafeSearchTypes>>;
+    firecrawlOptions: z.ZodOptional<z.ZodObject<{
+        formats: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        includeTags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        excludeTags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        waitFor: z.ZodOptional<z.ZodNumber>;
+        timeout: z.ZodOptional<z.ZodNumber>;
+        maxAge: z.ZodOptional<z.ZodNumber>;
+        mobile: z.ZodOptional<z.ZodBoolean>;
+        skipTlsVerification: z.ZodOptional<z.ZodBoolean>;
+        blockAds: z.ZodOptional<z.ZodBoolean>;
+        removeBase64Images: z.ZodOptional<z.ZodBoolean>;
+        parsePDF: z.ZodOptional<z.ZodBoolean>;
+        storeInCache: z.ZodOptional<z.ZodBoolean>;
+        zeroDataRetention: z.ZodOptional<z.ZodBoolean>;
+        location: z.ZodOptional<z.ZodObject<{
+            country: z.ZodOptional<z.ZodString>;
+            languages: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            country?: string | undefined;
+            languages?: string[] | undefined;
+        }, {
+            country?: string | undefined;
+            languages?: string[] | undefined;
+        }>>;
+        onlyMainContent: z.ZodOptional<z.ZodBoolean>;
+        changeTrackingOptions: z.ZodOptional<z.ZodObject<{
+            modes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            schema: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+            prompt: z.ZodOptional<z.ZodString>;
+            tag: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            modes?: string[] | undefined;
+            schema?: Record<string, unknown> | undefined;
+            prompt?: string | undefined;
+            tag?: string | null | undefined;
+        }, {
+            modes?: string[] | undefined;
+            schema?: Record<string, unknown> | undefined;
+            prompt?: string | undefined;
+            tag?: string | null | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        formats?: string[] | undefined;
+        includeTags?: string[] | undefined;
+        excludeTags?: string[] | undefined;
+        headers?: Record<string, string> | undefined;
+        waitFor?: number | undefined;
+        timeout?: number | undefined;
+        maxAge?: number | undefined;
+        mobile?: boolean | undefined;
+        skipTlsVerification?: boolean | undefined;
+        blockAds?: boolean | undefined;
+        removeBase64Images?: boolean | undefined;
+        parsePDF?: boolean | undefined;
+        storeInCache?: boolean | undefined;
+        zeroDataRetention?: boolean | undefined;
+        location?: {
+            country?: string | undefined;
+            languages?: string[] | undefined;
+        } | undefined;
+        onlyMainContent?: boolean | undefined;
+        changeTrackingOptions?: {
+            modes?: string[] | undefined;
+            schema?: Record<string, unknown> | undefined;
+            prompt?: string | undefined;
+            tag?: string | null | undefined;
+        } | undefined;
+    }, {
+        formats?: string[] | undefined;
+        includeTags?: string[] | undefined;
+        excludeTags?: string[] | undefined;
+        headers?: Record<string, string> | undefined;
+        waitFor?: number | undefined;
+        timeout?: number | undefined;
+        maxAge?: number | undefined;
+        mobile?: boolean | undefined;
+        skipTlsVerification?: boolean | undefined;
+        blockAds?: boolean | undefined;
+        removeBase64Images?: boolean | undefined;
+        parsePDF?: boolean | undefined;
+        storeInCache?: boolean | undefined;
+        zeroDataRetention?: boolean | undefined;
+        location?: {
+            country?: string | undefined;
+            languages?: string[] | undefined;
+        } | undefined;
+        onlyMainContent?: boolean | undefined;
+        changeTrackingOptions?: {
+            modes?: string[] | undefined;
+            schema?: Record<string, unknown> | undefined;
+            prompt?: string | undefined;
+            tag?: string | null | undefined;
+        } | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     serperApiKey: string;
+    searxngInstanceUrl: string;
+    searxngApiKey: string;
     firecrawlApiKey: string;
     firecrawlApiUrl: string;
+    firecrawlVersion: string;
     jinaApiKey: string;
+    jinaApiUrl: string;
     cohereApiKey: string;
     safeSearch: SafeSearchTypes;
     searchProvider?: SearchProviders | undefined;
-    scraperType?: ScraperTypes | undefined;
+    scraperProvider?: ScraperProviders | undefined;
     rerankerType?: RerankerTypes | undefined;
     scraperTimeout?: number | undefined;
+    firecrawlOptions?: {
+        formats?: string[] | undefined;
+        includeTags?: string[] | undefined;
+        excludeTags?: string[] | undefined;
+        headers?: Record<string, string> | undefined;
+        waitFor?: number | undefined;
+        timeout?: number | undefined;
+        maxAge?: number | undefined;
+        mobile?: boolean | undefined;
+        skipTlsVerification?: boolean | undefined;
+        blockAds?: boolean | undefined;
+        removeBase64Images?: boolean | undefined;
+        parsePDF?: boolean | undefined;
+        storeInCache?: boolean | undefined;
+        zeroDataRetention?: boolean | undefined;
+        location?: {
+            country?: string | undefined;
+            languages?: string[] | undefined;
+        } | undefined;
+        onlyMainContent?: boolean | undefined;
+        changeTrackingOptions?: {
+            modes?: string[] | undefined;
+            schema?: Record<string, unknown> | undefined;
+            prompt?: string | undefined;
+            tag?: string | null | undefined;
+        } | undefined;
+    } | undefined;
 }, {
     serperApiKey?: string | undefined;
+    searxngInstanceUrl?: string | undefined;
+    searxngApiKey?: string | undefined;
     firecrawlApiKey?: string | undefined;
     firecrawlApiUrl?: string | undefined;
+    firecrawlVersion?: string | undefined;
     jinaApiKey?: string | undefined;
+    jinaApiUrl?: string | undefined;
     cohereApiKey?: string | undefined;
     searchProvider?: SearchProviders | undefined;
-    scraperType?: ScraperTypes | undefined;
+    scraperProvider?: ScraperProviders | undefined;
     rerankerType?: RerankerTypes | undefined;
     scraperTimeout?: number | undefined;
     safeSearch?: SafeSearchTypes | undefined;
+    firecrawlOptions?: {
+        formats?: string[] | undefined;
+        includeTags?: string[] | undefined;
+        excludeTags?: string[] | undefined;
+        headers?: Record<string, string> | undefined;
+        waitFor?: number | undefined;
+        timeout?: number | undefined;
+        maxAge?: number | undefined;
+        mobile?: boolean | undefined;
+        skipTlsVerification?: boolean | undefined;
+        blockAds?: boolean | undefined;
+        removeBase64Images?: boolean | undefined;
+        parsePDF?: boolean | undefined;
+        storeInCache?: boolean | undefined;
+        zeroDataRetention?: boolean | undefined;
+        location?: {
+            country?: string | undefined;
+            languages?: string[] | undefined;
+        } | undefined;
+        onlyMainContent?: boolean | undefined;
+        changeTrackingOptions?: {
+            modes?: string[] | undefined;
+            schema?: Record<string, unknown> | undefined;
+            prompt?: string | undefined;
+            tag?: string | null | undefined;
+        } | undefined;
+    } | undefined;
 }>;
-export type TWebSearchConfig = z.infer<typeof webSearchSchema>;
+export type TWebSearchConfig = DeepPartial<z.infer<typeof webSearchSchema>>;
 export declare const ocrSchema: z.ZodObject<{
     mistralModel: z.ZodOptional<z.ZodString>;
     apiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
@@ -1165,6 +1822,10 @@ export declare const balanceSchema: z.ZodObject<{
     refillIntervalValue: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     refillIntervalUnit: z.ZodDefault<z.ZodOptional<z.ZodEnum<["seconds", "minutes", "hours", "days", "weeks", "months"]>>>;
     refillAmount: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    /** Number of days after which signup credits expire (0 = no expiry) */
+    creditExpiryDays: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    /** Minimum balance (in tokenCredits) below which requests are blocked */
+    minBalance: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
     enabled: boolean;
     startBalance: number;
@@ -1172,6 +1833,8 @@ export declare const balanceSchema: z.ZodObject<{
     refillIntervalValue: number;
     refillIntervalUnit: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months";
     refillAmount: number;
+    creditExpiryDays: number;
+    minBalance: number;
 }, {
     enabled?: boolean | undefined;
     startBalance?: number | undefined;
@@ -1179,11 +1842,21 @@ export declare const balanceSchema: z.ZodObject<{
     refillIntervalValue?: number | undefined;
     refillIntervalUnit?: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | undefined;
     refillAmount?: number | undefined;
+    creditExpiryDays?: number | undefined;
+    minBalance?: number | undefined;
+}>;
+export declare const transactionsSchema: z.ZodObject<{
+    enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+}, "strip", z.ZodTypeAny, {
+    enabled: boolean;
+}, {
+    enabled?: boolean | undefined;
 }>;
 export declare const memorySchema: z.ZodObject<{
     disabled: z.ZodOptional<z.ZodBoolean>;
     validKeys: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     tokenLimit: z.ZodOptional<z.ZodNumber>;
+    charLimit: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     personalize: z.ZodDefault<z.ZodBoolean>;
     messageWindowSize: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     agent: z.ZodOptional<z.ZodUnion<[z.ZodObject<{
@@ -1209,6 +1882,7 @@ export declare const memorySchema: z.ZodObject<{
         model_parameters?: Record<string, any> | undefined;
     }>]>>;
 }, "strip", z.ZodTypeAny, {
+    charLimit: number;
     personalize: boolean;
     messageWindowSize: number;
     disabled?: boolean | undefined;
@@ -1226,6 +1900,7 @@ export declare const memorySchema: z.ZodObject<{
     disabled?: boolean | undefined;
     validKeys?: string[] | undefined;
     tokenLimit?: number | undefined;
+    charLimit?: number | undefined;
     personalize?: boolean | undefined;
     messageWindowSize?: number | undefined;
     agent?: {
@@ -1237,7 +1912,133 @@ export declare const memorySchema: z.ZodObject<{
         model_parameters?: Record<string, any> | undefined;
     } | undefined;
 }>;
-export type TMemoryConfig = z.infer<typeof memorySchema>;
+export type TMemoryConfig = DeepPartial<z.infer<typeof memorySchema>>;
+declare const customEndpointsSchema: z.ZodOptional<z.ZodArray<z.ZodObject<{
+    streamRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    titlePrompt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    titleModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
+    titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>>;
+    titleEndpoint: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    titlePromptTemplate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    name: z.ZodOptional<z.ZodEffects<z.ZodString, string, string>>;
+    apiKey: z.ZodOptional<z.ZodString>;
+    baseURL: z.ZodOptional<z.ZodString>;
+    models: z.ZodOptional<z.ZodObject<{
+        default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+            name: z.ZodString;
+            description: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            description?: string | undefined;
+        }, {
+            name: string;
+            description?: string | undefined;
+        }>]>, "many">;
+        fetch: z.ZodOptional<z.ZodBoolean>;
+        userIdQuery: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
+        fetch?: boolean | undefined;
+        userIdQuery?: boolean | undefined;
+    }, {
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
+        fetch?: boolean | undefined;
+        userIdQuery?: boolean | undefined;
+    }>>;
+    summarize: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
+    summaryModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    iconURL: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    modelDisplayLabel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    headers: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
+    addParams: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
+    dropParams: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
+    customParams: z.ZodOptional<z.ZodOptional<z.ZodObject<{
+        defaultParamsEndpoint: z.ZodDefault<z.ZodString>;
+        paramDefinitions: z.ZodOptional<z.ZodArray<z.ZodRecord<z.ZodString, z.ZodAny>, "many">>;
+    }, "strict", z.ZodTypeAny, {
+        defaultParamsEndpoint: string;
+        paramDefinitions?: Record<string, any>[] | undefined;
+    }, {
+        defaultParamsEndpoint?: string | undefined;
+        paramDefinitions?: Record<string, any>[] | undefined;
+    }>>>;
+    customOrder: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    directEndpoint: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
+    titleMessageRole: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    iconURL?: string | undefined;
+    apiKey?: string | undefined;
+    baseURL?: string | undefined;
+    headers?: Record<string, any> | undefined;
+    name?: string | undefined;
+    streamRate?: number | undefined;
+    titlePrompt?: string | undefined;
+    titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
+    models?: {
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
+        fetch?: boolean | undefined;
+        userIdQuery?: boolean | undefined;
+    } | undefined;
+    addParams?: Record<string, any> | undefined;
+    dropParams?: string[] | undefined;
+    summarize?: boolean | undefined;
+    summaryModel?: string | undefined;
+    modelDisplayLabel?: string | undefined;
+    customParams?: {
+        defaultParamsEndpoint: string;
+        paramDefinitions?: Record<string, any>[] | undefined;
+    } | undefined;
+    customOrder?: number | undefined;
+    directEndpoint?: boolean | undefined;
+    titleMessageRole?: string | undefined;
+}, {
+    iconURL?: string | undefined;
+    apiKey?: string | undefined;
+    baseURL?: string | undefined;
+    headers?: Record<string, any> | undefined;
+    name?: string | undefined;
+    streamRate?: number | undefined;
+    titlePrompt?: string | undefined;
+    titleModel?: string | undefined;
+    titleConvo?: boolean | undefined;
+    titleMethod?: "completion" | "functions" | "structured" | undefined;
+    titleEndpoint?: string | undefined;
+    titlePromptTemplate?: string | undefined;
+    models?: {
+        default: (string | {
+            name: string;
+            description?: string | undefined;
+        })[];
+        fetch?: boolean | undefined;
+        userIdQuery?: boolean | undefined;
+    } | undefined;
+    addParams?: Record<string, any> | undefined;
+    dropParams?: string[] | undefined;
+    summarize?: boolean | undefined;
+    summaryModel?: string | undefined;
+    modelDisplayLabel?: string | undefined;
+    customParams?: {
+        defaultParamsEndpoint?: string | undefined;
+        paramDefinitions?: Record<string, any>[] | undefined;
+    } | undefined;
+    customOrder?: number | undefined;
+    directEndpoint?: boolean | undefined;
+    titleMessageRole?: string | undefined;
+}>, "many">>;
 export declare const configSchema: z.ZodObject<{
     version: z.ZodString;
     cache: z.ZodDefault<z.ZodBoolean>;
@@ -1259,42 +2060,204 @@ export declare const configSchema: z.ZodObject<{
     }>>;
     webSearch: z.ZodOptional<z.ZodObject<{
         serperApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        searxngInstanceUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        searxngApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         firecrawlApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         firecrawlApiUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        firecrawlVersion: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         jinaApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        jinaApiUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         cohereApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         searchProvider: z.ZodOptional<z.ZodNativeEnum<typeof SearchProviders>>;
-        scraperType: z.ZodOptional<z.ZodNativeEnum<typeof ScraperTypes>>;
+        scraperProvider: z.ZodOptional<z.ZodNativeEnum<typeof ScraperProviders>>;
         rerankerType: z.ZodOptional<z.ZodNativeEnum<typeof RerankerTypes>>;
         scraperTimeout: z.ZodOptional<z.ZodNumber>;
         safeSearch: z.ZodDefault<z.ZodNativeEnum<typeof SafeSearchTypes>>;
+        firecrawlOptions: z.ZodOptional<z.ZodObject<{
+            formats: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            includeTags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            excludeTags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+            waitFor: z.ZodOptional<z.ZodNumber>;
+            timeout: z.ZodOptional<z.ZodNumber>;
+            maxAge: z.ZodOptional<z.ZodNumber>;
+            mobile: z.ZodOptional<z.ZodBoolean>;
+            skipTlsVerification: z.ZodOptional<z.ZodBoolean>;
+            blockAds: z.ZodOptional<z.ZodBoolean>;
+            removeBase64Images: z.ZodOptional<z.ZodBoolean>;
+            parsePDF: z.ZodOptional<z.ZodBoolean>;
+            storeInCache: z.ZodOptional<z.ZodBoolean>;
+            zeroDataRetention: z.ZodOptional<z.ZodBoolean>;
+            location: z.ZodOptional<z.ZodObject<{
+                country: z.ZodOptional<z.ZodString>;
+                languages: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            }, {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            }>>;
+            onlyMainContent: z.ZodOptional<z.ZodBoolean>;
+            changeTrackingOptions: z.ZodOptional<z.ZodObject<{
+                modes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                schema: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+                prompt: z.ZodOptional<z.ZodString>;
+                tag: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            }, {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            }>>;
+        }, "strip", z.ZodTypeAny, {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        }, {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         serperApiKey: string;
+        searxngInstanceUrl: string;
+        searxngApiKey: string;
         firecrawlApiKey: string;
         firecrawlApiUrl: string;
+        firecrawlVersion: string;
         jinaApiKey: string;
+        jinaApiUrl: string;
         cohereApiKey: string;
         safeSearch: SafeSearchTypes;
         searchProvider?: SearchProviders | undefined;
-        scraperType?: ScraperTypes | undefined;
+        scraperProvider?: ScraperProviders | undefined;
         rerankerType?: RerankerTypes | undefined;
         scraperTimeout?: number | undefined;
+        firecrawlOptions?: {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        } | undefined;
     }, {
         serperApiKey?: string | undefined;
+        searxngInstanceUrl?: string | undefined;
+        searxngApiKey?: string | undefined;
         firecrawlApiKey?: string | undefined;
         firecrawlApiUrl?: string | undefined;
+        firecrawlVersion?: string | undefined;
         jinaApiKey?: string | undefined;
+        jinaApiUrl?: string | undefined;
         cohereApiKey?: string | undefined;
         searchProvider?: SearchProviders | undefined;
-        scraperType?: ScraperTypes | undefined;
+        scraperProvider?: ScraperProviders | undefined;
         rerankerType?: RerankerTypes | undefined;
         scraperTimeout?: number | undefined;
         safeSearch?: SafeSearchTypes | undefined;
+        firecrawlOptions?: {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        } | undefined;
     }>>;
     memory: z.ZodOptional<z.ZodObject<{
         disabled: z.ZodOptional<z.ZodBoolean>;
         validKeys: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         tokenLimit: z.ZodOptional<z.ZodNumber>;
+        charLimit: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         personalize: z.ZodDefault<z.ZodBoolean>;
         messageWindowSize: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         agent: z.ZodOptional<z.ZodUnion<[z.ZodObject<{
@@ -1320,6 +2283,7 @@ export declare const configSchema: z.ZodObject<{
             model_parameters?: Record<string, any> | undefined;
         }>]>>;
     }, "strip", z.ZodTypeAny, {
+        charLimit: number;
         personalize: boolean;
         messageWindowSize: number;
         disabled?: boolean | undefined;
@@ -1337,6 +2301,7 @@ export declare const configSchema: z.ZodObject<{
         disabled?: boolean | undefined;
         validKeys?: string[] | undefined;
         tokenLimit?: number | undefined;
+        charLimit?: number | undefined;
         personalize?: boolean | undefined;
         messageWindowSize?: number | undefined;
         agent?: {
@@ -1353,11 +2318,15 @@ export declare const configSchema: z.ZodObject<{
     includedTools: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     filteredTools: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     mcpServers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -1366,6 +2335,13 @@ export declare const configSchema: z.ZodObject<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1374,6 +2350,13 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1382,6 +2365,30 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -1402,12 +2409,22 @@ export declare const configSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         command: string;
         args: string[];
+        title?: string | undefined;
         type?: "stdio" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1416,7 +2433,15 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
@@ -1426,12 +2451,22 @@ export declare const configSchema: z.ZodObject<{
     }, {
         command: string;
         args: string[];
+        title?: string | undefined;
         type?: "stdio" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1440,7 +2475,15 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
@@ -1448,11 +2491,15 @@ export declare const configSchema: z.ZodObject<{
         env?: Record<string, string> | undefined;
         stderr?: any;
     }>, z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -1461,6 +2508,13 @@ export declare const configSchema: z.ZodObject<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1469,6 +2523,13 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1477,6 +2538,30 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -1493,12 +2578,22 @@ export declare const configSchema: z.ZodObject<{
         url: z.ZodEffects<z.ZodPipeline<z.ZodEffects<z.ZodString, string, string>, z.ZodString>, string, string>;
     }, "strip", z.ZodTypeAny, {
         url: string;
+        title?: string | undefined;
         type?: "websocket" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1507,19 +2602,37 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
     }, {
         url: string;
+        title?: string | undefined;
         type?: "websocket" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1528,17 +2641,29 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
     }>, z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -1547,6 +2672,13 @@ export declare const configSchema: z.ZodObject<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1555,6 +2687,13 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1563,6 +2702,30 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -1580,12 +2743,23 @@ export declare const configSchema: z.ZodObject<{
         url: z.ZodEffects<z.ZodPipeline<z.ZodEffects<z.ZodString, string, string>, z.ZodString>, string, string>;
     }, "strip", z.ZodTypeAny, {
         url: string;
+        title?: string | undefined;
         type?: "sse" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1594,20 +2768,38 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }, {
         url: string;
+        title?: string | undefined;
         type?: "sse" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1616,18 +2808,29 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }>, z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -1636,6 +2839,13 @@ export declare const configSchema: z.ZodObject<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1644,6 +2854,13 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1652,6 +2869,30 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -1664,17 +2905,28 @@ export declare const configSchema: z.ZodObject<{
             description: string;
         }>>>;
     } & {
-        type: z.ZodLiteral<"streamable-http">;
+        type: z.ZodUnion<[z.ZodLiteral<"streamable-http">, z.ZodLiteral<"http">]>;
         headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         url: z.ZodEffects<z.ZodPipeline<z.ZodEffects<z.ZodString, string, string>, z.ZodString>, string, string>;
     }, "strip", z.ZodTypeAny, {
-        type: "streamable-http";
+        type: "streamable-http" | "http";
         url: string;
-        iconPath?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1683,20 +2935,38 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }, {
-        type: "streamable-http";
+        type: "streamable-http" | "http";
         url: string;
-        iconPath?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -1705,13 +2975,27 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }>]>>>;
+    mcpSettings: z.ZodOptional<z.ZodObject<{
+        allowedDomains: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        allowedDomains?: string[] | undefined;
+    }, {
+        allowedDomains?: string[] | undefined;
+    }>>;
     interface: z.ZodDefault<z.ZodObject<{
         privacyPolicy: z.ZodOptional<z.ZodObject<{
             externalUrl: z.ZodOptional<z.ZodString>;
@@ -1743,13 +3027,43 @@ export declare const configSchema: z.ZodObject<{
             modalContent?: string | string[] | undefined;
         }>>;
         customWelcome: z.ZodOptional<z.ZodString>;
-        mcpServers: z.ZodOptional<z.ZodObject<{
+        mcpServers: z.ZodOptional<z.ZodOptional<z.ZodObject<{
             placeholder: z.ZodOptional<z.ZodString>;
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+            trustCheckbox: z.ZodOptional<z.ZodObject<{
+                label: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+                subLabel: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+            }, "strip", z.ZodTypeAny, {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            }, {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            }>>;
         }, "strip", z.ZodTypeAny, {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         }, {
             placeholder?: string | undefined;
-        }>>;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
+        }>>>;
         endpointsMenu: z.ZodOptional<z.ZodBoolean>;
         modelSelect: z.ZodOptional<z.ZodBoolean>;
         parameters: z.ZodOptional<z.ZodBoolean>;
@@ -1758,16 +3072,92 @@ export declare const configSchema: z.ZodObject<{
         bookmarks: z.ZodOptional<z.ZodBoolean>;
         memories: z.ZodOptional<z.ZodBoolean>;
         presets: z.ZodOptional<z.ZodBoolean>;
-        prompts: z.ZodOptional<z.ZodBoolean>;
-        agents: z.ZodOptional<z.ZodBoolean>;
+        prompts: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }>]>>;
+        agents: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }>]>>;
         temporaryChat: z.ZodOptional<z.ZodBoolean>;
         temporaryChatRetention: z.ZodOptional<z.ZodNumber>;
         runCode: z.ZodOptional<z.ZodBoolean>;
         webSearch: z.ZodOptional<z.ZodBoolean>;
+        peoplePicker: z.ZodOptional<z.ZodObject<{
+            users: z.ZodOptional<z.ZodBoolean>;
+            groups: z.ZodOptional<z.ZodBoolean>;
+            roles: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        }, {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        }>>;
+        marketplace: z.ZodOptional<z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+        }>>;
+        fileSearch: z.ZodOptional<z.ZodBoolean>;
+        fileCitations: z.ZodOptional<z.ZodBoolean>;
+        remoteAgents: z.ZodOptional<z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         webSearch?: boolean | undefined;
         mcpServers?: {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         } | undefined;
         privacyPolicy?: {
             externalUrl?: string | undefined;
@@ -1789,15 +3179,49 @@ export declare const configSchema: z.ZodObject<{
         bookmarks?: boolean | undefined;
         memories?: boolean | undefined;
         presets?: boolean | undefined;
-        prompts?: boolean | undefined;
-        agents?: boolean | undefined;
+        prompts?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
+        agents?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
         temporaryChat?: boolean | undefined;
         temporaryChatRetention?: number | undefined;
         runCode?: boolean | undefined;
+        peoplePicker?: {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        } | undefined;
+        marketplace?: {
+            use?: boolean | undefined;
+        } | undefined;
+        fileSearch?: boolean | undefined;
+        fileCitations?: boolean | undefined;
+        remoteAgents?: {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
     }, {
         webSearch?: boolean | undefined;
         mcpServers?: {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         } | undefined;
         privacyPolicy?: {
             externalUrl?: string | undefined;
@@ -1819,11 +3243,37 @@ export declare const configSchema: z.ZodObject<{
         bookmarks?: boolean | undefined;
         memories?: boolean | undefined;
         presets?: boolean | undefined;
-        prompts?: boolean | undefined;
-        agents?: boolean | undefined;
+        prompts?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
+        agents?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
         temporaryChat?: boolean | undefined;
         temporaryChatRetention?: number | undefined;
         runCode?: boolean | undefined;
+        peoplePicker?: {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        } | undefined;
+        marketplace?: {
+            use?: boolean | undefined;
+        } | undefined;
+        fileSearch?: boolean | undefined;
+        fileCitations?: boolean | undefined;
+        remoteAgents?: {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
     }>>;
     turnstile: z.ZodOptional<z.ZodObject<{
         siteKey: z.ZodString;
@@ -1851,6 +3301,22 @@ export declare const configSchema: z.ZodObject<{
         } | undefined;
     }>>;
     fileStrategy: z.ZodDefault<z.ZodNativeEnum<typeof FileSources>>;
+    fileStrategies: z.ZodOptional<z.ZodObject<{
+        default: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+        avatar: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+        image: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+        document: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+    }, "strip", z.ZodTypeAny, {
+        default?: FileSources | undefined;
+        avatar?: FileSources | undefined;
+        image?: FileSources | undefined;
+        document?: FileSources | undefined;
+    }, {
+        default?: FileSources | undefined;
+        avatar?: FileSources | undefined;
+        image?: FileSources | undefined;
+        document?: FileSources | undefined;
+    }>>;
     actions: z.ZodOptional<z.ZodObject<{
         allowedDomains: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -1875,6 +3341,10 @@ export declare const configSchema: z.ZodObject<{
         refillIntervalValue: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         refillIntervalUnit: z.ZodDefault<z.ZodOptional<z.ZodEnum<["seconds", "minutes", "hours", "days", "weeks", "months"]>>>;
         refillAmount: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        /** Number of days after which signup credits expire (0 = no expiry) */
+        creditExpiryDays: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        /** Minimum balance (in tokenCredits) below which requests are blocked */
+        minBalance: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     }, "strip", z.ZodTypeAny, {
         enabled: boolean;
         startBalance: number;
@@ -1882,6 +3352,8 @@ export declare const configSchema: z.ZodObject<{
         refillIntervalValue: number;
         refillIntervalUnit: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months";
         refillAmount: number;
+        creditExpiryDays: number;
+        minBalance: number;
     }, {
         enabled?: boolean | undefined;
         startBalance?: number | undefined;
@@ -1889,6 +3361,15 @@ export declare const configSchema: z.ZodObject<{
         refillIntervalValue?: number | undefined;
         refillIntervalUnit?: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | undefined;
         refillAmount?: number | undefined;
+        creditExpiryDays?: number | undefined;
+        minBalance?: number | undefined;
+    }>>;
+    transactions: z.ZodOptional<z.ZodObject<{
+        enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+    }, "strip", z.ZodTypeAny, {
+        enabled: boolean;
+    }, {
+        enabled?: boolean | undefined;
     }>>;
     speech: z.ZodOptional<z.ZodObject<{
         tts: z.ZodOptional<z.ZodObject<{
@@ -2480,6 +3961,7 @@ export declare const configSchema: z.ZodObject<{
         }>>>;
         serverFileSizeLimit: z.ZodOptional<z.ZodNumber>;
         avatarSizeLimit: z.ZodOptional<z.ZodNumber>;
+        fileTokenLimit: z.ZodOptional<z.ZodNumber>;
         imageGeneration: z.ZodOptional<z.ZodObject<{
             percentage: z.ZodOptional<z.ZodNumber>;
             px: z.ZodOptional<z.ZodNumber>;
@@ -2506,7 +3988,27 @@ export declare const configSchema: z.ZodObject<{
             maxHeight?: number | undefined;
             quality?: number | undefined;
         }>>;
+        ocr: z.ZodOptional<z.ZodObject<{
+            supportedMimeTypes: z.ZodOptional<z.ZodEffects<z.ZodOptional<z.ZodArray<z.ZodAny, "many">>, any[] | undefined, any[] | undefined>>;
+        }, "strip", z.ZodTypeAny, {
+            supportedMimeTypes?: any[] | undefined;
+        }, {
+            supportedMimeTypes?: any[] | undefined;
+        }>>;
+        text: z.ZodOptional<z.ZodObject<{
+            supportedMimeTypes: z.ZodOptional<z.ZodEffects<z.ZodOptional<z.ZodArray<z.ZodAny, "many">>, any[] | undefined, any[] | undefined>>;
+        }, "strip", z.ZodTypeAny, {
+            supportedMimeTypes?: any[] | undefined;
+        }, {
+            supportedMimeTypes?: any[] | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
+        text?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
+        ocr?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
         endpoints?: Record<string, {
             disabled?: boolean | undefined;
             fileLimit?: number | undefined;
@@ -2516,6 +4018,7 @@ export declare const configSchema: z.ZodObject<{
         }> | undefined;
         serverFileSizeLimit?: number | undefined;
         avatarSizeLimit?: number | undefined;
+        fileTokenLimit?: number | undefined;
         imageGeneration?: {
             percentage?: number | undefined;
             px?: number | undefined;
@@ -2527,6 +4030,12 @@ export declare const configSchema: z.ZodObject<{
             quality?: number | undefined;
         } | undefined;
     }, {
+        text?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
+        ocr?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
         endpoints?: Record<string, {
             disabled?: boolean | undefined;
             fileLimit?: number | undefined;
@@ -2536,6 +4045,7 @@ export declare const configSchema: z.ZodObject<{
         }> | undefined;
         serverFileSizeLimit?: number | undefined;
         avatarSizeLimit?: number | undefined;
+        fileTokenLimit?: number | undefined;
         imageGeneration?: {
             percentage?: number | undefined;
             px?: number | undefined;
@@ -2616,23 +4126,25 @@ export declare const configSchema: z.ZodObject<{
                 model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 instructions: z.ZodOptional<z.ZodString>;
+                fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
                 modelLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 userLabel: z.ZodOptional<z.ZodString>;
                 promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-                temperature: z.ZodOptional<z.ZodNumber>;
+                temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
                 topP: z.ZodOptional<z.ZodNumber>;
                 topK: z.ZodOptional<z.ZodNumber>;
                 top_p: z.ZodOptional<z.ZodNumber>;
                 frequency_penalty: z.ZodOptional<z.ZodNumber>;
                 presence_penalty: z.ZodOptional<z.ZodNumber>;
                 parentMessageId: z.ZodOptional<z.ZodString>;
-                maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+                maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
                 maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
                 max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
                 promptCache: z.ZodOptional<z.ZodBoolean>;
                 system: z.ZodOptional<z.ZodString>;
                 thinking: z.ZodOptional<z.ZodBoolean>;
                 thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+                stream: z.ZodOptional<z.ZodBoolean>;
                 artifacts: z.ZodOptional<z.ZodString>;
                 context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -2668,7 +4180,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles: z.ZodOptional<z.ZodBoolean>;
                 file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
                 imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ImageDetail>>;
-                reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>;
+                reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>>;
+                reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningSummary>>>;
+                verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").Verbosity>>>;
+                useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+                effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AnthropicEffort>>>;
+                web_search: z.ZodOptional<z.ZodBoolean>;
+                disableStreaming: z.ZodOptional<z.ZodBoolean>;
                 assistant_id: z.ZodOptional<z.ZodString>;
                 agent_id: z.ZodOptional<z.ZodString>;
                 region: z.ZodOptional<z.ZodString>;
@@ -2727,22 +4245,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
                 stop: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
                 resendImages: z.ZodOptional<z.ZodBoolean>;
-                agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-                    agent: z.ZodDefault<z.ZodString>;
-                    skipCompletion: z.ZodDefault<z.ZodBoolean>;
-                    model: z.ZodString;
-                    temperature: z.ZodDefault<z.ZodNumber>;
-                }, "strip", z.ZodTypeAny, {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                }, {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                }>>>;
                 chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             } & {
                 conversationId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -2781,23 +4283,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: number | undefined;
+                maxOutputTokens?: number | null | undefined;
                 maxContextTokens?: number | undefined;
                 max_tokens?: number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -2811,7 +4315,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -2846,12 +4356,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -2886,23 +4390,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: string | number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: string | number | undefined;
+                maxOutputTokens?: string | number | null | undefined;
                 maxContextTokens?: string | number | undefined;
                 max_tokens?: string | number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: string | number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -2916,7 +4422,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -2951,12 +4463,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -2965,13 +4471,20 @@ export declare const configSchema: z.ZodObject<{
             order: z.ZodOptional<z.ZodNumber>;
             default: z.ZodOptional<z.ZodBoolean>;
             description: z.ZodOptional<z.ZodString>;
+            group: z.ZodOptional<z.ZodString>;
+            groupIcon: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
             showIconInMenu: z.ZodOptional<z.ZodBoolean>;
             showIconInHeader: z.ZodOptional<z.ZodBoolean>;
             iconURL: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
             authType: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AuthType>>;
+            webSearch: z.ZodOptional<z.ZodBoolean>;
+            fileSearch: z.ZodOptional<z.ZodBoolean>;
+            executeCode: z.ZodOptional<z.ZodBoolean>;
+            artifacts: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodBoolean]>>;
+            mcpServers: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -3002,23 +4515,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: number | undefined;
+                maxOutputTokens?: number | null | undefined;
                 maxContextTokens?: number | undefined;
                 max_tokens?: number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -3032,7 +4547,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -3067,12 +4588,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -3081,13 +4596,20 @@ export declare const configSchema: z.ZodObject<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }, {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -3118,23 +4640,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: string | number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: string | number | undefined;
+                maxOutputTokens?: string | number | null | undefined;
                 maxContextTokens?: string | number | undefined;
                 max_tokens?: string | number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: string | number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -3148,7 +4672,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -3183,12 +4713,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -3197,18 +4721,25 @@ export declare const configSchema: z.ZodObject<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }>, "many">;
         addedEndpoints: z.ZodOptional<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>, "many">>;
     }, "strip", z.ZodTypeAny, {
         enforce: boolean;
         prioritize: boolean;
         list: {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -3239,23 +4770,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: number | undefined;
+                maxOutputTokens?: number | null | undefined;
                 maxContextTokens?: number | undefined;
                 max_tokens?: number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -3269,7 +4802,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -3304,12 +4843,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -3318,16 +4851,23 @@ export declare const configSchema: z.ZodObject<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }[];
         addedEndpoints?: string[] | undefined;
     }, {
         list: {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -3358,23 +4898,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: string | number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: string | number | undefined;
+                maxOutputTokens?: string | number | null | undefined;
                 maxContextTokens?: string | number | undefined;
                 max_tokens?: string | number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: string | number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -3388,7 +4930,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -3423,12 +4971,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -3437,10 +4979,17 @@ export declare const configSchema: z.ZodObject<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }[];
         enforce?: boolean | undefined;
         prioritize?: boolean | undefined;
@@ -3452,80 +5001,177 @@ export declare const configSchema: z.ZodObject<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }>>;
         openAI: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }>>;
         google: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }>>;
         anthropic: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
+        } & {
+            /** Vertex AI configuration for running Anthropic models on Google Cloud */
+            vertex: z.ZodOptional<z.ZodObject<{
+                /** Enable Vertex AI mode for Anthropic (defaults to true when vertex config is present) */
+                enabled: z.ZodOptional<z.ZodBoolean>;
+                /** Google Cloud Project ID (optional - auto-detected from service key file if not provided) */
+                projectId: z.ZodOptional<z.ZodString>;
+                /** Vertex AI region (e.g., 'us-east5', 'europe-west1') */
+                region: z.ZodDefault<z.ZodString>;
+                /** Optional: Path to service account key file */
+                serviceKeyFile: z.ZodOptional<z.ZodString>;
+                /** Optional: Default deployment name for all models (can be overridden per model) */
+                deploymentName: z.ZodOptional<z.ZodString>;
+                /** Optional: Available models - can be string array or object with deploymentName mapping */
+                models: z.ZodOptional<z.ZodUnion<[z.ZodArray<z.ZodString, "many">, z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodObject<{
+                    /** The actual model ID/deployment name used by Vertex AI API */
+                    deploymentName: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    deploymentName?: string | undefined;
+                }, {
+                    deploymentName?: string | undefined;
+                }>, z.ZodBoolean]>>]>>;
+            }, "strip", z.ZodTypeAny, {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            }, {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            }>>;
+            /** Optional: List of available models */
+            models: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        }>>;
-        gptPlugins: z.ZodOptional<z.ZodObject<{
-            streamRate: z.ZodOptional<z.ZodNumber>;
-            baseURL: z.ZodOptional<z.ZodString>;
-            titlePrompt: z.ZodOptional<z.ZodString>;
-            titleModel: z.ZodOptional<z.ZodString>;
-        }, "strip", z.ZodTypeAny, {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
-        }, {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         }>>;
         azureOpenAI: z.ZodOptional<z.ZodIntersection<z.ZodObject<{
             groups: z.ZodArray<z.ZodIntersection<z.ZodObject<{
@@ -3565,7 +5211,6 @@ export declare const configSchema: z.ZodObject<{
                 assistants: z.ZodOptional<z.ZodBoolean>;
                 addParams: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
                 dropParams: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-                forcePrompt: z.ZodOptional<z.ZodBoolean>;
                 version: z.ZodOptional<z.ZodString>;
                 baseURL: z.ZodOptional<z.ZodString>;
                 additionalHeaders: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
@@ -3579,7 +5224,6 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             }, {
                 apiKey: string;
@@ -3591,7 +5235,6 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             }>>, "many">;
             plugins: z.ZodOptional<z.ZodBoolean>;
@@ -3614,7 +5257,6 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
@@ -3637,32 +5279,37 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         }>, z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+            titlePrompt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             titleModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
-            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>>;
+            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>>;
+            titlePromptTemplate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             summarize: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
             summaryModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             customOrder: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
         }, "strip", z.ZodTypeAny, {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
         }, {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -3672,6 +5319,10 @@ export declare const configSchema: z.ZodObject<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         } & {
             disableBuilder: z.ZodOptional<z.ZodBoolean>;
             pollIntervalMs: z.ZodOptional<z.ZodNumber>;
@@ -3684,20 +5335,33 @@ export declare const configSchema: z.ZodObject<{
             capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof Capabilities>, "many">>>;
             apiKey: z.ZodOptional<z.ZodString>;
             models: z.ZodOptional<z.ZodObject<{
-                default: z.ZodArray<z.ZodString, "many">;
+                default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+                    name: z.ZodString;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                    description?: string | undefined;
+                }, {
+                    name: string;
+                    description?: string | undefined;
+                }>]>, "many">;
                 fetch: z.ZodOptional<z.ZodBoolean>;
                 userIdQuery: z.ZodOptional<z.ZodBoolean>;
             }, "strip", z.ZodTypeAny, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }>>;
-            titleConvo: z.ZodOptional<z.ZodBoolean>;
-            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>;
             headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
         }, "strip", z.ZodTypeAny, {
             version: string | number;
@@ -3709,13 +5373,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -3730,13 +5399,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -3751,6 +5425,10 @@ export declare const configSchema: z.ZodObject<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         } & {
             disableBuilder: z.ZodOptional<z.ZodBoolean>;
             pollIntervalMs: z.ZodOptional<z.ZodNumber>;
@@ -3763,20 +5441,33 @@ export declare const configSchema: z.ZodObject<{
             capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof Capabilities>, "many">>>;
             apiKey: z.ZodOptional<z.ZodString>;
             models: z.ZodOptional<z.ZodObject<{
-                default: z.ZodArray<z.ZodString, "many">;
+                default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+                    name: z.ZodString;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                    description?: string | undefined;
+                }, {
+                    name: string;
+                    description?: string | undefined;
+                }>]>, "many">;
                 fetch: z.ZodOptional<z.ZodBoolean>;
                 userIdQuery: z.ZodOptional<z.ZodBoolean>;
             }, "strip", z.ZodTypeAny, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }>>;
-            titleConvo: z.ZodOptional<z.ZodBoolean>;
-            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>;
             headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
         }, "strip", z.ZodTypeAny, {
             version: string | number;
@@ -3788,13 +5479,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -3809,13 +5505,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -3830,19 +5531,33 @@ export declare const configSchema: z.ZodObject<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         } & {
             recursionLimit: z.ZodOptional<z.ZodNumber>;
             disableBuilder: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
             maxRecursionLimit: z.ZodOptional<z.ZodNumber>;
+            maxCitations: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            maxCitationsPerFile: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            minRelevanceScore: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
             allowedProviders: z.ZodOptional<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>, "many">>;
             capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof AgentCapabilities>, "many">>>;
         }, "strip", z.ZodTypeAny, {
             disableBuilder: boolean;
             capabilities: AgentCapabilities[];
+            maxCitations: number;
+            maxCitationsPerFile: number;
+            minRelevanceScore: number;
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
             allowedProviders?: string[] | undefined;
@@ -3851,42 +5566,66 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             disableBuilder?: boolean | undefined;
             capabilities?: AgentCapabilities[] | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
+            maxCitations?: number | undefined;
+            maxCitationsPerFile?: number | undefined;
+            minRelevanceScore?: number | undefined;
             allowedProviders?: string[] | undefined;
         }>>>;
-        custom: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        custom: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
             titlePrompt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             titleModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+            titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
+            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>>;
+            titleEndpoint: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+            titlePromptTemplate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             name: z.ZodOptional<z.ZodEffects<z.ZodString, string, string>>;
             apiKey: z.ZodOptional<z.ZodString>;
             baseURL: z.ZodOptional<z.ZodString>;
             models: z.ZodOptional<z.ZodObject<{
-                default: z.ZodArray<z.ZodString, "many">;
+                default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+                    name: z.ZodString;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                    description?: string | undefined;
+                }, {
+                    name: string;
+                    description?: string | undefined;
+                }>]>, "many">;
                 fetch: z.ZodOptional<z.ZodBoolean>;
                 userIdQuery: z.ZodOptional<z.ZodBoolean>;
             }, "strip", z.ZodTypeAny, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }>>;
-            titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
-            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>>;
             summarize: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
             summaryModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
-            forcePrompt: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
+            iconURL: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             modelDisplayLabel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             headers: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
             addParams: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
             dropParams: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
-            customParams: z.ZodOptional<z.ZodObject<{
+            customParams: z.ZodOptional<z.ZodOptional<z.ZodObject<{
                 defaultParamsEndpoint: z.ZodDefault<z.ZodString>;
                 paramDefinitions: z.ZodOptional<z.ZodArray<z.ZodRecord<z.ZodString, z.ZodAny>, "many">>;
             }, "strict", z.ZodTypeAny, {
@@ -3895,11 +5634,12 @@ export declare const configSchema: z.ZodObject<{
             }, {
                 defaultParamsEndpoint?: string | undefined;
                 paramDefinitions?: Record<string, any>[] | undefined;
-            }>>;
+            }>>>;
             customOrder: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
             directEndpoint: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
             titleMessageRole: z.ZodOptional<z.ZodOptional<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -3907,16 +5647,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -3928,6 +5672,7 @@ export declare const configSchema: z.ZodObject<{
             directEndpoint?: boolean | undefined;
             titleMessageRole?: string | undefined;
         }, {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -3935,16 +5680,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -3955,22 +5704,44 @@ export declare const configSchema: z.ZodObject<{
             customOrder?: number | undefined;
             directEndpoint?: boolean | undefined;
             titleMessageRole?: string | undefined;
-        }>, "many">>;
+        }>, "many">>>;
         bedrock: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
+        } & {
+            availableRegions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            models: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            inferenceProfiles: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         }>>;
     }, "strict", z.ZodTypeAny, {
         azureOpenAI?: ({
@@ -3991,16 +5762,17 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -4010,18 +5782,41 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version: string | number;
@@ -4033,13 +5828,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4057,13 +5857,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4074,15 +5879,23 @@ export declare const configSchema: z.ZodObject<{
         agents?: {
             disableBuilder: boolean;
             capabilities: AgentCapabilities[];
+            maxCitations: number;
+            maxCitationsPerFile: number;
+            minRelevanceScore: number;
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -4090,16 +5903,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -4116,18 +5933,23 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }, {
         azureOpenAI?: ({
@@ -4148,16 +5970,17 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -4167,18 +5990,41 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version?: string | number | undefined;
@@ -4188,13 +6034,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4212,13 +6063,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4233,13 +6089,21 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             disableBuilder?: boolean | undefined;
             capabilities?: AgentCapabilities[] | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
+            maxCitations?: number | undefined;
+            maxCitationsPerFile?: number | undefined;
+            minRelevanceScore?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -4247,16 +6111,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -4273,18 +6141,23 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }>, {
         azureOpenAI?: ({
@@ -4305,16 +6178,17 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -4324,18 +6198,41 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version: string | number;
@@ -4347,13 +6244,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4371,13 +6273,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4388,15 +6295,23 @@ export declare const configSchema: z.ZodObject<{
         agents?: {
             disableBuilder: boolean;
             capabilities: AgentCapabilities[];
+            maxCitations: number;
+            maxCitationsPerFile: number;
+            minRelevanceScore: number;
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -4404,16 +6319,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -4430,18 +6349,23 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }, {
         azureOpenAI?: ({
@@ -4462,16 +6386,17 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -4481,18 +6406,41 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version?: string | number | undefined;
@@ -4502,13 +6450,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4526,13 +6479,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4547,13 +6505,21 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             disableBuilder?: boolean | undefined;
             capabilities?: AgentCapabilities[] | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
+            maxCitations?: number | undefined;
+            maxCitationsPerFile?: number | undefined;
+            minRelevanceScore?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -4561,16 +6527,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -4587,18 +6557,23 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
@@ -4609,6 +6584,14 @@ export declare const configSchema: z.ZodObject<{
         webSearch?: boolean | undefined;
         mcpServers?: {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         } | undefined;
         privacyPolicy?: {
             externalUrl?: string | undefined;
@@ -4630,11 +6613,37 @@ export declare const configSchema: z.ZodObject<{
         bookmarks?: boolean | undefined;
         memories?: boolean | undefined;
         presets?: boolean | undefined;
-        prompts?: boolean | undefined;
-        agents?: boolean | undefined;
+        prompts?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
+        agents?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
         temporaryChat?: boolean | undefined;
         temporaryChatRetention?: number | undefined;
         runCode?: boolean | undefined;
+        peoplePicker?: {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        } | undefined;
+        marketplace?: {
+            use?: boolean | undefined;
+        } | undefined;
+        fileSearch?: boolean | undefined;
+        fileCitations?: boolean | undefined;
+        remoteAgents?: {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
     };
     fileStrategy: FileSources;
     registration: {
@@ -4649,17 +6658,49 @@ export declare const configSchema: z.ZodObject<{
     } | undefined;
     webSearch?: {
         serperApiKey: string;
+        searxngInstanceUrl: string;
+        searxngApiKey: string;
         firecrawlApiKey: string;
         firecrawlApiUrl: string;
+        firecrawlVersion: string;
         jinaApiKey: string;
+        jinaApiUrl: string;
         cohereApiKey: string;
         safeSearch: SafeSearchTypes;
         searchProvider?: SearchProviders | undefined;
-        scraperType?: ScraperTypes | undefined;
+        scraperProvider?: ScraperProviders | undefined;
         rerankerType?: RerankerTypes | undefined;
         scraperTimeout?: number | undefined;
+        firecrawlOptions?: {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        } | undefined;
     } | undefined;
     memory?: {
+        charLimit: number;
         personalize: boolean;
         messageWindowSize: number;
         disabled?: boolean | undefined;
@@ -4680,12 +6721,22 @@ export declare const configSchema: z.ZodObject<{
     mcpServers?: Record<string, {
         command: string;
         args: string[];
+        title?: string | undefined;
         type?: "stdio" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -4694,7 +6745,15 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
@@ -4703,12 +6762,22 @@ export declare const configSchema: z.ZodObject<{
         stderr?: any;
     } | {
         url: string;
+        title?: string | undefined;
         type?: "websocket" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -4717,19 +6786,38 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
     } | {
         url: string;
+        title?: string | undefined;
         type?: "sse" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -4738,20 +6826,38 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     } | {
-        type: "streamable-http";
+        type: "streamable-http" | "http";
         url: string;
-        iconPath?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -4760,19 +6866,35 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }> | undefined;
+    mcpSettings?: {
+        allowedDomains?: string[] | undefined;
+    } | undefined;
     turnstile?: {
         siteKey: string;
         options?: {
             language: string;
             size: "normal" | "compact" | "flexible" | "invisible";
         } | undefined;
+    } | undefined;
+    fileStrategies?: {
+        default?: FileSources | undefined;
+        avatar?: FileSources | undefined;
+        image?: FileSources | undefined;
+        document?: FileSources | undefined;
     } | undefined;
     actions?: {
         allowedDomains?: string[] | undefined;
@@ -4784,6 +6906,11 @@ export declare const configSchema: z.ZodObject<{
         refillIntervalValue: number;
         refillIntervalUnit: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months";
         refillAmount: number;
+        creditExpiryDays: number;
+        minBalance: number;
+    } | undefined;
+    transactions?: {
+        enabled: boolean;
     } | undefined;
     speech?: {
         tts?: {
@@ -4900,16 +7027,17 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -4919,18 +7047,41 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version: string | number;
@@ -4942,13 +7093,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4966,13 +7122,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -4983,15 +7144,23 @@ export declare const configSchema: z.ZodObject<{
         agents?: {
             disableBuilder: boolean;
             capabilities: AgentCapabilities[];
+            maxCitations: number;
+            maxCitationsPerFile: number;
+            minRelevanceScore: number;
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -4999,16 +7168,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -5025,21 +7198,32 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     } | undefined;
     fileConfig?: {
+        text?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
+        ocr?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
         endpoints?: Record<string, {
             disabled?: boolean | undefined;
             fileLimit?: number | undefined;
@@ -5049,6 +7233,7 @@ export declare const configSchema: z.ZodObject<{
         }> | undefined;
         serverFileSizeLimit?: number | undefined;
         avatarSizeLimit?: number | undefined;
+        fileTokenLimit?: number | undefined;
         imageGeneration?: {
             percentage?: number | undefined;
             px?: number | undefined;
@@ -5064,8 +7249,8 @@ export declare const configSchema: z.ZodObject<{
         enforce: boolean;
         prioritize: boolean;
         list: {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -5096,23 +7281,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: number | undefined;
+                maxOutputTokens?: number | null | undefined;
                 maxContextTokens?: number | undefined;
                 max_tokens?: number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -5126,7 +7313,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -5161,12 +7354,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -5175,10 +7362,17 @@ export declare const configSchema: z.ZodObject<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }[];
         addedEndpoints?: string[] | undefined;
     } | undefined;
@@ -5193,20 +7387,52 @@ export declare const configSchema: z.ZodObject<{
     } | undefined;
     webSearch?: {
         serperApiKey?: string | undefined;
+        searxngInstanceUrl?: string | undefined;
+        searxngApiKey?: string | undefined;
         firecrawlApiKey?: string | undefined;
         firecrawlApiUrl?: string | undefined;
+        firecrawlVersion?: string | undefined;
         jinaApiKey?: string | undefined;
+        jinaApiUrl?: string | undefined;
         cohereApiKey?: string | undefined;
         searchProvider?: SearchProviders | undefined;
-        scraperType?: ScraperTypes | undefined;
+        scraperProvider?: ScraperProviders | undefined;
         rerankerType?: RerankerTypes | undefined;
         scraperTimeout?: number | undefined;
         safeSearch?: SafeSearchTypes | undefined;
+        firecrawlOptions?: {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        } | undefined;
     } | undefined;
     memory?: {
         disabled?: boolean | undefined;
         validKeys?: string[] | undefined;
         tokenLimit?: number | undefined;
+        charLimit?: number | undefined;
         personalize?: boolean | undefined;
         messageWindowSize?: number | undefined;
         agent?: {
@@ -5225,12 +7451,22 @@ export declare const configSchema: z.ZodObject<{
     mcpServers?: Record<string, {
         command: string;
         args: string[];
+        title?: string | undefined;
         type?: "stdio" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5239,7 +7475,15 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
@@ -5248,12 +7492,22 @@ export declare const configSchema: z.ZodObject<{
         stderr?: any;
     } | {
         url: string;
+        title?: string | undefined;
         type?: "websocket" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5262,19 +7516,38 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
     } | {
         url: string;
+        title?: string | undefined;
         type?: "sse" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5283,20 +7556,38 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     } | {
-        type: "streamable-http";
+        type: "streamable-http" | "http";
         url: string;
-        iconPath?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5305,17 +7596,35 @@ export declare const configSchema: z.ZodObject<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }> | undefined;
+    mcpSettings?: {
+        allowedDomains?: string[] | undefined;
+    } | undefined;
     interface?: {
         webSearch?: boolean | undefined;
         mcpServers?: {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         } | undefined;
         privacyPolicy?: {
             externalUrl?: string | undefined;
@@ -5337,11 +7646,37 @@ export declare const configSchema: z.ZodObject<{
         bookmarks?: boolean | undefined;
         memories?: boolean | undefined;
         presets?: boolean | undefined;
-        prompts?: boolean | undefined;
-        agents?: boolean | undefined;
+        prompts?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
+        agents?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
         temporaryChat?: boolean | undefined;
         temporaryChatRetention?: number | undefined;
         runCode?: boolean | undefined;
+        peoplePicker?: {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        } | undefined;
+        marketplace?: {
+            use?: boolean | undefined;
+        } | undefined;
+        fileSearch?: boolean | undefined;
+        fileCitations?: boolean | undefined;
+        remoteAgents?: {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
     } | undefined;
     turnstile?: {
         siteKey: string;
@@ -5351,6 +7686,12 @@ export declare const configSchema: z.ZodObject<{
         } | undefined;
     } | undefined;
     fileStrategy?: FileSources | undefined;
+    fileStrategies?: {
+        default?: FileSources | undefined;
+        avatar?: FileSources | undefined;
+        image?: FileSources | undefined;
+        document?: FileSources | undefined;
+    } | undefined;
     actions?: {
         allowedDomains?: string[] | undefined;
     } | undefined;
@@ -5365,6 +7706,11 @@ export declare const configSchema: z.ZodObject<{
         refillIntervalValue?: number | undefined;
         refillIntervalUnit?: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | undefined;
         refillAmount?: number | undefined;
+        creditExpiryDays?: number | undefined;
+        minBalance?: number | undefined;
+    } | undefined;
+    transactions?: {
+        enabled?: boolean | undefined;
     } | undefined;
     speech?: {
         tts?: {
@@ -5481,16 +7827,17 @@ export declare const configSchema: z.ZodObject<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -5500,18 +7847,41 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version?: string | number | undefined;
@@ -5521,13 +7891,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -5545,13 +7920,18 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -5566,13 +7946,21 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             disableBuilder?: boolean | undefined;
             capabilities?: AgentCapabilities[] | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
+            maxCitations?: number | undefined;
+            maxCitationsPerFile?: number | undefined;
+            minRelevanceScore?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -5580,16 +7968,20 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -5606,21 +7998,32 @@ export declare const configSchema: z.ZodObject<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     } | undefined;
     fileConfig?: {
+        text?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
+        ocr?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
         endpoints?: Record<string, {
             disabled?: boolean | undefined;
             fileLimit?: number | undefined;
@@ -5630,6 +8033,7 @@ export declare const configSchema: z.ZodObject<{
         }> | undefined;
         serverFileSizeLimit?: number | undefined;
         avatarSizeLimit?: number | undefined;
+        fileTokenLimit?: number | undefined;
         imageGeneration?: {
             percentage?: number | undefined;
             px?: number | undefined;
@@ -5643,8 +8047,8 @@ export declare const configSchema: z.ZodObject<{
     } | undefined;
     modelSpecs?: {
         list: {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -5675,23 +8079,25 @@ export declare const configSchema: z.ZodObject<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: string | number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: string | number | undefined;
+                maxOutputTokens?: string | number | null | undefined;
                 maxContextTokens?: string | number | undefined;
                 max_tokens?: string | number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: string | number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -5705,7 +8111,13 @@ export declare const configSchema: z.ZodObject<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -5740,12 +8152,6 @@ export declare const configSchema: z.ZodObject<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -5754,16 +8160,30 @@ export declare const configSchema: z.ZodObject<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }[];
         enforce?: boolean | undefined;
         prioritize?: boolean | undefined;
         addedEndpoints?: string[] | undefined;
     } | undefined;
 }>;
+/**
+ * Recursively makes all properties of T optional, including nested objects.
+ * Handles arrays, primitives, functions, and Date objects correctly.
+ */
+export type DeepPartial<T> = T extends (infer U)[] ? DeepPartial<U>[] : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends Function ? T : T extends Date ? T : T extends object ? {
+    [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
 export declare const getConfigDefaults: () => ExtractDefaults<{
     version: z.ZodString;
     cache: z.ZodDefault<z.ZodBoolean>;
@@ -5785,42 +8205,204 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
     }>>;
     webSearch: z.ZodOptional<z.ZodObject<{
         serperApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        searxngInstanceUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        searxngApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         firecrawlApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         firecrawlApiUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        firecrawlVersion: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         jinaApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        jinaApiUrl: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         cohereApiKey: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         searchProvider: z.ZodOptional<z.ZodNativeEnum<typeof SearchProviders>>;
-        scraperType: z.ZodOptional<z.ZodNativeEnum<typeof ScraperTypes>>;
+        scraperProvider: z.ZodOptional<z.ZodNativeEnum<typeof ScraperProviders>>;
         rerankerType: z.ZodOptional<z.ZodNativeEnum<typeof RerankerTypes>>;
         scraperTimeout: z.ZodOptional<z.ZodNumber>;
         safeSearch: z.ZodDefault<z.ZodNativeEnum<typeof SafeSearchTypes>>;
+        firecrawlOptions: z.ZodOptional<z.ZodObject<{
+            formats: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            includeTags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            excludeTags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+            waitFor: z.ZodOptional<z.ZodNumber>;
+            timeout: z.ZodOptional<z.ZodNumber>;
+            maxAge: z.ZodOptional<z.ZodNumber>;
+            mobile: z.ZodOptional<z.ZodBoolean>;
+            skipTlsVerification: z.ZodOptional<z.ZodBoolean>;
+            blockAds: z.ZodOptional<z.ZodBoolean>;
+            removeBase64Images: z.ZodOptional<z.ZodBoolean>;
+            parsePDF: z.ZodOptional<z.ZodBoolean>;
+            storeInCache: z.ZodOptional<z.ZodBoolean>;
+            zeroDataRetention: z.ZodOptional<z.ZodBoolean>;
+            location: z.ZodOptional<z.ZodObject<{
+                country: z.ZodOptional<z.ZodString>;
+                languages: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            }, {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            }>>;
+            onlyMainContent: z.ZodOptional<z.ZodBoolean>;
+            changeTrackingOptions: z.ZodOptional<z.ZodObject<{
+                modes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                schema: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+                prompt: z.ZodOptional<z.ZodString>;
+                tag: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            }, {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            }>>;
+        }, "strip", z.ZodTypeAny, {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        }, {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         serperApiKey: string;
+        searxngInstanceUrl: string;
+        searxngApiKey: string;
         firecrawlApiKey: string;
         firecrawlApiUrl: string;
+        firecrawlVersion: string;
         jinaApiKey: string;
+        jinaApiUrl: string;
         cohereApiKey: string;
         safeSearch: SafeSearchTypes;
         searchProvider?: SearchProviders | undefined;
-        scraperType?: ScraperTypes | undefined;
+        scraperProvider?: ScraperProviders | undefined;
         rerankerType?: RerankerTypes | undefined;
         scraperTimeout?: number | undefined;
+        firecrawlOptions?: {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        } | undefined;
     }, {
         serperApiKey?: string | undefined;
+        searxngInstanceUrl?: string | undefined;
+        searxngApiKey?: string | undefined;
         firecrawlApiKey?: string | undefined;
         firecrawlApiUrl?: string | undefined;
+        firecrawlVersion?: string | undefined;
         jinaApiKey?: string | undefined;
+        jinaApiUrl?: string | undefined;
         cohereApiKey?: string | undefined;
         searchProvider?: SearchProviders | undefined;
-        scraperType?: ScraperTypes | undefined;
+        scraperProvider?: ScraperProviders | undefined;
         rerankerType?: RerankerTypes | undefined;
         scraperTimeout?: number | undefined;
         safeSearch?: SafeSearchTypes | undefined;
+        firecrawlOptions?: {
+            formats?: string[] | undefined;
+            includeTags?: string[] | undefined;
+            excludeTags?: string[] | undefined;
+            headers?: Record<string, string> | undefined;
+            waitFor?: number | undefined;
+            timeout?: number | undefined;
+            maxAge?: number | undefined;
+            mobile?: boolean | undefined;
+            skipTlsVerification?: boolean | undefined;
+            blockAds?: boolean | undefined;
+            removeBase64Images?: boolean | undefined;
+            parsePDF?: boolean | undefined;
+            storeInCache?: boolean | undefined;
+            zeroDataRetention?: boolean | undefined;
+            location?: {
+                country?: string | undefined;
+                languages?: string[] | undefined;
+            } | undefined;
+            onlyMainContent?: boolean | undefined;
+            changeTrackingOptions?: {
+                modes?: string[] | undefined;
+                schema?: Record<string, unknown> | undefined;
+                prompt?: string | undefined;
+                tag?: string | null | undefined;
+            } | undefined;
+        } | undefined;
     }>>;
     memory: z.ZodOptional<z.ZodObject<{
         disabled: z.ZodOptional<z.ZodBoolean>;
         validKeys: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         tokenLimit: z.ZodOptional<z.ZodNumber>;
+        charLimit: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         personalize: z.ZodDefault<z.ZodBoolean>;
         messageWindowSize: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         agent: z.ZodOptional<z.ZodUnion<[z.ZodObject<{
@@ -5846,6 +8428,7 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             model_parameters?: Record<string, any> | undefined;
         }>]>>;
     }, "strip", z.ZodTypeAny, {
+        charLimit: number;
         personalize: boolean;
         messageWindowSize: number;
         disabled?: boolean | undefined;
@@ -5863,6 +8446,7 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         disabled?: boolean | undefined;
         validKeys?: string[] | undefined;
         tokenLimit?: number | undefined;
+        charLimit?: number | undefined;
         personalize?: boolean | undefined;
         messageWindowSize?: number | undefined;
         agent?: {
@@ -5879,11 +8463,15 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
     includedTools: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     filteredTools: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     mcpServers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -5892,6 +8480,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5900,6 +8495,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5908,6 +8510,30 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -5928,12 +8554,22 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
     }, "strip", z.ZodTypeAny, {
         command: string;
         args: string[];
+        title?: string | undefined;
         type?: "stdio" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5942,7 +8578,15 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
@@ -5952,12 +8596,22 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
     }, {
         command: string;
         args: string[];
+        title?: string | undefined;
         type?: "stdio" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5966,7 +8620,15 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
@@ -5974,11 +8636,15 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         env?: Record<string, string> | undefined;
         stderr?: any;
     }>, z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -5987,6 +8653,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -5995,6 +8668,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6003,6 +8683,30 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -6019,12 +8723,22 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         url: z.ZodEffects<z.ZodPipeline<z.ZodEffects<z.ZodString, string, string>, z.ZodString>, string, string>;
     }, "strip", z.ZodTypeAny, {
         url: string;
+        title?: string | undefined;
         type?: "websocket" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6033,19 +8747,37 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
     }, {
         url: string;
+        title?: string | undefined;
         type?: "websocket" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6054,17 +8786,29 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
     }>, z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -6073,6 +8817,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6081,6 +8832,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6089,6 +8847,30 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -6106,12 +8888,23 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         url: z.ZodEffects<z.ZodPipeline<z.ZodEffects<z.ZodString, string, string>, z.ZodString>, string, string>;
     }, "strip", z.ZodTypeAny, {
         url: string;
+        title?: string | undefined;
         type?: "sse" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6120,20 +8913,38 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }, {
         url: string;
+        title?: string | undefined;
         type?: "sse" | undefined;
-        iconPath?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6142,18 +8953,29 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }>, z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        startup: z.ZodOptional<z.ZodBoolean>;
         iconPath: z.ZodOptional<z.ZodString>;
         timeout: z.ZodOptional<z.ZodNumber>;
         initTimeout: z.ZodOptional<z.ZodNumber>;
         chatMenu: z.ZodOptional<z.ZodBoolean>;
         serverInstructions: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
+        requiresOAuth: z.ZodOptional<z.ZodBoolean>;
         oauth: z.ZodOptional<z.ZodObject<{
             authorization_url: z.ZodOptional<z.ZodString>;
             token_url: z.ZodOptional<z.ZodString>;
@@ -6162,6 +8984,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope: z.ZodOptional<z.ZodString>;
             redirect_uri: z.ZodOptional<z.ZodString>;
             token_exchange_method: z.ZodOptional<z.ZodNativeEnum<typeof import(".").TokenExchangeMethodEnum>>;
+            grant_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            token_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            response_types_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            code_challenge_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            skip_code_challenge_check: z.ZodOptional<z.ZodBoolean>;
+            revocation_endpoint: z.ZodOptional<z.ZodString>;
+            revocation_endpoint_auth_methods_supported: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6170,6 +8999,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         }, {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6178,6 +9014,30 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
+        }>>;
+        oauth_headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        apiKey: z.ZodOptional<z.ZodObject<{
+            key: z.ZodOptional<z.ZodString>;
+            source: z.ZodEnum<["admin", "user"]>;
+            authorization_type: z.ZodEnum<["basic", "bearer", "custom"]>;
+            custom_header: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        }, {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
         }>>;
         customUserVars: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             title: z.ZodString;
@@ -6190,17 +9050,28 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             description: string;
         }>>>;
     } & {
-        type: z.ZodLiteral<"streamable-http">;
+        type: z.ZodUnion<[z.ZodLiteral<"streamable-http">, z.ZodLiteral<"http">]>;
         headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         url: z.ZodEffects<z.ZodPipeline<z.ZodEffects<z.ZodString, string, string>, z.ZodString>, string, string>;
     }, "strip", z.ZodTypeAny, {
-        type: "streamable-http";
+        type: "streamable-http" | "http";
         url: string;
-        iconPath?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6209,20 +9080,38 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }, {
-        type: "streamable-http";
+        type: "streamable-http" | "http";
         url: string;
-        iconPath?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        apiKey?: {
+            source: "user" | "admin";
+            authorization_type: "custom" | "basic" | "bearer";
+            key?: string | undefined;
+            custom_header?: string | undefined;
+        } | undefined;
+        headers?: Record<string, string> | undefined;
         timeout?: number | undefined;
+        startup?: boolean | undefined;
+        iconPath?: string | undefined;
         initTimeout?: number | undefined;
         chatMenu?: boolean | undefined;
         serverInstructions?: string | boolean | undefined;
+        requiresOAuth?: boolean | undefined;
         oauth?: {
             authorization_url?: string | undefined;
             token_url?: string | undefined;
@@ -6231,13 +9120,27 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             scope?: string | undefined;
             redirect_uri?: string | undefined;
             token_exchange_method?: import(".").TokenExchangeMethodEnum | undefined;
+            grant_types_supported?: string[] | undefined;
+            token_endpoint_auth_methods_supported?: string[] | undefined;
+            response_types_supported?: string[] | undefined;
+            code_challenge_methods_supported?: string[] | undefined;
+            skip_code_challenge_check?: boolean | undefined;
+            revocation_endpoint?: string | undefined;
+            revocation_endpoint_auth_methods_supported?: string[] | undefined;
         } | undefined;
+        oauth_headers?: Record<string, string> | undefined;
         customUserVars?: Record<string, {
             title: string;
             description: string;
         }> | undefined;
-        headers?: Record<string, string> | undefined;
     }>]>>>;
+    mcpSettings: z.ZodOptional<z.ZodObject<{
+        allowedDomains: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        allowedDomains?: string[] | undefined;
+    }, {
+        allowedDomains?: string[] | undefined;
+    }>>;
     interface: z.ZodDefault<z.ZodObject<{
         privacyPolicy: z.ZodOptional<z.ZodObject<{
             externalUrl: z.ZodOptional<z.ZodString>;
@@ -6269,13 +9172,43 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             modalContent?: string | string[] | undefined;
         }>>;
         customWelcome: z.ZodOptional<z.ZodString>;
-        mcpServers: z.ZodOptional<z.ZodObject<{
+        mcpServers: z.ZodOptional<z.ZodOptional<z.ZodObject<{
             placeholder: z.ZodOptional<z.ZodString>;
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+            trustCheckbox: z.ZodOptional<z.ZodObject<{
+                label: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+                subLabel: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>>;
+            }, "strip", z.ZodTypeAny, {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            }, {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            }>>;
         }, "strip", z.ZodTypeAny, {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         }, {
             placeholder?: string | undefined;
-        }>>;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
+        }>>>;
         endpointsMenu: z.ZodOptional<z.ZodBoolean>;
         modelSelect: z.ZodOptional<z.ZodBoolean>;
         parameters: z.ZodOptional<z.ZodBoolean>;
@@ -6284,16 +9217,92 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         bookmarks: z.ZodOptional<z.ZodBoolean>;
         memories: z.ZodOptional<z.ZodBoolean>;
         presets: z.ZodOptional<z.ZodBoolean>;
-        prompts: z.ZodOptional<z.ZodBoolean>;
-        agents: z.ZodOptional<z.ZodBoolean>;
+        prompts: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }>]>>;
+        agents: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }>]>>;
         temporaryChat: z.ZodOptional<z.ZodBoolean>;
         temporaryChatRetention: z.ZodOptional<z.ZodNumber>;
         runCode: z.ZodOptional<z.ZodBoolean>;
         webSearch: z.ZodOptional<z.ZodBoolean>;
+        peoplePicker: z.ZodOptional<z.ZodObject<{
+            users: z.ZodOptional<z.ZodBoolean>;
+            groups: z.ZodOptional<z.ZodBoolean>;
+            roles: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        }, {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        }>>;
+        marketplace: z.ZodOptional<z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+        }>>;
+        fileSearch: z.ZodOptional<z.ZodBoolean>;
+        fileCitations: z.ZodOptional<z.ZodBoolean>;
+        remoteAgents: z.ZodOptional<z.ZodObject<{
+            use: z.ZodOptional<z.ZodBoolean>;
+            create: z.ZodOptional<z.ZodBoolean>;
+            share: z.ZodOptional<z.ZodBoolean>;
+            public: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }, {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         webSearch?: boolean | undefined;
         mcpServers?: {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         } | undefined;
         privacyPolicy?: {
             externalUrl?: string | undefined;
@@ -6315,15 +9324,49 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         bookmarks?: boolean | undefined;
         memories?: boolean | undefined;
         presets?: boolean | undefined;
-        prompts?: boolean | undefined;
-        agents?: boolean | undefined;
+        prompts?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
+        agents?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
         temporaryChat?: boolean | undefined;
         temporaryChatRetention?: number | undefined;
         runCode?: boolean | undefined;
+        peoplePicker?: {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        } | undefined;
+        marketplace?: {
+            use?: boolean | undefined;
+        } | undefined;
+        fileSearch?: boolean | undefined;
+        fileCitations?: boolean | undefined;
+        remoteAgents?: {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
     }, {
         webSearch?: boolean | undefined;
         mcpServers?: {
             placeholder?: string | undefined;
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+            trustCheckbox?: {
+                label?: string | Record<string, string> | undefined;
+                subLabel?: string | Record<string, string> | undefined;
+            } | undefined;
         } | undefined;
         privacyPolicy?: {
             externalUrl?: string | undefined;
@@ -6345,11 +9388,37 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         bookmarks?: boolean | undefined;
         memories?: boolean | undefined;
         presets?: boolean | undefined;
-        prompts?: boolean | undefined;
-        agents?: boolean | undefined;
+        prompts?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
+        agents?: boolean | {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
         temporaryChat?: boolean | undefined;
         temporaryChatRetention?: number | undefined;
         runCode?: boolean | undefined;
+        peoplePicker?: {
+            users?: boolean | undefined;
+            groups?: boolean | undefined;
+            roles?: boolean | undefined;
+        } | undefined;
+        marketplace?: {
+            use?: boolean | undefined;
+        } | undefined;
+        fileSearch?: boolean | undefined;
+        fileCitations?: boolean | undefined;
+        remoteAgents?: {
+            use?: boolean | undefined;
+            create?: boolean | undefined;
+            share?: boolean | undefined;
+            public?: boolean | undefined;
+        } | undefined;
     }>>;
     turnstile: z.ZodOptional<z.ZodObject<{
         siteKey: z.ZodString;
@@ -6377,6 +9446,22 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         } | undefined;
     }>>;
     fileStrategy: z.ZodDefault<z.ZodNativeEnum<typeof FileSources>>;
+    fileStrategies: z.ZodOptional<z.ZodObject<{
+        default: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+        avatar: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+        image: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+        document: z.ZodOptional<z.ZodNativeEnum<typeof FileSources>>;
+    }, "strip", z.ZodTypeAny, {
+        default?: FileSources | undefined;
+        avatar?: FileSources | undefined;
+        image?: FileSources | undefined;
+        document?: FileSources | undefined;
+    }, {
+        default?: FileSources | undefined;
+        avatar?: FileSources | undefined;
+        image?: FileSources | undefined;
+        document?: FileSources | undefined;
+    }>>;
     actions: z.ZodOptional<z.ZodObject<{
         allowedDomains: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -6401,6 +9486,10 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         refillIntervalValue: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         refillIntervalUnit: z.ZodDefault<z.ZodOptional<z.ZodEnum<["seconds", "minutes", "hours", "days", "weeks", "months"]>>>;
         refillAmount: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        /** Number of days after which signup credits expire (0 = no expiry) */
+        creditExpiryDays: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        /** Minimum balance (in tokenCredits) below which requests are blocked */
+        minBalance: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     }, "strip", z.ZodTypeAny, {
         enabled: boolean;
         startBalance: number;
@@ -6408,6 +9497,8 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         refillIntervalValue: number;
         refillIntervalUnit: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months";
         refillAmount: number;
+        creditExpiryDays: number;
+        minBalance: number;
     }, {
         enabled?: boolean | undefined;
         startBalance?: number | undefined;
@@ -6415,6 +9506,15 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         refillIntervalValue?: number | undefined;
         refillIntervalUnit?: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | undefined;
         refillAmount?: number | undefined;
+        creditExpiryDays?: number | undefined;
+        minBalance?: number | undefined;
+    }>>;
+    transactions: z.ZodOptional<z.ZodObject<{
+        enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+    }, "strip", z.ZodTypeAny, {
+        enabled: boolean;
+    }, {
+        enabled?: boolean | undefined;
     }>>;
     speech: z.ZodOptional<z.ZodObject<{
         tts: z.ZodOptional<z.ZodObject<{
@@ -7006,6 +10106,7 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         }>>>;
         serverFileSizeLimit: z.ZodOptional<z.ZodNumber>;
         avatarSizeLimit: z.ZodOptional<z.ZodNumber>;
+        fileTokenLimit: z.ZodOptional<z.ZodNumber>;
         imageGeneration: z.ZodOptional<z.ZodObject<{
             percentage: z.ZodOptional<z.ZodNumber>;
             px: z.ZodOptional<z.ZodNumber>;
@@ -7032,7 +10133,27 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             maxHeight?: number | undefined;
             quality?: number | undefined;
         }>>;
+        ocr: z.ZodOptional<z.ZodObject<{
+            supportedMimeTypes: z.ZodOptional<z.ZodEffects<z.ZodOptional<z.ZodArray<z.ZodAny, "many">>, any[] | undefined, any[] | undefined>>;
+        }, "strip", z.ZodTypeAny, {
+            supportedMimeTypes?: any[] | undefined;
+        }, {
+            supportedMimeTypes?: any[] | undefined;
+        }>>;
+        text: z.ZodOptional<z.ZodObject<{
+            supportedMimeTypes: z.ZodOptional<z.ZodEffects<z.ZodOptional<z.ZodArray<z.ZodAny, "many">>, any[] | undefined, any[] | undefined>>;
+        }, "strip", z.ZodTypeAny, {
+            supportedMimeTypes?: any[] | undefined;
+        }, {
+            supportedMimeTypes?: any[] | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
+        text?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
+        ocr?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
         endpoints?: Record<string, {
             disabled?: boolean | undefined;
             fileLimit?: number | undefined;
@@ -7042,6 +10163,7 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         }> | undefined;
         serverFileSizeLimit?: number | undefined;
         avatarSizeLimit?: number | undefined;
+        fileTokenLimit?: number | undefined;
         imageGeneration?: {
             percentage?: number | undefined;
             px?: number | undefined;
@@ -7053,6 +10175,12 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             quality?: number | undefined;
         } | undefined;
     }, {
+        text?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
+        ocr?: {
+            supportedMimeTypes?: any[] | undefined;
+        } | undefined;
         endpoints?: Record<string, {
             disabled?: boolean | undefined;
             fileLimit?: number | undefined;
@@ -7062,6 +10190,7 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         }> | undefined;
         serverFileSizeLimit?: number | undefined;
         avatarSizeLimit?: number | undefined;
+        fileTokenLimit?: number | undefined;
         imageGeneration?: {
             percentage?: number | undefined;
             px?: number | undefined;
@@ -7142,23 +10271,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 instructions: z.ZodOptional<z.ZodString>;
+                fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
                 modelLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 userLabel: z.ZodOptional<z.ZodString>;
                 promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-                temperature: z.ZodOptional<z.ZodNumber>;
+                temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
                 topP: z.ZodOptional<z.ZodNumber>;
                 topK: z.ZodOptional<z.ZodNumber>;
                 top_p: z.ZodOptional<z.ZodNumber>;
                 frequency_penalty: z.ZodOptional<z.ZodNumber>;
                 presence_penalty: z.ZodOptional<z.ZodNumber>;
                 parentMessageId: z.ZodOptional<z.ZodString>;
-                maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+                maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
                 maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
                 max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
                 promptCache: z.ZodOptional<z.ZodBoolean>;
                 system: z.ZodOptional<z.ZodString>;
                 thinking: z.ZodOptional<z.ZodBoolean>;
                 thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+                stream: z.ZodOptional<z.ZodBoolean>;
                 artifacts: z.ZodOptional<z.ZodString>;
                 context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -7194,7 +10325,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 resendFiles: z.ZodOptional<z.ZodBoolean>;
                 file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
                 imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ImageDetail>>;
-                reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>;
+                reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningEffort>>>;
+                reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").ReasoningSummary>>>;
+                verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").Verbosity>>>;
+                useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+                effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AnthropicEffort>>>;
+                web_search: z.ZodOptional<z.ZodBoolean>;
+                disableStreaming: z.ZodOptional<z.ZodBoolean>;
                 assistant_id: z.ZodOptional<z.ZodString>;
                 agent_id: z.ZodOptional<z.ZodString>;
                 region: z.ZodOptional<z.ZodString>;
@@ -7253,22 +10390,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 presetOverride: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
                 stop: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
                 resendImages: z.ZodOptional<z.ZodBoolean>;
-                agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-                    agent: z.ZodDefault<z.ZodString>;
-                    skipCompletion: z.ZodDefault<z.ZodBoolean>;
-                    model: z.ZodString;
-                    temperature: z.ZodDefault<z.ZodNumber>;
-                }, "strip", z.ZodTypeAny, {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                }, {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                }>>>;
                 chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             } & {
                 conversationId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -7307,23 +10428,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: number | undefined;
+                maxOutputTokens?: number | null | undefined;
                 maxContextTokens?: number | undefined;
                 max_tokens?: number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -7337,7 +10460,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -7372,12 +10501,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -7412,23 +10535,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: string | number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: string | number | undefined;
+                maxOutputTokens?: string | number | null | undefined;
                 maxContextTokens?: string | number | undefined;
                 max_tokens?: string | number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: string | number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -7442,7 +10567,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -7477,12 +10608,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -7491,13 +10616,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             order: z.ZodOptional<z.ZodNumber>;
             default: z.ZodOptional<z.ZodBoolean>;
             description: z.ZodOptional<z.ZodString>;
+            group: z.ZodOptional<z.ZodString>;
+            groupIcon: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
             showIconInMenu: z.ZodOptional<z.ZodBoolean>;
             showIconInHeader: z.ZodOptional<z.ZodBoolean>;
             iconURL: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>>;
             authType: z.ZodOptional<z.ZodNativeEnum<typeof import("./schemas").AuthType>>;
+            webSearch: z.ZodOptional<z.ZodBoolean>;
+            fileSearch: z.ZodOptional<z.ZodBoolean>;
+            executeCode: z.ZodOptional<z.ZodBoolean>;
+            artifacts: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodBoolean]>>;
+            mcpServers: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -7528,23 +10660,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: number | undefined;
+                maxOutputTokens?: number | null | undefined;
                 maxContextTokens?: number | undefined;
                 max_tokens?: number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -7558,7 +10692,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -7593,12 +10733,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -7607,13 +10741,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }, {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -7644,23 +10785,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: string | number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: string | number | undefined;
+                maxOutputTokens?: string | number | null | undefined;
                 maxContextTokens?: string | number | undefined;
                 max_tokens?: string | number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: string | number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -7674,7 +10817,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -7709,12 +10858,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -7723,18 +10866,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }>, "many">;
         addedEndpoints: z.ZodOptional<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>, "many">>;
     }, "strip", z.ZodTypeAny, {
         enforce: boolean;
         prioritize: boolean;
         list: {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -7765,23 +10915,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: number | undefined;
+                maxOutputTokens?: number | null | undefined;
                 maxContextTokens?: number | undefined;
                 max_tokens?: number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -7795,7 +10947,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -7830,12 +10988,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent: string;
-                    temperature: number;
-                    skipCompletion: boolean;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -7844,16 +10996,23 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }[];
         addedEndpoints?: string[] | undefined;
     }, {
         list: {
-            name: string;
             label: string;
+            name: string;
             preset: {
                 endpoint: string | null;
                 conversationId?: string | null | undefined;
@@ -7884,23 +11043,25 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 model?: string | null | undefined;
                 spec?: string | null | undefined;
                 instructions?: string | undefined;
+                fileTokenLimit?: string | number | undefined;
                 modelLabel?: string | null | undefined;
                 userLabel?: string | undefined;
                 promptPrefix?: string | null | undefined;
-                temperature?: number | undefined;
+                temperature?: number | null | undefined;
                 topP?: number | undefined;
                 topK?: number | undefined;
                 top_p?: number | undefined;
                 frequency_penalty?: number | undefined;
                 presence_penalty?: number | undefined;
                 parentMessageId?: string | undefined;
-                maxOutputTokens?: string | number | undefined;
+                maxOutputTokens?: string | number | null | undefined;
                 maxContextTokens?: string | number | undefined;
                 max_tokens?: string | number | undefined;
                 promptCache?: boolean | undefined;
                 system?: string | undefined;
                 thinking?: boolean | undefined;
                 thinkingBudget?: string | number | undefined;
+                stream?: boolean | undefined;
                 artifacts?: string | undefined;
                 context?: string | null | undefined;
                 examples?: {
@@ -7914,7 +11075,13 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 resendFiles?: boolean | undefined;
                 file_ids?: string[] | undefined;
                 imageDetail?: import("./schemas").ImageDetail | undefined;
-                reasoning_effort?: import("./schemas").ReasoningEffort | undefined;
+                reasoning_effort?: import("./schemas").ReasoningEffort | null | undefined;
+                reasoning_summary?: import("./schemas").ReasoningSummary | null | undefined;
+                verbosity?: import("./schemas").Verbosity | null | undefined;
+                useResponsesApi?: boolean | undefined;
+                effort?: import("./schemas").AnthropicEffort | null | undefined;
+                web_search?: boolean | undefined;
+                disableStreaming?: boolean | undefined;
                 assistant_id?: string | undefined;
                 agent_id?: string | undefined;
                 region?: string | undefined;
@@ -7949,12 +11116,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 presetOverride?: Record<string, unknown> | undefined;
                 stop?: string[] | undefined;
                 resendImages?: boolean | undefined;
-                agentOptions?: {
-                    model: string;
-                    agent?: string | undefined;
-                    temperature?: number | undefined;
-                    skipCompletion?: boolean | undefined;
-                } | null | undefined;
                 chatGptLabel?: string | null | undefined;
                 presetId?: string | null | undefined;
                 defaultPreset?: boolean | undefined;
@@ -7963,10 +11124,17 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             iconURL?: string | undefined;
             default?: boolean | undefined;
             description?: string | undefined;
+            webSearch?: boolean | undefined;
+            mcpServers?: string[] | undefined;
+            fileSearch?: boolean | undefined;
+            artifacts?: string | boolean | undefined;
             order?: number | undefined;
+            group?: string | undefined;
+            groupIcon?: string | undefined;
             showIconInMenu?: boolean | undefined;
             showIconInHeader?: boolean | undefined;
             authType?: import("./schemas").AuthType | undefined;
+            executeCode?: boolean | undefined;
         }[];
         enforce?: boolean | undefined;
         prioritize?: boolean | undefined;
@@ -7978,80 +11146,177 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }>>;
         openAI: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }>>;
         google: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         }>>;
         anthropic: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
+        } & {
+            /** Vertex AI configuration for running Anthropic models on Google Cloud */
+            vertex: z.ZodOptional<z.ZodObject<{
+                /** Enable Vertex AI mode for Anthropic (defaults to true when vertex config is present) */
+                enabled: z.ZodOptional<z.ZodBoolean>;
+                /** Google Cloud Project ID (optional - auto-detected from service key file if not provided) */
+                projectId: z.ZodOptional<z.ZodString>;
+                /** Vertex AI region (e.g., 'us-east5', 'europe-west1') */
+                region: z.ZodDefault<z.ZodString>;
+                /** Optional: Path to service account key file */
+                serviceKeyFile: z.ZodOptional<z.ZodString>;
+                /** Optional: Default deployment name for all models (can be overridden per model) */
+                deploymentName: z.ZodOptional<z.ZodString>;
+                /** Optional: Available models - can be string array or object with deploymentName mapping */
+                models: z.ZodOptional<z.ZodUnion<[z.ZodArray<z.ZodString, "many">, z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodObject<{
+                    /** The actual model ID/deployment name used by Vertex AI API */
+                    deploymentName: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    deploymentName?: string | undefined;
+                }, {
+                    deploymentName?: string | undefined;
+                }>, z.ZodBoolean]>>]>>;
+            }, "strip", z.ZodTypeAny, {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            }, {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            }>>;
+            /** Optional: List of available models */
+            models: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        }>>;
-        gptPlugins: z.ZodOptional<z.ZodObject<{
-            streamRate: z.ZodOptional<z.ZodNumber>;
-            baseURL: z.ZodOptional<z.ZodString>;
-            titlePrompt: z.ZodOptional<z.ZodString>;
-            titleModel: z.ZodOptional<z.ZodString>;
-        }, "strip", z.ZodTypeAny, {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
-        }, {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         }>>;
         azureOpenAI: z.ZodOptional<z.ZodIntersection<z.ZodObject<{
             groups: z.ZodArray<z.ZodIntersection<z.ZodObject<{
@@ -8091,7 +11356,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 assistants: z.ZodOptional<z.ZodBoolean>;
                 addParams: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
                 dropParams: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-                forcePrompt: z.ZodOptional<z.ZodBoolean>;
                 version: z.ZodOptional<z.ZodString>;
                 baseURL: z.ZodOptional<z.ZodString>;
                 additionalHeaders: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
@@ -8105,7 +11369,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             }, {
                 apiKey: string;
@@ -8117,7 +11380,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             }>>, "many">;
             plugins: z.ZodOptional<z.ZodBoolean>;
@@ -8140,7 +11402,6 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
@@ -8163,32 +11424,37 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         }>, z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+            titlePrompt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             titleModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
-            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>>;
+            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>>;
+            titlePromptTemplate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             summarize: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
             summaryModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             customOrder: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
         }, "strip", z.ZodTypeAny, {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
         }, {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -8198,6 +11464,10 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         } & {
             disableBuilder: z.ZodOptional<z.ZodBoolean>;
             pollIntervalMs: z.ZodOptional<z.ZodNumber>;
@@ -8210,20 +11480,33 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof Capabilities>, "many">>>;
             apiKey: z.ZodOptional<z.ZodString>;
             models: z.ZodOptional<z.ZodObject<{
-                default: z.ZodArray<z.ZodString, "many">;
+                default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+                    name: z.ZodString;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                    description?: string | undefined;
+                }, {
+                    name: string;
+                    description?: string | undefined;
+                }>]>, "many">;
                 fetch: z.ZodOptional<z.ZodBoolean>;
                 userIdQuery: z.ZodOptional<z.ZodBoolean>;
             }, "strip", z.ZodTypeAny, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }>>;
-            titleConvo: z.ZodOptional<z.ZodBoolean>;
-            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>;
             headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
         }, "strip", z.ZodTypeAny, {
             version: string | number;
@@ -8235,13 +11518,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8256,13 +11544,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8277,6 +11570,10 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         } & {
             disableBuilder: z.ZodOptional<z.ZodBoolean>;
             pollIntervalMs: z.ZodOptional<z.ZodNumber>;
@@ -8289,20 +11586,33 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof Capabilities>, "many">>>;
             apiKey: z.ZodOptional<z.ZodString>;
             models: z.ZodOptional<z.ZodObject<{
-                default: z.ZodArray<z.ZodString, "many">;
+                default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+                    name: z.ZodString;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                    description?: string | undefined;
+                }, {
+                    name: string;
+                    description?: string | undefined;
+                }>]>, "many">;
                 fetch: z.ZodOptional<z.ZodBoolean>;
                 userIdQuery: z.ZodOptional<z.ZodBoolean>;
             }, "strip", z.ZodTypeAny, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }>>;
-            titleConvo: z.ZodOptional<z.ZodBoolean>;
-            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>;
             headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
         }, "strip", z.ZodTypeAny, {
             version: string | number;
@@ -8314,13 +11624,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8335,13 +11650,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8356,19 +11676,33 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
         } & {
             recursionLimit: z.ZodOptional<z.ZodNumber>;
             disableBuilder: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
             maxRecursionLimit: z.ZodOptional<z.ZodNumber>;
+            maxCitations: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            maxCitationsPerFile: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            minRelevanceScore: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
             allowedProviders: z.ZodOptional<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNativeEnum<typeof EModelEndpoint>]>, "many">>;
             capabilities: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodNativeEnum<typeof AgentCapabilities>, "many">>>;
         }, "strip", z.ZodTypeAny, {
             disableBuilder: boolean;
             capabilities: AgentCapabilities[];
+            maxCitations: number;
+            maxCitationsPerFile: number;
+            minRelevanceScore: number;
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
             allowedProviders?: string[] | undefined;
@@ -8377,42 +11711,66 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             disableBuilder?: boolean | undefined;
             capabilities?: AgentCapabilities[] | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
+            maxCitations?: number | undefined;
+            maxCitationsPerFile?: number | undefined;
+            minRelevanceScore?: number | undefined;
             allowedProviders?: string[] | undefined;
         }>>>;
-        custom: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        custom: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
             titlePrompt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             titleModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+            titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
+            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>>;
+            titleEndpoint: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+            titlePromptTemplate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             name: z.ZodOptional<z.ZodEffects<z.ZodString, string, string>>;
             apiKey: z.ZodOptional<z.ZodString>;
             baseURL: z.ZodOptional<z.ZodString>;
             models: z.ZodOptional<z.ZodObject<{
-                default: z.ZodArray<z.ZodString, "many">;
+                default: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodObject<{
+                    name: z.ZodString;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                    description?: string | undefined;
+                }, {
+                    name: string;
+                    description?: string | undefined;
+                }>]>, "many">;
                 fetch: z.ZodOptional<z.ZodBoolean>;
                 userIdQuery: z.ZodOptional<z.ZodBoolean>;
             }, "strip", z.ZodTypeAny, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }, {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             }>>;
-            titleConvo: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
-            titleMethod: z.ZodOptional<z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">]>>>;
             summarize: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
             summaryModel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
-            forcePrompt: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
+            iconURL: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             modelDisplayLabel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             headers: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
             addParams: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
             dropParams: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
-            customParams: z.ZodOptional<z.ZodObject<{
+            customParams: z.ZodOptional<z.ZodOptional<z.ZodObject<{
                 defaultParamsEndpoint: z.ZodDefault<z.ZodString>;
                 paramDefinitions: z.ZodOptional<z.ZodArray<z.ZodRecord<z.ZodString, z.ZodAny>, "many">>;
             }, "strict", z.ZodTypeAny, {
@@ -8421,11 +11779,12 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             }, {
                 defaultParamsEndpoint?: string | undefined;
                 paramDefinitions?: Record<string, any>[] | undefined;
-            }>>;
+            }>>>;
             customOrder: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
             directEndpoint: z.ZodOptional<z.ZodOptional<z.ZodBoolean>>;
             titleMessageRole: z.ZodOptional<z.ZodOptional<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -8433,16 +11792,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -8454,6 +11817,7 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             directEndpoint?: boolean | undefined;
             titleMessageRole?: string | undefined;
         }, {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -8461,16 +11825,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -8481,22 +11849,44 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             customOrder?: number | undefined;
             directEndpoint?: boolean | undefined;
             titleMessageRole?: string | undefined;
-        }>, "many">>;
+        }>, "many">>>;
         bedrock: z.ZodOptional<z.ZodObject<{
             streamRate: z.ZodOptional<z.ZodNumber>;
             baseURL: z.ZodOptional<z.ZodString>;
             titlePrompt: z.ZodOptional<z.ZodString>;
             titleModel: z.ZodOptional<z.ZodString>;
+            titleConvo: z.ZodOptional<z.ZodBoolean>;
+            titleMethod: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"completion">, z.ZodLiteral<"functions">, z.ZodLiteral<"structured">]>>;
+            titleEndpoint: z.ZodOptional<z.ZodString>;
+            titlePromptTemplate: z.ZodOptional<z.ZodString>;
+        } & {
+            availableRegions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            models: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            inferenceProfiles: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         }, {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         }>>;
     }, "strict", z.ZodTypeAny, {
         azureOpenAI?: ({
@@ -8517,16 +11907,17 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -8536,18 +11927,41 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version: string | number;
@@ -8559,13 +11973,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8583,13 +12002,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8600,15 +12024,23 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         agents?: {
             disableBuilder: boolean;
             capabilities: AgentCapabilities[];
+            maxCitations: number;
+            maxCitationsPerFile: number;
+            minRelevanceScore: number;
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -8616,16 +12048,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -8642,18 +12078,23 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }, {
         azureOpenAI?: ({
@@ -8674,16 +12115,17 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -8693,18 +12135,41 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version?: string | number | undefined;
@@ -8714,13 +12179,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8738,13 +12208,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8759,13 +12234,21 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             disableBuilder?: boolean | undefined;
             capabilities?: AgentCapabilities[] | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
+            maxCitations?: number | undefined;
+            maxCitationsPerFile?: number | undefined;
+            minRelevanceScore?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -8773,16 +12256,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -8799,18 +12286,23 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }>, {
         azureOpenAI?: ({
@@ -8831,16 +12323,17 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -8850,18 +12343,41 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                region: string;
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version: string | number;
@@ -8873,13 +12389,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8897,13 +12418,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -8914,15 +12440,23 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         agents?: {
             disableBuilder: boolean;
             capabilities: AgentCapabilities[];
+            maxCitations: number;
+            maxCitationsPerFile: number;
+            minRelevanceScore: number;
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -8930,16 +12464,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -8956,18 +12494,23 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }, {
         azureOpenAI?: ({
@@ -8988,16 +12531,17 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
                 serverless?: boolean | undefined;
                 addParams?: Record<string, any> | undefined;
                 dropParams?: string[] | undefined;
-                forcePrompt?: boolean | undefined;
                 additionalHeaders?: Record<string, any> | undefined;
             })[];
             assistants?: boolean | undefined;
             plugins?: boolean | undefined;
         } & {
             streamRate?: number | undefined;
+            titlePrompt?: string | undefined;
             titleModel?: string | undefined;
             titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titlePromptTemplate?: string | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             customOrder?: number | undefined;
@@ -9007,18 +12551,41 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         google?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
         anthropic?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            vertex?: {
+                enabled?: boolean | undefined;
+                deploymentName?: string | undefined;
+                region?: string | undefined;
+                projectId?: string | undefined;
+                serviceKeyFile?: string | undefined;
+                models?: string[] | Record<string, boolean | {
+                    deploymentName?: string | undefined;
+                }> | undefined;
+            } | undefined;
         } | undefined;
         assistants?: {
             version?: string | number | undefined;
@@ -9028,13 +12595,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -9052,13 +12624,18 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             disableBuilder?: boolean | undefined;
             pollIntervalMs?: number | undefined;
             timeoutMs?: number | undefined;
@@ -9073,13 +12650,21 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             disableBuilder?: boolean | undefined;
             capabilities?: AgentCapabilities[] | undefined;
             recursionLimit?: number | undefined;
             maxRecursionLimit?: number | undefined;
+            maxCitations?: number | undefined;
+            maxCitationsPerFile?: number | undefined;
+            minRelevanceScore?: number | undefined;
             allowedProviders?: string[] | undefined;
         } | undefined;
         custom?: {
+            iconURL?: string | undefined;
             apiKey?: string | undefined;
             baseURL?: string | undefined;
             headers?: Record<string, any> | undefined;
@@ -9087,16 +12672,20 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
             models?: {
-                default: string[];
+                default: (string | {
+                    name: string;
+                    description?: string | undefined;
+                })[];
                 fetch?: boolean | undefined;
                 userIdQuery?: boolean | undefined;
             } | undefined;
             addParams?: Record<string, any> | undefined;
             dropParams?: string[] | undefined;
-            forcePrompt?: boolean | undefined;
-            titleConvo?: boolean | undefined;
-            titleMethod?: "completion" | "functions" | undefined;
             summarize?: boolean | undefined;
             summaryModel?: string | undefined;
             modelDisplayLabel?: string | undefined;
@@ -9113,22 +12702,28 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
-        } | undefined;
-        gptPlugins?: {
-            baseURL?: string | undefined;
-            streamRate?: number | undefined;
-            titlePrompt?: string | undefined;
-            titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
+            models?: string[] | undefined;
+            availableRegions?: string[] | undefined;
+            inferenceProfiles?: Record<string, string> | undefined;
         } | undefined;
         all?: {
             baseURL?: string | undefined;
             streamRate?: number | undefined;
             titlePrompt?: string | undefined;
             titleModel?: string | undefined;
+            titleConvo?: boolean | undefined;
+            titleMethod?: "completion" | "functions" | "structured" | undefined;
+            titleEndpoint?: string | undefined;
+            titlePromptTemplate?: string | undefined;
         } | undefined;
     }>>;
 }>;
-export type TCustomConfig = z.infer<typeof configSchema>;
+export type TCustomConfig = DeepPartial<z.infer<typeof configSchema>>;
+export type TCustomEndpoints = z.infer<typeof customEndpointsSchema>;
 export type TProviderSchema = z.infer<typeof ttsOpenaiSchema> | z.infer<typeof ttsElevenLabsSchema> | z.infer<typeof ttsLocalaiSchema> | undefined;
 export declare enum KnownEndpoints {
     anyscale = "anyscale",
@@ -9136,7 +12731,9 @@ export declare enum KnownEndpoints {
     cohere = "cohere",
     fireworks = "fireworks",
     deepseek = "deepseek",
+    moonshot = "moonshot",
     groq = "groq",
+    helicone = "helicone",
     huggingface = "huggingface",
     mistral = "mistral",
     mlx = "mlx",
@@ -9146,10 +12743,12 @@ export declare enum KnownEndpoints {
     shuttleai = "shuttleai",
     'together.ai' = "together.ai",
     unify = "unify",
+    vercel = "vercel",
     xai = "xai"
 }
 export declare enum FetchTokenConfig {
-    openrouter = "openrouter"
+    openrouter = "openrouter",
+    helicone = "helicone"
 }
 export declare const defaultEndpoints: EModelEndpoint[];
 export declare const alternateName: {
@@ -9158,15 +12757,16 @@ export declare const alternateName: {
     agents: string;
     azureAssistants: string;
     azureOpenAI: string;
-    chatGPTBrowser: string;
-    gptPlugins: string;
     google: string;
     anthropic: string;
     custom: string;
     bedrock: string;
     ollama: string;
     deepseek: string;
+    moonshot: string;
     xai: string;
+    vercel: string;
+    helicone: string;
 };
 export declare const bedrockModels: string[];
 export declare const defaultModels: {
@@ -9179,18 +12779,22 @@ export declare const defaultModels: {
     bedrock: string[];
 };
 export declare const initialModelsConfig: TModelsConfig;
-export declare const EndpointURLs: Record<string, string>;
+export declare const EndpointURLs: {
+    readonly assistants: `${string}/api/assistants/v2/chat`;
+    readonly azureAssistants: `${string}/api/assistants/v1/chat`;
+    readonly agents: `${string}/api/agents/chat`;
+};
 export declare const modularEndpoints: Set<string>;
 export declare const supportsBalanceCheck: {
     custom: boolean;
     openAI: boolean;
     anthropic: boolean;
-    gptPlugins: boolean;
     assistants: boolean;
     agents: boolean;
     azureAssistants: boolean;
     azureOpenAI: boolean;
     bedrock: boolean;
+    google: boolean;
 };
 export declare const visionModels: string[];
 export declare enum VisionModes {
@@ -9220,10 +12824,13 @@ export declare enum InfiniteCollections {
  * Enum for time intervals
  */
 export declare enum Time {
+    ONE_DAY = 86400000,
+    TWELVE_HOURS = 43200000,
     ONE_HOUR = 3600000,
     THIRTY_MINUTES = 1800000,
     TEN_MINUTES = 600000,
     FIVE_MINUTES = 300000,
+    THREE_MINUTES = 180000,
     TWO_MINUTES = 120000,
     ONE_MINUTE = 60000,
     THIRTY_SECONDS = 30000
@@ -9235,85 +12842,76 @@ export declare enum CacheKeys {
     /**
      * Key for the config store namespace.
      */
-    CONFIG_STORE = "configStore",
+    CONFIG_STORE = "CONFIG_STORE",
     /**
-     * Key for the config store namespace.
+     * Key for the tool cache namespace (plugins, MCP tools, tool definitions).
      */
-    ROLES = "roles",
+    TOOL_CACHE = "TOOL_CACHE",
     /**
-     * Key for the plugins cache.
+     * Key for the roles cache.
      */
-    PLUGINS = "plugins",
+    ROLES = "ROLES",
     /**
      * Key for the title generation cache.
      */
-    GEN_TITLE = "genTitle",
-    /**
+    GEN_TITLE = "GEN_TITLE",
     /**
      * Key for the tools cache.
      */
-    TOOLS = "tools",
+    TOOLS = "TOOLS",
     /**
      * Key for the model config cache.
      */
-    MODELS_CONFIG = "modelsConfig",
+    MODELS_CONFIG = "MODELS_CONFIG",
     /**
      * Key for the model queries cache.
      */
-    MODEL_QUERIES = "modelQueries",
+    MODEL_QUERIES = "MODEL_QUERIES",
     /**
      * Key for the default startup config cache.
      */
-    STARTUP_CONFIG = "startupConfig",
+    STARTUP_CONFIG = "STARTUP_CONFIG",
     /**
      * Key for the default endpoint config cache.
      */
-    ENDPOINT_CONFIG = "endpointsConfig",
+    ENDPOINT_CONFIG = "ENDPOINT_CONFIG",
     /**
      * Key for accessing the model token config cache.
      */
-    TOKEN_CONFIG = "tokenConfig",
+    TOKEN_CONFIG = "TOKEN_CONFIG",
     /**
-     * Key for the custom config cache.
+     * Key for the app config namespace.
      */
-    CUSTOM_CONFIG = "customConfig",
+    APP_CONFIG = "APP_CONFIG",
     /**
      * Key for accessing Abort Keys
      */
-    ABORT_KEYS = "abortKeys",
-    /**
-     * Key for the override config cache.
-     */
-    OVERRIDE_CONFIG = "overrideConfig",
+    ABORT_KEYS = "ABORT_KEYS",
     /**
      * Key for the bans cache.
      */
-    BANS = "bans",
+    BANS = "BANS",
     /**
      * Key for the encoded domains cache.
      * Used by Azure OpenAI Assistants.
      */
-    ENCODED_DOMAINS = "encoded_domains",
+    ENCODED_DOMAINS = "ENCODED_DOMAINS",
     /**
      * Key for the cached audio run Ids.
      */
-    AUDIO_RUNS = "audioRuns",
+    AUDIO_RUNS = "AUDIO_RUNS",
     /**
      * Key for in-progress messages.
      */
-    MESSAGES = "messages",
+    MESSAGES = "MESSAGES",
     /**
      * Key for in-progress flow states.
      */
-    FLOWS = "flows",
-    /**
-     * Key for individual MCP Tool Manifests.
-     */
-    MCP_TOOLS = "mcp_tools",
+    FLOWS = "FLOWS",
     /**
      * Key for pending chat requests (concurrency check)
      */
-    PENDING_REQ = "pending_req",
+    PENDING_REQ = "PENDING_REQ",
     /**
      * Key for s3 check intervals per user
      */
@@ -9321,7 +12919,19 @@ export declare enum CacheKeys {
     /**
      * key for open id exchanged tokens
      */
-    OPENID_EXCHANGED_TOKENS = "OPENID_EXCHANGED_TOKENS"
+    OPENID_EXCHANGED_TOKENS = "OPENID_EXCHANGED_TOKENS",
+    /**
+     * Key for OpenID session.
+     */
+    OPENID_SESSION = "OPENID_SESSION",
+    /**
+     * Key for SAML session.
+     */
+    SAML_SESSION = "SAML_SESSION",
+    /**
+     * Key for admin panel OAuth exchange codes (one-time-use, short TTL).
+     */
+    ADMIN_OAUTH_EXCHANGE = "ADMIN_OAUTH_EXCHANGE"
 }
 /**
  * Enum for violation types, used to identify, log, and cache violations.
@@ -9366,7 +12976,31 @@ export declare enum ViolationTypes {
     /**
      * Tool Call Limit Violation.
      */
-    TOOL_CALL_LIMIT = "tool_call_limit"
+    TOOL_CALL_LIMIT = "tool_call_limit",
+    /**
+     * General violation (catch-all).
+     */
+    GENERAL = "general",
+    /**
+     * Login attempt violations.
+     */
+    LOGINS = "logins",
+    /**
+     * Concurrent request violations.
+     */
+    CONCURRENT = "concurrent",
+    /**
+     * Non-browser access violations.
+     */
+    NON_BROWSER = "non_browser",
+    /**
+     * Message limit violations.
+     */
+    MESSAGE_LIMIT = "message_limit",
+    /**
+     * Registration violations.
+     */
+    REGISTRATIONS = "registrations"
 }
 /**
  * Enum for error message types that are not "violations" as above, used to identify client-facing errors.
@@ -9413,9 +13047,33 @@ export declare enum ErrorTypes {
      */
     GOOGLE_ERROR = "google_error",
     /**
+     * Google provider does not allow custom tools with built-in tools
+     */
+    GOOGLE_TOOL_CONFLICT = "google_tool_conflict",
+    /**
      * Invalid Agent Provider (excluded by Admin)
      */
-    INVALID_AGENT_PROVIDER = "invalid_agent_provider"
+    INVALID_AGENT_PROVIDER = "invalid_agent_provider",
+    /**
+     * Missing model selection
+     */
+    MISSING_MODEL = "missing_model",
+    /**
+     * Models configuration not loaded
+     */
+    MODELS_NOT_LOADED = "models_not_loaded",
+    /**
+     * Endpoint models not loaded
+     */
+    ENDPOINT_MODELS_NOT_LOADED = "endpoint_models_not_loaded",
+    /**
+     * Generic Authentication failure
+     */
+    AUTH_FAILED = "auth_failed",
+    /**
+     * Model refused to respond (content policy violation)
+     */
+    REFUSAL = "refusal"
 }
 /**
  * Enum for authentication keys.
@@ -9430,7 +13088,13 @@ export declare enum AuthKeys {
      *
      * Note: this is not for Environment Variables, but to access encrypted object values.
      */
-    GOOGLE_API_KEY = "GOOGLE_API_KEY"
+    GOOGLE_API_KEY = "GOOGLE_API_KEY",
+    /**
+     * API key to use Anthropic.
+     *
+     * Note: this is not for Environment Variables, but to access encrypted object values.
+     */
+    ANTHROPIC_API_KEY = "ANTHROPIC_API_KEY"
 }
 /**
  * Enum for Image Detail Cost.
@@ -9527,11 +13191,13 @@ export declare enum TTSProviders {
 /** Enum for app-wide constants */
 export declare enum Constants {
     /** Key for the app's version. */
-    VERSION = "v0.7.8",
-    /** Key for the Custom Config's version (chat.yaml). */
-    CONFIG_VERSION = "1.2.8",
+    VERSION = "v0.8.3-rc1",
+    /** Key for the Custom Config's version (librechat.yaml). */
+    CONFIG_VERSION = "1.3.4",
     /** Standard value for the first message's `parentMessageId` value, to indicate no parent exists. */
     NO_PARENT = "00000000-0000-0000-0000-000000000000",
+    /** Standard value to use whatever the submission prelim. `responseMessageId` is */
+    USE_PRELIM_RESPONSE_MESSAGE_ID = "USE_PRELIM_RESPONSE_MESSAGE_ID",
     /** Standard value for the initial conversationId before a request is sent */
     NEW_CONVO = "new",
     /** Standard value for the temporary conversationId after a request is sent and before the server responds */
@@ -9558,8 +13224,25 @@ export declare enum Constants {
     mcp_delimiter = "_mcp_",
     /** Prefix for MCP plugins */
     mcp_prefix = "mcp_",
+    /** Unique value to indicate all MCP servers. For backend use only. */
+    mcp_all = "sys__all__sys",
+    /** Unique value to indicate clearing MCP servers from UI state. For frontend use only. */
+    mcp_clear = "sys__clear__sys",
+    /** Key suffix for non-spec user default tool storage */
+    spec_defaults_key = "__defaults__",
+    /**
+     * Unique value to indicate the MCP tool was added to an agent.
+     * This helps inform the UI if the mcp server was previously added.
+     * */
+    mcp_server = "sys__server__sys",
+    /**
+     * Handoff Tool Name Prefix
+     */
+    LC_TRANSFER_TO_ = "lc_transfer_to_",
     /** Placeholder Agent ID for Ephemeral Agents */
-    EPHEMERAL_AGENT_ID = "ephemeral"
+    EPHEMERAL_AGENT_ID = "ephemeral",
+    /** Programmatic Tool Calling tool name */
+    PROGRAMMATIC_TOOL_CALLING = "run_tools_with_code"
 }
 export declare enum LocalStorageKeys {
     /** Key for the admin defined App Title */
@@ -9602,6 +13285,8 @@ export declare enum LocalStorageKeys {
     LAST_WEB_SEARCH_TOGGLE_ = "LAST_WEB_SEARCH_TOGGLE_",
     /** Last checked toggle for File Search per conversation ID */
     LAST_FILE_SEARCH_TOGGLE_ = "LAST_FILE_SEARCH_TOGGLE_",
+    /** Last checked toggle for Artifacts per conversation ID */
+    LAST_ARTIFACTS_TOGGLE_ = "LAST_ARTIFACTS_TOGGLE_",
     /** Key for the last selected agent provider */
     LAST_AGENT_PROVIDER = "lastAgentProvider",
     /** Key for the last selected agent model */
@@ -9667,4 +13352,11 @@ export declare const specialVariables: {
     current_datetime: boolean;
 };
 export type TSpecialVarLabel = `com_ui_special_var_${keyof typeof specialVariables}`;
+/**
+ * Retrieves a specific field from the endpoints configuration for a given endpoint key.
+ * Does not infer or default any endpoint type when absent.
+ */
+export declare function getEndpointField<K extends TConfig[keyof TConfig] extends never ? never : keyof TConfig>(endpointsConfig: TEndpointsConfig | undefined | null, endpoint: EModelEndpoint | string | null | undefined, property: K): TConfig[K] | undefined;
+/** Resolves the `defaultParamsEndpoint` for a given endpoint from its custom params config */
+export declare function getDefaultParamsEndpoint(endpointsConfig: TEndpointsConfig | undefined | null, endpoint: string | null | undefined): string | undefined;
 export {};

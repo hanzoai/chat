@@ -9,20 +9,49 @@ import type { AppConfig } from '@librechat/data-schemas';
 import { isEnabled } from '~/utils';
 
 /**
- * Retrieves the balance configuration object
- * */
+ * Retrieves the balance configuration object.
+ * Supports legacy env vars (CHECK_BALANCE, START_BALANCE) and
+ * Hanzo billing env vars (HANZO_BILLING_ENABLED, HANZO_SIGNUP_CREDIT, etc.).
+ */
 export function getBalanceConfig(appConfig?: AppConfig): Partial<TCustomConfig['balance']> | null {
   const isLegacyEnabled = isEnabled(process.env.CHECK_BALANCE);
+  const isHanzoEnabled = isEnabled(process.env.HANZO_BILLING_ENABLED);
   const startBalance = process.env.START_BALANCE;
-  /** @type {} */
-  const config: Partial<TCustomConfig['balance']> = removeNullishValues({
-    enabled: isLegacyEnabled,
+
+  // Hanzo billing env vars: HANZO_SIGNUP_CREDIT is in USD, convert to tokenCredits
+  const hanzoSignupCredit = process.env.HANZO_SIGNUP_CREDIT;
+  const hanzoExpiryDays = process.env.HANZO_SIGNUP_CREDIT_EXPIRY_DAYS;
+  const hanzoMinBalance = process.env.HANZO_MIN_BALANCE;
+
+  const envConfig: Partial<TCustomConfig['balance']> = removeNullishValues({
+    enabled: isLegacyEnabled || isHanzoEnabled,
     startBalance: startBalance != null && startBalance ? parseInt(startBalance, 10) : undefined,
   });
-  if (!appConfig) {
-    return config;
+
+  // Apply Hanzo env var overrides (USD to tokenCredits conversion)
+  if (hanzoSignupCredit != null && hanzoSignupCredit !== '') {
+    const usd = parseFloat(hanzoSignupCredit);
+    if (!isNaN(usd)) {
+      envConfig.startBalance = Math.round(usd * 1000000);
+    }
   }
-  return { ...config, ...(appConfig?.['balance'] ?? {}) };
+  if (hanzoExpiryDays != null && hanzoExpiryDays !== '') {
+    const days = parseInt(hanzoExpiryDays, 10);
+    if (!isNaN(days)) {
+      envConfig.creditExpiryDays = days;
+    }
+  }
+  if (hanzoMinBalance != null && hanzoMinBalance !== '') {
+    const usd = parseFloat(hanzoMinBalance);
+    if (!isNaN(usd)) {
+      envConfig.minBalance = Math.round(usd * 1000000);
+    }
+  }
+
+  if (!appConfig) {
+    return envConfig;
+  }
+  return { ...envConfig, ...(appConfig?.['balance'] ?? {}) };
 }
 
 /**

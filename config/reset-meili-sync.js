@@ -59,7 +59,7 @@ const { batchResetMeiliFlags } = require('~/db/utils');
     console.cyan(`\nDocuments queued for sync:`);
     console.cyan(`Messages: ${totalMessages}`);
     console.cyan(`Conversations: ${totalConversations}`);
-    console.yellow('\nThe next time LibreChat starts or performs a sync check,');
+    console.yellow('\nThe next time Hanzo Chat starts or performs a sync check,');
     console.yellow('all data will be re-indexed into MeiliSearch.');
     console.purple('---------------------------------------\n');
 

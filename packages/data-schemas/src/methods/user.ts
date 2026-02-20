@@ -77,17 +77,16 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
 
     // If balance is enabled, create or update a balance record for the user
     if (balanceConfig?.enabled && balanceConfig?.startBalance) {
-      const update: {
-        $inc: { tokenCredits: number };
-        $set?: {
-          autoRefillEnabled: boolean;
-          refillIntervalValue: number;
-          refillIntervalUnit: string;
-          refillAmount: number;
-        };
-      } = {
-        $inc: { tokenCredits: balanceConfig.startBalance },
+      const now = new Date();
+      const setFields: Record<string, unknown> = {
+        creditsGrantedAt: now,
       };
+
+      // Set credit expiry if configured
+      if (balanceConfig.creditExpiryDays && balanceConfig.creditExpiryDays > 0) {
+        const expiresAt = new Date(now.getTime() + balanceConfig.creditExpiryDays * 24 * 60 * 60 * 1000);
+        setFields.expiresAt = expiresAt;
+      }
 
       if (
         balanceConfig.autoRefillEnabled &&
@@ -95,13 +94,16 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
         balanceConfig.refillIntervalUnit != null &&
         balanceConfig.refillAmount != null
       ) {
-        update.$set = {
-          autoRefillEnabled: true,
-          refillIntervalValue: balanceConfig.refillIntervalValue,
-          refillIntervalUnit: balanceConfig.refillIntervalUnit,
-          refillAmount: balanceConfig.refillAmount,
-        };
+        setFields.autoRefillEnabled = true;
+        setFields.refillIntervalValue = balanceConfig.refillIntervalValue;
+        setFields.refillIntervalUnit = balanceConfig.refillIntervalUnit;
+        setFields.refillAmount = balanceConfig.refillAmount;
       }
+
+      const update: Record<string, unknown> = {
+        $inc: { tokenCredits: balanceConfig.startBalance },
+        $set: setFields,
+      };
 
       await Balance.findOneAndUpdate({ user: user._id }, update, {
         upsert: true,

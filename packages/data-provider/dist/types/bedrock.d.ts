@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import * as s from './schemas';
+/** Checks if a model supports adaptive thinking (Opus 4.6+, Sonnet 4.6+) */
+export declare function supportsAdaptiveThinking(model: string): boolean;
+/** Checks if a model qualifies for the context-1m beta header (Sonnet 4+, Opus 4.6+, Opus 5+) */
+export declare function supportsContext1m(model: string): boolean;
 export declare const bedrockInputSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<Pick<{
     conversationId: z.ZodNullable<z.ZodString>;
     endpoint: z.ZodNullable<z.ZodNativeEnum<typeof s.EModelEndpoint>>;
@@ -63,20 +67,21 @@ export declare const bedrockInputSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     userLabel: z.ZodOptional<z.ZodString>;
     model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    temperature: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     topP: z.ZodOptional<z.ZodNumber>;
     topK: z.ZodOptional<z.ZodNumber>;
     top_p: z.ZodOptional<z.ZodNumber>;
     frequency_penalty: z.ZodOptional<z.ZodNumber>;
     presence_penalty: z.ZodOptional<z.ZodNumber>;
     parentMessageId: z.ZodOptional<z.ZodString>;
-    maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
     maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     promptCache: z.ZodOptional<z.ZodBoolean>;
     system: z.ZodOptional<z.ZodString>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    stream: z.ZodOptional<z.ZodBoolean>;
     artifacts: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -115,7 +120,13 @@ export declare const bedrockInputSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     resendFiles: z.ZodOptional<z.ZodBoolean>;
     file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof s.ImageDetail>>;
-    reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>;
+    reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>>;
+    reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningSummary>>>;
+    verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.Verbosity>>>;
+    useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+    effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.AnthropicEffort>>>;
+    web_search: z.ZodOptional<z.ZodBoolean>;
+    disableStreaming: z.ZodOptional<z.ZodBoolean>;
     assistant_id: z.ZodOptional<z.ZodString>;
     agent_id: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
@@ -178,38 +189,25 @@ export declare const bedrockInputSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     resendImages: z.ZodOptional<z.ZodBoolean>;
-    agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        agent: z.ZodDefault<z.ZodString>;
-        skipCompletion: z.ZodDefault<z.ZodBoolean>;
-        model: z.ZodString;
-        temperature: z.ZodDefault<z.ZodNumber>;
-    }, "strip", z.ZodTypeAny, {
-        model: string;
-        temperature: number;
-        agent: string;
-        skipCompletion: boolean;
-    }, {
-        model: string;
-        temperature?: number | undefined;
-        agent?: string | undefined;
-        skipCompletion?: boolean | undefined;
-    }>>>;
     chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "system" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, "strip", z.ZodTypeAny, {
+}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "promptCache" | "system" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "effort" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, "strip", z.ZodTypeAny, {
     modelLabel?: string | null | undefined;
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: number | undefined;
+    maxOutputTokens?: number | null | undefined;
     maxContextTokens?: number | undefined;
+    promptCache?: boolean | undefined;
     system?: string | undefined;
     thinking?: boolean | undefined;
     thinkingBudget?: number | undefined;
     artifacts?: string | undefined;
     resendFiles?: boolean | undefined;
+    effort?: s.AnthropicEffort | null | undefined;
     region?: string | undefined;
     maxTokens?: number | undefined;
     additionalModelRequestFields?: (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | /*elided*/ any | {
@@ -245,16 +243,18 @@ export declare const bedrockInputSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     modelLabel?: string | null | undefined;
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: string | number | undefined;
+    maxOutputTokens?: string | number | null | undefined;
     maxContextTokens?: string | number | undefined;
+    promptCache?: boolean | undefined;
     system?: string | undefined;
     thinking?: boolean | undefined;
     thinkingBudget?: string | number | undefined;
     artifacts?: string | undefined;
     resendFiles?: boolean | undefined;
+    effort?: s.AnthropicEffort | null | undefined;
     region?: string | undefined;
     maxTokens?: string | number | undefined;
     additionalModelRequestFields?: (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | /*elided*/ any | {
@@ -290,16 +290,18 @@ export declare const bedrockInputSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     modelLabel?: string | null | undefined;
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: number | undefined;
+    maxOutputTokens?: number | null | undefined;
     maxContextTokens?: number | undefined;
+    promptCache?: boolean | undefined;
     system?: string | undefined;
     thinking?: boolean | undefined;
     thinkingBudget?: number | undefined;
     artifacts?: string | undefined;
     resendFiles?: boolean | undefined;
+    effort?: s.AnthropicEffort | null | undefined;
     region?: string | undefined;
     maxTokens?: number | undefined;
     additionalModelRequestFields?: (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | /*elided*/ any | {
@@ -335,16 +337,18 @@ export declare const bedrockInputSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     modelLabel?: string | null | undefined;
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: string | number | undefined;
+    maxOutputTokens?: string | number | null | undefined;
     maxContextTokens?: string | number | undefined;
+    promptCache?: boolean | undefined;
     system?: string | undefined;
     thinking?: boolean | undefined;
     thinkingBudget?: string | number | undefined;
     artifacts?: string | undefined;
     resendFiles?: boolean | undefined;
+    effort?: s.AnthropicEffort | null | undefined;
     region?: string | undefined;
     maxTokens?: string | number | undefined;
     additionalModelRequestFields?: (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | /*elided*/ any | {
@@ -441,20 +445,21 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     userLabel: z.ZodOptional<z.ZodString>;
     model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    temperature: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     topP: z.ZodOptional<z.ZodNumber>;
     topK: z.ZodOptional<z.ZodNumber>;
     top_p: z.ZodOptional<z.ZodNumber>;
     frequency_penalty: z.ZodOptional<z.ZodNumber>;
     presence_penalty: z.ZodOptional<z.ZodNumber>;
     parentMessageId: z.ZodOptional<z.ZodString>;
-    maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
     maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     promptCache: z.ZodOptional<z.ZodBoolean>;
     system: z.ZodOptional<z.ZodString>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    stream: z.ZodOptional<z.ZodBoolean>;
     artifacts: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -493,7 +498,13 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     resendFiles: z.ZodOptional<z.ZodBoolean>;
     file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof s.ImageDetail>>;
-    reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>;
+    reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>>;
+    reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningSummary>>>;
+    verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.Verbosity>>>;
+    useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+    effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.AnthropicEffort>>>;
+    web_search: z.ZodOptional<z.ZodBoolean>;
+    disableStreaming: z.ZodOptional<z.ZodBoolean>;
     assistant_id: z.ZodOptional<z.ZodString>;
     agent_id: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
@@ -556,25 +567,10 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     resendImages: z.ZodOptional<z.ZodBoolean>;
-    agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        agent: z.ZodDefault<z.ZodString>;
-        skipCompletion: z.ZodDefault<z.ZodBoolean>;
-        model: z.ZodString;
-        temperature: z.ZodDefault<z.ZodNumber>;
-    }, "strip", z.ZodTypeAny, {
-        model: string;
-        temperature: number;
-        agent: string;
-        skipCompletion: boolean;
-    }, {
-        model: string;
-        temperature?: number | undefined;
-        agent?: string | undefined;
-        skipCompletion?: boolean | undefined;
-    }>>>;
     chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, "strip", z.ZodAny, z.objectOutputType<Pick<{
+}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "promptCache" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "effort" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, "strip", z.ZodAny, z.objectOutputType<Pick<{
     conversationId: z.ZodNullable<z.ZodString>;
     endpoint: z.ZodNullable<z.ZodNativeEnum<typeof s.EModelEndpoint>>;
     endpointType: z.ZodOptional<z.ZodNullable<z.ZodNativeEnum<typeof s.EModelEndpoint>>>;
@@ -637,20 +633,21 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     userLabel: z.ZodOptional<z.ZodString>;
     model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    temperature: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     topP: z.ZodOptional<z.ZodNumber>;
     topK: z.ZodOptional<z.ZodNumber>;
     top_p: z.ZodOptional<z.ZodNumber>;
     frequency_penalty: z.ZodOptional<z.ZodNumber>;
     presence_penalty: z.ZodOptional<z.ZodNumber>;
     parentMessageId: z.ZodOptional<z.ZodString>;
-    maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
     maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     promptCache: z.ZodOptional<z.ZodBoolean>;
     system: z.ZodOptional<z.ZodString>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    stream: z.ZodOptional<z.ZodBoolean>;
     artifacts: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -689,7 +686,13 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     resendFiles: z.ZodOptional<z.ZodBoolean>;
     file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof s.ImageDetail>>;
-    reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>;
+    reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>>;
+    reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningSummary>>>;
+    verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.Verbosity>>>;
+    useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+    effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.AnthropicEffort>>>;
+    web_search: z.ZodOptional<z.ZodBoolean>;
+    disableStreaming: z.ZodOptional<z.ZodBoolean>;
     assistant_id: z.ZodOptional<z.ZodString>;
     agent_id: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
@@ -752,25 +755,10 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     resendImages: z.ZodOptional<z.ZodBoolean>;
-    agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        agent: z.ZodDefault<z.ZodString>;
-        skipCompletion: z.ZodDefault<z.ZodBoolean>;
-        model: z.ZodString;
-        temperature: z.ZodDefault<z.ZodNumber>;
-    }, "strip", z.ZodTypeAny, {
-        model: string;
-        temperature: number;
-        agent: string;
-        skipCompletion: boolean;
-    }, {
-        model: string;
-        temperature?: number | undefined;
-        agent?: string | undefined;
-        skipCompletion?: boolean | undefined;
-    }>>>;
     chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, z.ZodAny, "strip">, z.objectInputType<Pick<{
+}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "promptCache" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "effort" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, z.ZodAny, "strip">, z.objectInputType<Pick<{
     conversationId: z.ZodNullable<z.ZodString>;
     endpoint: z.ZodNullable<z.ZodNativeEnum<typeof s.EModelEndpoint>>;
     endpointType: z.ZodOptional<z.ZodNullable<z.ZodNativeEnum<typeof s.EModelEndpoint>>>;
@@ -833,20 +821,21 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     userLabel: z.ZodOptional<z.ZodString>;
     model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    temperature: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     topP: z.ZodOptional<z.ZodNumber>;
     topK: z.ZodOptional<z.ZodNumber>;
     top_p: z.ZodOptional<z.ZodNumber>;
     frequency_penalty: z.ZodOptional<z.ZodNumber>;
     presence_penalty: z.ZodOptional<z.ZodNumber>;
     parentMessageId: z.ZodOptional<z.ZodString>;
-    maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
     maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     promptCache: z.ZodOptional<z.ZodBoolean>;
     system: z.ZodOptional<z.ZodString>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    stream: z.ZodOptional<z.ZodBoolean>;
     artifacts: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -885,7 +874,13 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     resendFiles: z.ZodOptional<z.ZodBoolean>;
     file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof s.ImageDetail>>;
-    reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>;
+    reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>>;
+    reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningSummary>>>;
+    verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.Verbosity>>>;
+    useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+    effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.AnthropicEffort>>>;
+    web_search: z.ZodOptional<z.ZodBoolean>;
+    disableStreaming: z.ZodOptional<z.ZodBoolean>;
     assistant_id: z.ZodOptional<z.ZodString>;
     agent_id: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
@@ -948,38 +943,25 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     resendImages: z.ZodOptional<z.ZodBoolean>;
-    agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        agent: z.ZodDefault<z.ZodString>;
-        skipCompletion: z.ZodDefault<z.ZodBoolean>;
-        model: z.ZodString;
-        temperature: z.ZodDefault<z.ZodNumber>;
-    }, "strip", z.ZodTypeAny, {
-        model: string;
-        temperature: number;
-        agent: string;
-        skipCompletion: boolean;
-    }, {
-        model: string;
-        temperature?: number | undefined;
-        agent?: string | undefined;
-        skipCompletion?: boolean | undefined;
-    }>>>;
     chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, z.ZodAny, "strip">>, Partial<{
+}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "promptCache" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "effort" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, z.ZodAny, "strip">>, Partial<{
     modelLabel?: string | null | undefined;
     model?: string | null | undefined;
     promptPrefix?: string | null | undefined;
-    temperature?: number | undefined;
+    temperature?: number | null | undefined;
     topP?: number | undefined;
     topK?: number | undefined;
-    maxOutputTokens?: number | undefined;
+    maxOutputTokens?: number | null | undefined;
     maxContextTokens?: number | undefined;
+    promptCache?: boolean | undefined;
     system?: string | undefined;
     thinking?: boolean | undefined;
     thinkingBudget?: number | undefined;
     artifacts?: string | undefined;
     resendFiles?: boolean | undefined;
+    effort?: s.AnthropicEffort | null | undefined;
     region?: string | undefined;
     maxTokens?: number | undefined;
     additionalModelRequestFields?: (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | /*elided*/ any | {
@@ -1074,20 +1056,21 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     userLabel: z.ZodOptional<z.ZodString>;
     model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     promptPrefix: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    temperature: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     topP: z.ZodOptional<z.ZodNumber>;
     topK: z.ZodOptional<z.ZodNumber>;
     top_p: z.ZodOptional<z.ZodNumber>;
     frequency_penalty: z.ZodOptional<z.ZodNumber>;
     presence_penalty: z.ZodOptional<z.ZodNumber>;
     parentMessageId: z.ZodOptional<z.ZodString>;
-    maxOutputTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    maxOutputTokens: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>>;
     maxContextTokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     max_tokens: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     promptCache: z.ZodOptional<z.ZodBoolean>;
     system: z.ZodOptional<z.ZodString>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     thinkingBudget: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
+    stream: z.ZodOptional<z.ZodBoolean>;
     artifacts: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     examples: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -1126,7 +1109,13 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     resendFiles: z.ZodOptional<z.ZodBoolean>;
     file_ids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     imageDetail: z.ZodOptional<z.ZodNativeEnum<typeof s.ImageDetail>>;
-    reasoning_effort: z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>;
+    reasoning_effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningEffort>>>;
+    reasoning_summary: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.ReasoningSummary>>>;
+    verbosity: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.Verbosity>>>;
+    useResponsesApi: z.ZodOptional<z.ZodBoolean>;
+    effort: z.ZodNullable<z.ZodOptional<z.ZodNativeEnum<typeof s.AnthropicEffort>>>;
+    web_search: z.ZodOptional<z.ZodBoolean>;
+    disableStreaming: z.ZodOptional<z.ZodBoolean>;
     assistant_id: z.ZodOptional<z.ZodString>;
     agent_id: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
@@ -1189,23 +1178,8 @@ export declare const bedrockInputParser: z.ZodCatch<z.ZodEffects<z.ZodObject<Pic
     spec: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     iconURL: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     expiredAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    fileTokenLimit: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodNumber, z.ZodString]>, number | undefined, string | number>>;
     resendImages: z.ZodOptional<z.ZodBoolean>;
-    agentOptions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        agent: z.ZodDefault<z.ZodString>;
-        skipCompletion: z.ZodDefault<z.ZodBoolean>;
-        model: z.ZodString;
-        temperature: z.ZodDefault<z.ZodNumber>;
-    }, "strip", z.ZodTypeAny, {
-        model: string;
-        temperature: number;
-        agent: string;
-        skipCompletion: boolean;
-    }, {
-        model: string;
-        temperature?: number | undefined;
-        agent?: string | undefined;
-        skipCompletion?: boolean | undefined;
-    }>>>;
     chatGptLabel: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, z.ZodAny, "strip">>>;
+}, "modelLabel" | "model" | "promptPrefix" | "temperature" | "topP" | "topK" | "maxOutputTokens" | "maxContextTokens" | "promptCache" | "thinking" | "thinkingBudget" | "artifacts" | "resendFiles" | "effort" | "region" | "maxTokens" | "additionalModelRequestFields" | "stop" | "greeting" | "spec" | "iconURL">, z.ZodAny, "strip">>>;
 export declare const bedrockOutputParser: (data: Record<string, unknown>) => Record<string, unknown>;

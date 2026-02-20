@@ -1,4 +1,5 @@
-import type { AgentModelParameters } from '@hanzochat/data-provider';
+import type { Providers, ClientOptions } from '@librechat/agents';
+import type { AgentModelParameters } from 'librechat-data-provider';
 import type { OpenAIConfiguration } from './openai';
 export type RunLLMConfig = {
     provider: Providers;
@@ -6,4 +7,5 @@ export type RunLLMConfig = {
     streamUsage: boolean;
     usage?: boolean;
     configuration?: OpenAIConfiguration;
-} & AgentModelParameters;
+} & AgentModelParameters & ClientOptions;
+//# sourceMappingURL=run.d.ts.map

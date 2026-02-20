@@ -10,4 +10,12 @@ declare class Tokenizer {
     getTokenCount(text: string, encoding?: TiktokenModel | TiktokenEncoding): number;
 }
 declare const TokenizerSingleton: Tokenizer;
+/**
+ * Counts the number of tokens in a given text using tiktoken.
+ * This is an async wrapper around Tokenizer.getTokenCount for compatibility.
+ * @param text - The text to be tokenized. Defaults to an empty string if not provided.
+ * @returns The number of tokens in the provided text.
+ */
+export declare function countTokens(text?: string): Promise<number>;
 export default TokenizerSingleton;
+//# sourceMappingURL=tokenizer.d.ts.map
