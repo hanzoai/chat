@@ -1,5 +1,5 @@
 # Hanzo Router Configuration
-# LiteLLM proxy -- unified LLM gateway routing all models through api.hanzo.ai
+# Hanzo LLM proxy -- unified LLM gateway routing all models through api.hanzo.ai
 
 model_list:
   # =====================
