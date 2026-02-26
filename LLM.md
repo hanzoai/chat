@@ -1,6 +1,6 @@
 # Hanzo Chat
 
-Based on LibreChat v0.8.0-rc2. AI chat interface with multi-model support,
+AI chat interface with multi-model support,
 MCP integration, agents, and RAG. Live at **chat.hanzo.ai**.
 
 **Repo**: `github.com/hanzoai/chat`
