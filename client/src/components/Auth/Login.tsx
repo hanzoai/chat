@@ -10,6 +10,36 @@ import { getLoginError } from '~/utils';
 import { useLocalize } from '~/hooks';
 import LoginForm from './LoginForm';
 
+/**
+ * Build Hanzo IAM OIDC authorize URL from env vars.
+ * Used in static SPA mode when VITE_HANZO_IAM_URL is set.
+ */
+function getHanzoIamUrl(): string | null {
+  const iamUrl = import.meta.env.VITE_HANZO_IAM_URL;
+  const appId = import.meta.env.VITE_HANZO_IAM_APP;
+  const org = import.meta.env.VITE_HANZO_IAM_ORG;
+
+  if (!iamUrl || !appId) {
+    return null;
+  }
+
+  const redirectUri = `${window.location.origin}/auth/callback`;
+  const state = `hanzo-chat-${Date.now()}`;
+
+  // Store state for CSRF verification
+  sessionStorage.setItem('oauth_state', state);
+
+  const params = new URLSearchParams({
+    client_id: appId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    state,
+    scope: 'openid profile email',
+  });
+
+  return `${iamUrl}/login/oauth/authorize?${params.toString()}`;
+}
+
 function Login() {
   const localize = useLocalize();
   const { showToast } = useToastContext();
@@ -22,6 +52,10 @@ function Login() {
 
   // Persist the disable flag locally so that once detected, auto-redirect stays disabled.
   const [isAutoRedirectDisabled, setIsAutoRedirectDisabled] = useState(disableAutoRedirect);
+
+  // Check if we're in static/IAM mode
+  const hanzoIamUrl = getHanzoIamUrl();
+  const isStaticMode = !!import.meta.env.VITE_HANZO_API_URL;
 
   useEffect(() => {
     const oauthError = searchParams?.get('error');
@@ -46,44 +80,54 @@ function Login() {
     }
   }, [disableAutoRedirect, searchParams, setSearchParams]);
 
-  // Determine whether we should auto-redirect to OpenID.
+  // Determine whether we should auto-redirect to OpenID or Hanzo IAM
   const shouldAutoRedirect =
-    startupConfig?.openidLoginEnabled &&
-    startupConfig?.openidAutoRedirect &&
-    startupConfig?.serverDomain &&
-    !isAutoRedirectDisabled;
+    !isAutoRedirectDisabled &&
+    ((startupConfig?.openidLoginEnabled &&
+      startupConfig?.openidAutoRedirect &&
+      startupConfig?.serverDomain) ||
+      (isStaticMode && hanzoIamUrl));
 
   useEffect(() => {
     if (shouldAutoRedirect) {
-      console.log('Auto-redirecting to OpenID provider...');
-      window.location.href = `${startupConfig.serverDomain}/oauth/openid`;
+      if (isStaticMode && hanzoIamUrl) {
+        console.log('Auto-redirecting to Hanzo IAM...');
+        window.location.href = hanzoIamUrl;
+      } else if (startupConfig?.serverDomain) {
+        console.log('Auto-redirecting to OpenID provider...');
+        window.location.href = `${startupConfig.serverDomain}/oauth/openid`;
+      }
     }
-  }, [shouldAutoRedirect, startupConfig]);
+  }, [shouldAutoRedirect, startupConfig, isStaticMode, hanzoIamUrl]);
 
   // Render fallback UI if auto-redirect is active.
   if (shouldAutoRedirect) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <p className="text-lg font-semibold">
-          {localize('com_ui_redirecting_to_provider', { 0: startupConfig.openidLabel })}
+          {isStaticMode
+            ? 'Redirecting to Hanzo...'
+            : localize('com_ui_redirecting_to_provider', { 0: startupConfig?.openidLabel })}
         </p>
-        <div className="mt-4">
-          <SocialButton
-            key="openid"
-            enabled={startupConfig.openidLoginEnabled}
-            serverDomain={startupConfig.serverDomain}
-            oauthPath="openid"
-            Icon={() =>
-              startupConfig.openidImageUrl ? (
-                <img src={startupConfig.openidImageUrl} alt="OpenID Logo" className="h-5 w-5" />
-              ) : (
-                <OpenIDIcon />
-              )
-            }
-            label={startupConfig.openidLabel}
-            id="openid"
-          />
-        </div>
+        {!isStaticMode && startupConfig && (
+          <div className="mt-4">
+            <SocialButton
+              key="openid"
+              enabled={startupConfig.openidLoginEnabled}
+              serverDomain={startupConfig.serverDomain}
+              oauthPath="openid"
+              Icon={() =>
+                startupConfig.openidImageUrl ? (
+                  <img src={startupConfig.openidImageUrl} alt="OpenID Logo" className="h-5 w-5" />
+                ) : (
+                  <OpenIDIcon />
+                )
+              }
+              label={startupConfig.openidLabel}
+              id="openid"
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -91,7 +135,24 @@ function Login() {
   return (
     <>
       {error != null && <ErrorMessage>{localize(getLoginError(error))}</ErrorMessage>}
-      {startupConfig?.emailLoginEnabled === true && (
+
+      {/* Hanzo IAM button (static mode) */}
+      {isStaticMode && hanzoIamUrl && (
+        <div className="mt-4">
+          <a
+            href={hanzoIamUrl}
+            className="flex w-full items-center justify-center space-x-3 rounded-2xl border border-border-light bg-surface-primary px-5 py-3 text-text-primary transition-colors duration-200 hover:bg-surface-tertiary"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+            <p>Sign in with Hanzo</p>
+          </a>
+        </div>
+      )}
+
+      {/* Email/password form (non-static mode or as fallback) */}
+      {startupConfig?.emailLoginEnabled === true && !isStaticMode && (
         <LoginForm
           onSubmit={login}
           startupConfig={startupConfig}
@@ -99,7 +160,7 @@ function Login() {
           setError={setError}
         />
       )}
-      {startupConfig?.registrationEnabled === true && (
+      {startupConfig?.registrationEnabled === true && !isStaticMode && (
         <p className="my-4 text-center text-sm font-light text-gray-700 dark:text-white">
           {' '}
           {localize('com_auth_no_account')}{' '}

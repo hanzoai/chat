@@ -10,3 +10,8 @@ tests
 *.tgz
 log.txt
 docker/Dockerfile.*
+node_modules
+**/node_modules
+.env
+.env.*
+!.env.static
