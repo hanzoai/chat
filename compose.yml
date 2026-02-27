@@ -66,9 +66,6 @@ services:
       ALLOW_SOCIAL_REGISTRATION: ${ALLOW_SOCIAL_REGISTRATION:-true}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-jwt-refresh}
-      CREDS_KEY: ${CREDS_KEY:-}
-      CREDS_IV: ${CREDS_IV:-}
-
       # Hanzo IAM OpenID Connect
       OPENID_CLIENT_ID: ${OPENID_CLIENT_ID:-}
       OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET:-}
