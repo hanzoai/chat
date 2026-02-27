@@ -3,110 +3,124 @@
 
 model_list:
   # =====================
-  # zen4 series (Hanzo AI)
+  # Zen model family (Hanzo AI)
+  # Publishable key (HANZO_API_KEY) for unauthenticated users.
+  # Authenticated users override with their own key via IAM (hanzo.id).
   # =====================
-  - model_name: zen4
+  - model_name: zen3-nano
     litellm_params:
-      model: openai/zen4
+      model: openai/zen3-nano
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
     model_info:
-      description: "zen4: General purpose AI"
-
-  - model_name: zen4-pro
-    litellm_params:
-      model: openai/zen4-pro
-      api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      description: "zen4-pro: High capability reasoning"
-
-  - model_name: zen4-max
-    litellm_params:
-      model: openai/zen4-max
-      api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      description: "zen4-max: Extended context window"
+      description: "zen3-nano: 4B dense, fast free-tier model"
 
   - model_name: zen4-mini
     litellm_params:
       model: openai/zen4-mini
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
     model_info:
-      description: "zen4-mini: Fast and efficient"
+      description: "zen4-mini: 8B dense, fast and efficient"
+
+  - model_name: zen
+    litellm_params:
+      model: openai/zen
+      api_base: https://api.hanzo.ai/v1
+      api_key: os.environ/HANZO_API_KEY
+    model_info:
+      description: "zen: 32B default general-purpose model"
+
+  - model_name: zen4-pro
+    litellm_params:
+      model: openai/zen4-pro
+      api_base: https://api.hanzo.ai/v1
+      api_key: os.environ/HANZO_API_KEY
+    model_info:
+      description: "zen4-pro: 80B MoE flagship reasoning"
+
+  - model_name: zen4
+    litellm_params:
+      model: openai/zen4
+      api_base: https://api.hanzo.ai/v1
+      api_key: os.environ/HANZO_API_KEY
+    model_info:
+      description: "zen4: 744B MoE frontier model"
+
+  - model_name: zen4-max
+    litellm_params:
+      model: openai/zen4-max
+      api_base: https://api.hanzo.ai/v1
+      api_key: os.environ/HANZO_API_KEY
+    model_info:
+      description: "zen4-max: 1.04T MoE, 256K context"
 
   - model_name: zen4-ultra
     litellm_params:
       model: openai/zen4-ultra
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
     model_info:
-      description: "zen4-ultra: Maximum reasoning capability"
-
-  - model_name: zen4-coder
-    litellm_params:
-      model: openai/zen4-coder
-      api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      description: "zen4-coder: Code specialist"
+      description: "zen4-ultra: 744B MoE + CoT reasoning"
 
   - model_name: zen4-thinking
     litellm_params:
       model: openai/zen4-thinking
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
     model_info:
-      description: "zen4-thinking: Deep reasoning with chain-of-thought"
+      description: "zen4-thinking: 80B MoE with chain-of-thought"
+
+  - model_name: zen4-coder-flash
+    litellm_params:
+      model: openai/zen4-coder-flash
+      api_base: https://api.hanzo.ai/v1
+      api_key: os.environ/HANZO_API_KEY
+    model_info:
+      description: "zen4-coder-flash: 30B MoE, fast code specialist"
+
+  - model_name: zen4-coder
+    litellm_params:
+      model: openai/zen4-coder
+      api_base: https://api.hanzo.ai/v1
+      api_key: os.environ/HANZO_API_KEY
+    model_info:
+      description: "zen4-coder: 480B MoE code specialist"
 
   - model_name: zen4-coder-pro
     litellm_params:
       model: openai/zen4-coder-pro
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
     model_info:
-      description: "zen4-coder-pro: Premium coding model"
+      description: "zen4-coder-pro: 480B dense BF16 coding model"
 
   # =====================
-  # Standard models (via Hanzo Cloud)
+  # Third-party models (via Hanzo Cloud)
   # =====================
   - model_name: gpt-4o
     litellm_params:
       model: openai/gpt-4o
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
 
   - model_name: gpt-4o-mini
     litellm_params:
       model: openai/gpt-4o-mini
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
 
   - model_name: claude-sonnet-4-5
     litellm_params:
       model: openai/claude-sonnet-4-5
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
 
   - model_name: claude-haiku-4-5
     litellm_params:
       model: openai/claude-haiku-4-5
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
-
-  - model_name: deepseek-r1-distill-70b
-    litellm_params:
-      model: openai/deepseek-r1-distill-70b
-      api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
-
-  - model_name: qwen3-32b
-    litellm_params:
-      model: openai/qwen3-32b
-      api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
 
   # =====================
   # Wildcard passthrough
@@ -115,7 +129,7 @@ model_list:
     litellm_params:
       model: "openai/*"
       api_base: https://api.hanzo.ai/v1
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/HANZO_API_KEY
 
 litellm_settings:
   drop_params: true
