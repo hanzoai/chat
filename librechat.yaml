@@ -90,27 +90,30 @@ endpoints:
   # All models routed through api.hanzo.ai OpenAI-compatible gateway
   custom:
     - name: 'Hanzo'
-      apiKey: '${OPENAI_API_KEY}'
+      # Publishable key for unauthenticated users (rate-limited).
+      # Authenticated users override with their own key via IAM (hanzo.id).
+      apiKey: '${HANZO_API_KEY}'
       baseURL: 'https://api.hanzo.ai/v1'
       iconURL: 'https://hanzo.ai/logo/icon.svg'
       models:
         default:
-          # zen4 series (default models)
-          - 'zen4'
-          - 'zen4-pro'
-          - 'zen4-max'
+          # Zen model family (Hanzo AI)
+          - 'zen3-nano'
           - 'zen4-mini'
+          - 'zen'
+          - 'zen4-pro'
+          - 'zen4'
+          - 'zen4-max'
           - 'zen4-ultra'
-          - 'zen4-coder'
           - 'zen4-thinking'
+          - 'zen4-coder-flash'
+          - 'zen4-coder'
           - 'zen4-coder-pro'
-          # Standard models (via Hanzo Cloud)
+          # Third-party models (via Hanzo Cloud)
           - 'gpt-4o'
           - 'gpt-4o-mini'
           - 'claude-sonnet-4-5'
           - 'claude-haiku-4-5'
-          - 'deepseek-r1-distill-70b'
-          - 'qwen3-32b'
         fetch: false
       titleConvo: true
       titleModel: 'zen4-mini'
