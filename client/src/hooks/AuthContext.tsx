@@ -141,8 +141,12 @@ const AuthContextProvider = ({
         const { user, token = '' } = data ?? {};
         if (token) {
           setUserContext({ token, isAuthenticated: true, user });
+        } else if (user) {
+          // Session-based auth: no JWT token, but user data means session is valid
+          // Use a sentinel value so isAuthenticated works
+          setUserContext({ token: 'session', isAuthenticated: true, user });
         } else {
-          console.log('Token is not present. User is not authenticated.');
+          console.log('No valid session. User is not authenticated.');
           if (authConfig?.test === true) {
             return;
           }

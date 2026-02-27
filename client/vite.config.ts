@@ -8,8 +8,23 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
+// When VITE_HANZO_API_URL is set, the frontend talks directly to the cloud gateway
+// and no local backend proxy is needed (static SPA mode).
+const hanzoApiUrl = process.env.VITE_HANZO_API_URL;
 const backendPort = process.env.BACKEND_PORT && Number(process.env.BACKEND_PORT) || 3080;
 const backendURL = process.env.HOST ? `http://${process.env.HOST}:${backendPort}` : `http://localhost:${backendPort}`;
+
+// Only proxy to local backend if not using cloud gateway directly
+const devProxy = hanzoApiUrl ? {} : {
+  '/api': {
+    target: backendURL,
+    changeOrigin: true,
+  },
+  '/oauth': {
+    target: backendURL,
+    changeOrigin: true,
+  },
+};
 
 export default defineConfig(({ command }) => ({
   base: '',
@@ -18,20 +33,11 @@ export default defineConfig(({ command }) => ({
     host: process.env.HOST || 'localhost',
     port: process.env.PORT && Number(process.env.PORT) || 3090,
     strictPort: false,
-    proxy: {
-      '/api': {
-        target: backendURL,
-        changeOrigin: true,
-      },
-      '/oauth': {
-        target: backendURL,
-        changeOrigin: true,
-      },
-    },
+    proxy: devProxy,
   },
   // Set the directory where environment variables are loaded from and restrict prefixes
   envDir: '../',
-  envPrefix: ['VITE_', 'SCRIPT_', 'DOMAIN_', 'ALLOW_'],
+  envPrefix: ['VITE_', 'SCRIPT_', 'DOMAIN_', 'ALLOW_', 'HANZO_'],
   plugins: [
     react(),
     nodePolyfills(),
