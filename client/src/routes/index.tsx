@@ -8,6 +8,7 @@ import {
   TwoFactorScreen,
   RequestPasswordReset,
 } from '~/components/Auth';
+import OAuthCallback from '~/components/Auth/OAuthCallback';
 import { MarketplaceProvider } from '~/components/Agents/MarketplaceContext';
 import AgentMarketplace from '~/components/Agents/Marketplace';
 import { OAuthSuccess, OAuthError } from '~/components/OAuth';
@@ -36,6 +37,15 @@ export const router = createBrowserRouter(
     {
       path: 'share/:shareId',
       element: <ShareRoute />,
+      errorElement: <RouteErrorBoundary />,
+    },
+    {
+      path: 'auth/callback',
+      element: (
+        <AuthContextProvider>
+          <OAuthCallback />
+        </AuthContextProvider>
+      ),
       errorElement: <RouteErrorBoundary />,
     },
     {
