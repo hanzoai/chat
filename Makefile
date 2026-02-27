@@ -130,6 +130,28 @@ build-prod:
 	@echo "$(GREEN)Building production image...$(NC)"
 	@docker build -f docker/Dockerfile -t hanzoai/chat:latest .
 
+build-static-local:
+	@echo "$(GREEN)Building static SPA locally...$(NC)"
+	@cp .env.static .env
+	@pnpm run build:data-provider
+	@pnpm run --filter @librechat/client build
+	@cd client && pnpm run build
+	@cp .env.backup .env 2>/dev/null || true
+	@echo "$(GREEN)Local build complete: client/dist/$(NC)"
+
+build-static: build-static-local
+	@echo "$(GREEN)Building Docker image...$(NC)"
+	@docker build -f Dockerfile.static -t ghcr.io/hanzoai/chat:latest .
+	@echo "$(GREEN)Image built: ghcr.io/hanzoai/chat:latest$(NC)"
+
+deploy-static:
+	@echo "$(GREEN)Pushing and deploying static SPA...$(NC)"
+	@docker push ghcr.io/hanzoai/chat:latest
+	@kubectl apply -f k8s/deployment-static.yaml
+	@kubectl rollout restart deployment/chat -n hanzo
+	@echo "$(GREEN)Deployed. Watching rollout...$(NC)"
+	@kubectl rollout status deployment/chat -n hanzo --timeout=120s
+
 # ============================================================================
 # PRODUCTION
 # ============================================================================

@@ -34,10 +34,13 @@ export * from './accessPermissions';
 export * from './keys';
 /* api call helpers */
 export * from './headers-helpers';
-export { loginPage, registerPage, apiBaseUrl } from './api-endpoints';
-export { default as request } from './request';
+export { loginPage, registerPage, apiBaseUrl, setApiBaseUrl, zapUrl } from './api-endpoints';
+export { default as request, setPublishableKey, getWithPk } from './request';
 export { dataService };
 import * as dataService from './data-service';
+/* ZAP real-time transport */
+export { ZapClient, getZapClient, connectZap } from './zap';
+export type { ZapConfig, ChatStreamChunk } from './zap';
 /* general helpers */
 export * from './utils';
 export * from './actions';

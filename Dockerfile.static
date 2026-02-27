@@ -1,0 +1,25 @@
+# Static SPA — pre-built dist served by lightweight file server
+# Gateway/ingress handles load balancing, rate limiting, SSL, SPA routing.
+#
+# Pre-requisite: run `make build-static-local` first to build client/dist
+#
+# Build: docker build -f Dockerfile.static -t ghcr.io/hanzoai/chat:latest .
+# Run:   docker run -p 3080:3080 ghcr.io/hanzoai/chat:latest
+
+FROM node:22-alpine
+
+RUN npm install -g serve@14
+
+WORKDIR /app
+
+# Copy pre-built static files
+COPY client/dist/ /app/dist/
+COPY client/public/ /app/public/
+
+# Merge public assets into dist (favicon, icons, etc.)
+RUN cp -rn /app/public/* /app/dist/ 2>/dev/null || true && rm -rf /app/public
+
+EXPOSE 3080
+
+# serve with SPA fallback on port 3080
+CMD ["serve", "-s", "dist", "-l", "3080"]

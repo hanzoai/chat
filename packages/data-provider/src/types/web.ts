@@ -1,4 +1,10 @@
-import type { Logger as WinstonLogger } from 'winston';
+// Minimal Logger interface (replaces winston dependency for static SPA builds)
+interface WinstonLogger {
+  error: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+  info: (...args: unknown[]) => void;
+  debug: (...args: unknown[]) => void;
+}
 
 export type SearchRefType = 'search' | 'image' | 'news' | 'video' | 'ref';
 
