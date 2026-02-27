@@ -130,10 +130,31 @@ const thirdPartyModels = [
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
+function getLoginHref(serverDomain: string): string {
+  // Static mode: build Hanzo IAM OIDC URL
+  const iamUrl = import.meta.env.VITE_HANZO_IAM_URL;
+  const appId = import.meta.env.VITE_HANZO_IAM_APP;
+  if (iamUrl && appId) {
+    const redirectUri = `${window.location.origin}/auth/callback`;
+    const state = `hanzo-chat-${Date.now()}`;
+    sessionStorage.setItem('oauth_state', state);
+    const params = new URLSearchParams({
+      client_id: appId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      state,
+      scope: 'openid profile email',
+    });
+    return `${iamUrl}/login/oauth/authorize?${params.toString()}`;
+  }
+  // Backend mode: OAuth via server
+  return `${serverDomain}/oauth/openid`;
+}
+
 export default function LandingPage() {
   const { data: config } = useGetStartupConfig();
   const serverDomain = config?.serverDomain || '';
-  const loginHref = `${serverDomain}/oauth/openid`;
+  const loginHref = getLoginHref(serverDomain);
 
   return (
     <div
