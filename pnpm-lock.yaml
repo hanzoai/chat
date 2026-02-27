@@ -139,8 +139,8 @@ importers:
         specifier: ^0.3.80
         version: 0.3.80(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(openai@5.8.2(ws@8.19.0)(zod@3.25.76))
       '@librechat/agents':
-        specifier: ^3.1.50
-        version: 3.1.50(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ws@8.19.0)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)
+        specifier: ^3.1.51
+        version: 3.1.52(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ws@8.19.0)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)
       '@librechat/api':
         specifier: workspace:*
         version: link:../packages/api
@@ -723,8 +723,8 @@ importers:
         specifier: ^2.2.1
         version: 2.4.0(rollup@2.79.2)
       vite-plugin-node-polyfills:
-        specifier: ^0.23.0
-        version: 0.23.1(rollup@2.79.2)(vite@6.4.1(@types/node@20.19.33)(jiti@1.21.7)(terser@5.46.0)(yaml@2.8.2))
+        specifier: ^0.25.0
+        version: 0.25.0(rollup@2.79.2)(vite@6.4.1(@types/node@20.19.33)(jiti@1.21.7)(terser@5.46.0)(yaml@2.8.2))
       vite-plugin-pwa:
         specifier: ^0.21.2
         version: 0.21.2(vite@6.4.1(@types/node@20.19.33)(jiti@1.21.7)(terser@5.46.0)(yaml@2.8.2))(workbox-build@7.4.0(@types/babel__core@7.20.5))(workbox-window@7.4.0)
@@ -759,8 +759,8 @@ importers:
         specifier: ^0.3.80
         version: 0.3.80(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(openai@5.8.2(ws@8.19.0)(zod@3.25.76))
       '@librechat/agents':
-        specifier: ^3.1.50
-        version: 3.1.50(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ws@8.19.0)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)
+        specifier: ^3.1.51
+        version: 3.1.52(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ws@8.19.0)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)
       '@librechat/data-schemas':
         specifier: workspace:*
         version: link:../data-schemas
@@ -3731,8 +3731,8 @@ packages:
   '@lezer/lr@1.4.8':
     resolution: {integrity: sha512-bPWa0Pgx69ylNlMlPvBPryqeLYQjyJjqPx+Aupm5zydLIF3NE+6MMLT8Yi23Bd9cif9VS00aUebn+6fDIGBcDA==}
 
-  '@librechat/agents@3.1.50':
-    resolution: {integrity: sha512-+gdfUJ7X3PJ20/c+8lETY68D6QpxFlCIlGUQBF4A8VKv+Po9J/TO5rWE+OmzmPByYpye7GrcxVCBLfRTvZKraw==}
+  '@librechat/agents@3.1.52':
+    resolution: {integrity: sha512-Bg35zp+vEDZ0AEJQPZ+ukWb/UqBrsLcr3YQWRQpuvpftEgfQz0fHM5Wrxn6l5P7PvaD1ViolxoG44nggjCt7Hw==}
     engines: {node: '>=14.0.0'}
 
   '@marijn/find-cluster-break@1.0.2':
@@ -11911,9 +11911,8 @@ packages:
   vite-plugin-compression2@2.4.0:
     resolution: {integrity: sha512-8J4CBF1+dM1I06azba/eXJuJHinLF0Am7lUvRH8AZpu0otJoBaDEnxrIEr5iPZJSwH0AEglJGYCveh7pN52jCg==}
 
-  vite-plugin-node-polyfills@0.23.1:
-    resolution: {integrity: sha512-hR2YlaMqVo2f/0w6V9YgaeKsIy8z5gEsMFHX8MQlh8ATEAbfI4EWjE6qnCvkZ9lyaXKoJD2rAwL/up8/Rzsjkg==}
-    deprecated: this version is broken
+  vite-plugin-node-polyfills@0.25.0:
+    resolution: {integrity: sha512-rHZ324W3LhfGPxWwQb2N048TThB6nVvnipsqBUJEzh3R9xeK9KI3si+GMQxCuAcpPJBVf0LpDtJ+beYzB3/chg==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
 
@@ -15701,7 +15700,7 @@ snapshots:
     dependencies:
       '@lezer/common': 1.5.1
 
-  '@librechat/agents@3.1.50(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ws@8.19.0)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)':
+  '@librechat/agents@3.1.52(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.207.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ws@8.19.0)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@anthropic-ai/sdk': 0.73.0(zod@3.25.76)
       '@aws-sdk/client-bedrock-runtime': 3.994.0
@@ -22136,7 +22135,7 @@ snapshots:
 
   md5.js@1.3.5:
     dependencies:
-      hash-base: 3.0.5
+      hash-base: 3.1.2
       inherits: 2.0.4
       safe-buffer: 5.2.1
 
@@ -25519,7 +25518,7 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
-  vite-plugin-node-polyfills@0.23.1(rollup@2.79.2)(vite@6.4.1(@types/node@20.19.33)(jiti@1.21.7)(terser@5.46.0)(yaml@2.8.2)):
+  vite-plugin-node-polyfills@0.25.0(rollup@2.79.2)(vite@6.4.1(@types/node@20.19.33)(jiti@1.21.7)(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       '@rollup/plugin-inject': 5.0.5(rollup@2.79.2)
       node-stdlib-browser: 1.3.1

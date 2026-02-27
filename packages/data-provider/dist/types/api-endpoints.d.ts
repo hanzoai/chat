@@ -1,12 +1,64 @@
+/**
+ * Hanzo Cloud Gateway API Endpoints
+ *
+ * Single source of truth for all API URLs.
+ * The cloud gateway at api.hanzo.ai provides:
+ *   - REST endpoints for CRUD (chats, messages, files, auth)
+ *   - OpenAI/Anthropic-compatible LLM endpoints
+ *   - ZAP WebSocket for streaming & MCP tools
+ *
+ * No backward compat, no adapter layers. One way to do everything.
+ */
 import type { AssistantsEndpoint } from './schemas';
 import * as q from './types/queries';
 import { ResourceType } from './accessPermissions';
+/** Runtime override for API base URL */
+export declare function setApiBaseUrl(url: string): void;
 export declare const apiBaseUrl: () => string;
+/** ZAP WebSocket URL (derived from API base, or explicit) */
+export declare function zapUrl(): string;
 export declare const health: () => string;
+export declare const systemInfo: () => string;
+export declare const versionInfo: () => string;
+/** Sign in via hanzo.id OAuth code exchange */
+export declare const signin: (code: string, state: string) => string;
+/** Sign out */
+export declare const signout: () => string;
+/** Get current account (session-based) */
+export declare const getAccount: () => string;
+export declare const login: () => string;
+export declare const logout: () => string;
+export declare const register: () => string;
+export declare const refreshToken: (retry?: boolean) => string;
 export declare const user: () => string;
+export declare const loginPage: () => string;
+export declare const registerPage: () => string;
+export declare const loginFacebook: () => string;
+export declare const loginGoogle: () => string;
+export declare const verifyEmail: () => string;
+export declare const resendVerificationEmail: () => string;
+export declare const requestPasswordReset: () => string;
+export declare const resetPassword: () => string;
+export declare const enableTwoFactor: () => string;
+export declare const verifyTwoFactor: () => string;
+export declare const confirmTwoFactor: () => string;
+export declare const disableTwoFactor: () => string;
+export declare const regenerateBackupCodes: () => string;
+export declare const verifyTwoFactorTemp: () => string;
 export declare const balance: () => string;
 export declare const userPlugins: () => string;
 export declare const deleteUser: () => string;
+export declare const conversationsRoot: string;
+export declare const conversations: (params: q.ConversationListParams) => string;
+export declare const conversationById: (id: string) => string;
+export declare const genTitle: (conversationId: string) => string;
+export declare const updateConversation: () => string;
+export declare const archiveConversation: () => string;
+export declare const deleteConversation: () => string;
+export declare const deleteAllConversation: () => string;
+export declare const importConversation: () => string;
+export declare const forkConversation: () => string;
+export declare const duplicateConversation: () => string;
 export declare const messages: (params: q.MessagesListParams) => string;
 export declare const messagesArtifacts: (messageId: string) => string;
 export declare const messagesBranch: () => string;
@@ -21,65 +73,19 @@ export declare const revokeUserKey: (name: string) => string;
 export declare const revokeAllUserKeys: () => string;
 export declare const apiKeys: () => string;
 export declare const apiKeyById: (id: string) => string;
-export declare const conversationsRoot: string;
-export declare const conversations: (params: q.ConversationListParams) => string;
-export declare const conversationById: (id: string) => string;
-export declare const genTitle: (conversationId: string) => string;
-export declare const updateConversation: () => string;
-export declare const archiveConversation: () => string;
-export declare const deleteConversation: () => string;
-export declare const deleteAllConversation: () => string;
-export declare const importConversation: () => string;
-export declare const forkConversation: () => string;
-export declare const duplicateConversation: () => string;
 export declare const search: (q: string, cursor?: string | null) => string;
 export declare const searchEnabled: () => string;
 export declare const presets: () => string;
 export declare const deletePreset: () => string;
+export declare const plugins: () => string;
+export declare const config: () => string;
 export declare const aiEndpoints: () => string;
 export declare const models: () => string;
 export declare const tokenizer: () => string;
-export declare const login: () => string;
-export declare const logout: () => string;
-export declare const register: () => string;
-export declare const loginFacebook: () => string;
-export declare const loginGoogle: () => string;
-export declare const refreshToken: (retry?: boolean) => string;
-export declare const requestPasswordReset: () => string;
-export declare const resetPassword: () => string;
-export declare const verifyEmail: () => string;
-export declare const loginPage: () => string;
-export declare const registerPage: () => string;
-export declare const resendVerificationEmail: () => string;
-export declare const plugins: () => string;
-export declare const mcpReinitialize: (serverName: string) => string;
-export declare const mcpConnectionStatus: () => string;
-export declare const mcpServerConnectionStatus: (serverName: string) => string;
-export declare const mcpAuthValues: (serverName: string) => string;
-export declare const cancelMCPOAuth: (serverName: string) => string;
-export declare const mcpOAuthBind: (serverName: string) => string;
-export declare const actionOAuthBind: (actionId: string) => string;
-export declare const config: () => string;
-export declare const prompts: () => string;
-export declare const addPromptToGroup: (groupId: string) => string;
-export declare const assistants: ({ path, options, version, endpoint, isAvatar, }: {
-    path?: string;
-    options?: object;
-    endpoint?: AssistantsEndpoint;
-    version: number | string;
-    isAvatar?: boolean;
-}) => string;
-export declare const agents: ({ path, options }: {
-    path?: string;
-    options?: object;
-}) => string;
-export declare const activeJobs: () => string;
-export declare const mcp: {
-    tools: string;
-    servers: string;
-};
-export declare const mcpServer: (serverName: string) => string;
-export declare const revertAgentVersion: (agent_id: string) => string;
+export declare const chatCompletions: () => string;
+export declare const anthropicMessages: () => string;
+export declare const providers: () => string;
+export declare const provider: (id: string) => string;
 export declare const files: () => string;
 export declare const fileUpload: () => string;
 export declare const fileDelete: () => string;
@@ -94,6 +100,34 @@ export declare const textToSpeech: () => string;
 export declare const textToSpeechManual: () => string;
 export declare const textToSpeechVoices: () => string;
 export declare const getCustomConfigSpeech: () => string;
+export declare const assistants: ({ path, options, version, endpoint, isAvatar, }: {
+    path?: string;
+    options?: object;
+    endpoint?: AssistantsEndpoint;
+    version: number | string;
+    isAvatar?: boolean;
+}) => string;
+export declare const agents: ({ path, options }: {
+    path?: string;
+    options?: object;
+}) => string;
+export declare const activeJobs: () => string;
+export declare const revertAgentVersion: (agent_id: string) => string;
+export declare const mcp: {
+    tools: string;
+    servers: string;
+};
+export declare const mcpServer: (serverName: string) => string;
+export declare const mcpReinitialize: (serverName: string) => string;
+export declare const mcpConnectionStatus: () => string;
+export declare const mcpServerConnectionStatus: (serverName: string) => string;
+export declare const mcpAuthValues: (serverName: string) => string;
+export declare const cancelMCPOAuth: (serverName: string) => string;
+export declare const mcpOAuthBind: (serverName: string) => string;
+export declare const actionOAuthBind: (actionId: string) => string;
+export declare const refreshMcpTools: () => string;
+export declare const prompts: () => string;
+export declare const addPromptToGroup: (groupId: string) => string;
 export declare const getPromptGroup: (_id: string) => string;
 export declare const getPromptGroupsWithFilters: (filter: object) => string;
 export declare const getPromptsWithFilters: (filter: object) => string;
@@ -126,12 +160,6 @@ export declare const userTerms: () => string;
 export declare const acceptUserTerms: () => string;
 export declare const banner: () => string;
 export declare const feedback: (conversationId: string, messageId: string) => string;
-export declare const enableTwoFactor: () => string;
-export declare const verifyTwoFactor: () => string;
-export declare const confirmTwoFactor: () => string;
-export declare const disableTwoFactor: () => string;
-export declare const regenerateBackupCodes: () => string;
-export declare const verifyTwoFactorTemp: () => string;
 export declare const memories: () => string;
 export declare const memory: (key: string) => string;
 export declare const memoryPreferences: () => string;
@@ -142,3 +170,14 @@ export declare const updateResourcePermissions: (resourceType: ResourceType, res
 export declare const getEffectivePermissions: (resourceType: ResourceType, resourceId: string) => string;
 export declare const getAllEffectivePermissions: (resourceType: ResourceType) => string;
 export declare const graphToken: (scopes: string) => string;
+export declare const stores: () => string;
+export declare const store: (id: string) => string;
+export declare const addStore: () => string;
+export declare const updateStore: () => string;
+export declare const deleteStore: () => string;
+export declare const refreshStoreVectors: () => string;
+export declare const vectors: () => string;
+export declare const addVector: () => string;
+export declare const deleteVector: () => string;
+export declare const workflows: () => string;
+export declare const tasks: () => string;
