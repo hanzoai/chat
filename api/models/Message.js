@@ -54,6 +54,11 @@ async function saveMessage(req, params, metadata) {
       messageId: params.newMessageId || params.messageId,
     };
 
+    // Propagate organization from user to message for multi-tenancy
+    if (req.user.organization) {
+      update.organization = req.user.organization;
+    }
+
     if (req?.body?.isTemporary) {
       try {
         const appConfig = req.config;

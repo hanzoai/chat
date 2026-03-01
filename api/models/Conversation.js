@@ -95,6 +95,11 @@ module.exports = {
       const messages = await getMessages({ conversationId }, '_id');
       const update = { ...convo, messages, user: req.user.id };
 
+      // Propagate organization from user to conversation for multi-tenancy
+      if (req.user.organization) {
+        update.organization = req.user.organization;
+      }
+
       if (newConversationId) {
         update.conversationId = newConversationId;
       }
