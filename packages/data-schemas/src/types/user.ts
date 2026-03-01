@@ -43,6 +43,12 @@ export interface IUser extends Document {
   updatedAt?: Date;
   /** Field for external source identification (for consistency with TPrincipal schema) */
   idOnTheSource?: string;
+  /** Organization the user belongs to (from Hanzo IAM 'owner' claim) */
+  organization?: string;
+  /** User's title/role within their organization */
+  organizationTitle?: string;
+  /** User's tag within their organization (e.g. 'founder', 'member') */
+  organizationTag?: string;
 }
 
 export interface BalanceConfig {
