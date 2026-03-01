@@ -157,6 +157,19 @@ const userSchema = new Schema<IUser>(
       type: String,
       sparse: true,
     },
+    /** Organization the user belongs to (from Hanzo IAM 'owner' claim) */
+    organization: {
+      type: String,
+      index: true,
+    },
+    /** User's title/role within their organization */
+    organizationTitle: {
+      type: String,
+    },
+    /** User's tag within their organization (e.g. 'founder', 'member') */
+    organizationTag: {
+      type: String,
+    },
   },
   { timestamps: true },
 );

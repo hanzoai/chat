@@ -475,6 +475,12 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
     throw new Error('User does not exist');
   }
 
+  // Extract organization info from Hanzo IAM (Casdoor) claims
+  // Casdoor uses 'owner' for the organization name
+  const organization = userinfo.owner || userinfo.organization || userinfo.org || '';
+  const organizationTitle = userinfo.title || '';
+  const organizationTag = userinfo.tag || '';
+
   if (!user) {
     user = {
       provider: 'openid',
@@ -484,6 +490,9 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
       emailVerified: userinfo.email_verified || false,
       name: fullName,
       idOnTheSource: userinfo.oid,
+      organization,
+      organizationTitle,
+      organizationTag,
     };
 
     const balanceConfig = getBalanceConfig(appConfig);
@@ -494,6 +503,9 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
     user.username = username;
     user.name = fullName;
     user.idOnTheSource = userinfo.oid;
+    user.organization = organization;
+    user.organizationTitle = organizationTitle;
+    user.organizationTag = organizationTag;
     if (email && email !== user.email) {
       user.email = email;
       user.emailVerified = userinfo.email_verified || false;

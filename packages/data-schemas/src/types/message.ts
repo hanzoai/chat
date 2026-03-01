@@ -6,6 +6,8 @@ export interface IMessage extends Document {
   messageId: string;
   conversationId: string;
   user: string;
+  /** Organization this message belongs to */
+  organization?: string;
   model?: string;
   endpoint?: string;
   conversationSignature?: string;

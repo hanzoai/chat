@@ -23,6 +23,11 @@ const messageSchema: Schema<IMessage> = new Schema(
       default: null,
       meiliIndex: true,
     },
+    organization: {
+      type: String,
+      index: true,
+      meiliIndex: true,
+    },
     model: {
       type: String,
       default: null,
