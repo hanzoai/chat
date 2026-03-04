@@ -31,7 +31,18 @@ const getLogStores = require('~/cache/getLogStores');
  * @param {client.CustomFetchOptions} options
  */
 async function customFetch(url, options) {
-  const urlStr = url.toString();
+  let urlStr = url.toString();
+
+  // Rewrite OIDC issuer URLs to internal IAM service to avoid Cloudflare hairpin.
+  // The issuer remains https://hanzo.id but actual requests go to the in-cluster IAM pod.
+  const iamInternalUrl = process.env.IAM_INTERNAL_URL;
+  if (iamInternalUrl && process.env.OPENID_ISSUER && urlStr.startsWith(process.env.OPENID_ISSUER)) {
+    const rewritten = urlStr.replace(process.env.OPENID_ISSUER, iamInternalUrl);
+    logger.info(`[openidStrategy] Rewriting ${urlStr} -> ${rewritten}`);
+    url = new URL(rewritten);
+    urlStr = url.toString();
+  }
+
   logger.debug(`[openidStrategy] Request to: ${urlStr}`);
   const debugOpenId = isEnabled(process.env.DEBUG_OPENID_REQUESTS);
   if (debugOpenId) {
