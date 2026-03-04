@@ -145,7 +145,7 @@ function getLoginHref(serverDomain: string): string {
       state,
       scope: 'openid profile email',
     });
-    return `${iamUrl}/login/oauth/authorize?${params.toString()}`;
+    return `${iamUrl}/oauth/authorize?${params.toString()}`;
   }
   // Backend mode: OAuth via server
   return `${serverDomain}/oauth/openid`;

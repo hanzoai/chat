@@ -922,6 +922,24 @@ export const balanceSchema = z.object({
   creditExpiryDays: z.number().optional().default(0),
   /** Minimum balance (in tokenCredits) below which requests are blocked */
   minBalance: z.number().optional().default(0),
+  /** Commerce billing integration */
+  commerce: z.object({
+    enabled: z.boolean().optional().default(false),
+    endpoint: z.string().optional().default(''),
+    token: z.string().optional().default(''),
+  }).optional(),
+  /** Trial credit configuration (white-label) */
+  trial: z.object({
+    amountUsd: z.number().optional(),
+    expiryDays: z.number().optional(),
+    allowedModels: z.array(z.string()).optional(),
+    rateLimit: z.number().optional(),
+  }).optional(),
+  /** Paid credit configuration (white-label) */
+  paid: z.object({
+    allowedModels: z.array(z.string()).optional(),
+    rateLimit: z.number().optional(),
+  }).optional(),
 });
 
 export const transactionsSchema = z.object({
