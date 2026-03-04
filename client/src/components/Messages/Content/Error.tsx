@@ -25,6 +25,9 @@ type TTokenBalance = {
   violation_count: number;
   date: Date;
   generations?: unknown[];
+  reason?: string;
+  tier?: string;
+  allowedModels?: string[];
 };
 
 type TExpiredKey = {
@@ -99,7 +102,48 @@ const errorMessages = {
     }.`;
   },
   token_balance: (json: TTokenBalance) => {
-    const { balance, tokenCost, promptTokens, generations } = json;
+    const { balance, tokenCost, promptTokens, generations, reason, tier, allowedModels } = json;
+
+    // Model not allowed for this tier
+    if (reason === 'model_not_allowed') {
+      const tierName = tier || 'free';
+      const models = allowedModels?.join(', ') || 'basic models';
+      return (
+        <>
+          {`This model is not available on the ${tierName} tier. Available models: ${models}.`}
+          <br />
+          <br />
+          <a
+            href="https://hanzo.ai/billing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-hanzo-red underline"
+          >
+            Upgrade your plan
+          </a>
+        </>
+      );
+    }
+
+    // Commerce insufficient balance
+    if (reason === 'commerce_insufficient') {
+      return (
+        <>
+          {'Your account balance is empty. Please add funds to continue.'}
+          <br />
+          <br />
+          <a
+            href="https://hanzo.ai/billing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-hanzo-red underline"
+          >
+            Add funds to your Hanzo account
+          </a>
+        </>
+      );
+    }
+
     // Convert tokenCredits to USD: 1,000,000 tokenCredits = $1 USD
     const balanceUsd = (balance / 1000000).toFixed(4);
     const costUsd = (tokenCost / 1000000).toFixed(4);
