@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { ErrorTypes, registerPage } from 'librechat-data-provider';
 import { OpenIDIcon, useToastContext } from '@librechat/client';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
@@ -7,38 +7,9 @@ import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import SocialButton from '~/components/Auth/SocialButton';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { getLoginError } from '~/utils';
+import { getHanzoIamSdk, isStaticIamMode } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 import LoginForm from './LoginForm';
-
-/**
- * Build Hanzo IAM OIDC authorize URL from env vars.
- * Used in static SPA mode when VITE_HANZO_IAM_URL is set.
- */
-function getHanzoIamUrl(): string | null {
-  const iamUrl = import.meta.env.VITE_HANZO_IAM_URL;
-  const appId = import.meta.env.VITE_HANZO_IAM_APP;
-  const org = import.meta.env.VITE_HANZO_IAM_ORG;
-
-  if (!iamUrl || !appId) {
-    return null;
-  }
-
-  const redirectUri = `${window.location.origin}/auth/callback`;
-  const state = `hanzo-chat-${Date.now()}`;
-
-  // Store state for CSRF verification
-  sessionStorage.setItem('oauth_state', state);
-
-  const params = new URLSearchParams({
-    client_id: appId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    state,
-    scope: 'openid profile email',
-  });
-
-  return `${iamUrl}/login/oauth/authorize?${params.toString()}`;
-}
 
 function Login() {
   const localize = useLocalize();
@@ -54,8 +25,15 @@ function Login() {
   const [isAutoRedirectDisabled, setIsAutoRedirectDisabled] = useState(disableAutoRedirect);
 
   // Check if we're in static/IAM mode
-  const hanzoIamUrl = getHanzoIamUrl();
-  const isStaticMode = !!import.meta.env.VITE_HANZO_API_URL;
+  const iamSdk = getHanzoIamSdk();
+  const isStaticMode = isStaticIamMode();
+
+  /** Trigger IAM PKCE login redirect via the SDK. */
+  const handleIamLogin = useCallback(() => {
+    if (iamSdk) {
+      iamSdk.signinRedirect();
+    }
+  }, [iamSdk]);
 
   useEffect(() => {
     const oauthError = searchParams?.get('error');
@@ -86,19 +64,19 @@ function Login() {
     ((startupConfig?.openidLoginEnabled &&
       startupConfig?.openidAutoRedirect &&
       startupConfig?.serverDomain) ||
-      (isStaticMode && hanzoIamUrl));
+      (isStaticMode && iamSdk));
 
   useEffect(() => {
     if (shouldAutoRedirect) {
-      if (isStaticMode && hanzoIamUrl) {
+      if (isStaticMode && iamSdk) {
         console.log('Auto-redirecting to Hanzo IAM...');
-        window.location.href = hanzoIamUrl;
+        iamSdk.signinRedirect();
       } else if (startupConfig?.serverDomain) {
         console.log('Auto-redirecting to OpenID provider...');
         window.location.href = `${startupConfig.serverDomain}/oauth/openid`;
       }
     }
-  }, [shouldAutoRedirect, startupConfig, isStaticMode, hanzoIamUrl]);
+  }, [shouldAutoRedirect, startupConfig, isStaticMode, iamSdk]);
 
   // Render fallback UI if auto-redirect is active.
   if (shouldAutoRedirect) {
@@ -137,17 +115,18 @@ function Login() {
       {error != null && <ErrorMessage>{localize(getLoginError(error))}</ErrorMessage>}
 
       {/* Hanzo IAM button (static mode) */}
-      {isStaticMode && hanzoIamUrl && (
+      {isStaticMode && iamSdk && (
         <div className="mt-4">
-          <a
-            href={hanzoIamUrl}
+          <button
+            type="button"
+            onClick={handleIamLogin}
             className="flex w-full items-center justify-center space-x-3 rounded-2xl border border-border-light bg-surface-primary px-5 py-3 text-text-primary transition-colors duration-200 hover:bg-surface-tertiary"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
             <p>Sign in with Hanzo</p>
-          </a>
+          </button>
         </div>
       )}
 
