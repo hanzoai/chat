@@ -51,14 +51,14 @@
     <script defer type="module" src="/src/main.jsx"></script>
     <!-- Hanzo Analytics -->
     <script defer src="https://analytics.hanzo.ai/script.js" data-website-id="%VITE_ANALYTICS_SITE_ID%"></script>
-    <!-- Hanzo Insights (PostHog) - only loaded when VITE_POSTHOG_KEY is set -->
+    <!-- Hanzo Insights (Insights) - only loaded when VITE_INSIGHTS_KEY is set -->
     <script>
       (function() {
-        var key = "%VITE_POSTHOG_KEY%";
-        var host = "%VITE_POSTHOG_HOST%" || "https://insights.hanzo.ai";
-        if (!key || key === "%VITE_POSTHOG_KEY%") return;
-        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias reset opt_in_capturing opt_out_capturing has_opted_out_capturing has_opted_in_capturing register register_once unregister".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||(window.posthog=[]));
-        posthog.init(key, {api_host: host, person_profiles: 'identified_only'});
+        var key = "%VITE_INSIGHTS_KEY%";
+        var host = "%VITE_INSIGHTS_HOST%" || "https://insights.hanzo.ai";
+        if (!key || key === "%VITE_INSIGHTS_KEY%") return;
+        !function(t,e){var o,n,p,r;e.__SV||(window.insights=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="insights",u.people=u.people||[],u.toString=function(t){var e="insights";return"insights"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias reset opt_in_capturing opt_out_capturing has_opted_out_capturing has_opted_in_capturing register register_once unregister".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.insights||(window.insights=[]));
+        insights.init(key, {api_host: host, person_profiles: 'identified_only'});
       })();
     </script>
   </head>

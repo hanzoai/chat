@@ -685,4 +685,10 @@ export type TBalanceResponse = {
   // Credit expiry
   expiresAt?: Date;
   creditsGrantedAt?: Date;
+  // Commerce integration (tiered billing)
+  creditType?: 'trial' | 'paid' | 'combined';
+  tierId?: string;
+  allowedModels?: string[];
+  trialCredits?: number;
+  paidCredits?: number;
 };

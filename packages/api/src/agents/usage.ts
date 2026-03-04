@@ -139,6 +139,27 @@ export async function recordCollectedUsage(
     });
   }
 
+  // Fire usage to Commerce if configured (fire-and-forget)
+  try {
+    // Dynamic require to avoid hard dependency — CommerceClient is in the api layer
+    const { getCommerceClient } = require('~/server/services/CommerceClient');
+    const commerceClient = getCommerceClient();
+    if (commerceClient && user) {
+      // Estimate cost in cents from total tokens (rough: 1M tokenCredits = $1 = 100 cents)
+      const totalTokens = input_tokens + total_output_tokens;
+      const estimatedCents = Math.ceil(totalTokens / 10000); // 10,000 tokens ≈ 1 cent
+      commerceClient.recordUsage({
+        userId: user,
+        model: model || 'unknown',
+        promptTokens: input_tokens,
+        completionTokens: total_output_tokens,
+        amountCents: estimatedCents,
+      });
+    }
+  } catch {
+    // Commerce not available — local tracking is authoritative
+  }
+
   return {
     input_tokens,
     output_tokens: total_output_tokens,

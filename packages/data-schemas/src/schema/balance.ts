@@ -46,6 +46,22 @@ const balanceSchema = new Schema<t.IBalance>({
     type: Date,
     default: null,
   },
+  // Credit type: trial (signup), paid (purchased), or combined
+  creditType: {
+    type: String,
+    enum: ['trial', 'paid', 'combined'],
+    default: 'trial',
+  },
+  // Billing tier ID from Commerce (free, starter, pro, enterprise)
+  tierId: {
+    type: String,
+    default: 'free',
+  },
+  // Maps to Commerce userId (e.g. "hanzo/alice")
+  commerceUserId: {
+    type: String,
+    default: null,
+  },
 });
 
 export default balanceSchema;
