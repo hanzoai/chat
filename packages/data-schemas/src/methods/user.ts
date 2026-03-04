@@ -105,10 +105,35 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
         $set: setFields,
       };
 
-      await Balance.findOneAndUpdate({ user: user._id }, update, {
+      const balanceDoc = await Balance.findOneAndUpdate({ user: user._id }, update, {
         upsert: true,
         new: true,
       }).lean();
+
+      // Create trial credit grant in Commerce if configured (fire-and-forget)
+      try {
+        const { getCommerceClient } = require('~/server/services/CommerceClient');
+        const commerceClient = getCommerceClient?.();
+        if (commerceClient && balanceConfig.startBalance) {
+          // Derive Commerce userId from user data (org/username or email)
+          const commerceUserId = data.username
+            ? `hanzo/${data.username}`
+            : data.email || String(user._id);
+          const amountCents = Math.round(balanceConfig.startBalance / 10000); // tokenCredits → cents
+          const expiryDays = balanceConfig.creditExpiryDays || 30;
+
+          // Store commerceUserId on the balance record
+          await Balance.findOneAndUpdate(
+            { user: user._id },
+            { $set: { commerceUserId, creditType: 'trial', tierId: 'free' } },
+          );
+
+          // Create trial grant in Commerce (async, non-blocking)
+          commerceClient.createTrialGrant(commerceUserId, amountCents, expiryDays).catch(() => {});
+        }
+      } catch {
+        // Commerce not available — local balance is sufficient
+      }
     }
 
     if (returnUser) {

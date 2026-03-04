@@ -23,6 +23,9 @@ function Balance() {
     refillIntervalUnit,
     refillIntervalValue,
     expiresAt,
+    tierId,
+    trialCredits,
+    paidCredits,
   } = balanceData ?? {};
 
   // Check that all auto-refill props are present
@@ -36,6 +39,30 @@ function Balance() {
     <div className="flex flex-col gap-4 p-4 text-sm text-text-primary">
       {/* Token credits display */}
       <TokenCreditsItem tokenCredits={tokenCredits} expiresAt={expiresAt} />
+
+      {/* Tier and credit breakdown (when Commerce is connected) */}
+      {tierId && tierId !== 'unknown' && (
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span>Tier</span>
+          <span className="capitalize font-medium">{tierId}</span>
+        </div>
+      )}
+      {(trialCredits != null || paidCredits != null) && (
+        <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400">
+          {trialCredits != null && trialCredits > 0 && (
+            <div className="flex items-center justify-between">
+              <span>Trial credit</span>
+              <span>${(trialCredits / 100).toFixed(2)}</span>
+            </div>
+          )}
+          {paidCredits != null && paidCredits > 0 && (
+            <div className="flex items-center justify-between">
+              <span>Paid credit</span>
+              <span>${(paidCredits / 100).toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Auto-refill display */}
       {autoRefillEnabled ? (

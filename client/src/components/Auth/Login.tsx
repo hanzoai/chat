@@ -37,7 +37,7 @@ function getHanzoIamUrl(): string | null {
     scope: 'openid profile email',
   });
 
-  return `${iamUrl}/login/oauth/authorize?${params.toString()}`;
+  return `${iamUrl}/oauth/authorize?${params.toString()}`;
 }
 
 function Login() {
