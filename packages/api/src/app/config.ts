@@ -48,10 +48,52 @@ export function getBalanceConfig(appConfig?: AppConfig): Partial<TCustomConfig['
     }
   }
 
+  // Commerce integration settings
+  const commerceUrl = process.env.COMMERCE_API_URL || process.env.COMMERCE_ENDPOINT;
+  if (commerceUrl) {
+    envConfig.commerce = {
+      enabled: true,
+      endpoint: commerceUrl,
+      token: process.env.COMMERCE_API_TOKEN || process.env.COMMERCE_TOKEN || '',
+    };
+  }
+
+  // Trial credit config (white-label overrides)
+  const trialUsd = process.env.HANZO_TRIAL_CREDIT_USD;
+  const trialExpiry = process.env.HANZO_TRIAL_EXPIRY_DAYS;
+  const trialModels = process.env.HANZO_TRIAL_ALLOWED_MODELS;
+  const trialRateLimit = process.env.HANZO_TRIAL_RATE_LIMIT;
+
+  if (trialUsd || trialExpiry || trialModels || trialRateLimit) {
+    envConfig.trial = {
+      ...(trialUsd ? { amountUsd: parseFloat(trialUsd) } : {}),
+      ...(trialExpiry ? { expiryDays: parseInt(trialExpiry, 10) } : {}),
+      ...(trialModels ? { allowedModels: trialModels.split(',').map((m: string) => m.trim()) } : {}),
+      ...(trialRateLimit ? { rateLimit: parseInt(trialRateLimit, 10) } : {}),
+    };
+  }
+
+  // Paid credit config
+  const paidModels = process.env.HANZO_PAID_ALLOWED_MODELS;
+  if (paidModels) {
+    envConfig.paid = {
+      allowedModels: paidModels.split(',').map((m: string) => m.trim()),
+    };
+  }
+
   if (!appConfig) {
     return envConfig;
   }
-  return { ...envConfig, ...(appConfig?.['balance'] ?? {}) };
+
+  const appBalance = appConfig?.['balance'] ?? {};
+  return {
+    ...envConfig,
+    ...appBalance,
+    // Deep merge commerce/trial/paid from appConfig if present
+    commerce: { ...envConfig.commerce, ...appBalance.commerce },
+    trial: { ...envConfig.trial, ...appBalance.trial },
+    paid: { ...envConfig.paid, ...appBalance.paid },
+  };
 }
 
 /**

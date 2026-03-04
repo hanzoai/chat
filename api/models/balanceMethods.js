@@ -4,6 +4,7 @@ const { createAutoRefillTransaction } = require('./Transaction');
 const { logViolation } = require('~/cache');
 const { getMultiplier } = require('./tx');
 const { Balance } = require('~/db/models');
+const { getCommerceClient } = require('~/server/services/CommerceClient');
 
 /**
  * Default minimum balance in tokenCredits.
@@ -26,8 +27,31 @@ function isInvalidDate(date) {
 }
 
 /**
+ * Check if a specific model is allowed for the user's billing tier.
+ * Fails open: if Commerce is not configured or unreachable, all models allowed.
+ *
+ * @param {string} userId - MongoDB user ID
+ * @param {string} model - Model identifier
+ * @returns {Promise<{allowed: boolean, tier: string, allowedModels: string[]}>}
+ */
+const checkModelAccess = async function (userId, model) {
+  const commerceClient = getCommerceClient();
+  if (!commerceClient) {
+    return { allowed: true, tier: 'unknown', allowedModels: ['*'] };
+  }
+
+  // Look up the Commerce user ID from the balance record
+  const record = await Balance.findOne({ user: userId }, 'commerceUserId').lean();
+  if (!record?.commerceUserId) {
+    return { allowed: true, tier: 'unknown', allowedModels: ['*'] };
+  }
+
+  return commerceClient.isModelAllowed(record.commerceUserId, model);
+};
+
+/**
  * Simple check method that calculates token cost and returns balance info.
- * The auto-refill logic has been moved to balanceMethods.js to prevent circular dependencies.
+ * Integrates with Commerce balance gate when configured (fail-open).
  */
 const checkBalanceRecord = async function ({
   user,
@@ -51,6 +75,47 @@ const checkBalanceRecord = async function ({
       tokenCost,
     };
   }
+
+  // Commerce balance gate: if configured, check Commerce first (fail-open)
+  const commerceClient = getCommerceClient();
+  if (commerceClient && record.commerceUserId) {
+    try {
+      const commerceBalance = await commerceClient.checkBalance(record.commerceUserId);
+      if (!commerceBalance.sufficient) {
+        logger.debug('[Balance.check] Commerce balance insufficient', {
+          user,
+          commerceUserId: record.commerceUserId,
+          available: commerceBalance.available,
+        });
+        return { canSpend: false, balance: 0, tokenCost, reason: 'commerce_insufficient' };
+      }
+
+      // Check model access via Commerce tier
+      if (model) {
+        const modelAccess = await commerceClient.isModelAllowed(record.commerceUserId, model);
+        if (!modelAccess.allowed) {
+          logger.debug('[Balance.check] Model not allowed for tier', {
+            user,
+            model,
+            tier: modelAccess.tier,
+            allowedModels: modelAccess.allowedModels,
+          });
+          return {
+            canSpend: false,
+            balance: record.tokenCredits,
+            tokenCost,
+            reason: 'model_not_allowed',
+            tier: modelAccess.tier,
+            allowedModels: modelAccess.allowedModels,
+          };
+        }
+      }
+    } catch (err) {
+      // Fail-open: Commerce error → fall through to local check
+      logger.warn('[Balance.check] Commerce check failed, falling back to local', { error: err.message });
+    }
+  }
+
   let balance = record.tokenCredits;
 
   // Check if credits have expired
@@ -159,18 +224,29 @@ const addIntervalToDate = (date, value, unit) => {
  * @throws {Error} Throws an error if there's an issue with the balance check.
  */
 const checkBalance = async ({ req, res, txData }) => {
-  const { canSpend, balance, tokenCost } = await checkBalanceRecord(txData);
-  if (canSpend) {
+  const result = await checkBalanceRecord(txData);
+  if (result.canSpend) {
     return true;
   }
 
   const type = ViolationTypes.TOKEN_BALANCE;
   const errorMessage = {
     type,
-    balance,
-    tokenCost,
+    balance: result.balance,
+    tokenCost: result.tokenCost,
     promptTokens: txData.amount,
   };
+
+  // Pass through Commerce-specific error context
+  if (result.reason) {
+    errorMessage.reason = result.reason;
+  }
+  if (result.tier) {
+    errorMessage.tier = result.tier;
+  }
+  if (result.allowedModels) {
+    errorMessage.allowedModels = result.allowedModels;
+  }
 
   if (txData.generations && txData.generations.length > 0) {
     errorMessage.generations = txData.generations;
@@ -182,4 +258,5 @@ const checkBalance = async ({ req, res, txData }) => {
 
 module.exports = {
   checkBalance,
+  checkModelAccess,
 };

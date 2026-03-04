@@ -486,8 +486,8 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
     throw new Error('User does not exist');
   }
 
-  // Extract organization info from Hanzo IAM (Casdoor) claims
-  // Casdoor uses 'owner' for the organization name
+  // Extract organization info from Hanzo IAM claims
+  // IAM uses 'owner' for the organization name
   const organization = userinfo.owner || userinfo.organization || userinfo.org || '';
   const organizationTitle = userinfo.title || '';
   const organizationTag = userinfo.tag || '';
