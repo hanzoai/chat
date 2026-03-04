@@ -688,14 +688,21 @@ async function setupOpenId() {
     }
 
     /** @type {Configuration} */
+    const discoveryOptions = {
+      [client.customFetch]: customFetch,
+    };
+
+    // Allow HTTP issuers for internal/cluster-local OIDC providers
+    if (process.env.OPENID_ISSUER && !process.env.OPENID_ISSUER.startsWith('https://')) {
+      discoveryOptions.execute = [client.allowInsecureRequests];
+    }
+
     openidConfig = await client.discovery(
       new URL(process.env.OPENID_ISSUER),
       process.env.OPENID_CLIENT_ID,
       clientMetadata,
       undefined,
-      {
-        [client.customFetch]: customFetch,
-      },
+      discoveryOptions,
     );
 
     logger.info(`[openidStrategy] OpenID authentication configuration`, {
