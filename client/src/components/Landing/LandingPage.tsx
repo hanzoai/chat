@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useGetStartupConfig } from '~/data-provider';
+import { getHanzoIamSdk } from '~/utils/iam';
 
 /* ------------------------------------------------------------------ */
 /*  Design tokens matching dev.hanzo.ai (Geist/fd- design system)     */
@@ -130,31 +131,24 @@ const thirdPartyModels = [
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
-function getLoginHref(serverDomain: string): string {
-  // Static mode: build Hanzo IAM OIDC URL
-  const iamUrl = import.meta.env.VITE_HANZO_IAM_URL;
-  const appId = import.meta.env.VITE_HANZO_IAM_APP;
-  if (iamUrl && appId) {
-    const redirectUri = `${window.location.origin}/auth/callback`;
-    const state = `hanzo-chat-${Date.now()}`;
-    sessionStorage.setItem('oauth_state', state);
-    const params = new URLSearchParams({
-      client_id: appId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      state,
-      scope: 'openid profile email',
-    });
-    return `${iamUrl}/login/oauth/authorize?${params.toString()}`;
-  }
-  // Backend mode: OAuth via server
-  return `${serverDomain}/oauth/openid`;
-}
-
 export default function LandingPage() {
   const { data: config } = useGetStartupConfig();
   const serverDomain = config?.serverDomain || '';
-  const loginHref = getLoginHref(serverDomain);
+  const iamSdk = getHanzoIamSdk();
+
+  // When IAM SDK is available, login is an async redirect (PKCE).
+  // Otherwise fall back to the backend OAuth endpoint.
+  const loginHref = iamSdk ? '#' : `${serverDomain}/oauth/openid`;
+
+  const handleLoginClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (iamSdk) {
+        e.preventDefault();
+        iamSdk.signinRedirect();
+      }
+    },
+    [iamSdk],
+  );
 
   return (
     <div
@@ -203,6 +197,7 @@ export default function LandingPage() {
             </a>
             <a
               href={loginHref}
+              onClick={handleLoginClick}
               className="rounded-full px-5 py-2 text-sm font-medium tracking-tight transition-colors"
               style={{ backgroundColor: colors.brand, color: '#fff' }}
               onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
@@ -261,6 +256,7 @@ export default function LandingPage() {
             <div className="flex flex-row flex-wrap items-center gap-4">
               <a
                 href={loginHref}
+                onClick={handleLoginClick}
                 className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
                 style={{ backgroundColor: colors.brand, color: '#fff' }}
                 onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
@@ -530,6 +526,7 @@ zen4-coder: I'll help you refactor the auth module.
           <div className="flex flex-row items-center justify-center gap-4">
             <a
               href={loginHref}
+              onClick={handleLoginClick}
               className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
               style={{ backgroundColor: colors.brand, color: '#fff' }}
               onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
