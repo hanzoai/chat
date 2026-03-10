@@ -53,7 +53,7 @@ const TokenCreditsItem: React.FC<TokenCreditsItemProps> = ({ tokenCredits, expir
         <div className="text-xs text-yellow-600 dark:text-yellow-400">
           Low balance.{' '}
           <a
-            href="https://hanzo.ai/billing"
+            href="https://billing.hanzo.ai"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
@@ -68,7 +68,7 @@ const TokenCreditsItem: React.FC<TokenCreditsItemProps> = ({ tokenCredits, expir
         <div className="text-xs text-red-600 dark:text-red-400">
           Credits expired.{' '}
           <a
-            href="https://hanzo.ai/billing"
+            href="https://billing.hanzo.ai"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
