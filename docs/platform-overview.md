@@ -26,7 +26,7 @@ open http://localhost:8000  # IAM Dashboard
 | Service | Port | Description | Production URL |
 |---------|------|-------------|----------------|
 | **Cloud** | 3000 | AI Platform Dashboard | cloud.hanzo.ai |
-| **Chat** | 3081 | AI Chat Interface | chat.hanzo.ai |
+| **Chat** | 3081 | AI Chat Interface | hanzo.chat |
 | **Router** | 4000 | LLM Gateway (100+ providers) | api.hanzo.ai |
 | **IAM** | 8000 | Identity & Access Management | hanzo.id |
 | **Services** | 3333 | Service Orchestration | hanzo.services |
@@ -154,7 +154,7 @@ docker compose -f compose.dev.yml up
 | IAM | localhost:8000 | hanzo.id |
 | Cloud | localhost:3000 | cloud.hanzo.ai |
 | API | localhost:4000 | api.hanzo.ai |
-| Chat | localhost:3081 | chat.hanzo.ai |
+| Chat | localhost:3081 | hanzo.chat |
 | Services | localhost:3333 | hanzo.services |
 
 ### Migration Checklist
