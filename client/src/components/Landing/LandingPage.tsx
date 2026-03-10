@@ -308,7 +308,7 @@ export default function LandingPage() {
                     <div className="size-3 rounded-full bg-green-500" />
                   </div>
                   <span className="ml-2 text-xs" style={{ color: colors.mutedFg }}>
-                    chat.hanzo.ai
+                    hanzo.chat
                   </span>
                 </div>
                 <pre className="overflow-x-auto p-4 text-sm" style={{ fontFamily: "'Roboto Mono', 'Geist Mono', monospace" }}>
