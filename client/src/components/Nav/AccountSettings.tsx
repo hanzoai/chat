@@ -1,6 +1,6 @@
 import { useState, memo, useRef } from 'react';
 import * as Select from '@ariakit/react/select';
-import { FileText, LogOut } from 'lucide-react';
+import { FileText, LogOut, CreditCard } from 'lucide-react';
 import { LinkIcon, GearIcon, DropdownMenuSeparator, Avatar } from '@librechat/client';
 import { MyFilesModal } from '~/components/Chat/Input/Files/MyFilesModal';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
@@ -74,6 +74,16 @@ function AccountSettings() {
                 {isEmpty && ' (depleted)'}
                 {isLow && !isEmpty && ' (low)'}
               </div>
+              {(isEmpty || isLow) && (
+                <Select.SelectItem
+                  value=""
+                  onClick={() => window.open('https://billing.hanzo.ai', '_blank')}
+                  className="select-item text-sm text-green-600 dark:text-green-400"
+                >
+                  <CreditCard className="icon-md" aria-hidden="true" />
+                  Add Funds
+                </Select.SelectItem>
+              )}
               <DropdownMenuSeparator />
             </>
           );

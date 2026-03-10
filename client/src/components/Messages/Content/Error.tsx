@@ -114,7 +114,7 @@ const errorMessages = {
           <br />
           <br />
           <a
-            href="https://hanzo.ai/billing"
+            href="https://billing.hanzo.ai"
             target="_blank"
             rel="noopener noreferrer"
             className="text-hanzo-red underline"
@@ -133,7 +133,7 @@ const errorMessages = {
           <br />
           <br />
           <a
-            href="https://hanzo.ai/billing"
+            href="https://billing.hanzo.ai"
             target="_blank"
             rel="noopener noreferrer"
             className="text-hanzo-red underline"
@@ -154,7 +154,7 @@ const errorMessages = {
         <br />
         <br />
         <a
-          href="https://hanzo.ai/billing"
+          href="https://billing.hanzo.ai"
           target="_blank"
           rel="noopener noreferrer"
           className="text-hanzo-red underline"
