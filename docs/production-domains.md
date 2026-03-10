@@ -7,7 +7,7 @@
 | **IAM** | http://localhost:8000 | https://hanzo.id | Identity & Access Management |
 | **Cloud** | http://localhost:3000 | https://cloud.hanzo.ai | AI Platform Dashboard |
 | **Router** | http://localhost:4000 | https://api.hanzo.ai | LLM Gateway API |
-| **Chat** | http://localhost:3081 | https://chat.hanzo.ai | AI Chat Interface |
+| **Chat** | http://localhost:3081 | https://hanzo.chat | AI Chat Interface |
 | **Services** | http://localhost:3333 | https://hanzo.services | Service Orchestration |
 
 ## 🏗️ Architecture
@@ -44,7 +44,7 @@ In production:
 │                              │                                   │
 │     ┌────────────┬───────────┴───────────┬────────────┐        │
 │     ▼            ▼                       ▼            ▼        │
-│  hanzo.id    cloud.hanzo.ai         api.hanzo.ai  chat.hanzo.ai│
+│  hanzo.id    cloud.hanzo.ai         api.hanzo.ai  hanzo.chat│
 │   (IAM)        (Cloud)               (Router)       (Chat)      │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -77,7 +77,7 @@ SINGLE_TENANT_MODE=false
 IAM_URL=https://hanzo.id
 CLOUD_URL=https://cloud.hanzo.ai
 ROUTER_URL=https://api.hanzo.ai
-CHAT_URL=https://chat.hanzo.ai
+CHAT_URL=https://hanzo.chat
 SERVICES_URL=https://hanzo.services
 ```
 
@@ -91,7 +91,7 @@ SERVICES_URL=https://hanzo.services
    - Host(`hanzo.id`) → IAM service
    - Host(`cloud.hanzo.ai`) → Cloud service
    - Host(`api.hanzo.ai`) → Router service
-   - Host(`chat.hanzo.ai`) → Chat service
+   - Host(`hanzo.chat`) → Chat service
    - Host(`hanzo.services`) → Services bridge
    ```
 
@@ -183,4 +183,4 @@ User → Service → Redirect to hanzo.id → OAuth → Service
 - hanzo.services orchestrates all services
 - cloud.hanzo.ai manages AI configuration
 - api.hanzo.ai is the unified LLM gateway
-- chat.hanzo.ai is one of many possible frontends
+- hanzo.chat is one of many possible frontends
