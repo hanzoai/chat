@@ -208,7 +208,7 @@ actions:
   allowedDomains:
     - 'swapi.dev'
     - 'hanzo.ai'
-    - 'chat.hanzo.ai'
+    - 'hanzo.chat'
     - 'google.com'
     # - 'http://10.225.26.25:7894'  # Internal IP with protocol/port (uncomment if needed)
 
