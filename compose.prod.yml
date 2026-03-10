@@ -42,7 +42,7 @@ services:
       - "traefik.docker.network=traefik"
       
       # HTTPS router
-      - "traefik.http.routers.hanzo-chat.rule=Host(`chat.hanzo.ai`)"
+      - "traefik.http.routers.hanzo-chat.rule=Host(`hanzo.chat`) || Host(`chat.hanzo.ai`)"
       - "traefik.http.routers.hanzo-chat.entrypoints=websecure"
       - "traefik.http.routers.hanzo-chat.tls=true"
       - "traefik.http.routers.hanzo-chat.tls.certresolver=letsencrypt"
