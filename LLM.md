@@ -1,7 +1,7 @@
 # Hanzo Chat
 
 AI chat interface with multi-model support,
-MCP integration, agents, and RAG. Live at **chat.hanzo.ai**.
+MCP integration, agents, and RAG. Live at **hanzo.chat**.
 
 **Repo**: `github.com/hanzoai/chat`
 **Package**: `@hanzochat/chat`
@@ -76,7 +76,7 @@ CREDS_KEY= CREDS_IV=        # Credential encryption
 ## K8s Deployment
 
 - 2 replicas, port 3080
-- Ingress: `chat.hanzo.ai` + `hanzo.chat` (separate TLS certs)
+- Ingress: `hanzo.chat` (primary) + `chat.hanzo.ai` (301 → hanzo.chat)
 - Secret: `chat-secrets` (MONGO_URI, JWT_SECRET, CREDS_KEY/IV)
 - CI: `docker-publish.yml` -> `hanzoai/chat:latest` on Docker Hub
 - Image: `hanzoai/chat:latest` (amd64 only)
