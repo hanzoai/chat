@@ -176,6 +176,7 @@ hive-mind-prompt-*.txt
 
 # Hanzo-specific
 CLAUDE.md
+.env.hanzo
 !.env.hanzo-cloud
 tests/**/*.wav
 tests/**/*.mp3
