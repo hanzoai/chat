@@ -29,7 +29,7 @@
   },
   "homepage": "https://hanzo.ai/chat",
   "dependencies": {
-    "@hanzo/ui": "^5.3.36",
+    "@hanzo/ui": "^5.3.41",
     "@ariakit/react": "^0.4.15",
     "@ariakit/react-core": "^0.4.17",
     "@codesandbox/sandpack-react": "^2.19.10",
