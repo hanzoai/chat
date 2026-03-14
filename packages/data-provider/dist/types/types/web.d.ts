@@ -1,4 +1,9 @@
-import type { Logger as WinstonLogger } from 'winston';
+interface WinstonLogger {
+    error: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    info: (...args: unknown[]) => void;
+    debug: (...args: unknown[]) => void;
+}
 export type SearchRefType = 'search' | 'image' | 'news' | 'video' | 'ref';
 export declare enum DATE_RANGE {
     PAST_HOUR = "h",
@@ -518,3 +523,4 @@ export interface SearXNGResult {
     publishedDate?: string;
     img_src?: string;
 }
+export {};

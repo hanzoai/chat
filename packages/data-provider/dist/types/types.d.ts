@@ -516,4 +516,9 @@ export type TBalanceResponse = {
     refillAmount?: number;
     expiresAt?: Date;
     creditsGrantedAt?: Date;
+    creditType?: 'trial' | 'paid' | 'combined';
+    tierId?: string;
+    allowedModels?: string[];
+    trialCredits?: number;
+    paidCredits?: number;
 };

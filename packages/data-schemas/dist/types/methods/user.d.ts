@@ -12,7 +12,10 @@ export declare function createUserMethods(mongoose: typeof import('mongoose')): 
         searchPattern: string;
         limit?: number;
         fieldsToSelect?: string | string[] | null;
-    }) => Promise<any[]>;
+    }) => Promise<{
+        _id: unknown;
+        __v: number;
+    }[]>;
     getUserById: (userId: string, fieldsToSelect?: string | string[] | null) => Promise<IUser | null>;
     generateToken: (user: IUser, expiresIn?: number) => Promise<string>;
     deleteUserById: (userId: string) => Promise<UserDeleteResult>;

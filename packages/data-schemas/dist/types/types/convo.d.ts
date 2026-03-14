@@ -3,6 +3,8 @@ export interface IConversation extends Document {
     conversationId: string;
     title?: string;
     user?: string;
+    /** Organization this conversation belongs to */
+    organization?: string;
     messages?: Types.ObjectId[];
     endpoint?: string;
     endpointType?: string;
