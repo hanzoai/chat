@@ -1826,6 +1826,48 @@ export declare const balanceSchema: z.ZodObject<{
     creditExpiryDays: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     /** Minimum balance (in tokenCredits) below which requests are blocked */
     minBalance: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    /** Commerce billing integration */
+    commerce: z.ZodOptional<z.ZodObject<{
+        enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        endpoint: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        token: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        endpoint: string;
+        enabled: boolean;
+        token: string;
+    }, {
+        endpoint?: string | undefined;
+        enabled?: boolean | undefined;
+        token?: string | undefined;
+    }>>;
+    /** Trial credit configuration (white-label) */
+    trial: z.ZodOptional<z.ZodObject<{
+        amountUsd: z.ZodOptional<z.ZodNumber>;
+        expiryDays: z.ZodOptional<z.ZodNumber>;
+        allowedModels: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        rateLimit: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        amountUsd?: number | undefined;
+        expiryDays?: number | undefined;
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    }, {
+        amountUsd?: number | undefined;
+        expiryDays?: number | undefined;
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    }>>;
+    /** Paid credit configuration (white-label) */
+    paid: z.ZodOptional<z.ZodObject<{
+        allowedModels: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        rateLimit: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    }, {
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     enabled: boolean;
     startBalance: number;
@@ -1835,6 +1877,21 @@ export declare const balanceSchema: z.ZodObject<{
     refillAmount: number;
     creditExpiryDays: number;
     minBalance: number;
+    commerce?: {
+        endpoint: string;
+        enabled: boolean;
+        token: string;
+    } | undefined;
+    trial?: {
+        amountUsd?: number | undefined;
+        expiryDays?: number | undefined;
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    } | undefined;
+    paid?: {
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    } | undefined;
 }, {
     enabled?: boolean | undefined;
     startBalance?: number | undefined;
@@ -1844,6 +1901,21 @@ export declare const balanceSchema: z.ZodObject<{
     refillAmount?: number | undefined;
     creditExpiryDays?: number | undefined;
     minBalance?: number | undefined;
+    commerce?: {
+        endpoint?: string | undefined;
+        enabled?: boolean | undefined;
+        token?: string | undefined;
+    } | undefined;
+    trial?: {
+        amountUsd?: number | undefined;
+        expiryDays?: number | undefined;
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    } | undefined;
+    paid?: {
+        allowedModels?: string[] | undefined;
+        rateLimit?: number | undefined;
+    } | undefined;
 }>;
 export declare const transactionsSchema: z.ZodObject<{
     enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
@@ -3345,6 +3417,48 @@ export declare const configSchema: z.ZodObject<{
         creditExpiryDays: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         /** Minimum balance (in tokenCredits) below which requests are blocked */
         minBalance: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        /** Commerce billing integration */
+        commerce: z.ZodOptional<z.ZodObject<{
+            enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            endpoint: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            token: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            endpoint: string;
+            enabled: boolean;
+            token: string;
+        }, {
+            endpoint?: string | undefined;
+            enabled?: boolean | undefined;
+            token?: string | undefined;
+        }>>;
+        /** Trial credit configuration (white-label) */
+        trial: z.ZodOptional<z.ZodObject<{
+            amountUsd: z.ZodOptional<z.ZodNumber>;
+            expiryDays: z.ZodOptional<z.ZodNumber>;
+            allowedModels: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            rateLimit: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }, {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }>>;
+        /** Paid credit configuration (white-label) */
+        paid: z.ZodOptional<z.ZodObject<{
+            allowedModels: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            rateLimit: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }, {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         enabled: boolean;
         startBalance: number;
@@ -3354,6 +3468,21 @@ export declare const configSchema: z.ZodObject<{
         refillAmount: number;
         creditExpiryDays: number;
         minBalance: number;
+        commerce?: {
+            endpoint: string;
+            enabled: boolean;
+            token: string;
+        } | undefined;
+        trial?: {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
+        paid?: {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
     }, {
         enabled?: boolean | undefined;
         startBalance?: number | undefined;
@@ -3363,6 +3492,21 @@ export declare const configSchema: z.ZodObject<{
         refillAmount?: number | undefined;
         creditExpiryDays?: number | undefined;
         minBalance?: number | undefined;
+        commerce?: {
+            endpoint?: string | undefined;
+            enabled?: boolean | undefined;
+            token?: string | undefined;
+        } | undefined;
+        trial?: {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
+        paid?: {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
     }>>;
     transactions: z.ZodOptional<z.ZodObject<{
         enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
@@ -6908,6 +7052,21 @@ export declare const configSchema: z.ZodObject<{
         refillAmount: number;
         creditExpiryDays: number;
         minBalance: number;
+        commerce?: {
+            endpoint: string;
+            enabled: boolean;
+            token: string;
+        } | undefined;
+        trial?: {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
+        paid?: {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
     } | undefined;
     transactions?: {
         enabled: boolean;
@@ -7708,6 +7867,21 @@ export declare const configSchema: z.ZodObject<{
         refillAmount?: number | undefined;
         creditExpiryDays?: number | undefined;
         minBalance?: number | undefined;
+        commerce?: {
+            endpoint?: string | undefined;
+            enabled?: boolean | undefined;
+            token?: string | undefined;
+        } | undefined;
+        trial?: {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
+        paid?: {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
     } | undefined;
     transactions?: {
         enabled?: boolean | undefined;
@@ -9490,6 +9664,48 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         creditExpiryDays: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
         /** Minimum balance (in tokenCredits) below which requests are blocked */
         minBalance: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        /** Commerce billing integration */
+        commerce: z.ZodOptional<z.ZodObject<{
+            enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            endpoint: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            token: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            endpoint: string;
+            enabled: boolean;
+            token: string;
+        }, {
+            endpoint?: string | undefined;
+            enabled?: boolean | undefined;
+            token?: string | undefined;
+        }>>;
+        /** Trial credit configuration (white-label) */
+        trial: z.ZodOptional<z.ZodObject<{
+            amountUsd: z.ZodOptional<z.ZodNumber>;
+            expiryDays: z.ZodOptional<z.ZodNumber>;
+            allowedModels: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            rateLimit: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }, {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }>>;
+        /** Paid credit configuration (white-label) */
+        paid: z.ZodOptional<z.ZodObject<{
+            allowedModels: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            rateLimit: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }, {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         enabled: boolean;
         startBalance: number;
@@ -9499,6 +9715,21 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         refillAmount: number;
         creditExpiryDays: number;
         minBalance: number;
+        commerce?: {
+            endpoint: string;
+            enabled: boolean;
+            token: string;
+        } | undefined;
+        trial?: {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
+        paid?: {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
     }, {
         enabled?: boolean | undefined;
         startBalance?: number | undefined;
@@ -9508,6 +9739,21 @@ export declare const getConfigDefaults: () => ExtractDefaults<{
         refillAmount?: number | undefined;
         creditExpiryDays?: number | undefined;
         minBalance?: number | undefined;
+        commerce?: {
+            endpoint?: string | undefined;
+            enabled?: boolean | undefined;
+            token?: string | undefined;
+        } | undefined;
+        trial?: {
+            amountUsd?: number | undefined;
+            expiryDays?: number | undefined;
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
+        paid?: {
+            allowedModels?: string[] | undefined;
+            rateLimit?: number | undefined;
+        } | undefined;
     }>>;
     transactions: z.ZodOptional<z.ZodObject<{
         enabled: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;

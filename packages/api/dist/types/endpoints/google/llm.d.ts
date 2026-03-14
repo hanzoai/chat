@@ -1,4 +1,5 @@
 import { Providers } from '@librechat/agents';
+import type { VertexAIClientOptions } from '@librechat/agents';
 import type { GoogleAIToolType } from '@langchain/google-common';
 import type * as t from '~/types';
 /** Known Google/Vertex AI parameters that map directly to the client config */
@@ -20,6 +21,6 @@ export declare function getGoogleConfig(credentials: string | t.GoogleCredential
     /** @type {Providers.GOOGLE | Providers.VERTEXAI} */
     provider: Providers.VERTEXAI | Providers.GOOGLE;
     /** @type {GoogleClientOptions | VertexAIClientOptions} */
-    llmConfig: import("@langchain/google-vertexai").ChatVertexAIInput;
+    llmConfig: VertexAIClientOptions;
 };
 //# sourceMappingURL=llm.d.ts.map
