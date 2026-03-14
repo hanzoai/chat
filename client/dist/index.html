@@ -48,37 +48,49 @@
       `;
       document.head.appendChild(loadingContainerStyle);
     </script>
-    <script type="module" crossorigin src="./assets/react-interactions.CfyqjqXP.js"></script>
+    <!-- Hanzo Analytics -->
+    <script defer src="https://analytics.hanzo.ai/script.js" data-website-id="%VITE_ANALYTICS_SITE_ID%"></script>
+    <!-- Hanzo Insights (Insights) - only loaded when VITE_INSIGHTS_KEY is set -->
+    <script>
+      (function() {
+        var key = "%VITE_INSIGHTS_KEY%";
+        var host = "%VITE_INSIGHTS_HOST%" || "https://insights.hanzo.ai";
+        if (!key || key === "%VITE_INSIGHTS_KEY%") return;
+        !function(t,e){var o,n,p,r;e.__SV||(window.insights=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="insights",u.people=u.people||[],u.toString=function(t){var e="insights";return"insights"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias reset opt_in_capturing opt_out_capturing has_opted_out_capturing has_opted_in_capturing register register_once unregister".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.insights||(window.insights=[]));
+        insights.init(key, {api_host: host, person_profiles: 'identified_only'});
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/react-interactions.gFKDlzZD.js"></script>
     <script type="module" crossorigin src="./assets/validation.DFZwsG5o.js"></script>
     <script type="module" crossorigin src="./assets/math-katex.DLu84ADl.js"></script>
-    <script type="module" crossorigin src="./assets/markdown_highlight.ABKSddnD.js"></script>
-    <script type="module" crossorigin src="./assets/vendor.Byl_tGc2.js"></script>
-    <script type="module" crossorigin src="./assets/i18n.CA3mTzMG.js"></script>
-    <script type="module" crossorigin src="./assets/locales.D47CaVtF.js"></script>
-    <script type="module" crossorigin src="./assets/routing.CZbmXRkT.js"></script>
-    <script type="module" crossorigin src="./assets/radix-ui.CVh3Dd4P.js"></script>
-    <script type="module" crossorigin src="./assets/tanstack-vendor.DyoeZ73M.js"></script>
+    <script type="module" crossorigin src="./assets/markdown_highlight.CFBAAxX5.js"></script>
+    <script type="module" crossorigin src="./assets/vendor.DhT0nxfB.js"></script>
+    <script type="module" crossorigin src="./assets/i18n.wokR9Ib6.js"></script>
+    <script type="module" crossorigin src="./assets/locales.4almf4CO.js"></script>
+    <script type="module" crossorigin src="./assets/routing.CBrVdLrL.js"></script>
+    <script type="module" crossorigin src="./assets/radix-ui.C0NBumNF.js"></script>
+    <script type="module" crossorigin src="./assets/tanstack-vendor.DUJ_8wgo.js"></script>
     <script type="module" crossorigin src="./assets/avatars.CwJDtxyh.js"></script>
-    <script type="module" crossorigin src="./assets/advanced-inputs.w0JmX-rs.js"></script>
-    <script type="module" crossorigin src="./assets/virtualization.CbKUaacL.js"></script>
-    <script type="module" crossorigin src="./assets/animations.CbDvfLyt.js"></script>
-    <script type="module" crossorigin src="./assets/headlessui.CJGpwcHH.js"></script>
-    <script type="module" crossorigin src="./assets/framer-motion.C9OoZPLA.js"></script>
-    <script type="module" crossorigin src="./assets/http-client.BNDKsQmf.js"></script>
-    <script type="module" crossorigin src="./assets/utilities.Cp-QZ9vZ.js"></script>
+    <script type="module" crossorigin src="./assets/advanced-inputs.BwOfDptE.js"></script>
+    <script type="module" crossorigin src="./assets/virtualization.DDQS23p4.js"></script>
+    <script type="module" crossorigin src="./assets/animations.BfeuwOQN.js"></script>
+    <script type="module" crossorigin src="./assets/headlessui.oPXKsxJQ.js"></script>
+    <script type="module" crossorigin src="./assets/framer-motion.C-DOuzE2.js"></script>
+    <script type="module" crossorigin src="./assets/http-client.TPBuUrvA.js"></script>
+    <script type="module" crossorigin src="./assets/utilities.CvinsCCN.js"></script>
     <script type="module" crossorigin src="./assets/date-utils.CHq2fTxU.js"></script>
-    <script type="module" crossorigin src="./assets/forms.gP1Bt4Ju.js"></script>
-    <script type="module" crossorigin src="./assets/security-ui.DNmv7C0T.js"></script>
-    <script type="module" crossorigin src="./assets/markdown-processing.BGeF1fRm.js"></script>
-    <script type="module" crossorigin src="./assets/codemirror-state.C-fPAHjK.js"></script>
-    <script type="module" crossorigin src="./assets/codemirror-view.Dyel3EV1.js"></script>
-    <script type="module" crossorigin src="./assets/codemirror-language.BdbQ9O-9.js"></script>
-    <script type="module" crossorigin src="./assets/codemirror-core.DeBwLQXr.js"></script>
-    <script type="module" crossorigin src="./assets/sandpack.DnyQb158.js"></script>
+    <script type="module" crossorigin src="./assets/forms.2kxM1d4k.js"></script>
+    <script type="module" crossorigin src="./assets/security-ui.B9kKvEOE.js"></script>
+    <script type="module" crossorigin src="./assets/markdown-processing.Dw6RSHWA.js"></script>
+    <script type="module" crossorigin src="./assets/codemirror-state.CRQoRt1a.js"></script>
+    <script type="module" crossorigin src="./assets/codemirror-view.C3IQf3ZL.js"></script>
+    <script type="module" crossorigin src="./assets/codemirror-language.BPZOlgMm.js"></script>
+    <script type="module" crossorigin src="./assets/codemirror-core.D_srUHNY.js"></script>
+    <script type="module" crossorigin src="./assets/sandpack.COOEYd-Z.js"></script>
     <script type="module" crossorigin src="./assets/heic-converter.-u32bK9M.js"></script>
-    <script type="module" crossorigin src="./assets/index.BzPea_a_.js"></script>
+    <script type="module" crossorigin src="./assets/index.mpFtuxtk.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/math-katex.f1Jb2Qab.css">
-    <link rel="stylesheet" crossorigin href="./assets/index.CbU1k9ZB.css">
+    <link rel="stylesheet" crossorigin href="./assets/index.Ct8IWZIy.css">
   <link rel="manifest" href="./manifest.webmanifest" crossorigin="use-credentials"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
   <body>
     <div id="root">
