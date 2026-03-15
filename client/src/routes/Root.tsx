@@ -32,7 +32,19 @@ export default function Root() {
     return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
   });
 
-  const { isAuthenticated, logout } = useAuthContext();
+  const { isAuthenticated, logout, token } = useAuthContext();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Wait for the initial silent refresh before deciding to show landing vs chat
+  useEffect(() => {
+    if (isAuthenticated || token !== undefined) {
+      setAuthChecked(true);
+    } else {
+      // Give silentRefresh time to complete before showing landing page
+      const timer = setTimeout(() => setAuthChecked(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, token]);
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   // Global health check - runs once per authenticated session
@@ -63,6 +75,16 @@ export default function Root() {
     setShowTerms(false);
     logout('/login?redirect=false');
   };
+
+  if (!authChecked) {
+    // Show minimal loading while checking auth (prevents landing page flash)
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--main-surface-primary, #0a0a0a)' }}>
+        <div style={{ width: 24, height: 24, border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'rgba(255,255,255,0.5)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <LandingPage />;
