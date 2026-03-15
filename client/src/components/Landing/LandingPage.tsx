@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGetStartupConfig } from '~/data-provider';
 
 /* ------------------------------------------------------------------ */
@@ -176,17 +176,44 @@ function getLoginHref(serverDomain: string): string {
 
 export default function LandingPage() {
   const { data: config } = useGetStartupConfig();
-  const loginHref = getLoginHref(config?.serverDomain || '');
+  const serverDomain = config?.serverDomain || '';
+  const loginHref = getLoginHref(serverDomain);
+  const signupHref = `https://hanzo.id/signup?redirect_uri=${encodeURIComponent(window.location.origin + '/oauth/openid')}`;
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingRef = useRef<number | null>(null);
 
   useEffect(() => { injectStyles(); }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback((e?: React.FormEvent) => {
+    e?.preventDefault();
     const q = inputRef.current?.value?.trim();
     if (q) sessionStorage.setItem('hanzo_chat_initial_query', q);
     window.location.href = loginHref;
-  };
+  }, [loginHref]);
+
+  const typeAndSubmit = useCallback((text: string) => {
+    if (isTyping || !inputRef.current) return;
+    setIsTyping(true);
+    inputRef.current.value = '';
+    inputRef.current.focus();
+    let i = 0;
+    const speed = 30; // ms per character
+    typingRef.current = window.setInterval(() => {
+      if (!inputRef.current) return;
+      inputRef.current.value = text.slice(0, ++i);
+      if (i >= text.length) {
+        clearInterval(typingRef.current!);
+        // Brief pause then "submit" animation
+        setTimeout(() => {
+          setIsTyping(false);
+          handleSubmit();
+        }, 400);
+      }
+    }, speed);
+  }, [isTyping, handleSubmit]);
+
+  useEffect(() => () => { if (typingRef.current) clearInterval(typingRef.current); }, []);
 
   return (
     <div
@@ -217,7 +244,7 @@ export default function LandingPage() {
             Log in
           </a>
           <a
-            href={loginHref}
+            href={signupHref}
             style={{
               fontSize: 13, fontWeight: 600, textDecoration: 'none',
               padding: '7px 18px', borderRadius: 20,
@@ -268,7 +295,7 @@ export default function LandingPage() {
             <button
               key={i}
               className="hl-suggestion"
-              onClick={() => { if (inputRef.current) { inputRef.current.value = s.text; inputRef.current.focus(); } }}
+              onClick={() => typeAndSubmit(s.text)}
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, fontSize: 13, lineHeight: 1.35 }}
             >
               <span style={{ fontSize: 11, flexShrink: 0, opacity: 0.4 }}>{s.icon}</span>
