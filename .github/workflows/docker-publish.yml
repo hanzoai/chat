@@ -1,3 +1,4 @@
+# Deployment managed by hanzoai/universe — this workflow only builds and pushes images
 name: Docker Release
 
 on:
@@ -15,7 +16,4 @@ jobs:
     uses: hanzoai/.github/.github/workflows/docker-build.yml@main
     with:
       image: ghcr.io/hanzoai/chat
-      deploy: true
-      deploy-deployment: chat
-      deploy-namespace: hanzo
     secrets: inherit
