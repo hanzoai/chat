@@ -166,7 +166,8 @@
         "katex": "^0.16.21"
       }
     },
-    "langsmith": "0.4.12"
+    "langsmith": "0.4.12",
+    "zod": "3.24.4"
   },
   "nodemonConfig": {
     "ignore": [
@@ -182,5 +183,13 @@
     "@opentelemetry/core": "^2.6.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.213.0",
     "@opentelemetry/sdk-trace-base": "^2.6.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "protobufjs",
+      "mongodb-memory-server",
+      "unrs-resolver"
+    ]
   }
 }
