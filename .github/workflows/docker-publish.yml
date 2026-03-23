@@ -16,6 +16,7 @@ jobs:
     uses: hanzoai/.github/.github/workflows/docker-build.yml@main
     with:
       image: ghcr.io/hanzoai/chat
+      platforms: linux/amd64
     secrets: inherit
 
   dispatch-to-universe:
