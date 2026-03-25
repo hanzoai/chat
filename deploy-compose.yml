@@ -32,8 +32,8 @@ services:
       - ./logs:/app/api/logs
 
   client:
-    image: nginx:1.27.0-alpine
-    container_name: HanzoChat-NGINX
+    image: ghcr.io/hanzoai/static:latest
+    container_name: HanzoChat-Static
     ports:
       - 80:80
       - 443:443
@@ -41,7 +41,7 @@ services:
       - api
     restart: always
     volumes:
-      - ./client/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./client/nginx.conf:/etc/static/default.conf
   mongodb:
     container_name: chat-mongodb
     # ports:  # Uncomment this to access mongodb from outside docker, not safe in deployment
