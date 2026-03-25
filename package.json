@@ -167,7 +167,10 @@
       }
     },
     "langsmith": "0.4.12",
-    "zod-to-json-schema": "3.24.6"
+    "zod-to-json-schema": "3.24.6",
+    "@modelcontextprotocol/sdk": {
+      "zod": "3.24.6"
+    }
   },
   "nodemonConfig": {
     "ignore": [
@@ -192,8 +195,7 @@
       "unrs-resolver"
     ],
     "overrides": {
-      "zod-to-json-schema": "3.24.6",
-      "@modelcontextprotocol/sdk>zod": "3.24.6"
+      "zod-to-json-schema": "3.24.6"
     }
   }
 }
