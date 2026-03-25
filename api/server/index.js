@@ -100,7 +100,48 @@ const startServer = async () => {
   });
 
   app.use(mongoSanitize());
-  app.use(cors());
+
+  // CORS: restrict to known origins instead of wildcard.
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || process.env.DOMAIN_CLIENT || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const hanzoOriginRe =
+    /^https:\/\/([a-z0-9-]+\.)?(hanzo\.(ai|chat|bot|id|team|app|build)|lux\.(chat|network|id)|zoo\.(ngo|network))$/;
+
+  app.use(
+    cors({
+      origin: (origin, cb) => {
+        // Allow requests with no origin (server-to-server, curl, mobile apps).
+        if (!origin) {
+          return cb(null, true);
+        }
+        if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
+          return cb(null, origin);
+        }
+        if (hanzoOriginRe.test(origin)) {
+          return cb(null, origin);
+        }
+        return cb(null, false);
+      },
+      credentials: true,
+    }),
+  );
+
+  // Security headers (HSTS, CSP, clickjacking, MIME-sniff).
+  app.use((_req, res, next) => {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat; frame-ancestors 'none';",
+    );
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    next();
+  });
+
   app.use(cookieParser());
 
   if (!isEnabled(DISABLE_COMPRESSION)) {
@@ -171,9 +212,11 @@ const startServer = async () => {
       Expires: process.env.INDEX_EXPIRES || '0',
     });
 
-    const lang = req.cookies.lang || req.headers['accept-language']?.split(',')[0] || 'en-US';
-    const saneLang = lang.replace(/"/g, '&quot;');
-    let updatedIndexHtml = indexHTML.replace(/lang="en-US"/g, `lang="${saneLang}"`);
+    const rawLang = req.cookies.lang || req.headers['accept-language']?.split(',')[0] || 'en-US';
+    // R-RED-10: Validate lang against BCP 47 locale pattern to prevent HTML injection.
+    const localeRe = /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/;
+    const lang = localeRe.test(rawLang) ? rawLang : 'en-US';
+    let updatedIndexHtml = indexHTML.replace(/lang="en-US"/g, `lang="${lang}"`);
 
     res.type('html');
     res.send(updatedIndexHtml);
