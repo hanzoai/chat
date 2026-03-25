@@ -193,9 +193,6 @@
       "protobufjs",
       "mongodb-memory-server",
       "unrs-resolver"
-    ],
-    "overrides": {
-      "zod-to-json-schema": "3.24.6"
-    }
+    ]
   }
 }
