@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const { logger } = require('@librechat/data-schemas');
 const { isEnabled, getBalanceConfig } = require('@librechat/api');
@@ -58,6 +59,17 @@ router.get('/', async function (req, res) {
 
     const balanceConfig = getBalanceConfig(appConfig);
 
+    // Strip server-internal fields from balance config before sending to client.
+    // commerce.endpoint leaks K8s service URLs; commerce.token is a bearer secret.
+    const clientBalanceConfig = balanceConfig
+      ? {
+          ...balanceConfig,
+          commerce: balanceConfig.commerce
+            ? { enabled: !!balanceConfig.commerce.enabled }
+            : undefined,
+        }
+      : null;
+
     /** @type {TStartupConfig} */
     const payload = {
       appTitle: process.env.APP_TITLE || 'Hanzo Chat',
@@ -79,7 +91,7 @@ router.get('/', async function (req, res) {
       samlLoginEnabled: !isOpenIdEnabled && isSamlEnabled,
       samlLabel: process.env.SAML_BUTTON_LABEL,
       samlImageUrl: process.env.SAML_IMAGE_URL,
-      serverDomain: process.env.DOMAIN_SERVER || 'http://localhost:3080',
+      serverDomain: process.env.DOMAIN_CLIENT || process.env.DOMAIN_SERVER || 'http://localhost:3080',
       emailLoginEnabled,
       registrationEnabled: !ldap?.enabled && isEnabled(process.env.ALLOW_REGISTRATION),
       socialLoginEnabled: isEnabled(process.env.ALLOW_SOCIAL_LOGIN),
@@ -97,11 +109,11 @@ router.get('/', async function (req, res) {
       interface: appConfig?.interfaceConfig,
       turnstile: appConfig?.turnstileConfig,
       modelSpecs: appConfig?.modelSpecs,
-      balance: balanceConfig,
+      balance: clientBalanceConfig,
       sharedLinksEnabled,
       publicSharedLinksEnabled,
       analyticsGtmId: process.env.ANALYTICS_GTM_ID,
-      instanceProjectId: instanceProject._id.toString(),
+      instanceProjectId: crypto.createHash('sha256').update(instanceProject._id.toString()).digest('hex').slice(0, 16),
       bundlerURL: process.env.SANDPACK_BUNDLER_URL,
       staticBundlerURL: process.env.SANDPACK_STATIC_BUNDLER_URL,
       sharePointFilePickerEnabled,
@@ -151,7 +163,7 @@ router.get('/', async function (req, res) {
     return res.status(200).send(payload);
   } catch (err) {
     logger.error('Error in startup config', err);
-    return res.status(500).send({ error: err.message });
+    return res.status(500).send({ error: 'Internal server error' });
   }
 });
 
