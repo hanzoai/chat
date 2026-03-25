@@ -41,6 +41,19 @@ async function customFetch(url, options) {
     logger.info(`[openidStrategy] Rewriting ${urlStr} -> ${rewritten}`);
     url = new URL(rewritten);
     urlStr = url.toString();
+
+    // Casdoor generates the OIDC discovery document based on the incoming Host header.
+    // When we rewrite to the internal URL, we must send the original public hostname
+    // so the issuer in the response matches what openid-client expects (strict RFC check).
+    const publicHost = new URL(process.env.OPENID_ISSUER).host;
+    if (!options.headers) {
+      options.headers = {};
+    }
+    if (options.headers instanceof Headers) {
+      options.headers.set('Host', publicHost);
+    } else if (typeof options.headers === 'object') {
+      options.headers['Host'] = publicHost;
+    }
   }
 
   logger.debug(`[openidStrategy] Request to: ${urlStr}`);
