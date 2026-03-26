@@ -6,7 +6,7 @@ settings:
 
 overrides:
   zod-to-json-schema: 3.24.6
-  '@modelcontextprotocol/sdk': 1.25.3
+  '@modelcontextprotocol/sdk': 1.22.0
 
 importers:
 
@@ -135,7 +135,7 @@ importers:
         version: 12.31.0
       '@google/genai':
         specifier: ^1.19.0
-        version: 1.46.0(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))
+        version: 1.46.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))
       '@keyv/redis':
         specifier: ^4.3.3
         version: 4.6.0(keyv@5.6.0)
@@ -155,8 +155,8 @@ importers:
         specifier: ^3.0.7
         version: 3.0.7(@azure/identity@4.13.1)
       '@modelcontextprotocol/sdk':
-        specifier: 1.25.3
-        version: 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
+        specifier: 1.22.0
+        version: 1.22.0(@cfworker/json-schema@4.1.1)
       '@node-saml/passport-saml':
         specifier: ^5.1.0
         version: 5.1.0
@@ -376,7 +376,7 @@ importers:
         version: 9.4.2
       '@hanzo/ui':
         specifier: ^5.3.41
-        version: 5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)
+        version: 5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -388,7 +388,7 @@ importers:
         version: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mcp-ui/client':
         specifier: ^5.7.0
-        version: 5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(hono@4.12.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.4)
+        version: 5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.2.12(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -758,7 +758,7 @@ importers:
         version: 12.31.0
       '@google/genai':
         specifier: ^1.19.0
-        version: 1.42.0(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))
+        version: 1.42.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))
       '@keyv/redis':
         specifier: ^4.3.3
         version: 4.6.0(keyv@5.6.0)
@@ -772,8 +772,8 @@ importers:
         specifier: workspace:*
         version: link:../data-schemas
       '@modelcontextprotocol/sdk':
-        specifier: 1.25.3
-        version: 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
+        specifier: 1.22.0
+        version: 1.22.0(@cfworker/json-schema@4.1.1)
       '@smithy/node-http-handler':
         specifier: ^4.4.5
         version: 4.4.10
@@ -3647,7 +3647,7 @@ packages:
     resolution: {integrity: sha512-+3nlMTcrQufbQ8IumGkOphxD5Pd5kKyJOzLcnY0/1IuE8upJk5aLmoexZ2BJhBp1zAjRJMEB4a2CJwKI9e2EYw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      '@modelcontextprotocol/sdk': 1.25.3
+      '@modelcontextprotocol/sdk': 1.22.0
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
@@ -3656,7 +3656,7 @@ packages:
     resolution: {integrity: sha512-ewPMN5JkKfgU5/kdco9ZhXBHDPhVqZpMQqIFQhwsHLf8kyZfx1cNpw1pHo1eV6PGEW7EhIBFi3aYZraFndAXqg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      '@modelcontextprotocol/sdk': 1.25.3
+      '@modelcontextprotocol/sdk': 1.22.0
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
@@ -3693,7 +3693,7 @@ packages:
       '@dnd-kit/utilities': ^3.2.0
       '@hanzo/docs-core': ^16.0.0
       '@hookform/resolvers': ^3.3.2
-      '@modelcontextprotocol/sdk': 1.25.3
+      '@modelcontextprotocol/sdk': 1.22.0
       '@rainbow-me/rainbowkit': ^2.0.0
       '@tanstack/react-query': ^5.0.0
       '@tanstack/react-table': ^8.0.0
@@ -3769,12 +3769,6 @@ packages:
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
-
-  '@hono/node-server@1.19.11':
-    resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: ^4
 
   '@hookform/resolvers@3.10.0':
     resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
@@ -4404,12 +4398,11 @@ packages:
   '@mistralai/mistralai@1.15.1':
     resolution: {integrity: sha512-fb995eiz3r0KsBGtRjFV+/iLbX+UpfalxpF+YitT3R6ukrPD4PN+FGwwmYcRFhNAzVzDUtTVxQYnjQWEnwV5nw==}
 
-  '@modelcontextprotocol/sdk@1.25.3':
-    resolution: {integrity: sha512-vsAMBMERybvYgKbg/l4L1rhS7VXV1c0CtyJg72vwxONVX0l4ZfKVAnZEWTQixJGTzKnELjQ59e4NbdFDALRiAQ==}
+  '@modelcontextprotocol/sdk@1.22.0':
+    resolution: {integrity: sha512-VUpl106XVTCpDmTBil2ehgJZjhyLY2QZikzF8NvTXtLRF1CvO5iEE2UNZdVIUer35vFOwMKYeUGbjJtvPWan3g==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
-      zod: ^3.25 || ^4.0
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -9258,10 +9251,6 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.12.8:
-    resolution: {integrity: sha512-VJCEvtrezO1IAR+kqEYnxUOoStaQPGrCmX3j4wDTNOcD1uRPFpGlwQUIW8niPuvHXaTUxeOUl5MMDGrl+tmO9A==}
-    engines: {node: '>=16.9.0'}
-
   hookified@1.15.1:
     resolution: {integrity: sha512-MvG/clsADq1GPM2KGo2nyfaWVyn9naPiXrqIe4jYjXNZQt238kWyOGrsyc/DmRAQ+Re6yeo6yX/yoNCG5KAEVg==}
 
@@ -9976,9 +9965,6 @@ packages:
 
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
-
-  json-schema-typed@8.0.2:
-    resolution: {integrity: sha512-fQhoXdcvc3V28x7C7BMs4P5+kNlgUURe2jmUT1T//oBRMDrqy1QPelJimwZGo7Hg9VPV3EQV5Bnq4hbFy2vetA==}
 
   json-schema@0.4.0:
     resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
@@ -17160,27 +17146,27 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@google/genai@1.42.0(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))':
+  '@google/genai@1.42.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))':
     dependencies:
       google-auth-library: 10.5.0
       p-retry: 4.6.2
       protobufjs: 7.5.4
       ws: 8.19.0
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.22.0(@cfworker/json-schema@4.1.1)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@google/genai@1.46.0(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))':
+  '@google/genai@1.46.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))':
     dependencies:
       google-auth-library: 10.6.2
       p-retry: 4.6.2
       protobufjs: 7.5.4
       ws: 8.20.0
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.22.0(@cfworker/json-schema@4.1.1)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -17212,7 +17198,7 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@hanzo/ui@5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)':
+  '@hanzo/ui@5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)':
     dependencies:
       '@hookform/resolvers': 3.10.0(react-hook-form@7.71.2(react@18.3.1))
       '@next/third-parties': 15.5.14(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
@@ -17275,7 +17261,7 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.22.0(@cfworker/json-schema@4.1.1)
       '@tanstack/react-query': 4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-table': 8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       date-fns: 3.6.0
@@ -17298,10 +17284,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       use-sync-external-store: 1.6.0(react@18.3.1)
-
-  '@hono/node-server@1.19.11(hono@4.12.8)':
-    dependencies:
-      hono: 4.12.8
 
   '@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1))':
     dependencies:
@@ -18236,9 +18218,9 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mcp-ui/client@5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(hono@4.12.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.4)':
+  '@mcp-ui/client@5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.22.0(@cfworker/json-schema@4.1.1)
       '@quilted/threads': 3.3.1(@preact/signals-core@1.14.0)
       '@r2wc/react-to-web-component': 2.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@remote-dom/core': 1.10.1(@preact/signals-core@1.14.0)
@@ -18248,10 +18230,8 @@ snapshots:
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@preact/signals-core'
-      - hono
       - preact
       - supports-color
-      - zod
 
   '@mermaid-js/parser@1.0.1':
     dependencies:
@@ -18273,9 +18253,8 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)':
+  '@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)':
     dependencies:
-      '@hono/node-server': 1.19.11(hono@4.12.8)
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
       content-type: 1.0.5
@@ -18285,16 +18264,13 @@ snapshots:
       eventsource-parser: 3.0.6
       express: 5.2.1
       express-rate-limit: 7.5.1(express@5.2.1)
-      jose: 6.2.2
-      json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 3.24.4
-      zod-to-json-schema: 3.24.6(zod@3.24.4)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
     optionalDependencies:
       '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
-      - hono
       - supports-color
 
   '@mongodb-js/saslprep@1.4.6':
@@ -24066,8 +24042,6 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.12.8: {}
-
   hookified@1.15.1: {}
 
   htm@3.1.1: {}
@@ -25119,8 +25093,6 @@ snapshots:
   json-schema-traverse@0.4.1: {}
 
   json-schema-traverse@1.0.0: {}
-
-  json-schema-typed@8.0.2: {}
 
   json-schema@0.4.0: {}
 
@@ -29479,6 +29451,7 @@ snapshots:
   zod-to-json-schema@3.24.6(zod@3.24.4):
     dependencies:
       zod: 3.24.4
+    optional: true
 
   zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
