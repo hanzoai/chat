@@ -52,3 +52,4 @@ EXPOSE 3080
 ENV HOST=0.0.0.0
 CMD ["pnpm", "run", "backend"]
 
+# cache-bust: 1774514777
