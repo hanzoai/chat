@@ -192,7 +192,8 @@
       "unrs-resolver"
     ],
     "overrides": {
-      "zod-to-json-schema": "3.24.6"
+      "zod-to-json-schema": "3.24.6",
+      "@modelcontextprotocol/sdk": "1.25.3"
     }
   }
 }
