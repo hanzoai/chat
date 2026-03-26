@@ -6,6 +6,7 @@ settings:
 
 overrides:
   zod-to-json-schema: 3.24.6
+  '@modelcontextprotocol/sdk': 1.25.3
 
 importers:
 
@@ -134,7 +135,7 @@ importers:
         version: 12.31.0
       '@google/genai':
         specifier: ^1.19.0
-        version: 1.46.0(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4))
+        version: 1.46.0(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))
       '@keyv/redis':
         specifier: ^4.3.3
         version: 4.6.0(keyv@5.6.0)
@@ -154,8 +155,8 @@ importers:
         specifier: ^3.0.7
         version: 3.0.7(@azure/identity@4.13.1)
       '@modelcontextprotocol/sdk':
-        specifier: ^1.26.0
-        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4)
+        specifier: 1.25.3
+        version: 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
       '@node-saml/passport-saml':
         specifier: ^5.1.0
         version: 5.1.0
@@ -375,7 +376,7 @@ importers:
         version: 9.4.2
       '@hanzo/ui':
         specifier: ^5.3.41
-        version: 5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)
+        version: 5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -387,7 +388,7 @@ importers:
         version: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mcp-ui/client':
         specifier: ^5.7.0
-        version: 5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.4)
+        version: 5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(hono@4.12.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.4)
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.2.12(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3646,7 +3647,7 @@ packages:
     resolution: {integrity: sha512-+3nlMTcrQufbQ8IumGkOphxD5Pd5kKyJOzLcnY0/1IuE8upJk5aLmoexZ2BJhBp1zAjRJMEB4a2CJwKI9e2EYw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.25.2
+      '@modelcontextprotocol/sdk': 1.25.3
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
@@ -3655,7 +3656,7 @@ packages:
     resolution: {integrity: sha512-ewPMN5JkKfgU5/kdco9ZhXBHDPhVqZpMQqIFQhwsHLf8kyZfx1cNpw1pHo1eV6PGEW7EhIBFi3aYZraFndAXqg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.25.2
+      '@modelcontextprotocol/sdk': 1.25.3
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
@@ -3692,7 +3693,7 @@ packages:
       '@dnd-kit/utilities': ^3.2.0
       '@hanzo/docs-core': ^16.0.0
       '@hookform/resolvers': ^3.3.2
-      '@modelcontextprotocol/sdk': ^1.0.0
+      '@modelcontextprotocol/sdk': 1.25.3
       '@rainbow-me/rainbowkit': ^2.0.0
       '@tanstack/react-query': ^5.0.0
       '@tanstack/react-table': ^8.0.0
@@ -4405,16 +4406,6 @@ packages:
 
   '@modelcontextprotocol/sdk@1.25.3':
     resolution: {integrity: sha512-vsAMBMERybvYgKbg/l4L1rhS7VXV1c0CtyJg72vwxONVX0l4ZfKVAnZEWTQixJGTzKnELjQ59e4NbdFDALRiAQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@cfworker/json-schema': ^4.1.1
-      zod: ^3.25 || ^4.0
-    peerDependenciesMeta:
-      '@cfworker/json-schema':
-        optional: true
-
-  '@modelcontextprotocol/sdk@1.27.1':
-    resolution: {integrity: sha512-sr6GbP+4edBwFndLbM60gf07z0FQ79gaExpnsjMGePXqFcSSb7t6iscpjk9DhFhwd+mTEQrzNafGP8/iGGFYaA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -17182,14 +17173,14 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@google/genai@1.46.0(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4))':
+  '@google/genai@1.46.0(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))':
     dependencies:
       google-auth-library: 10.6.2
       p-retry: 4.6.2
       protobufjs: 7.5.4
       ws: 8.20.0
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -17221,7 +17212,7 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@hanzo/ui@5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)':
+  '@hanzo/ui@5.5.1(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)':
     dependencies:
       '@hookform/resolvers': 3.10.0(react-hook-form@7.71.2(react@18.3.1))
       '@next/third-parties': 15.5.14(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
@@ -17284,7 +17275,7 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
       '@tanstack/react-query': 4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-table': 8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       date-fns: 3.6.0
@@ -18245,9 +18236,9 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mcp-ui/client@5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.4)':
+  '@mcp-ui/client@5.17.3(@cfworker/json-schema@4.1.1)(@preact/signals-core@1.14.0)(hono@4.12.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.4)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.12.8)(zod@3.24.4)
       '@quilted/threads': 3.3.1(@preact/signals-core@1.14.0)
       '@r2wc/react-to-web-component': 2.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@remote-dom/core': 1.10.1(@preact/signals-core@1.14.0)
@@ -18257,6 +18248,7 @@ snapshots:
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@preact/signals-core'
+      - hono
       - preact
       - supports-color
       - zod
@@ -18303,30 +18295,6 @@ snapshots:
       '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
       - hono
-      - supports-color
-
-  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@3.24.4)':
-    dependencies:
-      '@hono/node-server': 1.19.11(hono@4.12.8)
-      ajv: 8.18.0
-      ajv-formats: 3.0.1(ajv@8.18.0)
-      content-type: 1.0.5
-      cors: 2.8.6
-      cross-spawn: 7.0.6
-      eventsource: 3.0.7
-      eventsource-parser: 3.0.6
-      express: 5.2.1
-      express-rate-limit: 8.3.1(express@5.2.1)
-      hono: 4.12.8
-      jose: 6.2.2
-      json-schema-typed: 8.0.2
-      pkce-challenge: 5.0.1
-      raw-body: 3.0.2
-      zod: 3.24.4
-      zod-to-json-schema: 3.24.6(zod@3.24.4)
-    optionalDependencies:
-      '@cfworker/json-schema': 4.1.1
-    transitivePeerDependencies:
       - supports-color
 
   '@mongodb-js/saslprep@1.4.6':
