@@ -27,7 +27,7 @@ jobs:
       NODE_OPTIONS: '--max-old-space-size=${{ secrets.NODE_MAX_OLD_SPACE_SIZE || 6144 }}'
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - name: Use Node.js 20.x
         uses: actions/setup-node@v6
         with:
