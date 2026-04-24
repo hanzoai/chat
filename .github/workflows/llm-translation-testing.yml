@@ -81,7 +81,7 @@ jobs:
           fi
       
       - name: Upload test artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: LLM-Translation-Artifact-${{ github.event.inputs.release_candidate_tag || github.ref_name }}
