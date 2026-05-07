@@ -32,7 +32,7 @@ services:
       - ./logs:/app/api/logs
 
   client:
-    image: ghcr.io/hanzoai/static:latest
+    image: ghcr.io/hanzoai/static:0.4.1
     container_name: HanzoChat-Static
     ports:
       - 80:80
@@ -74,7 +74,7 @@ services:
     volumes:
       - pgdata2:/var/lib/postgresql/data
   rag_api:
-    image: ghcr.io/hanzoai/chat-rag-api:latest
+    image: ghcr.io/hanzoai/chat-rag-api:v0.7.8
     environment:
       - DB_HOST=vectordb
       - RAG_PORT=${RAG_PORT:-8000}
