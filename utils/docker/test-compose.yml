@@ -50,7 +50,7 @@ services:
     volumes:
       - pgdata2:/var/lib/postgresql/data
   rag_api:
-    image: ghcr.io/hanzoai/chat-rag-api:latest
+    image: ghcr.io/hanzoai/chat-rag-api:v0.7.8
     environment:
       - DB_HOST=vectordb
       - RAG_PORT=${RAG_PORT:-8000}
