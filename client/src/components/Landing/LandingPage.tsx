@@ -163,8 +163,8 @@ const suggestions = [
 /* ------------------------------------------------------------------ */
 
 function getLoginHref(serverDomain: string): string {
-  const iamUrl = import.meta.env.VITE_HANZO_IAM_URL;
-  const appId = import.meta.env.VITE_HANZO_IAM_APP;
+  const iamUrl = import.meta.env.VITE_IAM_URL;
+  const appId = import.meta.env.VITE_IAM_APP;
   if (iamUrl && appId) {
     const redirectUri = `${window.location.origin}/auth/callback`;
     const state = `hanzo-chat-${Date.now()}`;
