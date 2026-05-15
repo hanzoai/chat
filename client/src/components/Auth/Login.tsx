@@ -12,12 +12,12 @@ import LoginForm from './LoginForm';
 
 /**
  * Build Hanzo IAM OIDC authorize URL from env vars.
- * Used in static SPA mode when VITE_HANZO_IAM_URL is set.
+ * Used in static SPA mode when VITE_IAM_URL is set.
  */
 function getHanzoIamUrl(): string | null {
-  const iamUrl = import.meta.env.VITE_HANZO_IAM_URL;
-  const appId = import.meta.env.VITE_HANZO_IAM_APP;
-  const org = import.meta.env.VITE_HANZO_IAM_ORG;
+  const iamUrl = import.meta.env.VITE_IAM_URL;
+  const appId = import.meta.env.VITE_IAM_APP;
+  const org = import.meta.env.VITE_IAM_ORG;
 
   if (!iamUrl || !appId) {
     return null;
