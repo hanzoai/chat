@@ -13,7 +13,7 @@ const MAX_FAVORITES = 50;
 /**
  * Hook for managing user favorites (pinned agents and models).
  *
- * Favorites are synchronized with the server via `/api/user/settings/favorites`.
+ * Favorites are synchronized with the server via `/v1/user/settings/favorites`.
  * Each favorite is either:
  * - An agent: `{ agentId: string }`
  * - A model: `{ model: string, endpoint: string }`

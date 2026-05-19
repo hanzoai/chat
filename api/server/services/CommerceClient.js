@@ -157,7 +157,7 @@ class CommerceClient {
   async createTrialGrant(userId, amountCents, expiryDays, eligibility = []) {
     try {
       const expiresIn = `${expiryDays * 24}h`;
-      const resp = await this._request('POST', '/api/v1/billing/credit-grants', {
+      const resp = await this._request('POST', '/v1/billing/credit-grants', {
         userId,
         name: 'Trial Credit',
         amountCents,
@@ -184,7 +184,7 @@ class CommerceClient {
     try {
       const resp = await this._request(
         'GET',
-        `/api/v1/billing/credit-balance/breakdown?userId=${encodeURIComponent(userId)}`,
+        `/v1/billing/credit-balance/breakdown?userId=${encodeURIComponent(userId)}`,
       );
       const breakdown = resp.breakdown || {};
       return {
@@ -204,7 +204,7 @@ class CommerceClient {
     try {
       const resp = await this._request(
         'GET',
-        `/api/v1/billing/balance?user=${encodeURIComponent(userId)}&currency=usd`,
+        `/v1/billing/balance?user=${encodeURIComponent(userId)}&currency=usd`,
       );
       const data = {
         sufficient: (resp.available || 0) > 0,
@@ -225,7 +225,7 @@ class CommerceClient {
 
   async _fetchTier(userId, tierName) {
     try {
-      let url = `/api/v1/billing/tier-check?user=${encodeURIComponent(userId)}`;
+      let url = `/v1/billing/tier-check?user=${encodeURIComponent(userId)}`;
       if (tierName) {
         url += `&tier=${encodeURIComponent(tierName)}`;
       }
@@ -255,7 +255,7 @@ class CommerceClient {
 
     for (const usage of batch) {
       try {
-        await this._request('POST', '/api/v1/billing/usage', usage);
+        await this._request('POST', '/v1/billing/usage', usage);
       } catch (err) {
         logger.warn('[CommerceClient] Usage recording failed', {
           user: usage.user,
