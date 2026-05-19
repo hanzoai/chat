@@ -158,13 +158,13 @@ if (typeof window !== 'undefined') {
       }
 
       // Don't retry auth endpoints
-      if (originalRequest.url?.includes('/api/signin') === true) {
+      if (originalRequest.url?.includes('/v1/signin') === true) {
         return Promise.reject(error);
       }
-      if (originalRequest.url?.includes('/api/signout') === true) {
+      if (originalRequest.url?.includes('/v1/signout') === true) {
         return Promise.reject(error);
       }
-      if (originalRequest.url?.includes('/api/get-account') === true && originalRequest._retry) {
+      if (originalRequest.url?.includes('/v1/get-account') === true && originalRequest._retry) {
         return Promise.reject(error);
       }
 

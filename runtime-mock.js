@@ -14,10 +14,10 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  if (req.url === '/api/health' || req.url === '/health') {
+  if (req.url === '/v1/health' || req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', service: 'hanzo-runtime' }));
-  } else if (req.url === '/api/sandboxes' && req.method === 'POST') {
+  } else if (req.url === '/v1/sandboxes' && req.method === 'POST') {
     // Mock sandbox creation
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -26,7 +26,7 @@ const server = http.createServer((req, res) => {
       language: 'python',
       createdAt: new Date().toISOString()
     }));
-  } else if (req.url.startsWith('/api/sandboxes/') && req.method === 'DELETE') {
+  } else if (req.url.startsWith('/v1/sandboxes/') && req.method === 'DELETE') {
     // Mock sandbox deletion
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: true }));

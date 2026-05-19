@@ -4,6 +4,7 @@ AI chat interface with multi-model support,
 MCP integration, agents, and RAG. Live at **hanzo.chat**.
 
 **Repo**: `github.com/hanzoai/chat`
+**Upstream**: LibreChat (MIT) — internal package names kept (`@librechat/*`)
 **Package**: `@hanzochat/chat`
 **Runtime**: Node.js 20 (Alpine)
 
