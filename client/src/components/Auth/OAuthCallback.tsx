@@ -4,7 +4,7 @@
  * Flow:
  * 1. User clicks "Sign in" → redirects to hanzo.id OIDC
  * 2. After auth, hanzo.id redirects back with ?code=xxx&state=yyy
- * 3. This component exchanges the code via cloud gateway /api/signin
+ * 3. This component exchanges the code via cloud gateway /v1/signin
  * 4. Gateway sets session cookie, returns user claims + access token
  * 5. We set the auth context and redirect to /c/new
  */
@@ -40,7 +40,7 @@ export default function OAuthCallback() {
     const exchangeCode = async () => {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_HANZO_API_URL || ''}/api/signin?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+          `${import.meta.env.VITE_HANZO_API_URL || ''}/v1/signin?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
           {
             method: 'POST',
             credentials: 'include',
