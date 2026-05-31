@@ -1,0 +1,21 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+jobs:
+  preview:
+    uses: hanzoai/.github/.github/workflows/pr-preview.yml@main
+    with:
+      service: chat
+      image: ghcr.io/hanzoai/chat
+      port: "3080"
+      health-path: /api/health
+      e2e-dir: e2e
+    secrets: inherit
