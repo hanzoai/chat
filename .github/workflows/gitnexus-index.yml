@@ -134,7 +134,7 @@ jobs:
           fi
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24.16.0'
 
@@ -166,7 +166,7 @@ jobs:
           test -x "$RUNNER_TEMP/gitnexus-cli/node_modules/.bin/gitnexus"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # When the /gitnexus command dispatches us with a pr_ref, it's
           # a refs/pull/<N>/head ref that GitHub mirrors into the base
@@ -213,7 +213,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Upload GitNexus index
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           # Artifact naming order of precedence:
           #   1. /gitnexus command dispatch: inputs.pr_number -> pr-<N>
@@ -249,7 +249,7 @@ jobs:
       # index runs opt into a deploy by setting deploy_after=true.
       - name: Trigger deploy workflow after command-triggered runs
         if: inputs.deploy_after && needs.index.result == 'success'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           PR_NUMBER: ${{ inputs.pr_number }}
         with:
@@ -276,7 +276,7 @@ jobs:
       # server has the fresh index.
       - name: Comment on PR — index complete
         if: inputs.pr_number != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           EMBEDDINGS_INPUT: ${{ inputs.embeddings }}
           INDEX_RESULT: ${{ needs.index.result }}
