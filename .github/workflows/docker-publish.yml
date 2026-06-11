@@ -19,7 +19,7 @@ permissions:
 jobs:
   # Build amd64 image on self-hosted runner
   build-amd64:
-    runs-on: hanzo-build
+    runs-on: [self-hosted, linux, amd64]
     permissions:
       contents: read
       packages: write
@@ -79,7 +79,7 @@ jobs:
 
   # Build arm64 image on self-hosted ARM runner
   build-arm64:
-    runs-on: hanzo-build-arm64
+    runs-on: [self-hosted, linux, arm64]
     permissions:
       contents: read
       packages: write
@@ -136,7 +136,7 @@ jobs:
 
   # Create multi-platform manifest combining both architectures
   create-manifest:
-    runs-on: hanzo-build
+    runs-on: [self-hosted, linux, amd64]
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
