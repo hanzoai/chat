@@ -15,7 +15,7 @@ jobs:
   tests_frontend_ubuntu:
     name: Run frontend unit tests on Ubuntu
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     env:
       NODE_OPTIONS: '--max-old-space-size=${{ secrets.NODE_MAX_OLD_SPACE_SIZE || 6144 }}'
     steps:
