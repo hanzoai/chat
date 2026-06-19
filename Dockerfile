@@ -47,6 +47,10 @@ RUN npm ci --omit=dev
 # Copy built application
 COPY --from=builder /app/api ./api
 COPY --from=builder /app/client/dist ./client/dist
+# Ship client/public so the server's staticCache(paths.assets) can serve
+# /assets/* (favicons, logos). Vite sets publicDir=false at build time, so
+# these are NOT bundled into dist — they must be copied for runtime serving.
+COPY --from=builder /app/client/public ./client/public
 COPY --from=builder /app/packages ./packages
 
 # Copy other necessary files
