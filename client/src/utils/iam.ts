@@ -1,21 +1,26 @@
 /**
- * Shared BrowserIamSdk singleton for Hanzo IAM OIDC flows.
+ * Shared @hanzo/iam singleton + config for Hanzo IAM OIDC flows.
  *
- * Reads VITE_HANZO_IAM_URL, VITE_HANZO_IAM_APP, and VITE_HANZO_API_URL
- * from the Vite environment. Returns null when IAM is not configured
- * (i.e. the app is running in backend-proxied mode).
+ * Reads VITE_HANZO_IAM_URL, VITE_HANZO_IAM_APP, VITE_HANZO_IAM_ORG, and
+ * VITE_HANZO_API_URL from the Vite environment. Returns null when IAM is
+ * not configured (backend-proxied mode).
+ *
+ * Login is EMBEDDED (in-app form via `@hanzo/iam/views <Login>`) — no
+ * redirect to the IAM-hosted page. The IAM class mints a PKCE-bound code
+ * via the credential endpoint; this SDK instance completes the standard
+ * PKCE exchange in the /auth/callback route.
  */
-import { BrowserIamSdk } from '@hanzo/iam';
+import { IAM } from '@hanzo/iam/browser';
 
-let instance: BrowserIamSdk | null = null;
-let checked = false;
+export interface HanzoIamConfig {
+  serverUrl: string;
+  clientId: string;
+  organization: string;
+  redirectUri: string;
+  proxyBaseUrl?: string;
+}
 
-export function getHanzoIamSdk(): BrowserIamSdk | null {
-  if (checked) {
-    return instance;
-  }
-  checked = true;
-
+export function getHanzoIamConfig(): HanzoIamConfig | null {
   const serverUrl = import.meta.env.VITE_HANZO_IAM_URL;
   const clientId = import.meta.env.VITE_HANZO_IAM_APP;
 
@@ -23,12 +28,36 @@ export function getHanzoIamSdk(): BrowserIamSdk | null {
     return null;
   }
 
-  instance = new BrowserIamSdk({
+  return {
     serverUrl,
     clientId,
+    organization: import.meta.env.VITE_HANZO_IAM_ORG || 'hanzo',
     redirectUri: `${window.location.origin}/auth/callback`,
-    scope: 'openid profile email',
     proxyBaseUrl: import.meta.env.VITE_HANZO_API_URL || undefined,
+  };
+}
+
+let instance: IAM | null = null;
+let checked = false;
+
+export function getHanzoIamSdk(): IAM | null {
+  if (checked) {
+    return instance;
+  }
+  checked = true;
+
+  const cfg = getHanzoIamConfig();
+  if (!cfg) {
+    return null;
+  }
+
+  instance = new IAM({
+    serverUrl: cfg.serverUrl,
+    clientId: cfg.clientId,
+    organization: cfg.organization,
+    redirectUri: cfg.redirectUri,
+    scope: 'openid profile email',
+    proxyBaseUrl: cfg.proxyBaseUrl,
   });
 
   return instance;
