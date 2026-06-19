@@ -63,12 +63,16 @@ function AuthLayout({
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-10 w-full bg-cover">
-          <img
-            src="/assets/hanzo-logo.svg"
-            className="h-full w-full object-contain"
-            alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Hanzo' })}
-          />
+        <div className="mt-6 flex h-10 w-full items-center justify-center text-black dark:text-white">
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            role="img"
+            aria-label={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Hanzo' })}
+            className="h-full w-auto"
+          >
+            <path d="M3 2 H7 V10 H17 V2 H21 V22 H17 V14 H7 V22 H3 Z" />
+          </svg>
         </div>
       </BlinkAnimation>
       <DisplayError />
