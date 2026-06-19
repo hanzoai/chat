@@ -1,13 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { ErrorTypes, registerPage } from 'librechat-data-provider';
 import { OpenIDIcon, useToastContext } from '@librechat/client';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
+import { Login as IamLogin } from '@hanzo/iam/views';
 import type { TLoginLayoutContext } from '~/common';
 import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import SocialButton from '~/components/Auth/SocialButton';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { getLoginError } from '~/utils';
-import { getHanzoIamSdk, isStaticIamMode } from '~/utils/iam';
+import { getHanzoIamConfig, isStaticIamMode } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 import LoginForm from './LoginForm';
 
@@ -24,16 +25,9 @@ function Login() {
   // Persist the disable flag locally so that once detected, auto-redirect stays disabled.
   const [isAutoRedirectDisabled, setIsAutoRedirectDisabled] = useState(disableAutoRedirect);
 
-  // Check if we're in static/IAM mode
-  const iamSdk = getHanzoIamSdk();
+  // Embedded IAM login (in-app form; no redirect to the IAM-hosted page).
+  const iamConfig = getHanzoIamConfig();
   const isStaticMode = isStaticIamMode();
-
-  /** Trigger IAM PKCE login redirect via the SDK. */
-  const handleIamLogin = useCallback(() => {
-    if (iamSdk) {
-      iamSdk.signinRedirect();
-    }
-  }, [iamSdk]);
 
   useEffect(() => {
     const oauthError = searchParams?.get('error');
@@ -59,24 +53,20 @@ function Login() {
   }, [disableAutoRedirect, searchParams, setSearchParams]);
 
   // Determine whether we should auto-redirect to OpenID or Hanzo IAM
+  // Embedded IAM login does NOT auto-redirect — the form renders in-app.
+  // Only the upstream OpenID provider (non-static mode) auto-redirects.
   const shouldAutoRedirect =
     !isAutoRedirectDisabled &&
-    ((startupConfig?.openidLoginEnabled &&
-      startupConfig?.openidAutoRedirect &&
-      startupConfig?.serverDomain) ||
-      (isStaticMode && iamSdk));
+    !isStaticMode &&
+    startupConfig?.openidLoginEnabled &&
+    startupConfig?.openidAutoRedirect &&
+    startupConfig?.serverDomain;
 
   useEffect(() => {
-    if (shouldAutoRedirect) {
-      if (isStaticMode && iamSdk) {
-        console.log('Auto-redirecting to Hanzo IAM...');
-        iamSdk.signinRedirect();
-      } else if (startupConfig?.serverDomain) {
-        console.log('Auto-redirecting to OpenID provider...');
-        window.location.href = `${startupConfig.serverDomain}/oauth/openid`;
-      }
+    if (shouldAutoRedirect && startupConfig?.serverDomain) {
+      window.location.href = `${startupConfig.serverDomain}/oauth/openid`;
     }
-  }, [shouldAutoRedirect, startupConfig, isStaticMode, iamSdk]);
+  }, [shouldAutoRedirect, startupConfig]);
 
   // Render fallback UI if auto-redirect is active.
   if (shouldAutoRedirect) {
@@ -114,19 +104,16 @@ function Login() {
     <>
       {error != null && <ErrorMessage>{localize(getLoginError(error))}</ErrorMessage>}
 
-      {/* Hanzo IAM button (static mode) */}
-      {isStaticMode && iamSdk && (
+      {/* Embedded Hanzo IAM login — in-app form, stays on hanzo.chat. */}
+      {isStaticMode && iamConfig && (
         <div className="mt-4">
-          <button
-            type="button"
-            onClick={handleIamLogin}
-            className="flex w-full items-center justify-center space-x-3 rounded-2xl border border-border-light bg-surface-primary px-5 py-3 text-text-primary transition-colors duration-200 hover:bg-surface-tertiary"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
-            <p>Sign in with Hanzo</p>
-          </button>
+          <IamLogin
+            serverUrl={iamConfig.serverUrl}
+            clientId={iamConfig.clientId}
+            organization={iamConfig.organization}
+            redirectUri={iamConfig.redirectUri}
+            state=""
+          />
         </div>
       )}
 
