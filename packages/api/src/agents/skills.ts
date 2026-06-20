@@ -931,7 +931,7 @@ export interface InjectManualSkillPrimesResult {
  * both manual and always-apply primes, applies cross-list dedup, and
  * enforces the combined `MAX_PRIMED_SKILLS_PER_TURN` ceiling. Retained here
  * for backward compatibility with external consumers of
- * `@librechat/api` that import the manual-only splicer directly.
+ * `@hanzochat/api` that import the manual-only splicer directly.
  */
 export function injectManualSkillPrimes(
   params: InjectManualSkillPrimesParams,

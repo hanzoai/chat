@@ -2,7 +2,7 @@ const cookies = require('cookie');
 const jwt = require('jsonwebtoken');
 const openIdClient = require('openid-client');
 const { logger } = require('@librechat/data-schemas');
-const { isEnabled, findOpenIDUser } = require('@librechat/api');
+const { isEnabled, findOpenIDUser } = require('@hanzochat/api');
 const {
   requestPasswordReset,
   setOpenIDAuthTokens,

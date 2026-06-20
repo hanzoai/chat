@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * import { createAgentChatCompletion, listAgentModels } from '@librechat/api';
+ * import { createAgentChatCompletion, listAgentModels } from '@hanzochat/api';
  *
  * // POST /v1/chat/completions
  * app.post('/v1/chat/completions', async (req, res) => {

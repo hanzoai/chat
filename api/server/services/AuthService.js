@@ -13,7 +13,7 @@ const {
   checkEmailConfig,
   isEmailDomainAllowed,
   shouldUseSecureCookie,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   findUser,
   findToken,

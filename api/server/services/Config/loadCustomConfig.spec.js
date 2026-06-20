@@ -1,7 +1,7 @@
 jest.mock('axios');
 jest.mock('~/cache/getLogStores');
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   loadYaml: jest.fn(),
 }));
 jest.mock('librechat-data-provider', () => {
@@ -45,7 +45,7 @@ jest.mock('@librechat/data-schemas', () => {
 });
 
 const axios = require('axios');
-const { loadYaml } = require('@librechat/api');
+const { loadYaml } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const loadCustomConfig = require('./loadCustomConfig');
 

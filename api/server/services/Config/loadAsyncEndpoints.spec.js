@@ -21,7 +21,7 @@ function mockDependencies() {
     access: mockAccess,
   }));
 
-  mockOptionalModule('@librechat/api', () => ({
+  mockOptionalModule('@hanzochat/api', () => ({
     isEnabled: (value) => value === true || value === 'true' || value === '1',
     isUserProvided: mockIsUserProvided,
     loadServiceKey: mockLoadServiceKey,

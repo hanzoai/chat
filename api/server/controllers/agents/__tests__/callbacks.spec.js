@@ -5,7 +5,7 @@ jest.mock('nanoid', () => ({
   nanoid: jest.fn(() => 'mock-id'),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   sendEvent: jest.fn(),
 }));
 

@@ -8,7 +8,7 @@ const {
   encodeAndFormatAudios,
   encodeAndFormatVideos,
   encodeAndFormatDocuments,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   Constants,
   ErrorTypes,
