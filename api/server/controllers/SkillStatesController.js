@@ -5,7 +5,7 @@ const {
   toSkillStatesRecord,
   validateSkillStatesPayload,
   pruneOrphanSkillStates,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { ResourceType, PermissionBits } = require('librechat-data-provider');
 const { findAccessibleResources } = require('~/server/services/PermissionService');
 const { updateUser, getUserById } = require('~/models');

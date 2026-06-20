@@ -47,7 +47,7 @@ jest.mock('./utils', () => ({
   batchResetMeiliFlags: mockBatchResetMeiliFlags,
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: mockIsEnabled,
   FlowStateManager: jest.fn(),
 }));

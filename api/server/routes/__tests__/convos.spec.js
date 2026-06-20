@@ -5,7 +5,7 @@ jest.mock('@librechat/agents', () => ({
   sleep: jest.fn(),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: jest.fn(),
   createAxiosInstance: jest.fn(() => ({
     get: jest.fn(),

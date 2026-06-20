@@ -7,7 +7,7 @@ const mockGetOpenIdConfig = jest.fn();
 const mockClearCloudFrontCookies = jest.fn();
 
 jest.mock('cookie');
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: (...args) => mockIsEnabled(...args),
   clearCloudFrontCookies: (...args) => mockClearCloudFrontCookies(...args),
 }));

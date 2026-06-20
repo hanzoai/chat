@@ -1,4 +1,4 @@
-const { handleError } = require('@librechat/api');
+const { handleError } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const {
   EndpointURLs,

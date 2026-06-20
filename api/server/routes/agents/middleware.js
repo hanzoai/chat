@@ -5,7 +5,7 @@ const {
   createRequireApiKeyAuth,
   createRemoteAgentAuth,
   createCheckRemoteAgentAccess,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { getEffectivePermissions } = require('~/server/services/PermissionService');
 const { getAppConfig } = require('~/server/services/Config');
 const db = require('~/models');

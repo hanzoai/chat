@@ -1,5 +1,5 @@
 const { nanoid } = require('nanoid');
-const { checkAccess } = require('@librechat/api');
+const { checkAccess } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const {
   Tools,

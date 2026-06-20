@@ -2,7 +2,7 @@ const path = require('path');
 const axios = require('axios');
 const yaml = require('js-yaml');
 const keyBy = require('lodash/keyBy');
-const { loadYaml } = require('@librechat/api');
+const { loadYaml } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const {
   configSchema,

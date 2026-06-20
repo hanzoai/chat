@@ -5,7 +5,7 @@
 const mongoose = require('mongoose');
 const { logger } = require('@librechat/data-schemas');
 const { ResourceType, PrincipalType, PermissionBits } = require('librechat-data-provider');
-const { enrichRemoteAgentPrincipals, backfillRemoteAgentPermissions } = require('@librechat/api');
+const { enrichRemoteAgentPrincipals, backfillRemoteAgentPermissions } = require('@hanzochat/api');
 const {
   bulkUpdateResourcePermissions,
   ensureGroupPrincipalExists,

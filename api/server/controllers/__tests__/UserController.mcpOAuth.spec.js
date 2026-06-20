@@ -20,7 +20,7 @@ jest.mock('librechat-data-provider', () => ({
   FileSources: {},
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   MCPOAuthHandler: {
     generateFlowId: jest.fn(() => 'user-1:test-server'),
     revokeOAuthToken: jest.fn(),
@@ -79,7 +79,7 @@ jest.mock('~/cache', () => ({
 }));
 
 const { logger } = require('@librechat/data-schemas');
-const { MCPTokenStorage, MCPOAuthHandler } = require('@librechat/api');
+const { MCPTokenStorage, MCPOAuthHandler } = require('@hanzochat/api');
 const { updateUserPluginsController } = require('~/server/controllers/UserController');
 
 function createResponse() {

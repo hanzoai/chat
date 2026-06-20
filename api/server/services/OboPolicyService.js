@@ -1,4 +1,4 @@
-const { isOboConfigStillTrusted } = require('@librechat/api');
+const { isOboConfigStillTrusted } = require('@hanzochat/api');
 const db = require('~/models');
 
 /**

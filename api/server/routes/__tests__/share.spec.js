@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 const mockGetSharedLinkExpiration = jest.fn();
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: jest.fn(() => true),
   getSharedLinkExpiration: (...args) => mockGetSharedLinkExpiration(...args),
   isActiveExpirationDate: jest.fn((expiredAt) => expiredAt > new Date()),
