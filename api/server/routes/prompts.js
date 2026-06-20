@@ -8,7 +8,7 @@ const {
   safeValidatePromptGroupUpdate,
   createEmptyPromptGroupsResponse,
   filterAccessibleIdsBySharedLogic,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   Permissions,
   SystemRoles,

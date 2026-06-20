@@ -17,9 +17,9 @@
  */
 
 export interface TxDeps {
-  /** From @librechat/api — matches a model name to a canonical key. */
+  /** From @hanzochat/api — matches a model name to a canonical key. */
   matchModelName: (model: string, endpoint?: string) => string | undefined;
-  /** From @librechat/api — finds the longest key in `values` whose key is a substring of `model`. */
+  /** From @hanzochat/api — finds the longest key in `values` whose key is a substring of `model`. */
   findMatchingPattern: (
     model: string,
     values: Record<string, number | Record<string, number>>,

@@ -5,7 +5,7 @@ const {
   MCPTokenStorage,
   normalizeHttpError,
   extractWebSearchEnvVars,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   deleteAllUserSessions,
   deleteAllSharedLinks,

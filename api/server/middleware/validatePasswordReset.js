@@ -1,4 +1,4 @@
-const { isEnabled } = require('@librechat/api');
+const { isEnabled } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 
 function validatePasswordReset(req, res, next) {

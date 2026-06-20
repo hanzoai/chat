@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { createAgentChatCompletion } from '@librechat/api';
+ * import { createAgentChatCompletion } from '@hanzochat/api';
  *
  * // In your Express route handler:
  * app.post('/v1/chat/completions', async (req, res) => {

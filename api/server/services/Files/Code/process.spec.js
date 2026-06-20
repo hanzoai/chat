@@ -55,7 +55,7 @@ jest.mock('@librechat/agents', () => ({
 }));
 
 // Mock logAxiosError and getBasePath
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   logAxiosError: jest.fn(),
   getBasePath: jest.fn(() => ''),
 }));

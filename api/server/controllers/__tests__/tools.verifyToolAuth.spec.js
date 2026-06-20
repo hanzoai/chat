@@ -2,7 +2,7 @@ jest.mock('@librechat/data-schemas', () => ({
   logger: { debug: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   checkAccess: jest.fn(),
   loadWebSearchAuth: jest.fn(),
 }));

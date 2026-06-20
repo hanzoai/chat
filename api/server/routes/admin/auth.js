@@ -8,7 +8,7 @@ const {
   getAdminPanelUrl,
   exchangeAdminCode,
   createSetBalanceConfig,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { loginController } = require('~/server/controllers/auth/LoginController');
 const { createOAuthHandler } = require('~/server/controllers/auth/oauth');
 const { getAppConfig } = require('~/server/services/Config');

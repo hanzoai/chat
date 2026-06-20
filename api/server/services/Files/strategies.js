@@ -3,7 +3,7 @@ const {
   uploadMistralOCR,
   uploadAzureMistralOCR,
   uploadGoogleVertexMistralOCR,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   getFirebaseURL,
   prepareImageURL,

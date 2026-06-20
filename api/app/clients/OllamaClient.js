@@ -4,7 +4,7 @@ const { Ollama } = require('ollama');
 const { sleep } = require('@librechat/agents');
 const { logger } = require('@librechat/data-schemas');
 const { Constants } = require('librechat-data-provider');
-const { resolveHeaders, deriveBaseURL } = require('@librechat/api');
+const { resolveHeaders, deriveBaseURL } = require('@hanzochat/api');
 
 const ollamaPayloadSchema = z.object({
   mirostat: z.number().optional(),

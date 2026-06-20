@@ -1,7 +1,7 @@
 jest.mock('@librechat/data-schemas', () => ({
   logger: { error: jest.fn(), debug: jest.fn() },
 }));
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   sendEvent: jest.fn(),
   emitEvent: jest.fn(),
   createToolExecuteHandler: jest.fn(),

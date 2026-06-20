@@ -2542,4 +2542,4 @@ describe('Premium Token Pricing', () => {
 });
 
 // Cross-package sync validation tests (tokens.ts ↔ tx.ts) moved to
-// packages/api tests since they require maxTokensMap from @librechat/api.
+// packages/api tests since they require maxTokensMap from @hanzochat/api.

@@ -29,7 +29,7 @@ const {
   sendResponsesErrorResponse,
   createResponsesEventHandlers,
   createAggregatorEventHandlers,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   createResponsesToolEndCallback,
   createToolEndCallback,
@@ -41,12 +41,12 @@ const { spendTokens, spendStructuredTokens } = require('~/models/spendTokens');
 const { getAgent, getAgents } = require('~/models/Agent');
 const db = require('~/models');
 
-/** @type {import('@librechat/api').AppConfig | null} */
+/** @type {import('@hanzochat/api').AppConfig | null} */
 let appConfig = null;
 
 /**
  * Set the app config for the controller
- * @param {import('@librechat/api').AppConfig} config
+ * @param {import('@hanzochat/api').AppConfig} config
  */
 function setAppConfig(config) {
   appConfig = config;
@@ -88,7 +88,7 @@ function createToolLoader(signal, definitionsOnly = true) {
 
 /**
  * Convert Open Responses input items to internal messages
- * @param {import('@librechat/api').InputItem[]} input
+ * @param {import('@hanzochat/api').InputItem[]} input
  * @returns {Array} Internal messages
  */
 function convertToInternalMessages(input) {
@@ -168,7 +168,7 @@ async function saveInputMessages(req, conversationId, inputMessages, agentId) {
  * @param {import('express').Request} req
  * @param {string} conversationId
  * @param {string} responseId
- * @param {import('@librechat/api').Response} response
+ * @param {import('@hanzochat/api').Response} response
  * @param {string} agentId
  * @returns {Promise<void>}
  */

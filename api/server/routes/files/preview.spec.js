@@ -15,7 +15,7 @@ jest.mock('@librechat/data-schemas', () => ({
   SystemCapabilities: {},
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   refreshS3FileUrls: jest.fn(),
   resolveUploadErrorMessage: jest.fn(),
   verifyAgentUploadPermission: jest.fn(),

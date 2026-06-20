@@ -52,7 +52,7 @@ afterEach(async () => {
 });
 
 function createApp(user) {
-  const { createAdminGrantsHandlers, getCachedPrincipals } = require('@librechat/api');
+  const { createAdminGrantsHandlers, getCachedPrincipals } = require('@hanzochat/api');
 
   const handlers = createAdminGrantsHandlers({
     listGrants: db.listGrants,
