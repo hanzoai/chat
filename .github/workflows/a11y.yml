@@ -13,7 +13,7 @@ on:
 
 jobs:
   axe-linter:
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     if: >
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'hanzoai/chat') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.run_workflow == 'true')
