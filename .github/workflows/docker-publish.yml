@@ -9,10 +9,6 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
-concurrency:
-  group: docker-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
-
 permissions:
   contents: read
   packages: write
@@ -25,37 +21,3 @@ jobs:
       image: ghcr.io/hanzoai/chat
       platforms: linux/amd64,linux/arm64
     secrets: inherit
-
-  dispatch-to-universe:
-    needs: docker
-    runs-on: ubuntu-latest
-    steps:
-      - name: Compute image URI
-        id: meta
-        run: |
-          IMAGE="ghcr.io/hanzoai/chat"
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            TAG="${GITHUB_REF#refs/tags/v}"
-          else
-            TAG="sha-$(echo "${GITHUB_SHA}" | cut -c1-7)"
-          fi
-          echo "image=${IMAGE}:${TAG}" >> "$GITHUB_OUTPUT"
-
-      - name: Dispatch image update to universe
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.UNIVERSE_DISPATCH_TOKEN }}
-          repository: hanzoai/universe
-          event-type: image-update
-          client-payload: |
-            {
-              "service": "chat",
-              "image": "${{ steps.meta.outputs.image }}",
-              "sha": "${{ github.sha }}",
-              "repo": "${{ github.repository }}"
-            }
-
-      - name: Summary
-        run: |
-          echo "### Image built & pushed" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Image:** ${{ steps.meta.outputs.image }}" >> "$GITHUB_STEP_SUMMARY"
