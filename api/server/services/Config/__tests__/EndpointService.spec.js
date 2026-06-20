@@ -27,7 +27,7 @@ const mockDataProvider = {
 };
 
 jest.mock(
-  '@librechat/api',
+  '@hanzochat/api',
   () => ({
     sendEvent: jest.fn(),
     isEnabled: (value) => value === true || value === 'true' || value === '1',

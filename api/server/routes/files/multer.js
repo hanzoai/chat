@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
-const { sanitizeFilename } = require('@librechat/api');
+const { sanitizeFilename } = require('@hanzochat/api');
 const {
   mergeFileConfig,
   getEndpointFileConfig,

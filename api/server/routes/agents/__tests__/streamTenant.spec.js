@@ -19,8 +19,8 @@ jest.mock('@librechat/data-schemas', () => ({
   },
 }));
 
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   isEnabled: jest.fn().mockReturnValue(false),
   GenerationJobManager: mockGenerationJobManager,
 }));

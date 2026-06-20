@@ -49,7 +49,7 @@ async function updateMCPServerTools({ userId, serverName, tools }) {
 
 /**
  * Merges app-level tools with global tools
- * @param {import('@librechat/api').LCAvailableTools} appTools
+ * @param {import('@hanzochat/api').LCAvailableTools} appTools
  * @returns {Promise<void>}
  */
 async function mergeAppTools(appTools) {
@@ -75,7 +75,7 @@ async function mergeAppTools(appTools) {
  * @param {object} params
  * @param {string} params.userId - User ID for user-specific caching
  * @param {string} params.serverName
- * @param {import('@librechat/api').LCAvailableTools} params.serverTools
+ * @param {import('@hanzochat/api').LCAvailableTools} params.serverTools
  * @returns {Promise<void>}
  */
 async function cacheMCPServerTools({ userId, serverName, serverTools }) {

@@ -5,7 +5,7 @@ const {
   resolveHeaders,
   constructAzureURL,
   checkUserKeyExpiry,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } = require('librechat-data-provider');
 const { getUserKeyValues, getUserKeyExpiry } = require('~/models');
 

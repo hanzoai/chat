@@ -5,7 +5,7 @@ const {
   getBedrockModels,
   getOpenAIModels,
   getGoogleModels,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { getAppConfig } = require('./app');
 
 /**

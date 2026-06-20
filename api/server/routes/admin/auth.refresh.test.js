@@ -24,7 +24,7 @@ jest.mock('@librechat/data-schemas', () => ({
   getTenantId: jest.fn(() => undefined),
 }));
 
-jest.mock('@librechat/api', () => {
+jest.mock('@hanzochat/api', () => {
   class AdminRefreshError extends Error {
     constructor(code, status, message) {
       super(message);
@@ -104,7 +104,7 @@ jest.mock('~/server/middleware', () => ({
 
 const openIdClient = require('openid-client');
 const { logger } = require('@librechat/data-schemas');
-const { isEnabled, applyAdminRefresh, buildOpenIDRefreshParams } = require('@librechat/api');
+const { isEnabled, applyAdminRefresh, buildOpenIDRefreshParams } = require('@hanzochat/api');
 const { getOpenIdConfig } = require('~/strategies');
 const adminAuthRouter = require('./auth');
 

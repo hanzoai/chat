@@ -1,7 +1,7 @@
 const express = require('express');
 const { nanoid } = require('nanoid');
 const { logger } = require('@librechat/data-schemas');
-const { isActionDomainAllowed } = require('@librechat/api');
+const { isActionDomainAllowed } = require('@hanzochat/api');
 const { actionDelimiter, EModelEndpoint, removeNullishValues } = require('librechat-data-provider');
 const { encryptMetadata, domainParser } = require('~/server/services/ActionService');
 const { getOpenAIClient } = require('~/server/controllers/assistants/helpers');

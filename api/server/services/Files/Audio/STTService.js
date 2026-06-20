@@ -4,7 +4,7 @@ const FormData = require('form-data');
 const { Readable } = require('stream');
 const { logger } = require('@librechat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { genAzureEndpoint, logAxiosError } = require('@librechat/api');
+const { genAzureEndpoint, logAxiosError } = require('@hanzochat/api');
 const { extractEnvVariable, STTProviders } = require('librechat-data-provider');
 const { getAppConfig } = require('~/server/services/Config');
 

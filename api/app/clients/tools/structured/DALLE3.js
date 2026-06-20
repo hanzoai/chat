@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { ProxyAgent, fetch } = require('undici');
 const { Tool } = require('@langchain/core/tools');
 const { logger } = require('@librechat/data-schemas');
-const { getImageBasename, extractBaseURL } = require('@librechat/api');
+const { getImageBasename, extractBaseURL } = require('@hanzochat/api');
 const { FileContext, ContentTypes } = require('librechat-data-provider');
 
 const dalle3JsonSchema = {

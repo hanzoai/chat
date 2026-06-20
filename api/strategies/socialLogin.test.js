@@ -21,8 +21,8 @@ jest.mock('./process', () => ({
   handleExistingUser: jest.fn(),
 }));
 
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   isEnabled: jest.fn().mockReturnValue(true),
   isEmailDomainAllowed: jest.fn().mockReturnValue(true),
 }));

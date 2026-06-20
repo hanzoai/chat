@@ -2,7 +2,7 @@
  * E2E Backend Integration Tests for Summarization
  *
  * Exercises the FULL LibreChat -> agents pipeline:
- *   LibreChat's createRun (@librechat/api)
+ *   LibreChat's createRun (@hanzochat/api)
  *     -> agents package Run.create (@librechat/agents)
  *     -> graph execution -> summarization node -> events
  *

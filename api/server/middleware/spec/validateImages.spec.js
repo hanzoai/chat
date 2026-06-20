@@ -2,12 +2,12 @@ const jwt = require('jsonwebtoken');
 const createValidateImageRequest = require('~/server/middleware/validateImageRequest');
 
 // Mock only isEnabled, keep getBasePath real so it reads process.env.DOMAIN_CLIENT
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   isEnabled: jest.fn(),
 }));
 
-const { isEnabled } = require('@librechat/api');
+const { isEnabled } = require('@hanzochat/api');
 
 describe('validateImageRequest middleware', () => {
   let req, res, next, validateImageRequest;

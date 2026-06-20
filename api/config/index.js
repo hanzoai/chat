@@ -5,7 +5,7 @@ const {
   FlowStateManager,
   MCPServersRegistry,
   OAuthReconnectionManager,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const logger = require('./winston');
 
 global.EventSource = EventSource;

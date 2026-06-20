@@ -1,4 +1,4 @@
-const { generateCapabilityCheck, capabilityContextMiddleware } = require('@librechat/api');
+const { generateCapabilityCheck, capabilityContextMiddleware } = require('@hanzochat/api');
 const { getUserPrincipals, hasCapabilityForPrincipals } = require('~/models');
 
 const { hasCapability, requireCapability, hasConfigCapability } = generateCapabilityCheck({

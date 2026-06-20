@@ -20,7 +20,7 @@ const {
   createOpenAIStreamTracker,
   createOpenAIContentAggregator,
   isChatCompletionValidationFailure,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { loadAgentTools, loadToolsForExecution } = require('~/server/services/ToolService');
 const { createToolEndCallback } = require('~/server/controllers/agents/callbacks');
 const { findAccessibleResources } = require('~/server/services/PermissionService');

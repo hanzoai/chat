@@ -23,7 +23,7 @@ jest.mock('~/server/services/Config', () => ({
   loadCustomConfig: jest.fn(),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   sendEvent: jest.fn(),
   MCPOAuthHandler: jest.fn(),
   isMCPDomainAllowed: jest.fn(),

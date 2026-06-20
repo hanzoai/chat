@@ -54,7 +54,7 @@ client/              # React frontend (Vite)
 packages/
   data-provider/     # Shared data layer (librechat-data-provider)
   data-schemas/      # Validation schemas
-  api/               # API client package (@librechat/api)
+  api/               # API client package (@hanzochat/api)
   client/            # Shared client components
   agents/            # Agent definitions
   mcp/               # MCP server integration
@@ -93,7 +93,7 @@ CREDS_KEY= CREDS_IV=        # Credential encryption
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
-- `@librechat/api`, `@librechat/client`, `@librechat/data-schemas`, `librechat-data-provider`, `@librechat/agents`
+- `@hanzochat/api`, `@librechat/client`, `@librechat/data-schemas`, `librechat-data-provider`, `@librechat/agents`
 - Functions: `extractLibreChatParams`, `importLibreChatConvo`
 - Type names: `LibreChatKeys`, `LibreChatParams`
 - Config filename: `librechat.yaml` (upstream convention)

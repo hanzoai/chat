@@ -713,7 +713,7 @@ describe('processTextWithTokenLimit', () => {
     });
   });
 
-  describe('using countTokens async function from @librechat/api', () => {
+  describe('using countTokens async function from @hanzochat/api', () => {
     beforeEach(() => {
       Tokenizer.freeAndResetAllEncoders();
     });

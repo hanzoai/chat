@@ -8,7 +8,7 @@ const {
   sanitizeFileForTransmit,
   sanitizeMessageForTransmit,
   checkAndIncrementPendingRequest,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { disposeClient, clientRegistry, requestDataMap } = require('~/server/cleanup');
 const { handleAbortError } = require('~/server/middleware');
 const { logViolation } = require('~/cache');

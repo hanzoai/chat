@@ -1,5 +1,5 @@
 const { logger } = require('@librechat/data-schemas');
-const { isEmailDomainAllowed } = require('@librechat/api');
+const { isEmailDomainAllowed } = require('@hanzochat/api');
 const { getAppConfig } = require('~/server/services/Config');
 
 /**

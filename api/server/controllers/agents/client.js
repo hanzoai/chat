@@ -23,7 +23,7 @@ const {
   createMemoryProcessor,
   createMultiAgentMapper,
   filterMalformedContentParts,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   Callback,
   Providers,
@@ -495,7 +495,7 @@ class AgentClient extends BaseClient {
       agent.model_parameters,
     );
 
-    /** @type {import('@librechat/api').MemoryConfig} */
+    /** @type {import('@hanzochat/api').MemoryConfig} */
     const config = {
       validKeys: memoryConfig.validKeys,
       instructions: agent.instructions,

@@ -3,7 +3,7 @@ const express = require('express');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const { getBasePath } = require('@librechat/api');
+const { getBasePath } = require('@hanzochat/api');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
 function generateTestCsrfToken(flowId) {
@@ -23,8 +23,8 @@ const mockRegistryInstance = {
   removeServer: jest.fn(),
 };
 
-jest.mock('@librechat/api', () => {
-  const actual = jest.requireActual('@librechat/api');
+jest.mock('@hanzochat/api', () => {
+  const actual = jest.requireActual('@hanzochat/api');
   return {
     ...actual,
     MCPOAuthHandler: {
@@ -44,7 +44,7 @@ jest.mock('@librechat/api', () => {
     MCPServersRegistry: {
       getInstance: () => mockRegistryInstance,
     },
-    // Error handling utilities (from @librechat/api mcp/errors)
+    // Error handling utilities (from @hanzochat/api mcp/errors)
     isMCPDomainNotAllowedError: (error) => error?.code === 'MCP_DOMAIN_NOT_ALLOWED',
     isMCPInspectionFailedError: (error) => error?.code === 'MCP_INSPECTION_FAILED',
     MCPErrorCodes: {
@@ -160,7 +160,7 @@ describe('MCP Routes', () => {
   });
 
   describe('GET /:serverName/oauth/initiate', () => {
-    const { MCPOAuthHandler } = require('@librechat/api');
+    const { MCPOAuthHandler } = require('@hanzochat/api');
     const { getLogStores } = require('~/cache');
 
     it('should initiate OAuth flow successfully', async () => {
@@ -285,7 +285,7 @@ describe('MCP Routes', () => {
   });
 
   describe('GET /:serverName/oauth/callback', () => {
-    const { MCPOAuthHandler, MCPTokenStorage } = require('@librechat/api');
+    const { MCPOAuthHandler, MCPTokenStorage } = require('@hanzochat/api');
     const { getLogStores } = require('~/cache');
 
     it('should redirect to error page when OAuth error is received', async () => {
@@ -891,7 +891,7 @@ describe('MCP Routes', () => {
   });
 
   describe('POST /oauth/cancel/:serverName', () => {
-    const { MCPOAuthHandler } = require('@librechat/api');
+    const { MCPOAuthHandler } = require('@hanzochat/api');
     const { getLogStores } = require('~/cache');
 
     it('should cancel OAuth flow successfully', async () => {
@@ -1151,7 +1151,7 @@ describe('MCP Routes', () => {
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
       require('~/config').getFlowStateManager.mockReturnValue({});
       require('~/cache').getLogStores.mockReturnValue({});
-      require('@librechat/api').getUserMCPAuthMap.mockResolvedValue({
+      require('@hanzochat/api').getUserMCPAuthMap.mockResolvedValue({
         'mcp:test-server': {
           API_KEY: 'api-key-value',
         },
@@ -1178,7 +1178,7 @@ describe('MCP Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(require('@librechat/api').getUserMCPAuthMap).toHaveBeenCalledWith({
+      expect(require('@hanzochat/api').getUserMCPAuthMap).toHaveBeenCalledWith({
         userId: 'test-user-id',
         servers: ['test-server'],
         findPluginAuthsByKeys: require('~/models').findPluginAuthsByKeys,
@@ -1464,7 +1464,7 @@ describe('MCP Routes', () => {
 
   describe('GET /:serverName/oauth/callback - Edge Cases', () => {
     it('should handle OAuth callback without toolFlowId (falsy toolFlowId)', async () => {
-      const { MCPOAuthHandler, MCPTokenStorage } = require('@librechat/api');
+      const { MCPOAuthHandler, MCPTokenStorage } = require('@hanzochat/api');
       const mockTokens = {
         access_token: 'edge-access-token',
         refresh_token: 'edge-refresh-token',
@@ -1515,7 +1515,7 @@ describe('MCP Routes', () => {
     it('should handle null cached tools in OAuth callback (triggers || {} fallback)', async () => {
       const { getCachedTools } = require('~/server/services/Config');
       getCachedTools.mockResolvedValue(null);
-      const { MCPOAuthHandler, MCPTokenStorage } = require('@librechat/api');
+      const { MCPOAuthHandler, MCPTokenStorage } = require('@hanzochat/api');
       const mockTokens = {
         access_token: 'edge-access-token',
         refresh_token: 'edge-refresh-token',

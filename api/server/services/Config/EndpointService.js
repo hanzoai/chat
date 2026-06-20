@@ -1,4 +1,4 @@
-const { isUserProvided, isEnabled } = require('@librechat/api');
+const { isUserProvided, isEnabled } = require('@hanzochat/api');
 const { EModelEndpoint } = require('librechat-data-provider');
 const { generateConfig } = require('~/server/utils/handleText');
 

@@ -5,7 +5,7 @@ const {
   sendEvent,
   GenerationJobManager,
   sanitizeMessageForTransmit,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { isAssistantsEndpoint, ErrorTypes } = require('librechat-data-provider');
 const { spendTokens, spendStructuredTokens } = require('~/models/spendTokens');
 const { truncateText, smartTruncateText } = require('~/app/clients/prompts');

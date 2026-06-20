@@ -1,7 +1,7 @@
 const passport = require('passport');
 const session = require('express-session');
 const { CacheKeys } = require('librechat-data-provider');
-const { isEnabled, shouldUseSecureCookie } = require('@librechat/api');
+const { isEnabled, shouldUseSecureCookie } = require('@hanzochat/api');
 const { logger, DEFAULT_SESSION_EXPIRY } = require('@librechat/data-schemas');
 const {
   openIdJwtLogin,

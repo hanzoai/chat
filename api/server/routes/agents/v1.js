@@ -1,5 +1,5 @@
 const express = require('express');
-const { generateCheckAccess } = require('@librechat/api');
+const { generateCheckAccess } = require('@hanzochat/api');
 const { PermissionTypes, Permissions, PermissionBits } = require('librechat-data-provider');
 const { requireJwtAuth, configMiddleware, canAccessAgentResource } = require('~/server/middleware');
 const v1 = require('~/server/controllers/agents/v1');

@@ -1,6 +1,6 @@
 const path = require('path');
 const { logger } = require('@librechat/data-schemas');
-const { loadServiceKey, isUserProvided } = require('@librechat/api');
+const { loadServiceKey, isUserProvided } = require('@hanzochat/api');
 const { config } = require('./EndpointService');
 
 async function loadAsyncEndpoints() {
