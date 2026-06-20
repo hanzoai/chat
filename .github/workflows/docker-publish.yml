@@ -1,6 +1,14 @@
-# Deployment managed by hanzoai/universe — this workflow only builds and pushes images.
-# Build runs on the self-hosted arcd pools via the canonical reusable workflow;
-# GHCR only (never Docker Hub); immutable sha-/semver tags only (no floating branch tag).
+# Hanzo Chat — image build (amd64, self-hosted hanzoai pool).
+#
+# chat is a PUBLIC repo, so it cannot reuse the private hanzoai/.github
+# reusable workflow (GitHub blocks public->private workflow reuse).
+# This is therefore self-contained.
+#
+# Builds ghcr.io/hanzoai/chat on:
+#   - push to main -> immutable sha-<sha7> tag
+#   - v* tags      -> semver image tag (e.g. v0.7.10 -> 0.7.10)
+# No :latest, no floating tags (semver-only policy). amd64 only
+# (DOKS is all amd64 — no arm64 runners).
 name: Docker Release
 
 on:
@@ -9,15 +17,55 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+concurrency:
+  group: docker-release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
   packages: write
-  id-token: write
 
 jobs:
-  docker:
-    uses: hanzoai/.github/.github/workflows/docker-build.yml@main
-    with:
-      image: ghcr.io/hanzoai/chat
-      platforms: linux/amd64,linux/arm64
-    secrets: inherit
+  build-amd64:
+    # hanzoai org pool — ARC routes by runnerScaleSetName, not labels.
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          driver-opts: network=host
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/hanzoai/chat
+          tags: |
+            type=semver,pattern={{version}}
+            type=sha,prefix=sha-,format=short
+          flavor: |
+            latest=false
+
+      - name: Build and push amd64 image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=ghcr.io/hanzoai/chat-cache:amd64
+          cache-to: type=registry,ref=ghcr.io/hanzoai/chat-cache:amd64,mode=max
+          provenance: false
