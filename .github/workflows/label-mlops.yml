@@ -7,7 +7,7 @@ on:
 
 jobs:
   add-mlops-label:
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     steps:
       - name: Check if ML Ops Team is selected
         uses: actions-ecosystem/action-add-labels@v1

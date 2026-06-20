@@ -13,7 +13,7 @@ jobs:
   tests_Backend:
     name: Run Backend unit tests
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     env:
       MONGO_URI: ${{ secrets.MONGO_URI }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

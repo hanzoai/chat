@@ -9,7 +9,7 @@ on:
 jobs:
   sync-translations:
     name: Sync Translation Keys with Locize
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -36,7 +36,7 @@ jobs:
 
   create-pull-request:
     name: Create Translation PR on Version Published
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     needs: sync-translations
     permissions:
       contents: write
