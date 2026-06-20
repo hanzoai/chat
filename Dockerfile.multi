@@ -16,7 +16,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 RUN apk --no-cache add curl
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/data-provider/package.json ./packages/data-provider/
 COPY packages/api/package.json ./packages/api/
 COPY packages/data-schemas/package.json ./packages/data-schemas/
