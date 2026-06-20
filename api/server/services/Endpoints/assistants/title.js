@@ -1,4 +1,4 @@
-const { isEnabled, sanitizeTitle } = require('@librechat/api');
+const { isEnabled, sanitizeTitle } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const { CacheKeys } = require('librechat-data-provider');
 const { saveConvo } = require('~/models/Conversation');

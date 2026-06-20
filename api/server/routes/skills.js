@@ -9,7 +9,7 @@ const {
   getStorageMetadata,
   resolveRequestTenantId,
   restoreTenantContextFromReq,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { isValidObjectIdString, logger } = require('@librechat/data-schemas');
 const {
   PermissionBits,

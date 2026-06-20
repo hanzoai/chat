@@ -29,7 +29,7 @@ jest.mock('@librechat/agents', () => ({
   EnvVar: { CODE_API_KEY: 'CODE_API_KEY' },
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   sanitizeFilename: jest.fn((n) => n),
   parseText: jest.fn().mockResolvedValue({ text: '', bytes: 0 }),
   processAudioFile: jest.fn(),

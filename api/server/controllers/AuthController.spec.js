@@ -19,12 +19,12 @@ jest.mock('~/models', () => ({
   updateUser: jest.fn(),
   findUser: jest.fn(),
 }));
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: jest.fn(),
   findOpenIDUser: jest.fn(),
 }));
 
-const { isEnabled } = require('@librechat/api');
+const { isEnabled } = require('@hanzochat/api');
 const { getGraphApiToken } = require('~/server/services/GraphTokenService');
 const { graphTokenController } = require('./AuthController');
 

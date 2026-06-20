@@ -3,7 +3,7 @@ const request = require('supertest');
 
 const mockForceRefreshCloudFrontAuthCookies = jest.fn();
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   createSetBalanceConfig: jest.fn(() => (req, res, next) => next()),
   forceRefreshCloudFrontAuthCookies: (...args) => mockForceRefreshCloudFrontAuthCookies(...args),
 }));
