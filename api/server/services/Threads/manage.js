@@ -1,6 +1,6 @@
 const path = require('path');
 const { v4 } = require('uuid');
-const { countTokens, escapeRegExp } = require('@librechat/api');
+const { countTokens, escapeRegExp } = require('@hanzochat/api');
 const {
   Constants,
   ContentTypes,

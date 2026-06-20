@@ -1,4 +1,4 @@
-const { loadCustomEndpointsConfig } = require('@librechat/api');
+const { loadCustomEndpointsConfig } = require('@hanzochat/api');
 const {
   CacheKeys,
   EModelEndpoint,

@@ -1,5 +1,5 @@
 const rateLimit = require('express-rate-limit');
-const { limiterCache } = require('@librechat/api');
+const { limiterCache } = require('@hanzochat/api');
 
 const PROMPT_USAGE_WINDOW_MS = 60 * 1000; // 1 minute
 const PROMPT_USAGE_MAX = 30; // 30 usage increments per user per minute

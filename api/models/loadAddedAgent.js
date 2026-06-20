@@ -1,5 +1,5 @@
 const { logger } = require('@librechat/data-schemas');
-const { getCustomEndpointConfig } = require('@librechat/api');
+const { getCustomEndpointConfig } = require('@hanzochat/api');
 const {
   Tools,
   Constants,

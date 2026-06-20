@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { isEnabled } = require('@librechat/api');
+const { isEnabled } = require('@hanzochat/api');
 const { getTransactionSupport, logger } = require('@librechat/data-schemas');
 const { ResourceType, PrincipalType, PrincipalModel } = require('librechat-data-provider');
 const {

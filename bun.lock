@@ -48,7 +48,7 @@
         "@keyv/redis": "^4.3.3",
         "@langchain/core": "^0.3.79",
         "@librechat/agents": "^3.0.50",
-        "@librechat/api": "*",
+        "@hanzochat/api": "*",
         "@librechat/data-schemas": "*",
         "@microsoft/microsoft-graph-client": "^3.0.7",
         "@modelcontextprotocol/sdk": "^1.24.3",
@@ -253,7 +253,7 @@
       },
     },
     "packages/api": {
-      "name": "@librechat/api",
+      "name": "@hanzochat/api",
       "version": "1.7.23",
       "devDependencies": {
         "@babel/preset-env": "^7.21.5",
@@ -1407,7 +1407,7 @@
 
     "@librechat/agents": ["@librechat/agents@3.0.50", "", { "dependencies": { "@langchain/anthropic": "^0.3.26", "@langchain/aws": "^0.1.15", "@langchain/core": "^0.3.79", "@langchain/deepseek": "^0.0.2", "@langchain/google-genai": "^0.2.18", "@langchain/google-vertexai": "^0.2.18", "@langchain/langgraph": "^0.4.9", "@langchain/mistralai": "^0.2.1", "@langchain/openai": "0.5.18", "@langchain/textsplitters": "^0.1.0", "@langchain/xai": "^0.0.3", "@langfuse/langchain": "^4.3.0", "@langfuse/otel": "^4.3.0", "@langfuse/tracing": "^4.3.0", "@opentelemetry/sdk-node": "^0.207.0", "axios": "^1.12.1", "cheerio": "^1.0.0", "dotenv": "^16.4.7", "https-proxy-agent": "^7.0.6", "mathjs": "^15.1.0", "nanoid": "^3.3.7", "openai": "5.8.2" } }, "sha512-oovj3BsP/QoxPbWFAc71Ddplwd9BT8ucfYs+n+kiR37aCWtvxdvL9/XldRYfnaq9boNE324njQJyqc8v8AAPFQ=="],
 
-    "@librechat/api": ["@librechat/api@workspace:packages/api"],
+    "@hanzochat/api": ["@hanzochat/api@workspace:packages/api"],
 
     "@librechat/backend": ["@librechat/backend@workspace:api"],
 

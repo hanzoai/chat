@@ -19,7 +19,7 @@ jest.mock('@librechat/data-schemas', () => ({
   DEFAULT_SESSION_EXPIRY: 60000,
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: (...args) => mockIsEnabled(...args),
   getAdminPanelUrl: (...args) => mockGetAdminPanelUrl(...args),
   isAdminPanelRedirect: (...args) => mockIsAdminPanelRedirect(...args),

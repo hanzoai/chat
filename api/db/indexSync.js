@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { MeiliSearch } = require('meilisearch');
 const { logger } = require('@librechat/data-schemas');
 const { CacheKeys } = require('librechat-data-provider');
-const { isEnabled, FlowStateManager } = require('@librechat/api');
+const { isEnabled, FlowStateManager } = require('@hanzochat/api');
 const { getLogStores } = require('~/cache');
 const { batchResetMeiliFlags } = require('./utils');
 

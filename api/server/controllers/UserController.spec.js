@@ -68,8 +68,8 @@ jest.mock('sharp', () =>
   })),
 );
 
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   needsRefresh: jest.fn(),
   getNewS3URL: jest.fn(),
 }));
