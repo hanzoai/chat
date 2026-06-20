@@ -94,7 +94,7 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     timeout-minutes: 20
     permissions:
       contents: read
@@ -153,7 +153,7 @@ jobs:
 
   deploy:
     needs: build-image
-    runs-on: ubuntu-latest
+    runs-on: hanzo-deploy-linux-amd64
     timeout-minutes: 20
     permissions:
       actions: read
