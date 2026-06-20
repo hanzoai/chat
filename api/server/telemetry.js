@@ -13,7 +13,7 @@ if (isTelemetryEnabled()) {
     initializeTelemetry,
     telemetryMiddleware,
     telemetryErrorMiddleware,
-  } = require('@librechat/api/telemetry');
+  } = require('@hanzochat/api/telemetry');
   const controller = initializeTelemetry();
 
   module.exports = {

@@ -1,7 +1,7 @@
 const { Keyv } = require('keyv');
 const uap = require('ua-parser-js');
 const { logger } = require('@librechat/data-schemas');
-const { isEnabled, keyvMongo } = require('@librechat/api');
+const { isEnabled, keyvMongo } = require('@hanzochat/api');
 const { ViolationTypes } = require('librechat-data-provider');
 const { removePorts } = require('~/server/utils');
 const denyRequest = require('./denyRequest');

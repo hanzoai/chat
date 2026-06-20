@@ -1,4 +1,4 @@
-const { isEnabled } = require('@librechat/api');
+const { isEnabled } = require('@hanzochat/api');
 
 function validateRegistration(req, res, next) {
   if (req.invite) {

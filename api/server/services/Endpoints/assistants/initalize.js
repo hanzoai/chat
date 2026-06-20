@@ -1,6 +1,6 @@
 const OpenAI = require('openai');
 const { ProxyAgent } = require('undici');
-const { isUserProvided, checkUserKeyExpiry } = require('@librechat/api');
+const { isUserProvided, checkUserKeyExpiry } = require('@hanzochat/api');
 const { ErrorTypes, EModelEndpoint } = require('librechat-data-provider');
 const { getUserKeyValues, getUserKeyExpiry } = require('~/models');
 

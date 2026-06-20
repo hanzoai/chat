@@ -9,7 +9,7 @@ const {
   refreshAccessToken,
   GenerationJobManager,
   createSSRFSafeAgents,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   Time,
   CacheKeys,

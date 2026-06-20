@@ -3,7 +3,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { logger } = require('@librechat/data-schemas');
 const { FileSources } = require('librechat-data-provider');
-const { logAxiosError, generateShortLivedToken } = require('@librechat/api');
+const { logAxiosError, generateShortLivedToken } = require('@hanzochat/api');
 
 /**
  * Deletes a file from the vector database. This function takes a file object, constructs the full path, and

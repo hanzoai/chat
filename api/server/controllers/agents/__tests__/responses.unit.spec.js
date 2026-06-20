@@ -36,7 +36,7 @@ jest.mock('@librechat/agents', () => ({
   }),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   createRun: jest.fn().mockResolvedValue({
     processStream: jest.fn().mockResolvedValue(undefined),
   }),
@@ -233,7 +233,7 @@ describe('createResponse controller', () => {
     beforeEach(() => {
       req.body.stream = true;
 
-      const api = require('@librechat/api');
+      const api = require('@hanzochat/api');
       api.validateResponseRequest.mockReturnValue({
         request: { model: 'agent-123', input: 'Hello', stream: true },
       });
@@ -255,7 +255,7 @@ describe('createResponse controller', () => {
 
   describe('collectedUsage population', () => {
     it('should collect usage from on_chat_model_end events', async () => {
-      const api = require('@librechat/api');
+      const api = require('@hanzochat/api');
 
       let capturedOnChatModelEnd;
       api.createAggregatorEventHandlers.mockImplementation(() => {

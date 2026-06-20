@@ -1,4 +1,4 @@
-const { getBalanceConfig } = require('@librechat/api');
+const { getBalanceConfig } = require('@hanzochat/api');
 const { FileSources } = require('librechat-data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { resizeAvatar } = require('~/server/services/Files/images/avatar');
