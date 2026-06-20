@@ -1,4 +1,4 @@
-const { isUserProvided, fetchModels } = require('@librechat/api');
+const { isUserProvided, fetchModels } = require('@hanzochat/api');
 const {
   EModelEndpoint,
   extractEnvVariable,

@@ -1,11 +1,11 @@
 const nodemailer = require('nodemailer');
-const { readFileAsString } = require('@librechat/api');
+const { readFileAsString } = require('@hanzochat/api');
 
 jest.mock('nodemailer');
 jest.mock('@librechat/data-schemas', () => ({
   logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   logAxiosError: jest.fn(),
   isEnabled: jest.fn((val) => val === 'true' || val === true),
   readFileAsString: jest.fn(),
@@ -48,7 +48,7 @@ function loadSendEmail() {
   jest.mock('@librechat/data-schemas', () => ({
     logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
   }));
-  jest.mock('@librechat/api', () => ({
+  jest.mock('@hanzochat/api', () => ({
     logAxiosError: jest.fn(),
     isEnabled: jest.fn((val) => val === 'true' || val === true),
     readFileAsString: jest.fn().mockResolvedValue({ content: '<p>{{name}}</p>' }),

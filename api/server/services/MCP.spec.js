@@ -21,8 +21,8 @@ const mockIsMCPDomainAllowed = jest.fn(() => Promise.resolve(true));
 
 const mockGetAppConfig = jest.fn(() => Promise.resolve({}));
 
-jest.mock('@librechat/api', () => {
-  const actual = jest.requireActual('@librechat/api');
+jest.mock('@hanzochat/api', () => {
+  const actual = jest.requireActual('@hanzochat/api');
   return {
     ...actual,
     sendEvent: jest.fn(),
@@ -36,7 +36,7 @@ jest.mock('@librechat/api', () => {
 });
 
 const { logger } = require('@librechat/data-schemas');
-const { MCPOAuthHandler } = require('@librechat/api');
+const { MCPOAuthHandler } = require('@hanzochat/api');
 const { CacheKeys, Constants } = require('librechat-data-provider');
 const D = Constants.mcp_delimiter;
 const {

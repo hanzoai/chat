@@ -1109,7 +1109,7 @@
 
 /**
  * @exports MCPServers
- * @typedef {import('@librechat/api').MCPServers} MCPServers
+ * @typedef {import('@hanzochat/api').MCPServers} MCPServers
  * @memberof typedefs
  */
 
@@ -1121,43 +1121,43 @@
 
 /**
  * @exports MCPManager
- * @typedef {import('@librechat/api').MCPManager} MCPManager
+ * @typedef {import('@hanzochat/api').MCPManager} MCPManager
  * @memberof typedefs
  */
 
 /**
  * @exports MCPConnection
- * @typedef {import('@librechat/api').MCPConnection} MCPConnection
+ * @typedef {import('@hanzochat/api').MCPConnection} MCPConnection
  * @memberof typedefs
  */
 
 /**
  * @exports LCFunctionTool
- * @typedef {import('@librechat/api').LCFunctionTool} LCFunctionTool
+ * @typedef {import('@hanzochat/api').LCFunctionTool} LCFunctionTool
  * @memberof typedefs
  */
 
 /**
  * @exports FlowStateManager
- * @typedef {import('@librechat/api').FlowStateManager} FlowStateManager
+ * @typedef {import('@hanzochat/api').FlowStateManager} FlowStateManager
  * @memberof typedefs
  */
 
 /**
  * @exports LCAvailableTools
- * @typedef {import('@librechat/api').LCAvailableTools} LCAvailableTools
+ * @typedef {import('@hanzochat/api').LCAvailableTools} LCAvailableTools
  * @memberof typedefs
  */
 
 /**
  * @exports LCTool
- * @typedef {import('@librechat/api').LCTool} LCTool
+ * @typedef {import('@hanzochat/api').LCTool} LCTool
  * @memberof typedefs
  */
 
 /**
  * @exports FormattedContent
- * @typedef {import('@librechat/api').FormattedContent} FormattedContent
+ * @typedef {import('@hanzochat/api').FormattedContent} FormattedContent
  * @memberof typedefs
  */
 

@@ -100,7 +100,7 @@ export interface DiscoverConnectedAgentsDeps {
   onAgentSkipped?: (agentId: string) => void;
   /**
    * Optional override for `initializeAgent`. Exists primarily so JS callers
-   * can inject their test doubles via `jest.mock('@librechat/api')` — since
+   * can inject their test doubles via `jest.mock('@hanzochat/api')` — since
    * this module's own direct import would otherwise bypass that mock.
    */
   initializeAgent?: typeof defaultInitializeAgent;

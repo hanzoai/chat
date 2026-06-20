@@ -33,7 +33,7 @@ jest.mock('librechat-data-provider', () => {
   };
 });
 
-jest.mock('@librechat/api', () => {
+jest.mock('@hanzochat/api', () => {
   return {
     sanitizeFilename: jest.fn((n) => n),
     parseText: jest.fn().mockResolvedValue({ text: '', bytes: 0 }),
@@ -114,7 +114,7 @@ const {
   getRetentionExpiry,
   sweepExpiredFiles: sweepExpiredFilesWithDeps,
   startExpiredFileSweep: startExpiredFileSweepWithDeps,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   EToolResources,
   FileSources,
@@ -326,7 +326,7 @@ describe('processAgentFileUpload', () => {
         handleFileUpload: jest.fn().mockRejectedValue(new Error('No text found in document')),
       });
       const req = makeReq({ mimetype: PDF_MIME, ocrConfig: null });
-      const { parseText } = require('@librechat/api');
+      const { parseText } = require('@hanzochat/api');
 
       await expect(
         processAgentFileUpload({ req, res: mockRes, metadata: makeMetadata() }),
@@ -366,7 +366,7 @@ describe('processAgentFileUpload', () => {
         mimetype: PDF_MIME,
         ocrConfig: { strategy: FileSources.mistral_ocr },
       });
-      const { parseText } = require('@librechat/api');
+      const { parseText } = require('@hanzochat/api');
 
       await expect(
         processAgentFileUpload({ req, res: mockRes, metadata: makeMetadata() }),

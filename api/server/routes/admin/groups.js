@@ -1,5 +1,5 @@
 const express = require('express');
-const { createAdminGroupsHandlers } = require('@librechat/api');
+const { createAdminGroupsHandlers } = require('@hanzochat/api');
 const { SystemCapabilities } = require('@librechat/data-schemas');
 const { requireCapability } = require('~/server/middleware/roles/capabilities');
 const { requireJwtAuth } = require('~/server/middleware');

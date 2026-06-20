@@ -10,7 +10,7 @@ jest.mock('@librechat/data-schemas', () => ({
   },
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   logAxiosError: jest.fn(),
   oaiToolkit: {
     image_gen_oai: {

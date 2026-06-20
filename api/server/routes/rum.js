@@ -1,5 +1,5 @@
 const express = require('express');
-const { getRumProxyBodyLimit, isRumProxyEnabled, proxyRumRequest } = require('@librechat/api');
+const { getRumProxyBodyLimit, isRumProxyEnabled, proxyRumRequest } = require('@hanzochat/api');
 const { requireJwtAuth } = require('~/server/middleware');
 
 const router = express.Router();

@@ -47,11 +47,11 @@ jest.mock('@librechat/data-schemas', () => {
   };
 });
 
-// Mock @librechat/api — the real tenantContextMiddleware is TS and cannot be
+// Mock @hanzochat/api — the real tenantContextMiddleware is TS and cannot be
 // required directly from CJS tests. This thin wrapper mirrors the real logic
 // (read request context, call tenantStorage.run) using the same data-schemas
 // primitives. The real implementation is covered by packages/api tenant.spec.ts.
-jest.mock('@librechat/api', () => {
+jest.mock('@hanzochat/api', () => {
   const { tenantStorage } = require('@librechat/data-schemas');
   const normalizeContextValue = (value) => {
     const trimmed = value?.trim?.();
@@ -85,7 +85,7 @@ jest.mock('@librechat/api', () => {
 
 const requireJwtAuth = require('../requireJwtAuth');
 const { getTenantId, getUserId } = require('@librechat/data-schemas');
-const { isEnabled, maybeRefreshCloudFrontAuthCookiesMiddleware } = require('@librechat/api');
+const { isEnabled, maybeRefreshCloudFrontAuthCookiesMiddleware } = require('@hanzochat/api');
 const passport = require('passport');
 
 const jwtSecret = 'test-refresh-secret';

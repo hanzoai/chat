@@ -16,7 +16,7 @@ jest.mock('node-fetch');
 jest.mock('@aws-sdk/s3-request-presigner');
 jest.mock('@aws-sdk/client-s3');
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   initializeS3: jest.fn(),
   deleteRagFile: jest.fn().mockResolvedValue(undefined),
   isEnabled: jest.fn((val) => val === 'true'),
@@ -31,7 +31,7 @@ jest.mock('@librechat/data-schemas', () => ({
   },
 }));
 
-const { initializeS3, deleteRagFile } = require('@librechat/api');
+const { initializeS3, deleteRagFile } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 
 // Set env vars before requiring crud so module-level constants pick them up

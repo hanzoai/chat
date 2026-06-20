@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { checkAccess, generateCheckAccess } = require('@librechat/api');
+const { checkAccess, generateCheckAccess } = require('@hanzochat/api');
 const { PermissionTypes, Permissions } = require('librechat-data-provider');
 const { getRoleByName } = require('~/models/Role');
 const { Role } = require('~/db/models');

@@ -26,7 +26,7 @@
     "@librechat/data-schemas#build": {
       "dependsOn": ["^build", "librechat-data-provider#build"]
     },
-    "@librechat/api#build": {
+    "@hanzochat/api#build": {
       "dependsOn": ["^build", "librechat-data-provider#build", "@librechat/data-schemas#build"]
     }
   }

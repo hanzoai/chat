@@ -20,7 +20,7 @@ const {
   generateCheckAccess,
   validateOAuthSession,
   OAUTH_SESSION_COOKIE,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   createMCPServerController,
   updateMCPServerController,

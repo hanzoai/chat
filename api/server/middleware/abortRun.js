@@ -1,4 +1,4 @@
-const { sendEvent } = require('@librechat/api');
+const { sendEvent } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const { CacheKeys, RunStatus, isUUID } = require('librechat-data-provider');
 const { initializeClient } = require('~/server/services/Endpoints/assistants');
