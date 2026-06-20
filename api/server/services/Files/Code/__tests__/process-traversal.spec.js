@@ -16,7 +16,7 @@ const mockAxios = jest.fn().mockResolvedValue({
 });
 mockAxios.post = jest.fn();
 
-jest.mock('@librechat/api', () => {
+jest.mock('@hanzochat/api', () => {
   const http = require('http');
   const https = require('https');
   return {

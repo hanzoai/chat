@@ -30,7 +30,7 @@ jest.mock('../getCachedTools', () => ({
 }));
 
 const mockClearMcpConfigCache = jest.fn().mockResolvedValue(undefined);
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   createAppConfigService: jest.fn(() => ({
     getAppConfig: jest.fn().mockResolvedValue({ availableTools: {} }),
     clearAppConfigCache: mockClearAppConfigCache,

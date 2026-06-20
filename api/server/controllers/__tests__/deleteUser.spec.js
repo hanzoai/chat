@@ -31,7 +31,7 @@ jest.mock('librechat-data-provider', () => ({
   FileSources: {},
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   MCPOAuthHandler: {},
   MCPTokenStorage: {},
   normalizeHttpError: jest.fn(),

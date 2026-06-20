@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { logAxiosError } = require('@librechat/api');
+const { logAxiosError } = require('@hanzochat/api');
 const { EModelEndpoint } = require('librechat-data-provider');
 
 /**

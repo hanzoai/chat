@@ -10,7 +10,7 @@ jest.mock('@librechat/agents', () => ({
 }));
 
 /* Inline the identity helpers' validation rules instead of pulling
- * them through `@librechat/api`'s root barrel (which has init-time
+ * them through `@hanzochat/api`'s root barrel (which has init-time
  * provider-config side effects that don't matter here) or its leaf
  * module (the package's `exports` field only surfaces the root).
  * The real implementation lives in `packages/api/src/files/code/identity.ts`
@@ -29,7 +29,7 @@ const validateIdentity = ({ kind, id, version }, label) => {
   }
 };
 
-jest.mock('@librechat/api', () => {
+jest.mock('@hanzochat/api', () => {
   const http = require('http');
   const https = require('https');
   return {
@@ -60,7 +60,7 @@ const {
   codeServerHttpAgent,
   codeServerHttpsAgent,
   getCodeApiAuthHeaders,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { deleteCodeEnvFile, getCodeOutputDownloadStream, uploadCodeEnvFile } = require('./crud');
 
 describe('Code CRUD', () => {

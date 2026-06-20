@@ -8,7 +8,7 @@
  * handling cannot silently break the protection.
  */
 jest.mock('node-fetch');
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   createSSRFSafeAgents: jest.fn(() => ({
     httpAgent: { __kind: 'http' },
     httpsAgent: { __kind: 'https' },
@@ -29,7 +29,7 @@ jest.mock('sharp', () => {
 });
 
 const fetch = require('node-fetch');
-const { createSSRFSafeAgents } = require('@librechat/api');
+const { createSSRFSafeAgents } = require('@hanzochat/api');
 const sharp = require('sharp');
 const { resizeAvatar } = require('./avatar');
 

@@ -12,7 +12,7 @@ const {
   loadWebSearchAuth,
   buildImageToolContext,
   buildWebSearchContext,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { getMCPServersRegistry } = require('~/config');
 const {
   Tools,

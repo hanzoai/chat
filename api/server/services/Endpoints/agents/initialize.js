@@ -8,7 +8,7 @@ const {
   GenerationJobManager,
   getCustomEndpointConfig,
   createSequentialChainEdges,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   EModelEndpoint,
   isAgentsEndpoint,

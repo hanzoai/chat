@@ -7,7 +7,7 @@ const {
   sessionCache,
   standardCache,
   violationCache,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 
 const namespaces = {
   [ViolationTypes.GENERAL]: new Keyv({ store: logFile, namespace: 'violations' }),

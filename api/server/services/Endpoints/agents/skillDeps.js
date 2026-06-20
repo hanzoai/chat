@@ -5,7 +5,7 @@ const {
   checkIfActive,
   readSandboxFile,
 } = require('~/server/services/Files/Code/process');
-const { enrichWithSkillConfigurable } = require('@librechat/api');
+const { enrichWithSkillConfigurable } = require('@hanzochat/api');
 const db = require('~/models');
 
 /**

@@ -19,7 +19,7 @@ jest.mock('~/server/services/Config', () => ({
   getAppConfig: jest.fn().mockResolvedValue({}),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   getBalanceConfig: jest.fn(() => ({
     enabled: false,
   })),

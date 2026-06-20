@@ -19,7 +19,7 @@ jest.mock('@librechat/data-schemas', () => ({
   webSearchKeys: [],
 }));
 
-jest.mock('@librechat/api', () => {
+jest.mock('@hanzochat/api', () => {
   return {
     MCPOAuthHandler: {
       revokeOAuthToken: (...args) => mockRevokeOAuthToken(...args),

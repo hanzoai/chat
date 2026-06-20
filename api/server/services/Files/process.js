@@ -19,7 +19,7 @@ const {
 } = require('librechat-data-provider');
 const { EnvVar } = require('@librechat/agents');
 const { logger } = require('@librechat/data-schemas');
-const { sanitizeFilename, parseText, processAudioFile } = require('@librechat/api');
+const { sanitizeFilename, parseText, processAudioFile } = require('@hanzochat/api');
 const {
   convertImage,
   resizeAndConvert,

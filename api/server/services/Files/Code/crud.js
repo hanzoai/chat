@@ -1,6 +1,6 @@
 const FormData = require('form-data');
 const { getCodeBaseURL } = require('@librechat/agents');
-const { createAxiosInstance, logAxiosError } = require('@librechat/api');
+const { createAxiosInstance, logAxiosError } = require('@hanzochat/api');
 
 const axios = createAxiosInstance();
 

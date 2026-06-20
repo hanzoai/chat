@@ -132,7 +132,7 @@ export interface InitializeAgentDbMethods extends EndpointDbMethods {
  * Initializes an agent for use in requests.
  * Handles file processing, tool loading, provider configuration, and context token calculations.
  *
- * This function is exported from @librechat/api and replaces the CJS version from
+ * This function is exported from @hanzochat/api and replaces the CJS version from
  * api/server/services/Endpoints/agents/agent.js
  *
  * @param params - Initialization parameters

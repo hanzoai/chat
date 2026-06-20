@@ -1,7 +1,7 @@
 const { nanoid } = require('nanoid');
 const { EnvVar } = require('@librechat/agents');
 const { logger } = require('@librechat/data-schemas');
-const { checkAccess, loadWebSearchAuth } = require('@librechat/api');
+const { checkAccess, loadWebSearchAuth } = require('@hanzochat/api');
 const {
   Tools,
   AuthType,

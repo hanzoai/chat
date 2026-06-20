@@ -9,7 +9,7 @@ const {
   mergeAgentOcrConversion,
   MAX_AVATAR_REFRESH_AGENTS,
   convertOcrToContextInPlace,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   Time,
   Tools,

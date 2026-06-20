@@ -12,7 +12,7 @@ jest.mock('librechat-data-provider', () => ({
   ...jest.requireActual('librechat-data-provider'),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   enrichRemoteAgentPrincipals: jest.fn(),
   backfillRemoteAgentPermissions: jest.fn(),
 }));

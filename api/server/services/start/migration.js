@@ -5,7 +5,7 @@ const {
   logPromptMigrationWarning,
   checkAgentPermissionsMigration,
   checkPromptPermissionsMigration,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { getProjectByName } = require('~/models/Project');
 const { Agent, PromptGroup } = require('~/db/models');
 const { findRoleByIdentifier } = require('~/models');

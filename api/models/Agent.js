@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('node:crypto');
 const { logger } = require('@librechat/data-schemas');
-const { getCustomEndpointConfig } = require('@librechat/api');
+const { getCustomEndpointConfig } = require('@hanzochat/api');
 const {
   Tools,
   SystemRoles,

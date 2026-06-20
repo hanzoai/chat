@@ -14,13 +14,13 @@ describe('telemetry bootstrap', () => {
   afterEach(() => {
     process.env = originalEnv;
     jest.dontMock('dotenv');
-    jest.dontMock('@librechat/api/telemetry');
+    jest.dontMock('@hanzochat/api/telemetry');
     jest.resetModules();
   });
 
   it('does not load OpenTelemetry packages by default', () => {
     jest.doMock(
-      '@librechat/api/telemetry',
+      '@hanzochat/api/telemetry',
       () => {
         throw new Error('telemetry package should not load when tracing is disabled');
       },
@@ -37,7 +37,7 @@ describe('telemetry bootstrap', () => {
     process.env.OTEL_SDK_DISABLED = 'true';
     process.env.OTEL_TRACING_ENABLED = 'true';
     jest.doMock(
-      '@librechat/api/telemetry',
+      '@hanzochat/api/telemetry',
       () => {
         throw new Error('telemetry package should not load when the SDK is disabled');
       },
@@ -66,7 +66,7 @@ describe('telemetry bootstrap', () => {
       shutdown: jest.fn(),
     }));
     jest.doMock(
-      '@librechat/api/telemetry',
+      '@hanzochat/api/telemetry',
       () => ({
         initializeTelemetry,
         telemetryMiddleware,

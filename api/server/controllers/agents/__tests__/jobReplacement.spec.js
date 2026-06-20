@@ -32,7 +32,7 @@ jest.mock('@librechat/data-schemas', () => ({
   logger: mockLogger,
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: jest.fn().mockReturnValue(false),
   GenerationJobManager: mockGenerationJobManager,
   checkAndIncrementPendingRequest: jest.fn().mockResolvedValue({ allowed: true }),
