@@ -1,6 +1,21 @@
 import type { FileSources } from './files';
 
 /**
+ * How a skill may be invoked. String values are the canonical tokens used in
+ * SKILL.md frontmatter and persisted form state, so `Object.values` yields the
+ * exact strings parsers validate against.
+ *
+ * - `auto`   — model may invoke; user `$` invocation also allowed.
+ * - `manual` — only user `$` invocation; model cannot invoke.
+ * - `both`   — explicit alias for auto + manual (default UI selection).
+ */
+export enum InvocationMode {
+  auto = 'auto',
+  manual = 'manual',
+  both = 'both',
+}
+
+/**
  * Shared skill validation constants — the single source of truth for name,
  * description, title, body, and file-path length limits. Mirrored by
  * `packages/data-schemas/src/methods/skill.ts`; whenever those constants
@@ -109,7 +124,7 @@ export type TSkill = {
    * temporarily so older form code that hasn't migrated still type-checks;
    * the backend no longer reads or writes it.
    */
-  invocationMode?: import('../types').InvocationMode;
+  invocationMode?: InvocationMode;
   /**
    * Mirrors the `disable-model-invocation` frontmatter field. `true` means
    * the model can no longer invoke this skill via the `skill` tool and the
