@@ -5,7 +5,7 @@ on:
   
 jobs:
   publish-dev-release:
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
 
     steps:
       - name: Checkout code
