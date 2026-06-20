@@ -5,7 +5,7 @@ const {
   getAdminPanelUrl,
   isAdminPanelRedirect,
   generateAdminExchangeCode,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { syncUserEntraGroupMemberships } = require('~/server/services/PermissionService');
 const { setAuthTokens, setOpenIDAuthTokens } = require('~/server/services/AuthService');
 const getLogStores = require('~/cache/getLogStores');

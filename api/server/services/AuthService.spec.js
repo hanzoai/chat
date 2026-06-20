@@ -8,7 +8,7 @@ jest.mock('librechat-data-provider', () => ({
   SystemRoles: { USER: 'USER', ADMIN: 'ADMIN' },
   errorsToString: jest.fn(),
 }));
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: jest.fn((val) => val === 'true' || val === true),
   checkEmailConfig: jest.fn(),
   isEmailDomainAllowed: jest.fn(),
@@ -35,7 +35,7 @@ jest.mock('~/strategies/validators', () => ({ registerSchema: { parse: jest.fn()
 jest.mock('~/server/services/Config', () => ({ getAppConfig: jest.fn() }));
 jest.mock('~/server/utils', () => ({ sendEmail: jest.fn() }));
 
-const { shouldUseSecureCookie } = require('@librechat/api');
+const { shouldUseSecureCookie } = require('@hanzochat/api');
 const { setOpenIDAuthTokens } = require('./AuthService');
 
 /** Helper to build a mock Express response */

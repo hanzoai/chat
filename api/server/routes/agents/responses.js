@@ -25,7 +25,7 @@ const {
   generateCheckAccess,
   createRequireApiKeyAuth,
   createCheckRemoteAgentAccess,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   createResponse,
   getResponse,

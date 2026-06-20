@@ -1,7 +1,7 @@
 const express = require('express');
 const { nanoid } = require('nanoid');
 const { logger } = require('@librechat/data-schemas');
-const { generateCheckAccess, isActionDomainAllowed } = require('@librechat/api');
+const { generateCheckAccess, isActionDomainAllowed } = require('@hanzochat/api');
 const {
   Permissions,
   ResourceType,

@@ -20,11 +20,11 @@ jest.mock('~/server/services/Files/strategies', () => ({
 jest.mock('~/server/services/Config', () => ({
   getAppConfig: jest.fn().mockResolvedValue({}),
 }));
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   isEnabled: jest.fn(() => false),
   isEmailDomainAllowed: jest.fn(() => true),
-  findOpenIDUser: jest.requireActual('@librechat/api').findOpenIDUser,
+  findOpenIDUser: jest.requireActual('@hanzochat/api').findOpenIDUser,
   getBalanceConfig: jest.fn(() => ({
     enabled: false,
   })),
@@ -35,7 +35,7 @@ jest.mock('~/models', () => ({
   updateUser: jest.fn(),
 }));
 jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/api'),
+  ...jest.requireActual('@hanzochat/api'),
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

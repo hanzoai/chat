@@ -1,4 +1,4 @@
-const { getRumProxyClientUrl, isEnabled, isRumProxyEnabled } = require('@librechat/api');
+const { getRumProxyClientUrl, isEnabled, isRumProxyEnabled } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 
 const DEFAULT_RUM_SERVICE_NAME = 'librechat-web';
