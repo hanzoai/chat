@@ -18,7 +18,7 @@ permissions:
 jobs:
   client-package-target:
     name: Build Docker client package target
-    runs-on: ubuntu-latest
+    runs-on: hanzo-build-linux-amd64
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
