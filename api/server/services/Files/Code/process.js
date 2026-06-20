@@ -3,7 +3,7 @@ const { v4 } = require('uuid');
 const axios = require('axios');
 const { logger } = require('@librechat/data-schemas');
 const { getCodeBaseURL } = require('@librechat/agents');
-const { logAxiosError, getBasePath } = require('@librechat/api');
+const { logAxiosError, getBasePath } = require('@hanzochat/api');
 const {
   Tools,
   megabyte,

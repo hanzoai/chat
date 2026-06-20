@@ -1,6 +1,6 @@
 const path = require('path');
 const { logger, runAsSystem } = require('@librechat/data-schemas');
-const { TOOL_RESOURCE_KEYS, collectToolResourceFileIds } = require('@librechat/api');
+const { TOOL_RESOURCE_KEYS, collectToolResourceFileIds } = require('@hanzochat/api');
 
 require('module-alias')({ base: path.resolve(__dirname, '..', 'api') });
 const connect = require('./connect');

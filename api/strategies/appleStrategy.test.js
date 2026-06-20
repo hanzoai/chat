@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const { isEnabled } = require('@librechat/api');
+const { isEnabled } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const { Strategy: AppleStrategy } = require('passport-apple');
 const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -26,8 +26,8 @@ jest.mock('./process', () => ({
   createSocialUser: jest.fn(),
   handleExistingUser: jest.fn(),
 }));
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   isEnabled: jest.fn(),
 }));
 jest.mock('~/models', () => ({

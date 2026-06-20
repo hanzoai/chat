@@ -17,7 +17,7 @@ const {
   loadServiceKey,
   getBalanceConfig,
   getTransactionsConfig,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { spendTokens } = require('~/models/spendTokens');
 const { getFiles } = require('~/models/File');

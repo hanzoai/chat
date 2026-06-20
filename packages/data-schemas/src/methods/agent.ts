@@ -14,7 +14,7 @@ import logger from '~/config/winston';
 const { mcp_delimiter } = Constants;
 
 /**
- * Mirrors `TOOL_RESOURCE_KEYS` in `@librechat/api` — the subset of
+ * Mirrors `TOOL_RESOURCE_KEYS` in `@hanzochat/api` — the subset of
  * `EToolResources` that actually carries `file_ids` on an agent document.
  * `code_interpreter` is excluded (it belongs to the Assistants API, not
  * `AgentToolResources`) to avoid emitting dead MongoDB clauses.

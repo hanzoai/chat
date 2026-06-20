@@ -10,8 +10,8 @@ jest.mock('@librechat/agents', () => ({
   }),
 }));
 
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   checkAccess: jest.fn(),
   initializeAgent: jest.fn(),
   createMemoryProcessor: jest.fn(),
@@ -2136,10 +2136,10 @@ describe('AgentClient - titleConvo', () => {
         agent: mockAgent,
       };
 
-      mockCheckAccess = require('@librechat/api').checkAccess;
+      mockCheckAccess = require('@hanzochat/api').checkAccess;
       mockLoadAgent = require('~/models/Agent').loadAgent;
-      mockInitializeAgent = require('@librechat/api').initializeAgent;
-      mockCreateMemoryProcessor = require('@librechat/api').createMemoryProcessor;
+      mockInitializeAgent = require('@hanzochat/api').initializeAgent;
+      mockCreateMemoryProcessor = require('@hanzochat/api').createMemoryProcessor;
     });
 
     it('should use current agent when memory config agent.id matches current agent id', async () => {

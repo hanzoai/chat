@@ -16,7 +16,7 @@ jest.mock('~/models/Role', () => ({
   getRoleByName: jest.fn(),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   checkAccess: jest.fn().mockResolvedValue(true),
 }));
 

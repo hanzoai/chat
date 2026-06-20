@@ -20,7 +20,7 @@ const {
   buildWebSearchContext,
   buildImageToolContext,
   buildToolClassification,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   Time,
   Tools,
@@ -427,8 +427,8 @@ const isBuiltInTool = (toolName) =>
  * @param {Object} params.agent - The agent configuration
  * @param {string|null} [params.streamId] - Stream ID for resumable mode
  * @returns {Promise<{
- *   toolDefinitions?: import('@librechat/api').LCTool[];
- *   toolRegistry?: Map<string, import('@librechat/api').LCTool>;
+ *   toolDefinitions?: import('@hanzochat/api').LCTool[];
+ *   toolRegistry?: Map<string, import('@hanzochat/api').LCTool>;
  *   userMCPAuthMap?: Record<string, Record<string, string>>;
  *   hasDeferredTools?: boolean;
  * }>}
