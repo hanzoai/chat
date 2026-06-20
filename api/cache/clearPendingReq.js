@@ -1,4 +1,4 @@
-const { isEnabled } = require('@librechat/api');
+const { isEnabled } = require('@hanzochat/api');
 const { Time, CacheKeys } = require('librechat-data-provider');
 const getLogStores = require('./getLogStores');
 

@@ -1,5 +1,5 @@
 /** Note: No hard-coded values should be used in this file. */
-const { maxTokensMap } = require('@librechat/api');
+const { maxTokensMap } = require('@hanzochat/api');
 const { EModelEndpoint } = require('librechat-data-provider');
 const {
   defaultRate,

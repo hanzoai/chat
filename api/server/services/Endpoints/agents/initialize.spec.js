@@ -20,8 +20,8 @@ jest.mock('@librechat/agents', () => ({
   })),
 }));
 
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
+jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   initializeAgent: (...args) => mockInitializeAgent(...args),
   validateAgentModel: (...args) => mockValidateAgentModel(...args),
   GenerationJobManager: { setCollectedUsage: jest.fn() },

@@ -18,7 +18,7 @@ const {
   initializeFileStorage,
   GenerationJobManager,
   createStreamServices,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const { connectDb, indexSync } = require('~/db');
 const initializeOAuthReconnectManager = require('./services/initializeOAuthReconnectManager');
 const createValidateImageRequest = require('./middleware/validateImageRequest');

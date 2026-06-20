@@ -8,7 +8,7 @@ const {
   defaultAssistantsVersion,
   defaultAgentCapabilities,
 } = require('librechat-data-provider');
-const { sendEvent, isUserProvided } = require('@librechat/api');
+const { sendEvent, isUserProvided } = require('@hanzochat/api');
 
 const addSpaceIfNeeded = (text) => (text.length > 0 && !text.endsWith(' ') ? text + ' ' : text);
 

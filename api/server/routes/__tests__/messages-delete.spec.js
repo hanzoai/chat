@@ -8,7 +8,7 @@ jest.mock('@librechat/agents', () => ({
   sleep: jest.fn(),
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   unescapeLaTeX: jest.fn((x) => x),
   countTokens: jest.fn().mockResolvedValue(10),
 }));

@@ -29,7 +29,7 @@ jest.mock('@librechat/data-schemas', () => ({
   },
 }));
 
-jest.mock('@librechat/api', () => ({
+jest.mock('@hanzochat/api', () => ({
   isEnabled: (value) => {
     if (typeof value === 'boolean') {
       return value;

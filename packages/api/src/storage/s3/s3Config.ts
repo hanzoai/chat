@@ -38,7 +38,7 @@ const parseRefreshExpiry = (): number | null => {
   return parsed;
 };
 
-// Internal module config — not part of the public @librechat/api surface
+// Internal module config — not part of the public @hanzochat/api surface
 export const s3Config = {
   /** AWS region for S3 */
   AWS_REGION: process.env.AWS_REGION ?? '',

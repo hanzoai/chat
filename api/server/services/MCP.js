@@ -14,7 +14,7 @@ const {
   normalizeJsonSchema,
   GenerationJobManager,
   resolveJsonSchemaRefs,
-} = require('@librechat/api');
+} = require('@hanzochat/api');
 const {
   Time,
   CacheKeys,
@@ -292,7 +292,7 @@ async function reconnectServer({
  * @param {number} [params.index]
  * @param {AbortSignal} [params.signal]
  * @param {string | null} [params.streamId] - The stream ID for resumable mode.
- * @param {import('@librechat/api').ParsedServerConfig} [params.config]
+ * @param {import('@hanzochat/api').ParsedServerConfig} [params.config]
  * @param {Record<string, Record<string, string>>} [params.userMCPAuthMap]
  * @returns { Promise<Array<typeof tool | { _call: (toolInput: Object | string) => unknown}>> } An object with `_call` method to execute the tool input.
  */
@@ -368,7 +368,7 @@ async function createMCPTools({
  * @param {Providers | EModelEndpoint} params.provider - The provider for the tool.
  * @param {LCAvailableTools} [params.availableTools]
  * @param {Record<string, Record<string, string>>} [params.userMCPAuthMap]
- * @param {import('@librechat/api').ParsedServerConfig} [params.config]
+ * @param {import('@hanzochat/api').ParsedServerConfig} [params.config]
  * @returns { Promise<typeof tool | { _call: (toolInput: Object | string) => unknown}> } An object with `_call` method to execute the tool input.
  */
 async function createMCPTool({
@@ -585,7 +585,7 @@ async function getMCPSetupData(userId) {
   }
 
   const mcpManager = getMCPManager(userId);
-  /** @type {Map<string, import('@librechat/api').MCPConnection>} */
+  /** @type {Map<string, import('@hanzochat/api').MCPConnection>} */
   let appConnections = new Map();
   try {
     // Use getLoaded() instead of getAll() to avoid forcing connection creation
@@ -669,9 +669,9 @@ async function checkOAuthFlowStatus(userId, serverName) {
  * Get connection status for a specific MCP server
  * @param {string} userId - The user ID
  * @param {string} serverName - The server name
- * @param {import('@librechat/api').ParsedServerConfig} config - The server configuration
- * @param {Map<string, import('@librechat/api').MCPConnection>} appConnections - App-level connections
- * @param {Map<string, import('@librechat/api').MCPConnection>} userConnections - User-level connections
+ * @param {import('@hanzochat/api').ParsedServerConfig} config - The server configuration
+ * @param {Map<string, import('@hanzochat/api').MCPConnection>} appConnections - App-level connections
+ * @param {Map<string, import('@hanzochat/api').MCPConnection>} userConnections - User-level connections
  * @param {Set} oauthServers - Set of OAuth servers
  * @returns {Object} Object containing requiresOAuth and connectionState
  */

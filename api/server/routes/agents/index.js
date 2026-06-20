@@ -1,5 +1,5 @@
 const express = require('express');
-const { isEnabled, GenerationJobManager } = require('@librechat/api');
+const { isEnabled, GenerationJobManager } = require('@hanzochat/api');
 const { logger } = require('@librechat/data-schemas');
 const {
   uaParser,

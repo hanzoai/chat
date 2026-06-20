@@ -1,5 +1,5 @@
 {
-  "name": "@librechat/api",
+  "name": "@hanzochat/api",
   "version": "1.7.23",
   "type": "commonjs",
   "description": "MCP services for Hanzo Chat",
