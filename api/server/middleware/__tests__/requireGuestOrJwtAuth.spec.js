@@ -42,7 +42,7 @@ describe('requireGuestOrJwtAuth', () => {
     requireGuestOrJwtAuth(req, mockRes(), next);
     expect(requireJwtAuth).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith();
-    expect(req.user).toEqual({ id: 'guest_abc', role: 'GUEST', guest: true });
+    expect(req.user).toEqual({ id: 'guest_abc', role: 'GUEST', name: 'Guest', guest: true });
   });
 
   it('delegates to requireJwtAuth when no bearer token is present', () => {
