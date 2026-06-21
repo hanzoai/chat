@@ -17,6 +17,7 @@ const {
 const { verify2FAWithTempToken } = require('~/server/controllers/auth/TwoFactorAuthController');
 const { logoutController } = require('~/server/controllers/auth/LogoutController');
 const { loginController } = require('~/server/controllers/auth/LoginController');
+const { guestTokenController } = require('~/server/controllers/auth/GuestController');
 const { getAppConfig } = require('~/server/services/Config');
 const middleware = require('~/server/middleware');
 const { Balance } = require('~/db/models');
@@ -41,6 +42,7 @@ router.post(
   loginController,
 );
 router.post('/refresh', refreshController);
+router.post('/guest', middleware.guestTokenLimiter, middleware.checkBan, guestTokenController);
 router.post(
   '/register',
   middleware.registerLimiter,

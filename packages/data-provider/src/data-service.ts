@@ -135,6 +135,10 @@ export const logout = (): Promise<m.TLogoutResponse> => {
   return request.post(endpoints.logout());
 };
 
+export const getGuestToken = (): Promise<t.TGuestTokenResponse> => {
+  return request.post(endpoints.guestToken());
+};
+
 export const register = (payload: t.TRegisterUser) => {
   return request.post(endpoints.register(), payload);
 };
