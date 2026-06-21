@@ -19,8 +19,10 @@ import {
   useLoginUserMutation,
   useLogoutUserMutation,
   useRefreshTokenMutation,
+  useGetStartupConfig,
 } from '~/data-provider';
 import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
+import useGuestAuth from './useGuestAuth';
 import useTimeout from './useTimeout';
 import store from '~/store';
 
@@ -37,7 +39,11 @@ const AuthContextProvider = ({
   const [token, setToken] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isGuest, setIsGuest] = useState<boolean>(false);
   const logoutRedirectRef = useRef<string | undefined>(undefined);
+
+  const { data: startupConfig } = useGetStartupConfig();
+  const { acquireGuestToken } = useGuestAuth();
 
   const { data: userRole = null } = useGetRole(SystemRoles.USER, {
     enabled: !!(isAuthenticated && (user?.role ?? '')),
@@ -125,10 +131,42 @@ const AuthContextProvider = ({
     [logoutUser],
   );
 
-  const userQuery = useGetUserQuery({ enabled: !!(token ?? '') });
+  const userQuery = useGetUserQuery({ enabled: !!(token ?? '') && !isGuest });
+
+  const acquireGuest = useCallback(async (): Promise<boolean> => {
+    const session = await acquireGuestToken();
+    if (!session) {
+      return false;
+    }
+    setUser(session.user);
+    setToken(session.token);
+    setTokenHeader(session.token);
+    setIsGuest(true);
+    setIsAuthenticated(false);
+    return true;
+  }, [acquireGuestToken, setUser]);
 
   const login = (data: t.TLoginUser) => {
     loginUser.mutate(data);
+  };
+
+  /**
+   * Ref-held guest fallback so `silentRefresh` (intentionally dep-free) always
+   * sees the latest config/handler without resubscribing. When no session
+   * exists and guest chat is enabled, acquire a guest token; otherwise let the
+   * root route show the landing/login gate.
+   */
+  const guestFallbackRef = useRef<() => void>(() => {});
+  guestFallbackRef.current = () => {
+    if (startupConfig?.allowGuestChat === true) {
+      void acquireGuest().then((ok) => {
+        if (!ok) {
+          setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
+        }
+      });
+      return;
+    }
+    setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
   };
 
   const silentRefresh = useCallback(() => {
@@ -150,8 +188,7 @@ const AuthContextProvider = ({
           if (authConfig?.test === true) {
             return;
           }
-          // Let the root route show the landing page instead of forcing /login
-          setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
+          guestFallbackRef.current();
         }
       },
       onError: (error) => {
@@ -159,8 +196,7 @@ const AuthContextProvider = ({
         if (authConfig?.test === true) {
           return;
         }
-        // Let the root route show the landing page instead of forcing /login
-        setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
+        guestFallbackRef.current();
       },
     });
   }, []);
@@ -175,11 +211,12 @@ const AuthContextProvider = ({
     if (error != null && error && isAuthenticated) {
       doSetError(undefined);
     }
-    if (token == null || !token || !isAuthenticated) {
+    if (!isGuest && (token == null || !token || !isAuthenticated)) {
       silentRefresh();
     }
   }, [
     token,
+    isGuest,
     isAuthenticated,
     userQuery.data,
     userQuery.isError,
@@ -223,9 +260,10 @@ const AuthContextProvider = ({
         [SystemRoles.ADMIN]: adminRole,
       },
       isAuthenticated,
+      isGuest,
     }),
 
-    [user, error, isAuthenticated, token, userRole, adminRole],
+    [user, error, isAuthenticated, isGuest, token, userRole, adminRole],
   );
 
   return <AuthContext.Provider value={memoedValue}>{children}</AuthContext.Provider>;
