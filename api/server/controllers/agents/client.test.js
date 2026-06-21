@@ -2257,3 +2257,124 @@ describe('AgentClient - titleConvo', () => {
     });
   });
 });
+
+describe('AgentClient - chatCompletion post-reply banner regression', () => {
+  /**
+   * Regression for the post-reply error banner:
+   * "Cannot read properties of undefined (reading 'hide_sequential_outputs')".
+   *
+   * `run.processStream` (from `@librechat/agents`) treats the passed `config` as
+   * owned and, in its post-stream cleanup, sets `config.configurable = undefined`
+   * to release heavy graph state. The controller must NOT read
+   * `config.configurable.hide_sequential_outputs` after the stream completes, or
+   * it throws and pushes an ERROR content part (the red banner). This test
+   * reproduces that mutation and asserts no ERROR part is produced.
+   */
+  const apiPkg = require('@hanzochat/api');
+  let createRunSpy;
+  let processStreamMock;
+
+  const makeClient = (agentOverrides = {}) => {
+    const agent = {
+      id: 'agent-123',
+      endpoint: EModelEndpoint.openAI,
+      provider: EModelEndpoint.openAI,
+      model_parameters: { model: 'gpt-4' },
+      ...agentOverrides,
+    };
+    const req = {
+      user: { id: 'user-123' },
+      body: {},
+      config: { endpoints: {} },
+    };
+    const client = new AgentClient({
+      req,
+      res: {},
+      agent,
+      endpoint: EModelEndpoint.openAI,
+      contentParts: [],
+      collectedUsage: [],
+      artifactPromises: [],
+      endpointTokenConfig: {},
+    });
+    client.conversationId = 'convo-123';
+    client.responseMessageId = 'response-123';
+    client.parentMessageId = '00000000-0000-0000-0000-000000000000';
+    client.user = 'user-123';
+    // Avoid DB / memory side effects.
+    client.recordCollectedUsage = jest.fn().mockResolvedValue();
+    client.runMemory = jest.fn().mockResolvedValue(undefined);
+    client.awaitMemoryWithTimeout = jest.fn().mockResolvedValue(undefined);
+    return client;
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Faithfully mimic `@librechat/agents` Run.processStream cleanup: it nulls
+    // the caller's `config.configurable` after the stream finishes.
+    processStreamMock = jest.fn(async (_inputs, config) => {
+      config.configurable = undefined;
+      return [];
+    });
+    createRunSpy = jest.spyOn(apiPkg, 'createRun').mockResolvedValue({
+      Graph: {},
+      processStream: processStreamMock,
+    });
+  });
+
+  afterEach(() => {
+    createRunSpy.mockRestore();
+  });
+
+  const errorParts = (client) =>
+    (client.getContentParts() || []).filter((p) => p && p.type === 'error');
+
+  it('does not push an error content part when processStream nulls config.configurable', async () => {
+    const client = makeClient();
+
+    await expect(
+      client.sendCompletion('hello', { abortController: new AbortController() }),
+    ).resolves.toBeDefined();
+
+    expect(processStreamMock).toHaveBeenCalledTimes(1);
+    // The config passed to processStream had configurable nulled (reproduction sanity check).
+    const passedConfig = processStreamMock.mock.calls[0][1];
+    expect(passedConfig.configurable).toBeUndefined();
+    // The fix: no banner-producing ERROR part despite the nulled configurable.
+    expect(errorParts(client)).toHaveLength(0);
+  });
+
+  it('still applies the deprecated hide_sequential_outputs filter using the pre-stream value', async () => {
+    const client = makeClient({ hide_sequential_outputs: true });
+    // Seed multiple content parts; the filter keeps only the last part plus
+    // tool_call parts. With the value captured before the stream, the filter
+    // must run even though config.configurable is undefined afterwards.
+    client.contentParts = [
+      { type: 'text', text: 'intermediate-1' },
+      { type: 'text', text: 'intermediate-2' },
+      { type: 'text', text: 'final' },
+    ];
+
+    await client.sendCompletion('hello', { abortController: new AbortController() });
+
+    expect(errorParts(client)).toHaveLength(0);
+    // hide_sequential_outputs collapses to the final part only (no tool calls present).
+    expect(client.contentParts).toEqual([{ type: 'text', text: 'final' }]);
+  });
+
+  it('leaves content parts intact when hide_sequential_outputs is falsy', async () => {
+    const client = makeClient({ hide_sequential_outputs: false });
+    client.contentParts = [
+      { type: 'text', text: 'a' },
+      { type: 'text', text: 'b' },
+    ];
+
+    await client.sendCompletion('hello', { abortController: new AbortController() });
+
+    expect(errorParts(client)).toHaveLength(0);
+    expect(client.contentParts).toEqual([
+      { type: 'text', text: 'a' },
+      { type: 'text', text: 'b' },
+    ]);
+  });
+});
