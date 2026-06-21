@@ -8,6 +8,9 @@ const {
   messageIpLimiter,
   configMiddleware,
   messageUserLimiter,
+  enforceGuestScope,
+  guestMessageLimiter,
+  requireGuestOrJwtAuth,
 } = require('~/server/middleware');
 const { saveMessage } = require('~/models');
 const openai = require('./openai');
@@ -32,6 +35,51 @@ router.use('/v1/responses', responses);
  * Mounted at /agents/v1 (full path: /api/agents/v1/chat/completions)
  */
 router.use('/v1', openai);
+
+/**
+ * Guest-capable chat completion router.
+ *
+ * Mounted before the JWT-only routes below so anonymous guests (when
+ * `ALLOW_GUEST_CHAT` is enabled) can reach ONLY the completion endpoints. Auth
+ * here accepts either a guest token or a real JWT; `enforceGuestScope` then pins
+ * guests to the free Zen endpoint/model and strips every other capability, and
+ * `guestMessageLimiter` enforces the per-IP guest quota. Every other agents route
+ * (management, CRUD, files) remains gated by the strict `requireJwtAuth` below,
+ * which rejects guest tokens.
+ */
+const RESERVED_CHAT_SUBPATHS = new Set(['stream', 'active', 'status', 'abort']);
+
+const chatRouter = express.Router();
+/**
+ * Defer reserved management subpaths (stream/active/status/abort) to the
+ * JWT-only handlers defined on the parent router. Without this guard the
+ * completion route's `POST /:endpoint` would shadow `POST /chat/abort`.
+ */
+chatRouter.use((req, res, next) => {
+  const subpath = req.path.split('/').filter(Boolean)[0];
+  if (RESERVED_CHAT_SUBPATHS.has(subpath)) {
+    return next('router');
+  }
+  return next();
+});
+chatRouter.use(requireGuestOrJwtAuth);
+chatRouter.use(checkBan);
+chatRouter.use(uaParser);
+chatRouter.use(configMiddleware);
+chatRouter.use(enforceGuestScope);
+chatRouter.use(guestMessageLimiter);
+
+if (isEnabled(LIMIT_MESSAGE_IP)) {
+  chatRouter.use(messageIpLimiter);
+}
+
+if (isEnabled(LIMIT_MESSAGE_USER)) {
+  chatRouter.use(messageUserLimiter);
+}
+
+chatRouter.use('/', chat);
+
+router.use('/chat', chatRouter);
 
 router.use(requireJwtAuth);
 router.use(checkBan);
@@ -268,19 +316,5 @@ router.post('/chat/abort', async (req, res) => {
   logger.warn(`[AgentStream] Job not found for streamId: ${jobStreamId}`);
   return res.status(404).json({ error: 'Job not found', streamId: jobStreamId });
 });
-
-const chatRouter = express.Router();
-chatRouter.use(configMiddleware);
-
-if (isEnabled(LIMIT_MESSAGE_IP)) {
-  chatRouter.use(messageIpLimiter);
-}
-
-if (isEnabled(LIMIT_MESSAGE_USER)) {
-  chatRouter.use(messageUserLimiter);
-}
-
-chatRouter.use('/', chat);
-router.use('/chat', chatRouter);
 
 module.exports = router;
