@@ -81,6 +81,19 @@ chatRouter.use('/', chat);
 
 router.use('/chat', chatRouter);
 
+/**
+ * Guest-safe active-jobs poll. Guests never own a generation job, so this
+ * returns an empty set without a DB/user lookup. Registered BEFORE the strict
+ * JWT guard below so the composer's bootstrap poll doesn't 401-loop for guests;
+ * every other agents route stays JWT-only and rejects guest tokens.
+ */
+router.get('/chat/active', requireGuestOrJwtAuth, async (req, res, next) => {
+  if (req.user?.guest === true) {
+    return res.json({ activeJobIds: [] });
+  }
+  return next();
+});
+
 router.use(requireJwtAuth);
 router.use(checkBan);
 router.use(uaParser);
