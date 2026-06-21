@@ -40,12 +40,16 @@ const { invalidateCachedTools } = require('~/server/services/Config/getCachedToo
 const { needsRefresh, getNewS3URL } = require('~/server/services/Files/S3/crud');
 const { processDeleteRequest } = require('~/server/services/Files/process');
 const { getAppConfig } = require('~/server/services/Config');
+const { buildGuestUser } = require('~/server/services/guestConfig');
 const { deleteToolCalls } = require('~/models/ToolCall');
 const { deleteUserPrompts } = require('~/models/Prompt');
 const { deleteUserAgents } = require('~/models/Agent');
 const { getLogStores } = require('~/cache');
 
 const getUserController = async (req, res) => {
+  if (req.user?.guest === true) {
+    return res.status(200).send(buildGuestUser(req.user));
+  }
   const appConfig = await getAppConfig({ role: req.user?.role });
   /** @type {IUser} */
   const userData = req.user.toObject != null ? req.user.toObject() : { ...req.user };
