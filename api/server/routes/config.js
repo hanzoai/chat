@@ -5,6 +5,7 @@ const { isEnabled, getBalanceConfig } = require('@hanzochat/api');
 const { Constants, CacheKeys, defaultSocialLogins } = require('librechat-data-provider');
 const { getLdapConfig } = require('~/server/services/Config/ldap');
 const { getAppConfig } = require('~/server/services/Config/app');
+const { getGuestConfig } = require('~/server/services/guestConfig');
 const { getProjectByName } = require('~/models/Project');
 const { getLogStores } = require('~/cache');
 
@@ -58,6 +59,8 @@ router.get('/', async function (req, res) {
       !!process.env.SAML_SESSION_SECRET;
 
     const balanceConfig = getBalanceConfig(appConfig);
+
+    const guestConfig = getGuestConfig();
 
     // Strip server-internal fields from balance config before sending to client.
     // commerce.endpoint leaks K8s service URLs; commerce.token is a bearer secret.
@@ -121,6 +124,8 @@ router.get('/', async function (req, res) {
       sharePointPickerGraphScope: process.env.SHAREPOINT_PICKER_GRAPH_SCOPE,
       sharePointPickerSharePointScope: process.env.SHAREPOINT_PICKER_SHAREPOINT_SCOPE,
       openidReuseTokens,
+      allowGuestChat: guestConfig.enabled,
+      guestMessageMax: guestConfig.enabled ? guestConfig.messageMax : undefined,
       conversationImportMaxFileSize: process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES
         ? parseInt(process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES, 10)
         : 0,
