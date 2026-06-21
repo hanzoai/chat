@@ -30,6 +30,11 @@ export enum SystemRoles {
    * The default user role
    */
   USER = 'USER',
+  /**
+   * The ephemeral guest role for unauthenticated preview chat.
+   * Guests are never persisted and are scoped to the free Zen endpoint only.
+   */
+  GUEST = 'GUEST',
 }
 
 export const roleSchema = z.object({
