@@ -136,6 +136,7 @@
     "typescript-eslint": "^8.24.0"
   },
   "overrides": {
+    "@ariakit/react": "0.4.29",
     "@anthropic-ai/sdk": "0.73.0",
     "@librechat/agents": {
       "@langchain/anthropic": {
@@ -192,6 +193,7 @@
       "unrs-resolver"
     ],
     "overrides": {
+      "@ariakit/react": "0.4.29",
       "zod-to-json-schema": "3.24.6",
       "@modelcontextprotocol/sdk": "1.22.0"
     }
