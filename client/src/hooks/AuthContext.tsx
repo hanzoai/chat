@@ -228,6 +228,21 @@ const AuthContextProvider = ({
     setUserContext,
   ]);
 
+  // Acquire a guest session once startup config confirms guest chat is enabled.
+  // silentRefresh's fallback can run before startupConfig has loaded (when
+  // `allowGuestChat` is still undefined), and it is not retried — so this effect
+  // closes that race by acquiring the guest token when the flag becomes true.
+  useEffect(() => {
+    if (
+      startupConfig?.allowGuestChat === true &&
+      !isAuthenticated &&
+      !isGuest &&
+      (token == null || !token)
+    ) {
+      void acquireGuest();
+    }
+  }, [startupConfig?.allowGuestChat, isAuthenticated, isGuest, token, acquireGuest]);
+
   useEffect(() => {
     const handleTokenUpdate = (event) => {
       console.log('tokenUpdated event received event');
