@@ -1,6 +1,7 @@
 const { logger } = require('@librechat/data-schemas');
 const { CacheKeys } = require('librechat-data-provider');
 const { loadDefaultModels, loadConfigModels } = require('~/server/services/Config');
+const { buildGuestModelsConfig } = require('~/server/services/guestConfig');
 const { getLogStores } = require('~/cache');
 
 /**
@@ -39,6 +40,9 @@ async function loadModels(req) {
 
 async function modelController(req, res) {
   try {
+    if (req.user?.guest === true) {
+      return res.send(buildGuestModelsConfig());
+    }
     const modelConfig = await loadModels(req);
     res.send(modelConfig);
   } catch (error) {
