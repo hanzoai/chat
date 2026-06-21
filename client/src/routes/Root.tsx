@@ -22,6 +22,7 @@ import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
 import LandingPage from '~/components/Landing/LandingPage';
+import GuestLimitDialog from '~/components/Auth/GuestLimitDialog';
 import ChatHanzoHeader from '~/components/Nav/HanzoHeader';
 
 export default function Root() {
@@ -32,8 +33,12 @@ export default function Root() {
     return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
   });
 
-  const { isAuthenticated, logout, token } = useAuthContext();
+  const { isAuthenticated, isGuest, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
+
+  // Guests get the chat UI without a full session. Capability-scoped hooks
+  // below stay gated on `isAuthenticated`, so guests never query agents/files/search.
+  const showChat = isAuthenticated || isGuest;
 
   // Wait for the initial silent refresh before deciding to show landing vs chat
   useEffect(() => {
@@ -86,7 +91,7 @@ export default function Root() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!showChat) {
     return <LandingPage />;
   }
 
@@ -97,6 +102,7 @@ export default function Root() {
           <AgentsMapContext.Provider value={agentsMap}>
             <PromptGroupsProvider>
               <ChatHanzoHeader />
+              {isGuest && <GuestLimitDialog />}
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
