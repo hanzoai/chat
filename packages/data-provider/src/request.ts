@@ -1,59 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * HTTP request layer for Hanzo Cloud Gateway.
+ * HTTP request layer for the Hanzo Chat (LibreChat-native) backend.
  *
- * Handles:
- * - Response unwrapping: gateway returns { status: "ok", data: X } → X
- * - Session-based auth (cookies) with fallback to Bearer token
- * - Auto-retry on session expiry via /api/get-account
- * - pk- key support for unauthenticated requests
+ * - Talks to the same-origin `/api/*` REST surface.
+ * - Auth is JWT Bearer (set via setTokenHeader) plus the httpOnly `refreshToken`
+ *   cookie; `withCredentials: true` ensures that cookie is sent so the silent
+ *   refresh against `POST /api/auth/refresh` can mint a fresh access token.
+ * - On a 401 the interceptor refreshes once and replays the original request.
+ * - pk- key support is retained for unauthenticated access (model listing, etc.).
  */
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import * as endpoints from './api-endpoints';
 import { setTokenHeader } from './headers-helpers';
 import type * as t from './types';
-
-// ---------------------------------------------------------------------------
-// Cloud Gateway response unwrapper
-// ---------------------------------------------------------------------------
-
-/**
- * The cloud gateway wraps all responses:
- *   { status: "ok", data: <payload>, data2?: <count> }
- *   { status: "error", msg: "..." }
- *
- * This interceptor unwraps successful responses to return `data` directly,
- * which is what the frontend components expect.
- */
-axios.interceptors.response.use(
-  (response) => {
-    const body = response.data;
-
-    // If the response has the gateway wrapper format, unwrap it
-    if (body && typeof body === 'object' && 'status' in body) {
-      if (body.status === 'ok') {
-        // Preserve pagination info if present
-        if (body.data2 !== undefined) {
-          response.data = body.data;
-          (response as any)._totalCount = body.data2;
-        } else {
-          response.data = body.data;
-        }
-      } else if (body.status === 'error') {
-        // Convert gateway error to rejection
-        const error = new Error(body.msg || 'Unknown error');
-        (error as any).response = response;
-        return Promise.reject(error);
-      }
-    }
-
-    return response;
-  },
-  (error) => Promise.reject(error),
-);
-
-// ---------------------------------------------------------------------------
-// Request methods
-// ---------------------------------------------------------------------------
 
 async function _get<T>(url: string, options?: AxiosRequestConfig): Promise<T> {
   const response = await axios.get(url, { withCredentials: true, ...options });
@@ -124,12 +83,8 @@ async function _patch(url: string, data?: any) {
 let isRefreshing = false;
 let failedQueue: { resolve: (value?: any) => void; reject: (reason?: any) => void }[] = [];
 
-/**
- * Refresh session by calling get-account.
- * Cloud gateway uses server-side sessions (cookies), so this just
- * validates the session is still alive and returns fresh user data.
- */
-const refreshSession = (): Promise<any> => _get(endpoints.getAccount());
+const refreshToken = (retry?: boolean): Promise<t.TRefreshTokenResponse | undefined> =>
+  _post(endpoints.refreshToken(retry));
 
 const dispatchTokenUpdatedEvent = (token: string) => {
   setTokenHeader(token);
@@ -147,7 +102,7 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
   failedQueue = [];
 };
 
-// Auto-retry on 401 (session expired)
+// Auto-retry on 401 (access token expired): refresh once, then replay.
 if (typeof window !== 'undefined') {
   axios.interceptors.response.use(
     (response) => response,
@@ -157,14 +112,11 @@ if (typeof window !== 'undefined') {
         return Promise.reject(error);
       }
 
-      // Don't retry auth endpoints
-      if (originalRequest.url?.includes('/v1/signin') === true) {
+      // Don't retry auth endpoints that legitimately 401.
+      if (originalRequest.url?.includes('/api/auth/2fa') === true) {
         return Promise.reject(error);
       }
-      if (originalRequest.url?.includes('/v1/signout') === true) {
-        return Promise.reject(error);
-      }
-      if (originalRequest.url?.includes('/v1/get-account') === true && originalRequest._retry) {
+      if (originalRequest.url?.includes('/api/auth/logout') === true) {
         return Promise.reject(error);
       }
 
@@ -186,23 +138,22 @@ if (typeof window !== 'undefined') {
         isRefreshing = true;
 
         try {
-          const accountData = await refreshSession();
+          const response = await refreshToken(
+            // Edge case: avoid a blank screen if the initial 401 is itself a refresh request.
+            originalRequest.url?.includes('api/auth/refresh') === true ? true : false,
+          );
 
-          // If session is still valid, the cookie is refreshed automatically
-          // Extract access token if present
-          const token = accountData?.accessToken ?? accountData?.AccessToken ?? '';
+          const token = response?.token ?? '';
 
           if (token) {
             originalRequest.headers['Authorization'] = 'Bearer ' + token;
             dispatchTokenUpdatedEvent(token);
             processQueue(null, token);
             return await axios(originalRequest);
-          } else if (accountData) {
-            // Session cookie is valid, just retry
-            processQueue(null, null);
-            return await axios(originalRequest);
           } else if (window.location.href.includes('share/')) {
-            console.log('Session expired on shared link, attempting request anyway');
+            console.log(
+              `Refresh token failed from shared link, attempting request to ${originalRequest.url}`,
+            );
           } else {
             window.location.href = endpoints.loginPage();
           }
@@ -244,10 +195,6 @@ export async function getWithPk<T>(url: string): Promise<T> {
   return response.data;
 }
 
-// Legacy compat: refreshToken calls refreshSession internally
-const refreshToken = (retry?: boolean): Promise<t.TRefreshTokenResponse | undefined> =>
-  refreshSession() as any;
-
 export default {
   get: _get,
   getResponse: _getResponse,
@@ -259,7 +206,6 @@ export default {
   deleteWithOptions: _deleteWithOptions,
   patch: _patch,
   refreshToken,
-  refreshSession,
   dispatchTokenUpdatedEvent,
   setPublishableKey,
   getWithPk,
