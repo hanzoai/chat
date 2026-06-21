@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { logger } = require('@librechat/data-schemas');
 const requireJwtAuth = require('./requireJwtAuth');
-const { getGuestConfig, GUEST_ROLE } = require('~/server/services/guestConfig');
+const { getGuestConfig, buildGuestPrincipal } = require('~/server/services/guestConfig');
 
 /**
  * Extracts a bearer token from the Authorization header.
@@ -51,11 +51,7 @@ const requireGuestOrJwtAuth = (req, res, next) => {
     return requireJwtAuth(req, res, next);
   }
 
-  req.user = {
-    id: payload.id,
-    role: GUEST_ROLE,
-    guest: true,
-  };
+  req.user = buildGuestPrincipal(payload.id);
   logger.debug(`[requireGuestOrJwtAuth] Guest principal authenticated: ${payload.id}`);
   return next();
 };
