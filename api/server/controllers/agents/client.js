@@ -891,9 +891,20 @@ class AgentClient extends BaseClient {
         config.signal = null;
       };
 
+      /**
+       * Capture before running the graph. `run.processStream` (via
+       * `@librechat/agents`) treats the passed `config` as owned and, during its
+       * post-stream cleanup, sets `config.configurable = undefined` to break the
+       * reference chain that keeps heavy graph state (base64 images/PDFs) alive.
+       * Reading `config.configurable.hide_sequential_outputs` AFTER `runAgents`
+       * therefore throws `Cannot read properties of undefined`, which surfaces as
+       * the post-reply error banner. Hoisting the read keeps the deprecated Agent
+       * Chain filter working without depending on post-run config state.
+       */
+      const hideSequentialOutputs = config.configurable.hide_sequential_outputs;
       await runAgents(initialMessages);
       /** @deprecated Agent Chain */
-      if (config.configurable.hide_sequential_outputs) {
+      if (hideSequentialOutputs) {
         this.contentParts = this.contentParts.filter((part, index) => {
           // Include parts that are either:
           // 1. At or after the finalContentStart index
