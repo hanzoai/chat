@@ -1244,9 +1244,9 @@ export const initialModelsConfig: TModelsConfig = {
 };
 
 export const EndpointURLs = {
-  [EModelEndpoint.assistants]: `${apiBaseUrl()}/v1/assistants/v2/chat`,
-  [EModelEndpoint.azureAssistants]: `${apiBaseUrl()}/v1/assistants/v1/chat`,
-  [EModelEndpoint.agents]: `${apiBaseUrl()}/v1/${EModelEndpoint.agents}/chat`,
+  [EModelEndpoint.assistants]: `${apiBaseUrl()}/api/assistants/v2/chat`,
+  [EModelEndpoint.azureAssistants]: `${apiBaseUrl()}/api/assistants/v1/chat`,
+  [EModelEndpoint.agents]: `${apiBaseUrl()}/api/${EModelEndpoint.agents}/chat`,
 } as const;
 
 export const modularEndpoints = new Set<EModelEndpoint | string>([
