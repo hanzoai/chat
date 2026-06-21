@@ -90,6 +90,34 @@ CREDS_KEY= CREDS_IV=        # Credential encryption
 - `uv` bundled for MCP server support
 - `dompurify` must be in `client/package.json` (externalized by bundler)
 
+## Guest Chat (anonymous preview)
+
+Off by default (`ALLOW_GUEST_CHAT=false`). When enabled, unauthenticated
+visitors get a per-IP free quota (`GUEST_MESSAGE_MAX`, default 3) on the free
+Zen model (`GUEST_MODEL`, default `zen3-nano`) via the `Hanzo` custom endpoint
+(`api.hanzo.ai`). Exhausting the quota returns `402 {type:'GUEST_LIMIT'}` and
+the client opens the existing OpenID/hanzo.id login.
+
+Security model (fail-closed, server-enforced):
+- `POST /api/auth/guest` issues a short-lived guest JWT (`{guest:true}`,
+  per-token random id) signed with `JWT_SECRET`. Rate-limited per IP.
+- `requireGuestOrJwtAuth` (chat-completion route ONLY) accepts guest tokens;
+  the standard `jwt` strategy rejects them everywhere else (no DB user), so
+  every other route stays closed. `enforceGuestScope` pins endpoint+model and
+  strips agents/tools/files/spec/preset. `guestMessageLimiter` (reuses the
+  Redis `limiterCache`) enforces the per-IP quota.
+- Key files: `api/server/services/guestConfig.js`,
+  `api/server/controllers/auth/GuestController.js`,
+  `api/server/middleware/{requireGuestOrJwtAuth,enforceGuestScope}.js`,
+  `api/server/middleware/limiters/{guestLimiters,guestMessageLimiter}.js`,
+  router wiring in `api/server/routes/agents/index.js`. Client:
+  `client/src/hooks/useGuestAuth.ts`, `AuthContext.tsx`,
+  `components/Auth/GuestLimitDialog.tsx`.
+- Env: `ALLOW_GUEST_CHAT`, `GUEST_MESSAGE_MAX`, `GUEST_ENDPOINT`, `GUEST_MODEL`,
+  `GUEST_TOKEN_EXPIRY`, `GUEST_TOKEN_MAX`, `GUEST_TOKEN_WINDOW`. Requires
+  `HANZO_API_KEY` (the free publishable gateway key) and `USE_REDIS` for the
+  shared per-IP quota across replicas.
+
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):

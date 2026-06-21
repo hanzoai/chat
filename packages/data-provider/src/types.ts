@@ -503,6 +503,14 @@ export type TRefreshTokenResponse = {
   user: TUser;
 };
 
+export type TGuestTokenResponse = {
+  token: string;
+  expiresIn: number;
+  endpoint: string;
+  model: string;
+  messageMax: number;
+};
+
 export type TCheckUserKeyResponse = {
   expiresAt: string;
 };

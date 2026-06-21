@@ -594,8 +594,18 @@ export default function useResumableSSE(
 
       console.error('[ResumableSSE] Error starting generation:', lastError);
 
-      const axiosError = lastError as { response?: { data?: Record<string, unknown> } };
+      const axiosError = lastError as {
+        response?: { status?: number; data?: Record<string, unknown> };
+      };
       const errorData = axiosError?.response?.data;
+
+      // Guest quota exhausted: signal the UI to open the login gate (existing OpenID flow).
+      if (axiosError?.response?.status === 402 && errorData?.type === 'GUEST_LIMIT') {
+        window.dispatchEvent(new CustomEvent('guestLimitReached'));
+        setIsSubmitting(false);
+        return null;
+      }
+
       if (errorData) {
         errorHandler({
           data: { text: JSON.stringify(errorData) } as unknown as Parameters<
