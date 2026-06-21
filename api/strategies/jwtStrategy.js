@@ -12,6 +12,16 @@ const jwtLogin = () =>
     },
     async (payload, done) => {
       try {
+        /**
+         * Guest tokens carry `guest: true` and a synthetic `guest_<uuid>` id that
+         * is NOT a Mongo ObjectId. Reject them cleanly here so the strict `jwt`
+         * strategy fails with a 401 instead of letting `getUserById` throw a
+         * Mongoose CastError (→ 500). Guests reach their scoped routes through
+         * `requireGuestOrJwtAuth`, never through this strategy. Fail closed.
+         */
+        if (payload?.guest === true) {
+          return done(null, false);
+        }
         const user = await getUserById(payload?.id, '-password -__v -totpSecret -backupCodes');
         if (user) {
           user.id = user._id.toString();
