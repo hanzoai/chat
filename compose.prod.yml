@@ -32,7 +32,7 @@ services:
       OPENID_SCOPE: openid profile email
       OPENID_CALLBACK_URL: /oauth/openid/callback
       OPENID_BUTTON_LABEL: Log in with Hanzo
-      OPENID_IMAGE_URL: https://hanzo.ai/logo/icon.svg
+      OPENID_IMAGE_URL: https://hanzo.chat/assets/logo.svg
       OPENID_USERNAME_CLAIM: name
       OPENID_NAME_CLAIM: name
       OPENID_USE_PKCE: "true"
