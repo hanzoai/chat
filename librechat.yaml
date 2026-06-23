@@ -94,7 +94,7 @@ endpoints:
       # Authenticated users override with their own key via IAM (hanzo.id).
       apiKey: '${HANZO_API_KEY}'
       baseURL: 'https://api.hanzo.ai/v1'
-      iconURL: 'https://hanzo.ai/logo/icon.svg'
+      iconURL: 'https://hanzo.chat/assets/logo.svg'
       models:
         default:
           # Zen model family (Hanzo AI)
