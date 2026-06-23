@@ -100,12 +100,24 @@ function Login() {
     );
   }
 
+  // Embedded IAM is only available when the static-mode VITE_* config is built in.
+  const hasEmbeddedIam = isStaticMode && iamConfig != null;
+
+  // OpenID is the working fallback whenever the embedded IAM form and the
+  // email/password form are both unavailable — guarantees a usable login path
+  // (server-proxied /oauth/openid -> hanzo.id) regardless of build-time config.
+  const showOpenIDFallback =
+    !hasEmbeddedIam &&
+    startupConfig?.emailLoginEnabled !== true &&
+    startupConfig?.openidLoginEnabled === true &&
+    startupConfig?.serverDomain != null;
+
   return (
     <>
       {error != null && <ErrorMessage>{localize(getLoginError(error))}</ErrorMessage>}
 
       {/* Embedded Hanzo IAM login — in-app form, stays on hanzo.chat. */}
-      {isStaticMode && iamConfig && (
+      {hasEmbeddedIam && iamConfig && (
         <div className="mt-4">
           <IamLogin
             serverUrl={iamConfig.serverUrl}
@@ -113,6 +125,27 @@ function Login() {
             organization={iamConfig.organization}
             redirectUri={iamConfig.redirectUri}
             state=""
+          />
+        </div>
+      )}
+
+      {/* OpenID fallback button (e.g. hanzo.id) when no in-app form is available. */}
+      {showOpenIDFallback && startupConfig && (
+        <div className="mt-4">
+          <SocialButton
+            key="openid"
+            enabled={startupConfig.openidLoginEnabled}
+            serverDomain={startupConfig.serverDomain}
+            oauthPath="openid"
+            Icon={() =>
+              startupConfig.openidImageUrl ? (
+                <img src={startupConfig.openidImageUrl} alt="OpenID Logo" className="h-5 w-5" />
+              ) : (
+                <OpenIDIcon />
+              )
+            }
+            label={startupConfig.openidLabel}
+            id="openid"
           />
         </div>
       )}
