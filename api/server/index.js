@@ -136,7 +136,7 @@ const startServer = async () => {
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat; frame-ancestors 'none';",
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://analytics.hanzo.ai https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com; frame-ancestors 'none';",
     );
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     next();
