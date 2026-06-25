@@ -1,4 +1,4 @@
-// file deepcode ignore NoRateLimitingForLogin: Rate limiting is handled by the `loginLimiter` middleware
+// file deepcode ignore NoRateLimitingForLogin: `loginLimiter` is applied per-route to the IdP-initiation GETs (not the machine-driven /callback routes, which would break the OIDC code exchange)
 const express = require('express');
 const passport = require('passport');
 const { randomState } = require('openid-client');
@@ -23,7 +23,6 @@ const domains = {
 };
 
 router.use(logHeaders);
-router.use(loginLimiter);
 
 const oauthHandler = createOAuthHandler();
 
@@ -42,6 +41,7 @@ router.get('/error', (req, res) => {
  */
 router.get(
   '/google',
+  loginLimiter,
   passport.authenticate('google', {
     scope: ['openid', 'profile', 'email'],
     session: false,
@@ -66,6 +66,7 @@ router.get(
  */
 router.get(
   '/facebook',
+  loginLimiter,
   passport.authenticate('facebook', {
     scope: ['public_profile'],
     profileFields: ['id', 'email', 'name'],
@@ -90,7 +91,7 @@ router.get(
 /**
  * OpenID Routes
  */
-router.get('/openid', (req, res, next) => {
+router.get('/openid', loginLimiter, (req, res, next) => {
   return passport.authenticate('openid', {
     session: false,
     state: randomState(),
@@ -114,6 +115,7 @@ router.get(
  */
 router.get(
   '/github',
+  loginLimiter,
   passport.authenticate('github', {
     scope: ['user:email', 'read:user'],
     session: false,
@@ -138,6 +140,7 @@ router.get(
  */
 router.get(
   '/discord',
+  loginLimiter,
   passport.authenticate('discord', {
     scope: ['identify', 'email'],
     session: false,
@@ -162,6 +165,7 @@ router.get(
  */
 router.get(
   '/apple',
+  loginLimiter,
   passport.authenticate('apple', {
     session: false,
   }),
@@ -184,6 +188,7 @@ router.post(
  */
 router.get(
   '/saml',
+  loginLimiter,
   passport.authenticate('saml', {
     session: false,
   }),
