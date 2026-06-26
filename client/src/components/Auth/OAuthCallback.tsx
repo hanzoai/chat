@@ -34,8 +34,8 @@ export default function OAuthCallback() {
       try {
         const tokens = await iamSdk.handleCallback();
 
-        if (tokens.access_token) {
-          setTokenHeader(tokens.access_token);
+        if (tokens.accessToken) {
+          setTokenHeader(tokens.accessToken);
         }
 
         navigate('/c/new', { replace: true });

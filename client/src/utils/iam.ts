@@ -5,12 +5,12 @@
  * from the Vite environment. Returns null when IAM is not configured
  * (i.e. the app is running in backend-proxied mode).
  */
-import { BrowserIamSdk } from '@hanzo/iam';
+import { IAM } from '@hanzo/iam';
 
-let instance: BrowserIamSdk | null = null;
+let instance: IAM | null = null;
 let checked = false;
 
-export function getHanzoIamSdk(): BrowserIamSdk | null {
+export function getHanzoIamSdk(): IAM | null {
   if (checked) {
     return instance;
   }
@@ -23,7 +23,7 @@ export function getHanzoIamSdk(): BrowserIamSdk | null {
     return null;
   }
 
-  instance = new BrowserIamSdk({
+  instance = new IAM({
     serverUrl,
     clientId,
     redirectUri: `${window.location.origin}/auth/callback`,
