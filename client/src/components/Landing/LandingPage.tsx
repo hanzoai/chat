@@ -13,9 +13,9 @@ const colors = {
   mutedFg: 'hsla(0, 0%, 70%, 0.85)',
   border: 'hsla(0, 0%, 40%, 0.2)',
   fg: 'hsl(0, 0%, 96%)',
-  brand: '#fd4444',
-  brandDim: 'rgba(253, 68, 68, 0.10)',
-  brandGlow: 'rgba(253, 68, 68, 0.04)',
+  brand: '#ffffff',
+  brandDim: 'rgba(255, 255, 255, 0.10)',
+  brandGlow: 'rgba(255, 255, 255, 0.06)',
   secondary: '#1f1f1f',
 } as const;
 
@@ -152,7 +152,7 @@ export default function LandingPage() {
 
   return (
     <div
-      className="min-h-screen selection:bg-[#fd4444]/30"
+      className="min-h-screen selection:bg-white/20"
       style={{
         backgroundColor: colors.bg,
         color: colors.fg,
@@ -169,7 +169,7 @@ export default function LandingPage() {
       >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2.5">
-            <HanzoLogo className="size-5 text-[#fd4444]" />
+            <HanzoLogo className="size-5 text-white" />
             <span className="text-sm font-bold tracking-tight">Hanzo Chat</span>
           </div>
           <div className="flex items-center gap-3">
@@ -199,7 +199,7 @@ export default function LandingPage() {
               href={loginHref}
               onClick={handleLoginClick}
               className="rounded-full px-5 py-2 text-sm font-medium tracking-tight transition-colors"
-              style={{ backgroundColor: colors.brand, color: '#fff' }}
+              style={{ backgroundColor: colors.brand, color: '#000' }}
               onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
               onMouseOut={(e) => (e.currentTarget.style.filter = 'none')}
             >
@@ -258,7 +258,7 @@ export default function LandingPage() {
                 href={loginHref}
                 onClick={handleLoginClick}
                 className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
-                style={{ backgroundColor: colors.brand, color: '#fff' }}
+                style={{ backgroundColor: colors.brand, color: '#000' }}
                 onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
                 onMouseOut={(e) => (e.currentTarget.style.filter = 'none')}
               >
@@ -528,7 +528,7 @@ zen4-coder: I'll help you refactor the auth module.
               href={loginHref}
               onClick={handleLoginClick}
               className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
-              style={{ backgroundColor: colors.brand, color: '#fff' }}
+              style={{ backgroundColor: colors.brand, color: '#000' }}
               onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
               onMouseOut={(e) => (e.currentTarget.style.filter = 'none')}
             >
