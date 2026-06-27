@@ -18,17 +18,18 @@
   --gray-800: #212121;
   --gray-850: #171717;
   --gray-900: #0d0d0d;
-  --green-50: #fff5f5;
-  --green-100: #ffe3e3;
-  --green-200: #ffc4c4;
-  --green-300: #ff9494;
-  --green-400: #ff6b6b;
-  --green-500: #fd4444;
-  --green-600: #e03e3e;
-  --green-700: #c53030;
-  --green-800: #9b2c2c;
-  --green-900: #742a2a;
-  --green-950: #4a1d1d;
+  /* Monochrome: legacy "green" (was brand red #fd4444) collapsed to the grey ramp. */
+  --green-50: #f7f7f8;
+  --green-100: #ececec;
+  --green-200: #e3e3e3;
+  --green-300: #cdcdcd;
+  --green-400: #999696;
+  --green-500: #595959;
+  --green-600: #424242;
+  --green-700: #2f2f2f;
+  --green-800: #212121;
+  --green-900: #0d0d0d;
+  --green-950: #0a0a0a;
   --red-50: #fef2f2;
   --red-100: #fee2e2;
   --red-200: #fecaca;
@@ -51,7 +52,7 @@
   --amber-800: #92400e;
   --amber-900: #78350f;
   --amber-950: #451a03;
-  --brand-purple: #ab68ff;
+  --brand-purple: #999696;
   --gizmo-gray-500: #999;
   --gizmo-gray-600: #666;
   --gizmo-gray-950: #0f0f0f;
@@ -63,13 +64,13 @@
   --markdown-font-size: 1rem;
 }
 html {
-  --brand-purple: #ab68ff;
+  --brand-purple: #999696;
   --presentation: var(--white);
   --text-primary: var(--gray-800);
   --text-secondary: var(--gray-600);
   --text-secondary-alt: var(--gray-500);
   --text-tertiary: var(--gray-500);
-  --text-warning: var(--amber-500);
+  --text-warning: var(--gray-400);
   --text-destructive: var(--red-600);
   --ring-primary: var(--gray-500);
   --header-primary: var(--white);
@@ -126,13 +127,13 @@ html {
   --switch-unchecked: 0 0% 58%;
 }
 .dark {
-  --brand-purple: #ab68ff;
+  --brand-purple: #999696;
   --presentation: var(--gray-800);
   --text-primary: var(--gray-100);
   --text-secondary: var(--gray-300);
   --text-secondary-alt: var(--gray-400);
   --text-tertiary: var(--gray-500);
-  --text-warning: var(--amber-500);
+  --text-warning: var(--gray-400);
   --text-destructive: var(--red-600);
   --header-primary: var(--gray-700);
   --header-hover: var(--gray-600);
@@ -1353,14 +1354,12 @@ button {
   opacity: 0.5;
 }
 .btn-primary {
-  --tw-bg-opacity: 1;
-  --tw-text-opacity: 1;
-  background-color: rgba(16, 163, 127, var(--tw-bg-opacity));
-  color: rgba(255, 255, 255, var(--tw-text-opacity));
+  /* Monochrome primary: adaptive white-on-dark / black-on-light (matches send button). */
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 .btn-primary:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgba(26, 127, 100, var(--tw-bg-opacity));
+  background-color: hsl(var(--primary) / 0.9);
 }
 .btn-primary:focus {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width)
@@ -1376,36 +1375,28 @@ button {
     var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 transparent);
 }
 .btn-primary.focus-visible {
-  --tw-ring-opacity: 1;
-  --tw-ring-color: rgba(25, 195, 125, var(--tw-ring-opacity));
+  --tw-ring-color: hsl(var(--ring));
 }
 .btn-primary:focus-visible {
-  --tw-ring-opacity: 1;
-  --tw-ring-color: rgba(25, 195, 125, var(--tw-ring-opacity));
+  --tw-ring-color: hsl(var(--ring));
 }
 .btn-primary:disabled:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgba(16, 163, 127, var(--tw-bg-opacity));
+  background-color: hsl(var(--primary));
 }
 .btn-secondary {
-  --tw-border-opacity: 1;
-  --tw-bg-opacity: 1;
   --tw-text-opacity: 1;
-  background-color: transparent;
-  background-color: rgba(16, 163, 156, var(--tw-bg-opacity));
-  color: rgba(255, 255, 255, var(--tw-text-opacity));
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
 }
 .btn-secondary:hover {
-  --tw-bg-opacity: 1;
   border-color: rgba(0, 0, 0, 0.1);
-  color: rgba(64, 65, 79, var(--tw-text-opacity));
-  background-color: rgba(236, 236, 241, var(--tw-bg-opacity));
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
 }
 .dark .btn-secondary:hover {
-  --tw-bg-opacity: 1;
-  border-color: rgba(8, 82, 78, var(--tw-border-opacity));
-  color: rgba(255, 255, 240, var(--tw-text-opacity));
-  background-color: rgba(8, 82, 78, var(--tw-bg-opacity));
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
 }
 .btn-neutral {
   --tw-bg-opacity: 1;

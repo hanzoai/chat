@@ -139,7 +139,7 @@ export default function VectorStorePreview() {
           </span>
           <div className="w-1/2 md:w-3/5">
             <p className="text-gray-500">
-              <span className="text-[#91c561]">0 KB hours</span>
+              <span className="text-text-secondary">0 KB hours</span>
               &nbsp; Free until end of 2024
             </p>
           </div>
