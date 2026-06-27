@@ -215,7 +215,7 @@ export default function LandingPage() {
           className="relative flex min-h-[600px] flex-col overflow-hidden rounded-2xl"
           style={{
             border: `1px solid ${colors.border}`,
-            background: `linear-gradient(135deg, rgba(253,68,68,0.08) 0%, transparent 50%, rgba(253,68,68,0.04) 100%)`,
+            background: `linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(255,255,255,0.04) 100%)`,
           }}
         >
           {/* Grid pattern overlay */}
@@ -232,7 +232,7 @@ export default function LandingPage() {
             <div
               className="flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium"
               style={{
-                border: `1px solid rgba(253,68,68,0.5)`,
+                border: `1px solid rgba(255,255,255,0.5)`,
                 color: colors.brand,
               }}
             >
@@ -363,8 +363,8 @@ zen4-coder: I'll help you refactor the auth module.
         <div
           className="rounded-2xl p-6 text-sm shadow-lg md:p-8"
           style={{
-            backgroundColor: 'rgba(253, 68, 68, 0.06)',
-            border: `1px solid rgba(253, 68, 68, 0.15)`,
+            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            border: `1px solid rgba(255, 255, 255, 0.15)`,
           }}
         >
           <IconBolt className="mb-4 size-8" style={{ color: colors.brand }} />
@@ -383,7 +383,7 @@ zen4-coder: I'll help you refactor the auth module.
                   border: `1px solid ${colors.border}`,
                   backgroundColor: 'rgba(0,0,0,0.2)',
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.borderColor = 'rgba(253, 68, 68, 0.3)')}
+                onMouseOver={(e) => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)')}
                 onMouseOut={(e) => (e.currentTarget.style.borderColor = colors.border)}
               >
                 <div className="mb-2 flex items-center gap-2">
@@ -480,11 +480,11 @@ zen4-coder: I'll help you refactor the auth module.
             <div
               className="rounded-xl p-6"
               style={{
-                border: `1px solid rgba(253, 68, 68, 0.3)`,
-                backgroundColor: 'rgba(253, 68, 68, 0.04)',
+                border: `1px solid rgba(255, 255, 255, 0.3)`,
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
               }}
             >
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider" style={{ color: 'rgba(253, 68, 68, 0.7)' }}>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                 Free credit
               </p>
               <p className="text-3xl font-bold">$5</p>
