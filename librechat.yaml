@@ -68,12 +68,17 @@ interface:
 registration:
   socialLogins: ['openid', 'github', 'google', 'discord']
 
-# Prepaid billing: $5 free signup credit with 30-day expiry
-# 1,000,000 tokenCredits = $1 USD, so $5 = 5,000,000 tokenCredits
-# Minimum balance of $1 (1,000,000 tokenCredits) required to send requests
+# Prepaid billing — money path. NO free local credits: startBalance is 0 so a
+# new user has no spendable balance until they claim their $5 starter credit at
+# billing.hanzo.ai (a real Commerce grant against their org). Each authenticated
+# request is billed to the user's OWN Hanzo Cloud (hk-) key against their org's
+# Commerce balance; the gate is Commerce-first and FAILS CLOSED (see
+# api/models/balanceMethods.js + packages/api/src/endpoints/custom/hanzoCloudKey.ts).
+# 1,000,000 tokenCredits = $1 USD. minBalance keeps the legacy local gate sane
+# for any non-IAM/legacy path.
 balance:
   enabled: true
-  startBalance: 5000000
+  startBalance: 0
   creditExpiryDays: 30
   minBalance: 1000000
 
