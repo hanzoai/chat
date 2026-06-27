@@ -667,6 +667,9 @@ class AgentClient extends BaseClient {
         user: this.user ?? this.options.req.user?.id,
         endpointTokenConfig: this.options.endpointTokenConfig,
         model: usage.model ?? model ?? this.model ?? this.options.agent.model_parameters.model,
+        // Thread the request so spendTokens can decrement the user's per-org
+        // Commerce balance under their IAM identity (IAM-native metering).
+        commerce: { req: this.options.req },
       };
 
       if (cache_creation > 0 || cache_read > 0) {
@@ -1199,6 +1202,7 @@ class AgentClient extends BaseClient {
           conversationId: this.conversationId,
           user: this.user ?? this.options.req.user?.id,
           endpointTokenConfig: this.options.endpointTokenConfig,
+          commerce: { req: this.options.req },
         },
         { promptTokens, completionTokens },
       );
@@ -1217,6 +1221,7 @@ class AgentClient extends BaseClient {
             conversationId: this.conversationId,
             user: this.user ?? this.options.req.user?.id,
             endpointTokenConfig: this.options.endpointTokenConfig,
+            commerce: { req: this.options.req },
           },
           { completionTokens: usage.reasoning_tokens },
         );
