@@ -1,5 +1,23 @@
 // const { fontFamily } = require('tailwindcss/defaultTheme');
 
+// Hanzo monochrome brand — every accent scale collapses to ONE neutral grey ramp.
+// Black / white / grey only; no color in the UI chrome. Destructive semantics keep a
+// single muted red via the --surface-destructive / --text-destructive CSS vars (style.css).
+const mono = {
+  50: '#f7f7f8',
+  100: '#ececec',
+  200: '#e3e3e3',
+  300: '#cdcdcd',
+  400: '#999696',
+  500: '#595959',
+  550: '#4d4d4d',
+  600: '#424242',
+  700: '#2f2f2f',
+  800: '#212121',
+  900: '#0d0d0d',
+  950: '#0a0a0a',
+};
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -72,19 +90,23 @@ module.exports = {
           850: '#171717',
           900: '#0d0d0d',
         },
-        green: {
-          50: '#fff5f5',
-          100: '#ffe3e3',
-          200: '#ffc4c4',
-          300: '#ff9494',
-          400: '#ff6b6b',
-          500: '#fd4444',
-          550: '#e03e3e',
-          600: '#c53030',
-          700: '#9b2c2c',
-          800: '#742a2a',
-          900: '#4a1d1d',
-        },
+        green: mono,
+        red: mono,
+        blue: mono,
+        sky: mono,
+        cyan: mono,
+        teal: mono,
+        emerald: mono,
+        lime: mono,
+        yellow: mono,
+        amber: mono,
+        orange: mono,
+        indigo: mono,
+        violet: mono,
+        purple: mono,
+        fuchsia: mono,
+        pink: mono,
+        rose: mono,
         'brand-purple': 'var(--brand-purple)',
         presentation: 'var(--presentation)',
         'text-primary': 'var(--text-primary)',
