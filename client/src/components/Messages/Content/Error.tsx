@@ -125,11 +125,12 @@ const errorMessages = {
       );
     }
 
-    // Commerce insufficient balance
+    // Commerce insufficient balance — new users claim the $5 starter credit,
+    // spent-out users add funds. Both live at billing.hanzo.ai.
     if (reason === 'commerce_insufficient') {
       return (
         <>
-          {'Your account balance is empty. Please add funds to continue.'}
+          {'You have no Hanzo Cloud balance. Claim your $5 starter credit (or add funds) to start chatting.'}
           <br />
           <br />
           <a
@@ -138,10 +139,16 @@ const errorMessages = {
             rel="noopener noreferrer"
             className="text-hanzo-red underline"
           >
-            Add funds to your Hanzo account
+            Claim your $5 credit at billing.hanzo.ai
           </a>
         </>
       );
+    }
+
+    // Commerce unreachable — fail closed (we block rather than bleed). The user
+    // may well be funded; do NOT tell them to add funds.
+    if (reason === 'commerce_unavailable') {
+      return 'Billing is temporarily unavailable, so we could not verify your balance. Please try again in a moment.';
     }
 
     // Convert tokenCredits to USD: 1,000,000 tokenCredits = $1 USD

@@ -13,6 +13,11 @@ import { getCustomEndpointConfig } from '~/app/config';
 import { fetchModels } from '~/endpoints/models';
 import { isUserProvided, checkUserKeyExpiry } from '~/utils';
 import { standardCache } from '~/cache';
+import {
+  isHanzoPerUserKeyEnabled,
+  resolveHanzoCloudKey,
+  type HanzoBillingUser,
+} from './hanzoCloudKey';
 
 const { PROXY } = process.env;
 
@@ -96,8 +101,29 @@ export async function initializeCustom({
     userValues = await db.getUserKeyValues({ userId: req.user?.id ?? '', name: endpoint });
   }
 
-  const apiKey = userProvidesKey ? userValues?.apiKey : CUSTOM_API_KEY;
+  let apiKey = userProvidesKey ? userValues?.apiKey : CUSTOM_API_KEY;
   const baseURL = userProvidesURL ? userValues?.baseURL : CUSTOM_BASE_URL;
+
+  // Hanzo per-user billing: an authenticated (non-guest) user's chat must be
+  // billed to THEIR OWN org via THEIR OWN hk- key — never the shared key. We
+  // resolve (mint on first chat) their key from IAM and use it here. If it
+  // cannot be resolved we FAIL CLOSED (throw) rather than silently fall back to
+  // the shared key, so an IAM hiccup can never route an authed user's spend onto
+  // the shared org. Guests (anonymous preview) keep the shared, capped key.
+  const billingUser = req.user as unknown as HanzoBillingUser | undefined;
+  const isAuthenticatedUser = Boolean(
+    billingUser && !billingUser.guest && billingUser.email,
+  );
+  if (isHanzoPerUserKeyEnabled() && isAuthenticatedUser) {
+    const perUserKey = await resolveHanzoCloudKey(billingUser);
+    if (perUserKey) {
+      apiKey = perUserKey;
+    } else {
+      throw new Error(
+        'Your Hanzo Cloud account is not linked for billing yet. Please sign out and back in, then claim your starter credit at https://billing.hanzo.ai',
+      );
+    }
+  }
 
   if (userProvidesKey && !apiKey) {
     throw new Error(
