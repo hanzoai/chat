@@ -1,188 +1,307 @@
 const { logger } = require('@librechat/data-schemas');
-const { getMultiplier } = require('~/models/tx');
 
 /**
- * CommerceClient is the IAM-native, multi-tenant transport to Hanzo Commerce
- * billing. Every call carries the LOGGED-IN USER'S hanzo.id IAM access token
- * (a real JWT) as `Authorization: Bearer <jwt>` — never a static service token.
- * Commerce's EdgeAuth validates the JWT against the IAM JWKS and derives the
- * tenant/org FROM the token (claims.owner), so reads/writes are scoped to the
- * caller's own org with no chance of cross-tenant leakage.
- *
- * The money read (`getMyBalance`) FAILS CLOSED: any failure to confirm a
- * sufficient balance throws, and the caller (BaseClient.checkBalance via
- * balanceMethods) refuses the AI call rather than serving unmetered tokens.
- *
- * Canonical commerce endpoints (all amounts in CENTS, identity from the JWT):
- *   - GET  /v1/billing/me/balance   → { balance, holds, available }
- *   - POST /v1/billing/me/welcome   → idempotent $5 starter credit (deposit)
- *   - POST /v1/billing/usage        → withdraw (decrements the org balance)
+ * CommerceClient provides a cached, fail-open interface to Hanzo Commerce
+ * billing APIs. Pattern follows cloud-api's filter_balance.go:
+ *   - 30s TTL balance/tier cache with async refresh
+ *   - Fire-and-forget usage recording queue
+ *   - All errors fail-open (local MongoDB is authoritative fallback)
  *
  * @example
- *   const client = getCommerceClient();
- *   const { available } = await client.getMyBalance(getIamToken(req), org);
+ *   const client = new CommerceClient({
+ *     endpoint: 'http://commerce.hanzo.svc:8001',
+ *     token: process.env.COMMERCE_API_TOKEN || process.env.COMMERCE_TOKEN,
+ *   });
+ *   const { sufficient } = await client.checkBalance('hanzo/alice');
  */
 class CommerceClient {
   /**
    * @param {Object} opts
-   * @param {string} opts.endpoint   - Commerce base URL (e.g. http://commerce.hanzo.svc:8001)
-   * @param {number} [opts.timeout]  - HTTP timeout in ms (default 5000)
-   * @param {number} [opts.cacheTTL] - Balance cache TTL in ms (default 10000)
+   * @param {string} opts.endpoint  - Commerce base URL (e.g. http://commerce.hanzo.svc:8001)
+   * @param {string} [opts.token]   - Bearer token for admin endpoints
+   * @param {number} [opts.timeout] - HTTP timeout in ms (default 5000)
+   * @param {number} [opts.cacheTTL] - Cache TTL in ms (default 30000)
    */
-  constructor({ endpoint, timeout = 5000, cacheTTL = 10000 }) {
+  constructor({ endpoint, token, timeout = 5000, cacheTTL = 30000 }) {
     this.endpoint = endpoint.replace(/\/+$/, '');
+    this.token = token;
     this.timeout = timeout;
     this.cacheTTL = cacheTTL;
-    /** Balance cache: orgKey -> { data, fetchedAt } (short TTL, invalidated on spend) */
+
+    // Balance cache: userId -> { data, fetchedAt, refreshing }
     this._balanceCache = new Map();
+    // Tier cache: userId -> { data, fetchedAt, refreshing }
+    this._tierCache = new Map();
+
+    // Usage recording queue
+    this._usageQueue = [];
+    this._usageFlushing = false;
+    this._usageFlushInterval = setInterval(() => this._flushUsageQueue(), 5000);
+
+    // Cache cleanup every 5 minutes
+    this._cleanupInterval = setInterval(() => this._cleanupCaches(), 300000);
   }
 
   /**
-   * Read the caller's org balance. Identity is taken ENTIRELY from the IAM JWT
-   * (commerce derives the org from claims.owner); there is no user/org query
-   * param to forge. FAILS CLOSED: throws on a missing token or any commerce
-   * error so the caller blocks the request.
+   * Check user's balance. Returns cached result if fresh, triggers async
+   * refresh if stale, synchronous fetch on cache miss. Fails open on error.
    *
-   * @param {string} token  - The user's hanzo.id IAM access token (JWT)
-   * @param {string} [orgKey] - Org slug used only as the cache key
-   * @returns {Promise<{available: number, balance: number, holds: number}>} cents
+   * @param {string} userId - Commerce user ID (e.g. "hanzo/alice")
+   * @returns {Promise<{sufficient: boolean, available: number}>}
    */
-  async getMyBalance(token, orgKey) {
-    if (!token) {
-      throw new Error('CommerceClient.getMyBalance: missing IAM token');
-    }
-    const cached = orgKey && this._balanceCache.get(orgKey);
-    if (cached && Date.now() - cached.fetchedAt < this.cacheTTL) {
+  async checkBalance(userId) {
+    const cached = this._balanceCache.get(userId);
+    const now = Date.now();
+
+    if (cached) {
+      const age = now - cached.fetchedAt;
+      if (age < this.cacheTTL) {
+        return cached.data;
+      }
+      // Stale: serve cached, refresh async
+      if (!cached.refreshing) {
+        cached.refreshing = true;
+        this._fetchBalance(userId).catch(() => {});
+      }
       return cached.data;
     }
-    const resp = await this._request('GET', '/v1/billing/me/balance?currency=usd', { token });
-    const data = {
-      available: Number(resp.available) || 0,
-      balance: Number(resp.balance) || 0,
-      holds: Number(resp.holds) || 0,
-    };
-    if (orgKey) {
-      this._balanceCache.set(orgKey, { data, fetchedAt: Date.now() });
-    }
-    return data;
+
+    // Cache miss: synchronous fetch
+    return this._fetchBalance(userId);
   }
 
   /**
-   * Grant the idempotent $5 welcome credit to the caller's org under their IAM
-   * identity. Safe to call repeatedly — commerce dedupes by the starter-credit
-   * tag and returns granted:false if it already exists. Best-effort (never
-   * throws): a failed grant must not crash login or the balance gate.
+   * Get tier configuration for a user.
    *
-   * @param {string} token - The user's hanzo.id IAM access token (JWT)
-   * @returns {Promise<Object|null>}
+   * @param {string} userId
+   * @param {string} [tierName] - Optional tier override
+   * @returns {Promise<{name: string, displayName: string, allowedModels: string[], maxAgents: number}|null>}
    */
-  async grantWelcome(token) {
-    if (!token) {
-      return null;
+  async getTierConfig(userId, tierName) {
+    const cached = this._tierCache.get(userId);
+    const now = Date.now();
+
+    if (cached) {
+      const age = now - cached.fetchedAt;
+      if (age < this.cacheTTL * 10) {
+        // Tier changes rarely, cache 5min
+        return cached.data;
+      }
+      if (!cached.refreshing) {
+        cached.refreshing = true;
+        this._fetchTier(userId, tierName).catch(() => {});
+      }
+      return cached.data;
     }
-    try {
-      const resp = await this._request('POST', '/v1/billing/me/welcome', { token });
-      this._balanceCache.clear();
-      return resp;
-    } catch (err) {
-      logger.error('[CommerceClient] welcome credit grant failed', err);
-      return null;
-    }
+
+    return this._fetchTier(userId, tierName);
   }
 
   /**
-   * Record a completed AI call as a withdraw that DECREMENTS the org balance.
-   * Awaited by spendTokens so the decrement is durable and the next pre-flight
-   * balance check sees it. Best-effort against commerce errors — the local
-   * MongoDB ledger is the redundant record, and the fail-closed pre-flight gate
-   * prevents runaway while commerce is unreachable.
+   * Check if a model is allowed for a user's tier.
    *
-   * @param {string} token
+   * @param {string} userId
+   * @param {string} model
+   * @returns {Promise<{allowed: boolean, tier: string, allowedModels: string[]}>}
+   */
+  async isModelAllowed(userId, model) {
+    const tier = await this.getTierConfig(userId);
+    if (!tier) {
+      return { allowed: true, tier: 'unknown', allowedModels: ['*'] };
+    }
+
+    const allowed =
+      tier.allowedModels.includes('*') ||
+      tier.allowedModels.some((prefix) => model.startsWith(prefix));
+
+    return { allowed, tier: tier.name, allowedModels: tier.allowedModels };
+  }
+
+  /**
+   * Enqueue usage recording (fire-and-forget). Commerce calls BurnCredits
+   * internally to burn trial grants first, then paid.
+   *
    * @param {Object} usage
-   * @param {string} usage.org             - Billing org slug (== balance key)
+   * @param {string} usage.userId
    * @param {string} usage.model
    * @param {number} usage.promptTokens
    * @param {number} usage.completionTokens
-   * @param {number} usage.amountCents      - Cost in cents (> 0)
-   * @param {string} [usage.provider]
-   * @param {string} [usage.requestId]
+   * @param {number} usage.amountCents - Cost in cents
    */
-  async recordUsage(
-    token,
-    { org, model, promptTokens, completionTokens, amountCents, provider, requestId },
-  ) {
-    if (!token || !org || !(amountCents > 0)) {
-      return;
-    }
-    await this._request('POST', '/v1/billing/usage', {
-      token,
-      body: {
-        user: org,
-        amount: Math.round(amountCents),
-        currency: 'usd',
-        model,
-        provider,
-        promptTokens: promptTokens || 0,
-        completionTokens: completionTokens || 0,
-        totalTokens: (promptTokens || 0) + (completionTokens || 0),
-        requestId,
-        status: 'completed',
-      },
+  recordUsage({ userId, model, promptTokens, completionTokens, amountCents }) {
+    this._usageQueue.push({
+      user: userId,
+      model,
+      promptTokens: promptTokens || 0,
+      completionTokens: completionTokens || 0,
+      amount: amountCents || 0,
+      currency: 'usd',
+      status: 'completed',
     });
-    // Next pre-flight read must reflect the spend immediately.
-    this._balanceCache.delete(org);
+
+    // Flush immediately if queue is large
+    if (this._usageQueue.length >= 50) {
+      this._flushUsageQueue().catch(() => {});
+    }
   }
 
   /**
-   * Credit balance breakdown (trial vs paid) for the billing UI. Best-effort.
+   * Create a trial credit grant for a new user.
    *
-   * @param {string} token
-   * @returns {Promise<{trial: {cents: number}, paid: {cents: number}, total: {cents: number}}|null>}
+   * @param {string} userId - Commerce user ID
+   * @param {number} amountCents - Grant amount in cents (e.g. 500 = $5)
+   * @param {number} expiryDays - Days until expiry
+   * @param {string[]} [eligibility] - Meter IDs (empty = all meters)
+   * @returns {Promise<Object|null>} Grant object or null on failure
    */
-  async getCreditBreakdown(token) {
-    if (!token) {
+  async createTrialGrant(userId, amountCents, expiryDays, eligibility = []) {
+    try {
+      const expiresIn = `${expiryDays * 24}h`;
+      const resp = await this._request('POST', '/v1/billing/credit-grants', {
+        userId,
+        name: 'Trial Credit',
+        amountCents,
+        currency: 'usd',
+        expiresIn,
+        priority: 100, // Trial burns before purchased (200)
+        eligibility,
+        tags: 'trial',
+      });
+      return resp;
+    } catch (err) {
+      logger.error('[CommerceClient] Failed to create trial grant', err);
       return null;
     }
+  }
+
+  /**
+   * Get credit balance breakdown by tag (trial vs purchased).
+   *
+   * @param {string} userId
+   * @returns {Promise<{trial: {cents: number, expiresAt?: string}, paid: {cents: number}, total: {cents: number}}|null>}
+   */
+  async getCreditBreakdown(userId) {
     try {
-      // userId is locked to the caller's org by commerce EdgeAuth; value is a placeholder.
-      const resp = await this._request('GET', '/v1/billing/credit-balance/breakdown?userId=me', {
-        token,
-      });
+      const resp = await this._request(
+        'GET',
+        `/v1/billing/credit-balance/breakdown?userId=${encodeURIComponent(userId)}`,
+      );
       const breakdown = resp.breakdown || {};
       return {
-        trial: breakdown['starter-credit'] || breakdown.trial || { cents: 0 },
-        paid: breakdown.purchased || breakdown.paid || { cents: 0 },
+        trial: breakdown.trial || { cents: 0 },
+        paid: breakdown.purchased || { cents: 0 },
         total: resp.total || { cents: 0 },
       };
     } catch (err) {
-      logger.warn('[CommerceClient] credit breakdown failed', { error: err.message });
+      logger.error('[CommerceClient] Failed to get credit breakdown', err);
       return null;
     }
+  }
+
+  // ── Internal methods ──
+
+  async _fetchBalance(userId) {
+    // FAIL CLOSED: this is the money gate. On error we THROW so the caller blocks
+    // the request rather than letting unfunded/unknown users spend. The cache
+    // (serve-stale on refresh) smooths transient blips for already-known users;
+    // only a cold miss + error propagates. `userId` is the billing ORG slug —
+    // we stamp it as both the `user=` selector and the X-Hanzo-Org namespace so
+    // the read is correctly scoped per-org (matches cloud-api's keying).
+    const resp = await this._request(
+      'GET',
+      `/v1/billing/balance?user=${encodeURIComponent(userId)}&currency=usd`,
+      undefined,
+      userId,
+    );
+    const data = {
+      sufficient: (resp.available || 0) > 0,
+      available: resp.available || 0,
+    };
+    this._balanceCache.set(userId, {
+      data,
+      fetchedAt: Date.now(),
+      refreshing: false,
+    });
+    return data;
+  }
+
+  async _fetchTier(userId, tierName) {
+    try {
+      let url = `/v1/billing/tier-check?user=${encodeURIComponent(userId)}`;
+      if (tierName) {
+        url += `&tier=${encodeURIComponent(tierName)}`;
+      }
+      const resp = await this._request('GET', url);
+      const tier = resp.tier || null;
+      if (tier) {
+        this._tierCache.set(userId, {
+          data: tier,
+          fetchedAt: Date.now(),
+          refreshing: false,
+        });
+      }
+      return tier;
+    } catch (err) {
+      logger.warn('[CommerceClient] Tier check failed, failing open', { userId, error: err.message });
+      return null; // Caller treats null as "allow all"
+    }
+  }
+
+  async _flushUsageQueue() {
+    if (this._usageFlushing || this._usageQueue.length === 0) {
+      return;
+    }
+
+    this._usageFlushing = true;
+    const batch = this._usageQueue.splice(0, 100);
+
+    for (const usage of batch) {
+      try {
+        await this._request('POST', '/v1/billing/usage', usage);
+      } catch (err) {
+        logger.warn('[CommerceClient] Usage recording failed', {
+          user: usage.user,
+          model: usage.model,
+          error: err.message,
+        });
+        // Don't retry — usage is also tracked locally in MongoDB
+      }
+    }
+
+    this._usageFlushing = false;
   }
 
   /**
    * @param {string} method
    * @param {string} path
-   * @param {Object} [opts]
-   * @param {string} [opts.token] - User IAM JWT for Authorization: Bearer
-   * @param {Object} [opts.body]
+   * @param {Object} [body]
    * @returns {Promise<Object>}
    */
-  async _request(method, path, { token, body } = {}) {
+  async _request(method, path, body, orgId) {
     const url = `${this.endpoint}${path}`;
     const headers = { 'Content-Type': 'application/json' };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    // Scope the service-token call to the tenant's commerce namespace so reads/
+    // writes are correctly per-org (not the service token's default namespace).
+    if (orgId) {
+      headers['X-Hanzo-Org'] = orgId;
     }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      const opts = { method, headers, signal: controller.signal };
+      const opts = {
+        method,
+        headers,
+        signal: controller.signal,
+      };
       if (body && method !== 'GET') {
         opts.body = JSON.stringify(body);
       }
+
       const resp = await fetch(url, opts);
       if (!resp.ok) {
         const text = await resp.text().catch(() => '');
@@ -193,145 +312,57 @@ class CommerceClient {
       clearTimeout(timeoutId);
     }
   }
-}
 
-/**
- * Extract the logged-in user's hanzo.id IAM access token (a JWT) from the
- * request. Populated by the OpenID JWT strategy when OPENID_REUSE_TOKENS is
- * enabled (req.user.federatedTokens). The id_token is preferred: it is always
- * a JWKS-signed JWT with the chat client_id as audience and carries the
- * `owner` (org) claim commerce keys billing on. Returns null when no IAM
- * identity is present — callers MUST treat that as "cannot confirm balance"
- * and fail closed.
- *
- * @param {import('express').Request} req
- * @returns {string|null}
- */
-function getIamToken(req) {
-  const ft = req?.user?.federatedTokens;
-  return ft?.id_token || ft?.access_token || null;
-}
+  _cleanupCaches() {
+    const now = Date.now();
+    const maxAge = this.cacheTTL * 20; // 10 minutes
 
-/**
- * The caller's billing org slug (lowercased to match commerce's org.Name key).
- * Sourced from the IAM `owner` claim persisted on the user at OIDC login.
- *
- * @param {import('express').Request} req
- * @returns {string}
- */
-function getBillingOrg(req) {
-  return (req?.user?.organization ?? '').toString().trim().toLowerCase();
-}
-
-// 1,000,000 tokenCredits = $1.00 USD = 100 cents → 10,000 credits = 1 cent.
-const CREDITS_PER_CENT = 10000;
-
-/**
- * Cost of a completed call in commerce cents, using the SAME multiplier table
- * the local ledger uses (models/tx) so commerce mirrors the local charge.
- * Rounds up so any non-zero usage decrements at least one cent.
- */
-function computeUsageCents({
-  model,
-  endpoint,
-  endpointTokenConfig,
-  promptTokens,
-  completionTokens,
-}) {
-  const p = Math.max(promptTokens || 0, 0);
-  const c = Math.max(completionTokens || 0, 0);
-  const promptMult = getMultiplier({ tokenType: 'prompt', model, endpoint, endpointTokenConfig });
-  const completionMult = getMultiplier({
-    tokenType: 'completion',
-    model,
-    endpoint,
-    endpointTokenConfig,
-  });
-  const credits = p * promptMult + c * completionMult;
-  return credits > 0 ? Math.ceil(credits / CREDITS_PER_CENT) : 0;
-}
-
-/**
- * Decrement the user's commerce balance for a completed AI call. Called from
- * spendTokens with the request so the IAM token + org are threaded per-request.
- * No-ops cleanly when commerce is unconfigured or there is no IAM identity
- * (the pre-flight gate has already fail-closed in that case).
- *
- * @param {Object} args
- * @param {import('express').Request} args.req
- * @param {string} args.model
- * @param {string} [args.endpoint]
- * @param {Object} [args.endpointTokenConfig]
- * @param {number} args.promptTokens
- * @param {number} args.completionTokens
- */
-async function recordCommerceSpend({
-  req,
-  model,
-  endpoint,
-  endpointTokenConfig,
-  promptTokens,
-  completionTokens,
-}) {
-  const client = getCommerceClient();
-  if (!client) {
-    return;
+    for (const [key, entry] of this._balanceCache) {
+      if (now - entry.fetchedAt > maxAge) {
+        this._balanceCache.delete(key);
+      }
+    }
+    for (const [key, entry] of this._tierCache) {
+      if (now - entry.fetchedAt > maxAge) {
+        this._tierCache.delete(key);
+      }
+    }
   }
-  const token = getIamToken(req);
-  const org = getBillingOrg(req);
-  if (!token || !org) {
-    return;
-  }
-  const amountCents = computeUsageCents({
-    model,
-    endpoint,
-    endpointTokenConfig,
-    promptTokens,
-    completionTokens,
-  });
-  if (amountCents <= 0) {
-    return;
-  }
-  try {
-    await client.recordUsage(token, {
-      org,
-      model,
-      promptTokens,
-      completionTokens,
-      amountCents,
-    });
-  } catch (err) {
-    logger.warn('[CommerceClient] usage decrement failed (kept in local ledger)', {
-      org,
-      error: err.message,
-    });
+
+  destroy() {
+    clearInterval(this._usageFlushInterval);
+    clearInterval(this._cleanupInterval);
+    // Flush remaining usage
+    this._flushUsageQueue().catch(() => {});
   }
 }
 
 /**
- * Singleton Commerce client. Initialized lazily from COMMERCE_API_URL.
- * Returns null when Commerce integration is not configured.
+ * Singleton Commerce client instance. Initialized lazily from env vars.
+ * Returns null if Commerce integration is not configured.
  */
 let _instance = null;
 
 function getCommerceClient() {
-  if (_instance) {
+  if (_instance !== undefined && _instance !== null) {
     return _instance;
   }
-  const endpoint = process.env.COMMERCE_API_URL || process.env.COMMERCE_ENDPOINT || '';
+
+  const endpoint =
+    process.env.COMMERCE_API_URL ||
+    process.env.COMMERCE_ENDPOINT ||
+    '';
+
   if (!endpoint) {
+    _instance = null;
     return null;
   }
-  _instance = new CommerceClient({ endpoint });
-  logger.info('[CommerceClient] Initialized (IAM-native, per-request user JWT)', { endpoint });
+
+  const token = process.env.COMMERCE_API_TOKEN || process.env.COMMERCE_TOKEN || '';
+
+  _instance = new CommerceClient({ endpoint, token });
+  logger.info('[CommerceClient] Initialized', { endpoint });
   return _instance;
 }
 
-module.exports = {
-  CommerceClient,
-  getCommerceClient,
-  getIamToken,
-  getBillingOrg,
-  computeUsageCents,
-  recordCommerceSpend,
-};
+module.exports = { CommerceClient, getCommerceClient };
