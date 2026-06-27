@@ -201,26 +201,28 @@ class CommerceClient {
   // ── Internal methods ──
 
   async _fetchBalance(userId) {
-    try {
-      const resp = await this._request(
-        'GET',
-        `/v1/billing/balance?user=${encodeURIComponent(userId)}&currency=usd`,
-      );
-      const data = {
-        sufficient: (resp.available || 0) > 0,
-        available: resp.available || 0,
-      };
-      this._balanceCache.set(userId, {
-        data,
-        fetchedAt: Date.now(),
-        refreshing: false,
-      });
-      return data;
-    } catch (err) {
-      logger.warn('[CommerceClient] Balance check failed, failing open', { userId, error: err.message });
-      // Fail open
-      return { sufficient: true, available: 0 };
-    }
+    // FAIL CLOSED: this is the money gate. On error we THROW so the caller blocks
+    // the request rather than letting unfunded/unknown users spend. The cache
+    // (serve-stale on refresh) smooths transient blips for already-known users;
+    // only a cold miss + error propagates. `userId` is the billing ORG slug —
+    // we stamp it as both the `user=` selector and the X-Hanzo-Org namespace so
+    // the read is correctly scoped per-org (matches cloud-api's keying).
+    const resp = await this._request(
+      'GET',
+      `/v1/billing/balance?user=${encodeURIComponent(userId)}&currency=usd`,
+      undefined,
+      userId,
+    );
+    const data = {
+      sufficient: (resp.available || 0) > 0,
+      available: resp.available || 0,
+    };
+    this._balanceCache.set(userId, {
+      data,
+      fetchedAt: Date.now(),
+      refreshing: false,
+    });
+    return data;
   }
 
   async _fetchTier(userId, tierName) {
@@ -275,11 +277,16 @@ class CommerceClient {
    * @param {Object} [body]
    * @returns {Promise<Object>}
    */
-  async _request(method, path, body) {
+  async _request(method, path, body, orgId) {
     const url = `${this.endpoint}${path}`;
     const headers = { 'Content-Type': 'application/json' };
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    // Scope the service-token call to the tenant's commerce namespace so reads/
+    // writes are correctly per-org (not the service token's default namespace).
+    if (orgId) {
+      headers['X-Hanzo-Org'] = orgId;
     }
 
     const controller = new AbortController();
