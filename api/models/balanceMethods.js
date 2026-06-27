@@ -4,11 +4,7 @@ const { createAutoRefillTransaction } = require('./Transaction');
 const { logViolation } = require('~/cache');
 const { getMultiplier } = require('./tx');
 const { Balance } = require('~/db/models');
-const {
-  getCommerceClient,
-  getIamToken,
-  getBillingOrg,
-} = require('~/server/services/CommerceClient');
+const { getCommerceClient } = require('~/server/services/CommerceClient');
 
 /**
  * Default minimum balance in tokenCredits.
@@ -46,6 +42,29 @@ function isInvalidDate(date) {
 }
 
 /**
+ * Check if a specific model is allowed for the user's billing tier.
+ * Fails open: if Commerce is not configured or unreachable, all models allowed.
+ *
+ * @param {string} userId - MongoDB user ID
+ * @param {string} model - Model identifier
+ * @returns {Promise<{allowed: boolean, tier: string, allowedModels: string[]}>}
+ */
+const checkModelAccess = async function (userId, model) {
+  const commerceClient = getCommerceClient();
+  if (!commerceClient) {
+    return { allowed: true, tier: 'unknown', allowedModels: ['*'] };
+  }
+
+  // Look up the Commerce user ID from the balance record
+  const record = await Balance.findOne({ user: userId }, 'commerceUserId').lean();
+  if (!record?.commerceUserId) {
+    return { allowed: true, tier: 'unknown', allowedModels: ['*'] };
+  }
+
+  return commerceClient.isModelAllowed(record.commerceUserId, model);
+};
+
+/**
  * Calculates token cost and decides whether the request may proceed.
  *
  * MONEY GATE — Commerce-first and FAIL CLOSED (this is the money path; better to
@@ -76,32 +95,13 @@ const checkBalanceRecord = async function ({
   const tokenCost = amount * multiplier;
 
   const commerceClient = getCommerceClient();
-  const token = getIamToken(req);
-  const billingOrg = getBillingOrg(req);
+  const billingOrg = (req?.user?.organization ?? '').toString().trim();
 
-  // IAM-native money gate — Commerce is authoritative and the path FAILS CLOSED.
-  // We confirm a sufficient balance against the user's OWN org (commerce derives
-  // the tenant from their IAM JWT). Anything we cannot positively confirm —
-  // missing IAM identity, commerce unreachable, balance below minimum — REFUSES
-  // the call. We never fall through to a permissive local gate here, so unmetered
-  // AI can't leak. A funded user always passes; only no-credit/unconfirmable is
-  // blocked.
-  if (commerceClient && (token || billingOrg)) {
-    // No IAM token ⇒ we cannot prove who the tenant is or read their balance.
-    // Block (clean "sign in to continue" UX) rather than serve unmetered tokens.
-    if (!token) {
-      logger.warn('[Balance.check] No IAM token on request — blocking (fail-closed)', {
-        user,
-        billingOrg,
-      });
-      return { canSpend: false, balance: 0, tokenCost, reason: 'no_billing_identity' };
-    }
-
-    const minCents = Math.max(getMinBalanceCents(), 1);
-
-    let balance;
+  // Commerce-first authoritative gate (per-org, fail closed).
+  if (commerceClient && billingOrg) {
+    let commerceBalance;
     try {
-      balance = await commerceClient.getMyBalance(token, billingOrg);
+      commerceBalance = await commerceClient.checkBalance(billingOrg);
     } catch (err) {
       logger.error('[Balance.check] Commerce unreachable — blocking (fail-closed)', {
         user,
@@ -111,44 +111,41 @@ const checkBalanceRecord = async function ({
       return { canSpend: false, balance: 0, tokenCost, reason: 'commerce_unavailable' };
     }
 
-    if ((balance.available || 0) >= minCents) {
-      // Decisive: Commerce confirms funds → allow. Do not consult local credits.
-      return { canSpend: true, balance: balance.available, tokenCost };
-    }
-
-    // Below minimum. Self-heal: grant the idempotent $5 welcome credit once and
-    // re-read. This funds brand-new accounts (and any pre-existing user who was
-    // created before this shipped) on their first message WITHOUT letting a user
-    // who already spent their credit top themselves up — commerce dedupes the
-    // grant by tag, so a returning empty wallet stays empty and stays blocked.
-    await commerceClient.grantWelcome(token);
-    try {
-      balance = await commerceClient.getMyBalance(token, billingOrg);
-    } catch (err) {
-      logger.error('[Balance.check] Commerce re-read failed after grant — blocking', {
+    const available = commerceBalance.available || 0;
+    const minCents = Math.max(getMinBalanceCents(), 1);
+    if (available < minCents) {
+      logger.debug('[Balance.check] Commerce balance insufficient', {
         user,
         billingOrg,
-        error: err.message,
+        available,
+        minCents,
       });
-      return { canSpend: false, balance: 0, tokenCost, reason: 'commerce_unavailable' };
+      return { canSpend: false, balance: available, tokenCost, reason: 'commerce_insufficient' };
     }
 
-    if ((balance.available || 0) >= minCents) {
-      return { canSpend: true, balance: balance.available, tokenCost };
+    // Tier/model access (fail-open: a tier hiccup must not block a funded user).
+    if (model) {
+      try {
+        const modelAccess = await commerceClient.isModelAllowed(billingOrg, model);
+        if (!modelAccess.allowed) {
+          return {
+            canSpend: false,
+            balance: available,
+            tokenCost,
+            reason: 'model_not_allowed',
+            tier: modelAccess.tier,
+            allowedModels: modelAccess.allowedModels,
+          };
+        }
+      } catch (err) {
+        logger.warn('[Balance.check] Tier check failed, allowing (balance ok)', {
+          error: err.message,
+        });
+      }
     }
 
-    logger.debug('[Balance.check] Commerce balance insufficient', {
-      user,
-      billingOrg,
-      available: balance.available,
-      minCents,
-    });
-    return {
-      canSpend: false,
-      balance: balance.available || 0,
-      tokenCost,
-      reason: 'commerce_insufficient',
-    };
+    // Decisive: Commerce says funded → allow. Do not consult local credits.
+    return { canSpend: true, balance: available, tokenCost };
   }
 
   // ── Legacy local-credit gate (Commerce not configured / no billing identity) ──
@@ -304,4 +301,5 @@ const checkBalance = async ({ req, res, txData }) => {
 
 module.exports = {
   checkBalance,
+  checkModelAccess,
 };
