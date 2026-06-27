@@ -94,6 +94,16 @@ const checkBalanceRecord = async function ({
   const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
   const tokenCost = amount * multiplier;
 
+  // Guests (anonymous preview) are NOT balance-gated here. Their spend is bounded
+  // two ways, neither of which is an authed user's org balance: (1) the per-IP
+  // guest message limiter (GUEST_MESSAGE_MAX, default 3) and (2) the separate,
+  // small-capped, NON-exempt guest key (HANZO_API_KEY) whose own org's Commerce
+  // balance the cloud gateway debits and 402s when empty. Running them through the
+  // Commerce/local gate (startBalance:0) would block the free tier entirely.
+  if (req?.user?.guest === true) {
+    return { canSpend: true, balance: 0, tokenCost };
+  }
+
   const commerceClient = getCommerceClient();
   const billingOrg = (req?.user?.organization ?? '').toString().trim();
 
