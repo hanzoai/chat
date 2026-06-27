@@ -22,6 +22,21 @@ function getMinBalance() {
   return 0;
 }
 
+/**
+ * Minimum balance in COMMERCE cents (commerce balances are in cents).
+ * Derived from HANZO_MIN_BALANCE (USD). Used by the commerce-first money gate.
+ */
+function getMinBalanceCents() {
+  const envVal = process.env.HANZO_MIN_BALANCE;
+  if (envVal != null && envVal !== '') {
+    const usd = parseFloat(envVal);
+    if (!isNaN(usd) && usd > 0) {
+      return Math.round(usd * 100);
+    }
+  }
+  return 0;
+}
+
 function isInvalidDate(date) {
   return isNaN(date);
 }
@@ -50,10 +65,24 @@ const checkModelAccess = async function (userId, model) {
 };
 
 /**
- * Simple check method that calculates token cost and returns balance info.
- * Integrates with Commerce balance gate when configured (fail-open).
+ * Calculates token cost and decides whether the request may proceed.
+ *
+ * MONEY GATE — Commerce-first and FAIL CLOSED (this is the money path; better to
+ * block a user than bleed). When Commerce is configured and we can identify the
+ * user's billing org (their IAM `organization`), Commerce is AUTHORITATIVE:
+ *   - sufficient org balance (>= HANZO_MIN_BALANCE) → allowed (decisive; we do
+ *     NOT fall through to the local tokenCredits gate, so startBalance:0 never
+ *     false-blocks a Commerce-funded user);
+ *   - insufficient / unreachable / no billing identity → BLOCKED.
+ * The cloud gateway separately debits the user's own hk- key against this same
+ * org, so this check is the pre-flight that yields a clean "claim credit" UX
+ * instead of a raw gateway 402.
+ *
+ * When Commerce is not configured (or no billing identity), falls back to the
+ * legacy local tokenCredits gate.
  */
 const checkBalanceRecord = async function ({
+  req,
   user,
   model,
   endpoint,
@@ -65,7 +94,61 @@ const checkBalanceRecord = async function ({
   const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
   const tokenCost = amount * multiplier;
 
-  // Retrieve the balance record
+  const commerceClient = getCommerceClient();
+  const billingOrg = (req?.user?.organization ?? '').toString().trim();
+
+  // Commerce-first authoritative gate (per-org, fail closed).
+  if (commerceClient && billingOrg) {
+    let commerceBalance;
+    try {
+      commerceBalance = await commerceClient.checkBalance(billingOrg);
+    } catch (err) {
+      logger.error('[Balance.check] Commerce unreachable — blocking (fail-closed)', {
+        user,
+        billingOrg,
+        error: err.message,
+      });
+      return { canSpend: false, balance: 0, tokenCost, reason: 'commerce_unavailable' };
+    }
+
+    const available = commerceBalance.available || 0;
+    const minCents = Math.max(getMinBalanceCents(), 1);
+    if (available < minCents) {
+      logger.debug('[Balance.check] Commerce balance insufficient', {
+        user,
+        billingOrg,
+        available,
+        minCents,
+      });
+      return { canSpend: false, balance: available, tokenCost, reason: 'commerce_insufficient' };
+    }
+
+    // Tier/model access (fail-open: a tier hiccup must not block a funded user).
+    if (model) {
+      try {
+        const modelAccess = await commerceClient.isModelAllowed(billingOrg, model);
+        if (!modelAccess.allowed) {
+          return {
+            canSpend: false,
+            balance: available,
+            tokenCost,
+            reason: 'model_not_allowed',
+            tier: modelAccess.tier,
+            allowedModels: modelAccess.allowedModels,
+          };
+        }
+      } catch (err) {
+        logger.warn('[Balance.check] Tier check failed, allowing (balance ok)', {
+          error: err.message,
+        });
+      }
+    }
+
+    // Decisive: Commerce says funded → allow. Do not consult local credits.
+    return { canSpend: true, balance: available, tokenCost };
+  }
+
+  // ── Legacy local-credit gate (Commerce not configured / no billing identity) ──
   let record = await Balance.findOne({ user }).lean();
   if (!record) {
     logger.debug('[Balance.check] No balance record found for user', { user });
@@ -74,46 +157,6 @@ const checkBalanceRecord = async function ({
       balance: 0,
       tokenCost,
     };
-  }
-
-  // Commerce balance gate: if configured, check Commerce first (fail-open)
-  const commerceClient = getCommerceClient();
-  if (commerceClient && record.commerceUserId) {
-    try {
-      const commerceBalance = await commerceClient.checkBalance(record.commerceUserId);
-      if (!commerceBalance.sufficient) {
-        logger.debug('[Balance.check] Commerce balance insufficient', {
-          user,
-          commerceUserId: record.commerceUserId,
-          available: commerceBalance.available,
-        });
-        return { canSpend: false, balance: 0, tokenCost, reason: 'commerce_insufficient' };
-      }
-
-      // Check model access via Commerce tier
-      if (model) {
-        const modelAccess = await commerceClient.isModelAllowed(record.commerceUserId, model);
-        if (!modelAccess.allowed) {
-          logger.debug('[Balance.check] Model not allowed for tier', {
-            user,
-            model,
-            tier: modelAccess.tier,
-            allowedModels: modelAccess.allowedModels,
-          });
-          return {
-            canSpend: false,
-            balance: record.tokenCredits,
-            tokenCost,
-            reason: 'model_not_allowed',
-            tier: modelAccess.tier,
-            allowedModels: modelAccess.allowedModels,
-          };
-        }
-      }
-    } catch (err) {
-      // Fail-open: Commerce error → fall through to local check
-      logger.warn('[Balance.check] Commerce check failed, falling back to local', { error: err.message });
-    }
   }
 
   let balance = record.tokenCredits;
@@ -224,7 +267,7 @@ const addIntervalToDate = (date, value, unit) => {
  * @throws {Error} Throws an error if there's an issue with the balance check.
  */
 const checkBalance = async ({ req, res, txData }) => {
-  const result = await checkBalanceRecord(txData);
+  const result = await checkBalanceRecord({ ...txData, req });
   if (result.canSpend) {
     return true;
   }
