@@ -19,6 +19,7 @@ const {
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { findUser, createUser, updateUser } = require('~/models');
 const { getAppConfig } = require('~/server/services/Config');
+const { getCommerceClient } = require('~/server/services/CommerceClient');
 const getLogStores = require('~/cache/getLogStores');
 
 /**
@@ -521,6 +522,24 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
 
     const balanceConfig = getBalanceConfig(appConfig);
     user = await createUser(user, balanceConfig, true, true);
+
+    // Fund the new account with the idempotent $5 welcome credit, under the
+    // user's OWN IAM identity, synchronously — so the credit lands BEFORE their
+    // first message and a funded new user can chat immediately. Commerce derives
+    // the org from the JWT and dedupes by the starter-credit tag. Best-effort: a
+    // commerce hiccup must never fail signup/login (the balance gate self-heals
+    // the grant on the first message as a backstop).
+    try {
+      const commerceClient = getCommerceClient();
+      if (commerceClient) {
+        const grant = await commerceClient.grantWelcome(tokenset.id_token || tokenset.access_token);
+        if (grant?.granted) {
+          logger.info(`[openidStrategy] granted $5 welcome credit to new user ${user.email}`);
+        }
+      }
+    } catch (err) {
+      logger.warn(`[openidStrategy] welcome credit grant failed (non-fatal): ${err?.message}`);
+    }
   } else {
     user.provider = 'openid';
     user.openidId = userinfo.sub;
