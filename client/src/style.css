@@ -163,24 +163,24 @@ html {
   --border-destructive: var(--red-500);
   /* Hanzo dark palette */
 
-  --background: 222 47% 5%;
+  --background: 0 0% 5%;
   --foreground: 0 0% 95%;
-  --card: 222 47% 7%;
+  --card: 0 0% 7%;
   --card-foreground: 0 0% 95%;
   --primary: 0 0% 95%;
-  --primary-foreground: 222 47% 9%;
-  --secondary: 222 30% 18%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 18%;
   --secondary-foreground: 0 0% 95%;
-  --muted: 222 30% 12%;
-  --muted-foreground: 215 16% 56%;
-  --accent: 222 30% 18%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 56%;
+  --accent: 0 0% 18%;
   --accent-foreground: 0 0% 95%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 222 30% 18%;
-  --input: 222 30% 18%;
-  --ring: 215 16% 56%;
-  --chart-1: 220 70% 50%;
+  --border: 0 0% 18%;
+  --input: 0 0% 18%;
+  --ring: 0 0% 56%;
+  --chart-1: 0 0% 50%;
   --chart-2: 160 60% 45%;
   --chart-3: 30 80% 55%;
   --chart-4: 280 65% 60%;
@@ -1710,12 +1710,12 @@ html {
   --tw-ring-inset: var(--tw-empty, /*!*/ /*!*/);
   --tw-ring-offset-width: 0px;
   --tw-ring-offset-color: #fff;
-  --tw-ring-color: #2563eb;
+  --tw-ring-color: #52525b;
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width)
     var(--tw-ring-offset-color);
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width))
     var(--tw-ring-color);
-  border-color: #2563eb;
+  border-color: #52525b;
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   outline: 2px solid transparent;
   outline-offset: 2px;
