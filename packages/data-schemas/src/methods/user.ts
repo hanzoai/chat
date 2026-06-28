@@ -105,35 +105,18 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
         $set: setFields,
       };
 
-      const balanceDoc = await Balance.findOneAndUpdate({ user: user._id }, update, {
+      await Balance.findOneAndUpdate({ user: user._id }, update, {
         upsert: true,
         new: true,
       }).lean();
 
-      // Create trial credit grant in Commerce if configured (fire-and-forget)
-      try {
-        const { getCommerceClient } = require('~/server/services/CommerceClient');
-        const commerceClient = getCommerceClient?.();
-        if (commerceClient && balanceConfig.startBalance) {
-          // Derive Commerce userId from user data (org/username or email)
-          const commerceUserId = data.username
-            ? `hanzo/${data.username}`
-            : data.email || String(user._id);
-          const amountCents = Math.round(balanceConfig.startBalance / 10000); // tokenCredits → cents
-          const expiryDays = balanceConfig.creditExpiryDays || 30;
-
-          // Store commerceUserId on the balance record
-          await Balance.findOneAndUpdate(
-            { user: user._id },
-            { $set: { commerceUserId, creditType: 'trial', tierId: 'free' } },
-          );
-
-          // Create trial grant in Commerce (async, non-blocking)
-          commerceClient.createTrialGrant(commerceUserId, amountCents, expiryDays).catch(() => {});
-        }
-      } catch {
-        // Commerce not available — local balance is sufficient
-      }
+      // NOTE: the real new-user $5 is the Commerce starter credit, granted
+      // idempotently on first chat by resolveHanzoCloudKey (→ /v1/billing/
+      // grant-starter), keyed on the user's per-user billing subject. It is NOT
+      // granted here: this createUser path does not fire for SSO/OIDC signups
+      // (which is how hanzo.chat users arrive), and the old credit-grants call
+      // wrote a separate ledger the balance gate never reads. The local
+      // tokenCredits above stay as the in-app display only.
     }
 
     if (returnUser) {
