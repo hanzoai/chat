@@ -41,6 +41,12 @@ export type HanzoBillingUser = {
   provider?: string;
   /** Guest (anonymous preview) users carry this and must NOT get a per-user key. */
   guest?: boolean;
+  /**
+   * Canonical Commerce billing subject (object.BillingSubject), stamped by
+   * resolveHanzoCloudKey from the authoritative IAM record. The balance gate
+   * reads this so it keys on the SAME account the gateway debits.
+   */
+  billingSubject?: string | null;
 };
 
 const KEY_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -87,6 +93,107 @@ export function isHanzoPerUserKeyEnabled(): boolean {
 function basicAuthHeader(): string {
   const raw = `${iamClientId()}:${iamClientSecret()}`;
   return `Basic ${Buffer.from(raw).toString('base64')}`;
+}
+
+// ── Per-user billing identity + starter credit ───────────────────────────────
+
+/**
+ * Orgs whose MEMBERS are billed per-user (default: the shared "hanzo" catch-all,
+ * the home of every unaffiliated individual signup). MUST mirror the gateway's
+ * PERSONAL_BILLING_ORGS / object.BillingSubject (hanzoai/ai) so chat and the
+ * gateway derive the identical subject.
+ */
+function personalBillingOrgs(): Set<string> {
+  const raw = (
+    process.env.HANZO_PERSONAL_BILLING_ORGS ||
+    process.env.HANZO_DEFAULT_ORG ||
+    'hanzo'
+  )
+    .split(',')
+    .map((o) => o.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set(raw.length ? raw : ['hanzo']);
+}
+
+/**
+ * Canonical Commerce billing subject for an IAM (owner, name) identity — the
+ * account the cloud gateway debits and reads. Personal-billing org → "owner/name"
+ * (per-user), pooled org → "owner". Always lowercased so it nets against the
+ * gateway's usage writes. Byte-identical to object.BillingSubject in hanzoai/ai.
+ */
+export function billingSubject(owner?: string | null, name?: string | null): string {
+  const o = (owner ?? '').toString().trim().toLowerCase();
+  if (!o) {
+    return '';
+  }
+  if (personalBillingOrgs().has(o)) {
+    const n = (name ?? '').toString().trim().toLowerCase();
+    return n ? `${o}/${n}` : o;
+  }
+  return o;
+}
+
+function commerceBaseUrl(): string {
+  return (process.env.COMMERCE_API_URL || process.env.COMMERCE_ENDPOINT || '').replace(/\/+$/, '');
+}
+
+function commerceToken(): string {
+  return process.env.COMMERCE_TOKEN || process.env.COMMERCE_API_TOKEN || '';
+}
+
+/** Subjects whose starter credit this process has already ensured (commerce is also idempotent). */
+const starterEnsured = new Set<string>();
+
+/**
+ * Ensure the new-user $5 welcome credit exists on THIS user's billing subject,
+ * exactly once. Idempotent two ways: an in-process set (avoids re-hitting
+ * commerce every key refresh) and commerce's own tag-deduped, transaction-guarded
+ * grant (`POST /v1/billing/grant-starter`) — so concurrent chats can never
+ * double-grant (no bleed).
+ *
+ * Best-effort but awaited: the credit must land on the subject BEFORE we forward
+ * the user's hk- key to the gateway, otherwise the gateway sees a $0 balance and
+ * 402s the very first chat. A commerce hiccup must NOT break key resolution,
+ * though — the gateway still enforces balance, and the next message retries.
+ */
+async function ensureStarterCredit(subject: string, owner: string): Promise<void> {
+  const base = commerceBaseUrl();
+  if (!base || !subject || starterEnsured.has(subject)) {
+    return;
+  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), IAM_TIMEOUT_MS);
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-Hanzo-Org': owner,
+    };
+    const tok = commerceToken();
+    if (tok) {
+      headers['Authorization'] = `Bearer ${tok}`;
+    }
+    const resp = await fetch(`${base}/v1/billing/grant-starter`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ user: subject, trigger: 'chat_first_use' }),
+      signal: controller.signal,
+    });
+    if (resp.ok) {
+      starterEnsured.add(subject); // ensured this process; commerce dedupes across pods
+    } else {
+      logger.warn('[hanzoCloudKey] starter-credit grant non-OK (continuing)', {
+        subject,
+        status: resp.status,
+      });
+    }
+  } catch (err) {
+    logger.warn('[hanzoCloudKey] starter-credit grant failed (continuing; gateway enforces)', {
+      subject,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /**
@@ -198,11 +305,20 @@ export async function resolveHanzoCloudKey(
     // super-org "admin" for some users, which is NOT where their hk- key bills —
     // so the downstream Commerce balance gate must use this resolved owner, not
     // the login-time value. This keeps the key and the gate on ONE org.
+    const subject = billingSubject(record.owner, record.name);
     try {
       user.organization = record.owner;
+      // Stamp the canonical billing subject so the balance gate keys on the SAME
+      // account the gateway debits (per-user for the shared "hanzo" catch-all).
+      user.billingSubject = subject;
     } catch {
       /* req.user may be a frozen/lean doc — non-fatal; gate still has gateway as backstop */
     }
+
+    // Ensure THIS user's one-time $5 welcome credit exists on THEIR subject
+    // before we hand back the key — so the gateway's first balance check sees it
+    // instead of 402-ing a brand-new account. Idempotent + best-effort.
+    await ensureStarterCredit(subject, record.owner);
 
     let key = (record.accessKey ?? '').trim();
     if (!key) {
