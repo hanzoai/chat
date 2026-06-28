@@ -139,26 +139,11 @@ export async function recordCollectedUsage(
     });
   }
 
-  // Fire usage to Commerce if configured (fire-and-forget)
-  try {
-    // Dynamic require to avoid hard dependency — CommerceClient is in the api layer
-    const { getCommerceClient } = require('~/server/services/CommerceClient');
-    const commerceClient = getCommerceClient();
-    if (commerceClient && user) {
-      // Estimate cost in cents from total tokens (rough: 1M tokenCredits = $1 = 100 cents)
-      const totalTokens = input_tokens + total_output_tokens;
-      const estimatedCents = Math.ceil(totalTokens / 10000); // 10,000 tokens ≈ 1 cent
-      commerceClient.recordUsage({
-        userId: user,
-        model: model || 'unknown',
-        promptTokens: input_tokens,
-        completionTokens: total_output_tokens,
-        amountCents: estimatedCents,
-      });
-    }
-  } catch {
-    // Commerce not available — local tracking is authoritative
-  }
+  // NOTE: Commerce is debited exactly once, by the cloud gateway (api.hanzo.ai),
+  // against the user's per-user billing subject when their hk- key is forwarded.
+  // Chat must NOT also record usage to Commerce here — that was a second debit
+  // (to a mis-keyed account) and breaks the single-debit money path. Local
+  // token accounting above remains for the in-app usage display.
 
   return {
     input_tokens,
