@@ -43,14 +43,31 @@ class CommerceClient {
   }
 
   /**
-   * Check user's balance. Returns cached result if fresh, triggers async
-   * refresh if stale, synchronous fetch on cache miss. Fails open on error.
+   * The Commerce namespace (X-Hanzo-Org) for a billing subject. The subject is
+   * object.BillingSubject(owner, name): "owner/name" (per-user) or "owner"
+   * (pooled) — so the namespace is always the part before the first "/", or the
+   * whole subject. Deriving it here keeps every read/write scoped to the right
+   * tenant without callers having to thread the org separately.
    *
-   * @param {string} userId - Commerce user ID (e.g. "hanzo/alice")
+   * @param {string} subject
+   * @returns {string}
+   */
+  _namespaceOf(subject) {
+    const s = (subject ?? '').toString();
+    const i = s.indexOf('/');
+    return i > 0 ? s.slice(0, i) : s;
+  }
+
+  /**
+   * Check a billing subject's balance. Returns cached result if fresh, triggers
+   * async refresh if stale, synchronous fetch on cache miss. Fails CLOSED (the
+   * cold-miss fetch throws) so the caller blocks rather than bleeding.
+   *
+   * @param {string} subject - Commerce billing subject (e.g. "hanzo/alice@gmail.com")
    * @returns {Promise<{sufficient: boolean, available: number}>}
    */
-  async checkBalance(userId) {
-    const cached = this._balanceCache.get(userId);
+  async checkBalance(subject) {
+    const cached = this._balanceCache.get(subject);
     const now = Date.now();
 
     if (cached) {
@@ -61,13 +78,13 @@ class CommerceClient {
       // Stale: serve cached, refresh async
       if (!cached.refreshing) {
         cached.refreshing = true;
-        this._fetchBalance(userId).catch(() => {});
+        this._fetchBalance(subject).catch(() => {});
       }
       return cached.data;
     }
 
     // Cache miss: synchronous fetch
-    return this._fetchBalance(userId);
+    return this._fetchBalance(subject);
   }
 
   /**
@@ -146,30 +163,31 @@ class CommerceClient {
   }
 
   /**
-   * Create a trial credit grant for a new user.
+   * Ensure a subject has the one-time $5 starter credit, idempotently.
    *
-   * @param {string} userId - Commerce user ID
-   * @param {number} amountCents - Grant amount in cents (e.g. 500 = $5)
-   * @param {number} expiryDays - Days until expiry
-   * @param {string[]} [eligibility] - Meter IDs (empty = all meters)
-   * @returns {Promise<Object|null>} Grant object or null on failure
+   * This posts to /v1/billing/grant-starter, which creates a real Deposit
+   * transaction (tag "starter-credit", $5, 30-day expiry) — so it nets into
+   * GET /v1/billing/balance, the account the gateway gate reads and debits.
+   * (NOT a credit-grant record: those live in a separate ledger the balance
+   * endpoint does not read, so they would never unblock the gate.)
+   *
+   * Idempotent + race-safe in Commerce (tag-deduped inside a transaction): safe
+   * to call on every first chat; duplicate/concurrent calls never double-grant.
+   *
+   * @param {string} subject - Commerce billing subject (e.g. "hanzo/alice@gmail.com")
+   * @returns {Promise<{granted: boolean}|null>} or null on failure
    */
-  async createTrialGrant(userId, amountCents, expiryDays, eligibility = []) {
+  async grantStarter(subject) {
     try {
-      const expiresIn = `${expiryDays * 24}h`;
-      const resp = await this._request('POST', '/v1/billing/credit-grants', {
-        userId,
-        name: 'Trial Credit',
-        amountCents,
-        currency: 'usd',
-        expiresIn,
-        priority: 100, // Trial burns before purchased (200)
-        eligibility,
-        tags: 'trial',
-      });
+      const resp = await this._request(
+        'POST',
+        '/v1/billing/grant-starter',
+        { user: subject, trigger: 'chat_first_use' },
+        this._namespaceOf(subject),
+      );
       return resp;
     } catch (err) {
-      logger.error('[CommerceClient] Failed to create trial grant', err);
+      logger.error('[CommerceClient] Failed to ensure starter credit', err);
       return null;
     }
   }
@@ -185,6 +203,8 @@ class CommerceClient {
       const resp = await this._request(
         'GET',
         `/v1/billing/credit-balance/breakdown?userId=${encodeURIComponent(userId)}`,
+        undefined,
+        this._namespaceOf(userId),
       );
       const breakdown = resp.breakdown || {};
       return {
@@ -200,24 +220,25 @@ class CommerceClient {
 
   // ── Internal methods ──
 
-  async _fetchBalance(userId) {
+  async _fetchBalance(subject) {
     // FAIL CLOSED: this is the money gate. On error we THROW so the caller blocks
     // the request rather than letting unfunded/unknown users spend. The cache
     // (serve-stale on refresh) smooths transient blips for already-known users;
-    // only a cold miss + error propagates. `userId` is the billing ORG slug —
-    // we stamp it as both the `user=` selector and the X-Hanzo-Org namespace so
-    // the read is correctly scoped per-org (matches cloud-api's keying).
+    // only a cold miss + error propagates. `subject` is the billing account
+    // (object.BillingSubject) used as `?user=`; the namespace (X-Hanzo-Org) is
+    // its org prefix — matching the gateway's keying so chat reads the SAME
+    // account the gateway debits.
     const resp = await this._request(
       'GET',
-      `/v1/billing/balance?user=${encodeURIComponent(userId)}&currency=usd`,
+      `/v1/billing/balance?user=${encodeURIComponent(subject)}&currency=usd`,
       undefined,
-      userId,
+      this._namespaceOf(subject),
     );
     const data = {
       sufficient: (resp.available || 0) > 0,
       available: resp.available || 0,
     };
-    this._balanceCache.set(userId, {
+    this._balanceCache.set(subject, {
       data,
       fetchedAt: Date.now(),
       refreshing: false,
@@ -231,7 +252,7 @@ class CommerceClient {
       if (tierName) {
         url += `&tier=${encodeURIComponent(tierName)}`;
       }
-      const resp = await this._request('GET', url);
+      const resp = await this._request('GET', url, undefined, this._namespaceOf(userId));
       const tier = resp.tier || null;
       if (tier) {
         this._tierCache.set(userId, {
