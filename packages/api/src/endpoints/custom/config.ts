@@ -35,6 +35,7 @@ export function loadCustomEndpointsConfig(
         iconURL,
         modelDisplayLabel,
         customParams,
+        customOrder,
       } = endpoint;
       const name = normalizeEndpointName(configName);
 
@@ -48,6 +49,14 @@ export function loadCustomEndpointsConfig(
         customParams,
         modelDisplayLabel,
         iconURL,
+        // Honor the YAML `customOrder`. orderEndpointsConfig defaults custom
+        // endpoints to order 9999 and spreads this `order` over it, so a custom
+        // endpoint can be placed ahead of built-ins. This is how the primary
+        // "Hanzo" endpoint becomes the default for a new conversation instead of
+        // the bare `agents` endpoint (which requires an explicit agent_id and
+        // otherwise 400s on the very first send). Only set when configured so
+        // unordered endpoints keep the 9999 default.
+        ...(customOrder != null ? { order: customOrder } : {}),
       };
     }
   }
