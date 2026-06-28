@@ -95,6 +95,11 @@ endpoints:
   # All models routed through api.hanzo.ai OpenAI-compatible gateway
   custom:
     - name: 'Hanzo'
+      # Primary endpoint: order ahead of the built-in `agents` endpoint (order 1)
+      # so a new conversation defaults to Hanzo (a working completion path that
+      # carries the per-user hk- key) instead of bare `agents`, which needs an
+      # explicit agent_id and 400s on the first send.
+      customOrder: 0
       # Publishable key for unauthenticated users (rate-limited).
       # Authenticated users override with their own key via IAM (hanzo.id).
       apiKey: '${HANZO_API_KEY}'
