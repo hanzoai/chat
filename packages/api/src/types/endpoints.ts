@@ -2,7 +2,9 @@ import type { ClientOptions, OpenAIClientOptions } from '@librechat/agents';
 import type { TConfig } from 'librechat-data-provider';
 import type { EndpointTokenConfig, ServerRequest } from '~/types';
 
-export type TCustomEndpointsConfig = Partial<{ [key: string]: Omit<TConfig, 'order'> }>;
+export type TCustomEndpointsConfig = Partial<{
+  [key: string]: Omit<TConfig, 'order'> & { order?: number };
+}>;
 
 /**
  * Interface for user key values retrieved from the database
