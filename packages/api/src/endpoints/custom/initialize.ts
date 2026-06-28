@@ -18,6 +18,7 @@ import {
   resolveHanzoCloudKey,
   type HanzoBillingUser,
 } from './hanzoCloudKey';
+import { wrapHanzoGatewayFetch, type GatewayFetch } from './hanzoGatewayFetch';
 
 const { PROXY } = process.env;
 
@@ -194,6 +195,20 @@ export async function initializeCustom({
   if (options != null) {
     (options as InitializeResultBase).useLegacyContent = true;
     (options as InitializeResultBase).endpointTokenConfig = endpointTokenConfig;
+  }
+
+  // The Hanzo Cloud gateway answers some failures (e.g. a premium model requested
+  // against a starter-credit-only balance) with HTTP 200 + a JSON error envelope
+  // ({status:"error", msg}) that has no `choices`. Left as-is, the OpenAI client
+  // parses the choices-less 200 to `undefined` and the agent run crashes with
+  // `Cannot read properties of undefined (reading 'role')` — no reply renders.
+  // Wrap the client fetch so that envelope becomes a clean 402 carrying the
+  // gateway's actionable message. Scoped to the Hanzo gateway; response-only, so
+  // per-user hk- billing is untouched.
+  if (options?.configOptions && /(?:^|\.)hanzo\.ai(?::|\/|$)/i.test(baseURL ?? '')) {
+    options.configOptions.fetch = wrapHanzoGatewayFetch(
+      options.configOptions.fetch as GatewayFetch | undefined,
+    );
   }
 
   const streamRate = clientOptions.streamRate as number | undefined;
