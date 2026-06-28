@@ -1,5 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { ViolationTypes } = require('librechat-data-provider');
+const { billingSubject } = require('@hanzochat/api');
 const { createAutoRefillTransaction } = require('./Transaction');
 const { logViolation } = require('~/cache');
 const { getMultiplier } = require('./tx');
@@ -106,16 +107,24 @@ const checkBalanceRecord = async function ({
 
   const commerceClient = getCommerceClient();
   const billingOrg = (req?.user?.organization ?? '').toString().trim();
+  // Per-user billing subject — prefer the one resolveHanzoCloudKey stamped from
+  // the authoritative IAM identity; otherwise derive it from organization + email
+  // (name == email for individual signups). This keys the gate on the SAME
+  // account the gateway debits (per-user for the shared "hanzo" catch-all), not
+  // the shared org balance.
+  const subject =
+    (req?.user?.billingSubject ?? '').toString().trim() ||
+    billingSubject(billingOrg, req?.user?.email);
 
-  // Commerce-first authoritative gate (per-org, fail closed).
-  if (commerceClient && billingOrg) {
+  // Commerce-first authoritative gate (per-subject, fail closed).
+  if (commerceClient && subject) {
     let commerceBalance;
     try {
-      commerceBalance = await commerceClient.checkBalance(billingOrg);
+      commerceBalance = await commerceClient.checkBalance(subject);
     } catch (err) {
       logger.error('[Balance.check] Commerce unreachable — blocking (fail-closed)', {
         user,
-        billingOrg,
+        subject,
         error: err.message,
       });
       return { canSpend: false, balance: 0, tokenCost, reason: 'commerce_unavailable' };
@@ -126,7 +135,7 @@ const checkBalanceRecord = async function ({
     if (available < minCents) {
       logger.debug('[Balance.check] Commerce balance insufficient', {
         user,
-        billingOrg,
+        subject,
         available,
         minCents,
       });
@@ -136,7 +145,7 @@ const checkBalanceRecord = async function ({
     // Tier/model access (fail-open: a tier hiccup must not block a funded user).
     if (model) {
       try {
-        const modelAccess = await commerceClient.isModelAllowed(billingOrg, model);
+        const modelAccess = await commerceClient.isModelAllowed(subject, model);
         if (!modelAccess.allowed) {
           return {
             canSpend: false,
