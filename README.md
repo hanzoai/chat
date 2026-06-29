@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="chat" width="880"></p>
+
 # Hanzo AI Chat
 
 AI-powered chat platform with enterprise features, using Hanzo's cloud API or local deployment.
