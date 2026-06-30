@@ -60,15 +60,11 @@ const canAccessAgentFromBody = (options) => {
         agentId = Constants.EPHEMERAL_AGENT_ID;
       }
 
-      if (!agentId) {
-        return res.status(400).json({
-          error: 'Bad Request',
-          message: 'agent_id is required in request body',
-        });
-      }
-
-      // Skip permission checks for ephemeral agents
-      // Real agent IDs always start with "agent_", so anything else is ephemeral
+      // A missing agent_id on the agents endpoint is an ad-hoc (ephemeral) chat,
+      // not an error: "type a message and get a reply" must work before the user
+      // has created or selected an agent. Ephemeral agents carry no per-agent ACL,
+      // so skip the permission check and fall through to plain chat. A missing id
+      // is ephemeral by the canonical predicate (isEphemeralAgentId(undefined) === true).
       if (isEphemeralAgentId(agentId)) {
         return next();
       }
