@@ -104,13 +104,15 @@ describe('canAccessAgentFromBody middleware', () => {
   });
 
   describe('primary agent checks', () => {
-    test('returns 400 when agent_id is missing on agents endpoint', async () => {
+    test('proceeds (ephemeral fallback) when agent_id is missing on agents endpoint', async () => {
+      // No agent created/selected yet → ad-hoc chat. "Type hi and get a reply"
+      // must work out of the box; a missing id is ephemeral, not a 400.
       req.body.agent_id = undefined;
       const middleware = canAccessAgentFromBody({ requiredPermission: 1 });
       await middleware(req, res, next);
 
-      expect(next).not.toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(next).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalled();
     });
 
     test('proceeds for ephemeral primary agent without addedConvo', async () => {
