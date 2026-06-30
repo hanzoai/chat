@@ -7,7 +7,10 @@ const buildOptions = (req, endpoint, parsedBody, endpointType) => {
   const agentPromise = loadAgent({
     req,
     spec,
-    agent_id: isAgentsEndpoint(endpoint) ? agent_id : Constants.EPHEMERAL_AGENT_ID,
+    // No agent selected on the agents endpoint → ad-hoc (ephemeral) chat, so the
+    // user gets a reply without first creating/selecting an agent. Mirrors the
+    // access middleware, which treats a missing id as ephemeral.
+    agent_id: isAgentsEndpoint(endpoint) && agent_id ? agent_id : Constants.EPHEMERAL_AGENT_ID,
     endpoint,
     model_parameters,
   }).catch((error) => {
