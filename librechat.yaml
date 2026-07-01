@@ -89,8 +89,35 @@ actions:
     - "api.hanzo.ai"
     - "google.com"
 
+# Web Search — Hanzo unified backend ONLY. One way, no external SaaS.
+# The web_search agent tool is a fixed provider pipeline; the only self-hosted,
+# no-external-key providers LibreChat accepts are `searxng` (search) and
+# `firecrawl` (scrape). Both point at Hanzo's own /v1/websearch surface
+# (cloud-api), which serves the SearXNG + Firecrawl contracts backed by Hanzo's
+# own metasearch + Hanzo Crawl. No reranker (provider+scraper is sufficient).
+# NEVER add Serper / Tavily / Jina / Cohere external providers here.
+webSearch:
+  searchProvider: 'searxng'
+  searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'   # -> api.hanzo.ai/v1/websearch  (Hanzo metasearch)
+  searxngApiKey: '${WEBSEARCH_API_KEY}'
+  scraperProvider: 'firecrawl'
+  firecrawlApiUrl: '${FIRECRAWL_API_URL}'         # -> api.hanzo.ai/v1/websearch  (Hanzo Crawl)
+  firecrawlApiKey: '${WEBSEARCH_API_KEY}'
+  firecrawlVersion: 'v1'                          # POSTs {firecrawlApiUrl}/v1/scrape
+
 # Model endpoints
 endpoints:
+  # Agent Builder capabilities. Both Run Code (execute_code) and Web Search
+  # (web_search) are explicitly enabled so they show as active (not 🔑-gated)
+  # once their Hanzo backends are wired: execute_code -> api.hanzo.ai/v1/exec
+  # (LIBRECHAT_CODE_*), web_search -> the webSearch block above.
+  agents:
+    capabilities:
+      - 'execute_code'
+      - 'web_search'
+      - 'file_search'
+      - 'actions'
+      - 'tools'
   # Hanzo Cloud -- primary endpoint with zen4 models
   # All models routed through api.hanzo.ai OpenAI-compatible gateway
   custom:
