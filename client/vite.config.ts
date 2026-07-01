@@ -58,7 +58,15 @@ export default defineConfig(({ command }) => ({
           'assets/maskable-icon.png',
           'manifest.webmanifest',
         ],
-        globIgnores: ['images/**/*', '**/*.map', 'index.html'],
+        // Do NOT exclude index.html: vite-plugin-pwa's default navigateFallback
+        // is 'index.html', so the generated SW binds a navigation handler via
+        // createHandlerBoundToURL('index.html'). If it isn't precached, that
+        // throws "non-precached-url: index.html", the service worker breaks, and
+        // users are stranded on a stale shell after each deploy (they see
+        // /api/* 401s until they manually clear the SW). Precaching it — with
+        // registerType:'autoUpdate' above — keeps the SPA nav fallback valid and
+        // self-updates on every release.
+        globIgnores: ['images/**/*', '**/*.map'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/oauth/, /^\/api/],
       },
