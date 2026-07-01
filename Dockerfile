@@ -42,6 +42,15 @@ RUN \
 
 COPY --chown=node:node . .
 
+# Bake the Umami analytics website id into the Vite build so the index.html
+# %VITE_ANALYTICS_SITE_ID% placeholder is substituted at build time. Vite's HTML
+# env replacement (loadEnv, envPrefix includes VITE_) picks this up from process.env.
+# Without it the tracker POSTs a literal "%VITE_ANALYTICS_SITE_ID%" as the website
+# id and analytics.hanzo.ai/api/send answers 400. Public site identifier (it appears
+# in the served HTML), safe to default here; override with --build-arg if needed.
+ARG VITE_ANALYTICS_SITE_ID=2f72b944-f1f8-4d2d-8f6c-26063bde0d1a
+ENV VITE_ANALYTICS_SITE_ID=$VITE_ANALYTICS_SITE_ID
+
 RUN \
     # React client build with configurable memory
     NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}" pnpm run frontend; \
