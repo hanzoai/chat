@@ -180,7 +180,7 @@ export default function AgentConfig() {
 
   return (
     <>
-      <div className="h-auto bg-white px-4 pt-3 dark:bg-transparent">
+      <div className="h-auto bg-white px-3 pt-3 dark:bg-transparent sm:px-4">
         {/* Avatar & Name */}
         <div className="mb-4">
           <AgentAvatar avatar={agent?.['avatar'] ?? null} />
@@ -206,7 +206,7 @@ export default function AgentConfig() {
                 />
                 <div
                   className={cn(
-                    'mt-1 w-56 text-sm text-red-500',
+                    'mt-1 w-full max-w-full break-words text-sm text-red-500',
                     errors.name ? 'visible h-auto' : 'invisible h-0',
                   )}
                   role="alert"
@@ -360,7 +360,7 @@ export default function AgentConfig() {
                   />
                 ))}
             </div>
-            <div className="mt-2 flex space-x-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:gap-2">
               {(toolsEnabled ?? false) && (
                 <button
                   type="button"

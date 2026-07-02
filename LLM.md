@@ -118,6 +118,39 @@ Security model (fail-closed, server-enforced):
   `HANZO_API_KEY` (the free publishable gateway key) and `USE_REDIS` for the
   shared per-IP quota across replicas.
 
+## Cloud Agents (canonical /v1/agents)
+
+Chat can RUN a user's canonical Hanzo Cloud agents (cloud `/v1/agents`, the ONE
+production agent registry) from the thread — alongside the LibreChat-legacy local
+agent builder, which is untouched.
+
+- Two surfaces, ONE run path: the `/agent <name> [prompt]` slash command and the
+  @mention picker (cloud agents appear as a `cloudAgent` type). Both funnel
+  through `useRunCloudAgent` → `POST /api/agents/cloud/:name/run`. The @mention /
+  `/agent` picker arms `/agent <name> ` in the composer; submit is intercepted in
+  `ChatForm` (`parseAgentCommand`) and dispatched to the run path.
+- Server proxy + auth (token never reaches the browser): the chat backend reads
+  the user's hanzo.id token from the server-side session
+  (`req.session.openidTokens.idToken`, then `accessToken`, then the httpOnly
+  cookies) and forwards it as `Authorization: Bearer` to cloud. Cloud's
+  `SanitizeIdentity` (HIP-0026) validates it and pins `X-Org-Id` from the `owner`
+  claim, so a user only ever reaches their OWN org's agents — chat never asserts
+  an org. `requireJwtAuth` gates the proxy (guests rejected); missing token →
+  honest 401, never a service-token fallback (fail-secure). Agent name is
+  validated against cloud's handle grammar (traversal/SSRF guard); it is NOT an
+  open proxy (three fixed endpoints).
+- Key files: backend `api/server/services/CloudAgentsClient.js`,
+  `api/server/routes/agents/cloud.js` (mounted `/cloud` in
+  `api/server/routes/agents/index.js`); data layer
+  `packages/data-provider/src/{types/cloudAgents.ts,api-endpoints.ts,data-service.ts}`;
+  client `client/src/hooks/Agents/useRunCloudAgent.ts`,
+  `client/src/utils/agentCommand.ts`,
+  `client/src/components/Chat/Input/AgentsCommand.tsx`, and the @mention wiring in
+  `client/src/hooks/Input/useMentions.ts` + `Mention.tsx`.
+- Env: `HANZO_CLOUD_URL` (optional; falls back to the `OPENAI_BASE_URL` host).
+- Convergence path (later): chat's LibreChat-legacy `/api/agents` CRUD should
+  converge onto cloud `/v1/agents`; this step only ADDS cloud-agent RUN.
+
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
