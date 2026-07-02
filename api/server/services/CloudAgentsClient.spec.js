@@ -12,6 +12,8 @@ const {
   getCloudAgentsClient,
   _resetCloudAgentsClient,
   AGENT_NAME_RE,
+  MAX_INPUT,
+  MAX_RESPONSE,
 } = require('./CloudAgentsClient');
 
 /**
@@ -121,6 +123,80 @@ describe('CloudAgentsClient', () => {
         status: 502,
         body: { status: 'error', error: 'model down' },
       });
+    });
+  });
+
+  describe('input byte cap', () => {
+    it('rejects on UTF-8 BYTE length, not UTF-16 units (multibyte bypass)', async () => {
+      const fetch = mockFetch();
+      global.fetch = fetch;
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai' });
+      // Half MAX_INPUT in .length, but 3 bytes/char in UTF-8 => 1.5x MAX_INPUT bytes.
+      const multibyte = '你'.repeat(MAX_INPUT / 2);
+      expect(multibyte.length).toBeLessThan(MAX_INPUT); // would pass a naive .length check
+      expect(Buffer.byteLength(multibyte, 'utf8')).toBeGreaterThan(MAX_INPUT);
+      await expect(client.run(BEARER, 'researcher', multibyte)).rejects.toMatchObject({
+        status: 400,
+      });
+      expect(fetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('response size cap (availability)', () => {
+    it('rejects a declared-oversize body up front via Content-Length (502)', async () => {
+      global.fetch = jest.fn(
+        async () =>
+          new Response('ok', {
+            status: 200,
+            headers: { 'content-length': String(MAX_RESPONSE + 1) },
+          }),
+      );
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai' });
+      await expect(client.list(BEARER)).rejects.toMatchObject({ status: 502 });
+    });
+
+    it('aborts a chunked stream once it exceeds the cap (502)', async () => {
+      const oversize = new Uint8Array(MAX_RESPONSE + 16);
+      global.fetch = jest.fn(async () => {
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(oversize);
+            controller.close();
+          },
+        });
+        return new Response(stream, { status: 200 }); // chunked: no content-length
+      });
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai' });
+      await expect(client.list(BEARER)).rejects.toMatchObject({ status: 502 });
+    });
+
+    it('reads a normal small streamed body', async () => {
+      global.fetch = jest.fn(
+        async () => new Response(JSON.stringify({ agents: [] }), { status: 200 }),
+      );
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai' });
+      await expect(client.list(BEARER)).resolves.toEqual({ agents: [] });
+    });
+  });
+
+  describe('concurrency cap (load shedding)', () => {
+    it('sheds load with 503 once the in-flight ceiling is reached, before any fetch', async () => {
+      const fetch = mockFetch({ body: { agents: [] } });
+      global.fetch = fetch;
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai', maxConcurrent: 2 });
+      client._inFlight = 2; // simulate the ceiling being saturated
+      await expect(client.list(BEARER)).rejects.toMatchObject({ status: 503 });
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('decrements in-flight after a call completes (no leak)', async () => {
+      const fetch = mockFetch({ body: { agents: [] } });
+      global.fetch = fetch;
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai', maxConcurrent: 1 });
+      await client.list(BEARER);
+      expect(client._inFlight).toBe(0);
+      await client.list(BEARER); // ceiling of 1 is reusable across sequential calls
+      expect(client._inFlight).toBe(0);
     });
   });
 
