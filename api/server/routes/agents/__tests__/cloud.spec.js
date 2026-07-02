@@ -9,6 +9,9 @@ jest.mock('~/server/middleware', () => ({
     req.user = { id: 'user_1' };
     next();
   },
+  // Rate limiter is exercised in its own layer; here it is a pass-through so the
+  // proxy logic (token resolution, honest errors, name guard) is under test.
+  cloudAgentLimiter: (_req, _res, next) => next(),
 }));
 
 const mockClient = {
@@ -29,13 +32,18 @@ const cloudRouter = require('../cloud');
 
 /**
  * Build an app whose session carries (or omits) the OpenID tokens the proxy
- * forwards to cloud.
+ * forwards to cloud. `cookie` defaults to an OpenID login (`token_provider=openid`)
+ * — the signal the proxy requires before forwarding any OpenID token — and can be
+ * overridden to model a local-JWT user whose browser still holds a stale session.
  */
-function buildApp(session) {
+function buildApp(session, cookie = 'token_provider=openid') {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
     req.session = session;
+    if (cookie != null && req.headers.cookie == null) {
+      req.headers.cookie = cookie;
+    }
     next();
   });
   app.use('/api/agents/cloud', cloudRouter);
@@ -70,6 +78,32 @@ describe('cloud agents proxy route', () => {
       const app = buildApp({ openidTokens: { accessToken: 'ONLY_ACC' } });
       await request(app).get('/api/agents/cloud');
       expect(mockClient.list).toHaveBeenCalledWith('ONLY_ACC');
+    });
+
+    it('reads the httpOnly openid_id_token cookie when the session is empty', async () => {
+      mockClient.list.mockResolvedValue({ agents: [] });
+      const app = buildApp({}, 'token_provider=openid; openid_id_token=COOKIE.ID.TOK');
+      await request(app).get('/api/agents/cloud');
+      expect(mockClient.list).toHaveBeenCalledWith('COOKIE.ID.TOK');
+    });
+  });
+
+  describe('principal guard (no confused deputy)', () => {
+    it('401s and forwards nothing when the request is NOT an openid login, even with a stale openid session', async () => {
+      // Local-JWT user (token_provider != openid) whose browser still holds a
+      // valid prior openid session. Forwarding those tokens would run as the wrong
+      // principal — deny instead.
+      const app = buildApp(withToken, 'token_provider=email');
+      const res = await request(app).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
+    });
+
+    it('401s when there is no token_provider cookie at all', async () => {
+      const app = buildApp(withToken, '');
+      const res = await request(app).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
     });
   });
 

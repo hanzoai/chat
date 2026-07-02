@@ -35,16 +35,34 @@ const AGENT_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** Matches cloud's maxInput (128 KiB) so oversized input fails fast, locally. */
 const MAX_INPUT = 128 * 1024;
 
+/**
+ * Cap the upstream body we buffer. A run's output is bounded; refusing a runaway
+ * or malformed response keeps one request from pinning the shared backend's
+ * memory. Availability defense — the proxy is otherwise unbounded by size.
+ */
+const MAX_RESPONSE = 4 * 1024 * 1024;
+
+/**
+ * Process-wide ceiling on concurrent in-flight calls to cloud. Each call holds a
+ * socket + timer for up to `timeout` ms; without a cap, a burst (many users, or
+ * one user within the per-user rate window) could saturate the shared backend.
+ * Fail fast (503) past the ceiling rather than queue and hold resources.
+ */
+const MAX_CONCURRENT = Number(process.env.CLOUD_AGENT_MAX_CONCURRENT) || 50;
+
 class CloudAgentsClient {
   /**
    * @param {Object} opts
    * @param {string} opts.endpoint  - Cloud base URL (e.g. https://api.hanzo.ai)
    * @param {number} [opts.timeout] - HTTP timeout in ms (default 30000; a run is
    *   a real chat completion so it needs more headroom than a metadata read)
+   * @param {number} [opts.maxConcurrent] - process-wide in-flight ceiling
    */
-  constructor({ endpoint, timeout = 30000 }) {
+  constructor({ endpoint, timeout = 30000, maxConcurrent = MAX_CONCURRENT }) {
     this.endpoint = endpoint.replace(/\/+$/, '');
     this.timeout = timeout;
+    this.maxConcurrent = maxConcurrent;
+    this._inFlight = 0;
   }
 
   /**
@@ -95,7 +113,9 @@ class CloudAgentsClient {
   async run(bearer, name, input) {
     const n = CloudAgentsClient.requireValidName(name);
     const body = (input ?? '').toString();
-    if (body.length > MAX_INPUT) {
+    // Byte length, not UTF-16 units — matches cloud's byte-based maxInput exactly
+    // (a multibyte string can be ~3x its .length in UTF-8).
+    if (Buffer.byteLength(body, 'utf8') > MAX_INPUT) {
       const err = new Error('input too large');
       err.status = 400;
       throw err;
@@ -121,6 +141,14 @@ class CloudAgentsClient {
       throw err;
     }
 
+    if (this._inFlight >= this.maxConcurrent) {
+      // Shed load: the shared backend is saturated with upstream calls. Refusing
+      // here protects every other tenant — availability over this one request.
+      const err = new Error('cloud agents temporarily saturated');
+      err.status = 503;
+      throw err;
+    }
+
     const url = `${this.endpoint}${path}`;
     const headers = {
       'Content-Type': 'application/json',
@@ -129,6 +157,7 @@ class CloudAgentsClient {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    this._inFlight += 1;
 
     try {
       const opts = { method, headers, signal: controller.signal };
@@ -137,7 +166,7 @@ class CloudAgentsClient {
       }
 
       const resp = await fetch(url, opts);
-      const text = await resp.text().catch(() => '');
+      const text = await this._readCapped(resp, controller);
       let json;
       try {
         json = text ? JSON.parse(text) : {};
@@ -156,7 +185,53 @@ class CloudAgentsClient {
       return json;
     } finally {
       clearTimeout(timeoutId);
+      this._inFlight -= 1;
     }
+  }
+
+  /**
+   * Read the response body but never buffer more than MAX_RESPONSE bytes. Rejects
+   * a declared-oversize body up front (Content-Length) and aborts a chunked
+   * stream the instant it exceeds the cap, so a runaway upstream cannot exhaust
+   * memory. Falls back to `.text()` when the runtime/mocks expose no stream body.
+   * @param {Response} resp
+   * @param {AbortController} controller
+   * @returns {Promise<string>}
+   */
+  async _readCapped(resp, controller) {
+    const declared = Number(resp.headers?.get?.('content-length'));
+    if (Number.isFinite(declared) && declared > MAX_RESPONSE) {
+      controller.abort();
+      const err = new Error('cloud response too large');
+      err.status = 502;
+      throw err;
+    }
+
+    const reader = resp.body?.getReader?.();
+    if (!reader) {
+      return resp.text().catch(() => '');
+    }
+
+    const decoder = new TextDecoder();
+    let out = '';
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      total += value.byteLength;
+      if (total > MAX_RESPONSE) {
+        await reader.cancel();
+        controller.abort();
+        const err = new Error('cloud response too large');
+        err.status = 502;
+        throw err;
+      }
+      out += decoder.decode(value, { stream: true });
+    }
+    out += decoder.decode();
+    return out;
   }
 }
 
@@ -202,4 +277,6 @@ module.exports = {
   _resetCloudAgentsClient,
   AGENT_NAME_RE,
   MAX_INPUT,
+  MAX_RESPONSE,
+  MAX_CONCURRENT,
 };
