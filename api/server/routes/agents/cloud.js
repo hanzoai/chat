@@ -1,7 +1,7 @@
 const cookies = require('cookie');
 const express = require('express');
 const { logger } = require('@librechat/data-schemas');
-const { requireJwtAuth } = require('~/server/middleware');
+const { requireJwtAuth, cloudAgentLimiter } = require('~/server/middleware');
 const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/CloudAgentsClient');
 
 /**
@@ -28,24 +28,44 @@ const router = express.Router();
  * null when the user did not authenticate via hanzo.id (e.g. a local JWT user),
  * so the route can fail with an honest 401 rather than a wrong-principal call.
  *
+ * Principal guard: only forward the OpenID tokens when THIS request actually
+ * authenticated via OpenID (`token_provider === 'openid'` — the exact signal
+ * requireJwtAuth uses to pick the openid strategy). A local-JWT user whose
+ * browser still holds a stale, non-expired OpenID session would otherwise run as
+ * that prior identity (confused deputy); denying keeps the forwarded principal
+ * identical to req.user.
+ *
  * @param {import('express').Request} req
  * @returns {string|null}
  */
 function getUserCloudBearer(req) {
+  const parsed = req.headers.cookie ? cookies.parse(req.headers.cookie) : {};
+  if (parsed.token_provider !== 'openid') {
+    return null;
+  }
+
   const session = req.session?.openidTokens;
   let idToken = session?.idToken;
   let accessToken = session?.accessToken;
 
-  if (!idToken && !accessToken && req.headers.cookie) {
-    const parsed = cookies.parse(req.headers.cookie);
-    idToken = idToken || parsed.openid_id_token;
-    accessToken = accessToken || parsed.openid_access_token;
+  if (!idToken && !accessToken) {
+    idToken = parsed.openid_id_token;
+    accessToken = parsed.openid_access_token;
   }
 
   return idToken || accessToken || null;
 }
 
 router.use(requireJwtAuth);
+
+/**
+ * Per-user rate limit. A run is a real, billable cloud completion holding an
+ * upstream socket; without this it escapes the throttle that guards the sibling
+ * chat-completion path. Applies to every cloud route (list/get/run) so no proxy
+ * op can be looped to degrade the shared backend. Runs after requireJwtAuth so
+ * the limiter keys on a real user id.
+ */
+router.use(cloudAgentLimiter);
 
 /**
  * Validate the :name path segment at the HTTP boundary — the same cloud handle
