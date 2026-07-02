@@ -18,6 +18,8 @@ const mockClient = {
 };
 jest.mock('~/server/services/CloudAgentsClient', () => ({
   getCloudAgentsClient: jest.fn(() => mockClient),
+  // Boundary name validation in the route uses the real grammar.
+  AGENT_NAME_RE: /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/,
 }));
 
 const express = require('express');
@@ -108,9 +110,38 @@ describe('cloud agents proxy route', () => {
       const err = Object.assign(new Error('invalid agent name'), { status: 400 });
       mockClient.run.mockRejectedValue(err);
       const res = await request(buildApp(withToken))
-        .post('/api/agents/cloud/..%2Fetc/run')
+        .post('/api/agents/cloud/researcher/run')
         .send({ input: 'x' });
+      // simulate the client rejecting after the boundary let a valid name through
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('boundary name validation (traversal / injection guard)', () => {
+    // Each decodes (per Express) to a value outside cloud's handle grammar; the
+    // route must reject at the boundary BEFORE constructing any client call.
+    const smuggles = [
+      '..%2Fetc', // -> ../etc
+      '%2e%2e%2fadmin', // -> ../admin
+      '..%5Cevil', // -> ..\evil
+      'a%00b', // -> null byte
+      'a%0dHost', // -> CR injection
+      'a%20b', // -> space
+    ];
+    for (const name of smuggles) {
+      it(`rejects "${name}" with 400 and never calls the client`, async () => {
+        const res = await request(buildApp(withToken))
+          .post(`/api/agents/cloud/${name}/run`)
+          .send({ input: 'x' });
+        expect(res.status).toBe(400);
+        expect(mockClient.run).not.toHaveBeenCalled();
+      });
+    }
+
+    it('rejects a bad name on GET /:name too', async () => {
+      const res = await request(buildApp(withToken)).get('/api/agents/cloud/..%2Fetc');
+      expect(res.status).toBe(400);
+      expect(mockClient.get).not.toHaveBeenCalled();
     });
   });
 });
