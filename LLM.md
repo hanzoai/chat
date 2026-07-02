@@ -138,7 +138,14 @@ agent builder, which is untouched.
   an org. `requireJwtAuth` gates the proxy (guests rejected); missing token →
   honest 401, never a service-token fallback (fail-secure). Agent name is
   validated against cloud's handle grammar (traversal/SSRF guard); it is NOT an
-  open proxy (three fixed endpoints).
+  open proxy (three fixed endpoints). Principal guard: OpenID tokens are only
+  forwarded when the request itself is an OpenID login (`token_provider==='openid'`),
+  so a local-JWT user with a stale OpenID session can't run as that prior identity.
+- Abuse limits (a run is a real billable completion): a per-user rate limiter
+  (`cloudAgentLimiter`, `CLOUD_AGENT_USER_MAX`/`CLOUD_AGENT_WINDOW`) guards the
+  whole `/cloud` router; the client caps input by UTF-8 **bytes** (128 KiB), caps
+  the buffered response (4 MiB → 502), and sheds load past a process-wide in-flight
+  ceiling (`CLOUD_AGENT_MAX_CONCURRENT`, 503).
 - Key files: backend `api/server/services/CloudAgentsClient.js`,
   `api/server/routes/agents/cloud.js` (mounted `/cloud` in
   `api/server/routes/agents/index.js`); data layer
