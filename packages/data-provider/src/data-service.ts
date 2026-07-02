@@ -3,6 +3,7 @@ import type * as t from './types';
 import * as endpoints from './api-endpoints';
 import * as a from './types/assistants';
 import * as ag from './types/agents';
+import * as ca from './types/cloudAgents';
 import * as m from './types/mutations';
 import * as q from './types/queries';
 import * as f from './types/files';
@@ -516,6 +517,16 @@ export const revertAgentVersion = ({
   agent_id: string;
   version_index: number;
 }): Promise<a.Agent> => request.post(endpoints.revertAgentVersion(agent_id), { version_index });
+
+/* Cloud agents (canonical `/v1/agents`, proxied via the chat backend) */
+
+/** List the caller's Hanzo Cloud agents. */
+export const listCloudAgents = (): Promise<ca.CloudAgentsListResponse> =>
+  request.get(endpoints.cloudAgents());
+
+/** Run a Hanzo Cloud agent once and return its recorded RunResult. */
+export const runCloudAgent = ({ name, input }: ca.CloudAgentRunParams): Promise<ca.CloudAgentRun> =>
+  request.post(endpoints.cloudAgentRun(name), { input });
 
 /* Marketplace */
 

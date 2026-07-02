@@ -16,6 +16,7 @@ const { saveMessage } = require('~/models');
 const openai = require('./openai');
 const responses = require('./responses');
 const { v1 } = require('./v1');
+const cloud = require('./cloud');
 const chat = require('./chat');
 
 const { LIMIT_MESSAGE_IP, LIMIT_MESSAGE_USER } = process.env ?? {};
@@ -97,6 +98,14 @@ router.get('/chat/active', requireGuestOrJwtAuth, async (req, res, next) => {
 router.use(requireJwtAuth);
 router.use(checkBan);
 router.use(uaParser);
+
+/**
+ * Canonical Hanzo Cloud agents (`/v1/agents`). Mounted BEFORE the legacy `/`
+ * (v1) router so `/cloud/*` is not shadowed by v1's `GET /:id`. The cloud router
+ * carries its own `requireJwtAuth` and forwards the user's hanzo.id bearer to
+ * cloud server-side (see cloud.js). Legacy `/api/agents` CRUD stays untouched.
+ */
+router.use('/cloud', cloud);
 
 router.use('/', v1);
 

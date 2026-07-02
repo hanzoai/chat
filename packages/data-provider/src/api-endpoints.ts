@@ -278,6 +278,17 @@ export const agents = ({ path = '', options }: { path?: string; options?: object
 
 export const activeJobs = () => `${BASE_URL}/api/agents/chat/active`;
 
+/**
+ * Canonical Hanzo Cloud agents (`/v1/agents`), proxied server-side through the
+ * chat backend at `/api/agents/cloud` so the user's hanzo.id token never reaches
+ * the browser. `name` is a cloud agent handle; empty for the list.
+ */
+export const cloudAgents = (name = '') =>
+  `${BASE_URL}/api/agents/cloud${name ? `/${encodeURIComponent(name)}` : ''}`;
+
+export const cloudAgentRun = (name: string) =>
+  `${BASE_URL}/api/agents/cloud/${encodeURIComponent(name)}/run`;
+
 export const mcp = {
   tools: `${BASE_URL}/api/mcp/tools`,
   servers: `${BASE_URL}/api/mcp/servers`,
