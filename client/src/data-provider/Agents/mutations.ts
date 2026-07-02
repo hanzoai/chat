@@ -406,3 +406,13 @@ export const useRevertAgentVersionMutation = (
 export const invalidateAgentMarketplaceQueries = (queryClient: QueryClient) => {
   queryClient.invalidateQueries([QueryKeys.marketplaceAgents]);
 };
+
+/**
+ * Run a canonical Hanzo Cloud agent (`/v1/agents/:name/run`) once, via the chat
+ * backend proxy. Returns the recorded RunResult (output, or an honest error).
+ */
+export const useRunCloudAgentMutation = (): UseMutationResult<
+  t.CloudAgentRun,
+  Error,
+  t.CloudAgentRunParams
+> => useMutation((params: t.CloudAgentRunParams) => dataService.runCloudAgent(params));

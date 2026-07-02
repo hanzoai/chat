@@ -236,6 +236,11 @@ const showPromptsPopoverFamily = atomFamily<boolean, string | number | null>({
   default: false,
 });
 
+const showAgentsPopoverFamily = atomFamily<boolean, string | number | null>({
+  key: 'showAgentsPopoverByIndex',
+  default: false,
+});
+
 const globalAudioURLFamily = atomFamily<string | null, string | number | null>({
   key: 'globalAudioURLByIndex',
   default: null,
@@ -425,5 +430,6 @@ export default {
   useClearSubmissionState,
   useClearLatestMessages,
   showPromptsPopoverFamily,
+  showAgentsPopoverFamily,
   updateConversationSelector,
 };

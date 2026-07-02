@@ -1,7 +1,7 @@
 import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
 import { TextareaAutosize } from '@librechat/client';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from 'librechat-data-provider';
 import {
   useChatContext,
@@ -19,12 +19,14 @@ import {
   useSubmitMessage,
   useFocusChatEffect,
 } from '~/hooks';
+import { useRunCloudAgent } from '~/hooks/Agents';
 import { mainTextareaId, BadgeItem } from '~/common';
 import AttachFileChat from './Files/AttachFileChat';
 import FileFormChat from './Files/FileFormChat';
-import { cn, removeFocusRings } from '~/utils';
+import { cn, removeFocusRings, parseAgentCommand } from '~/utils';
 import TextareaHeader from './TextareaHeader';
 import PromptsCommand from './PromptsCommand';
+import AgentsCommand from './AgentsCommand';
 import AudioRecorder from './AudioRecorder';
 import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
@@ -62,6 +64,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const [showMentionPopover, setShowMentionPopover] = useRecoilState(
     store.showMentionPopoverFamily(index),
   );
+  const setShowAgentsPopover = useSetRecoilState(store.showAgentsPopoverFamily(index));
 
   const { requiresKey } = useRequiresKey();
   const methods = useChatFormContext();
@@ -129,6 +132,26 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   });
 
   const { submitMessage, submitPrompt } = useSubmitMessage();
+  const runCloudAgent = useRunCloudAgent();
+
+  /**
+   * Submit handler that intercepts the `/agent <name> [prompt]` command and
+   * dispatches it through the single cloud-agent run path; everything else is a
+   * normal chat message. This is the ONE place the command is turned into a run.
+   */
+  const onSubmit = useCallback(
+    (data?: { text: string }) => {
+      const command = parseAgentCommand(data?.text ?? '');
+      if (command) {
+        methods.reset();
+        setShowAgentsPopover(false);
+        void runCloudAgent(command.name, command.prompt);
+        return;
+      }
+      submitMessage(data);
+    },
+    [methods, runCloudAgent, submitMessage, setShowAgentsPopover],
+  );
 
   const handleKeyUp = useHandleKeyUp({
     index,
@@ -203,7 +226,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   return (
     <form
-      onSubmit={methods.handleSubmit(submitMessage)}
+      onSubmit={methods.handleSubmit(onSubmit)}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
         maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
@@ -237,6 +260,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             />
           )}
           <PromptsCommand index={index} textAreaRef={textAreaRef} submitPrompt={submitPrompt} />
+          <AgentsCommand index={index} textAreaRef={textAreaRef} />
           <div
             onClick={handleContainerClick}
             className={cn(

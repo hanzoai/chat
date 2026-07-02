@@ -77,6 +77,22 @@ export default function Mention({
       }
     };
 
+    if (mention.type === 'cloudAgent') {
+      // Arm the `/agent <name> ` command so the run flows through the single
+      // cloud-agent run path (intercepted on submit in ChatForm).
+      setSearchValue('');
+      setOpen(false);
+      setShowMentionPopover(false);
+      const el = textAreaRef.current;
+      if (el) {
+        removeCharIfLast(el, commandChar);
+        el.value = `/agent ${mention.value} `;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+      return;
+    }
     if (mention.type === 'endpoint' && mention.value === EModelEndpoint.agents) {
       setSearchValue('');
       setInputOptions(agentsList ?? []);

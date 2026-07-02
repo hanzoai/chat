@@ -17,6 +17,7 @@ import {
   useGetEndpointsQuery,
   useListAgentsQuery,
   useGetStartupConfig,
+  useListCloudAgentsQuery,
 } from '~/data-provider';
 import useAssistantListMap from '~/hooks/Assistants/useAssistantListMap';
 import { useAgentsMapContext } from '~/Providers/AgentsMapContext';
@@ -107,6 +108,25 @@ export default function useMentions({
       },
     },
   );
+  /**
+   * Canonical Hanzo Cloud agents (`/v1/agents`). Surfaced in the @mention picker
+   * as a distinct `cloudAgent` type; selecting one arms the `/agent` command so
+   * the run flows through the single cloud-agent run path. Fails soft (empty).
+   */
+  const { data: cloudAgentsData } = useListCloudAgentsQuery({
+    enabled: interfaceConfig.modelSelect === true,
+  });
+  const cloudAgentsList = useMemo<MentionOption[]>(
+    () =>
+      (cloudAgentsData?.agents ?? []).map((agent) => ({
+        type: 'cloudAgent',
+        value: agent.name,
+        label: agent.name,
+        description: agent.description || agent.model,
+      })),
+    [cloudAgentsData],
+  );
+
   const assistantListMap = useMemo(
     () => ({
       [EModelEndpoint.assistants]: listMap[EModelEndpoint.assistants]
@@ -207,6 +227,7 @@ export default function useMentions({
         }),
       })),
       ...(interfaceConfig.modelSelect === true ? (agentsList ?? []) : []),
+      ...(interfaceConfig.modelSelect === true ? cloudAgentsList : []),
       ...(endpointsConfig?.[EModelEndpoint.assistants] &&
       includeAssistants &&
       interfaceConfig.modelSelect === true
@@ -243,6 +264,7 @@ export default function useMentions({
     endpoints,
     modelSpecs,
     agentsList,
+    cloudAgentsList,
     assistantMap,
     modelsConfig,
     endpointsConfig,
@@ -257,6 +279,7 @@ export default function useMentions({
     presets,
     modelSpecs,
     agentsList,
+    cloudAgentsList,
     modelsConfig,
     endpointsConfig,
     assistantListMap,
