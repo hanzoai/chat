@@ -166,3 +166,27 @@ export const useMarketplaceAgentsInfiniteQuery = (
     ...config,
   });
 };
+
+/**
+ * CLOUD AGENTS (canonical `/v1/agents`, proxied via the chat backend)
+ *
+ * Lists the caller's Hanzo Cloud agents. Fails soft: a 401 (user not signed in
+ * via hanzo.id) or a disabled deployment simply yields an empty list, so the
+ * @mention picker / `/agent` command degrade quietly rather than erroring.
+ */
+export const useListCloudAgentsQuery = <TData = t.CloudAgentsListResponse>(
+  config?: UseQueryOptions<t.CloudAgentsListResponse, unknown, TData>,
+): QueryObserverResult<TData> => {
+  return useQuery<t.CloudAgentsListResponse, unknown, TData>(
+    [QueryKeys.cloudAgents],
+    () => dataService.listCloudAgents(),
+    {
+      staleTime: 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: false,
+      ...config,
+    },
+  );
+};

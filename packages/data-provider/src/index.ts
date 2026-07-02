@@ -20,6 +20,7 @@ export * from './roles';
 /* types (exports schemas from `./types` as they contain needed in other defs) */
 export * from './types';
 export * from './types/agents';
+export * from './types/cloudAgents';
 export * from './types/assistants';
 export * from './types/files';
 export * from './types/mcpServers';

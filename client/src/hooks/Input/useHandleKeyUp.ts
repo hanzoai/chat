@@ -56,6 +56,7 @@ const useHandleKeyUp = ({
   });
   const latestMessage = useRecoilValue(store.latestMessageFamily(index));
   const setShowPromptsPopover = useSetRecoilState(store.showPromptsPopoverFamily(index));
+  const setShowAgentsPopover = useSetRecoilState(store.showAgentsPopoverFamily(index));
 
   // Get the current state of command toggles
   const atCommandEnabled = useRecoilValue(store.atCommand);
@@ -78,13 +79,31 @@ const useHandleKeyUp = ({
   }, [textAreaRef, setShowPlusPopover, plusCommandEnabled, hasMultiConvoAccess]);
 
   const handlePromptsCommand = useCallback(() => {
-    if (!hasPromptsAccess || !slashCommandEnabled) {
+    if (!slashCommandEnabled) {
+      return;
+    }
+    const text = textAreaRef.current?.value ?? '';
+    // `/agent …` opens the cloud-agents picker; a bare `/` opens Prompts. One
+    // slash trigger, disambiguated by what follows it.
+    if (/^\/agents?(\s|$)/.test(text)) {
+      setShowPromptsPopover(false);
+      setShowAgentsPopover(true);
+      return;
+    }
+    if (!hasPromptsAccess) {
       return;
     }
     if (shouldTriggerCommand(textAreaRef, '/')) {
+      setShowAgentsPopover(false);
       setShowPromptsPopover(true);
     }
-  }, [textAreaRef, hasPromptsAccess, setShowPromptsPopover, slashCommandEnabled]);
+  }, [
+    textAreaRef,
+    hasPromptsAccess,
+    setShowPromptsPopover,
+    setShowAgentsPopover,
+    slashCommandEnabled,
+  ]);
 
   const commandHandlers = useMemo(
     () => ({

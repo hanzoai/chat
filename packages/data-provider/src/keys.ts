@@ -45,6 +45,7 @@ export enum QueryKeys {
   randomPrompts = 'randomPrompts',
   agentCategories = 'agentCategories',
   marketplaceAgents = 'marketplaceAgents',
+  cloudAgents = 'cloudAgents',
   roles = 'roles',
   conversationTags = 'conversationTags',
   health = 'health',
