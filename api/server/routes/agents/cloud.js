@@ -2,7 +2,7 @@ const cookies = require('cookie');
 const express = require('express');
 const { logger } = require('@librechat/data-schemas');
 const { requireJwtAuth } = require('~/server/middleware');
-const { getCloudAgentsClient } = require('~/server/services/CloudAgentsClient');
+const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/CloudAgentsClient');
 
 /**
  * Cloud agents router — lets a signed-in chat user RUN their own canonical Hanzo
@@ -46,6 +46,19 @@ function getUserCloudBearer(req) {
 }
 
 router.use(requireJwtAuth);
+
+/**
+ * Validate the :name path segment at the HTTP boundary — the same cloud handle
+ * grammar the client enforces, applied here so a malformed/decoded name
+ * (traversal, null byte, CRLF, backslash) is rejected before any client call is
+ * even constructed. Defense at the boundary, not only in the client.
+ */
+router.param('name', (req, res, next, name) => {
+  if (!AGENT_NAME_RE.test((name ?? '').toString().trim())) {
+    return res.status(400).json({ error: 'invalid agent name' });
+  }
+  return next();
+});
 
 /**
  * Map a CloudAgentsClient error to an HTTP response. Upstream failures that
