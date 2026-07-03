@@ -421,17 +421,26 @@ const setAuthTokens = async (userId, res, _session = null) => {
  *
  * This is DELIBERATELY decoupled from the token-refresh strategy. It runs on
  * EVERY OpenID login regardless of `OPENID_REUSE_TOKENS`; that flag alone still
- * governs whether `/api/auth/refresh` performs an OIDC refresh-grant. Because it
- * writes only server-side session state (no `token_provider`, `refreshToken`, or
- * other auth cookie), it cannot alter the browser-facing login/refresh cookies —
- * a REUSE-disabled login stays byte-identical.
+ * governs whether `/api/auth/refresh` performs an OIDC refresh-grant. It writes
+ * only server-side session state (no `token_provider`, `refreshToken`, or other
+ * auth cookie), so it cannot alter the browser-facing login/refresh cookies — a
+ * REUSE-disabled login stays byte-identical.
+ *
+ * The OIDC `refresh` credential is a SEPARATE concern from the on-behalf-of
+ * BEARER: it is persisted only when passed EXPLICITLY as `refreshToken`, which
+ * the REUSE path does (its session refreshes via OIDC and `refreshController` /
+ * `logoutController` read `session.openidTokens.refreshToken`). The decoupled
+ * default passes NO refresh credential — its session refreshes via the local
+ * JWT cookie — so no OIDC refresh token is written here. That keeps the decoupled
+ * session carrying only bearer material and leaves refresh/logout identical to a
+ * non-OpenID login (they read the local cookie, never this session field).
  *
  * @param {Object} req - request carrying the express-session
  * @param {import('openid-client').TokenEndpointResponse & Partial<import('openid-client').TokenEndpointResponseHelpers>} tokenset
- * @param {string} [existingRefreshToken] - fallback when the tokenset omits a refresh_token
+ * @param {string} [refreshToken] - OIDC refresh credential to bind to this session (REUSE mode only); omitted in the decoupled path
  * @returns {boolean} true if persisted; false when no session (or tokenset) was available
  */
-const persistOpenIDTokensToSession = (req, tokenset, existingRefreshToken) => {
+const persistOpenIDTokensToSession = (req, tokenset, refreshToken) => {
   if (!req?.session) {
     logger.warn(
       '[persistOpenIDTokensToSession] No session available; on-behalf-of tokens not stored',
@@ -445,7 +454,7 @@ const persistOpenIDTokensToSession = (req, tokenset, existingRefreshToken) => {
   req.session.openidTokens = {
     accessToken: tokenset.access_token,
     idToken: tokenset.id_token,
-    refreshToken: tokenset.refresh_token || existingRefreshToken,
+    refreshToken,
     expiresAt: Date.now() + expiryInMilliseconds,
   };
   return true;

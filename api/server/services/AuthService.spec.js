@@ -288,7 +288,12 @@ describe('persistOpenIDTokensToSession', () => {
     process.env = env;
   });
 
-  it('stores id_token/access_token/refresh_token + expiry in the session and returns true', () => {
+  it('stores ONLY the bearer material (no OIDC refresh credential) in the decoupled path', () => {
+    // Decoupled call (no explicit refreshToken arg): the on-behalf-of bearer is
+    // persisted, but the tokenset's refresh_token is NOT — the decoupled session
+    // refreshes via the local JWT cookie, and leaking the OIDC refresh token into
+    // the session would hijack logout's session lookup (findSession by the wrong
+    // token) and leave the local session un-invalidated.
     const tokenset = {
       id_token: 'the-id-token',
       access_token: 'the-access-token',
@@ -303,20 +308,21 @@ describe('persistOpenIDTokensToSession', () => {
     expect(req.session.openidTokens).toEqual({
       accessToken: 'the-access-token',
       idToken: 'the-id-token',
-      refreshToken: 'the-refresh-token',
+      refreshToken: undefined,
       expiresAt: expect.any(Number),
     });
     // Expiry is anchored ~REFRESH_TOKEN_EXPIRY (default 7d) ahead of now.
     expect(req.session.openidTokens.expiresAt).toBeGreaterThanOrEqual(before + 604800000);
   });
 
-  it('falls back to existingRefreshToken when the tokenset omits refresh_token', () => {
-    const tokenset = { id_token: 'id', access_token: 'acc' };
+  it('persists the OIDC refresh credential only when passed EXPLICITLY (REUSE path)', () => {
+    const tokenset = { id_token: 'id', access_token: 'acc', refresh_token: 'tokenset-refresh' };
     const req = { session: {} };
 
-    persistOpenIDTokensToSession(req, tokenset, 'existing-refresh');
+    // The REUSE caller (setOpenIDAuthTokens) resolves and passes the credential.
+    persistOpenIDTokensToSession(req, tokenset, 'explicit-refresh');
 
-    expect(req.session.openidTokens.refreshToken).toBe('existing-refresh');
+    expect(req.session.openidTokens.refreshToken).toBe('explicit-refresh');
   });
 
   it('returns false and warns when no session is available (never a cookie)', () => {
