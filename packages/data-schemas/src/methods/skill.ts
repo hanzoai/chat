@@ -1,5 +1,4 @@
 import {
-import type { DataHandle } from '~/common/dataHandle';
   ResourceType,
   SKILL_NAME_MAX_LENGTH,
   SKILL_DESCRIPTION_MAX_LENGTH,
@@ -10,6 +9,7 @@ import type { DataHandle } from '~/common/dataHandle';
 } from 'librechat-data-provider';
 import type { CodeEnvRef } from 'librechat-data-provider';
 import type { Model, Types, FilterQuery } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type {
   ISkill,
   ISkillDocument,

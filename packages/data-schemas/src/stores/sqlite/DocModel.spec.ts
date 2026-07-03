@@ -162,4 +162,25 @@ describe('DocModel — Batch 2 primitives', () => {
     const doc = (await Shared.findOne({ shareId: 's2', isPublic: true }).lean()) as { isPublic: boolean };
     expect(doc.isPublic).toBe(true); // default filled
   });
+
+  it('findOneAndUpdate(new:false, upsert) returns null on insert, old doc on update', async () => {
+    const Tag = handle.models.ConversationTag;
+    // insert path: no pre-image => null (mongoose semantics; upsertSkillFile relies on this)
+    const onInsert = await Tag.findOneAndUpdate(
+      { tag: 'a', user: 'u1' },
+      { $set: { position: 1 } },
+      { new: false, upsert: true },
+    );
+    expect(onInsert).toBeNull();
+    expect(await Tag.countDocuments({ tag: 'a' })).toBe(1); // but the row WAS inserted
+
+    // update path: returns the pre-update doc
+    const onUpdate = (await Tag.findOneAndUpdate(
+      { tag: 'a', user: 'u1' },
+      { $set: { position: 2 } },
+      { new: false, upsert: true },
+    )) as { position: number };
+    expect(onUpdate.position).toBe(1); // old value
+    expect(((await Tag.findOne({ tag: 'a' }).lean()) as { position: number }).position).toBe(2);
+  });
 });
