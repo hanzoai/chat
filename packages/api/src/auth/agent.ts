@@ -4,6 +4,19 @@ import https from 'node:https';
 import type { LookupFunction } from 'node:net';
 import { isPrivateIP } from './domain';
 
+/**
+ * Returns the first resolved address that is private/reserved, or null.
+ * `dns.lookup` yields a single string when called without `{ all: true }` and a
+ * `LookupAddress[]` when called with it. undici's connector asks for all
+ * addresses, so a `typeof address === 'string'` guard silently fails open on
+ * the array shape — a hostname resolving to a private IP would pass unchecked.
+ * Normalize both shapes to a flat list and reject if ANY entry is private.
+ */
+function findBlockedLookupAddress(address: string | dns.LookupAddress[]): string | null {
+  const addresses = Array.isArray(address) ? address.map((entry) => entry.address) : [address];
+  return addresses.find((entry) => isPrivateIP(entry)) ?? null;
+}
+
 /** DNS lookup wrapper that blocks resolution to private/reserved IP addresses */
 const ssrfSafeLookup: LookupFunction = (hostname, options, callback) => {
   dns.lookup(hostname, options, (err, address, family) => {
@@ -11,12 +24,13 @@ const ssrfSafeLookup: LookupFunction = (hostname, options, callback) => {
       callback(err, '', 0);
       return;
     }
-    if (typeof address === 'string' && isPrivateIP(address)) {
+    const blockedAddress = findBlockedLookupAddress(address as string | dns.LookupAddress[]);
+    if (blockedAddress) {
       const ssrfError = Object.assign(
-        new Error(`SSRF protection: ${hostname} resolved to blocked address ${address}`),
+        new Error(`SSRF protection: ${hostname} resolved to blocked address ${blockedAddress}`),
         { code: 'ESSRF' },
       ) as NodeJS.ErrnoException;
-      callback(ssrfError, address, family as number);
+      callback(ssrfError, blockedAddress, family as number);
       return;
     }
     callback(null, address as string, family as number);
