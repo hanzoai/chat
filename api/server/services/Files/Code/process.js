@@ -48,7 +48,7 @@ const createDownloadFallback = ({
   const basePath = getBasePath();
   return {
     filename: name,
-    filepath: `${basePath}/api/files/code/download/${session_id}/${id}`,
+    filepath: `${basePath}/v1/chat/files/code/download/${session_id}/${id}`,
     expiresAt,
     conversationId,
     toolCallId,

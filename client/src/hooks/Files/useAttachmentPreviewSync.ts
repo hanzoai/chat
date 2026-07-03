@@ -31,7 +31,7 @@ interface UseAttachmentPreviewSyncResult {
  * `attachment` update event arrives and the SSE handler upserts by
  * `file_id`. If the stream has already closed (the model finished
  * generating before the render resolved), this hook covers the gap by
- * polling `GET /api/files/:file_id/preview` and writing the resolved
+ * polling `GET /v1/chat/files/:file_id/preview` and writing the resolved
  * record back into `messageAttachmentsMap` — which triggers
  * re-classification through `artifactTypeForAttachment`, so the file
  * chip transitions from a plain download to the rich preview card

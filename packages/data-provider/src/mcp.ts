@@ -51,7 +51,7 @@ const BaseOptionsSchema = z.object({
       client_secret: z.string().optional(),
       /** OAuth scopes to request */
       scope: z.string().optional(),
-      /** OAuth redirect URI (defaults to /api/mcp/{serverName}/oauth/callback) */
+      /** OAuth redirect URI (defaults to /v1/chat/mcp/{serverName}/oauth/callback) */
       redirect_uri: z.string().url().optional(),
       /** Token exchange method */
       token_exchange_method: z.nativeEnum(TokenExchangeMethodEnum).optional(),

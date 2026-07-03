@@ -34,7 +34,7 @@ function normalize(value: string | undefined): string | null {
 
 /**
  * Resolves the current deployment's build info from (in order): explicit env vars,
- * then local git metadata. Used by `/api/config` to expose commit/branch to clients
+ * then local git metadata. Used by `/v1/chat/config` to expose commit/branch to clients
  * when `interface.buildInfo` is enabled.
  */
 export function resolveBuildInfo(): BuildInfo {

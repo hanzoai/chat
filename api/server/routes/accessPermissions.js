@@ -22,17 +22,17 @@ router.use(uaParser);
 
 /**
  * Generic routes for resource permissions
- * Pattern: /api/permissions/{resourceType}/{resourceId}
+ * Pattern: /v1/chat/permissions/{resourceType}/{resourceId}
  */
 
 /**
- * GET /api/permissions/search-principals
+ * GET /v1/chat/permissions/search-principals
  * Search for users and groups to grant permissions
  */
 router.get('/search-principals', checkPeoplePickerAccess, searchPrincipals);
 
 /**
- * GET /api/permissions/{resourceType}/roles
+ * GET /v1/chat/permissions/{resourceType}/roles
  * Get available roles for a resource type
  */
 router.get('/:resourceType/roles', getResourceRoles);
@@ -84,7 +84,7 @@ const checkResourcePermissionAccess = (requiredPermission) => (req, res, next) =
 };
 
 /**
- * GET /api/permissions/{resourceType}/{resourceId}
+ * GET /v1/chat/permissions/{resourceType}/{resourceId}
  * Get all permissions for a specific resource
  * SECURITY: Requires SHARE permission to view resource permissions
  */
@@ -95,7 +95,7 @@ router.get(
 );
 
 /**
- * PUT /api/permissions/{resourceType}/{resourceId}
+ * PUT /v1/chat/permissions/{resourceType}/{resourceId}
  * Bulk update permissions for a specific resource
  * SECURITY: Requires SHARE permission to modify resource permissions
  * SECURITY: Requires SHARE_PUBLIC permission to enable public sharing
@@ -108,13 +108,13 @@ router.put(
 );
 
 /**
- * GET /api/permissions/{resourceType}/effective/all
+ * GET /v1/chat/permissions/{resourceType}/effective/all
  * Get user's effective permissions for all accessible resources of a type
  */
 router.get('/:resourceType/effective/all', getAllEffectivePermissions);
 
 /**
- * GET /api/permissions/{resourceType}/{resourceId}/effective
+ * GET /v1/chat/permissions/{resourceType}/{resourceId}/effective
  * Get user's effective permissions for a specific resource
  */
 router.get('/:resourceType/:resourceId/effective', getUserEffectivePermissions);

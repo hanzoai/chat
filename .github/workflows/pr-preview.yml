@@ -16,6 +16,6 @@ jobs:
       service: chat
       image: ghcr.io/hanzoai/chat
       port: "3080"
-      health-path: /api/health
+      health-path: /health
       e2e-dir: e2e
     secrets: inherit

@@ -33,11 +33,11 @@ export type FavoriteItem = {
 };
 
 export function getFavorites(): Promise<FavoriteItem[]> {
-  return request.get(`${endpoints.apiBaseUrl()}/api/user/settings/favorites`);
+  return request.get(`${endpoints.apiBaseUrl()}/v1/chat/user/settings/favorites`);
 }
 
 export function updateFavorites(favorites: FavoriteItem[]): Promise<FavoriteItem[]> {
-  return request.post(`${endpoints.apiBaseUrl()}/api/user/settings/favorites`, { favorites });
+  return request.post(`${endpoints.apiBaseUrl()}/v1/chat/user/settings/favorites`, { favorites });
 }
 
 export function getSharedMessages(shareId: string): Promise<t.TSharedMessagesResponse> {
@@ -1087,7 +1087,7 @@ export function getGraphApiToken(params: q.GraphTokenParams): Promise<q.GraphTok
 }
 
 export function getDomainServerBaseUrl(): string {
-  return `${endpoints.apiBaseUrl()}/api`;
+  return `${endpoints.apiBaseUrl()}/v1/chat`;
 }
 
 /* Active Jobs */

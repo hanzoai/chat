@@ -18,7 +18,7 @@ const MAX_DESCRIPTION_LENGTH = 2000;
 const CONTROL_CHAR_RE = /\p{Cc}/u;
 /**
  * Role names that would create semantically ambiguous URLs.
- * e.g. GET /api/admin/roles/members — is that "list roles" or "get role named members"?
+ * e.g. GET /v1/chat/admin/roles/members — is that "list roles" or "get role named members"?
  * Express routing resolves this correctly (single vs multi-segment), but the URLs
  * are confusing for API consumers. Keep in sync with sub-path routes in routes/admin/roles.js.
  */

@@ -286,7 +286,7 @@ describe('Code Process', () => {
         const result = await processCodeOutput(baseParams);
 
         expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('exceeds size limit'));
-        expect(result.filepath).toContain('/api/files/code/download/session-123/file-id-123');
+        expect(result.filepath).toContain('/v1/chat/files/code/download/session-123/file-id-123');
         expect(result.expiresAt).toBeDefined();
         // Should not call createFile for oversized files (fallback path)
         expect(createFile).not.toHaveBeenCalled();
@@ -307,7 +307,7 @@ describe('Code Process', () => {
         expect(logger.warn).toHaveBeenCalledWith(
           expect.stringContaining('saveBuffer not available'),
         );
-        expect(result.filepath).toContain('/api/files/code/download/');
+        expect(result.filepath).toContain('/v1/chat/files/code/download/');
         expect(result.filename).toBe('test-file.txt');
       });
 
@@ -316,7 +316,7 @@ describe('Code Process', () => {
 
         const result = await processCodeOutput(baseParams);
 
-        expect(result.filepath).toContain('/api/files/code/download/session-123/file-id-123');
+        expect(result.filepath).toContain('/v1/chat/files/code/download/session-123/file-id-123');
         expect(result.conversationId).toBe('conv-123');
         expect(result.messageId).toBe('msg-123');
         expect(result.toolCallId).toBe('tool-call-123');

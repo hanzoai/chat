@@ -79,8 +79,8 @@ function getLowCardinalityUrlPath(pathname: string, healthPath: string): string 
     return healthPath;
   }
 
-  if (pathname === '/api' || pathname.startsWith('/api/')) {
-    return '/api/*';
+  if (pathname === '/v1/chat' || pathname.startsWith('/v1/chat/')) {
+    return '/v1/chat/*';
   }
 
   return 'spa_fallback';

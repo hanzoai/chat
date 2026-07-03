@@ -34,7 +34,7 @@ describe('RUM proxy configuration', () => {
     delete process.env.RUM_PROXY_BODY_LIMIT;
     delete process.env.RUM_PROXY_TIMEOUT_MS;
 
-    expect(getRumProxyClientUrl()).toBe('/api/rum');
+    expect(getRumProxyClientUrl()).toBe('/v1/chat/rum');
     expect(getRumProxyBodyLimit()).toBe('3mb');
     expect(getRumProxyTimeoutMs()).toBe(10000);
   });

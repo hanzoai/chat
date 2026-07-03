@@ -12,7 +12,7 @@ const EMPTY_FAVORITES: string[] = [];
  * Hook for managing user skill favorites.
  *
  * Skill favorites are a flat array of skill ObjectId strings, persisted via
- * `/api/user/settings/favorites/skills`. React Query is the single source of
+ * `/v1/chat/user/settings/favorites/skills`. React Query is the single source of
  * truth — toggling drives an optimistic mutation that updates the cache,
  * eliminating the need for a separate atom mirror.
  */
