@@ -12,6 +12,8 @@ const {
   loadWebSearchAuth,
   buildImageToolContext,
   buildWebSearchContext,
+  resolveHanzoCloudKey,
+  isHanzoPerUserKeyEnabled,
 } = require('@hanzochat/api');
 const { getMCPServersRegistry } = require('~/config');
 const {
@@ -232,7 +234,30 @@ const loadTools = async ({
   const requestedTools = {};
 
   if (functions === true) {
-    toolConstructors.dalle = DALLE3;
+    // dalle (image generation) drives the Hanzo image family via a PER-USER hk-
+    // key so generation is metered to the signed-in user — mirroring the chat
+    // per-user key path in custom/initialize.ts. A guest keeps the shared env
+    // key; an authenticated user whose key cannot be resolved FAILS CLOSED
+    // (throws) rather than silently billing the shared org. (Custom constructors
+    // take precedence over the generic toolConstructors path in the loop below.)
+    customConstructors.dalle = async () => {
+      const authFields = getAuthFields('dalle');
+      const authValues = await loadAuthValues({ userId: user, authFields });
+      const billingUser = options.req?.user;
+      const isAuthenticatedUser = Boolean(
+        billingUser && !billingUser.guest && billingUser.email,
+      );
+      if (isHanzoPerUserKeyEnabled() && isAuthenticatedUser) {
+        const perUserKey = await resolveHanzoCloudKey(billingUser);
+        if (!perUserKey) {
+          throw new Error(
+            'Your Hanzo Cloud account is not linked for billing yet. Please sign out and back in, then claim your starter credit at https://billing.hanzo.ai',
+          );
+        }
+        authValues.DALLE3_API_KEY = perUserKey;
+      }
+      return new DALLE3({ ...imageGenOptions, ...authValues, userId: user });
+    };
   }
 
   /** @type {ImageGenOptions} */

@@ -143,16 +143,26 @@ class DALLE3 extends Tool {
       throw new Error('Missing required field: prompt');
     }
 
+    // Model is configurable (DALLE3_MODEL) so this tool drives the Hanzo image
+    // family (e.g. zen3-image) through the same OpenAI /images/generations shape.
+    // `quality` and `style` are DALL-E-3-only knobs — send them ONLY for a dall-e
+    // model so a non-DALL-E backend never sees a parameter it may reject.
+    const model = process.env.DALLE3_MODEL || 'dall-e-3';
+    const isDallE = model.startsWith('dall-e');
+    const genParams = {
+      model,
+      size,
+      prompt: this.replaceUnwantedChars(prompt),
+      n: 1,
+    };
+    if (isDallE) {
+      genParams.quality = quality;
+      genParams.style = style;
+    }
+
     let resp;
     try {
-      resp = await this.openai.images.generate({
-        model: 'dall-e-3',
-        quality,
-        style,
-        size,
-        prompt: this.replaceUnwantedChars(prompt),
-        n: 1,
-      });
+      resp = await this.openai.images.generate(genParams);
     } catch (error) {
       logger.error('[DALL-E-3] Problem generating the image:', error);
       return this
