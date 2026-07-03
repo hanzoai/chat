@@ -179,6 +179,102 @@ agent builder, which is untouched.
 - Convergence path (later): chat's LibreChat-legacy `/api/agents` CRUD should
   converge onto cloud `/v1/agents`; this step only ADDS cloud-agent RUN.
 
+## Unified cloud architecture (2026-07) — investigate-before-ripping map
+
+hanzo.chat is the **chat view** of the Hanzo AI cloud (sibling to hanzo.app =
+builder, console = admin). This section is the honest map of what is ALREADY
+unified onto the Go backend (`api.hanzo.ai/v1`) vs the one real seam that is not.
+Verified by full call-graph + route-table trace; do NOT rip blind.
+
+### What already routes through the Go backend `api.hanzo.ai/v1` (no shadow LLM)
+
+- **Chat completions**: client `useSSE` → `POST /api/agents/chat/Hanzo` (all
+  chat, incl. plain-model, goes through the agents framework) → custom-endpoint
+  resolver (`packages/api/src/endpoints/custom/initialize.ts`) reads
+  `HANZO_API_KEY` + literal `baseURL https://api.hanzo.ai/v1` from the loaded
+  config → LangChain OpenAI client → **`POST https://api.hanzo.ai/v1/chat/completions`**
+  (SSE stream, resumable via `GenerationJobManager`). Per-user `hk-` key +
+  per-org Commerce debit; fail-closed 402. THIS is the one inference path.
+- **Code interpreter** → `LIBRECHAT_CODE_BASEURL` = cloud `/v1/exec`.
+- **Web search** → `webSearch` block (searxng+firecrawl contracts) = cloud
+  `/v1/websearch`.
+- **Cloud agents** → `POST /api/agents/cloud/:name/run` server-proxies to cloud
+  `/v1/agents` with the user's hanzo.id bearer (see "Cloud Agents" section).
+- **Model list**: curated **zen-only** (`fetch:false`) in the loaded config —
+  NO raw upstream names (brand policy). Authoritative prod list lives in the
+  `chat-config` ConfigMap (`universe infra/k8s/chat/configmap.yaml`); repo
+  `librechat.yaml` mirrors it (one way).
+
+### DEAD residue — do NOT treat as a live backend
+
+- `config.yaml` (LiteLLM `model_list`/`litellm_params`), `docker/Dockerfile.{simple,dev,custom_ui}`
+  (`CMD litellm`), `deploy/migrations/*` (`LiteLLM_*` Prisma tables),
+  `CONTRIBUTING.md` (upstream LiteLLM's), `scripts/cleanup-{litellm,hanzo-chat}.sh`:
+  all **unreferenced** by any compose/k8s/helm/Dockerfile.multi. Prod runs
+  `node server/index.js` and hits `api.hanzo.ai/v1` directly — NO local litellm
+  sidecar. This is upstream merge residue; safe to delete in a dedicated sweep.
+
+### The ONE real parallel store (FLAG — needs a Go-backend home)
+
+LibreChat's Express backend owns, in **MongoDB** (`HanzoChat` DB), all of:
+`convos`, `messages`, `presets`, `prompts`/`promptGroups`, `users`, `balances`/
+`transactions`, `files`, `sessions` (refresh-token hashes), plus agents/assistants/
+memory/RBAC. Schemas: `packages/data-schemas/src/schema/*`. This is the shadow
+store that is NOT on the Go backend.
+
+- The Go backend (`hanzoai/ai`, mounted at bare `/v1/*` in cloud) DOES have a
+  persistence home, but under **casibase names** (`/v1/get-chats`, `/v1/get-chat`,
+  `/v1/add-chat`, `/v1/get-messages`, `/v1/add-message`, `/v1/get-usages`) — a
+  different schema/shape than LibreChat's Mongo.
+- The canonical OpenAPI repo has `chat/openapi.yaml` describing the INTENDED
+  LibreChat-shaped REST surface (`/v1/chat/convos`, `/v1/chat/messages`,
+  `/v1/chat/presets`, `/v1/chat/balance`, `/v1/chat/auth/*`) — but the Go binary
+  **does not implement it yet**, and `ai/openapi.yaml` under-documents the real
+  casibase routes.
+- To truly kill the parallel store WITHOUT breaking live chat: the Go backend
+  (or Base) must implement `chat/openapi.yaml` (conversations/messages/presets),
+  then repoint chat's data layer at it behind a flag and dual-write during
+  cutover. Until then Mongo stays (ripping it = data loss + dead chat).
+  **Coordinate with the openapi agent** (canonical spec + SDK regen).
+
+### IAM-native auth (HIP-0111) — federated to hanzo.id, LIVE
+
+- **Prod (backend-proxied)**: LibreChat passport `openid-client` strategy,
+  OIDC **discovery** from `${OPENID_ISSUER}` = `https://hanzo.id`
+  (`/.well-known/openid-configuration`; discovery fetched via in-cluster
+  `iam.hanzo.svc` to dodge the CF hairpin), client_id **`hanzo-chat`**, callback
+  `/oauth/openid/callback`. Local email/password is OFF in prod
+  (`ALLOW_EMAIL_LOGIN=false`, `ALLOW_REGISTRATION=false`); social OIDC only.
+  Files: `api/strategies/openidStrategy.js`, `api/server/socialLogins.js`,
+  `api/server/routes/oauth.js`. This IS IAM-native (federated), just not the
+  console `@hanzo/iam-js-sdk` shape.
+- **Static/IAM SPA mode** (`Dockerfile.static`, not the live prod deploy): browser
+  `@hanzo/iam` `BrowserIamSdk` PKCE straight to hanzo.id
+  (`client/src/utils/iam.ts`, `OAuthCallback.tsx`). ⚠️ INCONSISTENCY: uses
+  client_id **`app-chat`** while prod uses `hanzo-chat` — align to `hanzo-chat`.
+  `@hanzo/iam` is pinned `^0.4.0` (HIP-0111 wants ≥0.11.0); this path is dormant.
+
+### One brand system, but pick the RIGHT one for a Tailwind app
+
+`@hanzo/ui` and `@hanzo/gui` are **two different, non-overlapping** design systems:
+- **`@hanzo/ui`** = shadcn/ui + Tailwind + Radix (multi-framework). chat is
+  Vite + React 18 + Tailwind, so THIS is the correct shared lib. Already used:
+  `client/src/components/Nav/HanzoHeader.tsx` mounts `@hanzo/ui/navigation`
+  `HanzoHeader` for cross-app chrome. Monochrome rebrand already done (grey ramp,
+  H mark, favicon = hanzo.app set).
+- **`@hanzo/gui`** = a **Tamagui** fork (Next.js 15 / React 19, RN-web) — console's
+  stack. Forcing it into the Vite/React18 LibreChat client = a ground-up rewrite
+  of a live product; NOT done. Unify by widening `@hanzo/ui` adoption + matching
+  console's monochrome tokens, NOT by swapping component frameworks.
+
+### Config filename caveat
+
+`loadCustomConfig.js` defaults to **`chat.yaml`** (`CONFIG_PATH || <root>/chat.yaml`).
+Prod sets `CONFIG_PATH=/app/chat.yaml` (ConfigMap mount). Repo ships
+`librechat.yaml` (reference); a deploy that doesn't set `CONFIG_PATH` to it (or
+provide `chat.yaml`) falls back to the built-in `openAI` endpoint. `OPENAI_BASE_URL`
+in `compose.prod.yml` is inert here (built-in openAI reads `OPENAI_REVERSE_PROXY`).
+
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
