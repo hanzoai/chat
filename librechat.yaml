@@ -117,8 +117,26 @@ endpoints:
       summarize: true
       summaryModel: "zen5-nano"
       modelDisplayLabel: "Hanzo"
-    - name: "Meta Llama"
+    # Third-party provider families — same api.hanzo.ai/v1 gateway + per-user
+    # ${HANZO_API_KEY} (identical Commerce metering). CURRENT-GEN models only from
+    # the live /v1/models catalog (never sunset gens). Mirrors the live chat-config
+    # CM. Zen ("Hanzo") stays house brand + default at order 0.
+    - name: "Qwen"
       customOrder: 1
+      apiKey: "${HANZO_API_KEY}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "qwen3.5-397b"
+          - "qwen3-coder"
+          - "qwen3-coder-flash"
+          - "qwen3-32b"
+        fetch: false
+      titleConvo: true
+      titleModel: "qwen3-coder-flash"
+      modelDisplayLabel: "Qwen"
+    - name: "Meta Llama"
+      customOrder: 2
       apiKey: "${HANZO_API_KEY}"
       baseURL: "https://api.hanzo.ai/v1"
       models:
@@ -130,8 +148,22 @@ endpoints:
       titleConvo: true
       titleModel: "llama-3.1-8b"
       modelDisplayLabel: "Meta Llama"
+    - name: "DeepSeek"
+      customOrder: 3
+      apiKey: "${HANZO_API_KEY}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "deepseek-v4-pro"
+          - "deepseek-v4-flash"
+          - "deepseek-reasoner"
+          - "deepseek-3.2"
+        fetch: false
+      titleConvo: true
+      titleModel: "deepseek-v4-flash"
+      modelDisplayLabel: "DeepSeek"
     - name: "Mistral"
-      customOrder: 2
+      customOrder: 4
       apiKey: "${HANZO_API_KEY}"
       baseURL: "https://api.hanzo.ai/v1"
       iconURL: "/assets/mistral.png"
@@ -144,6 +176,30 @@ endpoints:
       titleConvo: true
       titleModel: "mistral-nemo"
       modelDisplayLabel: "Mistral"
+    - name: "Google Gemma"
+      customOrder: 5
+      apiKey: "${HANZO_API_KEY}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "gemma-4-31b"
+          - "gemma-3-31b"
+        fetch: false
+      titleConvo: true
+      titleModel: "gemma-3-31b"
+      modelDisplayLabel: "Google Gemma"
+    - name: "OpenAI GPT-OSS"
+      customOrder: 6
+      apiKey: "${HANZO_API_KEY}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "gpt-oss-120b"
+          - "gpt-oss-20b"
+        fetch: false
+      titleConvo: true
+      titleModel: "gpt-oss-20b"
+      modelDisplayLabel: "OpenAI GPT-OSS"
 balance:
   enabled: false
   startBalance: 0
