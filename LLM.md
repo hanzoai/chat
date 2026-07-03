@@ -138,9 +138,20 @@ agent builder, which is untouched.
   an org. `requireJwtAuth` gates the proxy (guests rejected); missing token →
   honest 401, never a service-token fallback (fail-secure). Agent name is
   validated against cloud's handle grammar (traversal/SSRF guard); it is NOT an
-  open proxy (three fixed endpoints). Principal guard: OpenID tokens are only
-  forwarded when the request itself is an OpenID login (`token_provider==='openid'`),
-  so a local-JWT user with a stale OpenID session can't run as that prior identity.
+  open proxy (three fixed endpoints). Principal guard: the on-behalf-of decision
+  keys off the VALIDATED principal (`req.user.provider==='openid'`), not the
+  mutable `token_provider` refresh-strategy cookie, so a local user (who never
+  carries a hanzo.id token) can't run under a stale OpenID session, and the
+  forwarded id_token must still name `req.user` (`sub===openidId`) and be
+  unexpired — an expired/absent token yields an honest 401, never a fabricated run.
+- id_token persistence is DECOUPLED from the refresh strategy: OIDC login ALWAYS
+  persists the id_token to `req.session.openidTokens` (server-side only) for this
+  on-behalf-of path, regardless of `OPENID_REUSE_TOKENS`. That flag SOLELY gates
+  whether `/api/auth/refresh` uses the OIDC refresh-grant; with it disabled (the
+  live default) login/refresh stay on the local-JWT path and are byte-identical.
+  The ~1h id_token is used while valid; durable refresh (hanzo.id/Casdoor OIDC
+  refresh or an RFC-8693 token-exchange from the chat session) is a tracked
+  FOLLOW-UP — the login-breaking refresh-grant is NOT enabled here.
 - Abuse limits (a run is a real billable completion): a per-user rate limiter
   (`cloudAgentLimiter`, `CLOUD_AGENT_USER_MAX`/`CLOUD_AGENT_WINDOW`) guards the
   whole `/cloud` router; the client caps input by UTF-8 **bytes** (128 KiB), caps

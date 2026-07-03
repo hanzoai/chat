@@ -2,11 +2,15 @@ jest.mock('@librechat/data-schemas', () => ({
   logger: { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() },
 }));
 
-// requireJwtAuth is exercised elsewhere; here we assert an authenticated user
-// and focus on the cloud-agent proxy logic (token resolution, honest errors).
+// The proxy keys the on-behalf-of decision off the VALIDATED principal
+// (`req.user.provider`), not a cookie. requireJwtAuth is exercised elsewhere;
+// here it simply installs the principal under test so the token-resolution +
+// honest-error logic is isolated. Set `mockPrincipal` per test (the `mock`
+// prefix is required for a jest.mock factory to reference it).
+let mockPrincipal;
 jest.mock('~/server/middleware', () => ({
   requireJwtAuth: (req, _res, next) => {
-    req.user = { id: 'user_1' };
+    req.user = mockPrincipal;
     next();
   },
   // Rate limiter is exercised in its own layer; here it is a pass-through so the
@@ -25,18 +29,31 @@ jest.mock('~/server/services/CloudAgentsClient', () => ({
   AGENT_NAME_RE: /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/,
 }));
 
+const jwt = require('jsonwebtoken');
 const express = require('express');
 const request = require('supertest');
 const { getCloudAgentsClient } = require('~/server/services/CloudAgentsClient');
 const cloudRouter = require('../cloud');
 
+const OPENID_SUB = 'sub-abc-123';
+const OPENID_USER = { id: 'u_openid', provider: 'openid', openidId: OPENID_SUB };
+const LOCAL_USER = { id: 'u_local', provider: 'local' };
+
+/**
+ * Mint a decodable id_token. The signature is irrelevant to the proxy — it
+ * decode-only checks `exp` + `sub`; cloud performs the authoritative JWKS
+ * validation. So a throwaway secret is exactly right here.
+ */
+function mintIdToken({ sub = OPENID_SUB, exp = Math.floor(Date.now() / 1000) + 3600 } = {}) {
+  return jwt.sign({ sub, exp }, 'test-only-not-verified');
+}
+
 /**
  * Build an app whose session carries (or omits) the OpenID tokens the proxy
- * forwards to cloud. `cookie` defaults to an OpenID login (`token_provider=openid`)
- * — the signal the proxy requires before forwarding any OpenID token — and can be
- * overridden to model a local-JWT user whose browser still holds a stale session.
+ * forwards to cloud. The authenticated principal is `mockPrincipal` (default: an
+ * OpenID user); `cookie` models the httpOnly no-session fallback.
  */
-function buildApp(session, cookie = 'token_provider=openid') {
+function buildApp(session, cookie) {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
@@ -50,16 +67,18 @@ function buildApp(session, cookie = 'token_provider=openid') {
   return app;
 }
 
-const withToken = { openidTokens: { idToken: 'ID.JWT.SIG', accessToken: 'ACC' } };
+const VALID_ID = mintIdToken();
+const withToken = { openidTokens: { idToken: VALID_ID, accessToken: 'ACC' } };
 
 describe('cloud agents proxy route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPrincipal = OPENID_USER;
     getCloudAgentsClient.mockReturnValue(mockClient);
   });
 
   describe('token handling (no leak, fail-secure)', () => {
-    it('401s when the user has no hanzo.id session token', async () => {
+    it('401s when the openid principal has no hanzo.id session token', async () => {
       const res = await request(buildApp({})).get('/api/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
@@ -69,7 +88,7 @@ describe('cloud agents proxy route', () => {
       mockClient.list.mockResolvedValue({ agents: [{ name: 'researcher' }] });
       const res = await request(buildApp(withToken)).get('/api/agents/cloud');
       expect(res.status).toBe(200);
-      expect(mockClient.list).toHaveBeenCalledWith('ID.JWT.SIG');
+      expect(mockClient.list).toHaveBeenCalledWith(VALID_ID);
       expect(res.body).toEqual({ agents: [{ name: 'researcher' }], enabled: true });
     });
 
@@ -82,26 +101,51 @@ describe('cloud agents proxy route', () => {
 
     it('reads the httpOnly openid_id_token cookie when the session is empty', async () => {
       mockClient.list.mockResolvedValue({ agents: [] });
-      const app = buildApp({}, 'token_provider=openid; openid_id_token=COOKIE.ID.TOK');
+      const app = buildApp({}, `openid_id_token=${VALID_ID}`);
       await request(app).get('/api/agents/cloud');
-      expect(mockClient.list).toHaveBeenCalledWith('COOKIE.ID.TOK');
+      expect(mockClient.list).toHaveBeenCalledWith(VALID_ID);
     });
   });
 
-  describe('principal guard (no confused deputy)', () => {
-    it('401s and forwards nothing when the request is NOT an openid login, even with a stale openid session', async () => {
-      // Local-JWT user (token_provider != openid) whose browser still holds a
-      // valid prior openid session. Forwarding those tokens would run as the wrong
-      // principal — deny instead.
-      const app = buildApp(withToken, 'token_provider=email');
+  describe('honest expiry + principal binding (never a fabricated session)', () => {
+    it('honest 401 when the id_token is past its own exp (no forward)', async () => {
+      const expired = mintIdToken({ exp: Math.floor(Date.now() / 1000) - 60 });
+      const app = buildApp({ openidTokens: { idToken: expired } });
       const res = await request(app).get('/api/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
 
-    it('401s when there is no token_provider cookie at all', async () => {
-      const app = buildApp(withToken, '');
+    it('honest 401 when the id_token names a different principal (sub mismatch)', async () => {
+      const foreign = mintIdToken({ sub: 'sub-someone-else' });
+      const app = buildApp({ openidTokens: { idToken: foreign } });
       const res = await request(app).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
+    });
+
+    it('honest 401 when the id_token is not a decodable JWT', async () => {
+      const app = buildApp({ openidTokens: { idToken: 'not-a-jwt' } });
+      const res = await request(app).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('principal guard (no confused deputy)', () => {
+    it('401s and forwards nothing for a LOCAL principal, even with a valid openid session', async () => {
+      // A local-JWT user whose browser still holds a valid prior openid session.
+      // Forwarding those tokens would run as the wrong principal — deny at the
+      // identity layer (req.user.provider), independent of any cookie.
+      mockPrincipal = LOCAL_USER;
+      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
+    });
+
+    it('401s for a principal that carries no provider', async () => {
+      mockPrincipal = { id: 'u_unknown' };
+      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -123,7 +167,7 @@ describe('cloud agents proxy route', () => {
         .post('/api/agents/cloud/researcher/run')
         .send({ input: 'summarize' });
       expect(res.status).toBe(200);
-      expect(mockClient.run).toHaveBeenCalledWith('ID.JWT.SIG', 'researcher', 'summarize');
+      expect(mockClient.run).toHaveBeenCalledWith(VALID_ID, 'researcher', 'summarize');
       expect(res.body.output).toBe('done');
     });
 

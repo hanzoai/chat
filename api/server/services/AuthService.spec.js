@@ -36,7 +36,8 @@ jest.mock('~/server/services/Config', () => ({ getAppConfig: jest.fn() }));
 jest.mock('~/server/utils', () => ({ sendEmail: jest.fn() }));
 
 const { shouldUseSecureCookie } = require('@hanzochat/api');
-const { setOpenIDAuthTokens } = require('./AuthService');
+const { setOpenIDAuthTokens, persistOpenIDTokensToSession } = require('./AuthService');
+const { logger } = require('@librechat/data-schemas');
 
 /** Helper to build a mock Express response */
 function mockResponse() {
@@ -265,5 +266,72 @@ describe('setOpenIDAuthTokens', () => {
       expect(result).toBe('the-id-token');
       expect(req.session.openidTokens.refreshToken).toBe('existing-refresh');
     });
+  });
+});
+
+/**
+ * The on-behalf-of session writer, decoupled from the refresh strategy. Called on
+ * every OpenID login (regardless of OPENID_REUSE_TOKENS) so downstream cloud
+ * calls can run as the hanzo.id principal — and ONLY ever touches server-side
+ * session state, never a browser cookie.
+ */
+describe('persistOpenIDTokensToSession', () => {
+  const env = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...env };
+    delete process.env.REFRESH_TOKEN_EXPIRY; // fall back to DEFAULT_REFRESH_TOKEN_EXPIRY
+  });
+
+  afterAll(() => {
+    process.env = env;
+  });
+
+  it('stores id_token/access_token/refresh_token + expiry in the session and returns true', () => {
+    const tokenset = {
+      id_token: 'the-id-token',
+      access_token: 'the-access-token',
+      refresh_token: 'the-refresh-token',
+    };
+    const req = { session: {} };
+
+    const before = Date.now();
+    const result = persistOpenIDTokensToSession(req, tokenset);
+
+    expect(result).toBe(true);
+    expect(req.session.openidTokens).toEqual({
+      accessToken: 'the-access-token',
+      idToken: 'the-id-token',
+      refreshToken: 'the-refresh-token',
+      expiresAt: expect.any(Number),
+    });
+    // Expiry is anchored ~REFRESH_TOKEN_EXPIRY (default 7d) ahead of now.
+    expect(req.session.openidTokens.expiresAt).toBeGreaterThanOrEqual(before + 604800000);
+  });
+
+  it('falls back to existingRefreshToken when the tokenset omits refresh_token', () => {
+    const tokenset = { id_token: 'id', access_token: 'acc' };
+    const req = { session: {} };
+
+    persistOpenIDTokensToSession(req, tokenset, 'existing-refresh');
+
+    expect(req.session.openidTokens.refreshToken).toBe('existing-refresh');
+  });
+
+  it('returns false and warns when no session is available (never a cookie)', () => {
+    const req = { session: null };
+    const result = persistOpenIDTokensToSession(req, { access_token: 'acc' });
+
+    expect(result).toBe(false);
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('returns false when no tokenset is provided', () => {
+    const req = { session: {} };
+    const result = persistOpenIDTokensToSession(req, undefined);
+
+    expect(result).toBe(false);
+    expect(req.session.openidTokens).toBeUndefined();
   });
 });
