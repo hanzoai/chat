@@ -1,10 +1,11 @@
 import { Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import { PrincipalType } from 'librechat-data-provider';
 import type { TUser, TPrincipalSearchResult } from 'librechat-data-provider';
 import type { Model, ClientSession } from 'mongoose';
 import type { IGroup, IRole, IUser } from '~/types';
 
-export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
+export function createUserGroupMethods(handle: DataHandle) {
   /**
    * Find a group by its ID
    * @param groupId - The group ID
@@ -17,7 +18,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     projection: Record<string, unknown> = {},
     session?: ClientSession,
   ): Promise<IGroup | null> {
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const Group = handle.models.Group as Model<IGroup>;
     const query = Group.findOne({ _id: groupId }, projection);
     if (session) {
       query.session(session);
@@ -39,7 +40,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     projection: Record<string, unknown> = {},
     session?: ClientSession,
   ): Promise<IGroup | null> {
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const Group = handle.models.Group as Model<IGroup>;
     const query = Group.findOne({ idOnTheSource, source }, projection);
     if (session) {
       query.session(session);
@@ -61,7 +62,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     limit: number = 20,
     session?: ClientSession,
   ): Promise<IGroup[]> {
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const Group = handle.models.Group as Model<IGroup>;
     const regex = new RegExp(namePattern, 'i');
     const query: Record<string, unknown> = {
       $or: [{ name: regex }, { email: regex }, { description: regex }],
@@ -88,8 +89,8 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     userId: string | Types.ObjectId,
     session?: ClientSession,
   ): Promise<IGroup[]> {
-    const User = mongoose.models.User as Model<IUser>;
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const User = handle.models.User as Model<IUser>;
+    const Group = handle.models.Group as Model<IGroup>;
 
     const userQuery = User.findById(userId, 'idOnTheSource');
     if (session) {
@@ -117,7 +118,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
    * @returns The created group
    */
   async function createGroup(groupData: Partial<IGroup>, session?: ClientSession): Promise<IGroup> {
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const Group = handle.models.Group as Model<IGroup>;
     const options = session ? { session } : {};
     return await Group.create([groupData], options).then((groups) => groups[0]);
   }
@@ -136,7 +137,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     updateData: Partial<IGroup>,
     session?: ClientSession,
   ): Promise<IGroup | null> {
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const Group = handle.models.Group as Model<IGroup>;
     const options = {
       new: true,
       upsert: true,
@@ -161,8 +162,8 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     groupId: string | Types.ObjectId,
     session?: ClientSession,
   ): Promise<{ user: IUser; group: IGroup | null }> {
-    const User = mongoose.models.User as Model<IUser>;
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const User = handle.models.User as Model<IUser>;
+    const Group = handle.models.Group as Model<IGroup>;
 
     const options = { new: true, ...(session ? { session } : {}) };
 
@@ -199,8 +200,8 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     groupId: string | Types.ObjectId,
     session?: ClientSession,
   ): Promise<{ user: IUser; group: IGroup | null }> {
-    const User = mongoose.models.User as Model<IUser>;
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const User = handle.models.User as Model<IUser>;
+    const Group = handle.models.Group as Model<IGroup>;
 
     const options = { new: true, ...(session ? { session } : {}) };
 
@@ -261,7 +262,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     // If role is not provided, query user to get it
     let userRole = role;
     if (userRole === undefined) {
-      const User = mongoose.models.User as Model<IUser>;
+      const User = handle.models.User as Model<IUser>;
       const query = User.findById(userId).select('role');
       if (session) {
         query.session(session);
@@ -303,8 +304,8 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     addedGroups: IGroup[];
     removedGroups: IGroup[];
   }> {
-    const User = mongoose.models.User as Model<IUser>;
-    const Group = mongoose.models.Group as Model<IGroup>;
+    const User = handle.models.User as Model<IUser>;
+    const Group = handle.models.Group as Model<IGroup>;
 
     const query = User.findById(userId, { idOnTheSource: 1 });
     if (session) {
@@ -516,7 +517,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
       /** Note: searchUsers is imported from ~/models and needs to be passed in or implemented */
       const userFields = 'name email username avatar provider idOnTheSource';
       /** For now, we'll use a direct query instead of searchUsers */
-      const User = mongoose.models.User as Model<IUser>;
+      const User = handle.models.User as Model<IUser>;
       const regex = new RegExp(trimmedPattern, 'i');
       const userQuery = User.find({
         $or: [{ name: regex }, { email: regex }, { username: regex }],
@@ -558,7 +559,7 @@ export function createUserGroupMethods(mongoose: typeof import('mongoose')) {
     }
 
     if (!typeFilter || typeFilter.includes(PrincipalType.ROLE)) {
-      const Role = mongoose.models.Role as Model<IRole>;
+      const Role = handle.models.Role as Model<IRole>;
       if (Role) {
         const regex = new RegExp(trimmedPattern, 'i');
         const roleQuery = Role.find({ name: regex }).select('name').limit(limitPerType);

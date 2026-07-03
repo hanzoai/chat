@@ -273,6 +273,22 @@ function matchOperator(docVal: unknown, op: string, operand: unknown, present: b
       }
       return !matchFieldConditions(docVal, operand as Record<string, unknown>, present);
     }
+    case '$bitsAllSet':
+    case '$bitsAnySet':
+    case '$bitsAllClear':
+    case '$bitsAnyClear': {
+      if (typeof docVal !== 'number') {
+        return false;
+      }
+      const mask = Array.isArray(operand)
+        ? (operand as number[]).reduce((m, bit) => m | (1 << bit), 0)
+        : (operand as number);
+      const set = docVal & mask;
+      if (op === '$bitsAllSet') return set === mask;
+      if (op === '$bitsAnySet') return set !== 0;
+      if (op === '$bitsAllClear') return set === 0;
+      return set !== mask; // $bitsAnyClear
+    }
     case '$size':
       return Array.isArray(docVal) && docVal.length === operand;
     case '$all':
@@ -393,7 +409,10 @@ export function equalitySeed(filter: Filter): Doc {
  * `$setOnInsert` is applied only when `isInsert` is true.
  */
 export function applyUpdate(base: Doc, update: Update, isInsert: boolean): Doc {
-  const doc: Doc = structuredClone(base);
+  // deepCoerceIds first: an upsert seed (equalitySeed of a filter) can carry
+  // ObjectId shims, which structuredClone would strip to a husk. No-op for
+  // already-stored docs (hex strings + Dates pass through untouched).
+  const doc: Doc = structuredClone(deepCoerceIds(base) as Doc);
   const ops: Update = normalizeUpdate(update);
 
   for (const [op, payload] of Object.entries(ops)) {
