@@ -138,19 +138,24 @@ endpoints:
         # Free tier first so a new /c/new conversation defaults to a model the
         # $5 starter credit covers; premium zen5* require a paid balance (402).
         # No raw upstream / third-party names in the picker (brand policy).
+        # LIVE catalog only — zen4 generation was SUNSET 2026-05-30 (gateway
+        # config.yaml). Mirrors the authoritative prod ConfigMap
+        # (universe infra/k8s/chat/configmap.yaml). zen5-* flagship + zen3-*.
         default:
-          - 'zen4-mini'
-          - 'zen3-nano'
-          - 'zen4'
-          - 'zen4-coder'
           - 'zen5-mini'
+          - 'zen5-flash'
           - 'zen5'
           - 'zen5-pro'
-          - 'zen4-pro'
-          - 'zen4-max'
+          - 'zen5-max'
+          - 'zen5-ultra'
+          - 'zen5-coder'
+          - 'zen5-nano'
+          - 'zen3-omni'
+          - 'zen3-vl'
+          - 'zen3-nano'
         fetch: false
       titleConvo: true
-      titleModel: 'zen4-mini'
+      titleModel: 'zen5-nano'
       summarize: true
-      summaryModel: 'zen4-mini'
+      summaryModel: 'zen5-nano'
       modelDisplayLabel: 'Hanzo'
