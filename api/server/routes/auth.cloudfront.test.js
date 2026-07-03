@@ -79,18 +79,18 @@ jest.mock('~/server/middleware', () => {
 
 const authRouter = require('./auth');
 
-describe('POST /api/auth/cloudfront/refresh', () => {
+describe('POST /v1/chat/auth/cloudfront/refresh', () => {
   let app;
 
   beforeEach(() => {
     jest.clearAllMocks();
     app = express();
     app.use(express.json());
-    app.use('/api/auth', authRouter);
+    app.use('/v1/chat/auth', authRouter);
   });
 
   it('requires authentication', async () => {
-    await request(app).post('/api/auth/cloudfront/refresh').expect(401);
+    await request(app).post('/v1/chat/auth/cloudfront/refresh').expect(401);
 
     expect(mockForceRefreshCloudFrontAuthCookies).not.toHaveBeenCalled();
   });
@@ -104,7 +104,7 @@ describe('POST /api/auth/cloudfront/refresh', () => {
     });
 
     const response = await request(app)
-      .post('/api/auth/cloudfront/refresh')
+      .post('/v1/chat/auth/cloudfront/refresh')
       .set('Authorization', 'Bearer ok')
       .expect(404);
 
@@ -121,7 +121,7 @@ describe('POST /api/auth/cloudfront/refresh', () => {
     });
 
     const response = await request(app)
-      .post('/api/auth/cloudfront/refresh')
+      .post('/v1/chat/auth/cloudfront/refresh')
       .set('Authorization', 'Bearer ok')
       .expect(200);
 
@@ -139,7 +139,7 @@ describe('POST /api/auth/cloudfront/refresh', () => {
 
   it('reuses the auth middleware refresh result instead of minting cookies twice', async () => {
     const response = await request(app)
-      .post('/api/auth/cloudfront/refresh')
+      .post('/v1/chat/auth/cloudfront/refresh')
       .set('Authorization', 'Bearer ok')
       .set('x-cloudfront-warmed', 'true')
       .expect(200);

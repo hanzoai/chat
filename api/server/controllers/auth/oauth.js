@@ -64,7 +64,7 @@ function createOAuthHandler(redirectUri = domains.client) {
         if (isEnabled(process.env.OPENID_REUSE_TOKENS) === true) {
           /**
            * REUSE path: the OIDC tokenset drives BOTH the app auth token and the
-           * refresh grant (`/api/auth/refresh` performs an OIDC refresh). Unchanged.
+           * refresh grant (`/v1/chat/auth/refresh` performs an OIDC refresh). Unchanged.
            * setOpenIDAuthTokens already persists the id_token to the session.
            */
           await syncUserEntraGroupMemberships(req.user, req.user.tokenset.access_token);
@@ -74,7 +74,7 @@ function createOAuthHandler(redirectUri = domains.client) {
            * Decoupled path (the live default, REUSE disabled). Keep refresh on the
            * local-JWT path so login/refresh cookies stay byte-identical, but ALSO
            * persist the id_token server-side so downstream on-behalf-of cloud calls
-           * (POST /api/agents/cloud/:name/run -> cloud /v1/agents) can run as this
+           * (POST /v1/chat/agents/cloud/:name/run -> cloud /v1/agents) can run as this
            * hanzo.id principal. OPENID_REUSE_TOKENS still SOLELY gates the OIDC
            * refresh-grant; it no longer gates id_token persistence.
            */

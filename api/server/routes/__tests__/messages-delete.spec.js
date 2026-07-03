@@ -155,7 +155,7 @@ describe('DELETE /:conversationId/:messageId – route handler', () => {
       req.user = { id: authenticatedUserId };
       next();
     });
-    app.use('/api/messages', messagesRouter);
+    app.use('/v1/chat/messages', messagesRouter);
   });
 
   beforeEach(() => {
@@ -165,7 +165,7 @@ describe('DELETE /:conversationId/:messageId – route handler', () => {
   it('should pass user and conversationId in the deleteMessages filter', async () => {
     deleteMessages.mockResolvedValue({ deletedCount: 1 });
 
-    await request(app).delete('/api/messages/convo-1/msg-1');
+    await request(app).delete('/v1/chat/messages/convo-1/msg-1');
 
     expect(deleteMessages).toHaveBeenCalledTimes(1);
     expect(deleteMessages).toHaveBeenCalledWith({
@@ -178,7 +178,7 @@ describe('DELETE /:conversationId/:messageId – route handler', () => {
   it('should return 204 on successful deletion', async () => {
     deleteMessages.mockResolvedValue({ deletedCount: 1 });
 
-    const response = await request(app).delete('/api/messages/convo-1/msg-owned');
+    const response = await request(app).delete('/v1/chat/messages/convo-1/msg-owned');
 
     expect(response.status).toBe(204);
     expect(deleteMessages).toHaveBeenCalledWith({
@@ -191,7 +191,7 @@ describe('DELETE /:conversationId/:messageId – route handler', () => {
   it('should return 500 when deleteMessages throws', async () => {
     deleteMessages.mockRejectedValue(new Error('DB failure'));
 
-    const response = await request(app).delete('/api/messages/convo-1/msg-1');
+    const response = await request(app).delete('/v1/chat/messages/convo-1/msg-1');
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({ error: 'Internal server error' });
@@ -213,7 +213,7 @@ describe('message route conversation ownership filters', () => {
       req.user = { id: authenticatedUserId };
       next();
     });
-    app.use('/api/messages', messagesRouter);
+    app.use('/v1/chat/messages', messagesRouter);
   });
 
   beforeEach(() => {
@@ -233,7 +233,7 @@ describe('message route conversation ownership filters', () => {
     saveMessage.mockResolvedValue(savedMessage);
     saveConvo.mockResolvedValue({ conversationId: urlConversationId });
 
-    const response = await request(app).post(`/api/messages/${urlConversationId}`).send({
+    const response = await request(app).post(`/v1/chat/messages/${urlConversationId}`).send({
       messageId: savedMessage.messageId,
       conversationId: bodyConversationId,
       text: savedMessage.text,
@@ -248,20 +248,20 @@ describe('message route conversation ownership filters', () => {
         text: savedMessage.text,
         user: authenticatedUserId,
       }),
-      { context: 'POST /api/messages/:conversationId' },
+      { context: 'POST /v1/chat/messages/:conversationId' },
     );
     expect(saveMessage.mock.calls[0][1].conversationId).not.toBe(bodyConversationId);
     expect(saveConvo).toHaveBeenCalledWith(
       expect.objectContaining({ userId: authenticatedUserId }),
       savedMessage,
-      { context: 'POST /api/messages/:conversationId' },
+      { context: 'POST /v1/chat/messages/:conversationId' },
     );
   });
 
   it('should filter conversation message reads by authenticated user', async () => {
     getMessages.mockResolvedValue([{ messageId: 'message-1', conversationId: 'convo-1' }]);
 
-    const response = await request(app).get('/api/messages/convo-1');
+    const response = await request(app).get('/v1/chat/messages/convo-1');
 
     expect(response.status).toBe(200);
     expect(getMessages).toHaveBeenCalledWith(
@@ -273,7 +273,7 @@ describe('message route conversation ownership filters', () => {
   it('should filter single message reads by authenticated user', async () => {
     getMessages.mockResolvedValue([{ messageId: 'message-1', conversationId: 'convo-1' }]);
 
-    const response = await request(app).get('/api/messages/convo-1/message-1');
+    const response = await request(app).get('/v1/chat/messages/convo-1/message-1');
 
     expect(response.status).toBe(200);
     expect(getMessages).toHaveBeenCalledWith(

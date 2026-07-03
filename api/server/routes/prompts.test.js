@@ -83,7 +83,7 @@ beforeAll(async () => {
 
   // Import routes after middleware is set up
   promptRoutes = require('./prompts');
-  app.use('/api/prompts', promptRoutes);
+  app.use('/v1/chat/prompts', promptRoutes);
 });
 
 afterEach(() => {
@@ -180,13 +180,13 @@ describe('Prompt Routes - ACL Permissions', () => {
   // Simple test to verify route is loaded
   it('should have routes loaded', async () => {
     // This should at least not crash
-    const response = await request(app).get('/api/prompts/test-404');
+    const response = await request(app).get('/v1/chat/prompts/test-404');
 
     // We expect a 401 or 404, not 500
     expect(response.status).not.toBe(500);
   });
 
-  describe('POST /api/prompts - Create Prompt', () => {
+  describe('POST /v1/chat/prompts - Create Prompt', () => {
     afterEach(async () => {
       await Prompt.deleteMany({});
       await PromptGroup.deleteMany({});
@@ -204,7 +204,7 @@ describe('Prompt Routes - ACL Permissions', () => {
         },
       };
 
-      const response = await request(app).post('/api/prompts').send(promptData);
+      const response = await request(app).post('/v1/chat/prompts').send(promptData);
 
       expect(response.status).toBe(200);
       expect(response.body.prompt).toBeDefined();
@@ -234,7 +234,7 @@ describe('Prompt Routes - ACL Permissions', () => {
         },
       };
 
-      const response = await request(app).post('/api/prompts').send(promptData).expect(200);
+      const response = await request(app).post('/v1/chat/prompts').send(promptData).expect(200);
 
       expect(response.body.prompt).toBeDefined();
       expect(response.body.group).toBeDefined();
@@ -252,7 +252,7 @@ describe('Prompt Routes - ACL Permissions', () => {
     });
   });
 
-  describe('GET /api/prompts/:promptId - Get Prompt', () => {
+  describe('GET /v1/chat/prompts/:promptId - Get Prompt', () => {
     let testPrompt;
     let testGroup;
 
@@ -293,7 +293,7 @@ describe('Prompt Routes - ACL Permissions', () => {
         grantedBy: testUsers.owner._id,
       });
 
-      const response = await request(app).get(`/api/prompts/${testPrompt._id}`);
+      const response = await request(app).get(`/v1/chat/prompts/${testPrompt._id}`);
       expect(response.status).toBe(200);
       expect(response.body._id).toBe(testPrompt._id.toString());
       expect(response.body.prompt).toBe(testPrompt.prompt);
@@ -303,7 +303,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       // Change the user to one without access
       setTestUser(app, testUsers.noAccess);
 
-      const response = await request(app).get(`/api/prompts/${testPrompt._id}`).expect(403);
+      const response = await request(app).get(`/v1/chat/prompts/${testPrompt._id}`).expect(403);
 
       // Verify error response
       expect(response.body.error).toBe('Forbidden');
@@ -314,13 +314,13 @@ describe('Prompt Routes - ACL Permissions', () => {
       // Set admin user
       setTestUser(app, testUsers.admin);
 
-      const response = await request(app).get(`/api/prompts/${testPrompt._id}`).expect(200);
+      const response = await request(app).get(`/v1/chat/prompts/${testPrompt._id}`).expect(200);
 
       expect(response.body._id).toBe(testPrompt._id.toString());
     });
   });
 
-  describe('DELETE /api/prompts/:promptId - Delete Prompt', () => {
+  describe('DELETE /v1/chat/prompts/:promptId - Delete Prompt', () => {
     let testPrompt;
     let testGroup;
 
@@ -366,7 +366,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
     it('should delete prompt when user has delete permissions', async () => {
       const response = await request(app)
-        .delete(`/api/prompts/${testPrompt._id}`)
+        .delete(`/v1/chat/prompts/${testPrompt._id}`)
         .query({ groupId: testGroup._id.toString() })
         .expect(200);
 
@@ -408,7 +408,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       setTestUser(app, testUsers.viewer);
 
       await request(app)
-        .delete(`/api/prompts/${authorPrompt._id}`)
+        .delete(`/v1/chat/prompts/${authorPrompt._id}`)
         .query({ groupId: testGroup._id.toString() })
         .expect(403);
 
@@ -418,7 +418,7 @@ describe('Prompt Routes - ACL Permissions', () => {
     });
   });
 
-  describe('PATCH /api/prompts/:promptId/tags/production - Make Production', () => {
+  describe('PATCH /v1/chat/prompts/:promptId/tags/production - Make Production', () => {
     let testPrompt;
     let testGroup;
 
@@ -462,7 +462,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       setTestUser(app, testUsers.owner);
 
       const response = await request(app)
-        .patch(`/api/prompts/${testPrompt._id}/tags/production`)
+        .patch(`/v1/chat/prompts/${testPrompt._id}/tags/production`)
         .expect(200);
 
       expect(response.body.message).toBe('Prompt production made successfully');
@@ -486,7 +486,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       // Set viewer user
       setTestUser(app, testUsers.viewer);
 
-      await request(app).patch(`/api/prompts/${testPrompt._id}/tags/production`).expect(403);
+      await request(app).patch(`/v1/chat/prompts/${testPrompt._id}/tags/production`).expect(403);
 
       // Verify prompt hasn't changed
       const unchangedGroup = await PromptGroup.findById(testGroup._id);
@@ -538,13 +538,13 @@ describe('Prompt Routes - ACL Permissions', () => {
       // Change user to someone without explicit permissions
       setTestUser(app, testUsers.noAccess);
 
-      const response = await request(app).get(`/api/prompts/${publicPrompt._id}`).expect(200);
+      const response = await request(app).get(`/v1/chat/prompts/${publicPrompt._id}`).expect(200);
 
       expect(response.body._id).toBe(publicPrompt._id.toString());
     });
   });
 
-  describe('PATCH /api/prompts/groups/:groupId - Update Prompt Group Security', () => {
+  describe('PATCH /v1/chat/prompts/groups/:groupId - Update Prompt Group Security', () => {
     let testGroup;
 
     beforeEach(async () => {
@@ -581,7 +581,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(updateData)
         .expect(200);
 
@@ -597,7 +597,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(maliciousUpdate)
         .expect(400);
 
@@ -613,7 +613,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(maliciousUpdate)
         .expect(400);
 
@@ -629,7 +629,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(maliciousUpdate)
         .expect(400);
 
@@ -645,7 +645,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(maliciousUpdate)
         .expect(400);
 
@@ -661,7 +661,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(maliciousUpdate)
         .expect(400);
 
@@ -676,7 +676,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(maliciousUpdate)
         .expect(400);
 
@@ -696,7 +696,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       };
 
       const response = await request(app)
-        .patch(`/api/prompts/groups/${testGroup._id}`)
+        .patch(`/v1/chat/prompts/groups/${testGroup._id}`)
         .send(maliciousUpdate)
         .expect(400);
 
@@ -741,7 +741,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
     it('should correctly indicate hasMore when there are more pages', async () => {
       const response = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '10' })
         .expect(200);
 
@@ -755,7 +755,7 @@ describe('Prompt Routes - ACL Permissions', () => {
     it('should correctly indicate no more pages on the last page', async () => {
       // First get the cursor for page 2
       const firstPage = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '10' })
         .expect(200);
 
@@ -764,7 +764,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
       // Now fetch the second page using the cursor
       const response = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '10', cursor: firstPage.body.after })
         .expect(200);
 
@@ -775,7 +775,7 @@ describe('Prompt Routes - ACL Permissions', () => {
     it('should support cursor-based pagination', async () => {
       // First page
       const firstPage = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '5' })
         .expect(200);
 
@@ -785,7 +785,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
       // Second page using cursor
       const secondPage = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '5', cursor: firstPage.body.after })
         .expect(200);
 
@@ -848,7 +848,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
       // Test pagination with category filter
       const firstPage = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '5', category: 'test-cat-1' })
         .expect(200);
 
@@ -858,7 +858,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       expect(firstPage.body.after).toBeTruthy();
 
       const secondPage = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '5', cursor: firstPage.body.after, category: 'test-cat-1' })
         .expect(200);
 
@@ -916,7 +916,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
       // Test pagination with name filter
       const firstPage = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '10', name: 'Search' })
         .expect(200);
 
@@ -926,7 +926,7 @@ describe('Prompt Routes - ACL Permissions', () => {
       expect(firstPage.body.after).toBeTruthy();
 
       const secondPage = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '10', cursor: firstPage.body.after, name: 'Search' })
         .expect(200);
 
@@ -984,7 +984,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
       // Test pagination with both filters
       const response = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '5', name: 'API', category: 'api-category' })
         .expect(200);
 
@@ -999,7 +999,7 @@ describe('Prompt Routes - ACL Permissions', () => {
 
       // Page 2
       const page2 = await request(app)
-        .get('/api/prompts/groups')
+        .get('/v1/chat/prompts/groups')
         .query({ limit: '5', cursor: response.body.after, name: 'API', category: 'api-category' })
         .expect(200);
 

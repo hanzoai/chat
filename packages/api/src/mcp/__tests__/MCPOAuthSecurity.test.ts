@@ -224,7 +224,7 @@ describe('MCP OAuth redirect_uri enforcement', () => {
     );
 
     const authUrl = new URL(result.authorizationUrl);
-    const expectedRedirectUri = `${process.env.DOMAIN_SERVER || 'http://localhost:3080'}/api/mcp/victim-server/oauth/callback`;
+    const expectedRedirectUri = `${process.env.DOMAIN_SERVER || 'http://localhost:3080'}/v1/chat/mcp/victim-server/oauth/callback`;
     expect(authUrl.searchParams.get('redirect_uri')).toBe(expectedRedirectUri);
     expect(authUrl.searchParams.get('redirect_uri')).not.toBe(attackerRedirectUri);
   });

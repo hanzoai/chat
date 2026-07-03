@@ -5,7 +5,7 @@ const configRoute = require('../config');
 // file deepcode ignore UseCsurfForExpress/test: test
 const app = express();
 app.disable('x-powered-by');
-app.use('/api/config', configRoute);
+app.use('/v1/chat/config', configRoute);
 
 afterEach(() => {
   delete process.env.APP_TITLE;

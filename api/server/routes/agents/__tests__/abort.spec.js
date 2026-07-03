@@ -69,7 +69,7 @@ describe('Agent Abort Endpoint', () => {
   beforeAll(() => {
     app = express();
     app.use(express.json());
-    app.use('/api/agents', agentRoutes);
+    app.use('/v1/chat/agents', agentRoutes);
   });
 
   beforeEach(() => {
@@ -86,7 +86,7 @@ describe('Agent Abort Endpoint', () => {
         });
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: jobStreamId });
 
         expect(response.status).toBe(403);
@@ -112,7 +112,7 @@ describe('Agent Abort Endpoint', () => {
         });
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: jobStreamId });
 
         expect(response.status).toBe(200);
@@ -135,7 +135,7 @@ describe('Agent Abort Endpoint', () => {
         });
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: jobStreamId });
 
         expect(response.status).toBe(200);
@@ -163,7 +163,7 @@ describe('Agent Abort Endpoint', () => {
         });
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: jobStreamId });
 
         expect(response.status).toBe(200);
@@ -189,7 +189,7 @@ describe('Agent Abort Endpoint', () => {
         });
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: jobStreamId });
 
         expect(response.status).toBe(200);
@@ -224,7 +224,7 @@ describe('Agent Abort Endpoint', () => {
         mockSaveMessage.mockResolvedValue();
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: jobStreamId });
 
         expect(response.status).toBe(200);
@@ -271,7 +271,7 @@ describe('Agent Abort Endpoint', () => {
         mockSaveMessage.mockRejectedValue(new Error('Database error'));
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: jobStreamId });
 
         // Should still return success even if save fails
@@ -289,7 +289,7 @@ describe('Agent Abort Endpoint', () => {
         mockGenerationJobManager.getActiveJobIdsForUser.mockResolvedValue([]);
 
         const response = await request(app)
-          .post('/api/agents/chat/abort')
+          .post('/v1/chat/agents/chat/abort')
           .send({ conversationId: 'non-existent-job' });
 
         expect(response.status).toBe(404);

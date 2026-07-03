@@ -17,7 +17,7 @@ import {
 const cloudFrontStartupConfig = {
   cloudFront: {
     cookieRefresh: {
-      endpoint: '/api/auth/cloudfront/refresh',
+      endpoint: '/v1/chat/auth/cloudfront/refresh',
       domain: 'https://cdn.example.com',
     },
   },
@@ -74,7 +74,7 @@ describe('CloudFront cookie refresh helpers', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/auth/cloudfront/refresh',
+      '/v1/chat/auth/cloudfront/refresh',
       expect.objectContaining({
         method: 'POST',
         credentials: 'include',
@@ -107,7 +107,7 @@ describe('CloudFront cookie refresh helpers', () => {
     await expect(refreshCloudFrontCookiesOnce()).resolves.toBe(true);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/chat/api/auth/cloudfront/refresh',
+      '/chat/v1/chat/auth/cloudfront/refresh',
       expect.objectContaining({ method: 'POST' }),
     );
   });

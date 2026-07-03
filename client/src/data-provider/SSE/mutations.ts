@@ -24,7 +24,7 @@ export interface AbortStreamResponse {
 export const abortStream = async (params: AbortStreamParams): Promise<AbortStreamResponse> => {
   console.log('[abortStream] Calling abort endpoint with params:', params);
   const result = (await request.post(
-    `${apiBaseUrl()}/api/agents/chat/abort`,
+    `${apiBaseUrl()}/v1/chat/agents/chat/abort`,
     params,
   )) as AbortStreamResponse;
   console.log('[abortStream] Abort response:', result);

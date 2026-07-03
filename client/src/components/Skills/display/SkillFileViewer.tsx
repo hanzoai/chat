@@ -32,7 +32,7 @@ function SkillFileViewer({ skillId, relativePath }: SkillFileViewerProps) {
 
   const rawUrl = useMemo(
     () =>
-      `${apiBaseUrl()}/api/skills/${skillId}/files/${encodeURIComponent(relativePath)}?raw=true`,
+      `${apiBaseUrl()}/v1/chat/skills/${skillId}/files/${encodeURIComponent(relativePath)}?raw=true`,
     [skillId, relativePath],
   );
 

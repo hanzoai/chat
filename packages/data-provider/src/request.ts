@@ -2,10 +2,10 @@
 /**
  * HTTP request layer for the Hanzo Chat (LibreChat-native) backend.
  *
- * - Talks to the same-origin `/api/*` REST surface.
+ * - Talks to the same-origin `/v1/chat/*` REST surface.
  * - Auth is JWT Bearer (set via setTokenHeader) plus the httpOnly `refreshToken`
  *   cookie; `withCredentials: true` ensures that cookie is sent so the silent
- *   refresh against `POST /api/auth/refresh` can mint a fresh access token.
+ *   refresh against `POST /v1/chat/auth/refresh` can mint a fresh access token.
  * - On a 401 the interceptor refreshes once and replays the original request.
  * - pk- key support is retained for unauthenticated access (model listing, etc.).
  */
@@ -113,10 +113,10 @@ if (typeof window !== 'undefined') {
       }
 
       // Don't retry auth endpoints that legitimately 401.
-      if (originalRequest.url?.includes('/api/auth/2fa') === true) {
+      if (originalRequest.url?.includes('/v1/chat/auth/2fa') === true) {
         return Promise.reject(error);
       }
-      if (originalRequest.url?.includes('/api/auth/logout') === true) {
+      if (originalRequest.url?.includes('/v1/chat/auth/logout') === true) {
         return Promise.reject(error);
       }
 

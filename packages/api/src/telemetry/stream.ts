@@ -5,7 +5,7 @@ import type { Response } from 'express';
 import type { ServerRequest } from '~/types';
 
 const STREAM_SPAN_NAME = 'librechat.sse.stream';
-const STREAM_ROUTE = '/api/agents/chat/stream/:streamId';
+const STREAM_ROUTE = '/v1/chat/agents/chat/stream/:streamId';
 
 type StreamEndReason = 'done' | 'client_aborted' | 'server_error' | 'subscribe_failed';
 

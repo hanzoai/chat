@@ -148,7 +148,7 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
   props.onClick = handleDownload;
   props.target = '_blank';
 
-  const domainServerBaseUrl = `${apiBaseUrl()}/api`;
+  const domainServerBaseUrl = `${apiBaseUrl()}/v1/chat`;
 
   return (
     <a

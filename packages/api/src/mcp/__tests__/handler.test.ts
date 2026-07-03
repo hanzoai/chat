@@ -1019,7 +1019,7 @@ describe('MCPOAuthHandler - Configurable OAuth Metadata', () => {
       mockRegisterClient.mockResolvedValueOnce({
         client_id: 'dynamic-client-id',
         client_secret: 'dynamic-client-secret',
-        redirect_uris: ['http://localhost:3080/api/mcp/test-server/oauth/callback'],
+        redirect_uris: ['http://localhost:3080/v1/chat/mcp/test-server/oauth/callback'],
       });
 
       // Mock startAuthorization to return a successful response

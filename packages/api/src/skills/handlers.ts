@@ -263,7 +263,7 @@ function parseLimit(raw: unknown): number {
 }
 
 /**
- * Factory for the typed Express handlers served at `/api/skills`.
+ * Factory for the typed Express handlers served at `/v1/chat/skills`.
  * The legacy `api/server/routes/skills.js` imports this, passes in concrete
  * deps from `~/models` + `PermissionService`, and wires the returned handlers
  * onto the Express router.

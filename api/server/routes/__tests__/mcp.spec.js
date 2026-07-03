@@ -147,7 +147,7 @@ describe('MCP Routes', () => {
       next();
     });
 
-    app.use('/api/mcp', mcpRouter);
+    app.use('/v1/chat/mcp', mcpRouter);
   });
 
   afterAll(async () => {
@@ -182,7 +182,7 @@ describe('MCP Routes', () => {
         flowId: 'test-user-id:test-server',
       });
 
-      const response = await request(app).get('/api/mcp/test-server/oauth/initiate').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/initiate').query({
         userId: 'test-user-id',
         flowId: 'test-user-id:test-server',
       });
@@ -199,7 +199,7 @@ describe('MCP Routes', () => {
     });
 
     it('should return 403 when userId does not match authenticated user', async () => {
-      const response = await request(app).get('/api/mcp/test-server/oauth/initiate').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/initiate').query({
         userId: 'different-user-id',
         flowId: 'test-user-id:test-server',
       });
@@ -216,7 +216,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/test-server/oauth/initiate').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/initiate').query({
         userId: 'test-user-id',
         flowId: 'non-existent-flow-id',
       });
@@ -237,7 +237,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/test-server/oauth/initiate').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/initiate').query({
         userId: 'test-user-id',
         flowId: 'test-user-id:test-server',
       });
@@ -254,7 +254,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/test-server/oauth/initiate').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/initiate').query({
         userId: 'test-user-id',
         flowId: 'test-user-id:test-server',
       });
@@ -274,7 +274,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/test-server/oauth/initiate').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/initiate').query({
         userId: 'test-user-id',
         flowId: 'test-user-id:test-server',
       });
@@ -289,7 +289,7 @@ describe('MCP Routes', () => {
     const { getLogStores } = require('~/cache');
 
     it('should redirect to error page when OAuth error is received', async () => {
-      const response = await request(app).get('/api/mcp/test-server/oauth/callback').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/callback').query({
         error: 'access_denied',
         state: 'test-user-id:test-server',
       });
@@ -300,7 +300,7 @@ describe('MCP Routes', () => {
     });
 
     it('should redirect to error page when code is missing', async () => {
-      const response = await request(app).get('/api/mcp/test-server/oauth/callback').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/callback').query({
         state: 'test-user-id:test-server',
       });
       const basePath = getBasePath();
@@ -310,7 +310,7 @@ describe('MCP Routes', () => {
     });
 
     it('should redirect to error page when state is missing', async () => {
-      const response = await request(app).get('/api/mcp/test-server/oauth/callback').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/callback').query({
         code: 'test-auth-code',
       });
       const basePath = getBasePath();
@@ -320,7 +320,7 @@ describe('MCP Routes', () => {
     });
 
     it('should redirect to error page when CSRF cookie is missing', async () => {
-      const response = await request(app).get('/api/mcp/test-server/oauth/callback').query({
+      const response = await request(app).get('/v1/chat/mcp/test-server/oauth/callback').query({
         code: 'test-auth-code',
         state: 'test-user-id:test-server',
       });
@@ -335,7 +335,7 @@ describe('MCP Routes', () => {
     it('should redirect to error page when CSRF cookie does not match state', async () => {
       const csrfToken = generateTestCsrfToken('different-flow-id');
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -355,7 +355,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -419,7 +419,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -464,7 +464,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -506,7 +506,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -558,7 +558,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -606,7 +606,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -671,7 +671,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -718,7 +718,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get('/api/mcp/test-server/oauth/callback')
+        .get('/v1/chat/mcp/test-server/oauth/callback')
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .query({
           code: 'test-auth-code',
@@ -751,7 +751,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/oauth/tokens/test-user-id:flow-123');
+      const response = await request(app).get('/v1/chat/mcp/oauth/tokens/test-user-id:flow-123');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -769,16 +769,16 @@ describe('MCP Routes', () => {
         req.user = null;
         next();
       });
-      unauthApp.use('/api/mcp', mcpRouter);
+      unauthApp.use('/v1/chat/mcp', mcpRouter);
 
-      const response = await request(unauthApp).get('/api/mcp/oauth/tokens/test-flow-id');
+      const response = await request(unauthApp).get('/v1/chat/mcp/oauth/tokens/test-flow-id');
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ error: 'User not authenticated' });
     });
 
     it('should return 403 when user tries to access flow they do not own', async () => {
-      const response = await request(app).get('/api/mcp/oauth/tokens/other-user-id:flow-123');
+      const response = await request(app).get('/v1/chat/mcp/oauth/tokens/other-user-id:flow-123');
 
       expect(response.status).toBe(403);
       expect(response.body).toEqual({ error: 'Access denied' });
@@ -793,7 +793,7 @@ describe('MCP Routes', () => {
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
       const response = await request(app).get(
-        '/api/mcp/oauth/tokens/test-user-id:non-existent-flow',
+        '/v1/chat/mcp/oauth/tokens/test-user-id:non-existent-flow',
       );
 
       expect(response.status).toBe(404);
@@ -811,7 +811,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/oauth/tokens/test-user-id:pending-flow');
+      const response = await request(app).get('/v1/chat/mcp/oauth/tokens/test-user-id:pending-flow');
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'Flow not completed' });
@@ -822,7 +822,7 @@ describe('MCP Routes', () => {
         throw new Error('Database connection failed');
       });
 
-      const response = await request(app).get('/api/mcp/oauth/tokens/test-user-id:error-flow');
+      const response = await request(app).get('/v1/chat/mcp/oauth/tokens/test-user-id:error-flow');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Failed to get tokens' });
@@ -843,7 +843,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/oauth/status/test-user-id:test-server');
+      const response = await request(app).get('/v1/chat/mcp/oauth/status/test-user-id:test-server');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -855,7 +855,7 @@ describe('MCP Routes', () => {
     });
 
     it('should return 403 when flowId does not match authenticated user', async () => {
-      const response = await request(app).get('/api/mcp/oauth/status/other-user-id:test-server');
+      const response = await request(app).get('/v1/chat/mcp/oauth/status/other-user-id:test-server');
 
       expect(response.status).toBe(403);
       expect(response.body).toEqual({ error: 'Access denied' });
@@ -869,7 +869,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/oauth/status/test-user-id:non-existent');
+      const response = await request(app).get('/v1/chat/mcp/oauth/status/test-user-id:non-existent');
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: 'Flow not found' });
@@ -883,7 +883,7 @@ describe('MCP Routes', () => {
       getLogStores.mockReturnValue({});
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
 
-      const response = await request(app).get('/api/mcp/oauth/status/test-user-id:error-server');
+      const response = await request(app).get('/v1/chat/mcp/oauth/status/test-user-id:error-server');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Failed to get flow status' });
@@ -906,7 +906,7 @@ describe('MCP Routes', () => {
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
       MCPOAuthHandler.generateFlowId.mockReturnValue('test-user-id:test-server');
 
-      const response = await request(app).post('/api/mcp/oauth/cancel/test-server');
+      const response = await request(app).post('/v1/chat/mcp/oauth/cancel/test-server');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -930,7 +930,7 @@ describe('MCP Routes', () => {
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
       MCPOAuthHandler.generateFlowId.mockReturnValue('test-user-id:test-server');
 
-      const response = await request(app).post('/api/mcp/oauth/cancel/test-server');
+      const response = await request(app).post('/v1/chat/mcp/oauth/cancel/test-server');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -949,7 +949,7 @@ describe('MCP Routes', () => {
       require('~/config').getFlowStateManager.mockReturnValue(mockFlowManager);
       MCPOAuthHandler.generateFlowId.mockReturnValue('test-user-id:test-server');
 
-      const response = await request(app).post('/api/mcp/oauth/cancel/test-server');
+      const response = await request(app).post('/v1/chat/mcp/oauth/cancel/test-server');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Failed to cancel OAuth flow' });
@@ -962,9 +962,9 @@ describe('MCP Routes', () => {
         req.user = null;
         next();
       });
-      unauthApp.use('/api/mcp', mcpRouter);
+      unauthApp.use('/v1/chat/mcp', mcpRouter);
 
-      const response = await request(unauthApp).post('/api/mcp/oauth/cancel/test-server');
+      const response = await request(unauthApp).post('/v1/chat/mcp/oauth/cancel/test-server');
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ error: 'User not authenticated' });
@@ -984,7 +984,7 @@ describe('MCP Routes', () => {
       require('~/config').getFlowStateManager.mockReturnValue({});
       require('~/cache').getLogStores.mockReturnValue({});
 
-      const response = await request(app).post('/api/mcp/non-existent-server/reinitialize');
+      const response = await request(app).post('/v1/chat/mcp/non-existent-server/reinitialize');
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
@@ -1018,7 +1018,7 @@ describe('MCP Routes', () => {
         oauthUrl: 'https://oauth.example.com/auth',
       });
 
-      const response = await request(app).post('/api/mcp/oauth-server/reinitialize');
+      const response = await request(app).post('/v1/chat/mcp/oauth-server/reinitialize');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -1043,7 +1043,7 @@ describe('MCP Routes', () => {
       require('~/cache').getLogStores.mockReturnValue({});
       require('~/server/services/Tools/mcp').reinitMCPServer.mockResolvedValue(null);
 
-      const response = await request(app).post('/api/mcp/error-server/reinitialize');
+      const response = await request(app).post('/v1/chat/mcp/error-server/reinitialize');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
@@ -1061,7 +1061,7 @@ describe('MCP Routes', () => {
       });
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
 
-      const response = await request(app).post('/api/mcp/test-server/reinitialize');
+      const response = await request(app).post('/v1/chat/mcp/test-server/reinitialize');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Internal server error' });
@@ -1074,9 +1074,9 @@ describe('MCP Routes', () => {
         req.user = null;
         next();
       });
-      unauthApp.use('/api/mcp', mcpRouter);
+      unauthApp.use('/v1/chat/mcp', mcpRouter);
 
-      const response = await request(unauthApp).post('/api/mcp/test-server/reinitialize');
+      const response = await request(unauthApp).post('/v1/chat/mcp/test-server/reinitialize');
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ error: 'User not authenticated' });
@@ -1116,7 +1116,7 @@ describe('MCP Routes', () => {
         oauthUrl: null,
       });
 
-      const response = await request(app).post('/api/mcp/test-server/reinitialize');
+      const response = await request(app).post('/v1/chat/mcp/test-server/reinitialize');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -1174,7 +1174,7 @@ describe('MCP Routes', () => {
         oauthUrl: null,
       });
 
-      const response = await request(app).post('/api/mcp/test-server/reinitialize');
+      const response = await request(app).post('/v1/chat/mcp/test-server/reinitialize');
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -1212,7 +1212,7 @@ describe('MCP Routes', () => {
           requiresOAuth: true,
         });
 
-      const response = await request(app).get('/api/mcp/connection/status');
+      const response = await request(app).get('/v1/chat/mcp/connection/status');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -1236,7 +1236,7 @@ describe('MCP Routes', () => {
     it('should return 404 when MCP config is not found', async () => {
       getMCPSetupData.mockRejectedValue(new Error('MCP config not found'));
 
-      const response = await request(app).get('/api/mcp/connection/status');
+      const response = await request(app).get('/v1/chat/mcp/connection/status');
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: 'MCP config not found' });
@@ -1245,7 +1245,7 @@ describe('MCP Routes', () => {
     it('should return 500 when connection status check fails', async () => {
       getMCPSetupData.mockRejectedValue(new Error('Database error'));
 
-      const response = await request(app).get('/api/mcp/connection/status');
+      const response = await request(app).get('/v1/chat/mcp/connection/status');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Failed to get connection status' });
@@ -1258,9 +1258,9 @@ describe('MCP Routes', () => {
         req.user = null;
         next();
       });
-      unauthApp.use('/api/mcp', mcpRouter);
+      unauthApp.use('/v1/chat/mcp', mcpRouter);
 
-      const response = await request(unauthApp).get('/api/mcp/connection/status');
+      const response = await request(unauthApp).get('/v1/chat/mcp/connection/status');
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ error: 'User not authenticated' });
@@ -1287,7 +1287,7 @@ describe('MCP Routes', () => {
         requiresOAuth: true,
       });
 
-      const response = await request(app).get('/api/mcp/connection/status/oauth-server');
+      const response = await request(app).get('/v1/chat/mcp/connection/status/oauth-server');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -1308,7 +1308,7 @@ describe('MCP Routes', () => {
         oauthServers: [],
       });
 
-      const response = await request(app).get('/api/mcp/connection/status/non-existent-server');
+      const response = await request(app).get('/v1/chat/mcp/connection/status/non-existent-server');
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
@@ -1319,7 +1319,7 @@ describe('MCP Routes', () => {
     it('should return 404 when MCP config is not found', async () => {
       getMCPSetupData.mockRejectedValue(new Error('MCP config not found'));
 
-      const response = await request(app).get('/api/mcp/connection/status/test-server');
+      const response = await request(app).get('/v1/chat/mcp/connection/status/test-server');
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: 'MCP config not found' });
@@ -1328,7 +1328,7 @@ describe('MCP Routes', () => {
     it('should return 500 when connection status check fails', async () => {
       getMCPSetupData.mockRejectedValue(new Error('Database connection failed'));
 
-      const response = await request(app).get('/api/mcp/connection/status/test-server');
+      const response = await request(app).get('/v1/chat/mcp/connection/status/test-server');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Failed to get connection status' });
@@ -1341,9 +1341,9 @@ describe('MCP Routes', () => {
         req.user = null;
         next();
       });
-      unauthApp.use('/api/mcp', mcpRouter);
+      unauthApp.use('/v1/chat/mcp', mcpRouter);
 
-      const response = await request(unauthApp).get('/api/mcp/connection/status/test-server');
+      const response = await request(unauthApp).get('/v1/chat/mcp/connection/status/test-server');
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ error: 'User not authenticated' });
@@ -1366,7 +1366,7 @@ describe('MCP Routes', () => {
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
       getUserPluginAuthValue.mockResolvedValueOnce('some-api-key-value').mockResolvedValueOnce('');
 
-      const response = await request(app).get('/api/mcp/test-server/auth-values');
+      const response = await request(app).get('/v1/chat/mcp/test-server/auth-values');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -1387,7 +1387,7 @@ describe('MCP Routes', () => {
       mockRegistryInstance.getServerConfig.mockResolvedValue(null);
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
 
-      const response = await request(app).get('/api/mcp/non-existent-server/auth-values');
+      const response = await request(app).get('/v1/chat/mcp/non-existent-server/auth-values');
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
@@ -1406,7 +1406,7 @@ describe('MCP Routes', () => {
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
       getUserPluginAuthValue.mockRejectedValue(new Error('Database error'));
 
-      const response = await request(app).get('/api/mcp/test-server/auth-values');
+      const response = await request(app).get('/v1/chat/mcp/test-server/auth-values');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -1426,7 +1426,7 @@ describe('MCP Routes', () => {
       });
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
 
-      const response = await request(app).get('/api/mcp/test-server/auth-values');
+      const response = await request(app).get('/v1/chat/mcp/test-server/auth-values');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Failed to check auth value flags' });
@@ -1440,7 +1440,7 @@ describe('MCP Routes', () => {
       });
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
 
-      const response = await request(app).get('/api/mcp/test-server/auth-values');
+      const response = await request(app).get('/v1/chat/mcp/test-server/auth-values');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -1453,9 +1453,9 @@ describe('MCP Routes', () => {
     it('should return 401 when user is not authenticated in auth-values endpoint', async () => {
       const appWithoutAuth = express();
       appWithoutAuth.use(express.json());
-      appWithoutAuth.use('/api/mcp', mcpRouter);
+      appWithoutAuth.use('/v1/chat/mcp', mcpRouter);
 
-      const response = await request(appWithoutAuth).get('/api/mcp/test-server/auth-values');
+      const response = await request(appWithoutAuth).get('/v1/chat/mcp/test-server/auth-values');
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ error: 'User not authenticated' });
@@ -1502,7 +1502,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get(`/api/mcp/test-server/oauth/callback?code=test-code&state=${flowId}`)
+        .get(`/v1/chat/mcp/test-server/oauth/callback?code=test-code&state=${flowId}`)
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .expect(302);
 
@@ -1556,7 +1556,7 @@ describe('MCP Routes', () => {
       const csrfToken = generateTestCsrfToken(flowId);
 
       const response = await request(app)
-        .get(`/api/mcp/test-server/oauth/callback?code=test-code&state=${flowId}`)
+        .get(`/v1/chat/mcp/test-server/oauth/callback?code=test-code&state=${flowId}`)
         .set('Cookie', [`oauth_csrf=${csrfToken}`])
         .expect(302);
 
@@ -1583,7 +1583,7 @@ describe('MCP Routes', () => {
 
       mockRegistryInstance.getAllServerConfigs.mockResolvedValue(mockServerConfigs);
 
-      const response = await request(app).get('/api/mcp/servers');
+      const response = await request(app).get('/v1/chat/mcp/servers');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockServerConfigs);
@@ -1593,7 +1593,7 @@ describe('MCP Routes', () => {
     it('should return empty object when no servers are configured', async () => {
       mockRegistryInstance.getAllServerConfigs.mockResolvedValue({});
 
-      const response = await request(app).get('/api/mcp/servers');
+      const response = await request(app).get('/v1/chat/mcp/servers');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({});
@@ -1606,9 +1606,9 @@ describe('MCP Routes', () => {
         req.user = null;
         next();
       });
-      unauthApp.use('/api/mcp', mcpRouter);
+      unauthApp.use('/v1/chat/mcp', mcpRouter);
 
-      const response = await request(unauthApp).get('/api/mcp/servers');
+      const response = await request(unauthApp).get('/v1/chat/mcp/servers');
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ message: 'Unauthorized' });
@@ -1617,7 +1617,7 @@ describe('MCP Routes', () => {
     it('should return 500 when server config retrieval fails', async () => {
       mockRegistryInstance.getAllServerConfigs.mockRejectedValue(new Error('Database error'));
 
-      const response = await request(app).get('/api/mcp/servers');
+      const response = await request(app).get('/v1/chat/mcp/servers');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Database error' });
@@ -1638,7 +1638,7 @@ describe('MCP Routes', () => {
         config: validConfig,
       });
 
-      const response = await request(app).post('/api/mcp/servers').send({ config: validConfig });
+      const response = await request(app).post('/v1/chat/mcp/servers').send({ config: validConfig });
 
       expect(response.status).toBe(201);
       expect(response.body).toEqual({
@@ -1664,7 +1664,7 @@ describe('MCP Routes', () => {
         title: 'Test Stdio Server',
       };
 
-      const response = await request(app).post('/api/mcp/servers').send({ config: stdioConfig });
+      const response = await request(app).post('/v1/chat/mcp/servers').send({ config: stdioConfig });
 
       // Stdio transport is not allowed via API - only admins can configure it via YAML
       expect(response.status).toBe(400);
@@ -1678,7 +1678,7 @@ describe('MCP Routes', () => {
         title: 'Invalid Server',
       };
 
-      const response = await request(app).post('/api/mcp/servers').send({ config: invalidConfig });
+      const response = await request(app).post('/v1/chat/mcp/servers').send({ config: invalidConfig });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid configuration');
@@ -1692,7 +1692,7 @@ describe('MCP Routes', () => {
         title: 'Invalid Protocol Server',
       };
 
-      const response = await request(app).post('/api/mcp/servers').send({ config: invalidConfig });
+      const response = await request(app).post('/v1/chat/mcp/servers').send({ config: invalidConfig });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid configuration');
@@ -1707,7 +1707,7 @@ describe('MCP Routes', () => {
 
       mockRegistryInstance.addServer.mockRejectedValue(new Error('Database connection failed'));
 
-      const response = await request(app).post('/api/mcp/servers').send({ config: validConfig });
+      const response = await request(app).post('/v1/chat/mcp/servers').send({ config: validConfig });
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ message: 'Database connection failed' });
@@ -1724,7 +1724,7 @@ describe('MCP Routes', () => {
 
       mockRegistryInstance.getServerConfig.mockResolvedValue(mockConfig);
 
-      const response = await request(app).get('/api/mcp/servers/test-server');
+      const response = await request(app).get('/v1/chat/mcp/servers/test-server');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockConfig);
@@ -1737,7 +1737,7 @@ describe('MCP Routes', () => {
     it('should return 404 when server not found', async () => {
       mockRegistryInstance.getServerConfig.mockResolvedValue(null);
 
-      const response = await request(app).get('/api/mcp/servers/non-existent-server');
+      const response = await request(app).get('/v1/chat/mcp/servers/non-existent-server');
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ message: 'MCP server not found' });
@@ -1746,7 +1746,7 @@ describe('MCP Routes', () => {
     it('should return 500 when registry throws error', async () => {
       mockRegistryInstance.getServerConfig.mockRejectedValue(new Error('Database error'));
 
-      const response = await request(app).get('/api/mcp/servers/error-server');
+      const response = await request(app).get('/v1/chat/mcp/servers/error-server');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ message: 'Database error' });
@@ -1765,7 +1765,7 @@ describe('MCP Routes', () => {
       mockRegistryInstance.updateServer.mockResolvedValue(updatedConfig);
 
       const response = await request(app)
-        .patch('/api/mcp/servers/test-server')
+        .patch('/v1/chat/mcp/servers/test-server')
         .send({ config: updatedConfig });
 
       expect(response.status).toBe(200);
@@ -1789,7 +1789,7 @@ describe('MCP Routes', () => {
       };
 
       const response = await request(app)
-        .patch('/api/mcp/servers/test-server')
+        .patch('/v1/chat/mcp/servers/test-server')
         .send({ config: invalidConfig });
 
       expect(response.status).toBe(400);
@@ -1807,7 +1807,7 @@ describe('MCP Routes', () => {
       mockRegistryInstance.updateServer.mockRejectedValue(new Error('Update failed'));
 
       const response = await request(app)
-        .patch('/api/mcp/servers/test-server')
+        .patch('/v1/chat/mcp/servers/test-server')
         .send({ config: validConfig });
 
       expect(response.status).toBe(500);
@@ -1819,7 +1819,7 @@ describe('MCP Routes', () => {
     it('should delete server successfully', async () => {
       mockRegistryInstance.removeServer.mockResolvedValue(undefined);
 
-      const response = await request(app).delete('/api/mcp/servers/test-server');
+      const response = await request(app).delete('/v1/chat/mcp/servers/test-server');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ message: 'MCP server deleted successfully' });
@@ -1833,7 +1833,7 @@ describe('MCP Routes', () => {
     it('should return 500 when registry throws error', async () => {
       mockRegistryInstance.removeServer.mockRejectedValue(new Error('Deletion failed'));
 
-      const response = await request(app).delete('/api/mcp/servers/error-server');
+      const response = await request(app).delete('/v1/chat/mcp/servers/error-server');
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ message: 'Deletion failed' });

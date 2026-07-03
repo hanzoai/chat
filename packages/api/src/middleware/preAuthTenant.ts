@@ -11,10 +11,10 @@ import { buildTenantContext, runWithTenantContext } from './tenant';
  *
  * **Where to use**: Mount on routes that must be tenant-aware before
  * authentication has occurred:
- * - `GET /api/config` — login page needs tenant-specific config (social logins, registration)
- * - `/api/auth/*` — login, register, password reset
+ * - `GET /v1/chat/config` — login page needs tenant-specific config (social logins, registration)
+ * - `/v1/chat/auth/*` — login, register, password reset
  * - `/oauth/*` — OAuth callback flows
- * - `GET /api/share/:shareId` — public shared conversation links
+ * - `GET /v1/chat/share/:shareId` — public shared conversation links
  *
  * **How the header gets set**: The deployment's reverse proxy, auth gateway,
  * or OpenID strategy sets `X-Tenant-Id` based on subdomain, path, or OIDC claim.

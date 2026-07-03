@@ -40,7 +40,7 @@ describe('downloadFile utilities', () => {
     expect(isHttpDownloadTarget('https://cdn.example.com/file.pdf')).toBe(true);
     expect(isHttpDownloadTarget('http://cdn.example.com/file.pdf')).toBe(true);
     expect(isHttpDownloadTarget('blob:https://app.example.com/id')).toBe(false);
-    expect(isHttpDownloadTarget('/api/files/code/download/session/file')).toBe(false);
+    expect(isHttpDownloadTarget('/v1/chat/files/code/download/session/file')).toBe(false);
     expect(isHttpDownloadTarget(undefined)).toBe(false);
   });
 
