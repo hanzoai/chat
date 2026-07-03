@@ -20,7 +20,7 @@ import type {
 import type { MCPOAuthTokens } from './oauth/types';
 import { withTimeout } from '~/utils/promise';
 import type * as t from './types';
-import { createSSRFSafeUndiciConnect, resolveHostnameSSRF } from '~/auth';
+import { createSSRFSafeUndiciConnect, isSSRFTarget, resolveHostnameSSRF } from '~/auth';
 import { sanitizeUrlForLogging } from './utils';
 import { mcpConfig } from './mcpConfig';
 
@@ -71,6 +71,117 @@ const FIVE_MINUTES = 5 * 60 * 1000;
 const DEFAULT_TIMEOUT = 60000;
 /** SSE connections through proxies may need longer initial handshake time */
 const SSE_CONNECT_TIMEOUT = 120000;
+
+/**
+ * Maximum number of 307/308 (method-preserving) redirect hops an MCP request
+ * will follow before giving up. Bounds redirect-chain amplification while still
+ * supporting servers (e.g. Coda) that route doc-scoped tool calls via 308.
+ */
+const MAX_REDIRECTS = 5;
+
+/**
+ * Credential-bearing headers that must never survive a cross-origin redirect.
+ * A server-controlled `Location` pointing at a different origin would otherwise
+ * exfiltrate the caller's bearer token / session id to that origin.
+ */
+const CROSS_ORIGIN_FORBIDDEN_HEADERS = new Set([
+  'authorization',
+  'proxy-authorization',
+  'cookie',
+  'mcp-session-id',
+]);
+
+/** Flattens undici/DOM header shapes to a plain lower-precedence record. */
+function normalizeInitHeaders(init: UndiciRequestInit | undefined): Record<string, string> {
+  if (!init?.headers) {
+    return {};
+  }
+  if (init.headers instanceof Headers) {
+    return Object.fromEntries(init.headers.entries());
+  }
+  if (Array.isArray(init.headers)) {
+    return Object.fromEntries(init.headers);
+  }
+  return init.headers as Record<string, string>;
+}
+
+/**
+ * Normalizes a fetch `(input, init)` pair to `(urlString, init)` so the redirect
+ * loop only ever deals with a string URL. When `input` is a `Request`, its
+ * method, headers, and body are baked into the init and the body is buffered
+ * (single-shot streams cannot be replayed on a 307/308 retry). Duck-typed rather
+ * than `instanceof` because requests can cross undici realms.
+ */
+async function resolveFetchInput(
+  input: UndiciRequestInfo,
+  init: UndiciRequestInit | undefined,
+): Promise<{ urlString: string; resolvedInit: UndiciRequestInit | undefined }> {
+  if (typeof input === 'string') {
+    return { urlString: input, resolvedInit: init };
+  }
+  if (input instanceof URL) {
+    return { urlString: input.href, resolvedInit: init };
+  }
+  const req = input as unknown as {
+    url: string;
+    method: string;
+    headers: { entries: () => Iterable<[string, string]> };
+    body: unknown;
+    signal: AbortSignal | null;
+    arrayBuffer: () => Promise<ArrayBuffer>;
+  };
+  const reqHeaders = Object.fromEntries(req.headers.entries());
+  const initHeaders = normalizeInitHeaders(init);
+  const mergedHeaders = { ...reqHeaders, ...initHeaders };
+  const reqBody = req.body ? await req.arrayBuffer() : undefined;
+  const signal = init?.signal ?? req.signal ?? undefined;
+  return {
+    urlString: req.url,
+    resolvedInit: {
+      ...init,
+      method: init?.method ?? req.method,
+      body: init?.body ?? (reqBody as unknown as UndiciRequestInit['body']),
+      headers: mergedHeaders,
+      signal,
+    },
+  };
+}
+
+/**
+ * Builds the undici init for one redirect hop. `redirect: 'manual'` is always
+ * set so undici never auto-follows a redirect past our SSRF checks — every hop
+ * is re-validated here instead.
+ */
+function buildFetchInit(
+  init: UndiciRequestInit | undefined,
+  dispatcher: Agent,
+  requestHeaders: Record<string, string> | null | undefined,
+): UndiciRequestInit {
+  const hasInitHeaders = init?.headers != null;
+  const hasRuntimeHeaders = requestHeaders != null && Object.keys(requestHeaders).length > 0;
+  if (!hasInitHeaders && !hasRuntimeHeaders) {
+    return { ...init, redirect: 'manual', dispatcher };
+  }
+  const initHeaders = normalizeInitHeaders(init);
+  const headers = hasRuntimeHeaders ? { ...initHeaders, ...requestHeaders } : initHeaders;
+  return { ...init, redirect: 'manual', headers, dispatcher };
+}
+
+/** Removes credential headers before a request crosses to a different origin. */
+function stripCrossOriginHeaders(
+  headers: Record<string, string>,
+  secretHeaderKeys: ReadonlySet<string>,
+): Record<string, string> {
+  const stripped: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    const lowered = key.toLowerCase();
+    if (CROSS_ORIGIN_FORBIDDEN_HEADERS.has(lowered) || secretHeaderKeys.has(lowered)) {
+      continue;
+    }
+    stripped[key] = value;
+  }
+  return stripped;
+}
 
 /**
  * Headers for SSE connections.
@@ -304,42 +415,119 @@ export class MCPConnection extends EventEmitter {
   private createFetchFunction(
     getHeaders: () => Record<string, string> | null | undefined,
     timeout?: number,
+    configuredSecretHeaderKeys?: ReadonlySet<string>,
   ): (input: UndiciRequestInfo, init?: UndiciRequestInit) => Promise<UndiciResponse> {
-    const ssrfConnect = this.useSSRFProtection ? createSSRFSafeUndiciConnect() : undefined;
-    return function customFetch(
+    const useSSRFProtection = this.useSSRFProtection;
+    const logPrefix = this.getLogPrefix();
+    const effectiveTimeout = timeout || DEFAULT_TIMEOUT;
+
+    /**
+     * Builds a fresh dispatcher for a single hop. The SSRF-safe connect resolves
+     * the target host and refuses private/reserved IPs at socket-connect time
+     * (TOCTOU-safe against DNS rebinding). `forceSafeConnect` attaches it even
+     * when SSRF protection is otherwise off, so a server-controlled cross-origin
+     * redirect hop cannot slip past in allowlist deployments.
+     */
+    const makeDispatcher = (forceSafeConnect: boolean): Agent => {
+      const needsSSRFConnect = useSSRFProtection || forceSafeConnect;
+      return new Agent({
+        bodyTimeout: effectiveTimeout,
+        headersTimeout: effectiveTimeout,
+        ...(needsSSRFConnect ? { connect: createSSRFSafeUndiciConnect() } : {}),
+      });
+    };
+
+    return async function customFetch(
       input: UndiciRequestInfo,
       init?: UndiciRequestInit,
     ): Promise<UndiciResponse> {
+      const { urlString, resolvedInit } = await resolveFetchInput(input, init);
       const requestHeaders = getHeaders();
-      const effectiveTimeout = timeout || DEFAULT_TIMEOUT;
-      const agent = new Agent({
-        bodyTimeout: effectiveTimeout,
-        headersTimeout: effectiveTimeout,
-        ...(ssrfConnect != null ? { connect: ssrfConnect } : {}),
-      });
-      if (!requestHeaders) {
-        return undiciFetch(input, { ...init, dispatcher: agent });
-      }
+      /**
+       * Runtime `setRequestHeaders` values plus any config-baked header keys are
+       * all treated as credentials and stripped alongside the well-known
+       * credential headers on any cross-origin redirect hop.
+       */
+      const secretHeaderKeys: ReadonlySet<string> = new Set([
+        ...Object.keys(requestHeaders ?? {}).map((key) => key.toLowerCase()),
+        ...(configuredSecretHeaderKeys ?? []),
+      ]);
 
-      let initHeaders: Record<string, string> = {};
-      if (init?.headers) {
-        if (init.headers instanceof Headers) {
-          initHeaders = Object.fromEntries(init.headers.entries());
-        } else if (Array.isArray(init.headers)) {
-          initHeaders = Object.fromEntries(init.headers);
-        } else {
-          initHeaders = init.headers as Record<string, string>;
+      const originalOrigin = new URL(urlString).origin;
+      let currentUrlString = urlString;
+      let forceRedirectSSRFConnect = false;
+      let currentInit = buildFetchInit(
+        resolvedInit,
+        makeDispatcher(forceRedirectSSRFConnect),
+        requestHeaders,
+      );
+
+      for (let redirects = 0; ; redirects++) {
+        const response = await undiciFetch(currentUrlString, currentInit);
+        const isMethodPreservingRedirect = response.status === 307 || response.status === 308;
+
+        /**
+         * Non-redirect responses and non-method-preserving redirects (301/302/
+         * 303) are returned unfollowed — the MCP SDK rejects a bare 3xx, which
+         * closes the SSRF-via-301/302 hole without silently following. Only
+         * 307/308 are followed, and only after the target clears SSRF checks.
+         */
+        if (!isMethodPreservingRedirect || redirects >= MAX_REDIRECTS) {
+          return response;
         }
-      }
 
-      return undiciFetch(input, {
-        ...init,
-        headers: {
-          ...initHeaders,
-          ...requestHeaders,
-        },
-        dispatcher: agent,
-      });
+        const location = response.headers.get('location');
+        if (!location) {
+          return response;
+        }
+
+        const targetUrl = new URL(location, currentUrlString);
+        const isCrossOriginRedirect = targetUrl.origin !== originalOrigin;
+
+        /**
+         * Re-validate every redirect target. `isSSRFTarget` catches literal
+         * private/reserved/metadata IPs (which undici's connect-time lookup
+         * skips because no DNS resolution happens for an IP literal);
+         * `resolveHostnameSSRF` catches hostnames that resolve to private IPs.
+         * Redirect targets are server-controlled, so they get no allowlist
+         * exemption — a blocked hop returns the redirect unfollowed.
+         */
+        if (isSSRFTarget(targetUrl.hostname) || (await resolveHostnameSSRF(targetUrl.hostname))) {
+          logger.warn(
+            `${logPrefix} Blocked MCP redirect to private/reserved address: ${sanitizeUrlForLogging(
+              targetUrl,
+            )}`,
+          );
+          return response;
+        }
+
+        await response.body?.cancel().catch(() => undefined);
+
+        if (isCrossOriginRedirect && currentInit.headers != null) {
+          currentInit = {
+            ...currentInit,
+            headers: stripCrossOriginHeaders(
+              currentInit.headers as Record<string, string>,
+              secretHeaderKeys,
+            ),
+          };
+        }
+
+        if (isCrossOriginRedirect) {
+          /**
+           * Once a server-controlled cross-origin hop is seen, pin an SSRF-safe
+           * connect for the rest of the chain so a later same-origin hop cannot
+           * reopen the rebinding gap in allowlist mode.
+           */
+          forceRedirectSSRFConnect = true;
+        }
+
+        currentInit = {
+          ...currentInit,
+          dispatcher: makeDispatcher(forceRedirectSSRFConnect),
+        };
+        currentUrlString = targetUrl.href;
+      }
     };
   }
 
@@ -448,6 +636,7 @@ export class MCPConnection extends EventEmitter {
             fetch: this.createFetchFunction(
               this.getRequestHeaders.bind(this),
               sseTimeout,
+              new Set(Object.keys(headers).map((key) => key.toLowerCase())),
             ) as unknown as FetchLike,
           });
 
@@ -489,6 +678,7 @@ export class MCPConnection extends EventEmitter {
             fetch: this.createFetchFunction(
               this.getRequestHeaders.bind(this),
               this.timeout,
+              new Set(Object.keys(headers).map((key) => key.toLowerCase())),
             ) as unknown as FetchLike,
           });
 
