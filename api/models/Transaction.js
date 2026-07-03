@@ -1,5 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { getMultiplier, getCacheMultiplier } = require('./tx');
+const { recordCommerceDebit } = require('./commerceWrites');
 const { Transaction, Balance } = require('~/db/models');
 
 const cancelRate = 1.15;
@@ -212,6 +213,22 @@ async function createTransaction(_txData) {
   const balanceResponse = await updateBalance({
     user: transaction.user,
     incrementValue,
+  });
+
+  // Behind COMMERCE_WRITES (default OFF): ALSO record the debit to the commerce
+  // ledger. Additive + fire-and-forget — the local Mongo write above stays
+  // authoritative until cutover. `subject` (billingSubject) is threaded from the
+  // request via txMetadata; absent => no-op (so this is inert until the caller
+  // threads it and the flag is flipped). tokenValue is micro-USD; _id is the
+  // stable idempotency key.
+  recordCommerceDebit({
+    subject: txData.subject,
+    model: transaction.model,
+    promptTokens: transaction.tokenType === 'prompt' ? Math.abs(transaction.rawAmount) : undefined,
+    completionTokens:
+      transaction.tokenType === 'completion' ? Math.abs(transaction.rawAmount) : undefined,
+    tokenValue: transaction.tokenValue,
+    requestId: transaction._id?.toString(),
   });
 
   return {
