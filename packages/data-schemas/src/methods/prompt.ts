@@ -1,4 +1,5 @@
 import { ResourceType, SystemCategories } from 'librechat-data-provider';
+import type { DataHandle } from '~/common/dataHandle';
 import type { Model, Types } from 'mongoose';
 import type { IAclEntry, IPrompt, IPromptGroup, IPromptGroupDocument } from '~/types';
 import { getTenantId, SYSTEM_TENANT_ID } from '~/config/tenantContext';
@@ -16,9 +17,9 @@ export interface PromptDeps {
   ) => Promise<Types.ObjectId[]>;
 }
 
-export function createPromptMethods(mongoose: typeof import('mongoose'), deps: PromptDeps) {
+export function createPromptMethods(handle: DataHandle, deps: PromptDeps) {
   const { getSoleOwnedResourceIds } = deps;
-  const { ObjectId } = mongoose.Types;
+  const { ObjectId } = handle.Types!;
 
   /**
    * Batch-fetches production prompts for an array of prompt groups
@@ -27,7 +28,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
   async function attachProductionPrompts(
     groups: Array<Record<string, unknown>>,
   ): Promise<Array<Record<string, unknown>>> {
-    const Prompt = mongoose.models.Prompt as Model<IPrompt>;
+    const Prompt = handle.models.Prompt as Model<IPrompt>;
     const uniqueIds = [
       ...new Set(groups.map((g) => (g.productionId as Types.ObjectId)?.toString()).filter(Boolean)),
     ];
@@ -53,7 +54,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getAllPromptGroups(filter: Record<string, unknown>) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
       const { name, ...query } = filter as {
         name?: string;
         category?: string;
@@ -91,7 +92,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getPromptGroups(filter: Record<string, unknown>) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
       const {
         pageNumber = 1,
         pageSize = 10,
@@ -160,8 +161,8 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    * `canAccessPromptGroupResource` middleware before invoking this.
    */
   async function deletePromptGroup({ _id }: { _id: string }) {
-    const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
-    const Prompt = mongoose.models.Prompt as Model<IPrompt>;
+    const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
+    const Prompt = handle.models.Prompt as Model<IPrompt>;
 
     const query: Record<string, unknown> = { _id };
     const groupQuery: Record<string, unknown> = { groupId: new ObjectId(_id) };
@@ -200,7 +201,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
     limit?: number | null;
     after?: string | null;
   }) {
-    const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+    const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
     const isPaginated = limit !== null && limit !== undefined;
     const normalizedLimit = isPaginated
       ? Math.min(Math.max(1, parseInt(String(limit)) || 20), 100)
@@ -310,7 +311,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
       throw new Error('Invalid groupId');
     }
 
-    const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+    const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
     const result = await PromptGroup.findByIdAndUpdate(
       groupId,
       { $inc: { numberOfGenerations: 1 } },
@@ -334,8 +335,8 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
     authorName: string;
   }) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
-      const Prompt = mongoose.models.Prompt as Model<IPrompt>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
+      const Prompt = handle.models.Prompt as Model<IPrompt>;
       const { prompt, group, author, authorName } = saveData;
 
       let newPromptGroup = await PromptGroup.findOneAndUpdate(
@@ -386,7 +387,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
     author: string | Types.ObjectId;
   }) {
     try {
-      const Prompt = mongoose.models.Prompt as Model<IPrompt>;
+      const Prompt = handle.models.Prompt as Model<IPrompt>;
       const { prompt, author } = saveData;
       const newPromptData = { ...prompt, author };
 
@@ -414,7 +415,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getPrompts(filter: Record<string, unknown>) {
     try {
-      const Prompt = mongoose.models.Prompt as Model<IPrompt>;
+      const Prompt = handle.models.Prompt as Model<IPrompt>;
       return await Prompt.find(filter).sort({ createdAt: -1 }).lean();
     } catch (error) {
       logger.error('Error getting prompts', error);
@@ -427,7 +428,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getPrompt(filter: Record<string, unknown>) {
     try {
-      const Prompt = mongoose.models.Prompt as Model<IPrompt>;
+      const Prompt = handle.models.Prompt as Model<IPrompt>;
       if (filter.groupId) {
         filter.groupId = new ObjectId(filter.groupId as string);
       }
@@ -443,7 +444,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getRandomPromptGroups(filter: { skip: number | string; limit: number | string }) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
       const categories = await PromptGroup.distinct('category', { category: { $ne: '' } });
 
       for (let i = categories.length - 1; i > 0; i--) {
@@ -484,7 +485,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getPromptGroupsWithPrompts(filter: Record<string, unknown>) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
       return await PromptGroup.findOne(filter)
         .populate({
           path: 'prompts',
@@ -503,7 +504,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getPromptGroup(filter: Record<string, unknown>) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
       // Cast string _id to ObjectId for aggregation (findOne auto-casts, aggregate does not)
       const matchFilter = { ...filter };
       if (typeof matchFilter._id === 'string') {
@@ -549,7 +550,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function getOwnedPromptGroupIds(author: string) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
       if (!author || !ObjectId.isValid(author)) {
         logger.warn('getOwnedPromptGroupIds called with invalid author', { author });
         return [];
@@ -576,8 +577,8 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
     promptId: string | Types.ObjectId;
     groupId: string | Types.ObjectId;
   }) {
-    const Prompt = mongoose.models.Prompt as Model<IPrompt>;
-    const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+    const Prompt = handle.models.Prompt as Model<IPrompt>;
+    const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
 
     const query: Record<string, unknown> = { _id: promptId, groupId };
     const { deletedCount } = await Prompt.deleteOne(query);
@@ -637,9 +638,9 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function deleteUserPrompts(userId: string) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
-      const Prompt = mongoose.models.Prompt as Model<IPrompt>;
-      const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
+      const Prompt = handle.models.Prompt as Model<IPrompt>;
+      const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
 
       const userObjectId = new ObjectId(userId);
       const soleOwnedIds = await getSoleOwnedResourceIds(userObjectId, ResourceType.PROMPTGROUP);
@@ -682,7 +683,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function updatePromptGroup(filter: Record<string, unknown>, data: Record<string, unknown>) {
     try {
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
       const updateOps = {};
       const updateData = { ...data, ...updateOps };
       const updatedDoc = await PromptGroup.findOneAndUpdate(filter, updateData, {
@@ -706,8 +707,8 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function makePromptProduction(promptId: string) {
     try {
-      const Prompt = mongoose.models.Prompt as Model<IPrompt>;
-      const PromptGroup = mongoose.models.PromptGroup as Model<IPromptGroupDocument>;
+      const Prompt = handle.models.Prompt as Model<IPrompt>;
+      const PromptGroup = handle.models.PromptGroup as Model<IPromptGroupDocument>;
 
       const prompt = await Prompt.findById(promptId).lean();
 
@@ -735,7 +736,7 @@ export function createPromptMethods(mongoose: typeof import('mongoose'), deps: P
    */
   async function updatePromptLabels(_id: string, labels: unknown) {
     try {
-      const Prompt = mongoose.models.Prompt as Model<IPrompt>;
+      const Prompt = handle.models.Prompt as Model<IPrompt>;
       const response = await Prompt.updateOne({ _id }, { $set: { labels } });
       if (response.matchedCount === 0) {
         return { message: 'Prompt not found' };

@@ -21,6 +21,8 @@ import {
   equalitySeed,
   objectId,
   coerceId,
+  deepCoerceIds,
+  getPath,
   type Doc,
   type Filter,
   type Update,
@@ -578,6 +580,69 @@ export class DocModel {
     return doc ? { _id: doc._id as string } : null;
   }
 
+  /**
+   * Aggregation pipeline — the bounded stage set the chat methods use:
+   * `$match $lookup $unwind $sort $limit $project`. Runs in JS over candidate
+   * docs. `$lookup` resolves `from` (a mongo collection name) to a sibling model
+   * via the naive singular-capitalized mapping (`prompts` -> `Prompt`).
+   */
+  async aggregate(pipeline: Array<Record<string, unknown>>): Promise<Doc[]> {
+    let docs = this.candidates({});
+    for (const stage of pipeline) {
+      const op = Object.keys(stage)[0];
+      if (op === '$match') {
+        const f = stage.$match as Filter;
+        docs = docs.filter((d) => matchesFilter(d, f));
+      } else if (op === '$lookup') {
+        const { from, localField, foreignField, as } = stage.$lookup as {
+          from: string;
+          localField: string;
+          foreignField: string;
+          as: string;
+        };
+        const modelName = from.charAt(0).toUpperCase() + from.slice(1).replace(/s$/, '');
+        const target = this.resolver?.(modelName);
+        docs = docs.map((d) => {
+          const local = coerceId(getPath(d, localField));
+          const joined = target ? target.candidates({ [foreignField]: local }) : [];
+          return { ...d, [as]: joined };
+        });
+      } else if (op === '$unwind') {
+        const spec = stage.$unwind as string | { path: string; preserveNullAndEmptyArrays?: boolean };
+        const path = (typeof spec === 'string' ? spec : spec.path).replace(/^\$/, '');
+        const preserve = typeof spec === 'object' && spec.preserveNullAndEmptyArrays === true;
+        const out: Doc[] = [];
+        for (const d of docs) {
+          const v = getPath(d, path);
+          if (Array.isArray(v)) {
+            for (const el of v) {
+              out.push({ ...d, [path]: el });
+            }
+            if (v.length === 0 && preserve) {
+              const c = { ...d };
+              delete c[path];
+              out.push(c);
+            }
+          } else if (v != null) {
+            out.push(d);
+          } else if (preserve) {
+            const c = { ...d };
+            delete c[path];
+            out.push(c);
+          }
+        }
+        docs = out;
+      } else if (op === '$sort') {
+        docs = sortDocs(docs, stage.$sort as SortSpec);
+      } else if (op === '$limit') {
+        docs = docs.slice(0, stage.$limit as number);
+      } else if (op === '$project') {
+        docs = docs.map((d) => projectDoc(d, stage.$project as Record<string, 0 | 1>));
+      }
+    }
+    return docs;
+  }
+
   async distinct(field: string, filter: Filter = {}): Promise<unknown[]> {
     const seen = new Set<unknown>();
     const out: unknown[] = [];
@@ -607,7 +672,7 @@ export class DocModel {
   }
 
   private createOne(input: Doc): Doc {
-    const doc = structuredClone(input);
+    const doc = structuredClone(deepCoerceIds(input) as Doc);
     this.stampTimestamps(doc, true, true);
     return hydrate(this.insertDoc(doc));
   }
@@ -653,7 +718,7 @@ export class DocModel {
           }
         } else if ('insertOne' in op) {
           const { document } = op.insertOne as { document: Doc };
-          const doc = structuredClone(document);
+          const doc = structuredClone(deepCoerceIds(document) as Doc);
           this.stampTimestamps(doc, true, true);
           const inserted = this.insertDoc(doc);
           result.insertedCount++;

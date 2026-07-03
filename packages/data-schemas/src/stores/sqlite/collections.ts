@@ -132,4 +132,15 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     dateFields: ['createdAt', 'updatedAt'],
     tenantIsolated: true,
   },
+  Prompt: {
+    name: 'Prompt',
+    index: ['groupId', 'author', 'type', 'createdAt', 'updatedAt'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  PromptGroup: {
+    name: 'PromptGroup',
+    index: ['author', 'category', 'productionId', 'command', 'createdAt', 'updatedAt'],
+    dateFields: ['createdAt', 'updatedAt'],
+    refs: { productionId: 'Prompt', prompts: 'Prompt' },
+  },
 };
