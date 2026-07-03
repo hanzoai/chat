@@ -95,12 +95,19 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     defaults: { isPublic: false, type: 'banner' },
   },
 
-  // ---- Batch 5: tenant-isolated domain (first user of tenantIsolated) ----
+  // ---- Batch 5/6: tenant-isolated domains ----
   Config: {
     name: 'Config',
     unique: [['principalType', 'principalId', 'tenantId']],
     index: ['principalType', 'principalId', 'isActive', 'priority', 'tenantId'],
     dateFields: ['createdAt', 'updatedAt'],
+    tenantIsolated: true,
+  },
+  SystemGrant: {
+    name: 'SystemGrant',
+    unique: [['principalType', 'principalId', 'capability', 'tenantId']],
+    index: ['capability', 'tenantId', 'principalType', 'principalId'],
+    dateFields: ['grantedAt', 'expiresAt', 'createdAt', 'updatedAt'],
     tenantIsolated: true,
   },
 };

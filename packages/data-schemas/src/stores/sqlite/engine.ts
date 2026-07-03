@@ -90,8 +90,25 @@ function deletePath(doc: Doc, path: string): void {
 
 /* ------------------------------------------------------------ comparison */
 
+/**
+ * Coerces a BSON ObjectId (real mongoose, or any `{ toHexString() }`) to its hex
+ * string, so filters carrying ObjectId operands compare against the hex strings
+ * this store persists (docs stringify ObjectIds to hex on write; `_id`s are
+ * generated in ObjectId-hex format). Leaves everything else untouched.
+ */
+export function coerceId(v: unknown): unknown {
+  if (v != null && typeof v === 'object') {
+    const o = v as { toHexString?: () => string; _bsontype?: string };
+    if (typeof o.toHexString === 'function') {
+      return o.toHexString();
+    }
+  }
+  return v;
+}
+
 /** Coerce a value to a comparable primitive: dates/ISO-strings -> epoch ms. */
-function comparable(v: unknown): number | string | boolean | null {
+function comparable(raw: unknown): number | string | boolean | null {
+  const v = coerceId(raw);
   if (v == null) {
     return null;
   }
@@ -128,7 +145,9 @@ export function compareValues(a: unknown, b: unknown): number {
   return sa < sb ? -1 : sa > sb ? 1 : 0;
 }
 
-function valueEquals(a: unknown, b: unknown): boolean {
+function valueEquals(rawA: unknown, rawB: unknown): boolean {
+  const a = coerceId(rawA);
+  const b = coerceId(rawB);
   if (a instanceof Date || b instanceof Date || isIsoDate(a) || isIsoDate(b)) {
     const ca = comparable(a);
     const cb = comparable(b);
