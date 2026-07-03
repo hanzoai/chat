@@ -133,24 +133,21 @@ endpoints:
       baseURL: 'https://api.hanzo.ai/v1'
       iconURL: 'https://hanzo.chat/assets/logo.svg'
       models:
+        # Zen-only (Hanzo AI). ONE way: this default mirrors the authoritative
+        # prod ConfigMap (universe infra/k8s/chat/configmap.yaml chat.yaml).
+        # Free tier first so a new /c/new conversation defaults to a model the
+        # $5 starter credit covers; premium zen5* require a paid balance (402).
+        # No raw upstream / third-party names in the picker (brand policy).
         default:
-          # Zen model family (Hanzo AI)
-          - 'zen3-nano'
           - 'zen4-mini'
-          - 'zen'
-          - 'zen4-pro'
+          - 'zen3-nano'
           - 'zen4'
-          - 'zen4-max'
-          - 'zen4-ultra'
-          - 'zen4-thinking'
-          - 'zen4-coder-flash'
           - 'zen4-coder'
-          - 'zen4-coder-pro'
-          # Third-party models (via Hanzo Cloud)
-          - 'gpt-4o'
-          - 'gpt-4o-mini'
-          - 'claude-sonnet-4-5'
-          - 'claude-haiku-4-5'
+          - 'zen5-mini'
+          - 'zen5'
+          - 'zen5-pro'
+          - 'zen4-pro'
+          - 'zen4-max'
         fetch: false
       titleConvo: true
       titleModel: 'zen4-mini'
