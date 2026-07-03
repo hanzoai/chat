@@ -13,13 +13,16 @@
 import { DatabaseSync } from 'node:sqlite';
 import { DocModel, type CollectionSpec } from './DocModel';
 import { CHAT_COLLECTION_SPECS } from './collections';
+import { ObjectId } from './engine';
 
 export { DocModel, type CollectionSpec } from './DocModel';
 export { CHAT_COLLECTION_SPECS } from './collections';
+export { ObjectId } from './engine';
 
 export interface SqliteHandle {
   models: Record<string, DocModel>;
   db: DatabaseSync;
+  Types: { ObjectId: typeof ObjectId };
   close(): void;
 }
 
@@ -65,6 +68,7 @@ export function createSqliteHandle(
   return {
     models,
     db,
+    Types: { ObjectId },
     close: () => db.close(),
   };
 }

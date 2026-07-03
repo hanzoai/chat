@@ -536,3 +536,45 @@ export function objectId(): string {
   const cntHex = counter.toString(16).padStart(6, '0');
   return tsHex + rand + cntHex;
 }
+
+const HEX24 = /^[0-9a-f]{24}$/i;
+
+/**
+ * Minimal BSON-ObjectId shim exposed as `handle.Types.ObjectId` for method files
+ * that construct ObjectIds (Skill, MCPServer). Store `_id`s are already
+ * ObjectId-hex and `coerceId` resolves this to hex for comparison/storage, so
+ * this only needs to hold a hex string and stringify to it. Timestamp-prefixed
+ * generation keeps `_id` ordering ~chronological (used by `_id` cursors).
+ */
+export class ObjectId {
+  private readonly hex: string;
+
+  constructor(id?: string | ObjectId) {
+    if (id == null) {
+      this.hex = objectId();
+    } else if (typeof id === 'string') {
+      if (!HEX24.test(id)) {
+        throw new TypeError(`[sqlite-store] invalid ObjectId hex: ${id}`);
+      }
+      this.hex = id.toLowerCase();
+    } else {
+      this.hex = id.toHexString();
+    }
+  }
+
+  toHexString(): string {
+    return this.hex;
+  }
+  toString(): string {
+    return this.hex;
+  }
+  toJSON(): string {
+    return this.hex;
+  }
+  equals(other: unknown): boolean {
+    return String(coerceId(other)) === this.hex;
+  }
+  static isValid(v: unknown): boolean {
+    return v instanceof ObjectId || (typeof v === 'string' && HEX24.test(v));
+  }
+}

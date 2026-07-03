@@ -110,4 +110,26 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     dateFields: ['grantedAt', 'expiresAt', 'createdAt', 'updatedAt'],
     tenantIsolated: true,
   },
+
+  // ---- Batch 7: ObjectId-coupled domains (need handle.Types.ObjectId) ----
+  MCPServer: {
+    name: 'MCPServer',
+    unique: ['serverName'],
+    index: ['author', 'updatedAt'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  Skill: {
+    name: 'Skill',
+    unique: [['name', 'author', 'tenantId']],
+    index: ['author', 'category', 'tenantId', 'alwaysApply', 'updatedAt'],
+    dateFields: ['createdAt', 'updatedAt'],
+    tenantIsolated: true,
+  },
+  SkillFile: {
+    name: 'SkillFile',
+    unique: [['skillId', 'relativePath']],
+    index: ['skillId', 'category', 'author', 'tenantId', 'file_id'],
+    dateFields: ['createdAt', 'updatedAt'],
+    tenantIsolated: true,
+  },
 };
