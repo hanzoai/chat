@@ -1,11 +1,15 @@
 const { logger } = require('@librechat/data-schemas');
 
 /**
- * CommerceClient provides a cached, fail-open interface to Hanzo Commerce
- * billing APIs. Pattern follows cloud-api's filter_balance.go:
+ * CommerceClient is chat's READ-ONLY window into Hanzo Commerce (balance, tier,
+ * credit breakdown). It NEVER writes: the single debit for an AI spend is the
+ * cloud gateway's (api.hanzo.ai debits the forwarded per-user hk- key), and the
+ * only credit (the first-chat starter grant) is issued by resolveHanzoCloudKey
+ * (packages/api) at the request boundary. Two writers to one ledger is the
+ * double-debit anti-pattern — so chat stays a reader. Pattern follows cloud-api's
+ * filter_balance.go:
  *   - 30s TTL balance/tier cache with async refresh
- *   - Fire-and-forget usage recording queue
- *   - All errors fail-open (local MongoDB is authoritative fallback)
+ *   - Reads fail CLOSED (the money gate); tier/breakdown fail open
  *
  * @example
  *   const client = new CommerceClient({
@@ -32,11 +36,6 @@ class CommerceClient {
     this._balanceCache = new Map();
     // Tier cache: userId -> { data, fetchedAt, refreshing }
     this._tierCache = new Map();
-
-    // Usage recording queue
-    this._usageQueue = [];
-    this._usageFlushing = false;
-    this._usageFlushInterval = setInterval(() => this._flushUsageQueue(), 5000);
 
     // Cache cleanup every 5 minutes
     this._cleanupInterval = setInterval(() => this._cleanupCaches(), 300000);
@@ -135,113 +134,6 @@ class CommerceClient {
   }
 
   /**
-   * Enqueue usage recording (fire-and-forget). Commerce calls BurnCredits
-   * internally to burn trial grants first, then paid.
-   *
-   * @param {Object} usage
-   * @param {string} usage.userId
-   * @param {string} usage.model
-   * @param {number} usage.promptTokens
-   * @param {number} usage.completionTokens
-   * @param {number} usage.amountCents - Cost in cents
-   */
-  recordUsage({
-    subject,
-    userId,
-    model,
-    provider,
-    promptTokens,
-    completionTokens,
-    totalTokens,
-    amountMicros,
-    amountCents,
-    requestId,
-  }) {
-    // The billing account is the subject (billingSubject(owner,email)) — NOT the
-    // Mongo user id — so the debit lands on the SAME account the read gate + the
-    // gateway key. `_namespace` (its org prefix) rides along so the flush can
-    // stamp X-Hanzo-Org and scope the write to the right tenant.
-    const user = (subject || userId || '').toString();
-    this._usageQueue.push({
-      _namespace: this._namespaceOf(user),
-      user,
-      model,
-      provider,
-      promptTokens: promptTokens || 0,
-      completionTokens: completionTokens || 0,
-      totalTokens: totalTokens || (promptTokens || 0) + (completionTokens || 0),
-      // amountMicros (micro-USD, 1e6=$1) is lossless; commerce rounds to nearest
-      // cent + records the exact micros. amount (cents) is the back-compat field.
-      amountMicros: amountMicros || 0,
-      amount: amountCents || 0,
-      currency: 'usd',
-      // Stable per-spend idempotency key (the local transaction _id): a retry /
-      // stream-abort MUST NOT double-debit. Commerce dedupes on this.
-      requestId: requestId || '',
-      status: 'completed',
-    });
-
-    // Flush immediately if queue is large
-    if (this._usageQueue.length >= 50) {
-      this._flushUsageQueue().catch(() => {});
-    }
-  }
-
-  /**
-   * Credit a billing subject (deposit / top-up / refill). Posts to
-   * /v1/billing/deposit scoped to the subject's org namespace. Fire-and-forget
-   * (fails open — local MongoDB remains the fallback until cutover).
-   *
-   * @param {string} subject
-   * @param {number} amountCents
-   * @param {string} [tag] - e.g. "auto-refill", "start-balance"
-   * @returns {Promise<Object|null>}
-   */
-  async deposit(subject, amountCents, tag) {
-    try {
-      return await this._request(
-        'POST',
-        '/v1/billing/deposit',
-        { user: subject, amount: amountCents, currency: 'usd', tag: tag || 'deposit' },
-        this._namespaceOf(subject),
-      );
-    } catch (err) {
-      logger.error('[CommerceClient] deposit failed', err);
-      return null;
-    }
-  }
-
-  /**
-   * Ensure a subject has the one-time $5 starter credit, idempotently.
-   *
-   * This posts to /v1/billing/grant-starter, which creates a real Deposit
-   * transaction (tag "starter-credit", $5, 30-day expiry) — so it nets into
-   * GET /v1/billing/balance, the account the gateway gate reads and debits.
-   * (NOT a credit-grant record: those live in a separate ledger the balance
-   * endpoint does not read, so they would never unblock the gate.)
-   *
-   * Idempotent + race-safe in Commerce (tag-deduped inside a transaction): safe
-   * to call on every first chat; duplicate/concurrent calls never double-grant.
-   *
-   * @param {string} subject - Commerce billing subject (e.g. "hanzo/alice@gmail.com")
-   * @returns {Promise<{granted: boolean}|null>} or null on failure
-   */
-  async grantStarter(subject) {
-    try {
-      const resp = await this._request(
-        'POST',
-        '/v1/billing/grant-starter',
-        { user: subject, trigger: 'chat_first_use' },
-        this._namespaceOf(subject),
-      );
-      return resp;
-    } catch (err) {
-      logger.error('[CommerceClient] Failed to ensure starter credit', err);
-      return null;
-    }
-  }
-
-  /**
    * Get credit balance breakdown by tag (trial vs purchased).
    *
    * @param {string} userId
@@ -317,36 +209,6 @@ class CommerceClient {
     }
   }
 
-  async _flushUsageQueue() {
-    if (this._usageFlushing || this._usageQueue.length === 0) {
-      return;
-    }
-
-    this._usageFlushing = true;
-    const batch = this._usageQueue.splice(0, 100);
-
-    for (const usage of batch) {
-      // Strip the transport-only namespace and post the debit scoped to the
-      // subject's org (X-Hanzo-Org) — matching the read gate. Previously the
-      // POST omitted the namespace, so a debit would hit the service token's
-      // default org, not the user's, and never net against the balance the
-      // gate reads.
-      const { _namespace, ...body } = usage;
-      try {
-        await this._request('POST', '/v1/billing/usage', body, _namespace);
-      } catch (err) {
-        logger.warn('[CommerceClient] Usage recording failed', {
-          user: usage.user,
-          model: usage.model,
-          error: err.message,
-        });
-        // Don't retry — usage is also tracked locally in MongoDB
-      }
-    }
-
-    this._usageFlushing = false;
-  }
-
   /**
    * @param {string} method
    * @param {string} path
@@ -406,10 +268,7 @@ class CommerceClient {
   }
 
   destroy() {
-    clearInterval(this._usageFlushInterval);
     clearInterval(this._cleanupInterval);
-    // Flush remaining usage
-    this._flushUsageQueue().catch(() => {});
   }
 }
 
