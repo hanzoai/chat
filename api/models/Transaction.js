@@ -214,6 +214,14 @@ async function createTransaction(_txData) {
     incrementValue,
   });
 
+  // NB: chat records NO debit to Commerce here. The single debit for an AI spend
+  // is the cloud gateway's (api.hanzo.ai): every authenticated request forwards
+  // the user's own hk- key and the gateway debits that key's Commerce balance
+  // (per-user, fail-closed, 402 when empty). A second debit from chat would
+  // double-charge — the incident that removed the write in recordCollectedUsage
+  // (packages/api usage.ts). This local Transaction/Balance is the in-app usage
+  // ledger only; in prod the balance gate is off (chat.yaml balance.enabled=false).
+
   return {
     rate: transaction.rate,
     user: transaction.user.toString(),

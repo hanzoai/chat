@@ -1,4 +1,5 @@
 import type { DeleteResult, FilterQuery, Model } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import { RetentionMode } from 'librechat-data-provider';
 import logger from '~/config/winston';
 import { createTempChatExpirationDate } from '~/utils/tempChatRetention';
@@ -56,7 +57,7 @@ export interface MessageMethods {
   deleteMessages(filter: FilterQuery<IMessage>): Promise<DeleteResult>;
 }
 
-export function createMessageMethods(mongoose: typeof import('mongoose')): MessageMethods {
+export function createMessageMethods(handle: DataHandle): MessageMethods {
   /**
    * Saves a message in the database.
    */
@@ -86,7 +87,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
     }
 
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       const update: Record<string, unknown> = {
         ...params,
         user: userId,
@@ -154,7 +155,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
         logger.warn(`Duplicate messageId detected: ${params.messageId}. Continuing execution.`);
 
         try {
-          const Message = mongoose.models.Message as Model<IMessage>;
+          const Message = handle.models.Message as Model<IMessage>;
           const existingMessage = await Message.findOne({
             messageId: params.messageId,
             user: userId,
@@ -185,7 +186,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
     overrideTimestamp = false,
   ) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       const bulkOps = messages.map((message) => ({
         updateOne: {
           filter: { messageId: message.messageId },
@@ -221,7 +222,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
     [key: string]: unknown;
   }) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       const message = {
         user,
         endpoint,
@@ -249,7 +250,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
     { messageId, text }: { messageId: string; text: string },
   ) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       await Message.updateOne({ messageId, user: userId }, { text });
     } catch (err) {
       logger.error('Error updating message text:', err);
@@ -266,7 +267,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
     metadata?: { context?: string },
   ) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       const { messageId, ...update } = message;
       const updatedMessage = await Message.findOneAndUpdate({ messageId, user: userId }, update, {
         new: true,
@@ -303,7 +304,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
     { messageId, conversationId }: { messageId: string; conversationId: string },
   ) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       const message = await Message.findOne({ messageId, user: userId }).lean<IMessage>();
 
       if (message) {
@@ -324,7 +325,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
    */
   async function getMessages(filter: FilterQuery<IMessage>, select?: string) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       if (select) {
         return await Message.find(filter).select(select).sort({ createdAt: 1 }).lean<IMessage[]>();
       }
@@ -341,7 +342,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
    */
   async function getMessage({ user, messageId }: { user: string; messageId: string }) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       return await Message.findOne({ user, messageId }).lean<IMessage>();
     } catch (err) {
       logger.error('Error getting message:', err);
@@ -354,7 +355,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
    */
   async function deleteMessages(filter: FilterQuery<IMessage>) {
     try {
-      const Message = mongoose.models.Message as Model<IMessage>;
+      const Message = handle.models.Message as Model<IMessage>;
       return await Message.deleteMany(filter);
     } catch (err) {
       logger.error('Error deleting messages:', err);
@@ -374,7 +375,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
       cursor?: string | null;
     } = {},
   ) {
-    const Message = mongoose.models.Message as Model<IMessage>;
+    const Message = handle.models.Message as Model<IMessage>;
     const { sortField = 'createdAt', sortOrder = -1, limit = 25, cursor } = options;
     const queryFilter = { ...filter };
     if (cursor) {
@@ -405,7 +406,7 @@ export function createMessageMethods(mongoose: typeof import('mongoose')): Messa
     searchOptions: Record<string, unknown>,
     hydrate?: boolean,
   ) {
-    const Message = mongoose.models.Message as Model<IMessage> & {
+    const Message = handle.models.Message as Model<IMessage> & {
       meiliSearch?: (q: string, opts: Record<string, unknown>, h?: boolean) => Promise<unknown>;
     };
     if (typeof Message.meiliSearch !== 'function') {

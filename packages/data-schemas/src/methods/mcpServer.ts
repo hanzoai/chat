@@ -1,4 +1,5 @@
 import type { Model, RootFilterQuery, Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type { MCPServerDocument } from '../types';
 import type { MCPOptions } from 'librechat-data-provider';
 import logger from '~/config/winston';
@@ -44,13 +45,13 @@ function generateServerNameFromTitle(title: string): string {
   return slug || 'mcp-server'; // Fallback if empty
 }
 
-export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
+export function createMCPServerMethods(handle: DataHandle) {
   /**
    * Finds the next available server name by checking for duplicates.
    * If baseName exists, returns baseName-2, baseName-3, etc.
    */
   async function findNextAvailableServerName(baseName: string): Promise<string> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
 
     // Find all servers with matching base name pattern (baseName or baseName-N)
     const escapedBaseName = escapeRegex(baseName);
@@ -87,7 +88,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
     config: MCPOptions;
     author: string | Types.ObjectId;
   }): Promise<MCPServerDocument> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     let lastError: unknown;
 
     for (let attempt = 0; attempt < MAX_CREATE_RETRIES; attempt++) {
@@ -138,7 +139,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
    * @returns The MCP server document or null
    */
   async function findMCPServerByServerName(serverName: string): Promise<MCPServerDocument | null> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     return await MCPServer.findOne({ serverName }).lean();
   }
 
@@ -150,7 +151,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
   async function findMCPServerByObjectId(
     _id: string | Types.ObjectId,
   ): Promise<MCPServerDocument | null> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     return await MCPServer.findById(_id).lean();
   }
 
@@ -162,7 +163,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
   async function findMCPServersByAuthor(
     authorId: string | Types.ObjectId,
   ): Promise<MCPServerDocument[]> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     return await MCPServer.find({ author: authorId }).sort({ updatedAt: -1 }).lean();
   }
 
@@ -189,7 +190,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
     has_more: boolean;
     after: string | null;
   }> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     const isPaginated = limit !== null && limit !== undefined;
     const normalizedLimit = isPaginated
       ? Math.min(Math.max(1, parseInt(String(limit)) || NORMALIZED_LIMIT_DEFAULT), 100)
@@ -207,7 +208,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
         const cursorCondition = {
           $or: [
             { updatedAt: { $lt: new Date(updatedAt) } },
-            { updatedAt: new Date(updatedAt), _id: { $gt: new mongoose.Types.ObjectId(_id) } },
+            { updatedAt: new Date(updatedAt), _id: { $gt: new handle.Types!.ObjectId(_id) } },
           ],
         };
 
@@ -275,7 +276,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
     serverName: string,
     updateData: { config?: MCPOptions },
   ): Promise<MCPServerDocument | null> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     return await MCPServer.findOneAndUpdate(
       { serverName },
       { $set: updateData },
@@ -289,7 +290,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
    * @returns The deleted MCP server document or null
    */
   async function deleteMCPServer(serverName: string): Promise<MCPServerDocument | null> {
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     return await MCPServer.findOneAndDelete({ serverName }).lean();
   }
 
@@ -304,7 +305,7 @@ export function createMCPServerMethods(mongoose: typeof import('mongoose')) {
     if (names.length === 0) {
       return { data: [] };
     }
-    const MCPServer = mongoose.models.MCPServer as Model<MCPServerDocument>;
+    const MCPServer = handle.models.MCPServer as Model<MCPServerDocument>;
     const servers = await MCPServer.find({ serverName: { $in: names } }).lean();
     return { data: servers };
   }
