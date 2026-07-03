@@ -22,6 +22,8 @@ jest.mock('librechat-data-provider', () => ({
 
 jest.mock('~/server/utils', () => ({
   removePorts: (req) => req.headers['x-test-ip'] || req.ip,
+  guestClientIp: (req) =>
+    req.headers['cf-connecting-ip'] || req.headers['x-test-ip'] || req.ip,
 }));
 
 jest.mock('../requireJwtAuth', () =>

@@ -92,27 +92,48 @@ CREDS_KEY= CREDS_IV=        # Credential encryption
 
 ## Guest Chat (anonymous preview)
 
-Off by default (`ALLOW_GUEST_CHAT=false`). When enabled, unauthenticated
-visitors get a per-IP free quota (`GUEST_MESSAGE_MAX`, default 3) on the free
+Off by default (`ALLOW_GUEST_CHAT=false`). When enabled, the landing IS the chat
+composer (ChatGPT-style): an unauthenticated visitor renders the real chat view —
+composer, starter cards, model picker — WITHOUT logging in, scoped to the free
 Zen model (`GUEST_MODEL`, default `zen3-nano`) via the `Hanzo` custom endpoint
-(`api.hanzo.ai`). Exhausting the quota returns `402 {type:'GUEST_LIMIT'}` and
-the client opens the existing OpenID/hanzo.id login.
+(`api.hanzo.ai`). Prod uses `GUEST_MESSAGE_MAX=2`. Exhausting the quota returns
+`402 {type:'GUEST_LIMIT'}` and the client opens the existing OpenID/hanzo.id login.
+
+Client render path (guest === chat, not a marketing gate):
+- `AuthContext` auto-acquires a guest token when `startupConfig.allowGuestChat`
+  is true (`silentRefresh` fallback + a dedicated effect closing the config race);
+  sets `isGuest=true`, `isAuthenticated=false`. `useAuthRedirect` keeps guests on
+  the chat surface (only truly anonymous, non-guest, non-guest-enabled users go to
+  `/login`). `Root` shows the chat shell for `isAuthenticated || isGuest`.
+- `ChatRoute` renders `ChatView` for `canChat = isAuthenticated || isGuest`; the
+  `/api/models` + `/api/endpoints` queries run for guests (both routes use
+  `requireGuestOrJwtAuth` and return the guest-scoped single-model config), and the
+  roles gate treats a guest as loaded (guests have no agent access). Files:
+  `client/src/routes/{ChatRoute,useAuthRedirect}.tsx`, `hooks/useGuestAuth.ts`,
+  `hooks/AuthContext.tsx`, `components/Auth/GuestLimitDialog.tsx`.
 
 Security model (fail-closed, server-enforced):
 - `POST /api/auth/guest` issues a short-lived guest JWT (`{guest:true}`,
-  per-token random id) signed with `JWT_SECRET`. Rate-limited per IP.
+  per-token random id) signed with `JWT_SECRET`. Rate-limited per IP
+  (`guestTokenLimiter`, `GUEST_TOKEN_MAX`/`GUEST_TOKEN_WINDOW`) so tokens can't be
+  spam-minted.
 - `requireGuestOrJwtAuth` (chat-completion route ONLY) accepts guest tokens;
   the standard `jwt` strategy rejects them everywhere else (no DB user), so
   every other route stays closed. `enforceGuestScope` pins endpoint+model and
-  strips agents/tools/files/spec/preset. `guestMessageLimiter` (reuses the
-  Redis `limiterCache`) enforces the per-IP quota.
+  strips agents/tools/files/spec/preset. Guests always use the shared, capped
+  `HANZO_API_KEY` (per-user `hk-` billing is skipped for `guest` principals).
+- `guestMessageLimiter` enforces the quota against the REAL client IP
+  (`utils/guestClientIp` → Cloudflare `CF-Connecting-IP`, falls back to `req.ip`),
+  NOT the token — clearing cookies / incognito / minting a fresh token does NOT
+  reset it. Backed by the shared Redis `limiterCache` so it holds across replicas.
+  `USE_REDIS=true` is MANDATORY (a memory store would let a visitor round-robin
+  pods to multiply their quota).
 - Key files: `api/server/services/guestConfig.js`,
   `api/server/controllers/auth/GuestController.js`,
   `api/server/middleware/{requireGuestOrJwtAuth,enforceGuestScope}.js`,
   `api/server/middleware/limiters/{guestLimiters,guestMessageLimiter}.js`,
-  router wiring in `api/server/routes/agents/index.js`. Client:
-  `client/src/hooks/useGuestAuth.ts`, `AuthContext.tsx`,
-  `components/Auth/GuestLimitDialog.tsx`.
+  `api/server/utils/guestClientIp.js`,
+  router wiring in `api/server/routes/agents/index.js`.
 - Env: `ALLOW_GUEST_CHAT`, `GUEST_MESSAGE_MAX`, `GUEST_ENDPOINT`, `GUEST_MODEL`,
   `GUEST_TOKEN_EXPIRY`, `GUEST_TOKEN_MAX`, `GUEST_TOKEN_WINDOW`. Requires
   `HANZO_API_KEY` (the free publishable gateway key) and `USE_REDIS` for the
