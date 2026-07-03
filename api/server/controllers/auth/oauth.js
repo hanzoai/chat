@@ -7,7 +7,11 @@ const {
   generateAdminExchangeCode,
 } = require('@hanzochat/api');
 const { syncUserEntraGroupMemberships } = require('~/server/services/PermissionService');
-const { setAuthTokens, setOpenIDAuthTokens } = require('~/server/services/AuthService');
+const {
+  setAuthTokens,
+  setOpenIDAuthTokens,
+  persistOpenIDTokensToSession,
+} = require('~/server/services/AuthService');
 const getLogStores = require('~/cache/getLogStores');
 const { checkBan } = require('~/server/middleware');
 const { generateToken } = require('~/models');
@@ -56,13 +60,32 @@ function createOAuthHandler(redirectUri = domains.client) {
       }
 
       /** Standard OAuth flow - set cookies and redirect */
-      if (
-        req.user &&
-        req.user.provider == 'openid' &&
-        isEnabled(process.env.OPENID_REUSE_TOKENS) === true
-      ) {
-        await syncUserEntraGroupMemberships(req.user, req.user.tokenset.access_token);
-        setOpenIDAuthTokens(req.user.tokenset, req, res, req.user._id.toString());
+      if (req.user && req.user.provider == 'openid') {
+        if (isEnabled(process.env.OPENID_REUSE_TOKENS) === true) {
+          /**
+           * REUSE path: the OIDC tokenset drives BOTH the app auth token and the
+           * refresh grant (`/api/auth/refresh` performs an OIDC refresh). Unchanged.
+           * setOpenIDAuthTokens already persists the id_token to the session.
+           */
+          await syncUserEntraGroupMemberships(req.user, req.user.tokenset.access_token);
+          setOpenIDAuthTokens(req.user.tokenset, req, res, req.user._id.toString());
+        } else {
+          /**
+           * Decoupled path (the live default, REUSE disabled). Keep refresh on the
+           * local-JWT path so login/refresh cookies stay byte-identical, but ALSO
+           * persist the id_token server-side so downstream on-behalf-of cloud calls
+           * (POST /api/agents/cloud/:name/run -> cloud /v1/agents) can run as this
+           * hanzo.id principal. OPENID_REUSE_TOKENS still SOLELY gates the OIDC
+           * refresh-grant; it no longer gates id_token persistence.
+           */
+          await setAuthTokens(req.user._id, res);
+          try {
+            persistOpenIDTokensToSession(req, req.user.tokenset);
+          } catch (persistErr) {
+            /** On-behalf-of is best-effort; NEVER let it break the login redirect. */
+            logger.warn('[OAuth] Failed to persist OpenID tokens for on-behalf-of:', persistErr);
+          }
+        }
       } else {
         await setAuthTokens(req.user._id, res);
       }
