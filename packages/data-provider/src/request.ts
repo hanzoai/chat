@@ -102,6 +102,12 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
   failedQueue = [];
 };
 
+/** The bearer currently on the axios default header, or null when anonymous. */
+function currentBearer(): string | null {
+  const auth = axios.defaults.headers.common['Authorization'];
+  return typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7) : null;
+}
+
 /**
  * A guest (anonymous preview) session carries a `{ guest: true }` JWT that is
  * only valid on the chat-completion route; every other endpoint answers 401 by
@@ -110,12 +116,12 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
  * the interceptor leaves guests on the chat surface.
  */
 function isGuestSession(): boolean {
+  const tok = currentBearer();
+  if (tok == null) {
+    return false;
+  }
   try {
-    const auth = axios.defaults.headers.common['Authorization'];
-    if (typeof auth !== 'string' || !auth.startsWith('Bearer ')) {
-      return false;
-    }
-    const b64 = auth.slice(7).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const b64 = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
     const payload = JSON.parse(atob(b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=')));
     return payload?.guest === true;
   } catch {
@@ -175,7 +181,11 @@ if (typeof window !== 'undefined') {
             console.log(
               `Refresh token failed from shared link, attempting request to ${originalRequest.url}`,
             );
-          } else if (!isGuestSession()) {
+          } else if (currentBearer() != null && !isGuestSession()) {
+            // Only hard-redirect a genuinely expired *session* bearer. An
+            // anonymous cold-start (no bearer yet, guest token still in flight)
+            // must never be bounced to /login — that races the guest-acquire and
+            // strands the visitor. Routing/login-gate handles the no-bearer case.
             window.location.href = endpoints.loginPage();
           }
         } catch (err) {
