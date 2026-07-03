@@ -1,10 +1,11 @@
 import { ErrorTypes } from 'librechat-data-provider';
+import type { DataHandle } from '~/common/dataHandle';
 // Note: checkUserKeyExpiry moved to @hanzochat/api (utils/key.ts) as it's a pure validation utility
 import { encrypt, decrypt } from '~/crypto';
 import logger from '~/config/winston';
 
 /** Factory function that takes mongoose instance and returns the key methods */
-export function createKeyMethods(mongoose: typeof import('mongoose')) {
+export function createKeyMethods(handle: DataHandle) {
   /**
    * Retrieves and decrypts the key value for a given user identified by userId and identifier name.
    * @param params - The parameters object
@@ -18,7 +19,7 @@ export function createKeyMethods(mongoose: typeof import('mongoose')) {
    */
   async function getUserKey(params: { userId: string; name: string }): Promise<string> {
     const { userId, name } = params;
-    const Key = mongoose.models.Key;
+    const Key = handle.models.Key;
     const keyValue = (await Key.findOne({ userId, name }).lean()) as {
       value: string;
     } | null;
@@ -75,7 +76,7 @@ export function createKeyMethods(mongoose: typeof import('mongoose')) {
     name: string;
   }): Promise<{ expiresAt: Date | 'never' | null }> {
     const { userId, name } = params;
-    const Key = mongoose.models.Key;
+    const Key = handle.models.Key;
     const keyValue = (await Key.findOne({ userId, name }).lean()) as {
       expiresAt?: Date;
     } | null;
@@ -103,7 +104,7 @@ export function createKeyMethods(mongoose: typeof import('mongoose')) {
     expiresAt?: Date | null;
   }): Promise<unknown> {
     const { userId, name, value, expiresAt = null } = params;
-    const Key = mongoose.models.Key;
+    const Key = handle.models.Key;
     const encryptedValue = await encrypt(value);
     const updateObject: { userId: string; name: string; value: string; expiresAt?: Date } = {
       userId,
@@ -141,7 +142,7 @@ export function createKeyMethods(mongoose: typeof import('mongoose')) {
     all?: boolean;
   }): Promise<unknown> {
     const { userId, name, all = false } = params;
-    const Key = mongoose.models.Key;
+    const Key = handle.models.Key;
     if (all) {
       return await Key.deleteMany({ userId });
     }

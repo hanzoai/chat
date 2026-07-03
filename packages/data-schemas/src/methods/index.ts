@@ -54,8 +54,8 @@ export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
     ...createSessionMethods(mongoose),
     ...createTokenMethods(mongoose),
     ...createRoleMethods(mongoose),
-    ...createKeyMethods(mongoose),
-    ...createFileMethods(mongoose),
+    ...createKeyMethods(dbHandle),
+    ...createFileMethods(dbHandle),
     ...createMemoryMethods(mongoose),
     ...createAgentCategoryMethods(mongoose),
     ...createAgentApiKeyMethods(mongoose),
@@ -64,7 +64,7 @@ export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
     ...createUserGroupMethods(mongoose),
     ...createAclEntryMethods(mongoose),
     ...createShareMethods(dbHandle),
-    ...createPluginAuthMethods(mongoose),
+    ...createPluginAuthMethods(dbHandle),
   };
 }
 
