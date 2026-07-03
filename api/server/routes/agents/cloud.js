@@ -7,11 +7,11 @@ const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/Cloud
 
 /**
  * Cloud agents router — lets a signed-in chat user RUN their own canonical Hanzo
- * Cloud agents (`/v1/agents`) from the chat thread. Mounted at `/api/agents/cloud`.
+ * Cloud agents (`/v1/agents`) from the chat thread. Mounted at `/v1/chat/agents/cloud`.
  *
- *   GET  /api/agents/cloud            list the caller's cloud agents
- *   GET  /api/agents/cloud/:name      one agent's detail + recent runs
- *   POST /api/agents/cloud/:name/run  run the agent {input} -> RunResult
+ *   GET  /v1/chat/agents/cloud            list the caller's cloud agents
+ *   GET  /v1/chat/agents/cloud/:name      one agent's detail + recent runs
+ *   POST /v1/chat/agents/cloud/:name/run  run the agent {input} -> RunResult
  *
  * Auth: `requireJwtAuth` gates every route (guests are rejected). The chat
  * backend then forwards the user's hanzo.id id_token to cloud as a Bearer;
@@ -144,7 +144,7 @@ function sendCloudError(res, err, action) {
   return res.status(status).json({ error: err.message || 'cloud agents request failed' });
 }
 
-/** GET /api/agents/cloud — list the caller's cloud agents. */
+/** GET /v1/chat/agents/cloud — list the caller's cloud agents. */
 router.get('/', async (req, res) => {
   const client = getCloudAgentsClient();
   if (!client) {
@@ -162,7 +162,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-/** GET /api/agents/cloud/:name — one agent's detail + recent runs. */
+/** GET /v1/chat/agents/cloud/:name — one agent's detail + recent runs. */
 router.get('/:name', async (req, res) => {
   const client = getCloudAgentsClient();
   if (!client) {
@@ -180,7 +180,7 @@ router.get('/:name', async (req, res) => {
   }
 });
 
-/** POST /api/agents/cloud/:name/run — run the agent, return its RunResult. */
+/** POST /v1/chat/agents/cloud/:name/run — run the agent, return its RunResult. */
 router.post('/:name/run', async (req, res) => {
   const client = getCloudAgentsClient();
   if (!client) {

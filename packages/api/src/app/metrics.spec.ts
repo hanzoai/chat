@@ -18,52 +18,52 @@ const request = require('supertest') as (app: express.Express) => any;
 describe('normalizePath', () => {
   it.each([
     // Known high-cardinality routes
-    ['/api/messages/507f1f77bcf86cd799439011', '/api/messages/#id'],
-    ['/api/messages/507f1f77bcf86cd799439011/507f1f77bcf86cd799439012', '/api/messages/#id/#id'],
-    ['/api/messages/artifact/507f1f77bcf86cd799439012', '/api/messages/artifact/#id'],
-    ['/api/convos/507f1f77bcf86cd799439011', '/api/convos/#id'],
-    ['/api/files/507f1f77bcf86cd799439011', '/api/files/#id'],
-    ['/api/files/507f1f77bcf86cd799439011/preview', '/api/files/#id/preview'],
-    ['/api/files/download/user-123/file-456', '/api/files/download/#id/#id'],
-    ['/api/files/download-url/user-123/file-456', '/api/files/download-url/#id/#id'],
-    ['/api/files/code/download/session-123/file-456', '/api/files/code/download/#id/#id'],
-    ['/api/agents/507f1f77bcf86cd799439011', '/api/agents/#id'],
-    ['/api/agents/chat/stream/stream-123', '/api/agents/chat/stream/#id'],
-    ['/api/agents/chat/status/convo-123', '/api/agents/chat/status/#id'],
-    ['/api/agents/v1/chat/completions', '/api/agents/v1/chat/completions'],
-    ['/api/agents/v1/responses', '/api/agents/v1/responses'],
-    ['/api/assistants/507f1f77bcf86cd799439011', '/api/assistants/#id'],
-    ['/api/skills/507f1f77bcf86cd799439011/files/reference.md', '/api/skills/#id/files'],
-    ['/api/share/some-token-value', '/api/share/#token'],
+    ['/v1/chat/messages/507f1f77bcf86cd799439011', '/v1/chat/messages/#id'],
+    ['/v1/chat/messages/507f1f77bcf86cd799439011/507f1f77bcf86cd799439012', '/v1/chat/messages/#id/#id'],
+    ['/v1/chat/messages/artifact/507f1f77bcf86cd799439012', '/v1/chat/messages/artifact/#id'],
+    ['/v1/chat/convos/507f1f77bcf86cd799439011', '/v1/chat/convos/#id'],
+    ['/v1/chat/files/507f1f77bcf86cd799439011', '/v1/chat/files/#id'],
+    ['/v1/chat/files/507f1f77bcf86cd799439011/preview', '/v1/chat/files/#id/preview'],
+    ['/v1/chat/files/download/user-123/file-456', '/v1/chat/files/download/#id/#id'],
+    ['/v1/chat/files/download-url/user-123/file-456', '/v1/chat/files/download-url/#id/#id'],
+    ['/v1/chat/files/code/download/session-123/file-456', '/v1/chat/files/code/download/#id/#id'],
+    ['/v1/chat/agents/507f1f77bcf86cd799439011', '/v1/chat/agents/#id'],
+    ['/v1/chat/agents/chat/stream/stream-123', '/v1/chat/agents/chat/stream/#id'],
+    ['/v1/chat/agents/chat/status/convo-123', '/v1/chat/agents/chat/status/#id'],
+    ['/v1/chat/agents/v1/chat/completions', '/v1/chat/agents/v1/chat/completions'],
+    ['/v1/chat/agents/v1/responses', '/v1/chat/agents/v1/responses'],
+    ['/v1/chat/assistants/507f1f77bcf86cd799439011', '/v1/chat/assistants/#id'],
+    ['/v1/chat/skills/507f1f77bcf86cd799439011/files/reference.md', '/v1/chat/skills/#id/files'],
+    ['/v1/chat/share/some-token-value', '/v1/chat/share/#token'],
     ['/share/shareId-with_nanoidChars', '/share/#id'],
     ['/share/shareId-with_nanoidChars/edit', '/share/#id/edit'],
     // Known API routes with dynamic IDs
-    ['/api/tags/507f1f77bcf86cd799439011', '/api/tags/#id'],
-    ['/api/tags/507F1F77BCF86CD799439011', '/api/tags/#id'],
-    ['/api/tools/507f1f77bcf86cd799439011', '/api/tools/#id'],
-    ['/api/runs/507f1f77bcf86cd799439011', '/api/runs/#id'],
+    ['/v1/chat/tags/507f1f77bcf86cd799439011', '/v1/chat/tags/#id'],
+    ['/v1/chat/tags/507F1F77BCF86CD799439011', '/v1/chat/tags/#id'],
+    ['/v1/chat/tools/507f1f77bcf86cd799439011', '/v1/chat/tools/#id'],
+    ['/v1/chat/runs/507f1f77bcf86cd799439011', '/v1/chat/runs/#id'],
     // Catch-all: UUID in unknown routes
-    ['/api/tools/123e4567-e89b-12d3-a456-426614174000', '/api/tools/#id'],
-    ['/api/sessions/123E4567-E89B-12D3-A456-426614174000', '/api/sessions/#id'],
+    ['/v1/chat/tools/123e4567-e89b-12d3-a456-426614174000', '/v1/chat/tools/#id'],
+    ['/v1/chat/sessions/123E4567-E89B-12D3-A456-426614174000', '/v1/chat/sessions/#id'],
     // Multiple dynamic segments
     [
-      '/api/convos/507f1f77bcf86cd799439011/messages/507f1f77bcf86cd799439012',
-      '/api/convos/#id/messages/#id',
+      '/v1/chat/convos/507f1f77bcf86cd799439011/messages/507f1f77bcf86cd799439012',
+      '/v1/chat/convos/#id/messages/#id',
     ],
     // Static paths are not modified
-    ['/api/auth/login', '/api/auth/login'],
-    ['/api/config', '/api/config'],
+    ['/v1/chat/auth/login', '/v1/chat/auth/login'],
+    ['/v1/chat/config', '/v1/chat/config'],
     ['/health', '/health'],
     ['/metrics', '/metrics'],
     ['/', '/'],
     // Unknown/user-generated routes collapse into bounded label buckets
-    ['/api/not-a-real-route/user-generated-value', '/api/#path'],
+    ['/v1/chat/not-a-real-route/user-generated-value', '/v1/chat/#path'],
     ['/images/user-123/avatar-1700000000000.png', '/images/#path'],
     ['/avatars/user-123/avatar-1700000000000.png', '/avatars/#path'],
     ['/t/tenant-a/images/user-123/avatar-1700000000000.png', '/t/#path'],
     ['/unknown/shareId-with_nanoidChars', '/#path'],
-    ['/api/messages/507f1f77bcf86cd799439011/user-generated-value/extra', '/api/#path'],
-    ['/api/messages/artifact/507f1f77bcf86cd799439012/user-generated-value', '/api/#path'],
+    ['/v1/chat/messages/507f1f77bcf86cd799439011/user-generated-value/extra', '/v1/chat/#path'],
+    ['/v1/chat/messages/artifact/507f1f77bcf86cd799439012/user-generated-value', '/v1/chat/#path'],
   ])('normalizes %s -> %s', (input: string, normalized: string) => {
     expect(normalizePath(input)).toBe(normalized);
   });
@@ -81,7 +81,7 @@ describe('createMetrics', () => {
     const next = jest.fn();
 
     metricsMiddleware(
-      { headers: {}, method: 'GET', path: '/api/slow-response' } as Request,
+      { headers: {}, method: 'GET', path: '/v1/chat/slow-response' } as Request,
       res as unknown as Response,
       next,
     );
@@ -99,13 +99,13 @@ describe('createMetrics', () => {
     const { metricsMiddleware, metricsRouter } = createMetrics();
     app.use(metricsMiddleware);
     app.use(express.text({ type: '*/*' }));
-    app.post('/api/files/:id', (_req, res) => {
+    app.post('/v1/chat/files/:id', (_req, res) => {
       res.status(201).send('ok');
     });
     app.use('/metrics', metricsRouter);
 
     await request(app)
-      .post('/api/files/507f1f77bcf86cd799439011')
+      .post('/v1/chat/files/507f1f77bcf86cd799439011')
       .set('Content-Type', 'text/plain')
       .send('x'.repeat(42))
       .expect(201);
@@ -134,14 +134,14 @@ describe('createMetrics', () => {
     process.env.METRICS_SECRET = 'test-secret';
     const { metricsMiddleware, metricsRouter } = createMetrics();
     app.use(metricsMiddleware);
-    app.get('/api/agents/chat/stream/:streamId', (_req, res) => {
+    app.get('/v1/chat/agents/chat/stream/:streamId', (_req, res) => {
       res.setHeader('Content-Type', 'text/event-stream');
       res.write('event: message\ndata: {}\n\n');
       res.end();
     });
     app.use('/metrics', metricsRouter);
 
-    await request(app).get('/api/agents/chat/stream/stream-123').expect(200);
+    await request(app).get('/v1/chat/agents/chat/stream/stream-123').expect(200);
 
     const response = await request(app)
       .get('/metrics')
@@ -164,13 +164,13 @@ describe('createMetrics', () => {
     process.env.METRICS_SECRET = 'test-secret';
     const { metricsMiddleware, metricsRouter } = createMetrics();
     app.use(metricsMiddleware);
-    app.post('/api/files', (_req, res) => {
+    app.post('/v1/chat/files', (_req, res) => {
       res.status(201).send('ok');
     });
     app.use('/metrics', metricsRouter);
 
     await request(app)
-      .post('/api/files')
+      .post('/v1/chat/files')
       .attach('file', Buffer.from('uploaded body'), 'test.txt')
       .expect(201);
 
@@ -196,12 +196,12 @@ describe('createMetrics', () => {
     process.env.METRICS_SECRET = 'test-secret';
     const { metricsMiddleware, metricsRouter } = createMetrics();
     app.use(metricsMiddleware);
-    app.delete('/api/files', (_req, res) => {
+    app.delete('/v1/chat/files', (_req, res) => {
       res.status(204).end();
     });
     app.use('/metrics', metricsRouter);
 
-    await request(app).delete('/api/files').expect(204);
+    await request(app).delete('/v1/chat/files').expect(204);
 
     const response = await request(app)
       .get('/metrics')
@@ -233,7 +233,7 @@ describe('createMetrics', () => {
     const next = jest.fn();
 
     metricsMiddleware(
-      { headers: {}, method: 'GET', path: '/api/slow-response' } as Request,
+      { headers: {}, method: 'GET', path: '/v1/chat/slow-response' } as Request,
       res as unknown as Response,
       next,
     );

@@ -50,7 +50,7 @@ function createResponse(statusCode = 200): MockResponse {
 
 function createRequest(overrides: Partial<ServerRequest> = {}): ServerRequest {
   return {
-    baseUrl: '/api/messages',
+    baseUrl: '/v1/chat/messages',
     body: {
       prompt: 'do not capture this prompt',
       text: 'do not capture this body',
@@ -61,7 +61,7 @@ function createRequest(overrides: Partial<ServerRequest> = {}): ServerRequest {
       'x-api-key': 'do-not-capture-this-api-key',
     },
     method: 'POST',
-    path: '/api/messages/conversation-1',
+    path: '/v1/chat/messages/conversation-1',
     route: { path: '/:conversationId' },
     user: {
       email: 'do-not-capture@example.com',
@@ -111,7 +111,7 @@ describe('telemetryMiddleware', () => {
     expect(requestSpan.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
         'http.response.status_code': 202,
-        'http.route': '/api/messages/:conversationId',
+        'http.route': '/v1/chat/messages/:conversationId',
       }),
     );
   });
@@ -137,7 +137,7 @@ describe('telemetryMiddleware', () => {
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
         'http.response.status_code': 201,
-        'http.route': '/api/messages/:conversationId',
+        'http.route': '/v1/chat/messages/:conversationId',
       }),
     );
 
@@ -224,7 +224,7 @@ describe('telemetryMiddleware', () => {
     const span = createSpan();
     const req = createRequest({
       baseUrl: '',
-      path: '/api/nonexistent/123',
+      path: '/v1/chat/nonexistent/123',
       route: undefined,
     });
     const res = createResponse(404);
@@ -235,7 +235,7 @@ describe('telemetryMiddleware', () => {
 
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
-        'http.route': '/api/*',
+        'http.route': '/v1/chat/*',
         'http.response.status_code': 404,
       }),
     );
@@ -325,7 +325,7 @@ describe('telemetryErrorMiddleware', () => {
     });
     expect(span.setAttributes).toHaveBeenCalledWith({
       'error.type': 'TypeError',
-      'http.route': '/api/messages/:conversationId',
+      'http.route': '/v1/chat/messages/:conversationId',
     });
     expect(next).toHaveBeenCalledWith(error);
   });
@@ -359,7 +359,7 @@ describe('telemetryErrorMiddleware', () => {
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
         'error.type': 'string',
-        'http.route': '/api/messages/:conversationId',
+        'http.route': '/v1/chat/messages/:conversationId',
       }),
     );
     expect(next).toHaveBeenCalledWith('boom');
@@ -377,7 +377,7 @@ describe('telemetryErrorMiddleware', () => {
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
         'error.type': 'null',
-        'http.route': '/api/messages/:conversationId',
+        'http.route': '/v1/chat/messages/:conversationId',
       }),
     );
     expect(next).toHaveBeenCalledWith(null);

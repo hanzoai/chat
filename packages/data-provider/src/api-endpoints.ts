@@ -1,5 +1,5 @@
 /**
- * Hanzo Chat API Endpoints (LibreChat-native backend under /api/*).
+ * Hanzo Chat API Endpoints (LibreChat-native backend under /v1/chat/*).
  *
  * Single source of truth for all REST URLs. The SPA is served by, and talks to,
  * its own origin (e.g. https://hanzo.chat): BASE_URL is derived from the <base>
@@ -72,15 +72,15 @@ const buildQuery = (params: Record<string, unknown>): string => {
 };
 
 export const health = () => `${BASE_URL}/health`;
-export const user = () => `${BASE_URL}/api/user`;
+export const user = () => `${BASE_URL}/v1/chat/user`;
 
-export const balance = () => `${BASE_URL}/api/balance`;
+export const balance = () => `${BASE_URL}/v1/chat/balance`;
 
-export const userPlugins = () => `${BASE_URL}/api/user/plugins`;
+export const userPlugins = () => `${BASE_URL}/v1/chat/user/plugins`;
 
-export const deleteUser = () => `${BASE_URL}/api/user/delete`;
+export const deleteUser = () => `${BASE_URL}/v1/chat/user/delete`;
 
-const messagesRoot = `${BASE_URL}/api/messages`;
+const messagesRoot = `${BASE_URL}/v1/chat/messages`;
 
 export const messages = (params: q.MessagesListParams) => {
   const { conversationId, messageId, ...rest } = params;
@@ -100,7 +100,7 @@ export const messagesArtifacts = (messageId: string) => `${messagesRoot}/artifac
 
 export const messagesBranch = () => `${messagesRoot}/branch`;
 
-const shareRoot = `${BASE_URL}/api/share`;
+const shareRoot = `${BASE_URL}/v1/chat/share`;
 export const shareMessages = (shareId: string) => `${shareRoot}/${shareId}`;
 export const getSharedLink = (conversationId: string) => `${shareRoot}/link/${conversationId}`;
 export const getSharedLinks = (
@@ -117,7 +117,7 @@ export const getSharedLinks = (
 export const createSharedLink = (conversationId: string) => `${shareRoot}/${conversationId}`;
 export const updateSharedLink = (shareId: string) => `${shareRoot}/${shareId}`;
 
-const keysEndpoint = `${BASE_URL}/api/keys`;
+const keysEndpoint = `${BASE_URL}/v1/chat/keys`;
 
 export const keys = () => keysEndpoint;
 
@@ -127,13 +127,13 @@ export const revokeUserKey = (name: string) => `${keysEndpoint}/${name}`;
 
 export const revokeAllUserKeys = () => `${keysEndpoint}?all=true`;
 
-const apiKeysEndpoint = `${BASE_URL}/api/api-keys`;
+const apiKeysEndpoint = `${BASE_URL}/v1/chat/api-keys`;
 
 export const apiKeys = () => apiKeysEndpoint;
 
 export const apiKeyById = (id: string) => `${apiKeysEndpoint}/${id}`;
 
-export const conversationsRoot = `${BASE_URL}/api/convos`;
+export const conversationsRoot = `${BASE_URL}/v1/chat/convos`;
 
 export const conversations = (params: q.ConversationListParams) => {
   return `${conversationsRoot}${buildQuery(params)}`;
@@ -159,73 +159,73 @@ export const forkConversation = () => `${conversationsRoot}/fork`;
 export const duplicateConversation = () => `${conversationsRoot}/duplicate`;
 
 export const search = (q: string, cursor?: string | null) =>
-  `${BASE_URL}/api/search?q=${q}${cursor ? `&cursor=${cursor}` : ''}`;
+  `${BASE_URL}/v1/chat/search?q=${q}${cursor ? `&cursor=${cursor}` : ''}`;
 
-export const searchEnabled = () => `${BASE_URL}/api/search/enable`;
+export const searchEnabled = () => `${BASE_URL}/v1/chat/search/enable`;
 
-export const presets = () => `${BASE_URL}/api/presets`;
+export const presets = () => `${BASE_URL}/v1/chat/presets`;
 
-export const deletePreset = () => `${BASE_URL}/api/presets/delete`;
+export const deletePreset = () => `${BASE_URL}/v1/chat/presets/delete`;
 
-export const aiEndpoints = () => `${BASE_URL}/api/endpoints`;
+export const aiEndpoints = () => `${BASE_URL}/v1/chat/endpoints`;
 
-export const models = () => `${BASE_URL}/api/models`;
+export const models = () => `${BASE_URL}/v1/chat/models`;
 
-export const tokenizer = () => `${BASE_URL}/api/tokenizer`;
+export const tokenizer = () => `${BASE_URL}/v1/chat/tokenizer`;
 
-export const login = () => `${BASE_URL}/api/auth/login`;
+export const login = () => `${BASE_URL}/v1/chat/auth/login`;
 
-export const logout = () => `${BASE_URL}/api/auth/logout`;
+export const logout = () => `${BASE_URL}/v1/chat/auth/logout`;
 
-export const register = () => `${BASE_URL}/api/auth/register`;
+export const register = () => `${BASE_URL}/v1/chat/auth/register`;
 
-export const loginFacebook = () => `${BASE_URL}/api/auth/facebook`;
+export const loginFacebook = () => `${BASE_URL}/v1/chat/auth/facebook`;
 
-export const loginGoogle = () => `${BASE_URL}/api/auth/google`;
+export const loginGoogle = () => `${BASE_URL}/v1/chat/auth/google`;
 
 export const refreshToken = (retry?: boolean) =>
-  `${BASE_URL}/api/auth/refresh${retry === true ? '?retry=true' : ''}`;
+  `${BASE_URL}/v1/chat/auth/refresh${retry === true ? '?retry=true' : ''}`;
 
-export const guestToken = () => `${BASE_URL}/api/auth/guest`;
+export const guestToken = () => `${BASE_URL}/v1/chat/auth/guest`;
 
-export const requestPasswordReset = () => `${BASE_URL}/api/auth/requestPasswordReset`;
+export const requestPasswordReset = () => `${BASE_URL}/v1/chat/auth/requestPasswordReset`;
 
-export const resetPassword = () => `${BASE_URL}/api/auth/resetPassword`;
+export const resetPassword = () => `${BASE_URL}/v1/chat/auth/resetPassword`;
 
-export const verifyEmail = () => `${BASE_URL}/api/user/verify`;
+export const verifyEmail = () => `${BASE_URL}/v1/chat/user/verify`;
 
 // Auth page URLs (for client-side navigation and redirects)
 export const loginPage = () => `${BASE_URL}/login`;
 export const registerPage = () => `${BASE_URL}/register`;
 
-export const resendVerificationEmail = () => `${BASE_URL}/api/user/verify/resend`;
+export const resendVerificationEmail = () => `${BASE_URL}/v1/chat/user/verify/resend`;
 
-export const plugins = () => `${BASE_URL}/api/plugins`;
+export const plugins = () => `${BASE_URL}/v1/chat/plugins`;
 
 export const mcpReinitialize = (serverName: string) =>
-  `${BASE_URL}/api/mcp/${serverName}/reinitialize`;
-export const mcpConnectionStatus = () => `${BASE_URL}/api/mcp/connection/status`;
+  `${BASE_URL}/v1/chat/mcp/${serverName}/reinitialize`;
+export const mcpConnectionStatus = () => `${BASE_URL}/v1/chat/mcp/connection/status`;
 export const mcpServerConnectionStatus = (serverName: string) =>
-  `${BASE_URL}/api/mcp/connection/status/${serverName}`;
+  `${BASE_URL}/v1/chat/mcp/connection/status/${serverName}`;
 export const mcpAuthValues = (serverName: string) => {
-  return `${BASE_URL}/api/mcp/${serverName}/auth-values`;
+  return `${BASE_URL}/v1/chat/mcp/${serverName}/auth-values`;
 };
 
 export const cancelMCPOAuth = (serverName: string) => {
-  return `${BASE_URL}/api/mcp/oauth/cancel/${serverName}`;
+  return `${BASE_URL}/v1/chat/mcp/oauth/cancel/${serverName}`;
 };
 
-export const mcpOAuthBind = (serverName: string) => `${BASE_URL}/api/mcp/${serverName}/oauth/bind`;
+export const mcpOAuthBind = (serverName: string) => `${BASE_URL}/v1/chat/mcp/${serverName}/oauth/bind`;
 
 export const actionOAuthBind = (actionId: string) =>
-  `${BASE_URL}/api/actions/${actionId}/oauth/bind`;
+  `${BASE_URL}/v1/chat/actions/${actionId}/oauth/bind`;
 
-export const config = () => `${BASE_URL}/api/config`;
+export const config = () => `${BASE_URL}/v1/chat/config`;
 
-export const prompts = () => `${BASE_URL}/api/prompts`;
+export const prompts = () => `${BASE_URL}/v1/chat/prompts`;
 
 export const addPromptToGroup = (groupId: string) =>
-  `${BASE_URL}/api/prompts/groups/${groupId}/prompts`;
+  `${BASE_URL}/v1/chat/prompts/groups/${groupId}/prompts`;
 
 export const assistants = ({
   path = '',
@@ -240,7 +240,7 @@ export const assistants = ({
   version: number | string;
   isAvatar?: boolean;
 }) => {
-  let url = isAvatar === true ? `${images()}/assistants` : `${BASE_URL}/api/assistants/v${version}`;
+  let url = isAvatar === true ? `${images()}/assistants` : `${BASE_URL}/v1/chat/assistants/v${version}`;
 
   if (path && path !== '') {
     url += `/${path}`;
@@ -262,7 +262,7 @@ export const assistants = ({
 };
 
 export const agents = ({ path = '', options }: { path?: string; options?: object }) => {
-  let url = `${BASE_URL}/api/agents`;
+  let url = `${BASE_URL}/v1/chat/agents`;
 
   if (path && path !== '') {
     url += `/${path}`;
@@ -276,35 +276,35 @@ export const agents = ({ path = '', options }: { path?: string; options?: object
   return url;
 };
 
-export const activeJobs = () => `${BASE_URL}/api/agents/chat/active`;
+export const activeJobs = () => `${BASE_URL}/v1/chat/agents/chat/active`;
 
 /**
  * Canonical Hanzo Cloud agents (`/v1/agents`), proxied server-side through the
- * chat backend at `/api/agents/cloud` so the user's hanzo.id token never reaches
+ * chat backend at `/v1/chat/agents/cloud` so the user's hanzo.id token never reaches
  * the browser. `name` is a cloud agent handle; empty for the list.
  */
 export const cloudAgents = (name = '') =>
-  `${BASE_URL}/api/agents/cloud${name ? `/${encodeURIComponent(name)}` : ''}`;
+  `${BASE_URL}/v1/chat/agents/cloud${name ? `/${encodeURIComponent(name)}` : ''}`;
 
 export const cloudAgentRun = (name: string) =>
-  `${BASE_URL}/api/agents/cloud/${encodeURIComponent(name)}/run`;
+  `${BASE_URL}/v1/chat/agents/cloud/${encodeURIComponent(name)}/run`;
 
 export const mcp = {
-  tools: `${BASE_URL}/api/mcp/tools`,
-  servers: `${BASE_URL}/api/mcp/servers`,
+  tools: `${BASE_URL}/v1/chat/mcp/tools`,
+  servers: `${BASE_URL}/v1/chat/mcp/servers`,
 };
 
-export const mcpServer = (serverName: string) => `${BASE_URL}/api/mcp/servers/${serverName}`;
+export const mcpServer = (serverName: string) => `${BASE_URL}/v1/chat/mcp/servers/${serverName}`;
 
 export const revertAgentVersion = (agent_id: string) => `${agents({ path: `${agent_id}/revert` })}`;
 
-export const files = () => `${BASE_URL}/api/files`;
-export const fileUpload = () => `${BASE_URL}/api/files`;
-export const fileDelete = () => `${BASE_URL}/api/files`;
+export const files = () => `${BASE_URL}/v1/chat/files`;
+export const fileUpload = () => `${BASE_URL}/v1/chat/files`;
+export const fileDelete = () => `${BASE_URL}/v1/chat/files`;
 export const fileDownload = (userId: string, fileId: string) =>
-  `${BASE_URL}/api/files/download/${userId}/${fileId}`;
-export const fileConfig = () => `${BASE_URL}/api/files/config`;
-export const agentFiles = (agentId: string) => `${BASE_URL}/api/files/agent/${agentId}`;
+  `${BASE_URL}/v1/chat/files/download/${userId}/${fileId}`;
+export const fileConfig = () => `${BASE_URL}/v1/chat/files/config`;
+export const agentFiles = (agentId: string) => `${BASE_URL}/v1/chat/files/agent/${agentId}`;
 
 export const images = () => `${files()}/images`;
 
@@ -372,12 +372,12 @@ export const deletePrompt = ({ _id, groupId }: { _id: string; groupId: string })
   return `${prompts()}/${_id}?groupId=${groupId}`;
 };
 
-export const getCategories = () => `${BASE_URL}/api/categories`;
+export const getCategories = () => `${BASE_URL}/v1/chat/categories`;
 
 export const getAllPromptGroups = () => `${prompts()}/all`;
 
 /* Roles */
-export const roles = () => `${BASE_URL}/api/roles`;
+export const roles = () => `${BASE_URL}/v1/chat/roles`;
 export const getRole = (roleName: string) => `${roles()}/${roleName.toLowerCase()}`;
 export const updatePromptPermissions = (roleName: string) => `${getRole(roleName)}/prompts`;
 export const updateMemoryPermissions = (roleName: string) => `${getRole(roleName)}/memories`;
@@ -393,7 +393,7 @@ export const updateMarketplacePermissions = (roleName: string) =>
 
 /* Conversation Tags */
 export const conversationTags = (tag?: string) =>
-  `${BASE_URL}/api/tags${tag != null && tag ? `/${encodeURIComponent(tag)}` : ''}`;
+  `${BASE_URL}/v1/chat/tags${tag != null && tag ? `/${encodeURIComponent(tag)}` : ''}`;
 
 export const conversationTagsList = (pageNumber: string, sort?: string, order?: string) =>
   `${conversationTags()}/list?pageNumber=${pageNumber}${sort ? `&sort=${sort}` : ''}${
@@ -403,30 +403,30 @@ export const conversationTagsList = (pageNumber: string, sort?: string, order?: 
 export const addTagToConversation = (conversationId: string) =>
   `${conversationTags()}/convo/${conversationId}`;
 
-export const userTerms = () => `${BASE_URL}/api/user/terms`;
-export const acceptUserTerms = () => `${BASE_URL}/api/user/terms/accept`;
-export const banner = () => `${BASE_URL}/api/banner`;
+export const userTerms = () => `${BASE_URL}/v1/chat/user/terms`;
+export const acceptUserTerms = () => `${BASE_URL}/v1/chat/user/terms/accept`;
+export const banner = () => `${BASE_URL}/v1/chat/banner`;
 
 // Message Feedback
 export const feedback = (conversationId: string, messageId: string) =>
-  `${BASE_URL}/api/messages/${conversationId}/${messageId}/feedback`;
+  `${BASE_URL}/v1/chat/messages/${conversationId}/${messageId}/feedback`;
 
 // Two-Factor Endpoints
-export const enableTwoFactor = () => `${BASE_URL}/api/auth/2fa/enable`;
-export const verifyTwoFactor = () => `${BASE_URL}/api/auth/2fa/verify`;
-export const confirmTwoFactor = () => `${BASE_URL}/api/auth/2fa/confirm`;
-export const disableTwoFactor = () => `${BASE_URL}/api/auth/2fa/disable`;
-export const regenerateBackupCodes = () => `${BASE_URL}/api/auth/2fa/backup/regenerate`;
-export const verifyTwoFactorTemp = () => `${BASE_URL}/api/auth/2fa/verify-temp`;
+export const enableTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/enable`;
+export const verifyTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/verify`;
+export const confirmTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/confirm`;
+export const disableTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/disable`;
+export const regenerateBackupCodes = () => `${BASE_URL}/v1/chat/auth/2fa/backup/regenerate`;
+export const verifyTwoFactorTemp = () => `${BASE_URL}/v1/chat/auth/2fa/verify-temp`;
 
 /* Memories */
-export const memories = () => `${BASE_URL}/api/memories`;
+export const memories = () => `${BASE_URL}/v1/chat/memories`;
 export const memory = (key: string) => `${memories()}/${encodeURIComponent(key)}`;
 export const memoryPreferences = () => `${memories()}/preferences`;
 
 export const searchPrincipals = (params: q.PrincipalSearchParams) => {
   const { q: query, limit, types } = params;
-  let url = `${BASE_URL}/api/permissions/search-principals?q=${encodeURIComponent(query)}`;
+  let url = `${BASE_URL}/v1/chat/permissions/search-principals?q=${encodeURIComponent(query)}`;
 
   if (limit !== undefined) {
     url += `&limit=${limit}`;
@@ -440,20 +440,20 @@ export const searchPrincipals = (params: q.PrincipalSearchParams) => {
 };
 
 export const getAccessRoles = (resourceType: ResourceType) =>
-  `${BASE_URL}/api/permissions/${resourceType}/roles`;
+  `${BASE_URL}/v1/chat/permissions/${resourceType}/roles`;
 
 export const getResourcePermissions = (resourceType: ResourceType, resourceId: string) =>
-  `${BASE_URL}/api/permissions/${resourceType}/${resourceId}`;
+  `${BASE_URL}/v1/chat/permissions/${resourceType}/${resourceId}`;
 
 export const updateResourcePermissions = (resourceType: ResourceType, resourceId: string) =>
-  `${BASE_URL}/api/permissions/${resourceType}/${resourceId}`;
+  `${BASE_URL}/v1/chat/permissions/${resourceType}/${resourceId}`;
 
 export const getEffectivePermissions = (resourceType: ResourceType, resourceId: string) =>
-  `${BASE_URL}/api/permissions/${resourceType}/${resourceId}/effective`;
+  `${BASE_URL}/v1/chat/permissions/${resourceType}/${resourceId}/effective`;
 
 export const getAllEffectivePermissions = (resourceType: ResourceType) =>
-  `${BASE_URL}/api/permissions/${resourceType}/effective/all`;
+  `${BASE_URL}/v1/chat/permissions/${resourceType}/effective/all`;
 
 // SharePoint Graph API Token
 export const graphToken = (scopes: string) =>
-  `${BASE_URL}/api/auth/graph-token?scopes=${encodeURIComponent(scopes)}`;
+  `${BASE_URL}/v1/chat/auth/graph-token?scopes=${encodeURIComponent(scopes)}`;

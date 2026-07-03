@@ -93,7 +93,7 @@ export default function StreamAudio({ index = 0 }) {
         }
 
         logger.log('Fetching audio...', navigator.userAgent);
-        const response = await fetch('/api/files/speech/tts', {
+        const response = await fetch('/v1/chat/files/speech/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ messageId: latestMessage?.messageId, runId: activeRunId, voice }),

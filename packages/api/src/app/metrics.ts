@@ -6,27 +6,27 @@ import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { Mongoose } from 'mongoose';
 
 const PATH_NORMALIZATIONS: [RegExp, string][] = [
-  [/^\/api\/agents\/chat\/stream\/[^/]+(?=\/|$)/, '/api/agents/chat/stream/#id'],
-  [/^\/api\/agents\/chat\/status\/[^/]+(?=\/|$)/, '/api/agents/chat/status/#id'],
-  [/^\/api\/files\/code\/download\/[^/]+\/[^/]+(?=\/|$)/, '/api/files/code/download/#id/#id'],
-  [/^\/api\/files\/download-url\/[^/]+\/[^/]+(?=\/|$)/, '/api/files/download-url/#id/#id'],
-  [/^\/api\/files\/download\/[^/]+\/[^/]+(?=\/|$)/, '/api/files/download/#id/#id'],
-  [/^\/api\/files\/[^/]+\/preview(?=\/|$)/, '/api/files/#id/preview'],
-  [/^\/api\/skills\/[^/]+\/files(?:\/.*)?(?=\/|$)/, '/api/skills/#id/files'],
-  [/^\/api\/messages\/artifact\/[^/]+(?=\/|$)/, '/api/messages/artifact/#id'],
-  [/^\/api\/messages\/[^/]+\/[^/]+(?=\/|$)/, '/api/messages/#id/#id'],
-  [/^\/api\/convos\/[^/]+\/messages\/[^/]+(?=\/|$)/, '/api/convos/#id/messages/#id'],
-  [/^\/api\/messages\/[^/]+(?=\/|$)/, '/api/messages/#id'],
-  [/^\/api\/convos\/[^/]+(?=\/|$)/, '/api/convos/#id'],
-  [/^\/api\/files\/[^/]+(?=\/|$)/, '/api/files/#id'],
-  [/^\/api\/agents\/[^/]+(?=\/|$)/, '/api/agents/#id'],
-  [/^\/api\/assistants\/[^/]+(?=\/|$)/, '/api/assistants/#id'],
-  [/^\/api\/share\/[^/]+(?=\/|$)/, '/api/share/#token'],
+  [/^\/api\/agents\/chat\/stream\/[^/]+(?=\/|$)/, '/v1/chat/agents/chat/stream/#id'],
+  [/^\/api\/agents\/chat\/status\/[^/]+(?=\/|$)/, '/v1/chat/agents/chat/status/#id'],
+  [/^\/api\/files\/code\/download\/[^/]+\/[^/]+(?=\/|$)/, '/v1/chat/files/code/download/#id/#id'],
+  [/^\/api\/files\/download-url\/[^/]+\/[^/]+(?=\/|$)/, '/v1/chat/files/download-url/#id/#id'],
+  [/^\/api\/files\/download\/[^/]+\/[^/]+(?=\/|$)/, '/v1/chat/files/download/#id/#id'],
+  [/^\/api\/files\/[^/]+\/preview(?=\/|$)/, '/v1/chat/files/#id/preview'],
+  [/^\/api\/skills\/[^/]+\/files(?:\/.*)?(?=\/|$)/, '/v1/chat/skills/#id/files'],
+  [/^\/api\/messages\/artifact\/[^/]+(?=\/|$)/, '/v1/chat/messages/artifact/#id'],
+  [/^\/api\/messages\/[^/]+\/[^/]+(?=\/|$)/, '/v1/chat/messages/#id/#id'],
+  [/^\/api\/convos\/[^/]+\/messages\/[^/]+(?=\/|$)/, '/v1/chat/convos/#id/messages/#id'],
+  [/^\/api\/messages\/[^/]+(?=\/|$)/, '/v1/chat/messages/#id'],
+  [/^\/api\/convos\/[^/]+(?=\/|$)/, '/v1/chat/convos/#id'],
+  [/^\/api\/files\/[^/]+(?=\/|$)/, '/v1/chat/files/#id'],
+  [/^\/api\/agents\/[^/]+(?=\/|$)/, '/v1/chat/agents/#id'],
+  [/^\/api\/assistants\/[^/]+(?=\/|$)/, '/v1/chat/assistants/#id'],
+  [/^\/api\/share\/[^/]+(?=\/|$)/, '/v1/chat/share/#token'],
   [/^\/share\/[^/]+(?=\/|$)/, '/share/#id'],
-  [/^\/api\/(tags|tools|runs|sessions)\/[0-9a-f]{24}(?=\/|$)/i, '/api/$1/#id'],
+  [/^\/api\/(tags|tools|runs|sessions)\/[0-9a-f]{24}(?=\/|$)/i, '/v1/chat/$1/#id'],
   [
     /^\/api\/(tools|sessions)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=\/|$)/i,
-    '/api/$1/#id',
+    '/v1/chat/$1/#id',
   ],
 ];
 
@@ -34,25 +34,25 @@ const STATIC_PATHS = new Set([
   '/',
   '/health',
   '/metrics',
-  '/api/auth/login',
-  '/api/config',
-  '/api/agents/chat/abort',
-  '/api/agents/chat/active',
-  '/api/agents/v1/chat/completions',
-  '/api/agents/v1/responses',
-  '/api/files',
-  '/api/files/config',
-  '/api/files/images',
-  '/api/files/images/avatar',
-  '/api/files/speech/stt',
+  '/v1/chat/auth/login',
+  '/v1/chat/config',
+  '/v1/chat/agents/chat/abort',
+  '/v1/chat/agents/chat/active',
+  '/v1/chat/agents/v1/chat/completions',
+  '/v1/chat/agents/v1/responses',
+  '/v1/chat/files',
+  '/v1/chat/files/config',
+  '/v1/chat/files/images',
+  '/v1/chat/files/images/avatar',
+  '/v1/chat/files/speech/stt',
 ]);
 
 const UPLOAD_PATHS = new Set([
-  '/api/files',
-  '/api/files/images',
-  '/api/files/images/avatar',
-  '/api/files/speech/stt',
-  '/api/skills/#id/files',
+  '/v1/chat/files',
+  '/v1/chat/files/images',
+  '/v1/chat/files/images/avatar',
+  '/v1/chat/files/speech/stt',
+  '/v1/chat/skills/#id/files',
 ]);
 
 const UPLOAD_METHODS = new Set(['POST', 'PUT', 'PATCH']);
@@ -91,8 +91,8 @@ const normalizeUnknownPath = (path: string): string => {
     return path;
   }
 
-  if (path === '/api' || path.startsWith('/api/')) {
-    return '/api/#path';
+  if (path === '/api' || path.startsWith('/v1/chat/')) {
+    return '/v1/chat/#path';
   }
 
   if (path === '/images' || path.startsWith('/images/')) {

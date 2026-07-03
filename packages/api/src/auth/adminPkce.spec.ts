@@ -27,20 +27,20 @@ describe('stripCodeChallenge', () => {
   it('removes code_challenge from req.query and both URL strings (sole param)', () => {
     const req = makeReq({
       query: { code_challenge: challenge },
-      originalUrl: `/api/admin/oauth/openid?code_challenge=${challenge}`,
+      originalUrl: `/v1/chat/admin/oauth/openid?code_challenge=${challenge}`,
       url: `/oauth/openid?code_challenge=${challenge}`,
     });
 
     stripCodeChallenge(req);
 
     expect(req.query.code_challenge).toBeUndefined();
-    expect(req.originalUrl).toBe('/api/admin/oauth/openid');
+    expect(req.originalUrl).toBe('/v1/chat/admin/oauth/openid');
     expect(req.url).toBe('/oauth/openid');
   });
 
   it('removes admin-panel-only params before the request reaches Passport', () => {
     const originalUrl =
-      `/api/admin/oauth/openid?code_challenge=${challenge}` +
+      `/v1/chat/admin/oauth/openid?code_challenge=${challenge}` +
       `&redirect_uri=${encodedCallbackUrl}&redirectTo=%2Fsettings&foo=bar`;
     const url =
       `/oauth/openid?code_challenge=${challenge}` +
@@ -62,7 +62,7 @@ describe('stripCodeChallenge', () => {
     expect(req.query.redirect_uri).toBeUndefined();
     expect(req.query.redirectTo).toBeUndefined();
     expect(req.query.foo).toBe('bar');
-    expect(req.originalUrl).toBe('/api/admin/oauth/openid?foo=bar');
+    expect(req.originalUrl).toBe('/v1/chat/admin/oauth/openid?foo=bar');
     expect(req.url).toBe('/oauth/openid?foo=bar');
   });
 

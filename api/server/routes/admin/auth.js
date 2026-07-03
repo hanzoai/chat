@@ -80,7 +80,7 @@ const EXCHANGE_CODE_PATTERN = /^[a-f0-9]{64}$/i;
  * This endpoint is called server-to-server by the admin panel.
  * The code is one-time-use and expires in 30 seconds.
  *
- * POST /api/admin/oauth/exchange
+ * POST /v1/chat/admin/oauth/exchange
  * Body: { code: string }
  * Response: { token: string, refreshToken: string, user: object }
  */

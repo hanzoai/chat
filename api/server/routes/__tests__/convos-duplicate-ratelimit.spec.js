@@ -39,7 +39,7 @@ jest.mock('multer', () => require(MOCKS).multerLib());
 jest.mock('~/server/services/Endpoints/azureAssistants', () => require(MOCKS).assistantEndpoint());
 jest.mock('~/server/services/Endpoints/assistants', () => require(MOCKS).assistantEndpoint());
 
-describe('POST /api/convos/duplicate - Rate Limiting', () => {
+describe('POST /v1/chat/convos/duplicate - Rate Limiting', () => {
   let app;
   let duplicateConversation;
   const savedEnv = {};
@@ -73,7 +73,7 @@ describe('POST /api/convos/duplicate - Rate Limiting', () => {
         req.user = { id: 'rate-limit-test-user' };
         next();
       });
-      app.use('/api/convos', convosRouter);
+      app.use('/v1/chat/convos', convosRouter);
     });
 
     duplicateConversation.mockResolvedValue({
@@ -95,13 +95,13 @@ describe('POST /api/convos/duplicate - Rate Limiting', () => {
 
       for (let i = 0; i < userMax; i++) {
         const res = await request(app)
-          .post('/api/convos/duplicate')
+          .post('/v1/chat/convos/duplicate')
           .send({ conversationId: 'conv-123' });
         expect(res.status).toBe(201);
       }
 
       const res = await request(app)
-        .post('/api/convos/duplicate')
+        .post('/v1/chat/convos/duplicate')
         .send({ conversationId: 'conv-123' });
       expect(res.status).toBe(429);
       expect(res.body.message).toMatch(/too many/i);
@@ -122,13 +122,13 @@ describe('POST /api/convos/duplicate - Rate Limiting', () => {
 
       for (let i = 0; i < ipMax; i++) {
         const res = await request(app)
-          .post('/api/convos/duplicate')
+          .post('/v1/chat/convos/duplicate')
           .send({ conversationId: 'conv-123' });
         expect(res.status).toBe(201);
       }
 
       const res = await request(app)
-        .post('/api/convos/duplicate')
+        .post('/v1/chat/convos/duplicate')
         .send({ conversationId: 'conv-123' });
       expect(res.status).toBe(429);
       expect(res.body.message).toMatch(/too many/i);
