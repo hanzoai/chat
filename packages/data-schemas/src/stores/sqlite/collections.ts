@@ -94,4 +94,13 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     dateFields: ['displayFrom', 'displayTo', 'createdAt', 'updatedAt'],
     defaults: { isPublic: false, type: 'banner' },
   },
+
+  // ---- Batch 5: tenant-isolated domain (first user of tenantIsolated) ----
+  Config: {
+    name: 'Config',
+    unique: [['principalType', 'principalId', 'tenantId']],
+    index: ['principalType', 'principalId', 'isActive', 'priority', 'tenantId'],
+    dateFields: ['createdAt', 'updatedAt'],
+    tenantIsolated: true,
+  },
 };

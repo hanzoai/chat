@@ -12,6 +12,7 @@
  * is intentionally absent, matching a mongoose model with no MEILI_HOST configured.
  */
 import { DatabaseSync } from 'node:sqlite';
+import { getTenantId, SYSTEM_TENANT_ID } from '~/config/tenantContext';
 import {
   matchesFilter,
   applyUpdate,
@@ -49,6 +50,14 @@ export interface CollectionSpec {
    * `SharedLink.isPublic`), where a missing value would change filter results.
    */
   defaults?: Record<string, unknown>;
+  /**
+   * Enables tenant isolation, mirroring the mongoose `applyTenantIsolation`
+   * plugin: every query filter is scoped to the current `tenantId`, inserts are
+   * stamped with it, and update payloads may not mutate `tenantId`. Required for
+   * collections that carry the plugin upstream (Config, Skill, SkillFile,
+   * SystemGrant). Fail-closed under `TENANT_ISOLATION_STRICT=true`.
+   */
+  tenantIsolated?: boolean;
 }
 
 interface WriteResult {
@@ -83,6 +92,7 @@ export class DocModel {
   private readonly anchorFields: Set<string>;
   private readonly refs: Record<string, string>;
   private readonly defaults: Record<string, unknown>;
+  private readonly tenantIsolated: boolean;
   /** Resolves sibling collections for `.populate()`; wired by createSqliteHandle. */
   resolver?: (name: string) => DocModel | undefined;
 
@@ -94,7 +104,82 @@ export class DocModel {
     this.anchorFields = new Set([...uniqueFields, ...(spec.index ?? [])]);
     this.refs = spec.refs ?? {};
     this.defaults = spec.defaults ?? {};
+    this.tenantIsolated = spec.tenantIsolated ?? false;
     this.ensureTable(spec);
+  }
+
+  /* ------------------------------------------------------- tenant isolation */
+
+  private static tenantStrict(): boolean {
+    return process.env.TENANT_ISOLATION_STRICT === 'true';
+  }
+
+  /** Scopes a filter to the active tenant (mirrors the plugin query middleware). */
+  private scopeFilter(filter: Filter): Filter {
+    if (!this.tenantIsolated) {
+      return filter;
+    }
+    const tenantId = getTenantId();
+    if (!tenantId) {
+      if (DocModel.tenantStrict()) {
+        throw new Error('[TenantIsolation] Query attempted without tenant context in strict mode');
+      }
+      return filter;
+    }
+    if (tenantId === SYSTEM_TENANT_ID) {
+      return filter;
+    }
+    return { $and: [filter, { tenantId }] };
+  }
+
+  /** Stamps tenantId onto an inserted doc (mirrors the plugin save/insertMany hook). */
+  private stampTenant(doc: Doc): void {
+    if (!this.tenantIsolated) {
+      return;
+    }
+    const tenantId = getTenantId();
+    if (!tenantId) {
+      if (DocModel.tenantStrict()) {
+        throw new Error('[TenantIsolation] Save attempted without tenant context in strict mode');
+      }
+      return;
+    }
+    if (tenantId === SYSTEM_TENANT_ID) {
+      return;
+    }
+    if (doc.tenantId == null) {
+      doc.tenantId = tenantId;
+    } else if (DocModel.tenantStrict() && doc.tenantId !== tenantId) {
+      throw new Error('[TenantIsolation] Document tenantId does not match current tenant context');
+    }
+  }
+
+  /** Strips tenantId mutations from an update (mirrors the plugin update guard). */
+  private sanitizeTenantUpdate(update: Update): void {
+    if (!this.tenantIsolated) {
+      return;
+    }
+    const tenantId = getTenantId();
+    if (tenantId === SYSTEM_TENANT_ID) {
+      return;
+    }
+    const stripValue = (payload: unknown): void => {
+      if (payload && typeof payload === 'object' && 'tenantId' in (payload as Doc)) {
+        if (tenantId && (payload as Doc).tenantId !== tenantId) {
+          throw new Error('[TenantIsolation] Cross-tenant tenantId mutation is not allowed');
+        }
+        delete (payload as Doc).tenantId;
+      }
+    };
+    stripValue(update.$set);
+    stripValue(update.$setOnInsert);
+    for (const op of ['$unset', '$rename'] as const) {
+      const payload = update[op] as Doc | undefined;
+      if (payload && 'tenantId' in payload) {
+        delete payload.tenantId;
+      }
+    }
+    stripValue(update);
   }
 
   private ensureTable(spec: CollectionSpec): void {
@@ -181,7 +266,17 @@ export class DocModel {
           cond == null || typeof cond !== 'object' || cond instanceof Date;
         if (isScalar && cond != null) {
           clauses.push(`json_extract(doc, '$.${key}') = ?`);
-          params.push(cond instanceof Date ? cond.toISOString() : cond);
+          // node:sqlite binds only null/number/bigint/string/blob. json_extract
+          // returns 1/0 for JSON booleans, so map booleans; dates -> ISO.
+          const param =
+            cond instanceof Date
+              ? cond.toISOString()
+              : typeof cond === 'boolean'
+                ? cond
+                  ? 1
+                  : 0
+                : cond;
+          params.push(param);
         }
       }
     };
@@ -193,7 +288,8 @@ export class DocModel {
   }
 
   /** Candidate rows narrowed by index anchors, then authoritatively JS-filtered. */
-  private candidates(filter: Filter): Doc[] {
+  private candidates(rawFilter: Filter): Doc[] {
+    const filter = this.scopeFilter(rawFilter);
     const { sql, params } = this.anchorWhere(filter);
     const rows = this.db.prepare(`SELECT doc FROM ${this.table}${sql}`).all(...(params as never[]));
     const out: Doc[] = [];
@@ -228,6 +324,7 @@ export class DocModel {
         doc[k] = v;
       }
     }
+    this.stampTenant(doc);
     this.castRefs(doc);
     this.db
       .prepare(`INSERT INTO ${this.table} (_id, doc) VALUES (?, ?)`)
@@ -354,6 +451,7 @@ export class DocModel {
     filter: Filter,
     m: { update: Update; upsert?: boolean; new?: boolean; timestamps?: boolean },
   ): Doc | null {
+    this.sanitizeTenantUpdate(m.update);
     const returnNew = m.new ?? false;
     const timestamps = m.timestamps ?? true;
     const existing = this.candidates(filter)[0] ?? null;
@@ -409,6 +507,7 @@ export class DocModel {
     update: Update,
     options: { upsert?: boolean; timestamps?: boolean } = {},
   ): Promise<WriteResult> {
+    this.sanitizeTenantUpdate(update);
     const timestamps = options.timestamps ?? true;
     const existing = this.candidates(filter)[0] ?? null;
     if (existing) {
@@ -438,6 +537,7 @@ export class DocModel {
     update: Update,
     options: { timestamps?: boolean } = {},
   ): Promise<WriteResult> {
+    this.sanitizeTenantUpdate(update);
     const timestamps = options.timestamps ?? true;
     const docs = this.candidates(filter);
     for (const existing of docs) {
@@ -534,6 +634,7 @@ export class DocModel {
             timestamps?: boolean;
           };
           const enabled = timestamps ?? true;
+          this.sanitizeTenantUpdate(update);
           const existing = this.candidates(filter)[0] ?? null;
           if (existing) {
             const updated = applyUpdate(existing, update, false);
@@ -649,6 +750,11 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
 
   limit(n: number): this {
     this.limitN = n;
+    return this;
+  }
+
+  /** No-op: node:sqlite is a single connection; Mongo sessions don't apply. */
+  session(_session?: unknown): this {
     return this;
   }
 
