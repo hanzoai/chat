@@ -1,20 +1,23 @@
 import { useMemo, useCallback } from 'react';
+import { PenLine, Lightbulb, Code2, Sparkles } from 'lucide-react';
 import { EModelEndpoint, Constants } from 'librechat-data-provider';
 import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
 import { getIconEndpoint, getEntity } from '~/utils';
 import { useSubmitMessage } from '~/hooks';
 
+type Starter = { text: string; Icon?: typeof PenLine };
+
 /**
  * Curated fallback starters for plain-model chats (no agent/assistant-specific
  * starters). Keeps the empty state from being bare and matches the ChatGPT/Claude
  * suggestion-chip pattern. Category-style so submitting reads naturally.
  */
-const DEFAULT_STARTERS = [
-  'Help me write or refine something',
-  'Explain a concept clearly',
-  'Review, debug, or improve some code',
-  'Brainstorm ideas and a plan',
+const DEFAULT_STARTERS: Starter[] = [
+  { text: 'Help me write or refine something', Icon: PenLine },
+  { text: 'Explain a concept clearly', Icon: Lightbulb },
+  { text: 'Review, debug, or improve some code', Icon: Code2 },
+  { text: 'Brainstorm ideas and a plan', Icon: Sparkles },
 ];
 
 const ConversationStarters = () => {
@@ -47,9 +50,11 @@ const ConversationStarters = () => {
     assistant_id: conversation?.assistant_id,
   });
 
-  const conversation_starters = useMemo(() => {
+  const starters: Starter[] = useMemo(() => {
+    const toStarters = (list: string[]): Starter[] => list.map((text) => ({ text }));
+
     if (entity?.conversation_starters?.length) {
-      return entity.conversation_starters;
+      return toStarters(entity.conversation_starters);
     }
 
     // Agents may intentionally omit starters — honor that (no defaults).
@@ -59,7 +64,7 @@ const ConversationStarters = () => {
 
     const docStarters = documentsMap.get(entity?.id ?? '')?.conversation_starters;
     if (docStarters?.length) {
-      return docStarters;
+      return toStarters(docStarters);
     }
 
     // Plain-model chat: fall back to curated defaults so the empty state isn't bare.
@@ -72,25 +77,26 @@ const ConversationStarters = () => {
     [submitMessage],
   );
 
-  if (!conversation_starters.length) {
+  if (!starters.length) {
     return null;
   }
 
   return (
-    <div className="mt-8 flex flex-wrap justify-center gap-3 px-4">
-      {conversation_starters
-        .slice(0, Constants.MAX_CONVO_STARTERS)
-        .map((text: string, index: number) => (
-          <button
-            key={index}
-            onClick={() => sendConversationStarter(text)}
-            className="relative flex w-40 cursor-pointer flex-col gap-2 rounded-2xl border border-border-medium px-3 pb-4 pt-3 text-start align-top text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition-colors duration-300 ease-in-out fade-in hover:bg-surface-tertiary"
-          >
-            <p className="break-word line-clamp-3 overflow-hidden text-balance break-all text-text-secondary">
-              {text}
-            </p>
-          </button>
-        ))}
+    <div className="mx-auto mt-6 grid w-full max-w-2xl grid-cols-1 gap-2.5 px-4 sm:grid-cols-2">
+      {starters.slice(0, Constants.MAX_CONVO_STARTERS).map(({ text, Icon = Sparkles }, index) => (
+        <button
+          key={index}
+          onClick={() => sendConversationStarter(text)}
+          className="group flex items-center gap-3 rounded-2xl border border-border-light bg-surface-primary-alt px-4 py-3.5 text-start transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border-medium hover:bg-surface-tertiary hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transform-none motion-reduce:transition-none"
+        >
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-tertiary text-text-secondary transition-colors duration-200 group-hover:text-text-primary">
+            <Icon className="size-4" aria-hidden="true" />
+          </span>
+          <span className="line-clamp-2 text-balance text-sm text-text-secondary transition-colors duration-200 group-hover:text-text-primary">
+            {text}
+          </span>
+        </button>
+      ))}
     </div>
   );
 };
