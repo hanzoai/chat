@@ -97,7 +97,7 @@ const features = [
   {
     title: '100+ Models',
     description:
-      'Claude, GPT-5, DeepSeek, Qwen, and more. Every major provider through one interface.',
+      'The Zen model family plus Claude, GPT-5, Gemini, and more. Every major provider through one interface.',
     Icon: IconCube,
   },
   {
@@ -121,10 +121,12 @@ const zenModels = [
   { name: 'zen3-omni', description: 'Multimodal vision and text', context: '128K', params: '32B' },
 ];
 
+// Independent third-party providers offered via the gateway. NO upstream
+// base-model names that would leak the Zen family's provenance (brand policy:
+// no raw Qwen/DeepSeek/Kimi/Llama/HuggingFace names).
 const thirdPartyModels = [
-  'GPT-5', 'Claude Opus 4', 'Gemini 2.5', 'DeepSeek R1',
-  'Qwen3', 'Llama 4', 'Mistral Large', 'Command R+',
-  'Grok', 'Phi-4',
+  'GPT-5', 'Claude Opus 4', 'Gemini 2.5', 'Grok',
+  'Mistral Large', 'Command R+',
 ];
 
 /* ------------------------------------------------------------------ */
