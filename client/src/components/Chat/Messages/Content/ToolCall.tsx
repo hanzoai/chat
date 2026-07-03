@@ -72,7 +72,7 @@ export default function ToolCall({
     try {
       const url = new URL(auth);
       const redirectUri = url.searchParams.get('redirect_uri') || '';
-      const match = redirectUri.match(/\/api\/actions\/([^/]+)\/oauth\/callback/);
+      const match = redirectUri.match(/\/v1\/chat\/actions\/([^/]+)\/oauth\/callback/);
       return match?.[1] || '';
     } catch {
       return '';
