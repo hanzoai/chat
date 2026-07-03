@@ -464,7 +464,10 @@ export class DocModel {
     }
     const seeded = applyUpdate(equalitySeed(filter), m.update, true);
     this.stampTimestamps(seeded, true, timestamps);
-    return this.insertDoc(seeded);
+    const inserted = this.insertDoc(seeded);
+    // Mongoose semantics: on an upsert-insert, `new:false` returns null (there is
+    // no pre-image). upsertSkillFile relies on this for new-vs-replace detection.
+    return returnNew ? inserted : null;
   }
 
   findByIdAndUpdate(
