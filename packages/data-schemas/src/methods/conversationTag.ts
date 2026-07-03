@@ -1,4 +1,5 @@
 import type { Model } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import { tenantSafeBulkWrite } from '~/utils/tenantBulkWrite';
 import logger from '~/config/winston';
 
@@ -12,13 +13,13 @@ interface IConversationTag {
   [key: string]: unknown;
 }
 
-export function createConversationTagMethods(mongoose: typeof import('mongoose')) {
+export function createConversationTagMethods(handle: DataHandle) {
   /**
    * Retrieves all conversation tags for a user.
    */
   async function getConversationTags(user: string) {
     try {
-      const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
+      const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
       return await ConversationTag.find({ user }).sort({ position: 1 }).lean();
     } catch (error) {
       logger.error('[getConversationTags] Error getting conversation tags', error);
@@ -39,8 +40,8 @@ export function createConversationTagMethods(mongoose: typeof import('mongoose')
     },
   ) {
     try {
-      const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
-      const Conversation = mongoose.models.Conversation;
+      const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
+      const Conversation = handle.models.Conversation;
       const { tag, description, addToConversation, conversationId } = data;
 
       const existingTag = await ConversationTag.findOne({ user, tag }).lean();
@@ -91,7 +92,7 @@ export function createConversationTagMethods(mongoose: typeof import('mongoose')
       return;
     }
 
-    const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
+    const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
 
     const update =
       oldPosition < newPosition ? { $inc: { position: -1 } } : { $inc: { position: 1 } };
@@ -118,8 +119,8 @@ export function createConversationTagMethods(mongoose: typeof import('mongoose')
     data: { tag?: string; description?: string; position?: number },
   ) {
     try {
-      const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
-      const Conversation = mongoose.models.Conversation;
+      const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
+      const Conversation = handle.models.Conversation;
       const { tag: newTag, description, position } = data;
 
       const existingTag = await ConversationTag.findOne({ user, tag: oldTag }).lean();
@@ -163,8 +164,8 @@ export function createConversationTagMethods(mongoose: typeof import('mongoose')
    */
   async function deleteConversationTag(user: string, tag: string) {
     try {
-      const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
-      const Conversation = mongoose.models.Conversation;
+      const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
+      const Conversation = handle.models.Conversation;
 
       const deletedTag = await ConversationTag.findOneAndDelete({ user, tag }).lean();
       if (!deletedTag) {
@@ -190,8 +191,8 @@ export function createConversationTagMethods(mongoose: typeof import('mongoose')
    */
   async function updateTagsForConversation(user: string, conversationId: string, tags: string[]) {
     try {
-      const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
-      const Conversation = mongoose.models.Conversation;
+      const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
+      const Conversation = handle.models.Conversation;
 
       const conversation = await Conversation.findOne({ user, conversationId }).lean();
       if (!conversation) {
@@ -261,7 +262,7 @@ export function createConversationTagMethods(mongoose: typeof import('mongoose')
     }
 
     try {
-      const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
+      const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
       const uniqueTags = [...new Set(tags.filter(Boolean))];
       if (uniqueTags.length === 0) {
         return;
@@ -290,7 +291,7 @@ export function createConversationTagMethods(mongoose: typeof import('mongoose')
    */
   async function deleteConversationTags(filter: Record<string, unknown>): Promise<number> {
     try {
-      const ConversationTag = mongoose.models.ConversationTag as Model<IConversationTag>;
+      const ConversationTag = handle.models.ConversationTag as Model<IConversationTag>;
       const result = await ConversationTag.deleteMany(filter);
       return result.deletedCount;
     } catch (error) {

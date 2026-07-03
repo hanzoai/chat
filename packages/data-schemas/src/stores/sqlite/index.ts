@@ -58,6 +58,10 @@ export function createSqliteHandle(
     }
     models[name] = new DocModel(db, spec);
   }
+  // Wire cross-collection resolution for `.populate()`.
+  for (const model of Object.values(models)) {
+    model.resolver = (name: string) => models[name];
+  }
   return {
     models,
     db,

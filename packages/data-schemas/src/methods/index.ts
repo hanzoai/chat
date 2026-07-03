@@ -1,3 +1,4 @@
+import { createModels } from '~/models';
 import { createSessionMethods, DEFAULT_REFRESH_TOKEN_EXPIRY, type SessionMethods } from './session';
 import { createTokenMethods, type TokenMethods } from './token';
 import { createRoleMethods, type RoleMethods } from './role';
@@ -43,6 +44,11 @@ export type AllMethods = UserMethods &
  * @param mongoose - Mongoose instance
  */
 export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
+  // Registry-aware handle so already-migrated domains (Share) resolve to the
+  // backend selected by CHAT_STORE_SQLITE. Not-yet-migrated factories keep
+  // reading the mongoose registry directly; they move to `dbHandle` as they
+  // migrate. Unset flag => createModels returns pure mongoose => unchanged.
+  const dbHandle = { models: createModels(mongoose) };
   return {
     ...createUserMethods(mongoose),
     ...createSessionMethods(mongoose),
@@ -57,7 +63,7 @@ export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
     ...createAccessRoleMethods(mongoose),
     ...createUserGroupMethods(mongoose),
     ...createAclEntryMethods(mongoose),
-    ...createShareMethods(mongoose),
+    ...createShareMethods(dbHandle),
     ...createPluginAuthMethods(mongoose),
   };
 }

@@ -305,6 +305,30 @@ export function isOperatorUpdate(update: Update): boolean {
   return Object.keys(update).some((k) => k.startsWith('$'));
 }
 
+/**
+ * Normalizes an update to pure operator form. A plain update becomes `$set`.
+ * A mixed update (top-level fields alongside operators, e.g. `{a:1, $setOnInsert}`)
+ * folds the plain fields into `$set` — mongoose's semantics.
+ */
+function normalizeUpdate(update: Update): Update {
+  if (!isOperatorUpdate(update)) {
+    return { $set: update };
+  }
+  const operators: Update = {};
+  const implicitSet: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(update)) {
+    if (k.startsWith('$')) {
+      operators[k] = v;
+    } else {
+      implicitSet[k] = v;
+    }
+  }
+  if (Object.keys(implicitSet).length > 0) {
+    operators.$set = { ...implicitSet, ...((operators.$set as Record<string, unknown>) ?? {}) };
+  }
+  return operators;
+}
+
 /** Equality clauses of a filter, used to seed an upsert-inserted document. */
 export function equalitySeed(filter: Filter): Doc {
   const seed: Doc = {};
@@ -325,7 +349,7 @@ export function equalitySeed(filter: Filter): Doc {
  */
 export function applyUpdate(base: Doc, update: Update, isInsert: boolean): Doc {
   const doc: Doc = structuredClone(base);
-  const ops: Update = isOperatorUpdate(update) ? update : { $set: update };
+  const ops: Update = normalizeUpdate(update);
 
   for (const [op, payload] of Object.entries(ops)) {
     const fields = payload as Record<string, unknown>;
@@ -381,6 +405,17 @@ export function applyUpdate(base: Doc, update: Update, isInsert: boolean): Doc {
             doc,
             k,
             arr.filter((el) => !pred(el)),
+          );
+        }
+        break;
+      case '$pullAll':
+        for (const [k, v] of Object.entries(fields)) {
+          const arr = (getPath(doc, k) as unknown[]) ?? [];
+          const remove = v as unknown[];
+          setPath(
+            doc,
+            k,
+            arr.filter((el) => !remove.some((r) => valueEquals(el, r))),
           );
         }
         break;
