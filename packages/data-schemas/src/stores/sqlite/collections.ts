@@ -17,11 +17,17 @@ import type { CollectionSpec } from './DocModel';
  * (getConvosByCursor / getMessages). Therefore NO migrated domain here needs a
  * DB-subscription replacement — plain node:sqlite is correct for all of them.
  *
- * The Hanzo Base realtime path (native SQLite subscriptions) is reserved for
- * FUTURE features that introduce DB-driven push — multi-device live conversation
- * sync, presence, collaborative shared sessions. None exist today; route those
- * collections through Base's realtime API if/when such a feature lands. No Mongo,
- * no Mongo-wire, no FerretDB anywhere.
+ * CUTOVER TARGET (per architecture directive "Base for realtime, SQLite for
+ * storage"): the live-chat domains — **Conversation** and **Message** — are the
+ * ones a multi-device / live-sync UX would subscribe to, so at cutover they
+ * target Hanzo Base (which provides native realtime subscriptions over the same
+ * SQLite substrate), not a bare table. Every other migrated domain here (Preset,
+ * ConversationTag, SharedLink, Project, File, Key, PluginAuth, Banner) is pure
+ * storage → SQLite/Base storage tier, no subscription.
+ *
+ * The DocModel handle abstraction makes this a backend swap, not a code change:
+ * the methods call the same Model API whether it resolves to embedded SQLite or a
+ * Base-backed handle. No Mongo, no Mongo-wire, no FerretDB anywhere.
  */
 export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
   Conversation: {
@@ -64,5 +70,28 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     index: ['name'],
     dateFields: ['createdAt', 'updatedAt'],
     defaults: { promptGroupIds: [], agentIds: [] },
+  },
+
+  // ---- Batch 4: non-tenant storage domains ----
+  File: {
+    name: 'File',
+    index: ['file_id', 'user', 'conversationId', 'messageId'],
+    dateFields: ['createdAt', 'updatedAt', 'expiresAt'],
+  },
+  Key: {
+    name: 'Key',
+    index: ['userId', 'name', 'expiresAt'],
+    dateFields: ['expiresAt', 'createdAt', 'updatedAt'],
+  },
+  PluginAuth: {
+    name: 'PluginAuth',
+    index: ['userId', 'pluginKey', 'authField'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  Banner: {
+    name: 'Banner',
+    index: ['bannerId', 'type'],
+    dateFields: ['displayFrom', 'displayTo', 'createdAt', 'updatedAt'],
+    defaults: { isPublic: false, type: 'banner' },
   },
 };

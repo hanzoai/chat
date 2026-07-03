@@ -14,14 +14,22 @@ describe('createModels — per-domain store registry', () => {
 
   it('overrides only the listed collections with the SQLite DocModel', () => {
     process.env.CHAT_STORE_SQLITE =
-      'Conversation,Message,Preset,ConversationTag,SharedLink,Project';
+      'Conversation,Message,Preset,ConversationTag,SharedLink,Project,File,Key,PluginAuth,Banner';
     const models = createModels(mongoose);
-    expect(models.Conversation.constructor.name).toBe('DocModel');
-    expect(models.Message.constructor.name).toBe('DocModel');
-    expect(models.Preset.constructor.name).toBe('DocModel');
-    expect(models.ConversationTag.constructor.name).toBe('DocModel');
-    expect(models.SharedLink.constructor.name).toBe('DocModel');
-    expect(models.Project.constructor.name).toBe('DocModel');
+    for (const name of [
+      'Conversation',
+      'Message',
+      'Preset',
+      'ConversationTag',
+      'SharedLink',
+      'Project',
+      'File',
+      'Key',
+      'PluginAuth',
+      'Banner',
+    ] as const) {
+      expect(models[name].constructor.name).toBe('DocModel');
+    }
     // A non-migrated collection stays on mongoose
     expect(models.User.constructor.name).not.toBe('DocModel');
   });
