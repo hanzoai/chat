@@ -263,6 +263,10 @@ export class DocModel {
     return new QueryBuilder(this, filter, { single: false, projection });
   }
 
+  findById(id: string, projection?: string | Record<string, 0 | 1>): QueryBuilder {
+    return new QueryBuilder(this, { _id: id }, { single: true, projection });
+  }
+
   /** Internal: executes a find/findOne with projection/sort/limit/skip/lean/populate. */
   execQuery(opts: {
     filter: Filter;
