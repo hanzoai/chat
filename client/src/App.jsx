@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { DndProvider } from 'react-dnd';
 import { RouterProvider } from 'react-router-dom';
@@ -23,25 +23,34 @@ const ReactQueryDevtools = import.meta.env.DEV
 const App = () => {
   const { setError } = useApiErrorBoundary();
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        // Always attempt network requests, even when navigator.onLine is false
-        // This is needed because localhost is reachable without WiFi
-        networkMode: 'always',
-      },
-      mutations: {
-        networkMode: 'always',
-      },
-    },
-    queryCache: new QueryCache({
-      onError: (error) => {
-        if (error?.response?.status === 401) {
-          setError(error);
-        }
-      },
-    }),
-  });
+  // Stabilize the QueryClient for the app's lifetime. Creating it in the render
+  // body mints a fresh, empty client on every re-render; a guest's expected 401s
+  // (mcp/servers, files/config, …) fire `setError`, re-rendering App and swapping
+  // in an empty client — so the lazy chat-form's `getQueryData([endpoints])`
+  // resolves to a client with no `Hanzo` endpoint and submit throws
+  // "Unknown endpoint: Hanzo". One client, one cache, every consumer.
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // Always attempt network requests, even when navigator.onLine is false
+            // This is needed because localhost is reachable without WiFi
+            networkMode: 'always',
+          },
+          mutations: {
+            networkMode: 'always',
+          },
+        },
+        queryCache: new QueryCache({
+          onError: (error) => {
+            if (error?.response?.status === 401) {
+              setError(error);
+            }
+          },
+        }),
+      }),
+  );
 
   useEffect(() => {
     initializeFontSize();
