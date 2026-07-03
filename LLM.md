@@ -141,14 +141,24 @@ agent builder, which is untouched.
   open proxy (three fixed endpoints). Principal guard: the on-behalf-of decision
   keys off the VALIDATED principal (`req.user.provider==='openid'`), not the
   mutable `token_provider` refresh-strategy cookie, so a local user (who never
-  carries a hanzo.id token) can't run under a stale OpenID session, and the
-  forwarded id_token must still name `req.user` (`sub===openidId`) and be
-  unexpired — an expired/absent token yields an honest 401, never a fabricated run.
+  carries a hanzo.id token) can't run under a stale OpenID session. EVERY
+  forwarded token — id_token preferred, access_token fallback, from session or
+  the httpOnly cookie — must pass `isForwardableToken`: a decodable JWT whose
+  `sub` EQUALS `req.user.openidId` (binding MANDATORY — absent `openidId`/`sub`
+  or a mismatch ⇒ no forward, no fail-open) and is unexpired. Decode-only is
+  sound because cloud does the authoritative JWKS validation over the SAME claims,
+  so it runs as exactly that `sub`; the gate only ever removes a token. An
+  unbindable/expired/foreign token yields an honest 401, never a fabricated or
+  wrong-principal run.
 - id_token persistence is DECOUPLED from the refresh strategy: OIDC login ALWAYS
-  persists the id_token to `req.session.openidTokens` (server-side only) for this
-  on-behalf-of path, regardless of `OPENID_REUSE_TOKENS`. That flag SOLELY gates
-  whether `/api/auth/refresh` uses the OIDC refresh-grant; with it disabled (the
-  live default) login/refresh stay on the local-JWT path and are byte-identical.
+  persists the on-behalf-of BEARER (id_token + access_token) to
+  `req.session.openidTokens` (server-side only), regardless of
+  `OPENID_REUSE_TOKENS`. It does NOT persist the OIDC refresh credential in the
+  decoupled default — the session refreshes via the local JWT cookie, so
+  `session.openidTokens.refreshToken` is written ONLY in REUSE mode (where
+  `refreshController`/`logoutController` read it). That keeps login, refresh AND
+  logout on the local-JWT path byte-identical to a non-OpenID login; that flag
+  SOLELY gates whether `/api/auth/refresh` performs the OIDC refresh-grant.
   The ~1h id_token is used while valid; durable refresh (hanzo.id/Casdoor OIDC
   refresh or an RFC-8693 token-exchange from the chat session) is a tracked
   FOLLOW-UP — the login-breaking refresh-grant is NOT enabled here.
