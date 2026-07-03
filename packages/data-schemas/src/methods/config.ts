@@ -1,18 +1,19 @@
 import { Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import { PrincipalType, PrincipalModel } from 'librechat-data-provider';
 import { BASE_CONFIG_PRINCIPAL_ID } from '~/admin/capabilities';
 import type { TCustomConfig } from 'librechat-data-provider';
 import type { Model, ClientSession } from 'mongoose';
 import type { IConfig } from '~/types';
 
-export function createConfigMethods(mongoose: typeof import('mongoose')) {
+export function createConfigMethods(handle: DataHandle) {
   async function findConfigByPrincipal(
     principalType: PrincipalType,
     principalId: string | Types.ObjectId,
     options?: { includeInactive?: boolean },
     session?: ClientSession,
   ): Promise<IConfig | null> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
     const filter: { principalType: PrincipalType; principalId: string; isActive?: boolean } = {
       principalType,
       principalId: principalId.toString(),
@@ -29,7 +30,7 @@ export function createConfigMethods(mongoose: typeof import('mongoose')) {
     filter?: { isActive?: boolean },
     session?: ClientSession,
   ): Promise<IConfig[]> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
     const where: { isActive?: boolean } = {};
     if (filter?.isActive !== undefined) {
       where.isActive = filter.isActive;
@@ -44,7 +45,7 @@ export function createConfigMethods(mongoose: typeof import('mongoose')) {
     principals?: Array<{ principalType: string; principalId?: string | Types.ObjectId }>,
     session?: ClientSession,
   ): Promise<IConfig[]> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
 
     const basePrincipal = {
       principalType: PrincipalType.ROLE as string,
@@ -81,7 +82,7 @@ export function createConfigMethods(mongoose: typeof import('mongoose')) {
     priority: number,
     session?: ClientSession,
   ): Promise<IConfig | null> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
 
     const query = {
       principalType,
@@ -127,7 +128,7 @@ export function createConfigMethods(mongoose: typeof import('mongoose')) {
     priority: number,
     session?: ClientSession,
   ): Promise<IConfig | null> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
 
     const setPayload: { principalModel: PrincipalModel; priority: number; [key: string]: unknown } =
       {
@@ -159,7 +160,7 @@ export function createConfigMethods(mongoose: typeof import('mongoose')) {
     fieldPath: string,
     session?: ClientSession,
   ): Promise<IConfig | null> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
 
     const options = {
       new: true,
@@ -178,7 +179,7 @@ export function createConfigMethods(mongoose: typeof import('mongoose')) {
     principalId: string | Types.ObjectId,
     session?: ClientSession,
   ): Promise<IConfig | null> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
 
     return await Config.findOneAndDelete({
       principalType,
@@ -192,7 +193,7 @@ export function createConfigMethods(mongoose: typeof import('mongoose')) {
     isActive: boolean,
     session?: ClientSession,
   ): Promise<IConfig | null> {
-    const Config = mongoose.models.Config as Model<IConfig>;
+    const Config = handle.models.Config as Model<IConfig>;
     return await Config.findOneAndUpdate(
       { principalType, principalId: principalId.toString() },
       { $set: { isActive } },

@@ -1,4 +1,5 @@
 import { PrincipalType, SystemRoles } from 'librechat-data-provider';
+import type { DataHandle } from '~/common/dataHandle';
 import type { Types, Model, ClientSession, FilterQuery } from 'mongoose';
 import type { SystemCapability } from '~/types/admin';
 import type { ISystemGrant } from '~/types';
@@ -46,7 +47,7 @@ function getParentCapabilities(capability: string): string[] {
   return parents;
 }
 
-export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
+export function createSystemGrantMethods(handle: DataHandle) {
   function tenantCondition(tenantId?: string): FilterQuery<ISystemGrant> {
     return tenantId != null
       ? { $and: [{ $or: [{ tenantId }, { tenantId: { $exists: false } }] }] }
@@ -71,7 +72,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     capability: SystemCapability;
     tenantId?: string;
   }): Promise<boolean> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
     const principalsQuery = principals
       .filter(
         (p): p is typeof p & { principalId: string | Types.ObjectId } =>
@@ -114,7 +115,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     capabilities: SystemCapability[];
     tenantId?: string;
   }): Promise<Set<SystemCapability>> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
     const principalsQuery = principals
       .filter(
         (p): p is typeof p & { principalId: string | Types.ObjectId } =>
@@ -185,7 +186,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     },
     session?: ClientSession,
   ): Promise<ISystemGrant | null> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
 
     const normalizedPrincipalId = normalizePrincipalId(principalId, principalType);
 
@@ -242,7 +243,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     },
     session?: ClientSession,
   ): Promise<void> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
 
     const normalizedPrincipalId = normalizePrincipalId(principalId, principalType);
 
@@ -270,7 +271,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     principalId: string | Types.ObjectId;
     tenantId?: string;
   }): Promise<ISystemGrant[]> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
 
     const filter: FilterQuery<ISystemGrant> = {
       principalType,
@@ -290,7 +291,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     limit?: number;
     offset?: number;
   }): Promise<ISystemGrant[]> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
     const limit = Math.min(GRANTS_MAX_LIMIT, Math.max(1, options?.limit ?? GRANTS_DEFAULT_LIMIT));
     const offset = options?.offset ?? 0;
     const filter: FilterQuery<ISystemGrant> = {
@@ -309,7 +310,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     tenantId?: string;
     principalTypes?: PrincipalType[];
   }): Promise<number> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
     const filter: FilterQuery<ISystemGrant> = {
       ...(options?.principalTypes?.length && { principalType: { $in: options.principalTypes } }),
       ...tenantCondition(options?.tenantId),
@@ -329,7 +330,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
       return [];
     }
 
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
     const principalsQuery = principals
       .filter((p) => p.principalType !== PrincipalType.PUBLIC)
       .map((p) => ({
@@ -361,7 +362,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     const maxRetries = 3;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+        const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
         const now = new Date();
         const ops = Object.values(SystemCapabilities).map((capability) => ({
           updateOne: {
@@ -418,7 +419,7 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
     principalId: string | Types.ObjectId,
     options?: { tenantId?: string; session?: ClientSession },
   ): Promise<void> {
-    const SystemGrant = mongoose.models.SystemGrant as Model<ISystemGrant>;
+    const SystemGrant = handle.models.SystemGrant as Model<ISystemGrant>;
     const normalizedPrincipalId = normalizePrincipalId(principalId, principalType);
 
     const filter: FilterQuery<ISystemGrant> = {

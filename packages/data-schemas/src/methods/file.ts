@@ -1,10 +1,11 @@
 import logger from '../config/winston';
+import type { DataHandle } from '~/common/dataHandle';
 import { EToolResources, FileContext } from 'librechat-data-provider';
 import type { FilterQuery, SortOrder, Model } from 'mongoose';
 import type { IMongoFile } from '~/types/file';
 
 /** Factory function that takes mongoose instance and returns the file methods */
-export function createFileMethods(mongoose: typeof import('mongoose')) {
+export function createFileMethods(handle: DataHandle) {
   /**
    * Finds a file by its file_id with additional query options.
    * @param file_id - The unique identifier of the file
@@ -15,7 +16,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
     file_id: string,
     options: Record<string, unknown> = {},
   ): Promise<IMongoFile | null> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     return File.findOne({ file_id, ...options }).lean();
   }
 
@@ -35,7 +36,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
     _sortOptions?: Record<string, SortOrder> | null,
     selectFields?: SelectProjection | string | null,
   ): Promise<IMongoFile[] | null> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     const sortOptions = { updatedAt: -1 as SortOrder, ..._sortOptions };
     const query = File.find(filter);
     if (selectFields != null) {
@@ -182,7 +183,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
     file_id: string;
     user: string;
   }): Promise<IMongoFile> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     const result = await File.findOneAndUpdate(
       {
         filename: data.filename,
@@ -210,7 +211,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
     data: Partial<IMongoFile>,
     disableTTL?: boolean,
   ): Promise<IMongoFile | null> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     const fileData: Partial<IMongoFile> = {
       ...data,
       expiresAt: new Date(Date.now() + 3600 * 1000),
@@ -234,7 +235,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
   async function updateFile(
     data: Partial<IMongoFile> & { file_id: string },
   ): Promise<IMongoFile | null> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     const { file_id, ...update } = data;
     const updateOperation = {
       $set: update,
@@ -254,7 +255,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
     file_id: string;
     inc?: number;
   }): Promise<IMongoFile | null> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     const { file_id, inc = 1 } = data;
     const updateOperation = {
       $inc: { usage: inc },
@@ -271,7 +272,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
    * @returns A promise that resolves to the deleted file document or null
    */
   async function deleteFile(file_id: string): Promise<IMongoFile | null> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     return File.findOneAndDelete({ file_id }).lean();
   }
 
@@ -281,7 +282,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
    * @returns A promise that resolves to the deleted file document or null
    */
   async function deleteFileByFilter(filter: FilterQuery<IMongoFile>): Promise<IMongoFile | null> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     return File.findOneAndDelete(filter).lean();
   }
 
@@ -295,7 +296,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
     file_ids: string[],
     user?: string,
   ): Promise<{ deletedCount?: number }> {
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     let deleteQuery: FilterQuery<IMongoFile> = { file_id: { $in: file_ids } };
     if (user) {
       deleteQuery = { user: user };
@@ -314,7 +315,7 @@ export function createFileMethods(mongoose: typeof import('mongoose')) {
       return;
     }
 
-    const File = mongoose.models.File as Model<IMongoFile>;
+    const File = handle.models.File as Model<IMongoFile>;
     const bulkOperations = updates.map((update) => ({
       updateOne: {
         filter: { file_id: update.file_id },

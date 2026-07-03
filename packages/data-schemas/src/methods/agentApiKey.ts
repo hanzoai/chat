@@ -1,4 +1,5 @@
 import type { Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type {
   AgentApiKeyCreateResult,
   AgentApiKeyCreateData,
@@ -11,7 +12,7 @@ import logger from '~/config/winston';
 const API_KEY_PREFIX = 'sk-';
 const API_KEY_LENGTH = 32;
 
-export function createAgentApiKeyMethods(mongoose: typeof import('mongoose')) {
+export function createAgentApiKeyMethods(handle: DataHandle) {
   async function generateApiKey(): Promise<{ key: string; keyHash: string; keyPrefix: string }> {
     const randomPart = await getRandomValues(API_KEY_LENGTH);
     const key = `${API_KEY_PREFIX}${randomPart}`;
@@ -22,7 +23,7 @@ export function createAgentApiKeyMethods(mongoose: typeof import('mongoose')) {
 
   async function createAgentApiKey(data: AgentApiKeyCreateData): Promise<AgentApiKeyCreateResult> {
     try {
-      const AgentApiKey = mongoose.models.AgentApiKey;
+      const AgentApiKey = handle.models.AgentApiKey;
       const { key, keyHash, keyPrefix } = await generateApiKey();
 
       const apiKeyDoc = await AgentApiKey.create({
@@ -51,7 +52,7 @@ export function createAgentApiKeyMethods(mongoose: typeof import('mongoose')) {
     apiKey: string,
   ): Promise<{ userId: Types.ObjectId; keyId: Types.ObjectId } | null> {
     try {
-      const AgentApiKey = mongoose.models.AgentApiKey;
+      const AgentApiKey = handle.models.AgentApiKey;
       const keyHash = await hashToken(apiKey);
 
       const keyDoc = (await AgentApiKey.findOne({ keyHash }).lean()) as IAgentApiKey | null;
@@ -78,7 +79,7 @@ export function createAgentApiKeyMethods(mongoose: typeof import('mongoose')) {
 
   async function listAgentApiKeys(userId: string | Types.ObjectId): Promise<AgentApiKeyListItem[]> {
     try {
-      const AgentApiKey = mongoose.models.AgentApiKey;
+      const AgentApiKey = handle.models.AgentApiKey;
       const keys = (await AgentApiKey.find({ userId })
         .sort({ createdAt: -1 })
         .lean()) as unknown as IAgentApiKey[];
@@ -102,7 +103,7 @@ export function createAgentApiKeyMethods(mongoose: typeof import('mongoose')) {
     userId: string | Types.ObjectId,
   ): Promise<boolean> {
     try {
-      const AgentApiKey = mongoose.models.AgentApiKey;
+      const AgentApiKey = handle.models.AgentApiKey;
       const result = await AgentApiKey.deleteOne({ _id: keyId, userId });
       return result.deletedCount > 0;
     } catch (error) {
@@ -113,7 +114,7 @@ export function createAgentApiKeyMethods(mongoose: typeof import('mongoose')) {
 
   async function deleteAllAgentApiKeys(userId: string | Types.ObjectId): Promise<number> {
     try {
-      const AgentApiKey = mongoose.models.AgentApiKey;
+      const AgentApiKey = handle.models.AgentApiKey;
       const result = await AgentApiKey.deleteMany({ userId });
       return result.deletedCount;
     } catch (error) {
@@ -127,7 +128,7 @@ export function createAgentApiKeyMethods(mongoose: typeof import('mongoose')) {
     userId: string | Types.ObjectId,
   ): Promise<AgentApiKeyListItem | null> {
     try {
-      const AgentApiKey = mongoose.models.AgentApiKey;
+      const AgentApiKey = handle.models.AgentApiKey;
       const keyDoc = (await AgentApiKey.findOne({
         _id: keyId,
         userId,

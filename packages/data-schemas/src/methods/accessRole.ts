@@ -1,16 +1,17 @@
 import { AccessRoleIds, ResourceType, PermissionBits } from 'librechat-data-provider';
+import type { DataHandle } from '~/common/dataHandle';
 import type { Model, Types, DeleteResult } from 'mongoose';
 import type { IAccessRole } from '~/types';
 import { RoleBits } from '~/common';
 
-export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
+export function createAccessRoleMethods(handle: DataHandle) {
   /**
    * Find an access role by its ID
    * @param roleId - The role ID
    * @returns The role document or null if not found
    */
   async function findRoleById(roleId: string | Types.ObjectId): Promise<IAccessRole | null> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.findById(roleId).lean();
   }
 
@@ -22,7 +23,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
   async function findRoleByIdentifier(
     accessRoleId: string | Types.ObjectId,
   ): Promise<IAccessRole | null> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.findOne({ accessRoleId }).lean();
   }
 
@@ -32,7 +33,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
    * @returns Array of role documents
    */
   async function findRolesByResourceType(resourceType: string): Promise<IAccessRole[]> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.find({ resourceType }).lean();
   }
 
@@ -46,7 +47,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
     resourceType: string,
     permBits: PermissionBits | RoleBits,
   ): Promise<IAccessRole | null> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.findOne({ resourceType, permBits }).lean();
   }
 
@@ -56,7 +57,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
    * @returns The created role document
    */
   async function createRole(roleData: Partial<IAccessRole>): Promise<IAccessRole> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.create(roleData);
   }
 
@@ -70,7 +71,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
     accessRoleId: string | Types.ObjectId,
     updateData: Partial<IAccessRole>,
   ): Promise<IAccessRole | null> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.findOneAndUpdate(
       { accessRoleId },
       { $set: updateData },
@@ -84,7 +85,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
    * @returns The result of the delete operation
    */
   async function deleteRole(accessRoleId: string | Types.ObjectId): Promise<DeleteResult> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.deleteOne({ accessRoleId });
   }
 
@@ -93,7 +94,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
    * @returns Array of all role documents
    */
   async function getAllRoles(): Promise<IAccessRole[]> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     return await AccessRole.find().lean();
   }
 
@@ -102,7 +103,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
    * @returns Object containing created roles
    */
   async function seedDefaultRoles() {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     const defaultRoles = [
       {
         accessRoleId: AccessRoleIds.AGENT_VIEWER,
@@ -215,7 +216,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
     resourceType: string,
     permBits: PermissionBits | RoleBits,
   ): Promise<IAccessRole | null> {
-    const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
+    const AccessRole = handle.models.AccessRole as Model<IAccessRole>;
     const exactMatch = await AccessRole.findOne({ resourceType, permBits }).lean();
     if (exactMatch) {
       return exactMatch;

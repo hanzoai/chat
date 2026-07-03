@@ -1,13 +1,14 @@
 import type { Model, Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type { IAgentCategory } from '~/types';
 
-export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) {
+export function createAgentCategoryMethods(handle: DataHandle) {
   /**
    * Get all active categories sorted by order
    * @returns Array of active categories
    */
   async function getActiveCategories(): Promise<IAgentCategory[]> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     return await AgentCategory.find({ isActive: true }).sort({ order: 1, label: 1 }).lean();
   }
 
@@ -16,7 +17,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns Categories with agent counts
    */
   async function getCategoriesWithCounts(): Promise<(IAgentCategory & { agentCount: number })[]> {
-    const Agent = mongoose.models.Agent;
+    const Agent = handle.models.Agent;
 
     const categoryCounts = await Agent.aggregate([
       { $match: { category: { $exists: true, $ne: null } } },
@@ -37,7 +38,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns Array of valid category values
    */
   async function getValidCategoryValues(): Promise<string[]> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     return await AgentCategory.find({ isActive: true }).distinct('value').lean();
   }
 
@@ -55,7 +56,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
       custom?: boolean;
     }>,
   ): Promise<import('mongoose').mongo.BulkWriteResult> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
 
     const operations = categories.map((category, index) => ({
       updateOne: {
@@ -83,7 +84,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns The category document or null
    */
   async function findCategoryByValue(value: string): Promise<IAgentCategory | null> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     return await AgentCategory.findOne({ value }).lean();
   }
 
@@ -93,7 +94,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns The created category
    */
   async function createCategory(categoryData: Partial<IAgentCategory>): Promise<IAgentCategory> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     const category = await AgentCategory.create(categoryData);
     return category.toObject() as IAgentCategory;
   }
@@ -108,7 +109,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
     value: string,
     updateData: Partial<IAgentCategory>,
   ): Promise<IAgentCategory | null> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     return await AgentCategory.findOneAndUpdate(
       { value },
       { $set: updateData },
@@ -122,7 +123,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns Whether the deletion was successful
    */
   async function deleteCategory(value: string): Promise<boolean> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     const result = await AgentCategory.deleteOne({ value });
     return result.deletedCount > 0;
   }
@@ -133,7 +134,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns The category document or null
    */
   async function findCategoryById(id: string | Types.ObjectId): Promise<IAgentCategory | null> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     return await AgentCategory.findById(id).lean();
   }
 
@@ -142,7 +143,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns Array of all categories
    */
   async function getAllCategories(): Promise<IAgentCategory[]> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
     return await AgentCategory.find({}).sort({ order: 1, label: 1 }).lean();
   }
 
@@ -151,7 +152,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
    * @returns Promise<boolean> - true if categories were created/updated, false if no changes
    */
   async function ensureDefaultCategories(): Promise<boolean> {
-    const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
+    const AgentCategory = handle.models.AgentCategory as Model<IAgentCategory>;
 
     const defaultCategories = [
       {

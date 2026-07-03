@@ -214,7 +214,9 @@ const registerUser = async (user, additionalData = {}) => {
     //determine if this is the first registered user (not counting anonymous_user)
     const isFirstRegisteredUser = (await countUsers()) === 0;
 
-    const salt = bcrypt.genSaltSync(10);
+    // No local password credential is stored — identity is owned by Hanzo IAM.
+    // (This local path is gated off in prod via ALLOW_REGISTRATION=false; the
+    // full local-strategy teardown lands with the identity cutover.)
     const newUserData = {
       provider: provider ?? 'local',
       email,
@@ -222,7 +224,6 @@ const registerUser = async (user, additionalData = {}) => {
       name,
       avatar: null,
       role: isFirstRegisteredUser ? SystemRoles.ADMIN : SystemRoles.USER,
-      password: bcrypt.hashSync(password, salt),
       ...additionalData,
     };
 
@@ -327,43 +328,11 @@ const requestPasswordReset = async (req) => {
  * @param {String} password
  * @returns
  */
-const resetPassword = async (userId, token, password) => {
-  let passwordResetToken = await findToken(
-    {
-      userId,
-    },
-    { sort: { createdAt: -1 } },
-  );
-
-  if (!passwordResetToken) {
-    return new Error('Invalid or expired password reset token');
-  }
-
-  const isValid = bcrypt.compareSync(token, passwordResetToken.token);
-
-  if (!isValid) {
-    return new Error('Invalid or expired password reset token');
-  }
-
-  const hash = bcrypt.hashSync(password, 10);
-  const user = await updateUser(userId, { password: hash });
-
-  if (checkEmailConfig()) {
-    await sendEmail({
-      email: user.email,
-      subject: 'Password Reset Successfully',
-      payload: {
-        appName: process.env.APP_TITLE || 'Hanzo Chat',
-        name: user.name || user.username || user.email,
-        year: new Date().getFullYear(),
-      },
-      template: 'passwordReset.handlebars',
-    });
-  }
-
-  await deleteTokens({ token: passwordResetToken.token });
-  logger.info(`[resetPassword] Password reset successful. [Email: ${user.email}]`);
-  return { message: 'Password reset was successful' };
+const resetPassword = async () => {
+  // Chat stores no local password credential. Password reset is owned by Hanzo
+  // IAM (hanzo.id); there is nothing to reset here. Prod already disables this
+  // route (ALLOW_EMAIL_LOGIN=false) — this is the service-level guarantee.
+  return new Error('Password reset is managed by Hanzo IAM (hanzo.id).');
 };
 
 /**

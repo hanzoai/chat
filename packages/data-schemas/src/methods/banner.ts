@@ -1,14 +1,15 @@
 import type { Model } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import logger from '~/config/winston';
 import type { IBanner, IUser } from '~/types';
 
-export function createBannerMethods(mongoose: typeof import('mongoose')) {
+export function createBannerMethods(handle: DataHandle) {
   /**
    * Retrieves the current active banner.
    */
   async function getBanner(user?: IUser | null): Promise<IBanner | null> {
     try {
-      const Banner = mongoose.models.Banner as Model<IBanner>;
+      const Banner = handle.models.Banner as Model<IBanner>;
       const now = new Date();
       const banner = (await Banner.findOne({
         displayFrom: { $lte: now },

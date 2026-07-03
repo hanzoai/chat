@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { DataHandle } from '~/common/dataHandle';
 import {
   Constants,
   EToolResources,
@@ -246,14 +247,14 @@ async function generateActionMetadataHash(
   return hashHex;
 }
 
-export function createAgentMethods(mongoose: typeof import('mongoose'), deps: AgentDeps) {
+export function createAgentMethods(handle: DataHandle, deps: AgentDeps) {
   const { removeAllPermissions, getActions, getSoleOwnedResourceIds } = deps;
 
   /**
    * Create an agent with the provided data.
    */
   async function createAgent(agentData: Record<string, unknown>): Promise<IAgent> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const { author: _author, ...versionData } = agentData;
     const timestamp = new Date();
     const initialAgentData = {
@@ -276,7 +277,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
    * Get an agent document based on the provided search parameter.
    */
   async function getAgent(searchParameter: FilterQuery<IAgent>): Promise<IAgent | null> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     return await Agent.findOne(searchParameter).lean<IAgent>();
   }
 
@@ -284,7 +285,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
    * Get multiple agent documents based on the provided search parameters.
    */
   async function getAgents(searchParameter: FilterQuery<IAgent>): Promise<IAgent[]> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     return await Agent.find(searchParameter).lean<IAgent[]>();
   }
 
@@ -299,7 +300,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
       return false;
     }
 
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const agent = await Agent.exists({
       _id: { $in: agentIds },
       mcpServerNames: serverName,
@@ -313,7 +314,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
       return [];
     }
 
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const agents = await Agent.find(
       {
         _id: { $in: agentIds },
@@ -346,7 +347,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
       skipVersioning?: boolean;
     } = {},
   ): Promise<IAgent | null> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const { updatingUserId = null, forceVersion = false, skipVersioning = false } = options;
     const mongoOptions = { new: true, upsert: false };
 
@@ -428,7 +429,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
       }
 
       if (updatingUserId) {
-        versionEntry.updatedBy = new mongoose.Types.ObjectId(updatingUserId);
+        versionEntry.updatedBy = new handle.Types!.ObjectId(updatingUserId);
       }
 
       if (shouldCreateVersion) {
@@ -460,7 +461,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
     file_id: string;
     updatingUserId?: string;
   }): Promise<IAgent> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const searchParameter = { id: agent_id };
     const agent = await getAgent(searchParameter);
     if (!agent) {
@@ -506,7 +507,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
     agent_id: string;
     files: Array<{ tool_resource: string; file_id: string }>;
   }): Promise<IAgent> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const searchParameter = { id: agent_id };
 
     const filesByResource = files.reduce(
@@ -555,7 +556,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
       return { matchedCount: 0, modifiedCount: 0 };
     }
 
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
 
     const orQuery = TOOL_RESOURCE_KEYS.map((key) => ({
       [`tool_resources.${key}.file_ids`]: { $in: file_ids },
@@ -577,8 +578,8 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
    * Deletes an agent based on the provided search parameter.
    */
   async function deleteAgent(searchParameter: FilterQuery<IAgent>): Promise<IAgent | null> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
-    const User = mongoose.models.User as Model<unknown>;
+    const Agent = handle.models.Agent as Model<IAgent>;
+    const User = handle.models.User as Model<unknown>;
     const agent = await Agent.findOneAndDelete(searchParameter);
     if (agent) {
       await Promise.all([
@@ -620,12 +621,12 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
    * ensuring they are not orphaned if no permission migration has been run.
    */
   async function deleteUserAgents(userId: string): Promise<void> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
-    const User = mongoose.models.User as Model<unknown>;
+    const Agent = handle.models.Agent as Model<IAgent>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
+    const User = handle.models.User as Model<unknown>;
 
     try {
-      const userObjectId = new mongoose.Types.ObjectId(userId);
+      const userObjectId = new handle.Types!.ObjectId(userId);
       const soleOwnedObjectIds = await getSoleOwnedResourceIds(userObjectId, [
         ResourceType.AGENT,
         ResourceType.REMOTE_AGENT,
@@ -714,7 +715,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
     has_more: boolean;
     after: string | null;
   }> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const isPaginated = limit !== null && limit !== undefined;
     const normalizedLimit = isPaginated
       ? Math.min(Math.max(1, parseInt(String(limit)) || 20), 1000)
@@ -735,7 +736,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
             { updatedAt: { $lt: new Date(updatedAt) } },
             {
               updatedAt: new Date(updatedAt),
-              _id: { $gt: new mongoose.Types.ObjectId(_id) },
+              _id: { $gt: new handle.Types!.ObjectId(_id) },
             },
           ],
         };
@@ -817,7 +818,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
     searchParameter: FilterQuery<IAgent>,
     versionIndex: number,
   ): Promise<IAgent> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     const agent = await Agent.findOne(searchParameter);
     if (!agent) {
       throw new Error('Agent not found');
@@ -847,7 +848,7 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
    * Counts the number of promoted agents.
    */
   async function countPromotedAgents(): Promise<number> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
+    const Agent = handle.models.Agent as Model<IAgent>;
     return await Agent.countDocuments({ is_promoted: true });
   }
 
@@ -856,8 +857,8 @@ export function createAgentMethods(mongoose: typeof import('mongoose'), deps: Ag
     resourceId: string,
     userIds: string[],
   ): Promise<void> {
-    const Agent = mongoose.models.Agent as Model<IAgent>;
-    const User = mongoose.models.User as Model<unknown>;
+    const Agent = handle.models.Agent as Model<IAgent>;
+    const User = handle.models.User as Model<unknown>;
 
     const agent = await Agent.findOne({ _id: resourceId }, { id: 1 }).lean();
     if (!agent) {

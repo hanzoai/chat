@@ -46,13 +46,10 @@ const userSchema = new Schema<IUser>(
       required: true,
       default: false,
     },
-    password: {
-      type: String,
-      trim: true,
-      minlength: 8,
-      maxlength: 128,
-      select: false,
-    },
+    // No local password credential. Identity is owned by Hanzo IAM (hanzo.id):
+    // authenticated chat is OIDC-only (provider='openid', keyed by openidId=sub),
+    // so the User doc is a thin IAM projection, never a second credential store.
+    // Local email registration / password reset are removed (see AuthService).
     avatar: {
       type: String,
       required: false,
