@@ -143,4 +143,45 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     dateFields: ['createdAt', 'updatedAt'],
     refs: { productionId: 'Prompt', prompts: 'Prompt' },
   },
+
+  // ---- Batch 8: chat-native domains with no external subsystem owner ----
+  // (Agent family + memory + app-domain authz; NOT delegated — see collections
+  // header note. Cloud /v1/agents is an additive read+execute feature, there is
+  // no /v1/memory, and Role/AccessRole/AclEntry/Group have no IAM equivalent.)
+  AgentApiKey: {
+    name: 'AgentApiKey',
+    index: ['userId', 'name', 'keyPrefix', 'expiresAt'],
+    dateFields: ['lastUsedAt', 'expiresAt', 'createdAt', 'updatedAt'],
+  },
+  Assistant: {
+    name: 'Assistant',
+    index: ['user', 'assistant_id'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  Action: {
+    name: 'Action',
+    index: ['user', 'action_id', 'agent_id', 'assistant_id'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  ToolCall: {
+    name: 'ToolCall',
+    index: ['messageId', 'user', 'conversationId', 'toolId'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  MemoryEntry: {
+    name: 'MemoryEntry',
+    index: ['userId', 'key'],
+    dateFields: ['updated_at', 'createdAt', 'updatedAt'],
+  },
+  Role: {
+    name: 'Role',
+    unique: ['name'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  AccessRole: {
+    name: 'AccessRole',
+    unique: ['accessRoleId'],
+    index: ['resourceType', 'name'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
 };

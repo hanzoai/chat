@@ -1,9 +1,10 @@
 import type { FilterQuery, Model } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type { IAction } from '~/types';
 
 const sensitiveFields = ['api_key', 'oauth_client_id', 'oauth_client_secret'] as const;
 
-export function createActionMethods(mongoose: typeof import('mongoose')) {
+export function createActionMethods(handle: DataHandle) {
   /**
    * Update an action with new data without overwriting existing properties,
    * or create a new action if it doesn't exist.
@@ -12,7 +13,7 @@ export function createActionMethods(mongoose: typeof import('mongoose')) {
     searchParams: FilterQuery<IAction>,
     updateData: Partial<IAction>,
   ): Promise<IAction | null> {
-    const Action = mongoose.models.Action as Model<IAction>;
+    const Action = handle.models.Action as Model<IAction>;
     const options = { new: true, upsert: true };
     return await Action.findOneAndUpdate(searchParams, updateData, options).lean<IAction>();
   }
@@ -24,7 +25,7 @@ export function createActionMethods(mongoose: typeof import('mongoose')) {
     searchParams: FilterQuery<IAction>,
     includeSensitive = false,
   ): Promise<IAction[]> {
-    const Action = mongoose.models.Action as Model<IAction>;
+    const Action = handle.models.Action as Model<IAction>;
     const actions = await Action.find(searchParams).lean<IAction[]>();
 
     if (!includeSensitive) {
@@ -49,7 +50,7 @@ export function createActionMethods(mongoose: typeof import('mongoose')) {
    * Deletes an action by params.
    */
   async function deleteAction(searchParams: FilterQuery<IAction>): Promise<IAction | null> {
-    const Action = mongoose.models.Action as Model<IAction>;
+    const Action = handle.models.Action as Model<IAction>;
     return await Action.findOneAndDelete(searchParams).lean<IAction>();
   }
 
@@ -57,7 +58,7 @@ export function createActionMethods(mongoose: typeof import('mongoose')) {
    * Deletes actions by params.
    */
   async function deleteActions(searchParams: FilterQuery<IAction>): Promise<number> {
-    const Action = mongoose.models.Action as Model<IAction>;
+    const Action = handle.models.Action as Model<IAction>;
     const result = await Action.deleteMany(searchParams);
     return result.deletedCount;
   }
