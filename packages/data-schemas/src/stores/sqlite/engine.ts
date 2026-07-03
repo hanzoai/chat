@@ -152,6 +152,23 @@ function isIsoDate(v: unknown): boolean {
   return typeof v === 'string' && ISO_DATE.test(v);
 }
 
+/**
+ * Casts a comparison operand to match the stored value's type, mirroring
+ * Mongoose's schema-driven query casting. The critical case: cursor pagination
+ * passes `String(date)` (a non-ISO `Date.toString()`) as a range operand against
+ * a Date field — coerce it back to a Date so the comparison is chronological,
+ * not lexical. Non-date strings are left untouched.
+ */
+function coerceOperand(ref: unknown, operand: unknown): unknown {
+  if (ref instanceof Date && typeof operand === 'string') {
+    const t = Date.parse(operand);
+    if (!Number.isNaN(t)) {
+      return new Date(t);
+    }
+  }
+  return operand;
+}
+
 /* --------------------------------------------------------------- matching */
 
 /** Mongo equality: {field: value}. Array fields match on membership. */
@@ -187,13 +204,13 @@ function matchOperator(docVal: unknown, op: string, operand: unknown, present: b
       return !arr.some((o) => matchEquality(docVal, o));
     }
     case '$gt':
-      return docVal != null && compareValues(docVal, operand) > 0;
+      return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) > 0;
     case '$gte':
-      return docVal != null && compareValues(docVal, operand) >= 0;
+      return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) >= 0;
     case '$lt':
-      return docVal != null && compareValues(docVal, operand) < 0;
+      return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) < 0;
     case '$lte':
-      return docVal != null && compareValues(docVal, operand) <= 0;
+      return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) <= 0;
     case '$exists':
       return operand ? present : !present;
     case '$regex': {
