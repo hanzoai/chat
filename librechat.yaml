@@ -1,60 +1,22 @@
-# Hanzo Chat Configuration
-# https://docs.hanzo.ai/chat/configuration
-
-version: 1.2.1
+version: 1.3.4
 cache: true
-
-# Custom interface configuration
+fileConfig:
+  endpoints:
+    default:
+      fileLimit: 10
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
+        - "application/json"
+        - "application/xml"
+  serverFileSizeLimit: 500
+  avatarSizeLimit: 4
+fileStrategy: "s3"
 interface:
-  customWelcome: "Welcome to Hanzo Chat! Enjoy your AI-powered conversation experience."
-  mcpServers:
-    placeholder: 'MCP Servers'
-  fileSearch: true
-  privacyPolicy:
-    externalUrl: 'https://hanzo.ai/privacy'
-    openNewTab: true
-  termsOfService:
-    externalUrl: 'https://hanzo.ai/terms'
-    openNewTab: true
-    modalAcceptance: true
-    modalTitle: "Terms of Service for Hanzo Chat"
-    modalContent: |
-      # Terms and Conditions for Hanzo Chat
-
-      *Effective Date: February 18, 2024*
-
-      Welcome to Hanzo Chat, the AI-powered conversation platform by Hanzo AI, available at https://chat.hanzo.ai. These Terms of Service ("Terms") govern your use of our website and the services we offer. By accessing or using the Website, you agree to be bound by these Terms and our Privacy Policy, accessible at https://hanzo.ai/privacy.
-
-      ## 1. Ownership
-
-      Upon purchasing a package from Hanzo Chat, you are granted the right to download and use the code for accessing an admin panel for Hanzo Chat. While you own the downloaded code, you are expressly prohibited from reselling, redistributing, or otherwise transferring the code to third parties without explicit permission from Hanzo AI.
-
-      ## 2. User Data
-
-      We collect personal data, such as your name, email address, and payment information, as described in our Privacy Policy. This information is collected to provide and improve our services, process transactions, and communicate with you.
-
-      ## 3. Non-Personal Data Collection
-
-      The Website uses cookies to enhance user experience, analyze site usage, and facilitate certain functionalities. By using the Website, you consent to the use of cookies in accordance with our Privacy Policy.
-
-      ## 4. Use of the Website
-
-      You agree to use the Website only for lawful purposes and in a manner that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the Website. Prohibited behavior includes harassing or causing distress or inconvenience to any person, transmitting obscene or offensive content, or disrupting the normal flow of dialogue within the Website.
-
-      ## 5. Governing Law
-
-      These Terms shall be governed by and construed in accordance with the laws of the United States, without giving effect to any principles of conflicts of law.
-
-      ## 6. Changes to the Terms
-
-      We reserve the right to modify these Terms at any time. We will notify users of any changes by email. Your continued use of the Website after such changes have been notified will constitute your consent to such changes.
-
-      ## 7. Contact Information
-
-      If you have any questions about these Terms, please contact us at support@hanzo.ai.
-
-      By using the Website, you acknowledge that you have read these Terms of Service and agree to be bound by them.
-
+  customWelcome: "Welcome to Hanzo Chat"
   endpointsMenu: true
   modelSelect: true
   parameters: true
@@ -64,53 +26,54 @@ interface:
   bookmarks: true
   multiConvo: true
   agents: true
-
+  privacyPolicy:
+    externalUrl: 'https://hanzo.ai/privacy'
+    openNewTab: true
+  termsOfService:
+    externalUrl: 'https://hanzo.ai/terms'
+    openNewTab: true
 registration:
-  socialLogins: ['openid', 'github', 'google', 'discord']
-
-# Prepaid billing — money path. NO free local credits: startBalance is 0 so a
-# new user has no spendable balance until they claim their $5 starter credit at
-# billing.hanzo.ai (a real Commerce grant against their org). Each authenticated
-# request is billed to the user's OWN Hanzo Cloud (hk-) key against their org's
-# Commerce balance; the gate is Commerce-first and FAILS CLOSED (see
-# api/models/balanceMethods.js + packages/api/src/endpoints/custom/hanzoCloudKey.ts).
-# 1,000,000 tokenCredits = $1 USD. minBalance keeps the legacy local gate sane
-# for any non-IAM/legacy path.
-balance:
-  enabled: true
-  startBalance: 0
-  creditExpiryDays: 30
-  minBalance: 1000000
-
+  socialLogins: ['openid']
 actions:
   allowedDomains:
     - "hanzo.ai"
     - "chat.hanzo.ai"
+    - "hanzo.chat"
     - "api.hanzo.ai"
-    - "google.com"
-
-# Web Search — Hanzo unified backend ONLY. One way, no external SaaS.
-# The web_search agent tool is a fixed provider pipeline; the only self-hosted,
-# no-external-key providers LibreChat accepts are `searxng` (search) and
-# `firecrawl` (scrape). Both point at Hanzo's own /v1/websearch surface
-# (cloud-api), which serves the SearXNG + Firecrawl contracts backed by Hanzo's
-# own metasearch + Hanzo Crawl. No reranker (provider+scraper is sufficient).
-# NEVER add Serper / Tavily / Jina / Cohere external providers here.
+    - "lux.network"
+    - "s3.hanzo.ai"
+# Web Search — Hanzo unified backend ONLY, no external SaaS. searxng +
+# firecrawl both point at cloud's /v1/websearch surface (Hanzo
+# metasearch + Hanzo Crawl). Never add Serper/Tavily/Jina/Cohere.
 webSearch:
   searchProvider: 'searxng'
-  searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'   # -> api.hanzo.ai/v1/websearch  (Hanzo metasearch)
+  searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'
   searxngApiKey: '${WEBSEARCH_API_KEY}'
   scraperProvider: 'firecrawl'
-  firecrawlApiUrl: '${FIRECRAWL_API_URL}'         # -> api.hanzo.ai/v1/websearch  (Hanzo Crawl)
+  firecrawlApiUrl: '${FIRECRAWL_API_URL}'
   firecrawlApiKey: '${WEBSEARCH_API_KEY}'
-  firecrawlVersion: 'v1'                          # POSTs {firecrawlApiUrl}/v1/scrape
-
-# Model endpoints
+  firecrawlVersion: 'v1'
+# Unified picker (HIP: one source of truth). EVERY endpoint below is the SAME
+# api.hanzo.ai/v1 gateway carrying the per-user ${HANZO_API_KEY}; they differ
+# only by a curated family subset + icon, so metering is identical across all
+# of them (the cloud billing gate). "Hanzo" (Zen house brand) leads at order 0
+# with the zen5-mini default.
+#
+# BRAND POLICY: only families that are GENUINELY INDEPENDENT of the Zen
+# upstreams may be listed. Zen models are derived from GLM/DeepSeek/Kimi/
+# MiniMax/Qwen upstreams, so NEVER list a Qwen or DeepSeek family (that would
+# reveal the Zen mapping). Meta Llama and Mistral are independent open-weight
+# brands Zen's flagship tiers do not build on — safe to resell by real name.
+#
+# Every model listed is served by api.hanzo.ai/v1/models AND verified to return
+# content via a live /v1/chat/completions call — no dead models.
+#
+# OpenAI/Anthropic branded resale is intentionally NOT listed: no funded key
+# path exists yet (direct OPENAI/ANTHROPIC keys unfunded; DO GenAI account
+# lacks proprietary access), so listing them would surface non-invocable
+# models. Add them here the moment a funded key/enablement lands.
 endpoints:
-  # Agent Builder capabilities. Both Run Code (execute_code) and Web Search
-  # (web_search) are explicitly enabled so they show as active (not 🔑-gated)
-  # once their Hanzo backends are wired: execute_code -> api.hanzo.ai/v1/exec
-  # (LIBRECHAT_CODE_*), web_search -> the webSearch block above.
+  # Agent Builder: enable Run Code + Web Search so they show active.
   agents:
     capabilities:
       - 'execute_code'
@@ -118,42 +81,69 @@ endpoints:
       - 'file_search'
       - 'actions'
       - 'tools'
-  # Hanzo Cloud -- primary endpoint with zen4 models
-  # All models routed through api.hanzo.ai OpenAI-compatible gateway
   custom:
-    - name: 'Hanzo'
-      # Primary endpoint: order ahead of the built-in `agents` endpoint (order 1)
-      # so a new conversation defaults to Hanzo (a working completion path that
-      # carries the per-user hk- key) instead of bare `agents`, which needs an
-      # explicit agent_id and 400s on the first send.
+    - name: "Hanzo"
+      # Primary endpoint: order ahead of the built-in `agents` endpoint
+      # (order 1) so a new /c/new conversation defaults to Hanzo (a working
+      # completion path that carries the per-user hk- key) instead of bare
+      # `agents`, which requires an explicit agent_id and 400s on first send.
       customOrder: 0
-      # Publishable key for unauthenticated users (rate-limited).
-      # Authenticated users override with their own key via IAM (hanzo.id).
-      apiKey: '${HANZO_API_KEY}'
-      baseURL: 'https://api.hanzo.ai/v1'
-      iconURL: 'https://hanzo.chat/assets/logo.svg'
+      apiKey: "${HANZO_API_KEY}"
+      baseURL: "https://api.hanzo.ai/v1"
+      # zen* now route to DigitalOcean GenAI (do-ai) and return content
+      # (cloud >= 1.785.11). fetch:false keeps the menu curated to the
+      # tiers we expose.
       models:
+        # LIVE catalog only — zen4 generation was SUNSET 2026-05-30 (gateway
+        # config.yaml); offering it routed to a dead fallback. Current families
+        # the gateway serves: zen5-* (flagship) + zen3-* (omni/vision). zen5-mini
+        # leads as the default (smart current-gen small model); larger zen5 tiers
+        # meter against balance. Order = the default-selected model for new users.
         default:
-          # Zen model family (Hanzo AI)
-          - 'zen3-nano'
-          - 'zen4-mini'
-          - 'zen'
-          - 'zen4-pro'
-          - 'zen4'
-          - 'zen4-max'
-          - 'zen4-ultra'
-          - 'zen4-thinking'
-          - 'zen4-coder-flash'
-          - 'zen4-coder'
-          - 'zen4-coder-pro'
-          # Third-party models (via Hanzo Cloud)
-          - 'gpt-4o'
-          - 'gpt-4o-mini'
-          - 'claude-sonnet-4-5'
-          - 'claude-haiku-4-5'
+          - "zen5-mini"
+          - "zen5-flash"
+          - "zen5"
+          - "zen5-pro"
+          - "zen5-max"
+          - "zen5-ultra"
+          - "zen5-coder"
+          - "zen5-nano"
+          - "zen3-omni"
+          - "zen3-vl"
+          - "zen3-nano"
         fetch: false
       titleConvo: true
-      titleModel: 'zen4-mini'
+      titleModel: "zen5-nano"
       summarize: true
-      summaryModel: 'zen4-mini'
-      modelDisplayLabel: 'Hanzo'
+      summaryModel: "zen5-nano"
+      modelDisplayLabel: "Hanzo"
+    - name: "Meta Llama"
+      customOrder: 1
+      apiKey: "${HANZO_API_KEY}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "llama-3.3-70b"
+          - "llama-4-maverick"
+          - "llama-3.1-8b"
+        fetch: false
+      titleConvo: true
+      titleModel: "llama-3.1-8b"
+      modelDisplayLabel: "Meta Llama"
+    - name: "Mistral"
+      customOrder: 2
+      apiKey: "${HANZO_API_KEY}"
+      baseURL: "https://api.hanzo.ai/v1"
+      iconURL: "/assets/mistral.png"
+      models:
+        default:
+          - "mistral-small"
+          - "mistral-3-14b"
+          - "mistral-nemo"
+        fetch: false
+      titleConvo: true
+      titleModel: "mistral-nemo"
+      modelDisplayLabel: "Mistral"
+balance:
+  enabled: false
+  startBalance: 0
