@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import type { DataHandle } from '~/common/dataHandle';
 import { Constants } from 'librechat-data-provider';
 import type { FilterQuery, Model } from 'mongoose';
 import type { SchemaWithMeiliMethods } from '~/models/plugins/mongoMeili';
@@ -154,13 +155,13 @@ function getMessagesUpToTarget(messages: t.IMessage[], targetMessageId: string):
 }
 
 /** Factory function that takes mongoose instance and returns the methods */
-export function createShareMethods(mongoose: typeof import('mongoose')) {
+export function createShareMethods(handle: DataHandle) {
   /**
    * Get shared messages for a public share link
    */
   async function getSharedMessages(shareId: string): Promise<t.SharedMessagesResult | null> {
     try {
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
       const share = (await SharedLink.findOne({ shareId, isPublic: true })
         .populate({
           path: 'messages',
@@ -213,8 +214,8 @@ export function createShareMethods(mongoose: typeof import('mongoose')) {
     search?: string,
   ): Promise<t.SharedLinksResult> {
     try {
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
-      const Conversation = mongoose.models.Conversation as SchemaWithMeiliMethods;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
+      const Conversation = handle.models.Conversation as SchemaWithMeiliMethods;
       const query: FilterQuery<t.ISharedLink> = { user, isPublic };
 
       if (pageParam) {
@@ -295,7 +296,7 @@ export function createShareMethods(mongoose: typeof import('mongoose')) {
    */
   async function deleteAllSharedLinks(user: string): Promise<t.DeleteAllSharesResult> {
     try {
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
       const result = await SharedLink.deleteMany({ user });
       return {
         message: 'All shared links deleted successfully',
@@ -322,7 +323,7 @@ export function createShareMethods(mongoose: typeof import('mongoose')) {
     }
 
     try {
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
       const result = await SharedLink.deleteMany({ user, conversationId });
       return {
         message: 'Shared links deleted successfully',
@@ -350,9 +351,9 @@ export function createShareMethods(mongoose: typeof import('mongoose')) {
       throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
     }
     try {
-      const Message = mongoose.models.Message as SchemaWithMeiliMethods;
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
-      const Conversation = mongoose.models.Conversation as SchemaWithMeiliMethods;
+      const Message = handle.models.Message as SchemaWithMeiliMethods;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
+      const Conversation = handle.models.Conversation as SchemaWithMeiliMethods;
 
       const [existingShare, conversationMessages] = await Promise.all([
         SharedLink.findOne({
@@ -437,7 +438,7 @@ export function createShareMethods(mongoose: typeof import('mongoose')) {
     }
 
     try {
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
       const share = (await SharedLink.findOne({ conversationId, user, isPublic: true })
         .select('shareId -_id')
         .lean()) as { shareId?: string } | null;
@@ -466,8 +467,8 @@ export function createShareMethods(mongoose: typeof import('mongoose')) {
     }
 
     try {
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
-      const Message = mongoose.models.Message as SchemaWithMeiliMethods;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
+      const Message = handle.models.Message as SchemaWithMeiliMethods;
       const share = (await SharedLink.findOne({ shareId, user })
         .select('-_id -__v -user')
         .lean()) as t.ISharedLink | null;
@@ -525,7 +526,7 @@ export function createShareMethods(mongoose: typeof import('mongoose')) {
     }
 
     try {
-      const SharedLink = mongoose.models.SharedLink as Model<t.ISharedLink>;
+      const SharedLink = handle.models.SharedLink as Model<t.ISharedLink>;
       const result = await SharedLink.findOneAndDelete({ shareId, user }).lean();
 
       if (!result) {

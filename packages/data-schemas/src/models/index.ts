@@ -27,12 +27,43 @@ import { createMemoryModel } from './memory';
 import { createAccessRoleModel } from './accessRole';
 import { createAclEntryModel } from './aclEntry';
 import { createGroupModel } from './group';
+import { createSqliteHandle, CHAT_COLLECTION_SPECS } from '~/stores/sqlite';
+
+/**
+ * Per-domain backend selection — the migration seam.
+ *
+ * `CHAT_STORE_SQLITE` is a CSV of collection names to serve from the SQLite
+ * document store instead of mongoose (e.g. `Conversation,Message`). Unset (the
+ * default) leaves every collection on mongoose, byte-for-byte unchanged — so the
+ * live deployment is untouched until a domain is explicitly flipped. Only
+ * collections with a CollectionSpec can be overridden; anything else throws,
+ * failing closed rather than silently mis-storing.
+ */
+function applySqliteOverrides<T extends Record<string, unknown>>(models: T): T {
+  const csv = process.env.CHAT_STORE_SQLITE?.trim();
+  if (!csv) {
+    return models;
+  }
+  const names = csv
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s in CHAT_COLLECTION_SPECS);
+  if (names.length === 0) {
+    return models;
+  }
+  const handle = createSqliteHandle(names);
+  const out = { ...models } as Record<string, unknown>;
+  for (const name of names) {
+    out[name] = handle.models[name];
+  }
+  return out as T;
+}
 
 /**
  * Creates all database models for all collections
  */
 export function createModels(mongoose: typeof import('mongoose')) {
-  return {
+  const models = {
     User: createUserModel(mongoose),
     Token: createTokenModel(mongoose),
     Session: createSessionModel(mongoose),
@@ -63,4 +94,5 @@ export function createModels(mongoose: typeof import('mongoose')) {
     AclEntry: createAclEntryModel(mongoose),
     Group: createGroupModel(mongoose),
   };
+  return applySqliteOverrides(models);
 }

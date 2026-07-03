@@ -9,6 +9,7 @@ import {
 } from 'librechat-data-provider';
 import type { CodeEnvRef } from 'librechat-data-provider';
 import type { Model, Types, FilterQuery } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type {
   ISkill,
   ISkillDocument,
@@ -801,8 +802,8 @@ export function validateAlwaysApplyInBody(body: string | undefined): ValidationI
   return [];
 }
 
-export function createSkillMethods(mongoose: typeof import('mongoose'), deps: SkillDeps) {
-  const { ObjectId } = mongoose.Types;
+export function createSkillMethods(handle: DataHandle, deps: SkillDeps) {
+  const { ObjectId } = handle.Types!;
 
   function buildSkillFilter(
     params: Pick<ListSkillsByAccessParams, 'accessibleIds' | 'category' | 'search'>,
@@ -892,7 +893,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
       throw error;
     }
 
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
 
     // Application-level uniqueness check on (name, author, tenantId).
     // The unique index in the schema is the persistent guarantee, but Mongoose
@@ -947,7 +948,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
     if (typeof id === 'string' && !isValidObjectIdString(id)) {
       return null;
     }
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
     const doc = await Skill.findById(id).lean();
     return (doc as unknown as (ISkill & { _id: Types.ObjectId }) | null) ?? null;
   }
@@ -979,7 +980,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
       preferModelInvocable?: boolean;
     },
   ): Promise<(ISkill & { _id: Types.ObjectId }) | null> {
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
     const preferUserInvocable = options?.preferUserInvocable === true;
     const preferModelInvocable = options?.preferModelInvocable === true;
     /* Single-doc fast path when no preference is requested — preserves
@@ -1020,7 +1021,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
   async function listSkillsByAccess(
     params: ListSkillsByAccessParams,
   ): Promise<ListSkillsByAccessResult> {
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
     const limit = Math.min(Math.max(1, params.limit || 20), 100);
 
     const baseFilter = buildSkillFilter(params);
@@ -1083,7 +1084,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
   async function listAlwaysApplySkills(
     params: ListAlwaysApplySkillsParams,
   ): Promise<ListAlwaysApplySkillsResult> {
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
     if (!params.accessibleIds.length) {
       return { skills: [], has_more: false, after: null };
     }
@@ -1199,7 +1200,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
       throw error;
     }
 
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
     const setPayload: Record<string, unknown> = {};
     const unsetPayload: Record<string, ''> = {};
     if (update.name !== undefined) setPayload.name = update.name;
@@ -1316,8 +1317,8 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
     if (!isValidObjectIdString(id)) {
       return { deleted: false };
     }
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     const objectId = new ObjectId(id);
     const res = await Skill.deleteOne({ _id: objectId });
     if (!res.deletedCount) {
@@ -1334,12 +1335,12 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
 
   async function deleteUserSkills(userId: Types.ObjectId | string): Promise<number> {
     const userObjectId = typeof userId === 'string' ? new ObjectId(userId) : userId;
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
     const soleOwned = await deps.getSoleOwnedResourceIds(userObjectId, ResourceType.SKILL);
     if (soleOwned.length === 0) {
       return 0;
     }
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     await SkillFile.deleteMany({ skillId: { $in: soleOwned } });
     const res = await Skill.deleteMany({ _id: { $in: soleOwned } });
     await Promise.allSettled(
@@ -1382,7 +1383,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
     skillId: Types.ObjectId | string,
     delta: number,
   ): Promise<void> {
-    const Skill = mongoose.models.Skill as Model<ISkillDocument>;
+    const Skill = handle.models.Skill as Model<ISkillDocument>;
     const updateOps: Record<string, Record<string, number>> = { $inc: { version: 1 } };
     if (delta !== 0) {
       updateOps.$inc.fileCount = delta;
@@ -1393,7 +1394,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
   async function listSkillFiles(
     skillId: Types.ObjectId | string,
   ): Promise<Array<ISkillFile & { _id: Types.ObjectId }>> {
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     const rows = await SkillFile.find({ skillId })
       .select('-content')
       .sort({ relativePath: 1 })
@@ -1411,7 +1412,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
       (error as Error & { code?: string }).code = 'SKILL_FILE_VALIDATION_FAILED';
       throw error;
     }
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     const category = inferSkillFileCategory(row.relativePath);
     // Atomic new-vs-replace detection: with `new: false, upsert: true`,
     // `findOneAndUpdate` returns the pre-update document (or null if the doc
@@ -1462,7 +1463,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
     skillId: Types.ObjectId | string,
     relativePath: string,
   ): Promise<{ deleted: boolean }> {
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     const res = await SkillFile.deleteOne({ skillId, relativePath });
     if (!res.deletedCount) {
       return { deleted: false };
@@ -1476,7 +1477,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
     skillId: Types.ObjectId | string,
     relativePath: string,
   ): Promise<(ISkillFile & { _id: Types.ObjectId }) | null> {
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     const row = await SkillFile.findOne({ skillId, relativePath }).lean();
     return row as unknown as (ISkillFile & { _id: Types.ObjectId }) | null;
   }
@@ -1486,7 +1487,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
     relativePath: string,
     update: { content?: string; isBinary?: boolean },
   ): Promise<void> {
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     await SkillFile.updateOne({ skillId, relativePath }, { $set: update });
   }
 
@@ -1498,7 +1499,7 @@ export function createSkillMethods(mongoose: typeof import('mongoose'), deps: Sk
     }>,
   ): Promise<{ matchedCount: number; modifiedCount: number }> {
     if (updates.length === 0) return { matchedCount: 0, modifiedCount: 0 };
-    const SkillFile = mongoose.models.SkillFile as Model<ISkillFileDocument>;
+    const SkillFile = handle.models.SkillFile as Model<ISkillFileDocument>;
     const ops = updates.map((u) => ({
       updateOne: {
         filter: { skillId: u.skillId, relativePath: u.relativePath },
