@@ -217,7 +217,7 @@ describe('MCPOAuthHandler - client registration reuse on reconnection', () => {
         clientInfo: {
           client_id: 'old-client-id',
           client_secret: 'old-secret',
-          redirect_uris: ['http://old-domain.com/api/mcp/test-server/oauth/callback'],
+          redirect_uris: ['http://old-domain.com/v1/chat/mcp/test-server/oauth/callback'],
         } as OAuthClientInformation & { redirect_uris: string[] },
       });
 
@@ -303,7 +303,7 @@ describe('MCPOAuthHandler - client registration reuse on reconnection', () => {
         clientInfo: {
           client_id: 'stale-client-that-oauth-server-deleted',
           client_secret: 'stale-secret',
-          redirect_uris: ['http://localhost:3080/api/mcp/test-server/oauth/callback'],
+          redirect_uris: ['http://localhost:3080/v1/chat/mcp/test-server/oauth/callback'],
         } as OAuthClientInformation & { redirect_uris: string[] },
         metadata: {
           issuer: serverIssuer,
@@ -369,7 +369,7 @@ describe('MCPOAuthHandler - client registration reuse on reconnection', () => {
         clientInfo: {
           client_id: 'old-issuer-client',
           client_secret: 'secret',
-          redirect_uris: ['http://localhost:3080/api/mcp/test-server/oauth/callback'],
+          redirect_uris: ['http://localhost:3080/v1/chat/mcp/test-server/oauth/callback'],
         } as OAuthClientInformation & { redirect_uris: string[] },
         metadata: {
           issuer: 'https://old-auth-server.example.com',

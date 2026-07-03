@@ -196,7 +196,7 @@ describe('ServerConfigsCacheRedis Performance Benchmark', () => {
   /**
    * Benchmark 3: Concurrent getAll() calls (simulates the actual production bottleneck)
    *
-   * Multiple users hitting /api/mcp/* simultaneously, all triggering getAll()
+   * Multiple users hitting /v1/chat/mcp/* simultaneously, all triggering getAll()
    * after the 5s TTL read-through cache expires.
    */
   describe('Concurrent getAll() under load', () => {

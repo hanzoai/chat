@@ -25,7 +25,7 @@ const router = express.Router();
 
 /**
  * Open Responses API routes (API key authentication handled in route file)
- * Mounted at /agents/v1/responses (full path: /api/agents/v1/responses)
+ * Mounted at /agents/v1/responses (full path: /v1/chat/agents/v1/responses)
  * NOTE: Must be mounted BEFORE /v1 to avoid being caught by the less specific route
  * @see https://openresponses.org/specification
  */
@@ -33,7 +33,7 @@ router.use('/v1/responses', responses);
 
 /**
  * OpenAI-compatible API routes (API key authentication handled in route file)
- * Mounted at /agents/v1 (full path: /api/agents/v1/chat/completions)
+ * Mounted at /agents/v1 (full path: /v1/chat/agents/v1/chat/completions)
  */
 router.use('/v1', openai);
 
@@ -103,7 +103,7 @@ router.use(uaParser);
  * Canonical Hanzo Cloud agents (`/v1/agents`). Mounted BEFORE the legacy `/`
  * (v1) router so `/cloud/*` is not shadowed by v1's `GET /:id`. The cloud router
  * carries its own `requireJwtAuth` and forwards the user's hanzo.id bearer to
- * cloud server-side (see cloud.js). Legacy `/api/agents` CRUD stays untouched.
+ * cloud server-side (see cloud.js). Legacy `/v1/chat/agents` CRUD stays untouched.
  */
 router.use('/cloud', cloud);
 

@@ -143,7 +143,7 @@ beforeAll(async () => {
 
   currentTestUser = testUsers.owner;
   skillRoutes = require('./skills');
-  app.use('/api/skills', skillRoutes);
+  app.use('/v1/chat/skills', skillRoutes);
 });
 
 afterEach(async () => {
@@ -223,7 +223,7 @@ async function createSkillAsOwner(overrides = {}) {
   // Description is deliberately kept above the 20-char short-description
   // warning threshold so existing tests don't trip the coaching warning.
   const res = await request(app)
-    .post('/api/skills')
+    .post('/v1/chat/skills')
     .send({
       name: 'demo-skill',
       description: 'A small demo skill used in routing integration tests.',
@@ -240,7 +240,7 @@ describe('Skill routes', () => {
   });
   afterEach(() => errSpy.mockRestore());
 
-  describe('POST /api/skills', () => {
+  describe('POST /v1/chat/skills', () => {
     it('creates a skill and grants SKILL_OWNER ACL', async () => {
       const res = await createSkillAsOwner();
       expect(res.status).toBe(201);
@@ -306,7 +306,7 @@ describe('Skill routes', () => {
     });
 
     it('rejects missing description with 400', async () => {
-      const res = await request(app).post('/api/skills').send({ name: 'x-skill', body: '' });
+      const res = await request(app).post('/v1/chat/skills').send({ name: 'x-skill', body: '' });
       expect(res.status).toBe(400);
     });
 
@@ -324,7 +324,7 @@ describe('Skill routes', () => {
     });
   });
 
-  describe('POST /api/skills/import', () => {
+  describe('POST /v1/chat/skills/import', () => {
     it('enforces fileConfig.skills.fileSizeLimit before import handling', async () => {
       mockFileConfig = {
         skills: {
@@ -333,7 +333,7 @@ describe('Skill routes', () => {
       };
 
       const res = await request(app)
-        .post('/api/skills/import')
+        .post('/v1/chat/skills/import')
         .attach('file', Buffer.alloc(2 * 1024 * 1024), {
           filename: 'too-large.skill',
           contentType: 'application/zip',
@@ -368,7 +368,7 @@ describe('Skill routes', () => {
       zip.file('scripts/imported-script.sh', 'echo imported');
       const buffer = await zip.generateAsync({ type: 'nodebuffer' });
 
-      const res = await request(app).post('/api/skills/import').attach('file', buffer, {
+      const res = await request(app).post('/v1/chat/skills/import').attach('file', buffer, {
         filename: 'imported-skill.skill',
         contentType: 'application/zip',
       });
@@ -395,7 +395,7 @@ describe('Skill routes', () => {
     });
   });
 
-  describe('GET /api/skills', () => {
+  describe('GET /v1/chat/skills', () => {
     it('returns only skills the caller can access', async () => {
       const mine = await createSkillAsOwner({ name: 'mine-skill' });
       expect(mine.status).toBe(201);
@@ -407,36 +407,36 @@ describe('Skill routes', () => {
       // users see their own skill only.
 
       setTestUser(testUsers.owner);
-      const res = await request(app).get('/api/skills');
+      const res = await request(app).get('/v1/chat/skills');
       expect(res.status).toBe(200);
       expect(res.body.skills.length).toBe(1);
       expect(res.body.skills[0].name).toBe('mine-skill');
     });
   });
 
-  describe('GET /api/skills/:id', () => {
+  describe('GET /v1/chat/skills/:id', () => {
     it('returns 403 when the user has no access', async () => {
       const created = await createSkillAsOwner();
       expect(created.status).toBe(201);
       setTestUser(testUsers.noAccess);
-      const res = await request(app).get(`/api/skills/${created.body._id}`);
+      const res = await request(app).get(`/v1/chat/skills/${created.body._id}`);
       expect(res.status).toBe(403);
     });
 
     it('returns the skill to the owner with isPublic flag', async () => {
       const created = await createSkillAsOwner();
-      const res = await request(app).get(`/api/skills/${created.body._id}`);
+      const res = await request(app).get(`/v1/chat/skills/${created.body._id}`);
       expect(res.status).toBe(200);
       expect(res.body.name).toBe('demo-skill');
       expect(res.body.isPublic).toBe(false);
     });
   });
 
-  describe('PATCH /api/skills/:id (optimistic concurrency)', () => {
+  describe('PATCH /v1/chat/skills/:id (optimistic concurrency)', () => {
     it('updates with correct expectedVersion and bumps version', async () => {
       const created = await createSkillAsOwner();
       const res = await request(app)
-        .patch(`/api/skills/${created.body._id}`)
+        .patch(`/v1/chat/skills/${created.body._id}`)
         .send({ expectedVersion: 1, description: 'Updated description' });
       expect(res.status).toBe(200);
       expect(res.body.version).toBe(2);
@@ -446,12 +446,12 @@ describe('Skill routes', () => {
     it('returns 409 on stale expectedVersion', async () => {
       const created = await createSkillAsOwner();
       const first = await request(app)
-        .patch(`/api/skills/${created.body._id}`)
+        .patch(`/v1/chat/skills/${created.body._id}`)
         .send({ expectedVersion: 1, description: 'First' });
       expect(first.status).toBe(200);
 
       const stale = await request(app)
-        .patch(`/api/skills/${created.body._id}`)
+        .patch(`/v1/chat/skills/${created.body._id}`)
         .send({ expectedVersion: 1, description: 'Stale' });
       expect(stale.status).toBe(409);
       expect(stale.body.error).toBe('skill_version_conflict');
@@ -461,7 +461,7 @@ describe('Skill routes', () => {
     it('rejects updates without expectedVersion', async () => {
       const created = await createSkillAsOwner();
       const res = await request(app)
-        .patch(`/api/skills/${created.body._id}`)
+        .patch(`/v1/chat/skills/${created.body._id}`)
         .send({ description: 'no version' });
       expect(res.status).toBe(400);
     });
@@ -470,16 +470,16 @@ describe('Skill routes', () => {
       const created = await createSkillAsOwner();
       setTestUser(testUsers.noAccess);
       const res = await request(app)
-        .patch(`/api/skills/${created.body._id}`)
+        .patch(`/v1/chat/skills/${created.body._id}`)
         .send({ expectedVersion: 1, description: 'nope' });
       expect(res.status).toBe(403);
     });
   });
 
-  describe('DELETE /api/skills/:id', () => {
+  describe('DELETE /v1/chat/skills/:id', () => {
     it('deletes and cascades ACL entries', async () => {
       const created = await createSkillAsOwner();
-      const res = await request(app).delete(`/api/skills/${created.body._id}`);
+      const res = await request(app).delete(`/v1/chat/skills/${created.body._id}`);
       expect(res.status).toBe(200);
       expect(res.body.deleted).toBe(true);
 
@@ -493,33 +493,33 @@ describe('Skill routes', () => {
     it('returns 403 for a non-owner', async () => {
       const created = await createSkillAsOwner();
       setTestUser(testUsers.noAccess);
-      const res = await request(app).delete(`/api/skills/${created.body._id}`);
+      const res = await request(app).delete(`/v1/chat/skills/${created.body._id}`);
       expect(res.status).toBe(403);
     });
   });
 
-  describe('GET /api/skills/:id/files', () => {
+  describe('GET /v1/chat/skills/:id/files', () => {
     it('returns an empty list for a skill with no files', async () => {
       const created = await createSkillAsOwner();
-      const res = await request(app).get(`/api/skills/${created.body._id}/files`);
+      const res = await request(app).get(`/v1/chat/skills/${created.body._id}/files`);
       expect(res.status).toBe(200);
       expect(res.body.files).toEqual([]);
     });
   });
 
-  describe('POST /api/skills/:id/files (live)', () => {
+  describe('POST /v1/chat/skills/:id/files (live)', () => {
     it('returns 400 when no file is provided', async () => {
       const created = await createSkillAsOwner();
-      const res = await request(app).post(`/api/skills/${created.body._id}/files`);
+      const res = await request(app).post(`/v1/chat/skills/${created.body._id}/files`);
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/no file/i);
     });
   });
 
-  describe('GET /api/skills/:id/files/:relativePath', () => {
+  describe('GET /v1/chat/skills/:id/files/:relativePath', () => {
     it('returns SKILL.md content from skill body', async () => {
       const created = await createSkillAsOwner();
-      const res = await request(app).get(`/api/skills/${created.body._id}/files/SKILL.md`);
+      const res = await request(app).get(`/v1/chat/skills/${created.body._id}/files/SKILL.md`);
       expect(res.status).toBe(200);
       expect(res.body.mimeType).toBe('text/markdown');
       expect(res.body.isBinary).toBe(false);
@@ -530,13 +530,13 @@ describe('Skill routes', () => {
     it('returns 404 for a nonexistent file', async () => {
       const created = await createSkillAsOwner();
       const res = await request(app).get(
-        `/api/skills/${created.body._id}/files/scripts%2Fmissing.sh`,
+        `/v1/chat/skills/${created.body._id}/files/scripts%2Fmissing.sh`,
       );
       expect(res.status).toBe(404);
     });
   });
 
-  describe('DELETE /api/skills/:id/files/:relativePath', () => {
+  describe('DELETE /v1/chat/skills/:id/files/:relativePath', () => {
     const { upsertSkillFile } = require('~/models');
 
     it('deletes an existing skill file, bumps skill version, and returns 200', async () => {
@@ -553,12 +553,12 @@ describe('Skill routes', () => {
         author: testUsers.owner._id,
       });
 
-      const beforeSkill = await request(app).get(`/api/skills/${created.body._id}`);
+      const beforeSkill = await request(app).get(`/v1/chat/skills/${created.body._id}`);
       expect(beforeSkill.body.fileCount).toBe(1);
       expect(beforeSkill.body.version).toBe(2);
 
       const res = await request(app).delete(
-        `/api/skills/${created.body._id}/files/scripts%2Fparse.sh`,
+        `/v1/chat/skills/${created.body._id}/files/scripts%2Fparse.sh`,
       );
       expect(res.status).toBe(200);
       expect(res.body).toEqual({
@@ -567,7 +567,7 @@ describe('Skill routes', () => {
         deleted: true,
       });
 
-      const afterSkill = await request(app).get(`/api/skills/${created.body._id}`);
+      const afterSkill = await request(app).get(`/v1/chat/skills/${created.body._id}`);
       expect(afterSkill.body.fileCount).toBe(0);
       expect(afterSkill.body.version).toBe(3);
     });
@@ -575,7 +575,7 @@ describe('Skill routes', () => {
     it('returns 404 when the file does not exist', async () => {
       const created = await createSkillAsOwner();
       const res = await request(app).delete(
-        `/api/skills/${created.body._id}/files/scripts%2Fmissing.sh`,
+        `/v1/chat/skills/${created.body._id}/files/scripts%2Fmissing.sh`,
       );
       expect(res.status).toBe(404);
     });
@@ -584,7 +584,7 @@ describe('Skill routes', () => {
       const created = await createSkillAsOwner();
       setTestUser(testUsers.noAccess);
       const res = await request(app).delete(
-        `/api/skills/${created.body._id}/files/scripts%2Fparse.sh`,
+        `/v1/chat/skills/${created.body._id}/files/scripts%2Fparse.sh`,
       );
       expect(res.status).toBe(403);
     });
@@ -604,12 +604,12 @@ describe('Skill routes', () => {
 
       setTestUser(testUsers.editor);
       const res = await request(app)
-        .patch(`/api/skills/${created.body._id}`)
+        .patch(`/v1/chat/skills/${created.body._id}`)
         .send({ expectedVersion: 1, description: 'Edited by editor' });
       expect(res.status).toBe(200);
 
       // Editor should NOT be able to delete
-      const del = await request(app).delete(`/api/skills/${created.body._id}`);
+      const del = await request(app).delete(`/v1/chat/skills/${created.body._id}`);
       expect(del.status).toBe(403);
     });
   });

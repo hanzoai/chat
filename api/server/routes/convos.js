@@ -186,7 +186,7 @@ router.post('/archive', validateConvoAccess, async (req, res) => {
     const dbResponse = await saveConvo(
       req,
       { conversationId, isArchived },
-      { context: `POST /api/convos/archive ${conversationId}` },
+      { context: `POST /v1/chat/convos/archive ${conversationId}` },
     );
     res.status(200).json(dbResponse);
   } catch (error) {
@@ -226,7 +226,7 @@ router.post('/update', validateConvoAccess, async (req, res) => {
     const dbResponse = await saveConvo(
       req,
       { conversationId, title: sanitizedTitle },
-      { context: `POST /api/convos/update ${conversationId}` },
+      { context: `POST /v1/chat/convos/update ${conversationId}` },
     );
     res.status(201).json(dbResponse);
   } catch (error) {

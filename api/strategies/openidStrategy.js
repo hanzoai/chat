@@ -674,7 +674,7 @@ const setupOpenIdAdmin = (openidConfig) => {
         scope: process.env.OPENID_SCOPE,
         usePKCE: isEnabled(process.env.OPENID_USE_PKCE),
         clockTolerance: process.env.OPENID_CLOCK_TOLERANCE || 300,
-        callbackURL: process.env.DOMAIN_SERVER + '/api/admin/oauth/openid/callback',
+        callbackURL: process.env.DOMAIN_SERVER + '/v1/chat/admin/oauth/openid/callback',
       },
       createOpenIDCallback(true),
     );

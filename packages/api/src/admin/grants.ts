@@ -77,7 +77,7 @@ export interface AdminGrantsDeps {
 /** Currently ROLE-only; Record/Set structure preserved for future principal-type expansion. */
 export type GrantPrincipalType = PrincipalType.ROLE;
 
-/** Creates admin grant handlers with dependency injection for the /api/admin/grants routes. */
+/** Creates admin grant handlers with dependency injection for the /v1/chat/admin/grants routes. */
 export function createAdminGrantsHandlers(deps: AdminGrantsDeps) {
   const {
     listGrants,

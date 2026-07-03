@@ -55,7 +55,7 @@ const buildGuestPrincipal = (id) => ({
 });
 
 /**
- * Builds the guest-scoped `/api/user` response: the ephemeral principal only.
+ * Builds the guest-scoped `/v1/chat/user` response: the ephemeral principal only.
  * Mirrors the safe-field shape the client expects (no password/totp/email/db id).
  *
  * @param {{ id: string }} principal

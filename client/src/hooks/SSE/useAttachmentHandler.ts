@@ -21,7 +21,7 @@ export default function useAttachmentHandler(queryClient?: QueryClient) {
       queryClient &&
       fileData?.file_id &&
       fileData?.filepath &&
-      !fileData.filepath.includes('/api/files')
+      !fileData.filepath.includes('/v1/chat/files')
     ) {
       queryClient.setQueryData([QueryKeys.files], (oldData: TFile[] | undefined) => {
         if (!oldData) {

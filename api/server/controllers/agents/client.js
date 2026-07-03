@@ -940,7 +940,7 @@ class AgentClient extends BaseClient {
         }
 
         /** Skip token spending if aborted - the abort handler (abortMiddleware.js) handles it
-        This prevents double-spending when user aborts via `/api/agents/chat/abort` */
+        This prevents double-spending when user aborts via `/v1/chat/agents/chat/abort` */
         const wasAborted = abortController?.signal?.aborted;
         if (!wasAborted) {
           await this.recordCollectedUsage({

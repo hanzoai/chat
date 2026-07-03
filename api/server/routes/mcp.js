@@ -47,7 +47,7 @@ const { getLogStores } = require('~/cache');
 
 const router = Router();
 
-const OAUTH_CSRF_COOKIE_PATH = '/api/mcp';
+const OAUTH_CSRF_COOKIE_PATH = '/v1/chat/mcp';
 
 /**
  * Get all MCP tools available to the user
@@ -677,7 +677,7 @@ const checkMCPCreate = generateCheckAccess({
 
 /**
  * Get list of accessible MCP servers
- * @route GET /api/mcp/servers
+ * @route GET /v1/chat/mcp/servers
  * @param {Object} req.query - Query parameters for pagination and search
  * @param {number} [req.query.limit] - Number of results per page
  * @param {string} [req.query.after] - Pagination cursor
@@ -688,7 +688,7 @@ router.get('/servers', requireJwtAuth, checkMCPUsePermissions, getMCPServersList
 
 /**
  * Create a new MCP server
- * @route POST /api/mcp/servers
+ * @route POST /v1/chat/mcp/servers
  * @param {MCPServerCreateParams} req.body - The MCP server creation parameters.
  * @returns {MCPServer} 201 - Success response - application/json
  */
@@ -696,7 +696,7 @@ router.post('/servers', requireJwtAuth, checkMCPCreate, createMCPServerControlle
 
 /**
  * Get single MCP server by ID
- * @route GET /api/mcp/servers/:serverName
+ * @route GET /v1/chat/mcp/servers/:serverName
  * @param {string} req.params.serverName - MCP server identifier.
  * @returns {MCPServer} 200 - Success response - application/json
  */
@@ -713,7 +713,7 @@ router.get(
 
 /**
  * Update MCP server
- * @route PATCH /api/mcp/servers/:serverName
+ * @route PATCH /v1/chat/mcp/servers/:serverName
  * @param {string} req.params.serverName - MCP server identifier.
  * @param {MCPServerUpdateParams} req.body - The MCP server update parameters.
  * @returns {MCPServer} 200 - Success response - application/json
@@ -731,7 +731,7 @@ router.patch(
 
 /**
  * Delete MCP server
- * @route DELETE /api/mcp/servers/:serverName
+ * @route DELETE /v1/chat/mcp/servers/:serverName
  * @param {string} req.params.serverName - MCP server identifier.
  * @returns {Object} 200 - Success response - application/json
  */

@@ -124,7 +124,7 @@ describe('Convos Routes', () => {
       next();
     });
 
-    app.use('/api/convos', convosRouter);
+    app.use('/v1/chat/convos', convosRouter);
   });
 
   beforeEach(() => {
@@ -145,7 +145,7 @@ describe('Convos Routes', () => {
         deletedCount: 3,
       });
 
-      const response = await request(app).delete('/api/convos/all');
+      const response = await request(app).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(201);
       expect(response.body).toEqual(mockDbResponse);
@@ -176,7 +176,7 @@ describe('Convos Routes', () => {
         deletedCount: 0,
       });
 
-      const response = await request(app).delete('/api/convos/all');
+      const response = await request(app).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(201);
       expect(deleteAllSharedLinks).toHaveBeenCalledWith('test-user-123');
@@ -186,7 +186,7 @@ describe('Convos Routes', () => {
       const errorMessage = 'Database connection error';
       deleteConvos.mockRejectedValue(new Error(errorMessage));
 
-      const response = await request(app).delete('/api/convos/all');
+      const response = await request(app).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(500);
       expect(response.text).toBe('Error clearing conversations');
@@ -200,7 +200,7 @@ describe('Convos Routes', () => {
       deleteConvos.mockResolvedValue({ deletedCount: 5 });
       deleteToolCalls.mockRejectedValue(new Error('Tool calls deletion failed'));
 
-      const response = await request(app).delete('/api/convos/all');
+      const response = await request(app).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(500);
       expect(response.text).toBe('Error clearing conversations');
@@ -211,7 +211,7 @@ describe('Convos Routes', () => {
       deleteToolCalls.mockResolvedValue({ deletedCount: 10 });
       deleteAllSharedLinks.mockRejectedValue(new Error('Shared links deletion failed'));
 
-      const response = await request(app).delete('/api/convos/all');
+      const response = await request(app).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(500);
       expect(response.text).toBe('Error clearing conversations');
@@ -223,7 +223,7 @@ describe('Convos Routes', () => {
       deleteToolCalls.mockResolvedValue({ deletedCount: 5 });
       deleteAllSharedLinks.mockResolvedValue({ deletedCount: 2 });
 
-      let response = await request(app).delete('/api/convos/all');
+      let response = await request(app).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(201);
       expect(deleteAllSharedLinks).toHaveBeenCalledWith('test-user-123');
@@ -237,13 +237,13 @@ describe('Convos Routes', () => {
         req.user = { id: 'test-user-456' };
         next();
       });
-      app2.use('/api/convos', require('../convos'));
+      app2.use('/v1/chat/convos', require('../convos'));
 
       deleteConvos.mockResolvedValue({ deletedCount: 7 });
       deleteToolCalls.mockResolvedValue({ deletedCount: 12 });
       deleteAllSharedLinks.mockResolvedValue({ deletedCount: 4 });
 
-      response = await request(app2).delete('/api/convos/all');
+      response = await request(app2).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(201);
       expect(deleteAllSharedLinks).toHaveBeenCalledWith('test-user-456');
@@ -267,7 +267,7 @@ describe('Convos Routes', () => {
         return Promise.resolve({ deletedCount: 3 });
       });
 
-      await request(app).delete('/api/convos/all');
+      await request(app).delete('/v1/chat/convos/all');
 
       /** Verify all three functions were called */
       expect(executionOrder).toEqual(['deleteConvos', 'deleteToolCalls', 'deleteAllSharedLinks']);
@@ -286,7 +286,7 @@ describe('Convos Routes', () => {
       deleteToolCalls.mockResolvedValue(mockToolCallsDeleted);
       deleteAllSharedLinks.mockResolvedValue(mockSharedLinksDeleted);
 
-      const response = await request(app).delete('/api/convos/all');
+      const response = await request(app).delete('/v1/chat/convos/all');
 
       expect(response.status).toBe(201);
 
@@ -314,7 +314,7 @@ describe('Convos Routes', () => {
       });
 
       const response = await request(app)
-        .delete('/api/convos')
+        .delete('/v1/chat/convos')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -341,7 +341,7 @@ describe('Convos Routes', () => {
       deleteToolCalls.mockResolvedValue({ deletedCount: 0 });
 
       const response = await request(app)
-        .delete('/api/convos')
+        .delete('/v1/chat/convos')
         .send({
           arg: {
             source: 'button',
@@ -363,7 +363,7 @@ describe('Convos Routes', () => {
       });
 
       const response = await request(app)
-        .delete('/api/convos')
+        .delete('/v1/chat/convos')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -375,7 +375,7 @@ describe('Convos Routes', () => {
     });
 
     it('should return 400 when no parameters provided', async () => {
-      const response = await request(app).delete('/api/convos').send({
+      const response = await request(app).delete('/v1/chat/convos').send({
         arg: {},
       });
 
@@ -386,7 +386,7 @@ describe('Convos Routes', () => {
     });
 
     it('should return 400 when request body is empty (DoS prevention)', async () => {
-      const response = await request(app).delete('/api/convos').send({});
+      const response = await request(app).delete('/v1/chat/convos').send({});
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'no parameters provided' });
@@ -394,7 +394,7 @@ describe('Convos Routes', () => {
     });
 
     it('should return 400 when arg is null (DoS prevention)', async () => {
-      const response = await request(app).delete('/api/convos').send({ arg: null });
+      const response = await request(app).delete('/v1/chat/convos').send({ arg: null });
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'no parameters provided' });
@@ -402,7 +402,7 @@ describe('Convos Routes', () => {
     });
 
     it('should return 400 when arg is undefined (DoS prevention)', async () => {
-      const response = await request(app).delete('/api/convos').send({ arg: undefined });
+      const response = await request(app).delete('/v1/chat/convos').send({ arg: undefined });
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'no parameters provided' });
@@ -411,7 +411,7 @@ describe('Convos Routes', () => {
 
     it('should return 400 when request body is null (DoS prevention)', async () => {
       const response = await request(app)
-        .delete('/api/convos')
+        .delete('/v1/chat/convos')
         .set('Content-Type', 'application/json')
         .send('null');
 
@@ -427,7 +427,7 @@ describe('Convos Routes', () => {
       deleteConvoSharedLink.mockRejectedValue(new Error('Failed to delete shared links'));
 
       const response = await request(app)
-        .delete('/api/convos')
+        .delete('/v1/chat/convos')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -458,7 +458,7 @@ describe('Convos Routes', () => {
       });
 
       await request(app)
-        .delete('/api/convos')
+        .delete('/v1/chat/convos')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -479,7 +479,7 @@ describe('Convos Routes', () => {
       });
 
       const response = await request(app)
-        .delete('/api/convos')
+        .delete('/v1/chat/convos')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -509,7 +509,7 @@ describe('Convos Routes', () => {
       saveConvo.mockResolvedValue(mockArchivedConvo);
 
       const response = await request(app)
-        .post('/api/convos/archive')
+        .post('/v1/chat/convos/archive')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -522,7 +522,7 @@ describe('Convos Routes', () => {
       expect(saveConvo).toHaveBeenCalledWith(
         expect.objectContaining({ user: { id: 'test-user-123' } }),
         { conversationId: mockConversationId, isArchived: true },
-        { context: `POST /api/convos/archive ${mockConversationId}` },
+        { context: `POST /v1/chat/convos/archive ${mockConversationId}` },
       );
     });
 
@@ -538,7 +538,7 @@ describe('Convos Routes', () => {
       saveConvo.mockResolvedValue(mockUnarchivedConvo);
 
       const response = await request(app)
-        .post('/api/convos/archive')
+        .post('/v1/chat/convos/archive')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -551,13 +551,13 @@ describe('Convos Routes', () => {
       expect(saveConvo).toHaveBeenCalledWith(
         expect.objectContaining({ user: { id: 'test-user-123' } }),
         { conversationId: mockConversationId, isArchived: false },
-        { context: `POST /api/convos/archive ${mockConversationId}` },
+        { context: `POST /v1/chat/convos/archive ${mockConversationId}` },
       );
     });
 
     it('should return 400 when conversationId is missing', async () => {
       const response = await request(app)
-        .post('/api/convos/archive')
+        .post('/v1/chat/convos/archive')
         .send({
           arg: {
             isArchived: true,
@@ -571,7 +571,7 @@ describe('Convos Routes', () => {
 
     it('should return 400 when isArchived is not a boolean', async () => {
       const response = await request(app)
-        .post('/api/convos/archive')
+        .post('/v1/chat/convos/archive')
         .send({
           arg: {
             conversationId: 'conv-123',
@@ -586,7 +586,7 @@ describe('Convos Routes', () => {
 
     it('should return 400 when isArchived is undefined', async () => {
       const response = await request(app)
-        .post('/api/convos/archive')
+        .post('/v1/chat/convos/archive')
         .send({
           arg: {
             conversationId: 'conv-123',
@@ -603,7 +603,7 @@ describe('Convos Routes', () => {
       saveConvo.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
-        .post('/api/convos/archive')
+        .post('/v1/chat/convos/archive')
         .send({
           arg: {
             conversationId: mockConversationId,
@@ -619,7 +619,7 @@ describe('Convos Routes', () => {
     });
 
     it('should handle empty arg object', async () => {
-      const response = await request(app).post('/api/convos/archive').send({
+      const response = await request(app).post('/v1/chat/convos/archive').send({
         arg: {},
       });
 

@@ -46,8 +46,8 @@ describe('expired file sweep helpers', () => {
     expect(loadAppConfig).toHaveBeenCalledTimes(1);
     expect(processDeleteRequest).toHaveBeenCalledWith({
       req: expect.objectContaining({
-        baseUrl: '/api/assistants/v3',
-        originalUrl: '/api/assistants/v3/files',
+        baseUrl: '/v1/chat/assistants/v3',
+        originalUrl: '/v1/chat/assistants/v3/files',
         body: { endpoint: EModelEndpoint.assistants, version: '3' },
         user: { id: 'user-123', tenantId: 'tenant-a' },
       }),

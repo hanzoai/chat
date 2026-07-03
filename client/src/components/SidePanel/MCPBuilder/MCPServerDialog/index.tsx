@@ -103,7 +103,7 @@ export default function MCPServerDialog({
     !permissionsLoading;
 
   const redirectUri = createdServerId
-    ? `${window.location.origin}/api/mcp/${createdServerId}/oauth/callback`
+    ? `${window.location.origin}/v1/chat/mcp/${createdServerId}/oauth/callback`
     : '';
 
   const copyLink = useCopyToClipboard({ text: redirectUri });

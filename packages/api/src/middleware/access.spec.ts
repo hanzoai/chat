@@ -33,7 +33,7 @@ describe('access middleware', () => {
         provider: 'local',
       } as IUser,
       body: {},
-      originalUrl: '/api/test',
+      originalUrl: '/v1/chat/test',
       method: 'POST',
     } as Partial<Request>;
 
@@ -67,7 +67,7 @@ describe('access middleware', () => {
 
     it('should return false when URL does not include agents endpoint', () => {
       mockReq.body = { endpoint: 'gpt-4' };
-      mockReq.originalUrl = '/api/messages';
+      mockReq.originalUrl = '/v1/chat/messages';
       expect(skipAgentCheck(mockReq as Request)).toBe(false);
     });
 

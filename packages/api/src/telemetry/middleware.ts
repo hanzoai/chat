@@ -31,7 +31,7 @@ function isHealthPath(req: ServerRequest): boolean {
 }
 
 function isApiPath(req: ServerRequest): boolean {
-  return req.path === '/api' || req.path.startsWith('/api/');
+  return req.path === '/v1/chat' || req.path.startsWith('/v1/chat/');
 }
 
 function getRoutePath(req: ServerRequest): string {
@@ -45,7 +45,7 @@ function getRoutePath(req: ServerRequest): string {
   }
 
   if (isApiPath(req)) {
-    return '/api/*';
+    return '/v1/chat/*';
   }
 
   return 'spa_fallback';
