@@ -414,6 +414,44 @@ const setAuthTokens = async (userId, res, _session = null) => {
 };
 
 /**
+ * @function persistOpenIDTokensToSession
+ * Persist the OpenID tokenset material an on-behalf-of downstream call needs
+ * (e.g. running the caller's canonical Hanzo Cloud `/v1/agents`) into the
+ * server-side express-session — and ONLY there, never a browser cookie.
+ *
+ * This is DELIBERATELY decoupled from the token-refresh strategy. It runs on
+ * EVERY OpenID login regardless of `OPENID_REUSE_TOKENS`; that flag alone still
+ * governs whether `/api/auth/refresh` performs an OIDC refresh-grant. Because it
+ * writes only server-side session state (no `token_provider`, `refreshToken`, or
+ * other auth cookie), it cannot alter the browser-facing login/refresh cookies —
+ * a REUSE-disabled login stays byte-identical.
+ *
+ * @param {Object} req - request carrying the express-session
+ * @param {import('openid-client').TokenEndpointResponse & Partial<import('openid-client').TokenEndpointResponseHelpers>} tokenset
+ * @param {string} [existingRefreshToken] - fallback when the tokenset omits a refresh_token
+ * @returns {boolean} true if persisted; false when no session (or tokenset) was available
+ */
+const persistOpenIDTokensToSession = (req, tokenset, existingRefreshToken) => {
+  if (!req?.session) {
+    logger.warn(
+      '[persistOpenIDTokensToSession] No session available; on-behalf-of tokens not stored',
+    );
+    return false;
+  }
+  if (!tokenset) {
+    return false;
+  }
+  const expiryInMilliseconds = math(process.env.REFRESH_TOKEN_EXPIRY, DEFAULT_REFRESH_TOKEN_EXPIRY);
+  req.session.openidTokens = {
+    accessToken: tokenset.access_token,
+    idToken: tokenset.id_token,
+    refreshToken: tokenset.refresh_token || existingRefreshToken,
+    expiresAt: Date.now() + expiryInMilliseconds,
+  };
+  return true;
+};
+
+/**
  * @function setOpenIDAuthTokens
  * Set OpenID Authentication Tokens
  * Stores tokens server-side in express-session to avoid large cookie sizes
@@ -478,15 +516,8 @@ const setOpenIDAuthTokens = (tokenset, req, res, userId, existingRefreshToken) =
       sameSite: 'lax',
     });
 
-    /** Store tokens server-side in session to avoid large cookies */
-    if (req.session) {
-      req.session.openidTokens = {
-        accessToken: tokenset.access_token,
-        idToken: tokenset.id_token,
-        refreshToken: refreshToken,
-        expiresAt: expirationDate.getTime(),
-      };
-    } else {
+    /** Store tokens server-side in session to avoid large cookies (one writer). */
+    if (!persistOpenIDTokensToSession(req, tokenset, refreshToken)) {
       logger.warn('[setOpenIDAuthTokens] No session available, falling back to cookies');
       res.cookie('openid_access_token', tokenset.access_token, {
         expires: expirationDate,
@@ -596,6 +627,7 @@ module.exports = {
   setAuthTokens,
   resetPassword,
   setOpenIDAuthTokens,
+  persistOpenIDTokensToSession,
   requestPasswordReset,
   resendVerificationEmail,
 };
