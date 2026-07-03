@@ -145,20 +145,69 @@ class CommerceClient {
    * @param {number} usage.completionTokens
    * @param {number} usage.amountCents - Cost in cents
    */
-  recordUsage({ userId, model, promptTokens, completionTokens, amountCents }) {
+  recordUsage({
+    subject,
+    userId,
+    model,
+    provider,
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    amountMicros,
+    amountCents,
+    requestId,
+  }) {
+    // The billing account is the subject (billingSubject(owner,email)) — NOT the
+    // Mongo user id — so the debit lands on the SAME account the read gate + the
+    // gateway key. `_namespace` (its org prefix) rides along so the flush can
+    // stamp X-Hanzo-Org and scope the write to the right tenant.
+    const user = (subject || userId || '').toString();
     this._usageQueue.push({
-      user: userId,
+      _namespace: this._namespaceOf(user),
+      user,
       model,
+      provider,
       promptTokens: promptTokens || 0,
       completionTokens: completionTokens || 0,
+      totalTokens: totalTokens || (promptTokens || 0) + (completionTokens || 0),
+      // amountMicros (micro-USD, 1e6=$1) is lossless; commerce rounds to nearest
+      // cent + records the exact micros. amount (cents) is the back-compat field.
+      amountMicros: amountMicros || 0,
       amount: amountCents || 0,
       currency: 'usd',
+      // Stable per-spend idempotency key (the local transaction _id): a retry /
+      // stream-abort MUST NOT double-debit. Commerce dedupes on this.
+      requestId: requestId || '',
       status: 'completed',
     });
 
     // Flush immediately if queue is large
     if (this._usageQueue.length >= 50) {
       this._flushUsageQueue().catch(() => {});
+    }
+  }
+
+  /**
+   * Credit a billing subject (deposit / top-up / refill). Posts to
+   * /v1/billing/deposit scoped to the subject's org namespace. Fire-and-forget
+   * (fails open — local MongoDB remains the fallback until cutover).
+   *
+   * @param {string} subject
+   * @param {number} amountCents
+   * @param {string} [tag] - e.g. "auto-refill", "start-balance"
+   * @returns {Promise<Object|null>}
+   */
+  async deposit(subject, amountCents, tag) {
+    try {
+      return await this._request(
+        'POST',
+        '/v1/billing/deposit',
+        { user: subject, amount: amountCents, currency: 'usd', tag: tag || 'deposit' },
+        this._namespaceOf(subject),
+      );
+    } catch (err) {
+      logger.error('[CommerceClient] deposit failed', err);
+      return null;
     }
   }
 
@@ -277,8 +326,14 @@ class CommerceClient {
     const batch = this._usageQueue.splice(0, 100);
 
     for (const usage of batch) {
+      // Strip the transport-only namespace and post the debit scoped to the
+      // subject's org (X-Hanzo-Org) — matching the read gate. Previously the
+      // POST omitted the namespace, so a debit would hit the service token's
+      // default org, not the user's, and never net against the balance the
+      // gate reads.
+      const { _namespace, ...body } = usage;
       try {
-        await this._request('POST', '/v1/billing/usage', usage);
+        await this._request('POST', '/v1/billing/usage', body, _namespace);
       } catch (err) {
         logger.warn('[CommerceClient] Usage recording failed', {
           user: usage.user,
