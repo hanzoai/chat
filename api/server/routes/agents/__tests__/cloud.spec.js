@@ -92,11 +92,31 @@ describe('cloud agents proxy route', () => {
       expect(res.body).toEqual({ agents: [{ name: 'researcher' }], enabled: true });
     });
 
-    it('falls back to access_token when no id_token', async () => {
+    it('falls back to a principal-bound access_token JWT when there is no id_token', async () => {
       mockClient.list.mockResolvedValue({ agents: [] });
-      const app = buildApp({ openidTokens: { accessToken: 'ONLY_ACC' } });
+      // hanzo.id issues JWT access tokens too; the fallback stays principal-bound.
+      const accJwt = mintIdToken();
+      const app = buildApp({ openidTokens: { accessToken: accJwt } });
       await request(app).get('/api/agents/cloud');
-      expect(mockClient.list).toHaveBeenCalledWith('ONLY_ACC');
+      expect(mockClient.list).toHaveBeenCalledWith(accJwt);
+    });
+
+    it('401s (never forwards) an opaque access_token that cannot be principal-bound', async () => {
+      // A non-JWT access_token has no `sub` to bind against — fail-secure, do not
+      // forward. (This is the path a selective `openid_access_token` cookie
+      // injection would take; the binding requirement closes it.)
+      const app = buildApp({ openidTokens: { accessToken: 'OPAQUE_NO_BINDING' } });
+      const res = await request(app).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
+    });
+
+    it('401s (never forwards) an access_token JWT that names a different principal', async () => {
+      const foreignAcc = mintIdToken({ sub: 'sub-someone-else' });
+      const app = buildApp({ openidTokens: { accessToken: foreignAcc } });
+      const res = await request(app).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
     });
 
     it('reads the httpOnly openid_id_token cookie when the session is empty', async () => {
@@ -146,6 +166,27 @@ describe('cloud agents proxy route', () => {
     it('401s for a principal that carries no provider', async () => {
       mockPrincipal = { id: 'u_unknown' };
       const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
+    });
+
+    it('401s for an openid principal with no openidId to bind against (no fail-open)', async () => {
+      // provider==='openid' but the record has no openidId: the binding cannot be
+      // asserted, so NO token is forwarded — even one whose sub would have matched
+      // a normal user. Fail-secure closes the null-binding gap.
+      mockPrincipal = { id: 'u_openid_no_sub', provider: 'openid' };
+      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      expect(res.status).toBe(401);
+      expect(mockClient.list).not.toHaveBeenCalled();
+    });
+
+    it('401s when a foreign id_token is injected via cookie with an empty session (confused-deputy denied)', async () => {
+      // Attacker pairs their own openid app-token (req.user) with a victim's
+      // id_token in the openid_id_token cookie and an empty session. The sub
+      // binding rejects it — the forwarded principal can only ever be req.user.
+      const foreign = mintIdToken({ sub: 'victim-sub-xyz' });
+      const app = buildApp({}, `openid_id_token=${foreign}`);
+      const res = await request(app).get('/api/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });

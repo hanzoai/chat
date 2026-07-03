@@ -21,32 +21,40 @@ const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/Cloud
 const router = express.Router();
 
 /**
- * Is this id_token safe to forward on-behalf-of `user`? Two honest gates:
- *  - Expiry: never forward a token past its own `exp` (~1h for a hanzo.id
- *    id_token). We do NOT fabricate a live session; an expired token yields an
- *    honest 401 here instead of an opaque upstream rejection.
- *  - Principal binding: the token must NAME the authenticated user
- *    (`sub === req.user.openidId`). This makes "forwarded principal == req.user"
- *    true by construction, closing any credential-mixing confused-deputy gap
- *    (a stolen session cookie paired with a different user's JWT).
+ * Is this token safe to forward on-behalf-of `user`? Fail-secure gates, ALL
+ * mandatory — the function only ever REMOVES a token from consideration, never
+ * admits one:
+ *  - Decodable JWT: an opaque/garbage token cannot be principal-bound, so it is
+ *    never forwarded. hanzo.id — the only cloud IdP — always issues JWTs.
+ *  - Principal binding (MANDATORY): the token must NAME the authenticated user
+ *    (`sub === user.openidId`). If we cannot ASSERT the binding — no `openidId`
+ *    on the principal, no `sub` on the token, or a mismatch — we do NOT forward.
+ *    This keeps "forwarded principal == req.user" true by construction, closing
+ *    the credential-mixing confused deputy (a session/cookie carrying a
+ *    different user's token) with no fail-open when binding data is absent.
+ *  - Expiry: never forward a token past its own `exp`.
  *
  * Decode-only (no signature verification): cloud performs the authoritative
- * JWKS + claim validation, so a forged token cannot gain privilege there; this
- * check only ever REMOVES a token from consideration, never admits one.
+ * JWKS + claim validation over the SAME claims, so it runs as exactly this
+ * `sub`. A forged/tampered token gains nothing here — changing `sub` fails the
+ * binding; an intact `sub` is rejected by cloud on signature.
  *
- * @param {string} idToken
+ * @param {string|undefined} token
  * @param {{openidId?: string}} user
  * @returns {boolean}
  */
-function isForwardableIdToken(idToken, user) {
-  const claims = jwt.decode(idToken);
+function isForwardableToken(token, user) {
+  if (!token || !user?.openidId) {
+    return false;
+  }
+  const claims = jwt.decode(token);
   if (!claims || typeof claims !== 'object') {
     return false;
   }
-  if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
+  if (claims.sub !== user.openidId) {
     return false;
   }
-  if (user?.openidId && claims.sub && claims.sub !== user.openidId) {
+  if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
     return false;
   }
   return true;
@@ -56,17 +64,15 @@ function isForwardableIdToken(idToken, user) {
  * Resolve the caller's hanzo.id bearer for the on-behalf-of call to cloud.
  *
  * Keyed off the VALIDATED principal (`req.user.provider === 'openid'` — the
- * authoritative user record loaded by requireJwtAuth), NOT the mutable
- * `token_provider` cookie, which only selects the refresh strategy. Only a
- * hanzo.id principal can carry a hanzo.id token; a local user never does, so a
- * stale OpenID session left in the browser can never be forwarded under a local
- * identity — the confused deputy is denied at the identity layer.
+ * authoritative DB user loaded by requireJwtAuth), NOT any cookie. A local user
+ * never carries a hanzo.id token, so a stale OpenID session left in the browser
+ * can never be forwarded under a local identity — the confused deputy is denied
+ * at the identity layer.
  *
- * Prefers the id_token (JWKS-validated by cloud); reads the server-side session
- * first (where login persists it via persistOpenIDTokensToSession), then the
- * httpOnly cookies for the no-session fallback. Returns null — for an honest 401,
- * never a wrong-principal, expired, or fabricated call — when the caller is not an
- * OpenID principal or has no valid, matching id_token.
+ * EVERY candidate — session first, then the httpOnly no-session cookie fallback;
+ * id_token preferred, access_token second — must pass `isForwardableToken`:
+ * principal-bound to req.user and unexpired. Returns null — for an honest 401,
+ * never a wrong-principal, expired, unbound, or fabricated call — otherwise.
  *
  * @param {import('express').Request} req
  * @returns {string|null}
@@ -78,18 +84,21 @@ function getUserCloudBearer(req) {
 
   const parsed = req.headers.cookie ? cookies.parse(req.headers.cookie) : {};
   const session = req.session?.openidTokens;
-  const idToken = session?.idToken || parsed.openid_id_token;
-  const accessToken = session?.accessToken || parsed.openid_access_token;
 
-  if (idToken) {
-    return isForwardableIdToken(idToken, req.user) ? idToken : null;
+  const idToken = session?.idToken || parsed.openid_id_token;
+  if (isForwardableToken(idToken, req.user)) {
+    return idToken;
   }
   /**
-   * Opaque access_token fallback (providers that do not issue an id_token). It
-   * cannot be introspected locally; the OpenID-principal gate above still bounds
-   * it. hanzo.id always issues an id_token, so this is not the hanzo.id path.
+   * access_token fallback (rare: the session/cookie carries no id_token).
+   * hanzo.id issues JWT access tokens too, so this stays principal-bound; an
+   * opaque or foreign access_token fails the gate and is never forwarded.
    */
-  return accessToken || null;
+  const accessToken = session?.accessToken || parsed.openid_access_token;
+  if (isForwardableToken(accessToken, req.user)) {
+    return accessToken;
+  }
+  return null;
 }
 
 router.use(requireJwtAuth);
