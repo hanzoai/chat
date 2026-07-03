@@ -20,6 +20,7 @@ import {
   sortDocs,
   equalitySeed,
   objectId,
+  coerceId,
   type Doc,
   type Filter,
   type Update,
@@ -262,20 +263,14 @@ export class DocModel {
         if (!this.anchorFields.has(key)) {
           continue;
         }
-        const isScalar =
-          cond == null || typeof cond !== 'object' || cond instanceof Date;
-        if (isScalar && cond != null) {
+        const c = coerceId(cond); // ObjectId -> hex string, so it can anchor
+        const isScalar = c == null || typeof c !== 'object' || c instanceof Date;
+        if (isScalar && c != null) {
           clauses.push(`json_extract(doc, '$.${key}') = ?`);
           // node:sqlite binds only null/number/bigint/string/blob. json_extract
           // returns 1/0 for JSON booleans, so map booleans; dates -> ISO.
           const param =
-            cond instanceof Date
-              ? cond.toISOString()
-              : typeof cond === 'boolean'
-                ? cond
-                  ? 1
-                  : 0
-                : cond;
+            c instanceof Date ? c.toISOString() : typeof c === 'boolean' ? (c ? 1 : 0) : c;
           params.push(param);
         }
       }
@@ -575,6 +570,12 @@ export class DocModel {
 
   async countDocuments(filter: Filter = {}): Promise<number> {
     return this.candidates(filter).length;
+  }
+
+  /** Mongoose `exists`: returns `{ _id }` of the first match, else null. */
+  async exists(filter: Filter = {}): Promise<{ _id: string } | null> {
+    const doc = this.candidates(filter)[0];
+    return doc ? { _id: doc._id as string } : null;
   }
 
   async distinct(field: string, filter: Filter = {}): Promise<unknown[]> {
