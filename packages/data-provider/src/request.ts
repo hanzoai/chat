@@ -102,6 +102,27 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
   failedQueue = [];
 };
 
+/**
+ * A guest (anonymous preview) session carries a `{ guest: true }` JWT that is
+ * only valid on the chat-completion route; every other endpoint answers 401 by
+ * design. Those expected 401s must NOT hard-redirect the guest to /login — that
+ * wipes the guest session and loops. Derive guest-ness from the active bearer so
+ * the interceptor leaves guests on the chat surface.
+ */
+function isGuestSession(): boolean {
+  try {
+    const auth = axios.defaults.headers.common['Authorization'];
+    if (typeof auth !== 'string' || !auth.startsWith('Bearer ')) {
+      return false;
+    }
+    const b64 = auth.slice(7).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=')));
+    return payload?.guest === true;
+  } catch {
+    return false;
+  }
+}
+
 // Auto-retry on 401 (access token expired): refresh once, then replay.
 if (typeof window !== 'undefined') {
   axios.interceptors.response.use(
@@ -154,7 +175,7 @@ if (typeof window !== 'undefined') {
             console.log(
               `Refresh token failed from shared link, attempting request to ${originalRequest.url}`,
             );
-          } else {
+          } else if (!isGuestSession()) {
             window.location.href = endpoints.loginPage();
           }
         } catch (err) {
