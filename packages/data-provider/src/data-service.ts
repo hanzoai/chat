@@ -1087,7 +1087,7 @@ export function getGraphApiToken(params: q.GraphTokenParams): Promise<q.GraphTok
 }
 
 export function getDomainServerBaseUrl(): string {
-  return `${endpoints.apiBaseUrl()}/api`;
+  return `${endpoints.apiBaseUrl()}/v1/chat`;
 }
 
 /* Active Jobs */

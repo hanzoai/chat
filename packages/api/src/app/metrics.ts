@@ -91,7 +91,7 @@ const normalizeUnknownPath = (path: string): string => {
     return path;
   }
 
-  if (path === '/api' || path.startsWith('/v1/chat/')) {
+  if (path === '/v1/chat' || path.startsWith('/v1/chat/')) {
     return '/v1/chat/#path';
   }
 
