@@ -207,7 +207,7 @@ interface ServerRequest extends Request {
 }
 
 /**
- * `POST /api/skills/import`
+ * `POST /v1/chat/skills/import`
  *
  * Accepts a single multipart file (.md, .zip, or .skill).
  * Creates the skill, then processes additional files individually.

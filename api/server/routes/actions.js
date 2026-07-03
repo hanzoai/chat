@@ -19,7 +19,7 @@ const { getLogStores } = require('~/cache');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
-const OAUTH_CSRF_COOKIE_PATH = '/api/actions';
+const OAUTH_CSRF_COOKIE_PATH = '/v1/chat/actions';
 
 /**
  * Sets a CSRF cookie binding the action OAuth flow to the current browser session.

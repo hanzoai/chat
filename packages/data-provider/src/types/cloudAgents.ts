@@ -1,6 +1,6 @@
 /**
  * Types for the canonical Hanzo Cloud agents surface (`/v1/agents`), reached
- * through the chat backend proxy at `/api/agents/cloud`. These mirror cloud's
+ * through the chat backend proxy at `/v1/chat/agents/cloud`. These mirror cloud's
  * published response shapes (github.com/hanzoai/cloud, clients/agents/agents.go):
  * agentView, agentDetail, runView, RunResult.
  */

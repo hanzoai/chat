@@ -5,7 +5,7 @@
  *
  * Proves:
  *  - a guest token on a JWT-only route returns a clean 401 (NOT 500/CastError),
- *  - /api/endpoints, /api/user, /api/convos return guest-scoped data,
+ *  - /v1/chat/endpoints, /v1/chat/user, /v1/chat/convos return guest-scoped data,
  *  - a non-bootstrap protected route still 401s for a guest.
  */
 
@@ -52,19 +52,19 @@ const buildApp = () => {
   passport.use(jwtLogin());
 
   // Bootstrap (guest-aware) routes.
-  app.get('/api/endpoints', requireGuestOrJwtAuth, (req, res) => {
+  app.get('/v1/chat/endpoints', requireGuestOrJwtAuth, (req, res) => {
     if (req.user?.guest === true) {
       return res.send(JSON.stringify(buildGuestEndpointsConfig()));
     }
     return res.send(JSON.stringify({ openAI: {}, Hanzo: {} }));
   });
-  app.get('/api/user', requireGuestOrJwtAuth, (req, res) => {
+  app.get('/v1/chat/user', requireGuestOrJwtAuth, (req, res) => {
     if (req.user?.guest === true) {
       return res.status(200).send(buildGuestUser(req.user));
     }
     return res.status(200).send(req.user);
   });
-  app.get('/api/convos', requireGuestOrJwtAuth, (req, res) => {
+  app.get('/v1/chat/convos', requireGuestOrJwtAuth, (req, res) => {
     if (req.user?.guest === true) {
       return res.status(200).json({ conversations: [], nextCursor: null });
     }
@@ -72,7 +72,7 @@ const buildApp = () => {
   });
 
   // Non-bootstrap protected route (JWT-only): must reject guests.
-  app.get('/api/prompts', requireJwtAuth, (req, res) => res.status(200).json({ ok: true }));
+  app.get('/v1/chat/prompts', requireJwtAuth, (req, res) => res.status(200).json({ ok: true }));
 
   return app;
 };
@@ -91,9 +91,9 @@ describe('guest bootstrap auth chain (integration)', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('GET /api/endpoints → 200 with ONLY the guest endpoint', async () => {
+  it('GET /v1/chat/endpoints → 200 with ONLY the guest endpoint', async () => {
     const res = await request(app)
-      .get('/api/endpoints')
+      .get('/v1/chat/endpoints')
       .set('Authorization', `Bearer ${guestToken}`);
     expect(res.status).toBe(200);
     const body = JSON.parse(res.text);
@@ -101,36 +101,36 @@ describe('guest bootstrap auth chain (integration)', () => {
     expect(getUserById).not.toHaveBeenCalled();
   });
 
-  it('GET /api/user → 200 ephemeral guest principal (no email, no DB lookup)', async () => {
-    const res = await request(app).get('/api/user').set('Authorization', `Bearer ${guestToken}`);
+  it('GET /v1/chat/user → 200 ephemeral guest principal (no email, no DB lookup)', async () => {
+    const res = await request(app).get('/v1/chat/user').set('Authorization', `Bearer ${guestToken}`);
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ id: 'guest_abc-123', role: 'GUEST', guest: true });
     expect(res.body).not.toHaveProperty('email');
     expect(getUserById).not.toHaveBeenCalled();
   });
 
-  it('GET /api/convos → 200 empty list for a guest', async () => {
-    const res = await request(app).get('/api/convos').set('Authorization', `Bearer ${guestToken}`);
+  it('GET /v1/chat/convos → 200 empty list for a guest', async () => {
+    const res = await request(app).get('/v1/chat/convos').set('Authorization', `Bearer ${guestToken}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ conversations: [], nextCursor: null });
   });
 
-  it('GET /api/prompts (JWT-only) → clean 401 for a guest, NEVER 500/CastError', async () => {
-    const res = await request(app).get('/api/prompts').set('Authorization', `Bearer ${guestToken}`);
+  it('GET /v1/chat/prompts (JWT-only) → clean 401 for a guest, NEVER 500/CastError', async () => {
+    const res = await request(app).get('/v1/chat/prompts').set('Authorization', `Bearer ${guestToken}`);
     expect(res.status).toBe(401);
     // The guest id must never reach getUserById (that is what caused the CastError → 500).
     expect(getUserById).not.toHaveBeenCalled();
   });
 
-  it('GET /api/prompts → clean 401 for a real-but-missing user (no 500)', async () => {
+  it('GET /v1/chat/prompts → clean 401 for a real-but-missing user (no 500)', async () => {
     const realToken = jwt.sign({ id: '64b2f0c0c0c0c0c0c0c0c0c0' }, JWT_SECRET);
-    const res = await request(app).get('/api/prompts').set('Authorization', `Bearer ${realToken}`);
+    const res = await request(app).get('/v1/chat/prompts').set('Authorization', `Bearer ${realToken}`);
     expect(res.status).toBe(401);
     expect(getUserById).toHaveBeenCalledTimes(1);
   });
 
-  it('GET /api/prompts → 401 with no token (fail closed)', async () => {
-    const res = await request(app).get('/api/prompts');
+  it('GET /v1/chat/prompts → 401 with no token (fail closed)', async () => {
+    const res = await request(app).get('/v1/chat/prompts');
     expect(res.status).toBe(401);
   });
 });

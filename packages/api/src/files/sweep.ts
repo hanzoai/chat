@@ -157,7 +157,7 @@ export function createExpiredFileSweepRequest({
   const source = file.source ?? FileSources.local;
   const endpoint = getExpiredFileEndpoint(source);
   const version = getExpiredFileAssistantVersion({ appConfig, source, endpoint });
-  const baseUrl = `/api/assistants/v${version}`;
+  const baseUrl = `/v1/chat/assistants/v${version}`;
 
   return {
     baseUrl,

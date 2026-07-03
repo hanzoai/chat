@@ -46,7 +46,7 @@ const buildEndpointOption = require('./buildEndpointOption');
 const createReq = (body, config = {}) => ({
   body,
   config,
-  baseUrl: '/api/chat',
+  baseUrl: '/v1/chat/chat',
 });
 
 const createRes = () => ({

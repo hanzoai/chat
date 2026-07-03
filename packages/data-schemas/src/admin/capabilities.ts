@@ -151,7 +151,7 @@ export const ResourceCapabilityMap: Record<ResourceType, SystemCapability> = {
  *
  * TODO: Section-level config capabilities are scaffolded but not yet active.
  * To activate delegated config management:
- *  1. Expose POST/DELETE /api/admin/grants endpoints (wiring grantCapability/revokeCapability)
+ *  1. Expose POST/DELETE /v1/chat/admin/grants endpoints (wiring grantCapability/revokeCapability)
  *  2. Seed section-specific grants for delegated admin roles via those endpoints
  *  3. Guard config write handlers with hasConfigCapability(user, section)
  */

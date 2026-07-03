@@ -377,8 +377,8 @@ describe('GenerationJobManager Integration Tests', () => {
   describe('Cross-Replica Support (Redis)', () => {
     /**
      * Problem: In k8s with Redis and multiple replicas, when a user sends a message:
-     * 1. POST /api/agents/chat hits Replica A, creates job
-     * 2. GET /api/agents/chat/stream/:streamId hits Replica B
+     * 1. POST /v1/chat/agents/chat hits Replica A, creates job
+     * 2. GET /v1/chat/agents/chat/stream/:streamId hits Replica B
      * 3. Replica B calls getJob() which returned undefined because runtimeState
      *    was only in Replica A's memory
      * 4. Stream endpoint returns 404

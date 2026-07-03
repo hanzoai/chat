@@ -94,7 +94,7 @@ export type TSkillWarning = {
 };
 
 /**
- * API shape for a full skill (returned by GET `/api/skills/:id`).
+ * API shape for a full skill (returned by GET `/v1/chat/skills/:id`).
  *
  * Field semantics:
  * - `name` is the machine-readable kebab-case identifier Claude sees in its
@@ -172,7 +172,7 @@ export type TSkill = {
 /**
  * Summary shape used in list endpoints — omits `body` and `frontmatter` to keep
  * list payloads small. Callers that need the full body/frontmatter must fetch
- * the detail via `GET /api/skills/:id`.
+ * the detail via `GET /v1/chat/skills/:id`.
  */
 export type TSkillSummary = Omit<TSkill, 'body' | 'frontmatter'>;
 
@@ -204,7 +204,7 @@ export type TSkillFile = {
   updatedAt: string;
 };
 
-/** Request body for POST `/api/skills`. */
+/** Request body for POST `/v1/chat/skills`. */
 export type TCreateSkill = {
   name: string;
   displayTitle?: string;
@@ -216,7 +216,7 @@ export type TCreateSkill = {
   alwaysApply?: boolean;
 };
 
-/** Partial payload for PATCH `/api/skills/:id` — all fields optional. */
+/** Partial payload for PATCH `/v1/chat/skills/:id` — all fields optional. */
 export type TUpdateSkillPayload = {
   name?: string;
   displayTitle?: string;
@@ -243,7 +243,7 @@ export type TSkillConflictResponse = {
   current: TSkill;
 };
 
-/** Query params for GET `/api/skills` (list). */
+/** Query params for GET `/v1/chat/skills` (list). */
 export type TSkillListRequest = {
   category?: string;
   search?: string;
@@ -258,19 +258,19 @@ export type TSkillListResponse = {
   after: string | null;
 };
 
-/** Response from DELETE `/api/skills/:id`. */
+/** Response from DELETE `/v1/chat/skills/:id`. */
 export type TDeleteSkillResponse = {
   id: string;
   deleted: true;
 };
 
-/** Response from GET `/api/skills/:id/files`. */
+/** Response from GET `/v1/chat/skills/:id/files`. */
 export type TListSkillFilesResponse = {
   files: TSkillFile[];
 };
 
 /**
- * Upload body for POST `/api/skills/:id/files`.
+ * Upload body for POST `/v1/chat/skills/:id/files`.
  * In phase 1 the backend responds with 501; the client contract is still defined here
  * so hooks are stable when the upload pipeline is wired up in phase 2.
  */
@@ -278,14 +278,14 @@ export type TUploadSkillFilePayload = {
   relativePath: string;
 };
 
-/** Response from DELETE `/api/skills/:id/files/:relativePath`. */
+/** Response from DELETE `/v1/chat/skills/:id/files/:relativePath`. */
 export type TDeleteSkillFileResponse = {
   skillId: string;
   relativePath: string;
   deleted: true;
 };
 
-/** Response from GET `/api/skills/:id/files/:relativePath` (JSON mode). */
+/** Response from GET `/v1/chat/skills/:id/files/:relativePath` (JSON mode). */
 export type TSkillFileContentResponse = {
   content?: string;
   mimeType: string;

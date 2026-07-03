@@ -82,7 +82,7 @@ describe('LogLink download routing', () => {
 
     render(
       <LogLink
-        href="/api/files/code/download/session-1/file-1"
+        href="/v1/chat/files/code/download/session-1/file-1"
         filename={filename}
         source={FileSources.execute_code}
       >

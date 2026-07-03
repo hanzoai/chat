@@ -52,7 +52,7 @@ export const RESOURCE_CONFIGS: Record<ResourceType, ResourceConfig> = {
     defaultViewerRoleId: AccessRoleIds.REMOTE_AGENT_VIEWER,
     defaultEditorRoleId: AccessRoleIds.REMOTE_AGENT_EDITOR,
     defaultOwnerRoleId: AccessRoleIds.REMOTE_AGENT_OWNER,
-    getResourceUrl: () => `${window.location.origin}/api/v1/responses`,
+    getResourceUrl: () => `${window.location.origin}/v1/chat/v1/responses`,
     getResourceName: (name?: string) => (name && name !== '' ? `"${name}"` : 'remote agent'),
     getShareMessage: (name?: string) =>
       name && name !== '' ? `"${name}" (API Access)` : 'remote agent access',

@@ -60,7 +60,7 @@ describe('guest bootstrap controllers', () => {
     process.env = originalEnv;
   });
 
-  describe('GET /api/endpoints', () => {
+  describe('GET /v1/chat/endpoints', () => {
     it('returns ONLY the guest endpoint, no DB/config read', async () => {
       const req = guestReq();
       const res = mockRes();
@@ -80,7 +80,7 @@ describe('guest bootstrap controllers', () => {
     });
   });
 
-  describe('GET /api/models', () => {
+  describe('GET /v1/chat/models', () => {
     it('returns ONLY the single guest model under the guest endpoint', async () => {
       const req = guestReq();
       const res = mockRes();

@@ -11,7 +11,7 @@ export default function ActionCallback({ action_id }: { action_id?: string }) {
   const { watch } = useFormContext();
   const { showToast } = useToastContext();
   const [isCopying, setIsCopying] = useState(false);
-  const callbackURL = `${window.location.protocol}//${window.location.host}/api/actions/${action_id}/oauth/callback`;
+  const callbackURL = `${window.location.protocol}//${window.location.host}/v1/chat/actions/${action_id}/oauth/callback`;
   const copyLink = useCopyToClipboard({ text: callbackURL });
 
   if (!action_id) {

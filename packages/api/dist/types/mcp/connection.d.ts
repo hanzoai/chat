@@ -62,19 +62,25 @@ export declare class MCPConnection extends EventEmitter {
     disconnect(): Promise<void>;
     fetchResources(): Promise<t.MCPResource[]>;
     fetchTools(): Promise<{
-        inputSchema: {
-            [x: string]: unknown;
-            type: "object";
-            properties?: Record<string, object> | undefined;
-            required?: string[] | undefined;
-        };
         name: string;
+        inputSchema: {
+            type: "object";
+            required?: string[] | undefined;
+            properties?: Record<string, object> | undefined;
+        };
+        _meta?: Record<string, unknown> | undefined;
+        icons?: {
+            src: string;
+            mimeType?: string | undefined;
+            sizes?: string[] | undefined;
+        }[] | undefined;
+        title?: string | undefined;
         description?: string | undefined;
         outputSchema?: {
-            [x: string]: unknown;
             type: "object";
-            properties?: Record<string, object> | undefined;
             required?: string[] | undefined;
+            properties?: Record<string, object> | undefined;
+            additionalProperties?: boolean | undefined;
         } | undefined;
         annotations?: {
             title?: string | undefined;
@@ -83,17 +89,6 @@ export declare class MCPConnection extends EventEmitter {
             idempotentHint?: boolean | undefined;
             openWorldHint?: boolean | undefined;
         } | undefined;
-        execution?: {
-            taskSupport?: "optional" | "required" | "forbidden" | undefined;
-        } | undefined;
-        _meta?: Record<string, unknown> | undefined;
-        icons?: {
-            src: string;
-            mimeType?: string | undefined;
-            sizes?: string[] | undefined;
-            theme?: "light" | "dark" | undefined;
-        }[] | undefined;
-        title?: string | undefined;
     }[]>;
     fetchPrompts(): Promise<t.MCPPrompt[]>;
     isConnected(): Promise<boolean>;

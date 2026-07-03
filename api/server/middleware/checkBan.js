@@ -26,7 +26,7 @@ const banResponse = async (req, res) => {
   const { baseUrl, originalUrl } = req;
   if (!ua.browser.name) {
     return res.status(403).json({ message });
-  } else if (baseUrl === '/api/agents' && originalUrl.startsWith('/api/agents/chat')) {
+  } else if (baseUrl === '/v1/chat/agents' && originalUrl.startsWith('/v1/chat/agents/chat')) {
     return await denyRequest(req, res, { type: ViolationTypes.BAN });
   }
 

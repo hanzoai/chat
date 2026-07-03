@@ -10,7 +10,7 @@ describe('handleJsonParseError', () => {
 
   beforeEach(() => {
     req = {
-      path: '/api/test',
+      path: '/v1/chat/test',
       method: 'POST',
       ip: '127.0.0.1',
     };
