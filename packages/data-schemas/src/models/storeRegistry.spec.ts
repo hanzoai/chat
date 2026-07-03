@@ -14,7 +14,7 @@ describe('createModels — per-domain store registry', () => {
 
   it('overrides only the listed collections with the SQLite DocModel', () => {
     process.env.CHAT_STORE_SQLITE =
-      'Conversation,Message,Preset,ConversationTag,SharedLink,Project,File,Key,PluginAuth,Banner';
+      'Conversation,Message,Preset,ConversationTag,SharedLink,Project,File,Key,PluginAuth,Banner,Config';
     const models = createModels(mongoose);
     for (const name of [
       'Conversation',
@@ -27,6 +27,7 @@ describe('createModels — per-domain store registry', () => {
       'Key',
       'PluginAuth',
       'Banner',
+      'Config',
     ] as const) {
       expect(models[name].constructor.name).toBe('DocModel');
     }
