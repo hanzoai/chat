@@ -1,4 +1,5 @@
 import type { DeleteResult, Model } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type {
   FindPluginAuthsByKeysParams,
   UpdatePluginAuthParams,
@@ -8,7 +9,7 @@ import type {
 } from '~/types';
 
 // Factory function that takes mongoose instance and returns the methods
-export function createPluginAuthMethods(mongoose: typeof import('mongoose')) {
+export function createPluginAuthMethods(handle: DataHandle) {
   /**
    * Finds a single plugin auth entry by userId and authField (and optionally pluginKey)
    */
@@ -18,7 +19,7 @@ export function createPluginAuthMethods(mongoose: typeof import('mongoose')) {
     pluginKey,
   }: FindPluginAuthParams): Promise<IPluginAuth | null> {
     try {
-      const PluginAuth: Model<IPluginAuth> = mongoose.models.PluginAuth;
+      const PluginAuth: Model<IPluginAuth> = handle.models.PluginAuth;
       return await PluginAuth.findOne({
         userId,
         authField,
@@ -43,7 +44,7 @@ export function createPluginAuthMethods(mongoose: typeof import('mongoose')) {
         return [];
       }
 
-      const PluginAuth: Model<IPluginAuth> = mongoose.models.PluginAuth;
+      const PluginAuth: Model<IPluginAuth> = handle.models.PluginAuth;
       return await PluginAuth.find({
         userId,
         pluginKey: { $in: pluginKeys },
@@ -65,7 +66,7 @@ export function createPluginAuthMethods(mongoose: typeof import('mongoose')) {
     value,
   }: UpdatePluginAuthParams): Promise<IPluginAuth> {
     try {
-      const PluginAuth: Model<IPluginAuth> = mongoose.models.PluginAuth;
+      const PluginAuth: Model<IPluginAuth> = handle.models.PluginAuth;
       const existingAuth = await PluginAuth.findOne({ userId, pluginKey, authField }).lean();
 
       if (existingAuth) {
@@ -75,13 +76,14 @@ export function createPluginAuthMethods(mongoose: typeof import('mongoose')) {
           { new: true, upsert: true },
         ).lean();
       } else {
-        const newPluginAuth = await new PluginAuth({
+        // Model.create is equivalent to `new Model(doc).save()` on mongoose and
+        // is part of the shared Model API (works on the SQLite DocModel too).
+        const newPluginAuth = await PluginAuth.create({
           userId,
           authField,
           value,
           pluginKey,
         });
-        await newPluginAuth.save();
         return newPluginAuth.toObject();
       }
     } catch (error) {
@@ -101,7 +103,7 @@ export function createPluginAuthMethods(mongoose: typeof import('mongoose')) {
     all = false,
   }: DeletePluginAuthParams): Promise<DeleteResult> {
     try {
-      const PluginAuth: Model<IPluginAuth> = mongoose.models.PluginAuth;
+      const PluginAuth: Model<IPluginAuth> = handle.models.PluginAuth;
       if (all) {
         const filter: DeletePluginAuthParams = { userId };
         if (pluginKey) {
@@ -127,7 +129,7 @@ export function createPluginAuthMethods(mongoose: typeof import('mongoose')) {
    */
   async function deleteAllUserPluginAuths(userId: string): Promise<DeleteResult> {
     try {
-      const PluginAuth: Model<IPluginAuth> = mongoose.models.PluginAuth;
+      const PluginAuth: Model<IPluginAuth> = handle.models.PluginAuth;
       return await PluginAuth.deleteMany({ userId });
     } catch (error) {
       throw new Error(

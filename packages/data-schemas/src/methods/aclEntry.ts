@@ -1,9 +1,10 @@
 import { Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import { PrincipalType, PrincipalModel } from 'librechat-data-provider';
 import type { Model, DeleteResult, ClientSession } from 'mongoose';
 import type { IAclEntry } from '~/types';
 
-export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
+export function createAclEntryMethods(handle: DataHandle) {
   /**
    * Find ACL entries for a specific principal (user or group)
    * @param principalType - The type of principal ('user', 'group')
@@ -16,7 +17,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     principalId: string | Types.ObjectId,
     resourceType?: string,
   ): Promise<IAclEntry[]> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const query: Record<string, unknown> = { principalType, principalId };
     if (resourceType) {
       query.resourceType = resourceType;
@@ -34,7 +35,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     resourceType: string,
     resourceId: string | Types.ObjectId,
   ): Promise<IAclEntry[]> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     return await AclEntry.find({ resourceType, resourceId }).lean();
   }
 
@@ -50,7 +51,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     resourceType: string,
     resourceId: string | Types.ObjectId,
   ): Promise<IAclEntry[]> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const principalsQuery = principalsList.map((p) => ({
       principalType: p.principalType,
       ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),
@@ -77,7 +78,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     resourceId: string | Types.ObjectId,
     permissionBit: number,
   ): Promise<boolean> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const principalsQuery = principalsList.map((p) => ({
       principalType: p.principalType,
       ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),
@@ -146,7 +147,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
       return new Map();
     }
 
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const principalsQuery = principalsList.map((p) => ({
       principalType: p.principalType,
       ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),
@@ -192,7 +193,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     session?: ClientSession,
     roleId?: string | Types.ObjectId,
   ): Promise<IAclEntry | null> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const query: Record<string, unknown> = {
       principalType,
       resourceType,
@@ -247,7 +248,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     resourceId: string | Types.ObjectId,
     session?: ClientSession,
   ): Promise<DeleteResult> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const query: Record<string, unknown> = {
       principalType,
       resourceType,
@@ -286,7 +287,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     removeBits?: number | null,
     session?: ClientSession,
   ): Promise<IAclEntry | null> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const query: Record<string, unknown> = {
       principalType,
       resourceType,
@@ -332,7 +333,7 @@ export function createAclEntryMethods(mongoose: typeof import('mongoose')) {
     resourceType: string,
     requiredPermBit: number,
   ): Promise<Types.ObjectId[]> {
-    const AclEntry = mongoose.models.AclEntry as Model<IAclEntry>;
+    const AclEntry = handle.models.AclEntry as Model<IAclEntry>;
     const principalsQuery = principalsList.map((p) => ({
       principalType: p.principalType,
       ...(p.principalType !== PrincipalType.PUBLIC && { principalId: p.principalId }),

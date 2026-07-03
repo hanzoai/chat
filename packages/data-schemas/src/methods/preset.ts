@@ -1,4 +1,5 @@
 import type { Model } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import logger from '~/config/winston';
 
 interface IPreset {
@@ -11,13 +12,13 @@ interface IPreset {
   [key: string]: unknown;
 }
 
-export function createPresetMethods(mongoose: typeof import('mongoose')) {
+export function createPresetMethods(handle: DataHandle) {
   /**
    * Retrieves a single preset by user and presetId.
    */
   async function getPreset(user: string, presetId: string) {
     try {
-      const Preset = mongoose.models.Preset as Model<IPreset>;
+      const Preset = handle.models.Preset as Model<IPreset>;
       return await Preset.findOne({ user, presetId }).lean();
     } catch (error) {
       logger.error('[getPreset] Error getting single preset', error);
@@ -30,7 +31,7 @@ export function createPresetMethods(mongoose: typeof import('mongoose')) {
    */
   async function getPresets(user: string, filter: Record<string, unknown> = {}) {
     try {
-      const Preset = mongoose.models.Preset as Model<IPreset>;
+      const Preset = handle.models.Preset as Model<IPreset>;
       const presets = await Preset.find({ ...filter, user }).lean();
       const defaultValue = 10000;
 
@@ -70,7 +71,7 @@ export function createPresetMethods(mongoose: typeof import('mongoose')) {
     },
   ) {
     try {
-      const Preset = mongoose.models.Preset as Model<IPreset>;
+      const Preset = handle.models.Preset as Model<IPreset>;
       const setter: Record<string, unknown> = { $set: {} };
       const { user: _unusedUser, ...cleanPreset } = preset;
       const update: Record<string, unknown> = { presetId, ...cleanPreset };
@@ -116,7 +117,7 @@ export function createPresetMethods(mongoose: typeof import('mongoose')) {
    * Deletes presets matching the given filter for a user.
    */
   async function deletePresets(user: string, filter: Record<string, unknown> = {}) {
-    const Preset = mongoose.models.Preset as Model<IPreset>;
+    const Preset = handle.models.Preset as Model<IPreset>;
     const deleteCount = await Preset.deleteMany({ ...filter, user });
     return deleteCount;
   }

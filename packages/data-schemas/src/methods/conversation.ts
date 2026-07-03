@@ -1,4 +1,5 @@
 import type { FilterQuery, Model, SortOrder } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import { RetentionMode } from 'librechat-data-provider';
 import { createTempChatExpirationDate } from '~/utils/tempChatRetention';
 import { buildRetentionVisibilityFilter, createFallbackRetentionDate } from '~/utils/retention';
@@ -61,7 +62,7 @@ export interface ConversationMethods {
 }
 
 export function createConversationMethods(
-  mongoose: typeof import('mongoose'),
+  handle: DataHandle,
   messageMethods?: Pick<MessageMethods, 'getMessages' | 'deleteMessages'>,
 ): ConversationMethods {
   function getMessageMethods() {
@@ -80,7 +81,7 @@ export function createConversationMethods(
    */
   async function searchConversation(conversationId: string) {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       return await Conversation.findOne(
         { conversationId },
         'conversationId user',
@@ -96,7 +97,7 @@ export function createConversationMethods(
    */
   async function getConvo(user: string, conversationId: string) {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       return await Conversation.findOne({ user, conversationId }).lean<IConversation>();
     } catch (error) {
       logger.error('[getConvo] Error getting single conversation', error);
@@ -112,7 +113,7 @@ export function createConversationMethods(
     conversationId: string,
   ): Promise<Pick<IConversation, 'expiredAt'> | null> {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       return await Conversation.findOne({ user, conversationId }, 'expiredAt').lean<
         Pick<IConversation, 'expiredAt'>
       >();
@@ -127,7 +128,7 @@ export function createConversationMethods(
    */
   async function deleteNullOrEmptyConversations() {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       const { deleteMessages } = getMessageMethods();
       const filter = {
         $or: [
@@ -159,7 +160,7 @@ export function createConversationMethods(
    */
   async function getConvoFiles(conversationId: string): Promise<string[]> {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       return (
         (await Conversation.findOne({ conversationId }, 'files').lean<IConversation>())?.files ?? []
       );
@@ -199,7 +200,7 @@ export function createConversationMethods(
     },
   ) {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       const { getMessages } = getMessageMethods();
 
       if (metadata?.context) {
@@ -298,7 +299,7 @@ export function createConversationMethods(
    */
   async function bulkSaveConvos(conversations: Array<Record<string, unknown>>) {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       const bulkOps = conversations.map((convo) => ({
         updateOne: {
           filter: {
@@ -342,7 +343,7 @@ export function createConversationMethods(
       sortDirection?: string;
     } = {},
   ) {
-    const Conversation = mongoose.models.Conversation as Model<IConversation>;
+    const Conversation = handle.models.Conversation as Model<IConversation>;
     const filters: FilterQuery<IConversation>[] = [{ user } as FilterQuery<IConversation>];
     if (isArchived) {
       filters.push({ isArchived: true } as FilterQuery<IConversation>);
@@ -471,7 +472,7 @@ export function createConversationMethods(
     limit = 25,
   ) {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       if (!convoIds?.length) {
         return { conversations: [], nextCursor: null, convoMap: {} };
       }
@@ -535,7 +536,7 @@ export function createConversationMethods(
    */
   async function deleteConvos(user: string, filter: FilterQuery<IConversation>) {
     try {
-      const Conversation = mongoose.models.Conversation as Model<IConversation>;
+      const Conversation = handle.models.Conversation as Model<IConversation>;
       const { deleteMessages } = getMessageMethods();
       const userFilter = { ...filter, user };
       const conversations = await Conversation.find(userFilter).select('conversationId');
