@@ -5,6 +5,18 @@ import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider'
 import { getIconEndpoint, getEntity } from '~/utils';
 import { useSubmitMessage } from '~/hooks';
 
+/**
+ * Curated fallback starters for plain-model chats (no agent/assistant-specific
+ * starters). Keeps the empty state from being bare and matches the ChatGPT/Claude
+ * suggestion-chip pattern. Category-style so submitting reads naturally.
+ */
+const DEFAULT_STARTERS = [
+  'Help me write or refine something',
+  'Explain a concept clearly',
+  'Review, debug, or improve some code',
+  'Brainstorm ideas and a plan',
+];
+
 const ConversationStarters = () => {
   const { conversation } = useChatContext();
   const agentsMap = useAgentsMapContext();
@@ -40,11 +52,18 @@ const ConversationStarters = () => {
       return entity.conversation_starters;
     }
 
+    // Agents may intentionally omit starters — honor that (no defaults).
     if (isAgent) {
       return [];
     }
 
-    return documentsMap.get(entity?.id ?? '')?.conversation_starters ?? [];
+    const docStarters = documentsMap.get(entity?.id ?? '')?.conversation_starters;
+    if (docStarters?.length) {
+      return docStarters;
+    }
+
+    // Plain-model chat: fall back to curated defaults so the empty state isn't bare.
+    return DEFAULT_STARTERS;
   }, [documentsMap, isAgent, entity]);
 
   const { submitMessage } = useSubmitMessage();
