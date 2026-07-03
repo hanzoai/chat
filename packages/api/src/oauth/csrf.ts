@@ -6,7 +6,7 @@ export const OAUTH_CSRF_MAX_AGE = 10 * 60 * 1000;
 
 export const OAUTH_SESSION_COOKIE = 'oauth_session';
 export const OAUTH_SESSION_MAX_AGE = 24 * 60 * 60 * 1000;
-export const OAUTH_SESSION_COOKIE_PATH = '/api';
+export const OAUTH_SESSION_COOKIE_PATH = '/v1/chat';
 
 /**
  * Determines if secure cookies should be used.
