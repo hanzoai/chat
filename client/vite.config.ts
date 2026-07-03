@@ -16,7 +16,7 @@ const backendURL = process.env.HOST ? `http://${process.env.HOST}:${backendPort}
 
 // Only proxy to local backend if not using cloud gateway directly
 const devProxy = hanzoApiUrl ? {} : {
-  '/api': {
+  '/v1/chat': {
     target: backendURL,
     changeOrigin: true,
   },
@@ -63,12 +63,12 @@ export default defineConfig(({ command }) => ({
         // createHandlerBoundToURL('index.html'). If it isn't precached, that
         // throws "non-precached-url: index.html", the service worker breaks, and
         // users are stranded on a stale shell after each deploy (they see
-        // /api/* 401s until they manually clear the SW). Precaching it — with
+        // /v1/chat/* 401s until they manually clear the SW). Precaching it — with
         // registerType:'autoUpdate' above — keeps the SPA nav fallback valid and
         // self-updates on every release.
         globIgnores: ['images/**/*', '**/*.map'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        navigateFallbackDenylist: [/^\/oauth/, /^\/api/],
+        navigateFallbackDenylist: [/^\/oauth/, /^\/v1\//],
       },
       includeAssets: [],
       manifest: {

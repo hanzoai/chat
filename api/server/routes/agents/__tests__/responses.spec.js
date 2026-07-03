@@ -411,7 +411,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
     // Mount the responses routes
     const responsesRoutes = require('~/server/routes/agents/responses');
-    app.use('/api/agents/v1/responses', responsesRoutes);
+    app.use('/v1/chat/agents/v1/responses', responsesRoutes);
 
     // Create test user
     testUser = await User.create({
@@ -531,7 +531,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
     describe('basic-response', () => {
       it('should return a valid ResponseResource for a simple text request', async () => {
         const response = await authRequest()
-          .post('/api/agents/v1/responses')
+          .post('/v1/chat/agents/v1/responses')
           .send({
             model: testAgent.id,
             input: [
@@ -570,7 +570,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
     describe('streaming-response', () => {
       it('should return valid SSE streaming events', async () => {
         const response = await authRequest()
-          .post('/api/agents/v1/responses')
+          .post('/v1/chat/agents/v1/responses')
           .send({
             model: testAgent.id,
             input: [
@@ -642,7 +642,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
       it('should emit valid event types per Open Responses spec', async () => {
         const response = await authRequest()
-          .post('/api/agents/v1/responses')
+          .post('/v1/chat/agents/v1/responses')
           .send({
             model: testAgent.id,
             input: [
@@ -679,7 +679,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
       it('should include logprobs array in output_text events', async () => {
         const response = await authRequest()
-          .post('/api/agents/v1/responses')
+          .post('/v1/chat/agents/v1/responses')
           .send({
             model: testAgent.id,
             input: [
@@ -736,7 +736,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
         // gets merged into the system prompt, or we test with a simple user message
         // that instructs the behavior.
         const response = await authRequest()
-          .post('/api/agents/v1/responses')
+          .post('/v1/chat/agents/v1/responses')
           .send({
             model: testAgent.id,
             input: [
@@ -762,7 +762,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
     describe('multi-turn', () => {
       it('should handle multi-turn conversation history', async () => {
         const response = await authRequest()
-          .post('/api/agents/v1/responses')
+          .post('/v1/chat/agents/v1/responses')
           .send({
             model: testAgent.id,
             input: [
@@ -802,7 +802,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
     describe('string-input', () => {
       it('should accept simple string input', async () => {
-        const response = await authRequest().post('/api/agents/v1/responses').send({
+        const response = await authRequest().post('/v1/chat/agents/v1/responses').send({
           model: testAgent.id,
           input: 'Hello!',
         });
@@ -822,7 +822,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
   describe('Extended Thinking', () => {
     it('should return reasoning output when thinking is enabled', async () => {
       const response = await authRequest()
-        .post('/api/agents/v1/responses')
+        .post('/v1/chat/agents/v1/responses')
         .send({
           model: thinkingAgent.id,
           input: [
@@ -863,7 +863,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
     it('should stream reasoning events when thinking is enabled', async () => {
       const response = await authRequest()
-        .post('/api/agents/v1/responses')
+        .post('/v1/chat/agents/v1/responses')
         .send({
           model: thinkingAgent.id,
           input: [
@@ -938,7 +938,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
   describe('Schema Validation', () => {
     it('should include all required fields in response', async () => {
-      const response = await authRequest().post('/api/agents/v1/responses').send({
+      const response = await authRequest().post('/v1/chat/agents/v1/responses').send({
         model: testAgent.id,
         input: 'Test',
       });
@@ -984,7 +984,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
     });
 
     it('should have valid message item structure', async () => {
-      const response = await authRequest().post('/api/agents/v1/responses').send({
+      const response = await authRequest().post('/v1/chat/agents/v1/responses').send({
         model: testAgent.id,
         input: 'Hello',
       });
@@ -1034,7 +1034,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
   describe('Response Storage', () => {
     it('should store response when store: true and retrieve it', async () => {
       // Create a stored response
-      const createResponse = await authRequest().post('/api/agents/v1/responses').send({
+      const createResponse = await authRequest().post('/v1/chat/agents/v1/responses').send({
         model: testAgent.id,
         input: 'Remember this: The answer is 42.',
         store: true,
@@ -1050,7 +1050,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Retrieve the stored response
-      const getResponseResult = await authRequest().get(`/api/agents/v1/responses/${responseId}`);
+      const getResponseResult = await authRequest().get(`/v1/chat/agents/v1/responses/${responseId}`);
 
       // Note: The response might be stored under conversationId, not responseId
       // If we get 404, that's expected behavior for now since we store by conversationId
@@ -1062,7 +1062,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
     });
 
     it('should return 404 for non-existent response', async () => {
-      const response = await authRequest().get('/api/agents/v1/responses/resp_nonexistent123');
+      const response = await authRequest().get('/v1/chat/agents/v1/responses/resp_nonexistent123');
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBeDefined();
@@ -1075,7 +1075,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
   describe('Error Handling', () => {
     it('should return error for missing model', async () => {
-      const response = await authRequest().post('/api/agents/v1/responses').send({
+      const response = await authRequest().post('/v1/chat/agents/v1/responses').send({
         input: 'Hello',
       });
 
@@ -1084,7 +1084,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
     });
 
     it('should return error for missing input', async () => {
-      const response = await authRequest().post('/api/agents/v1/responses').send({
+      const response = await authRequest().post('/v1/chat/agents/v1/responses').send({
         model: testAgent.id,
       });
 
@@ -1093,7 +1093,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
     });
 
     it('should return error for non-existent agent', async () => {
-      const response = await authRequest().post('/api/agents/v1/responses').send({
+      const response = await authRequest().post('/v1/chat/agents/v1/responses').send({
         model: 'agent_nonexistent123456789',
         input: 'Hello',
       });
@@ -1109,7 +1109,7 @@ describeWithApiKey('Open Responses API Integration Tests', () => {
 
   describe('GET /v1/responses/models', () => {
     it('should list available agents as models', async () => {
-      const response = await authRequest().get('/api/agents/v1/responses/models');
+      const response = await authRequest().get('/v1/chat/agents/v1/responses/models');
 
       expect(response.status).toBe(200);
       expect(response.body.object).toBe('list');

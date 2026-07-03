@@ -111,7 +111,7 @@ describe('Server Configuration', () => {
     });
 
     try {
-      const response = await request(app).post('/api/auth/login').send({
+      const response = await request(app).post('/v1/chat/auth/login').send({
         email: 'test@example.com',
         password: 'password123',
       });

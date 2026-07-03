@@ -61,7 +61,7 @@ const createReq = (overrides = {}) => ({
   headers: { 'user-agent': 'Mozilla/5.0' },
   body: {},
   baseUrl: '/api',
-  originalUrl: '/api/test',
+  originalUrl: '/v1/chat/test',
   ...overrides,
 });
 

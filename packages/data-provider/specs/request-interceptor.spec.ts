@@ -60,11 +60,11 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/messages', headers: {} },
+      config: { url: '/v1/chat/messages', headers: {} },
     });
 
     try {
-      await axios.get('/api/messages');
+      await axios.get('/v1/chat/messages');
     } catch {
       // expected rejection
     }
@@ -85,7 +85,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/share/abc123', headers: {} },
+      config: { url: '/v1/chat/share/abc123', headers: {} },
     });
 
     mockAdapter.mockResolvedValueOnce({
@@ -103,7 +103,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
     });
 
     try {
-      await axios.get('/api/share/abc123');
+      await axios.get('/v1/chat/share/abc123');
     } catch {
       // may reject depending on exact flow
     }
@@ -127,11 +127,11 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/messages', headers: {} },
+      config: { url: '/v1/chat/messages', headers: {} },
     });
 
     try {
-      await axios.get('/api/messages');
+      await axios.get('/v1/chat/messages');
     } catch {
       // expected rejection
     }
@@ -152,7 +152,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/share/abc123', headers: {} },
+      config: { url: '/v1/chat/share/abc123', headers: {} },
     });
 
     mockAdapter.mockResolvedValueOnce({
@@ -163,7 +163,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
     });
 
     try {
-      await axios.get('/api/share/abc123');
+      await axios.get('/v1/chat/share/abc123');
     } catch {
       // expected rejection
     }
@@ -184,7 +184,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/share/abc123', headers: {} },
+      config: { url: '/v1/chat/share/abc123', headers: {} },
     });
 
     mockAdapter.mockResolvedValueOnce({
@@ -195,7 +195,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
     });
 
     try {
-      await axios.get('/api/share/abc123');
+      await axios.get('/v1/chat/share/abc123');
     } catch {
       // expected rejection
     }
@@ -216,7 +216,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/messages', headers: {} },
+      config: { url: '/v1/chat/messages', headers: {} },
     });
 
     mockAdapter.mockResolvedValueOnce({
@@ -227,7 +227,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
     });
 
     try {
-      await axios.get('/api/messages');
+      await axios.get('/v1/chat/messages');
     } catch {
       // expected rejection
     }
@@ -248,7 +248,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/messages', headers: {} },
+      config: { url: '/v1/chat/messages', headers: {} },
     });
 
     mockAdapter.mockResolvedValueOnce({
@@ -259,7 +259,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
     });
 
     try {
-      await axios.get('/api/messages');
+      await axios.get('/v1/chat/messages');
     } catch {
       // expected rejection
     }
@@ -273,7 +273,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
 
     mockAdapter.mockRejectedValueOnce({
       response: { status: 401 },
-      config: { url: '/api/messages', headers: {}, _retry: false },
+      config: { url: '/v1/chat/messages', headers: {}, _retry: false },
     });
 
     mockAdapter.mockResolvedValueOnce({
@@ -291,7 +291,7 @@ describe('axios 401 interceptor — Authorization header guard', () => {
     });
 
     try {
-      await axios.get('/api/messages');
+      await axios.get('/v1/chat/messages');
     } catch {
       // may reject depending on exact flow
     }

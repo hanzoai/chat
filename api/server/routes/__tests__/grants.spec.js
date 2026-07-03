@@ -81,7 +81,7 @@ function createApp(user) {
   router.get('/:principalType/:principalId', handlers.getPrincipalGrants);
   router.post('/', handlers.assignGrant);
   router.delete('/:principalType/:principalId/:capability', handlers.revokeGrant);
-  app.use('/api/admin/grants', router);
+  app.use('/v1/chat/admin/grants', router);
 
   return app;
 }
@@ -96,7 +96,7 @@ describe('Admin Grants Routes — Integration', () => {
 
   it('GET / returns seeded admin grants', async () => {
     const app = createApp(adminUser);
-    const res = await request(app).get('/api/admin/grants').expect(200);
+    const res = await request(app).get('/v1/chat/admin/grants').expect(200);
 
     expect(res.body).toHaveProperty('grants');
     expect(res.body).toHaveProperty('total');
@@ -107,7 +107,7 @@ describe('Admin Grants Routes — Integration', () => {
 
   it('GET /effective returns capabilities for admin', async () => {
     const app = createApp(adminUser);
-    const res = await request(app).get('/api/admin/grants/effective').expect(200);
+    const res = await request(app).get('/v1/chat/admin/grants/effective').expect(200);
 
     expect(res.body).toHaveProperty('capabilities');
     expect(res.body.capabilities).toContain('access:admin');
@@ -119,7 +119,7 @@ describe('Admin Grants Routes — Integration', () => {
 
     // Assign
     const assignRes = await request(app)
-      .post('/api/admin/grants')
+      .post('/v1/chat/admin/grants')
       .send({
         principalType: PrincipalType.ROLE,
         principalId: SystemRoles.USER,
@@ -135,19 +135,19 @@ describe('Admin Grants Routes — Integration', () => {
 
     // Verify via GET
     const getRes = await request(app)
-      .get(`/api/admin/grants/${PrincipalType.ROLE}/${SystemRoles.USER}`)
+      .get(`/v1/chat/admin/grants/${PrincipalType.ROLE}/${SystemRoles.USER}`)
       .expect(200);
 
     expect(getRes.body.grants.some((g) => g.capability === 'read:users')).toBe(true);
 
     // Revoke
     await request(app)
-      .delete(`/api/admin/grants/${PrincipalType.ROLE}/${SystemRoles.USER}/read:users`)
+      .delete(`/v1/chat/admin/grants/${PrincipalType.ROLE}/${SystemRoles.USER}/read:users`)
       .expect(200);
 
     // Verify revoked
     const afterRes = await request(app)
-      .get(`/api/admin/grants/${PrincipalType.ROLE}/${SystemRoles.USER}`)
+      .get(`/v1/chat/admin/grants/${PrincipalType.ROLE}/${SystemRoles.USER}`)
       .expect(200);
 
     expect(afterRes.body.grants.some((g) => g.capability === 'read:users')).toBe(false);
@@ -157,7 +157,7 @@ describe('Admin Grants Routes — Integration', () => {
     const app = createApp(adminUser);
 
     const res = await request(app)
-      .post('/api/admin/grants')
+      .post('/v1/chat/admin/grants')
       .send({
         principalType: PrincipalType.ROLE,
         principalId: 'nonexistent-role',
@@ -172,7 +172,7 @@ describe('Admin Grants Routes — Integration', () => {
     const app = createApp(undefined);
 
     const res = await request(app)
-      .post('/api/admin/grants')
+      .post('/v1/chat/admin/grants')
       .send({
         principalType: PrincipalType.ROLE,
         principalId: SystemRoles.USER,

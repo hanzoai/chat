@@ -49,7 +49,7 @@ Artifacts are for substantial, self-contained content that users might modify or
   4. Add a \`type\` attribute to specify the type of content the artifact represents. Assign one of the following values to the \`type\` attribute:
     - HTML: "text/html"
       - The user interface can render single file HTML pages placed within the artifact tags. HTML, JS, and CSS should be in a single file when using the \`text/html\` type.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - The only place external scripts can be imported from is https://cdnjs.cloudflare.com
     - Mermaid Diagrams: "application/vnd.mermaid"
       - The user interface will render Mermaid diagrams placed within the artifact tags.
@@ -63,7 +63,7 @@ Artifacts are for substantial, self-contained content that users might modify or
       - The assistant can use prebuilt components from the \`shadcn/ui\` library after it is imported: \`import { Alert, AlertDescription, AlertTitle, AlertDialog, AlertDialogAction } from '/components/ui/alert';\`. If using components from the shadcn/ui library, the assistant mentions this to the user and offers to help them install the components if necessary.
       - Components MUST be imported from \`/components/ui/name\` and NOT from \`/components/name\` or \`@/components/ui/name\`.
       - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - If you are unable to follow the above requirements for any reason, don't use artifacts and use regular code blocks instead, which will not attempt to render the component.
   5. Include the complete and updated content of the artifact, without any truncation or minimization. Don't use "// rest of the code remains the same...".
   6. If unsure whether the content qualifies as an artifact, if an artifact should be updated, or which type to assign to an artifact, err on the side of not creating an artifact.
@@ -162,7 +162,7 @@ Artifacts are for substantial, self-contained content that users might modify or
   4. Add a \`type\` attribute to specify the type of content the artifact represents. Assign one of the following values to the \`type\` attribute:
     - HTML: "text/html"
       - The user interface can render single file HTML pages placed within the artifact tags. HTML, JS, and CSS should be in a single file when using the \`text/html\` type.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - The only place external scripts can be imported from is https://cdnjs.cloudflare.com
     - SVG: "image/svg+xml"
       - The user interface will render the Scalable Vector Graphics (SVG) image within the artifact tags.
@@ -186,7 +186,7 @@ Artifacts are for substantial, self-contained content that users might modify or
       - The assistant can use prebuilt components from the \`shadcn/ui\` library after it is imported: \`import { Alert, AlertDescription, AlertTitle, AlertDialog, AlertDialogAction } from '/components/ui/alert';\`. If using components from the shadcn/ui library, the assistant mentions this to the user and offers to help them install the components if necessary.
       - Components MUST be imported from \`/components/ui/name\` and NOT from \`/components/name\` or \`@/components/ui/name\`.
       - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - When iterating on code, ensure that the code is complete and functional without any snippets, placeholders, or ellipses.
       - If you are unable to follow the above requirements for any reason, don't use artifacts and use regular code blocks instead, which will not attempt to render the component.
   5. Include the complete and updated content of the artifact, without any truncation or minimization. Don't use "// rest of the code remains the same...".
@@ -367,7 +367,7 @@ Artifacts are for substantial, self-contained content that users might modify or
   4. Add a \`type\` attribute to specify the type of content the artifact represents. Assign one of the following values to the \`type\` attribute:
     - HTML: "text/html"
       - The user interface can render single file HTML pages placed within the artifact tags. HTML, JS, and CSS should be in a single file when using the \`text/html\` type.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - The only place external scripts can be imported from is https://cdnjs.cloudflare.com
     - SVG: "image/svg+xml"
       - The user interface will render the Scalable Vector Graphics (SVG) image within the artifact tags.
@@ -391,7 +391,7 @@ Artifacts are for substantial, self-contained content that users might modify or
       - The assistant can use prebuilt components from the \`shadcn/ui\` library after it is imported: \`import { Alert, AlertDescription, AlertTitle, AlertDialog, AlertDialogAction } from '/components/ui/alert';\`. If using components from the shadcn/ui library, the assistant mentions this to the user and offers to help them install the components if necessary.
       - Components MUST be imported from \`/components/ui/name\` and NOT from \`/components/name\` or \`@/components/ui/name\`.
       - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - When iterating on code, ensure that the code is complete and functional without any snippets, placeholders, or ellipses.
       - If you are unable to follow the above requirements for any reason, don't use artifacts and use regular code blocks instead, which will not attempt to render the component.
   5. Include the complete and updated content of the artifact, without any truncation or minimization. Don't use "// rest of the code remains the same...".

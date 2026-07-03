@@ -63,7 +63,7 @@ function buildApp(session, cookie) {
     }
     next();
   });
-  app.use('/api/agents/cloud', cloudRouter);
+  app.use('/v1/chat/agents/cloud', cloudRouter);
   return app;
 }
 
@@ -79,14 +79,14 @@ describe('cloud agents proxy route', () => {
 
   describe('token handling (no leak, fail-secure)', () => {
     it('401s when the openid principal has no hanzo.id session token', async () => {
-      const res = await request(buildApp({})).get('/api/agents/cloud');
+      const res = await request(buildApp({})).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
 
     it('forwards the session id_token (never the browser) to cloud', async () => {
       mockClient.list.mockResolvedValue({ agents: [{ name: 'researcher' }] });
-      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      const res = await request(buildApp(withToken)).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(200);
       expect(mockClient.list).toHaveBeenCalledWith(VALID_ID);
       expect(res.body).toEqual({ agents: [{ name: 'researcher' }], enabled: true });
@@ -97,7 +97,7 @@ describe('cloud agents proxy route', () => {
       // hanzo.id issues JWT access tokens too; the fallback stays principal-bound.
       const accJwt = mintIdToken();
       const app = buildApp({ openidTokens: { accessToken: accJwt } });
-      await request(app).get('/api/agents/cloud');
+      await request(app).get('/v1/chat/agents/cloud');
       expect(mockClient.list).toHaveBeenCalledWith(accJwt);
     });
 
@@ -106,7 +106,7 @@ describe('cloud agents proxy route', () => {
       // forward. (This is the path a selective `openid_access_token` cookie
       // injection would take; the binding requirement closes it.)
       const app = buildApp({ openidTokens: { accessToken: 'OPAQUE_NO_BINDING' } });
-      const res = await request(app).get('/api/agents/cloud');
+      const res = await request(app).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -114,7 +114,7 @@ describe('cloud agents proxy route', () => {
     it('401s (never forwards) an access_token JWT that names a different principal', async () => {
       const foreignAcc = mintIdToken({ sub: 'sub-someone-else' });
       const app = buildApp({ openidTokens: { accessToken: foreignAcc } });
-      const res = await request(app).get('/api/agents/cloud');
+      const res = await request(app).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -122,7 +122,7 @@ describe('cloud agents proxy route', () => {
     it('reads the httpOnly openid_id_token cookie when the session is empty', async () => {
       mockClient.list.mockResolvedValue({ agents: [] });
       const app = buildApp({}, `openid_id_token=${VALID_ID}`);
-      await request(app).get('/api/agents/cloud');
+      await request(app).get('/v1/chat/agents/cloud');
       expect(mockClient.list).toHaveBeenCalledWith(VALID_ID);
     });
   });
@@ -131,7 +131,7 @@ describe('cloud agents proxy route', () => {
     it('honest 401 when the id_token is past its own exp (no forward)', async () => {
       const expired = mintIdToken({ exp: Math.floor(Date.now() / 1000) - 60 });
       const app = buildApp({ openidTokens: { idToken: expired } });
-      const res = await request(app).get('/api/agents/cloud');
+      const res = await request(app).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -139,14 +139,14 @@ describe('cloud agents proxy route', () => {
     it('honest 401 when the id_token names a different principal (sub mismatch)', async () => {
       const foreign = mintIdToken({ sub: 'sub-someone-else' });
       const app = buildApp({ openidTokens: { idToken: foreign } });
-      const res = await request(app).get('/api/agents/cloud');
+      const res = await request(app).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
 
     it('honest 401 when the id_token is not a decodable JWT', async () => {
       const app = buildApp({ openidTokens: { idToken: 'not-a-jwt' } });
-      const res = await request(app).get('/api/agents/cloud');
+      const res = await request(app).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -158,14 +158,14 @@ describe('cloud agents proxy route', () => {
       // Forwarding those tokens would run as the wrong principal — deny at the
       // identity layer (req.user.provider), independent of any cookie.
       mockPrincipal = LOCAL_USER;
-      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      const res = await request(buildApp(withToken)).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
 
     it('401s for a principal that carries no provider', async () => {
       mockPrincipal = { id: 'u_unknown' };
-      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      const res = await request(buildApp(withToken)).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -175,7 +175,7 @@ describe('cloud agents proxy route', () => {
       // asserted, so NO token is forwarded — even one whose sub would have matched
       // a normal user. Fail-secure closes the null-binding gap.
       mockPrincipal = { id: 'u_openid_no_sub', provider: 'openid' };
-      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      const res = await request(buildApp(withToken)).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -186,7 +186,7 @@ describe('cloud agents proxy route', () => {
       // binding rejects it — the forwarded principal can only ever be req.user.
       const foreign = mintIdToken({ sub: 'victim-sub-xyz' });
       const app = buildApp({}, `openid_id_token=${foreign}`);
-      const res = await request(app).get('/api/agents/cloud');
+      const res = await request(app).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(401);
       expect(mockClient.list).not.toHaveBeenCalled();
     });
@@ -195,7 +195,7 @@ describe('cloud agents proxy route', () => {
   describe('disabled deployment', () => {
     it('returns an empty, disabled list when cloud agents are not configured', async () => {
       getCloudAgentsClient.mockReturnValue(null);
-      const res = await request(buildApp(withToken)).get('/api/agents/cloud');
+      const res = await request(buildApp(withToken)).get('/v1/chat/agents/cloud');
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ agents: [], enabled: false });
     });
@@ -205,7 +205,7 @@ describe('cloud agents proxy route', () => {
     it('forwards {input} and returns the RunResult', async () => {
       mockClient.run.mockResolvedValue({ id: 'run_1', status: 'ok', output: 'done' });
       const res = await request(buildApp(withToken))
-        .post('/api/agents/cloud/researcher/run')
+        .post('/v1/chat/agents/cloud/researcher/run')
         .send({ input: 'summarize' });
       expect(res.status).toBe(200);
       expect(mockClient.run).toHaveBeenCalledWith(VALID_ID, 'researcher', 'summarize');
@@ -219,7 +219,7 @@ describe('cloud agents proxy route', () => {
       });
       mockClient.run.mockRejectedValue(err);
       const res = await request(buildApp(withToken))
-        .post('/api/agents/cloud/researcher/run')
+        .post('/v1/chat/agents/cloud/researcher/run')
         .send({ input: 'x' });
       expect(res.status).toBe(502);
       expect(res.body).toEqual({ status: 'error', error: 'model down' });
@@ -229,7 +229,7 @@ describe('cloud agents proxy route', () => {
       const err = Object.assign(new Error('invalid agent name'), { status: 400 });
       mockClient.run.mockRejectedValue(err);
       const res = await request(buildApp(withToken))
-        .post('/api/agents/cloud/researcher/run')
+        .post('/v1/chat/agents/cloud/researcher/run')
         .send({ input: 'x' });
       // simulate the client rejecting after the boundary let a valid name through
       expect(res.status).toBe(400);
@@ -250,7 +250,7 @@ describe('cloud agents proxy route', () => {
     for (const name of smuggles) {
       it(`rejects "${name}" with 400 and never calls the client`, async () => {
         const res = await request(buildApp(withToken))
-          .post(`/api/agents/cloud/${name}/run`)
+          .post(`/v1/chat/agents/cloud/${name}/run`)
           .send({ input: 'x' });
         expect(res.status).toBe(400);
         expect(mockClient.run).not.toHaveBeenCalled();
@@ -258,7 +258,7 @@ describe('cloud agents proxy route', () => {
     }
 
     it('rejects a bad name on GET /:name too', async () => {
-      const res = await request(buildApp(withToken)).get('/api/agents/cloud/..%2Fetc');
+      const res = await request(buildApp(withToken)).get('/v1/chat/agents/cloud/..%2Fetc');
       expect(res.status).toBe(400);
       expect(mockClient.get).not.toHaveBeenCalled();
     });

@@ -188,7 +188,7 @@ router.post('/branch', async (req, res) => {
     };
 
     const savedMessage = await saveMessage(req, newMessage, {
-      context: 'POST /api/messages/branch',
+      context: 'POST /v1/chat/messages/branch',
     });
 
     if (!savedMessage) {
@@ -265,7 +265,7 @@ router.post('/artifact/:messageId', async (req, res) => {
         content: message.content,
         user: req.user.id,
       },
-      { context: 'POST /api/messages/artifact/:messageId' },
+      { context: 'POST /v1/chat/messages/artifact/:messageId' },
     );
 
     res.status(200).json({
@@ -297,12 +297,12 @@ router.post('/:conversationId', validateMessageReq, async (req, res) => {
     const savedMessage = await saveMessage(
       req,
       { ...message, user: req.user.id },
-      { context: 'POST /api/messages/:conversationId' },
+      { context: 'POST /v1/chat/messages/:conversationId' },
     );
     if (!savedMessage) {
       return res.status(400).json({ error: 'Message not saved' });
     }
-    await saveConvo(req, savedMessage, { context: 'POST /api/messages/:conversationId' });
+    await saveConvo(req, savedMessage, { context: 'POST /v1/chat/messages/:conversationId' });
     res.status(201).json(savedMessage);
   } catch (error) {
     logger.error('Error saving message:', error);

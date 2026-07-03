@@ -142,7 +142,7 @@ describe('useAppStartup — MCP permission gating', () => {
     const startupConfig = {
       cloudFront: {
         cookieRefresh: {
-          endpoint: '/api/auth/cloudfront/refresh',
+          endpoint: '/v1/chat/auth/cloudfront/refresh',
           domain: 'https://cdn.example.com',
         },
       },

@@ -134,7 +134,7 @@ describe('admin auth OpenID refresh route', () => {
 
     app = express();
     app.use(express.json());
-    app.use('/api/admin', adminAuthRouter);
+    app.use('/v1/chat/admin', adminAuthRouter);
 
     isEnabled.mockReturnValue(true);
     getOpenIdConfig.mockReturnValue(openIdConfig);
@@ -187,7 +187,7 @@ describe('admin auth OpenID refresh route', () => {
     Object.assign(process.env, env);
 
     const response = await request(app)
-      .post('/api/admin/oauth/refresh')
+      .post('/v1/chat/admin/oauth/refresh')
       .send({ refresh_token: 'incoming-refresh-token' });
 
     expect(response.status).toBe(200);
@@ -211,7 +211,7 @@ describe('admin auth OpenID refresh route', () => {
     });
 
     const response = await request(app)
-      .post('/api/admin/oauth/refresh')
+      .post('/v1/chat/admin/oauth/refresh')
       .send({ refresh_token: 'incoming-refresh-token' });
 
     expect(response.status).toBe(401);
@@ -227,7 +227,7 @@ describe('admin auth OpenID refresh route', () => {
     process.env.OPENID_REFRESH_AUDIENCE = 'https://api.example.com';
 
     await request(app)
-      .post('/api/admin/oauth/refresh')
+      .post('/v1/chat/admin/oauth/refresh')
       .send({ refresh_token: 'incoming-refresh-token' });
 
     expect(logger.debug).toHaveBeenCalledWith('[admin/oauth/refresh] OpenID refresh params', {

@@ -2337,13 +2337,13 @@ describe('Agent Methods', () => {
       const actions = [
         {
           action_id: '123',
-          metadata: { version: '1.0', endpoints: ['GET /api/test'], schema: { type: 'object' } },
+          metadata: { version: '1.0', endpoints: ['GET /v1/chat/test'], schema: { type: 'object' } },
         },
         {
           action_id: '456',
           metadata: {
             version: '2.0',
-            endpoints: ['POST /api/example'],
+            endpoints: ['POST /v1/chat/example'],
             schema: { type: 'string' },
           },
         },
@@ -2360,10 +2360,10 @@ describe('Agent Methods', () => {
     test('should generate different hashes for different action metadata', async () => {
       const actionIds = ['test.com_action_123'];
       const actions1 = [
-        { action_id: '123', metadata: { version: '1.0', endpoints: ['GET /api/test'] } },
+        { action_id: '123', metadata: { version: '1.0', endpoints: ['GET /v1/chat/test'] } },
       ];
       const actions2 = [
-        { action_id: '123', metadata: { version: '2.0', endpoints: ['GET /api/test'] } },
+        { action_id: '123', metadata: { version: '2.0', endpoints: ['GET /v1/chat/test'] } },
       ];
 
       const hash1 = await generateActionMetadataHash(actionIds, actions1);
@@ -2432,8 +2432,8 @@ describe('Agent Methods', () => {
               },
             },
             endpoints: [
-              { path: '/api/test', method: 'GET', params: ['id'] },
-              { path: '/api/create', method: 'POST', body: true },
+              { path: '/v1/chat/test', method: 'GET', params: ['id'] },
+              { path: '/v1/chat/create', method: 'POST', body: true },
             ],
           },
         },
