@@ -106,6 +106,32 @@ export function coerceId(v: unknown): unknown {
   return v;
 }
 
+/**
+ * Recursively coerces ObjectId-like values (real mongoose or the shim) to their
+ * hex string. Used on input documents before `structuredClone` — which would
+ * otherwise strip an ObjectId's methods, leaving a `{ }`-shaped husk that
+ * serializes wrong. Dates and everything else pass through untouched.
+ */
+export function deepCoerceIds(v: unknown): unknown {
+  if (v == null || typeof v !== 'object') {
+    return v;
+  }
+  if (typeof (v as { toHexString?: () => string }).toHexString === 'function') {
+    return (v as { toHexString: () => string }).toHexString();
+  }
+  if (v instanceof Date) {
+    return v;
+  }
+  if (Array.isArray(v)) {
+    return v.map(deepCoerceIds);
+  }
+  const out: Record<string, unknown> = {};
+  for (const [k, val] of Object.entries(v)) {
+    out[k] = deepCoerceIds(val);
+  }
+  return out;
+}
+
 /** Coerce a value to a comparable primitive: dates/ISO-strings -> epoch ms. */
 function comparable(raw: unknown): number | string | boolean | null {
   const v = coerceId(raw);
