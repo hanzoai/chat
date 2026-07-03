@@ -687,8 +687,8 @@ export class MCPOAuthHandler {
   private static getDefaultRedirectUri(serverName?: string): string {
     const baseUrl = process.env.DOMAIN_SERVER || 'http://localhost:3080';
     return serverName
-      ? `${baseUrl}/api/mcp/${serverName}/oauth/callback`
-      : `${baseUrl}/api/mcp/oauth/callback`;
+      ? `${baseUrl}/v1/chat/mcp/${serverName}/oauth/callback`
+      : `${baseUrl}/v1/chat/mcp/oauth/callback`;
   }
 
   /**

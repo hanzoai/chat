@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { logger } from '@librechat/data-schemas';
 
-const DEFAULT_PROXY_PATH = '/api/rum';
+const DEFAULT_PROXY_PATH = '/v1/chat/rum';
 const DEFAULT_BODY_LIMIT = '3mb';
 const DEFAULT_TIMEOUT_MS = 10_000;
 const OTLP_PATHS = new Set(['/v1/traces', '/v1/logs']);

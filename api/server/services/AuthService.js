@@ -421,7 +421,7 @@ const setAuthTokens = async (userId, res, _session = null) => {
  *
  * This is DELIBERATELY decoupled from the token-refresh strategy. It runs on
  * EVERY OpenID login regardless of `OPENID_REUSE_TOKENS`; that flag alone still
- * governs whether `/api/auth/refresh` performs an OIDC refresh-grant. It writes
+ * governs whether `/v1/chat/auth/refresh` performs an OIDC refresh-grant. It writes
  * only server-side session state (no `token_provider`, `refreshToken`, or other
  * auth cookie), so it cannot alter the browser-facing login/refresh cookies — a
  * REUSE-disabled login stays byte-identical.

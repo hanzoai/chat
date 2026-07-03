@@ -280,8 +280,8 @@ describe('useHandleKeyUp', () => {
   });
 
   describe('paste protection — long text starting with command char', () => {
-    it('does NOT trigger for pasted "/api/v1/users"', () => {
-      const ref = makeTextAreaRef('/api/v1/users', 13);
+    it('does NOT trigger for pasted "/v1/chat/v1/users"', () => {
+      const ref = makeTextAreaRef('/v1/chat/v1/users', 13);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('v')));

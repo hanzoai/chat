@@ -654,7 +654,7 @@ describe('Environment Variable Extraction (MCP)', () => {
       };
       const options: MCPOptions = {
         type: 'websocket',
-        url: 'wss://example.com/{{TENANT_ID}}/api/{{API_VERSION}}?user={{LIBRECHAT_USER_ID}}&key=${TEST_API_KEY}',
+        url: 'wss://example.com/{{TENANT_ID}}/v1/chat/{{API_VERSION}}?user={{LIBRECHAT_USER_ID}}&key=${TEST_API_KEY}',
       };
 
       const result = processMCPEnv({ options, user, customUserVars });

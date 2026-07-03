@@ -45,7 +45,7 @@ const validateResourceType = (resourceType) => {
 
 /**
  * Bulk update permissions for a resource (grant, update, remove)
- * @route PUT /api/{resourceType}/{resourceId}/permissions
+ * @route PUT /v1/chat/{resourceType}/{resourceId}/permissions
  * @param {Object} req - Express request object
  * @param {Object} req.params - Route parameters
  * @param {string} req.params.resourceType - Resource type (e.g., 'agent')
@@ -178,7 +178,7 @@ const updateResourcePermissions = async (req, res) => {
 /**
  * Get principals with their permission roles for a resource (UI-friendly format)
  * Uses efficient aggregation pipeline to join User/Group data in single query
- * @route GET /api/permissions/{resourceType}/{resourceId}
+ * @route GET /v1/chat/permissions/{resourceType}/{resourceId}
  */
 const getResourcePermissions = async (req, res) => {
   try {
@@ -311,7 +311,7 @@ const getResourcePermissions = async (req, res) => {
 
 /**
  * Get available roles for a resource type
- * @route GET /api/{resourceType}/roles
+ * @route GET /v1/chat/{resourceType}/roles
  */
 const getResourceRoles = async (req, res) => {
   try {
@@ -339,7 +339,7 @@ const getResourceRoles = async (req, res) => {
 
 /**
  * Get user's effective permission bitmask for a resource
- * @route GET /api/{resourceType}/{resourceId}/effective
+ * @route GET /v1/chat/{resourceType}/{resourceId}/effective
  */
 const getUserEffectivePermissions = async (req, res) => {
   try {
@@ -370,7 +370,7 @@ const getUserEffectivePermissions = async (req, res) => {
 /**
  * Search for users and groups to grant permissions
  * Supports hybrid local database + Entra ID search when configured
- * @route GET /api/permissions/search-principals
+ * @route GET /v1/chat/permissions/search-principals
  */
 const searchPrincipals = async (req, res) => {
   try {
@@ -487,7 +487,7 @@ const searchPrincipals = async (req, res) => {
 
 /**
  * Get user's effective permissions for all accessible resources of a type
- * @route GET /api/permissions/{resourceType}/effective/all
+ * @route GET /v1/chat/permissions/{resourceType}/effective/all
  */
 const getAllEffectivePermissions = async (req, res) => {
   try {

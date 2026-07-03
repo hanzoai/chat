@@ -231,7 +231,7 @@ function readClaims(tokenset: RefreshTokenset): AdminRefreshClaims {
 /**
  * Looks up the active admin user for a freshly-refreshed OpenID tokenset,
  * mints the bearer the admin panel should send on subsequent requests, and
- * returns the response shape used by `/api/admin/oauth/exchange`.
+ * returns the response shape used by `/v1/chat/admin/oauth/exchange`.
  *
  * The route handler is responsible for the IdP `refreshTokenGrant` call;
  * this helper takes the resulting tokenset and turns it into an admin-panel

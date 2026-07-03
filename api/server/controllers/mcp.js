@@ -172,7 +172,7 @@ const getMCPTools = async (req, res) => {
 };
 /**
  * Get all MCP servers with permissions
- * @route GET /api/mcp/servers
+ * @route GET /v1/chat/mcp/servers
  */
 const getMCPServersList = async (req, res) => {
   try {
@@ -193,7 +193,7 @@ const getMCPServersList = async (req, res) => {
 
 /**
  * Create MCP server
- * @route POST /api/mcp/servers
+ * @route POST /v1/chat/mcp/servers
  */
 const createMCPServerController = async (req, res) => {
   try {
@@ -252,7 +252,7 @@ const getMCPServerById = async (req, res) => {
 
 /**
  * Update MCP server
- * @route PATCH /api/mcp/servers/:serverName
+ * @route PATCH /v1/chat/mcp/servers/:serverName
  */
 const updateMCPServerController = async (req, res) => {
   try {
@@ -287,7 +287,7 @@ const updateMCPServerController = async (req, res) => {
 
 /**
  * Delete MCP server
- * @route DELETE /api/mcp/servers/:serverName
+ * @route DELETE /v1/chat/mcp/servers/:serverName
  */
 const deleteMCPServerController = async (req, res) => {
   try {

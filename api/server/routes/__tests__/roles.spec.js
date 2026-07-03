@@ -28,7 +28,7 @@ function createApp(user) {
     req.user = user;
     next();
   });
-  app.use('/api/roles', rolesRouter);
+  app.use('/v1/chat/roles', rolesRouter);
   return app;
 }
 
@@ -48,12 +48,12 @@ beforeEach(() => {
   mockGetRoleByName.mockResolvedValue(null);
 });
 
-describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
+describe('GET /v1/chat/roles/:roleName — isOwnRole authorization', () => {
   it('allows a custom role user to fetch their own role', async () => {
     mockGetRoleByName.mockResolvedValue(staffRole);
     const app = createApp({ id: 'u1', role: 'STAFF' });
 
-    const res = await request(app).get('/api/roles/STAFF');
+    const res = await request(app).get('/v1/chat/roles/STAFF');
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('STAFF');
@@ -63,7 +63,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
   it('returns 403 when a custom role user requests a different custom role', async () => {
     const app = createApp({ id: 'u1', role: 'STAFF' });
 
-    const res = await request(app).get('/api/roles/MANAGER');
+    const res = await request(app).get('/v1/chat/roles/MANAGER');
 
     expect(res.status).toBe(403);
     expect(mockGetRoleByName).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
   it('returns 403 when a custom role user requests ADMIN', async () => {
     const app = createApp({ id: 'u1', role: 'STAFF' });
 
-    const res = await request(app).get('/api/roles/ADMIN');
+    const res = await request(app).get('/v1/chat/roles/ADMIN');
 
     expect(res.status).toBe(403);
     expect(mockGetRoleByName).not.toHaveBeenCalled();
@@ -82,7 +82,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
     mockGetRoleByName.mockResolvedValue(userRole);
     const app = createApp({ id: 'u1', role: SystemRoles.USER });
 
-    const res = await request(app).get(`/api/roles/${SystemRoles.USER}`);
+    const res = await request(app).get(`/v1/chat/roles/${SystemRoles.USER}`);
 
     expect(res.status).toBe(200);
   });
@@ -90,7 +90,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
   it('returns 403 when USER requests the ADMIN role', async () => {
     const app = createApp({ id: 'u1', role: SystemRoles.USER });
 
-    const res = await request(app).get(`/api/roles/${SystemRoles.ADMIN}`);
+    const res = await request(app).get(`/v1/chat/roles/${SystemRoles.ADMIN}`);
 
     expect(res.status).toBe(403);
   });
@@ -100,7 +100,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
     mockGetRoleByName.mockResolvedValue(adminRole);
     const app = createApp({ id: 'u1', role: SystemRoles.ADMIN });
 
-    const res = await request(app).get(`/api/roles/${SystemRoles.ADMIN}`);
+    const res = await request(app).get(`/v1/chat/roles/${SystemRoles.ADMIN}`);
 
     expect(res.status).toBe(200);
   });
@@ -110,7 +110,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
     mockGetRoleByName.mockResolvedValue(staffRole);
     const app = createApp({ id: 'u1', role: SystemRoles.USER });
 
-    const res = await request(app).get('/api/roles/STAFF');
+    const res = await request(app).get('/v1/chat/roles/STAFF');
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('STAFF');
@@ -120,7 +120,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
     mockGetRoleByName.mockResolvedValue(null);
     const app = createApp({ id: 'u1', role: 'GHOST' });
 
-    const res = await request(app).get('/api/roles/GHOST');
+    const res = await request(app).get('/v1/chat/roles/GHOST');
 
     expect(res.status).toBe(404);
   });
@@ -129,7 +129,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
     mockGetRoleByName.mockRejectedValue(new Error('db error'));
     const app = createApp({ id: 'u1', role: SystemRoles.USER });
 
-    const res = await request(app).get(`/api/roles/${SystemRoles.USER}`);
+    const res = await request(app).get(`/v1/chat/roles/${SystemRoles.USER}`);
 
     expect(res.status).toBe(500);
   });
@@ -137,7 +137,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
   it('returns 403 for prototype property names like constructor (no prototype pollution)', async () => {
     const app = createApp({ id: 'u1', role: 'STAFF' });
 
-    const res = await request(app).get('/api/roles/constructor');
+    const res = await request(app).get('/v1/chat/roles/constructor');
 
     expect(res.status).toBe(403);
     expect(mockGetRoleByName).not.toHaveBeenCalled();
@@ -148,7 +148,7 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
     const app = createApp({ id: 'u1', role: 'STAFF' });
     mockGetRoleByName.mockResolvedValue(staffRole);
 
-    const res = await request(app).get('/api/roles/STAFF');
+    const res = await request(app).get('/v1/chat/roles/STAFF');
 
     expect(res.status).toBe(200);
   });

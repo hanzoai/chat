@@ -126,7 +126,7 @@ describe('Access permissions share policy', () => {
       req.user = { id: 'skill-owner', role: SystemRoles.USER };
       next();
     });
-    app.use('/api/permissions', accessPermissionsRouter);
+    app.use('/v1/chat/permissions', accessPermissionsRouter);
   });
 
   it.each(sharePolicyCases)(
@@ -142,7 +142,7 @@ describe('Access permissions share policy', () => {
       });
 
       const response = await request(app)
-        .put(`/api/permissions/${resourceType}/${resourceId}`)
+        .put(`/v1/chat/permissions/${resourceType}/${resourceId}`)
         .send({ updated: [createUpdatedPrincipal(accessRoleId)], public: false });
 
       expect(response.status).toBe(403);
@@ -166,7 +166,7 @@ describe('Access permissions share policy', () => {
     });
 
     const response = await request(app)
-      .put(`/api/permissions/${ResourceType.SKILL}/${resourceId}`)
+      .put(`/v1/chat/permissions/${ResourceType.SKILL}/${resourceId}`)
       .send({ updated: [createUpdatedPrincipal(AccessRoleIds.SKILL_VIEWER)], public: false });
 
     expect(response.status).toBe(200);
@@ -178,7 +178,7 @@ describe('Access permissions share policy', () => {
     hasCapability.mockResolvedValue(true);
 
     const response = await request(app)
-      .put(`/api/permissions/${ResourceType.SKILL}/${resourceId}`)
+      .put(`/v1/chat/permissions/${ResourceType.SKILL}/${resourceId}`)
       .send({ updated: [createUpdatedPrincipal(AccessRoleIds.SKILL_VIEWER)], public: false });
 
     expect(response.status).toBe(200);
@@ -198,7 +198,7 @@ describe('Access permissions share policy', () => {
     });
 
     const response = await request(app)
-      .put(`/api/permissions/${ResourceType.SKILL}/${resourceId}`)
+      .put(`/v1/chat/permissions/${ResourceType.SKILL}/${resourceId}`)
       .send({ public: true, publicAccessRoleId: AccessRoleIds.SKILL_VIEWER });
 
     expect(response.status).toBe(403);

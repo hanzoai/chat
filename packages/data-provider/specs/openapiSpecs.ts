@@ -218,7 +218,7 @@ info:
 servers:
   - url: https://scholar-ai.net
 paths:
-  /api/abstracts:
+  /v1/chat/abstracts:
     get:
       operationId: searchAbstracts
       summary: Get relevant paper abstracts by keywords search
@@ -275,7 +275,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/searchAbstractsResponse'
-  /api/fulltext:
+  /v1/chat/fulltext:
     get:
       operationId: getFullText
       summary: Get full text of a paper by URL for PDF
@@ -299,7 +299,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getFullTextResponse'
-  /api/save-citation:
+  /v1/chat/save-citation:
     get:
       operationId: saveCitation
       summary: Save citation to reference manager
@@ -406,7 +406,7 @@ servers:
   - url: https://swapi.dev
 
 paths:
-  /api/people:
+  /v1/chat/people:
     get:
       summary: List all people
       operationId: getPeople
@@ -436,7 +436,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Person'
 
-  /api/people/{id}:
+  /v1/chat/people/{id}:
     get:
       summary: Get a person by ID
       operationId: getPersonById

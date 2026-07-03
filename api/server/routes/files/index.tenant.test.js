@@ -106,7 +106,7 @@ describe('file upload routes restore strict isolation context after multer', () 
   beforeAll(async () => {
     const { initialize } = require('./index');
     app = express();
-    app.use('/api/files', await initialize());
+    app.use('/v1/chat/files', await initialize());
   });
 
   beforeEach(() => {
@@ -123,12 +123,12 @@ describe('file upload routes restore strict isolation context after multer', () 
   });
 
   it.each([
-    ['files', '/api/files'],
-    ['images', '/api/files/images'],
-    ['avatar', '/api/files/images/avatar'],
-    ['agent-avatar', '/api/files/images/agents/agent-1/avatar'],
-    ['assistant-avatar', '/api/files/images/assistants/asst-1/avatar'],
-    ['speech-stt', '/api/files/speech/stt'],
+    ['files', '/v1/chat/files'],
+    ['images', '/v1/chat/files/images'],
+    ['avatar', '/v1/chat/files/images/avatar'],
+    ['agent-avatar', '/v1/chat/files/images/agents/agent-1/avatar'],
+    ['assistant-avatar', '/v1/chat/files/images/assistants/asst-1/avatar'],
+    ['speech-stt', '/v1/chat/files/speech/stt'],
   ])('restores context for %s upload', async (route, url) => {
     const res = await request(app).post(url);
 
@@ -142,7 +142,7 @@ describe('file upload routes restore strict isolation context after multer', () 
       role: 'USER',
     };
 
-    const res = await request(app).post('/api/files');
+    const res = await request(app).post('/v1/chat/files');
 
     expect(res.status).toBe(403);
     expect(res.body.error).toMatch(/Tenant context required/);

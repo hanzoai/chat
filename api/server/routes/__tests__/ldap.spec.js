@@ -12,7 +12,7 @@ jest.mock('@hanzochat/api', () => ({
 const app = express();
 
 // Mock the route handler
-app.get('/api/config', (req, res) => {
+app.get('/v1/chat/config', (req, res) => {
   const ldapConfig = getLdapConfig();
   res.json({ ldap: ldapConfig });
 });
@@ -26,7 +26,7 @@ describe('LDAP Config Tests', () => {
     getLdapConfig.mockReturnValue({ enabled: true, username: true });
     isEnabled.mockReturnValue(true);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.statusCode).toBe(200);
     expect(response.body.ldap).toEqual({
@@ -39,7 +39,7 @@ describe('LDAP Config Tests', () => {
     getLdapConfig.mockReturnValue({ enabled: true });
     isEnabled.mockReturnValue(false);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.statusCode).toBe(200);
     expect(response.body.ldap).toEqual({
@@ -50,7 +50,7 @@ describe('LDAP Config Tests', () => {
   it('should not return LDAP config when LDAP is not enabled', async () => {
     getLdapConfig.mockReturnValue(undefined);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.statusCode).toBe(200);
     expect(response.body.ldap).toBeUndefined();
