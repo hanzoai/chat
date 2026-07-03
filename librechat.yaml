@@ -57,14 +57,21 @@ webSearch:
 # api.hanzo.ai/v1 gateway carrying the per-user ${HANZO_API_KEY}; they differ
 # only by a curated family subset + icon, so metering is identical across all
 # of them (the cloud billing gate). "Hanzo" (Zen house brand) leads at order 0
-# with the zen5-mini default; the remaining families are the genuine resold
-# open-model families the gateway serves and can actually invoke today
-# (Meta Llama, Mistral, DeepSeek, Qwen — all via DigitalOcean GenAI, funded).
+# with the zen5-mini default.
+#
+# BRAND POLICY: only families that are GENUINELY INDEPENDENT of the Zen
+# upstreams may be listed. Zen models are derived from GLM/DeepSeek/Kimi/
+# MiniMax/Qwen upstreams, so NEVER list a Qwen or DeepSeek family (that would
+# reveal the Zen mapping). Meta Llama and Mistral are independent open-weight
+# brands Zen's flagship tiers do not build on — safe to resell by real name.
+#
+# Every model listed is served by api.hanzo.ai/v1/models AND verified to return
+# content via a live /v1/chat/completions call — no dead models.
+#
 # OpenAI/Anthropic branded resale is intentionally NOT listed: no funded key
-# path exists yet (direct keys unfunded; DO account lacks proprietary access),
-# so listing them would surface non-invocable models. Add them here the moment
-# a funded OPENAI_API_KEY / ANTHROPIC_API_KEY (or DO proprietary enablement)
-# lands — same shape, one block each.
+# path exists yet (direct OPENAI/ANTHROPIC keys unfunded; DO GenAI account
+# lacks proprietary access), so listing them would surface non-invocable
+# models. Add them here the moment a funded key/enablement lands.
 endpoints:
   # Agent Builder: enable Run Code + Web Search so they show active.
   agents:
@@ -137,35 +144,6 @@ endpoints:
       titleConvo: true
       titleModel: "mistral-nemo"
       modelDisplayLabel: "Mistral"
-    - name: "DeepSeek"
-      customOrder: 3
-      apiKey: "${HANZO_API_KEY}"
-      baseURL: "https://api.hanzo.ai/v1"
-      iconURL: "/assets/deepseek.svg"
-      models:
-        default:
-          - "deepseek-v4-pro"
-          - "deepseek-v4-flash"
-          - "deepseek-reasoner"
-          - "deepseek-3.2"
-        fetch: false
-      titleConvo: true
-      titleModel: "deepseek-v4-flash"
-      modelDisplayLabel: "DeepSeek"
-    - name: "Qwen"
-      customOrder: 4
-      apiKey: "${HANZO_API_KEY}"
-      baseURL: "https://api.hanzo.ai/v1"
-      iconURL: "/assets/qwen.svg"
-      models:
-        default:
-          - "qwen3-coder"
-          - "qwen3-coder-flash"
-          - "qwen3-32b"
-        fetch: false
-      titleConvo: true
-      titleModel: "qwen3-coder-flash"
-      modelDisplayLabel: "Qwen"
 balance:
   enabled: false
   startBalance: 0
