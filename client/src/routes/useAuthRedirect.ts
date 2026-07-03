@@ -32,5 +32,6 @@ export default function useAuthRedirect() {
     user,
     roles,
     isAuthenticated,
+    isGuest,
   };
 }

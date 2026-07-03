@@ -23,7 +23,11 @@ import store from '~/store';
 
 export default function ChatRoute() {
   const { data: startupConfig } = useGetStartupConfig();
-  const { isAuthenticated, user, roles } = useAuthRedirect();
+  const { isAuthenticated, isGuest, user, roles } = useAuthRedirect();
+  // Anonymous guests (when ALLOW_GUEST_CHAT is on) get the full chat composer,
+  // scoped server-side to the free preview model. They render the same view as
+  // an authenticated user, minus the capability-gated queries below.
+  const canChat = isAuthenticated || isGuest;
 
   const defaultTemporaryChat = useRecoilValue(temporaryStore.defaultTemporaryChat);
   const setIsTemporary = useRecoilCallback(
@@ -44,14 +48,14 @@ export default function ChatRoute() {
   const localize = useLocalize();
 
   const modelsQuery = useGetModelsQuery({
-    enabled: isAuthenticated,
+    enabled: canChat,
     refetchOnMount: 'always',
   });
   const initialConvoQuery = useGetConvoIdQuery(conversationId, {
     enabled:
       isAuthenticated && conversationId !== Constants.NEW_CONVO && !hasSetConversation.current,
   });
-  const endpointsQuery = useGetEndpointsQuery({ enabled: isAuthenticated });
+  const endpointsQuery = useGetEndpointsQuery({ enabled: canChat });
   const assistantListMap = useAssistantListMap();
 
   const isTemporaryChat = conversation && conversation.expiredAt ? true : false;
@@ -70,8 +74,10 @@ export default function ChatRoute() {
    *  Adjusting this may have unintended consequences on the conversation state.
    */
   useEffect(() => {
-    // Wait for roles to load so hasAgentAccess has a definitive value in useNewConvo
-    const rolesLoaded = roles?.USER != null;
+    // Wait for roles to load so hasAgentAccess has a definitive value in useNewConvo.
+    // Guests never load roles (no DB user); they have no agent access, so treat
+    // their roles as "loaded" to let the composer initialize.
+    const rolesLoaded = isGuest || roles?.USER != null;
     const shouldSetConvo =
       (startupConfig && rolesLoaded && !hasSetConversation.current && !modelsQuery.data?.initial) ??
       false;
@@ -171,7 +177,7 @@ export default function ChatRoute() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!canChat) {
     return null;
   }
 
