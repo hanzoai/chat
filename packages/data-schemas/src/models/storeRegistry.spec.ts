@@ -14,7 +14,7 @@ describe('createModels — per-domain store registry', () => {
 
   it('overrides only the listed collections with the SQLite DocModel', () => {
     process.env.CHAT_STORE_SQLITE =
-      'Conversation,Message,Preset,ConversationTag,SharedLink,Project,File,Key,PluginAuth,Banner,Config,SystemGrant,MCPServer,Skill,SkillFile,Prompt,PromptGroup,MemoryEntry,ToolCall,Assistant,Action,AccessRole,Role,AgentApiKey';
+      'Conversation,Message,Preset,ConversationTag,SharedLink,Project,File,Key,PluginAuth,Banner,Config,SystemGrant,MCPServer,Skill,SkillFile,Prompt,PromptGroup,Agent,AgentCategory,AclEntry,Group,MemoryEntry,ToolCall,Assistant,Action,AccessRole,Role,AgentApiKey';
     const models = createModels(mongoose);
     for (const name of [
       'Conversation',
@@ -34,6 +34,10 @@ describe('createModels — per-domain store registry', () => {
       'SkillFile',
       'Prompt',
       'PromptGroup',
+      'Agent',
+      'AgentCategory',
+      'AclEntry',
+      'Group',
       'MemoryEntry',
       'ToolCall',
       'Assistant',

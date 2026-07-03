@@ -184,4 +184,28 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     index: ['resourceType', 'name'],
     dateFields: ['createdAt', 'updatedAt'],
   },
+
+  // ---- Batch 8b: Agent family + ACL (ObjectId + aggregate $group) ----
+  Agent: {
+    name: 'Agent',
+    unique: ['id'],
+    index: ['author', 'category', 'is_promoted', 'updatedAt'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  AgentCategory: {
+    name: 'AgentCategory',
+    unique: ['value'],
+    index: ['isActive', 'order', 'label'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  AclEntry: {
+    name: 'AclEntry',
+    index: ['principalId', 'principalType', 'resourceType', 'resourceId', 'permBits'],
+    dateFields: ['grantedAt', 'createdAt', 'updatedAt'],
+  },
+  Group: {
+    name: 'Group',
+    index: ['source', 'idOnTheSource', 'name', 'memberIds'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
 };

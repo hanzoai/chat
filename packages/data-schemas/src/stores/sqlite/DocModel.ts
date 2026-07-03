@@ -268,9 +268,13 @@ export class DocModel {
         const c = coerceId(cond); // ObjectId -> hex string, so it can anchor
         const isScalar = c == null || typeof c !== 'object' || c instanceof Date;
         if (isScalar && c != null) {
-          clauses.push(`json_extract(doc, '$.${key}') = ?`);
-          // node:sqlite binds only null/number/bigint/string/blob. json_extract
-          // returns 1/0 for JSON booleans, so map booleans; dates -> ISO.
+          // json_each iterates array elements AND yields a scalar field as one
+          // row, so this equality anchor is correct for BOTH scalar fields and
+          // array-contains (Mongo {field: value} over an array) — and remains a
+          // superset prefilter (the JS matcher is authoritative).
+          clauses.push(`EXISTS (SELECT 1 FROM json_each(doc, '$.${key}') WHERE value = ?)`);
+          // node:sqlite binds only null/number/bigint/string/blob. json_each
+          // yields 1/0 for JSON booleans, so map booleans; dates -> ISO.
           const param =
             c instanceof Date ? c.toISOString() : typeof c === 'boolean' ? (c ? 1 : 0) : c;
           params.push(param);
@@ -635,6 +639,8 @@ export class DocModel {
           }
         }
         docs = out;
+      } else if (op === '$group') {
+        docs = groupStage(docs, stage.$group as Record<string, unknown>);
       } else if (op === '$sort') {
         docs = sortDocs(docs, stage.$sort as SortSpec);
       } else if (op === '$limit') {
@@ -902,6 +908,82 @@ function stripMethods(doc: Doc): Doc {
     out[key] = doc[key];
   }
   return out;
+}
+
+/** Resolves a `$field` reference (or literal) against a doc, for aggregate exprs. */
+function resolveExpr(expr: unknown, doc: Doc): unknown {
+  if (typeof expr === 'string' && expr.startsWith('$')) {
+    return getPath(doc, expr.slice(1));
+  }
+  return expr;
+}
+
+/**
+ * `$group` stage: groups candidate docs by `_id` and applies accumulators. The
+ * accumulator set the chat methods use — `$sum` (count/field), plus the cheap
+ * adjacent `$first/$last/$max/$min/$push/$addToSet`.
+ */
+function groupStage(docs: Doc[], spec: Record<string, unknown>): Doc[] {
+  const groups = new Map<string, Doc>();
+  const order: string[] = [];
+  for (const doc of docs) {
+    const key = resolveExpr(spec._id, doc);
+    const keyStr = JSON.stringify(key ?? null);
+    let g = groups.get(keyStr);
+    if (!g) {
+      g = { _id: key ?? null };
+      groups.set(keyStr, g);
+      order.push(keyStr);
+    }
+    for (const [field, acc] of Object.entries(spec)) {
+      if (field === '_id') {
+        continue;
+      }
+      const accOp = Object.keys(acc as object)[0];
+      const arg = (acc as Record<string, unknown>)[accOp];
+      const val = resolveExpr(arg, doc);
+      switch (accOp) {
+        case '$sum':
+          g[field] = ((g[field] as number) ?? 0) + (Number(val) || 0);
+          break;
+        case '$first':
+          if (!(field in g)) {
+            g[field] = val;
+          }
+          break;
+        case '$last':
+          g[field] = val;
+          break;
+        case '$max':
+          if (!(field in g) || compareValuesForGroup(val, g[field]) > 0) {
+            g[field] = val;
+          }
+          break;
+        case '$min':
+          if (!(field in g) || compareValuesForGroup(val, g[field]) < 0) {
+            g[field] = val;
+          }
+          break;
+        case '$push':
+          (g[field] = (g[field] as unknown[]) ?? []).push(val);
+          break;
+        case '$addToSet':
+          g[field] = (g[field] as unknown[]) ?? [];
+          if (!(g[field] as unknown[]).some((x) => JSON.stringify(x) === JSON.stringify(val))) {
+            (g[field] as unknown[]).push(val);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  return order.map((k) => groups.get(k) as Doc);
+}
+
+function compareValuesForGroup(a: unknown, b: unknown): number {
+  if (a === b) return 0;
+  return (a as number) > (b as number) ? 1 : -1;
 }
 
 /** Extracts the `_id` from a ref value (a doc or an id), mirroring mongoose casting. */
