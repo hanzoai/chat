@@ -11,4 +11,10 @@
  */
 export interface DataHandle {
   models: Record<string, unknown>;
+  /**
+   * BSON value helpers. Satisfied by mongoose (`mongoose.Types`) and by the
+   * SQLite handle (a hex-string ObjectId shim). Optional — only method files
+   * that construct ObjectIds (Skill, MCPServer) read it.
+   */
+  Types?: { ObjectId: new (id?: string | { toHexString(): string }) => unknown };
 }

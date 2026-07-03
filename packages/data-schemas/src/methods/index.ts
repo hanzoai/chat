@@ -48,7 +48,7 @@ export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
   // backend selected by CHAT_STORE_SQLITE. Not-yet-migrated factories keep
   // reading the mongoose registry directly; they move to `dbHandle` as they
   // migrate. Unset flag => createModels returns pure mongoose => unchanged.
-  const dbHandle = { models: createModels(mongoose) };
+  const dbHandle = { models: createModels(mongoose), Types: mongoose.Types };
   return {
     ...createUserMethods(mongoose),
     ...createSessionMethods(mongoose),
@@ -59,7 +59,7 @@ export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
     ...createMemoryMethods(mongoose),
     ...createAgentCategoryMethods(mongoose),
     ...createAgentApiKeyMethods(mongoose),
-    ...createMCPServerMethods(mongoose),
+    ...createMCPServerMethods(dbHandle),
     ...createAccessRoleMethods(mongoose),
     ...createUserGroupMethods(mongoose),
     ...createAclEntryMethods(mongoose),
