@@ -112,3 +112,54 @@ describe('DocModel (node:sqlite backend)', () => {
     expect(rows).toHaveLength(1);
   });
 });
+
+describe('DocModel — Batch 2 primitives', () => {
+  let handle: SqliteHandle;
+
+  beforeEach(() => {
+    handle = createSqliteHandle(['ConversationTag', 'SharedLink', 'Message']);
+  });
+  afterEach(() => handle.close());
+
+  it('compound unique (tag,user) allows same tag across users, blocks dup per user', async () => {
+    const Tag = handle.models.ConversationTag;
+    await Tag.create({ tag: 'work', user: 'u1' });
+    await Tag.create({ tag: 'work', user: 'u2' }); // same tag, different user — OK
+    await expect(Tag.create({ tag: 'work', user: 'u1' })).rejects.toThrow(); // dup per user
+    expect(await Tag.countDocuments({})).toBe(2);
+  });
+
+  it('findByIdAndUpdate + findOneAndDelete', async () => {
+    const Tag = handle.models.ConversationTag;
+    const t = (await Tag.create({ tag: 'x', user: 'u1', position: 1 })) as { _id: string };
+    await Tag.findByIdAndUpdate(t._id, { $set: { position: 9 } });
+    expect(((await Tag.findOne({ tag: 'x' }).lean()) as { position: number }).position).toBe(9);
+    const deleted = (await Tag.findOneAndDelete({ tag: 'x', user: 'u1' }).lean()) as { tag: string };
+    expect(deleted.tag).toBe('x');
+    expect(await Tag.countDocuments({})).toBe(0);
+  });
+
+  it('ref casting on write + populate on read', async () => {
+    const Message = handle.models.Message;
+    const Shared = handle.models.SharedLink;
+    const m1 = (await Message.create({ messageId: 'm1', conversationId: 'c1', user: 'u1', text: 'A' })) as { _id: string };
+    const m2 = (await Message.create({ messageId: 'm2', conversationId: 'c1', user: 'u1', text: 'B' })) as { _id: string };
+    // assign FULL message docs — DocModel casts them to _id like mongoose refs
+    await Shared.create({ shareId: 's1', conversationId: 'c1', user: 'u1', messages: [{ _id: m1._id }, { _id: m2._id }] });
+
+    const raw = (await Shared.findOne({ shareId: 's1' }).lean()) as { messages: unknown[] };
+    expect(raw.messages).toEqual([m1._id, m2._id]); // stored as ids
+
+    const populated = (await Shared.findOne({ shareId: 's1' })
+      .populate({ path: 'messages', select: 'text' })
+      .lean()) as { messages: Array<{ text: string }> };
+    expect(populated.messages.map((m) => m.text)).toEqual(['A', 'B']);
+  });
+
+  it('schema default applied on insert when absent', async () => {
+    const Shared = handle.models.SharedLink;
+    await Shared.create({ shareId: 's2', conversationId: 'c1', user: 'u1' });
+    const doc = (await Shared.findOne({ shareId: 's2', isPublic: true }).lean()) as { isPublic: boolean };
+    expect(doc.isPublic).toBe(true); // default filled
+  });
+});

@@ -21,4 +21,25 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     index: ['conversationId', 'user', 'organization', 'parentMessageId', 'createdAt', 'expiredAt'],
     dateFields: ['createdAt', 'updatedAt', 'expiredAt'],
   },
+
+  // ---- Batch 2: self-contained chat documents (no tenant plugin) ----
+  Preset: {
+    name: 'Preset',
+    unique: ['presetId'],
+    index: ['user', 'order'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  ConversationTag: {
+    name: 'ConversationTag',
+    unique: [['tag', 'user']],
+    index: ['user', 'position'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
+  SharedLink: {
+    name: 'SharedLink',
+    index: ['shareId', 'conversationId', 'user', 'targetMessageId', 'createdAt'],
+    dateFields: ['createdAt', 'updatedAt'],
+    refs: { messages: 'Message' },
+    defaults: { isPublic: true },
+  },
 };

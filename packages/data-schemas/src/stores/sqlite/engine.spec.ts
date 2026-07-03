@@ -103,6 +103,17 @@ describe('sqlite engine — applyUpdate', () => {
     expect(applyUpdate({}, { $setOnInsert: { createdAt: 'x' } }, false)).toEqual({});
   });
 
+  it('mixed update folds top-level fields into $set (mongoose semantics)', () => {
+    const inserted = applyUpdate(
+      {},
+      { tag: 't', user: 'u', count: 1, $setOnInsert: { createdAt: 'x' } },
+      true,
+    );
+    expect(inserted).toEqual({ tag: 't', user: 'u', count: 1, createdAt: 'x' });
+    const updated = applyUpdate({ tag: 't' }, { count: 2, $setOnInsert: { createdAt: 'x' } }, false);
+    expect(updated).toEqual({ tag: 't', count: 2 }); // $setOnInsert skipped on update
+  });
+
   it('$addToSet dedupes; $pull removes', () => {
     expect(applyUpdate({ t: ['a'] }, { $addToSet: { t: 'a' } }, false)).toEqual({ t: ['a'] });
     expect(applyUpdate({ t: ['a'] }, { $addToSet: { t: 'b' } }, false)).toEqual({ t: ['a', 'b'] });

@@ -28,12 +28,27 @@ import {
 export interface CollectionSpec {
   /** Collection / table name (matches the mongoose model name). */
   name: string;
-  /** Fields carrying a global unique constraint (e.g. conversationId, messageId). */
-  unique?: string[];
+  /**
+   * Unique constraints. A `string` is a single-field global unique (e.g.
+   * `conversationId`); a `string[]` is a compound unique (e.g. `['tag','user']`).
+   */
+  unique?: Array<string | string[]>;
   /** Fields to index for query acceleration (equality anchors + range/sort). */
   index?: string[];
   /** Fields stored as dates; rehydrated to `Date` on read to match `.lean()`. */
   dateFields?: string[];
+  /**
+   * ObjectId-ref array/scalar fields → target collection name (e.g.
+   * `{ messages: 'Message' }`). On write, assigned documents are cast to their
+   * `_id` (mirroring mongoose ref casting); `.populate()` resolves them back.
+   */
+  refs?: Record<string, string>;
+  /**
+   * Schema defaults applied on insert when the field is absent (mirrors
+   * mongoose `default:`). Only declare fields that are *queried* (e.g.
+   * `SharedLink.isPublic`), where a missing value would change filter results.
+   */
+  defaults?: Record<string, unknown>;
 }
 
 interface WriteResult {
@@ -66,12 +81,19 @@ export class DocModel {
   private readonly db: DatabaseSync;
   private readonly dateFields: Set<string>;
   private readonly anchorFields: Set<string>;
+  private readonly refs: Record<string, string>;
+  private readonly defaults: Record<string, unknown>;
+  /** Resolves sibling collections for `.populate()`; wired by createSqliteHandle. */
+  resolver?: (name: string) => DocModel | undefined;
 
   constructor(db: DatabaseSync, spec: CollectionSpec) {
     this.db = db;
     this.modelName = spec.name;
     this.dateFields = new Set(spec.dateFields ?? ['createdAt', 'updatedAt', 'expiredAt']);
-    this.anchorFields = new Set([...(spec.unique ?? []), ...(spec.index ?? [])]);
+    const uniqueFields = (spec.unique ?? []).flatMap((u) => (Array.isArray(u) ? u : [u]));
+    this.anchorFields = new Set([...uniqueFields, ...(spec.index ?? [])]);
+    this.refs = spec.refs ?? {};
+    this.defaults = spec.defaults ?? {};
     this.ensureTable(spec);
   }
 
@@ -80,11 +102,12 @@ export class DocModel {
     const t = this.table;
     const n = this.modelName;
     this.db.exec(`CREATE TABLE IF NOT EXISTS ${t} (_id TEXT PRIMARY KEY, doc TEXT NOT NULL)`);
-    for (const field of spec.unique ?? []) {
-      this.assertField(field);
+    for (const u of spec.unique ?? []) {
+      const fields = Array.isArray(u) ? u : [u];
+      fields.forEach((f) => this.assertField(f));
+      const cols = fields.map((f) => `json_extract(doc, '$.${f}')`).join(', ');
       this.db.exec(
-        `CREATE UNIQUE INDEX IF NOT EXISTS "ux_${n}_${field}" ` +
-          `ON ${t} (json_extract(doc, '$.${field}'))`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS "ux_${n}_${fields.join('_')}" ON ${t} (${cols})`,
       );
     }
     for (const field of spec.index ?? []) {
@@ -93,6 +116,24 @@ export class DocModel {
         `CREATE INDEX IF NOT EXISTS "ix_${n}_${field}" ON ${t} (json_extract(doc, '$.${field}'))`,
       );
     }
+  }
+
+  /** Casts ref fields to `_id` on write, mirroring mongoose ObjectId-ref casting. */
+  private castRefs(doc: Doc): void {
+    for (const field of Object.keys(this.refs)) {
+      const v = doc[field];
+      if (Array.isArray(v)) {
+        doc[field] = v.map(refId);
+      } else if (v != null) {
+        doc[field] = refId(v);
+      }
+    }
+  }
+
+  /** Fetches a doc by `_id` and applies a projection — used by `.populate()`. */
+  getByIdProjected(id: string, projection?: string | Record<string, 0 | 1>): Doc | null {
+    const doc = this.getRawById(id);
+    return doc ? projectDoc(doc, projection) : null;
   }
 
   private get table(): string {
@@ -182,6 +223,12 @@ export class DocModel {
     if (!doc._id) {
       doc._id = objectId();
     }
+    for (const [k, v] of Object.entries(this.defaults)) {
+      if (!(k in doc) || doc[k] === undefined) {
+        doc[k] = v;
+      }
+    }
+    this.castRefs(doc);
     this.db
       .prepare(`INSERT INTO ${this.table} (_id, doc) VALUES (?, ?)`)
       .run(doc._id as string, this.serialize(doc));
@@ -189,6 +236,7 @@ export class DocModel {
   }
 
   private replaceDoc(doc: Doc): void {
+    this.castRefs(doc);
     this.db
       .prepare(`UPDATE ${this.table} SET doc = ? WHERE _id = ?`)
       .run(this.serialize(doc), doc._id as string);
@@ -215,7 +263,7 @@ export class DocModel {
     return new QueryBuilder(this, filter, { single: false, projection });
   }
 
-  /** Internal: executes a find/findOne with projection/sort/limit/skip/lean. */
+  /** Internal: executes a find/findOne with projection/sort/limit/skip/lean/populate. */
   execQuery(opts: {
     filter: Filter;
     single: boolean;
@@ -224,7 +272,26 @@ export class DocModel {
     limit?: number;
     skip?: number;
     lean: boolean;
+    populate?: Array<{ path: string; select?: string | Record<string, 0 | 1> }>;
+    deleteAfter?: boolean;
+    mutate?: { update: Update; upsert?: boolean; new?: boolean; timestamps?: boolean };
   }): Doc | Doc[] | null {
+    // findOneAndUpdate: perform the write, then project/populate/lean the result.
+    if (opts.mutate) {
+      const resultDoc = this.mutateOne(opts.filter, opts.mutate);
+      let docs = resultDoc ? [resultDoc] : [];
+      if (opts.populate?.length) {
+        for (const d of docs) {
+          this.applyPopulate(d, opts.populate);
+        }
+      }
+      docs = docs.map((d) => projectDoc(d, opts.projection));
+      if (!opts.lean) {
+        docs = docs.map((d) => hydrate(d));
+      }
+      return docs[0] ?? null;
+    }
+
     let docs = this.candidates(opts.filter);
     if (opts.sort) {
       docs = sortDocs(docs, opts.sort);
@@ -232,8 +299,21 @@ export class DocModel {
     if (opts.skip) {
       docs = docs.slice(opts.skip);
     }
-    if (opts.limit != null) {
+    if (opts.single) {
+      docs = docs.slice(0, 1);
+    } else if (opts.limit != null) {
       docs = docs.slice(0, opts.limit);
+    }
+    if (opts.deleteAfter) {
+      const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
+      for (const d of docs) {
+        del.run(d._id as string);
+      }
+    }
+    if (opts.populate?.length) {
+      for (const d of docs) {
+        this.applyPopulate(d, opts.populate);
+      }
     }
     docs = docs.map((d) => projectDoc(d, opts.projection));
     if (!opts.lean) {
@@ -245,30 +325,79 @@ export class DocModel {
     return docs;
   }
 
-  async findOneAndUpdate(
-    filter: Filter,
-    update: Update,
-    options: { upsert?: boolean; new?: boolean; timestamps?: boolean } = {},
-  ): Promise<Doc | null> {
-    const returnNew = options.new ?? false;
-    const timestamps = options.timestamps ?? true;
-    const existing = this.candidates(filter)[0] ?? null;
+  private applyPopulate(
+    doc: Doc,
+    populate: Array<{ path: string; select?: string | Record<string, 0 | 1> }>,
+  ): void {
+    for (const { path, select } of populate) {
+      const target = this.resolver?.(this.refs[path]);
+      if (!target) {
+        continue;
+      }
+      const v = doc[path];
+      if (Array.isArray(v)) {
+        doc[path] = v
+          .map((id) => target.getByIdProjected(String(id), select))
+          .filter((d): d is Doc => d != null);
+      } else if (v != null) {
+        doc[path] = target.getByIdProjected(String(v), select);
+      }
+    }
+  }
 
+  /** Core write for findOneAndUpdate/findByIdAndUpdate. Returns the raw doc. */
+  private mutateOne(
+    filter: Filter,
+    m: { update: Update; upsert?: boolean; new?: boolean; timestamps?: boolean },
+  ): Doc | null {
+    const returnNew = m.new ?? false;
+    const timestamps = m.timestamps ?? true;
+    const existing = this.candidates(filter)[0] ?? null;
     if (existing) {
-      const updated = applyUpdate(existing, update, false);
+      const updated = applyUpdate(existing, m.update, false);
       this.stampTimestamps(updated, false, timestamps);
       updated._id = existing._id;
       this.replaceDoc(updated);
-      return hydrate(returnNew ? updated : existing);
+      return returnNew ? updated : existing;
     }
-
-    if (!options.upsert) {
+    if (!m.upsert) {
       return null;
     }
-    const seeded = applyUpdate(equalitySeed(filter), update, true);
+    const seeded = applyUpdate(equalitySeed(filter), m.update, true);
     this.stampTimestamps(seeded, true, timestamps);
-    const inserted = this.insertDoc(seeded);
-    return hydrate(inserted);
+    return this.insertDoc(seeded);
+  }
+
+  findByIdAndUpdate(
+    id: string,
+    update: Update,
+    options: { new?: boolean; timestamps?: boolean; lean?: boolean } = {},
+  ): QueryBuilder {
+    return this.findOneAndUpdate({ _id: id }, update, options);
+  }
+
+  findOneAndDelete(filter: Filter, projection?: string | Record<string, 0 | 1>): QueryBuilder {
+    return new QueryBuilder(this, filter, { single: true, projection, deleteAfter: true });
+  }
+
+  findOneAndUpdate(
+    filter: Filter,
+    update: Update,
+    options: { upsert?: boolean; new?: boolean; timestamps?: boolean; lean?: boolean } = {},
+  ): QueryBuilder {
+    const qb = new QueryBuilder(this, filter, {
+      single: true,
+      mutate: {
+        update,
+        upsert: options.upsert,
+        new: options.new,
+        timestamps: options.timestamps,
+      },
+    });
+    if (options.lean) {
+      qb.lean();
+    }
+    return qb;
   }
 
   async updateOne(
@@ -470,6 +599,7 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
   private limitN?: number;
   private skipN?: number;
   private leanFlag = false;
+  private populates: Array<{ path: string; select?: string | Record<string, 0 | 1> }> = [];
 
   constructor(
     private readonly model: DocModel,
@@ -477,6 +607,8 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
     private readonly opts: {
       single: boolean;
       projection?: string | Record<string, 0 | 1>;
+      deleteAfter?: boolean;
+      mutate?: { update: Update; upsert?: boolean; new?: boolean; timestamps?: boolean };
     },
   ) {
     this.projection = opts.projection;
@@ -484,6 +616,13 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
 
   select(projection: string | Record<string, 0 | 1>): this {
     this.projection = projection;
+    return this;
+  }
+
+  populate(
+    spec: string | { path: string; select?: string | Record<string, 0 | 1> },
+  ): this {
+    this.populates.push(typeof spec === 'string' ? { path: spec } : spec);
     return this;
   }
 
@@ -529,6 +668,9 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
         limit: this.limitN,
         skip: this.skipN,
         lean: this.leanFlag,
+        populate: this.populates.length ? this.populates : undefined,
+        deleteAfter: this.opts.deleteAfter,
+        mutate: this.opts.mutate,
       }),
     );
   }
@@ -581,4 +723,12 @@ function stripMethods(doc: Doc): Doc {
     out[key] = doc[key];
   }
   return out;
+}
+
+/** Extracts the `_id` from a ref value (a doc or an id), mirroring mongoose casting. */
+function refId(v: unknown): unknown {
+  if (v != null && typeof v === 'object' && '_id' in (v as Doc)) {
+    return String((v as Doc)._id);
+  }
+  return v;
 }
