@@ -631,7 +631,7 @@ describe('ActionRequest', () => {
     it('handles mixed authentication types concurrently', async () => {
       const actionRequest = new ActionRequest(
         'https://example.com',
-        '/v1/chat/{version}/data',
+        '/api/{version}/data',
         'GET',
         'getData',
         false,
@@ -754,7 +754,7 @@ describe('ActionRequest', () => {
     it('shares immutable configuration between executors from the same ActionRequest', () => {
       const actionRequest = new ActionRequest(
         'https://example.com',
-        '/v1/chat/{version}/data',
+        '/api/{version}/data',
         'GET',
         'getData',
         false,
@@ -771,7 +771,7 @@ describe('ActionRequest', () => {
         expect(executor.getConfig()).toBeDefined();
         expect(executor.getConfig()).toEqual({
           domain: 'https://example.com',
-          basePath: '/v1/chat/{version}/data',
+          basePath: '/api/{version}/data',
           method: 'GET',
           operation: 'getData',
           isConsequential: false,
@@ -788,14 +788,14 @@ describe('ActionRequest', () => {
       executor2.setParams({ version: 'v2' });
       executor3.setParams({ version: 'v3' });
 
-      expect(executor1.path).toBe('/v1/chat/v1/data');
-      expect(executor2.path).toBe('/v1/chat/v2/data');
+      expect(executor1.path).toBe('/api/v1/data');
+      expect(executor2.path).toBe('/api/v2/data');
       expect(executor3.path).toBe('/api/v3/data');
 
       // Verify that the original config remains unchanged
-      expect(executor1.getConfig().basePath).toBe('/v1/chat/{version}/data');
-      expect(executor2.getConfig().basePath).toBe('/v1/chat/{version}/data');
-      expect(executor3.getConfig().basePath).toBe('/v1/chat/{version}/data');
+      expect(executor1.getConfig().basePath).toBe('/api/{version}/data');
+      expect(executor2.getConfig().basePath).toBe('/api/{version}/data');
+      expect(executor3.getConfig().basePath).toBe('/api/{version}/data');
     });
   });
 });
@@ -1209,13 +1209,13 @@ describe('validateAndParseOpenAPISpec', () => {
 
 describe('createURL', () => {
   it('correctly combines domain and path', () => {
-    expect(createURL('https://example.com', '/v1/chat/v1/users')).toBe(
+    expect(createURL('https://example.com', '/api/v1/users')).toBe(
       'https://example.com/api/v1/users',
     );
   });
 
   it('handles domain with trailing slash', () => {
-    expect(createURL('https://example.com/', '/v1/chat/v1/users')).toBe(
+    expect(createURL('https://example.com/', '/api/v1/users')).toBe(
       'https://example.com/api/v1/users',
     );
   });
@@ -1227,7 +1227,7 @@ describe('createURL', () => {
   });
 
   it('handles domain with trailing slash and path with leading slash', () => {
-    expect(createURL('https://example.com/', '/v1/chat/v1/users')).toBe(
+    expect(createURL('https://example.com/', '/api/v1/users')).toBe(
       'https://example.com/api/v1/users',
     );
   });
@@ -1243,7 +1243,7 @@ describe('createURL', () => {
   });
 
   it('handles domain with subdirectory', () => {
-    expect(createURL('https://example.com/subdirectory', '/v1/chat/v1/users')).toBe(
+    expect(createURL('https://example.com/subdirectory', '/api/v1/users')).toBe(
       'https://example.com/subdirectory/api/v1/users',
     );
   });
