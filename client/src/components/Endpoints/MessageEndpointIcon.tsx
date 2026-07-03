@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import HanzoLogoIcon from '~/components/svg/HanzoLogoIcon';
+import ZenLogoIcon from '~/components/svg/ZenLogoIcon';
 import { EModelEndpoint, isAssistantsEndpoint, alternateName } from 'librechat-data-provider';
 import {
   Plugin,
@@ -11,7 +12,6 @@ import {
   AssistantIcon,
   AnthropicIcon,
   AzureMinimalIcon,
-  CustomMinimalIcon,
 } from '@librechat/client';
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
 import { IconProps } from '~/common';
@@ -148,8 +148,10 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       name: alternateName[EModelEndpoint.bedrock],
     },
     [EModelEndpoint.custom]: {
-      icon: <CustomMinimalIcon size={size * 0.7} />,
-      name: 'Custom',
+      // hanzo.chat's custom endpoint is Zen-only (Hanzo AI zen* models) — brand it
+      // with the ensō mark instead of the generic LibreChat "custom" glyph.
+      icon: <ZenLogoIcon size={size * 0.72} className="text-white" />,
+      name: 'Zen',
     },
     null: { icon: <GPTIcon size={size * 0.7} />, bg: 'grey', name: 'N/A' },
     default: {
