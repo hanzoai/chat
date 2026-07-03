@@ -40,7 +40,7 @@ jest.mock('@librechat/data-schemas', () => ({
   decryptV2: jest.fn(async (val: string) => val.replace(/^enc:/, '')),
 }));
 
-const CSRF_COOKIE_PATH = '/api/mcp';
+const CSRF_COOKIE_PATH = '/v1/chat/mcp';
 
 function makeReq(cookies: Record<string, string> = {}): Request {
   return { cookies } as unknown as Request;

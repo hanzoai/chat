@@ -141,7 +141,7 @@ beforeAll(async () => {
   });
 
   currentTestUser = testUsers.owner;
-  app.use('/api/skills', require('./skills'));
+  app.use('/v1/chat/skills', require('./skills'));
 });
 
 afterEach(async () => {
@@ -202,7 +202,7 @@ async function setupTestData() {
 
 async function createSkillAsOwner(overrides = {}) {
   return request(app)
-    .post('/api/skills')
+    .post('/v1/chat/skills')
     .send({
       name: 'strict-file-skill',
       description: 'A strict tenant skill used in multipart route tests.',
@@ -227,7 +227,7 @@ describe('Skill multipart routes under strict tenant isolation', () => {
     zip.file('scripts/run.sh', 'echo strict');
     const buffer = await zip.generateAsync({ type: 'nodebuffer' });
 
-    const res = await request(app).post('/api/skills/import').attach('file', buffer, {
+    const res = await request(app).post('/v1/chat/skills/import').attach('file', buffer, {
       filename: 'strict-import.skill',
       contentType: 'application/zip',
     });
@@ -274,7 +274,7 @@ describe('Skill multipart routes under strict tenant isolation', () => {
     });
 
     const res = await request(app)
-      .post('/api/skills/import')
+      .post('/v1/chat/skills/import')
       .attach('file', Buffer.from('# Request Tenant Markdown'), {
         filename: 'request-tenant.md',
         contentType: 'text/markdown',
@@ -301,7 +301,7 @@ describe('Skill multipart routes under strict tenant isolation', () => {
     });
 
     const res = await request(app)
-      .post('/api/skills/import')
+      .post('/v1/chat/skills/import')
       .attach('file', Buffer.from('# No Tenant'), {
         filename: 'no-tenant.md',
         contentType: 'text/markdown',
@@ -316,7 +316,7 @@ describe('Skill multipart routes under strict tenant isolation', () => {
     expect(created.status).toBe(201);
 
     const res = await request(app)
-      .post(`/api/skills/${created.body._id}/files`)
+      .post(`/v1/chat/skills/${created.body._id}/files`)
       .field('relativePath', 'scripts/manual.sh')
       .attach('file', Buffer.from('echo manual'), {
         filename: 'manual.sh',
@@ -351,7 +351,7 @@ describe('Skill multipart routes under strict tenant isolation', () => {
     });
 
     const res = await request(app)
-      .post(`/api/skills/${created.body._id}/files`)
+      .post(`/v1/chat/skills/${created.body._id}/files`)
       .field('relativePath', 'scripts/request-tenant.sh')
       .attach('file', Buffer.from('echo request tenant'), {
         filename: 'request-tenant.sh',

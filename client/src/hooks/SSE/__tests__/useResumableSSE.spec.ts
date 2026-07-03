@@ -106,7 +106,7 @@ jest.mock('librechat-data-provider', () => {
     ...actual,
     createPayload: jest.fn(() => ({
       payload: { model: 'gpt-4o' },
-      server: '/api/agents/chat',
+      server: '/v1/chat/agents/chat',
     })),
     removeNullishValues: jest.fn((v: unknown) => v),
     apiBaseUrl: jest.fn(() => ''),

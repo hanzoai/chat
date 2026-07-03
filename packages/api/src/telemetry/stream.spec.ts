@@ -78,10 +78,10 @@ describe('createSseStreamTelemetry', () => {
         kind: SpanKind.INTERNAL,
         attributes: expect.objectContaining({
           'http.request.method': 'GET',
-          'http.route': '/api/agents/chat/stream/:streamId',
+          'http.route': '/v1/chat/agents/chat/stream/:streamId',
           'librechat.stream.id': 'stream-1',
           'librechat.stream.resume': false,
-          'librechat.stream.route': '/api/agents/chat/stream/:streamId',
+          'librechat.stream.route': '/v1/chat/agents/chat/stream/:streamId',
         }),
       },
       context.active(),

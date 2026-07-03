@@ -23,7 +23,7 @@ describe('Multer Configuration', () => {
     mockReq = {
       user: { id: 'test-user-123' },
       body: {},
-      originalUrl: '/api/files/upload',
+      originalUrl: '/v1/chat/files/upload',
       config: {
         paths: {
           uploads: tempDir,
@@ -256,7 +256,7 @@ describe('Multer Configuration', () => {
     });
 
     it('should handle audio files for speech-to-text endpoint with real config', async () => {
-      mockReq.originalUrl = '/api/speech/stt';
+      mockReq.originalUrl = '/v1/chat/speech/stt';
 
       const multerInstance = await createMulterInstance();
       expect(multerInstance).toBeDefined();

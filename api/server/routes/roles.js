@@ -103,7 +103,7 @@ const createPermissionUpdateHandler = (permissionKey) => {
 };
 
 /**
- * GET /api/roles/:roleName
+ * GET /v1/chat/roles/:roleName
  * Get a specific role by name
  */
 router.get('/:roleName', async (req, res) => {
@@ -131,43 +131,43 @@ router.get('/:roleName', async (req, res) => {
 });
 
 /**
- * PUT /api/roles/:roleName/prompts
+ * PUT /v1/chat/roles/:roleName/prompts
  * Update prompt permissions for a specific role
  */
 router.put('/:roleName/prompts', checkAdmin, createPermissionUpdateHandler('prompts'));
 
 /**
- * PUT /api/roles/:roleName/agents
+ * PUT /v1/chat/roles/:roleName/agents
  * Update agent permissions for a specific role
  */
 router.put('/:roleName/agents', checkAdmin, createPermissionUpdateHandler('agents'));
 
 /**
- * PUT /api/roles/:roleName/memories
+ * PUT /v1/chat/roles/:roleName/memories
  * Update memory permissions for a specific role
  */
 router.put('/:roleName/memories', checkAdmin, createPermissionUpdateHandler('memories'));
 
 /**
- * PUT /api/roles/:roleName/people-picker
+ * PUT /v1/chat/roles/:roleName/people-picker
  * Update people picker permissions for a specific role
  */
 router.put('/:roleName/people-picker', checkAdmin, createPermissionUpdateHandler('people-picker'));
 
 /**
- * PUT /api/roles/:roleName/mcp-servers
+ * PUT /v1/chat/roles/:roleName/mcp-servers
  * Update MCP servers permissions for a specific role
  */
 router.put('/:roleName/mcp-servers', checkAdmin, createPermissionUpdateHandler('mcp-servers'));
 
 /**
- * PUT /api/roles/:roleName/marketplace
+ * PUT /v1/chat/roles/:roleName/marketplace
  * Update marketplace permissions for a specific role
  */
 router.put('/:roleName/marketplace', checkAdmin, createPermissionUpdateHandler('marketplace'));
 
 /**
- * PUT /api/roles/:roleName/remote-agents
+ * PUT /v1/chat/roles/:roleName/remote-agents
  * Update remote agents (API) permissions for a specific role
  */
 router.put('/:roleName/remote-agents', checkAdmin, createPermissionUpdateHandler('remote-agents'));

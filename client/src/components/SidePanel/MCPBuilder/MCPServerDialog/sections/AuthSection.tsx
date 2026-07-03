@@ -36,7 +36,7 @@ export default function AuthSection({ isEditMode, serverName }: AuthSectionProps
   }) as AuthorizationTypeEnum;
 
   const redirectUri = serverName
-    ? `${window.location.origin}/api/mcp/${serverName}/oauth/callback`
+    ? `${window.location.origin}/v1/chat/mcp/${serverName}/oauth/callback`
     : '';
 
   const copyLink = useCopyToClipboard({ text: redirectUri });

@@ -28,7 +28,7 @@ describe('Keys Routes', () => {
       next();
     });
 
-    app.use('/api/keys', keysRouter);
+    app.use('/v1/chat/keys', keysRouter);
   });
 
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe('Keys Routes', () => {
       updateUserKey.mockResolvedValue({});
 
       const response = await request(app)
-        .put('/api/keys')
+        .put('/v1/chat/keys')
         .send({ name: 'openAI', value: 'sk-test-key-123', expiresAt: '2026-12-31' });
 
       expect(response.status).toBe(201);
@@ -56,7 +56,7 @@ describe('Keys Routes', () => {
     it('should not allow userId override via request body (IDOR prevention)', async () => {
       updateUserKey.mockResolvedValue({});
 
-      const response = await request(app).put('/api/keys').send({
+      const response = await request(app).put('/v1/chat/keys').send({
         userId: 'attacker-injected-id',
         name: 'openAI',
         value: 'sk-attacker-key',
@@ -74,7 +74,7 @@ describe('Keys Routes', () => {
     it('should ignore extraneous fields from request body', async () => {
       updateUserKey.mockResolvedValue({});
 
-      const response = await request(app).put('/api/keys').send({
+      const response = await request(app).put('/v1/chat/keys').send({
         name: 'openAI',
         value: 'sk-test-key',
         expiresAt: '2026-12-31',
@@ -96,7 +96,7 @@ describe('Keys Routes', () => {
       updateUserKey.mockResolvedValue({});
 
       const response = await request(app)
-        .put('/api/keys')
+        .put('/v1/chat/keys')
         .send({ name: 'anthropic', value: 'sk-ant-key' });
 
       expect(response.status).toBe(201);
@@ -110,7 +110,7 @@ describe('Keys Routes', () => {
 
     it('should return 400 when request body is null', async () => {
       const response = await request(app)
-        .put('/api/keys')
+        .put('/v1/chat/keys')
         .set('Content-Type', 'application/json')
         .send('null');
 
@@ -123,7 +123,7 @@ describe('Keys Routes', () => {
     it('should delete a user key by name', async () => {
       deleteUserKey.mockResolvedValue({});
 
-      const response = await request(app).delete('/api/keys/openAI');
+      const response = await request(app).delete('/v1/chat/keys/openAI');
 
       expect(response.status).toBe(204);
       expect(deleteUserKey).toHaveBeenCalledWith({
@@ -138,7 +138,7 @@ describe('Keys Routes', () => {
     it('should delete all keys when all=true', async () => {
       deleteUserKey.mockResolvedValue({});
 
-      const response = await request(app).delete('/api/keys?all=true');
+      const response = await request(app).delete('/v1/chat/keys?all=true');
 
       expect(response.status).toBe(204);
       expect(deleteUserKey).toHaveBeenCalledWith({
@@ -148,7 +148,7 @@ describe('Keys Routes', () => {
     });
 
     it('should return 400 when all query param is not true', async () => {
-      const response = await request(app).delete('/api/keys');
+      const response = await request(app).delete('/v1/chat/keys');
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'Specify either all=true to delete.' });
@@ -161,7 +161,7 @@ describe('Keys Routes', () => {
       const mockExpiry = { expiresAt: '2026-12-31' };
       getUserKeyExpiry.mockResolvedValue(mockExpiry);
 
-      const response = await request(app).get('/api/keys?name=openAI');
+      const response = await request(app).get('/v1/chat/keys?name=openAI');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockExpiry);

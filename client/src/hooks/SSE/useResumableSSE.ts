@@ -147,7 +147,7 @@ export default function useResumableSSE(
       let { userMessage } = currentSubmission;
       let textIndex: number | null = null;
 
-      const baseUrl = `${apiBaseUrl()}/api/agents/chat/stream/${encodeURIComponent(currentStreamId)}`;
+      const baseUrl = `${apiBaseUrl()}/v1/chat/agents/chat/stream/${encodeURIComponent(currentStreamId)}`;
       const url = isResume ? `${baseUrl}?resume=true` : baseUrl;
       console.log('[ResumableSSE] Subscribing to stream:', url, { isResume });
 

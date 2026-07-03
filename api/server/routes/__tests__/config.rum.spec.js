@@ -36,7 +36,7 @@ function createApp(user) {
       next();
     });
   }
-  app.use('/api/config', configRoute);
+  app.use('/v1/chat/config', configRoute);
   return app;
 }
 
@@ -70,7 +70,7 @@ afterEach(() => {
   delete process.env.RUM_ENVIRONMENT;
 });
 
-describe('GET /api/config RUM config', () => {
+describe('GET /v1/chat/config RUM config', () => {
   it('includes public-token RUM config when enabled with valid env', async () => {
     mockGetAppConfig.mockResolvedValue(baseAppConfig);
     process.env.RUM_ENABLED = 'true';
@@ -82,7 +82,7 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_ENVIRONMENT = 'test';
     const app = createApp(null);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body.rum).toEqual({
       provider: 'hyperdx',
@@ -107,7 +107,7 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_PUBLIC_TOKEN = 'public-token';
     const app = createApp(null);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body).not.toHaveProperty('rum');
   });
@@ -119,12 +119,12 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_PROXY_TARGET_URL = 'http://otel-collector:4318';
     const app = createApp(mockUser);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body.rum).toEqual({
       provider: 'hyperdx',
       enabled: true,
-      url: '/api/rum',
+      url: '/v1/chat/rum',
       serviceName: 'librechat-web',
       authMode: 'proxy',
       consoleCapture: false,
@@ -139,7 +139,7 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_AUTH_MODE = 'proxy';
     const app = createApp(mockUser);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body).not.toHaveProperty('rum');
   });
@@ -151,7 +151,7 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_PUBLIC_TOKEN = 'public-token';
     const app = createApp(null);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body).not.toHaveProperty('rum');
   });
@@ -163,7 +163,7 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_PUBLIC_TOKEN = 'public-token';
     const app = createApp(null);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body.rum?.url).toBe('http://[::1]:4318');
   });
@@ -175,7 +175,7 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_AUTH_MODE = 'userJwt';
     const app = createApp(mockUser);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body).not.toHaveProperty('rum');
   });
@@ -187,7 +187,7 @@ describe('GET /api/config RUM config', () => {
     process.env.RUM_AUTH_MODE = 'userJwt';
     const app = createApp(null);
 
-    const response = await request(app).get('/api/config');
+    const response = await request(app).get('/v1/chat/config');
 
     expect(response.body).not.toHaveProperty('rum');
   });

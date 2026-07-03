@@ -112,7 +112,7 @@ describe('useRum', () => {
         rum: {
           provider: 'hyperdx',
           enabled: true,
-          url: '/api/rum',
+          url: '/v1/chat/rum',
           serviceName: 'librechat-web',
           authMode: 'proxy',
         },
@@ -129,11 +129,11 @@ describe('useRum', () => {
         disableReplay: true,
         service: 'librechat-web',
         tracePropagationTargets: undefined,
-        url: '/api/rum',
+        url: '/v1/chat/rum',
       });
     });
 
-    await window.fetch('/api/rum/v1/traces', { method: 'POST' });
+    await window.fetch('/v1/chat/rum/v1/traces', { method: 'POST' });
 
     const headers = fetchMock.mock.calls[0]?.[1]?.headers;
     expect(headers).toBeInstanceOf(Headers);
@@ -151,7 +151,7 @@ describe('useRum', () => {
         rum: {
           provider: 'hyperdx',
           enabled: true,
-          url: '/api/rum',
+          url: '/v1/chat/rum',
           serviceName: 'librechat-web',
           authMode: 'proxy',
         },

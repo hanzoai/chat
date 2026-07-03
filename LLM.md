@@ -106,14 +106,14 @@ Client render path (guest === chat, not a marketing gate):
   the chat surface (only truly anonymous, non-guest, non-guest-enabled users go to
   `/login`). `Root` shows the chat shell for `isAuthenticated || isGuest`.
 - `ChatRoute` renders `ChatView` for `canChat = isAuthenticated || isGuest`; the
-  `/api/models` + `/api/endpoints` queries run for guests (both routes use
+  `/v1/chat/models` + `/v1/chat/endpoints` queries run for guests (both routes use
   `requireGuestOrJwtAuth` and return the guest-scoped single-model config), and the
   roles gate treats a guest as loaded (guests have no agent access). Files:
   `client/src/routes/{ChatRoute,useAuthRedirect}.tsx`, `hooks/useGuestAuth.ts`,
   `hooks/AuthContext.tsx`, `components/Auth/GuestLimitDialog.tsx`.
 
 Security model (fail-closed, server-enforced):
-- `POST /api/auth/guest` issues a short-lived guest JWT (`{guest:true}`,
+- `POST /v1/chat/auth/guest` issues a short-lived guest JWT (`{guest:true}`,
   per-token random id) signed with `JWT_SECRET`. Rate-limited per IP
   (`guestTokenLimiter`, `GUEST_TOKEN_MAX`/`GUEST_TOKEN_WINDOW`) so tokens can't be
   spam-minted.
@@ -147,7 +147,7 @@ agent builder, which is untouched.
 
 - Two surfaces, ONE run path: the `/agent <name> [prompt]` slash command and the
   @mention picker (cloud agents appear as a `cloudAgent` type). Both funnel
-  through `useRunCloudAgent` → `POST /api/agents/cloud/:name/run`. The @mention /
+  through `useRunCloudAgent` → `POST /v1/chat/agents/cloud/:name/run`. The @mention /
   `/agent` picker arms `/agent <name> ` in the composer; submit is intercepted in
   `ChatForm` (`parseAgentCommand`) and dispatched to the run path.
 - Server proxy + auth (token never reaches the browser): the chat backend reads
@@ -179,7 +179,7 @@ agent builder, which is untouched.
   `session.openidTokens.refreshToken` is written ONLY in REUSE mode (where
   `refreshController`/`logoutController` read it). That keeps login, refresh AND
   logout on the local-JWT path byte-identical to a non-OpenID login; that flag
-  SOLELY gates whether `/api/auth/refresh` performs the OIDC refresh-grant.
+  SOLELY gates whether `/v1/chat/auth/refresh` performs the OIDC refresh-grant.
   The ~1h id_token is used while valid; durable refresh (hanzo.id/Casdoor OIDC
   refresh or an RFC-8693 token-exchange from the chat session) is a tracked
   FOLLOW-UP — the login-breaking refresh-grant is NOT enabled here.
@@ -197,7 +197,7 @@ agent builder, which is untouched.
   `client/src/components/Chat/Input/AgentsCommand.tsx`, and the @mention wiring in
   `client/src/hooks/Input/useMentions.ts` + `Mention.tsx`.
 - Env: `HANZO_CLOUD_URL` (optional; falls back to the `OPENAI_BASE_URL` host).
-- Convergence path (later): chat's LibreChat-legacy `/api/agents` CRUD should
+- Convergence path (later): chat's LibreChat-legacy `/v1/chat/agents` CRUD should
   converge onto cloud `/v1/agents`; this step only ADDS cloud-agent RUN.
 
 ## Unified cloud architecture (2026-07) — investigate-before-ripping map
@@ -209,7 +209,7 @@ Verified by full call-graph + route-table trace; do NOT rip blind.
 
 ### What already routes through the Go backend `api.hanzo.ai/v1` (no shadow LLM)
 
-- **Chat completions**: client `useSSE` → `POST /api/agents/chat/Hanzo` (all
+- **Chat completions**: client `useSSE` → `POST /v1/chat/agents/chat/Hanzo` (all
   chat, incl. plain-model, goes through the agents framework) → custom-endpoint
   resolver (`packages/api/src/endpoints/custom/initialize.ts`) reads
   `HANZO_API_KEY` + literal `baseURL https://api.hanzo.ai/v1` from the loaded
@@ -219,7 +219,7 @@ Verified by full call-graph + route-table trace; do NOT rip blind.
 - **Code interpreter** → `LIBRECHAT_CODE_BASEURL` = cloud `/v1/exec`.
 - **Web search** → `webSearch` block (searxng+firecrawl contracts) = cloud
   `/v1/websearch`.
-- **Cloud agents** → `POST /api/agents/cloud/:name/run` server-proxies to cloud
+- **Cloud agents** → `POST /v1/chat/agents/cloud/:name/run` server-proxies to cloud
   `/v1/agents` with the user's hanzo.id bearer (see "Cloud Agents" section).
 - **Model list**: curated **zen-only** (`fetch:false`) in the loaded config —
   NO raw upstream names (brand policy). Authoritative prod list lives in the

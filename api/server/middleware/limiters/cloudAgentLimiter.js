@@ -4,7 +4,7 @@ const { ViolationTypes } = require('librechat-data-provider');
 const logViolation = require('~/cache/logViolation');
 
 /**
- * Per-user rate limiter for the cloud-agents proxy (`/api/agents/cloud/*`). A run
+ * Per-user rate limiter for the cloud-agents proxy (`/v1/chat/agents/cloud/*`). A run
  * is a real, billable cloud chat completion that holds an upstream socket for up
  * to 30s, yet it bypasses the message limiters that guard the sibling completion
  * path. This caps a signed-in user to CLOUD_AGENT_USER_MAX requests per window so

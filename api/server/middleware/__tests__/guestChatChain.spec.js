@@ -72,7 +72,7 @@ const buildRouter = () => {
 const buildApp = () => {
   const app = express();
   app.use(express.json());
-  app.use('/api/agents', buildRouter());
+  app.use('/v1/chat/agents', buildRouter());
   return app;
 };
 
@@ -96,7 +96,7 @@ describe('guest chat middleware chain', () => {
 
   it('lets a guest reach the completion route, pinned to the free endpoint/model', async () => {
     const res = await request(buildApp())
-      .post('/api/agents/chat')
+      .post('/v1/chat/agents/chat')
       .set('Authorization', `Bearer ${guestToken()}`)
       .set('x-test-ip', '10.1.0.1')
       .send({ endpoint: 'Hanzo', model: 'zen3-nano', text: 'hi' });
@@ -109,7 +109,7 @@ describe('guest chat middleware chain', () => {
     const ip = '10.1.0.2';
     const send = () =>
       request(app)
-        .post('/api/agents/chat')
+        .post('/v1/chat/agents/chat')
         .set('Authorization', `Bearer ${guestToken()}`)
         .set('x-test-ip', ip)
         .send({ endpoint: 'Hanzo', model: 'zen3-nano', text: 'hi' });
@@ -123,7 +123,7 @@ describe('guest chat middleware chain', () => {
 
   it('routes reserved /chat/abort to the JWT-only handler, not the guest router', async () => {
     const res = await request(buildApp())
-      .post('/api/agents/chat/abort')
+      .post('/v1/chat/agents/chat/abort')
       .set('Authorization', `Bearer ${guestToken()}`)
       .set('x-test-ip', '10.1.0.3')
       .send({ streamId: 'x' });

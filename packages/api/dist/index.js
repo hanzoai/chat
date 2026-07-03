@@ -23362,8 +23362,8 @@ class MCPOAuthHandler {
     static getDefaultRedirectUri(serverName) {
         const baseUrl = process.env.DOMAIN_SERVER || 'http://localhost:3080';
         return serverName
-            ? `${baseUrl}/api/mcp/${serverName}/oauth/callback`
-            : `${baseUrl}/api/mcp/oauth/callback`;
+            ? `${baseUrl}/v1/chat/mcp/${serverName}/oauth/callback`
+            : `${baseUrl}/v1/chat/mcp/oauth/callback`;
     }
     /**
      * Processes and logs a token refresh response from an OAuth server.
@@ -34042,9 +34042,10 @@ function createDedent(options) {
       result = result.trim();
     }
 
-    // handle escaped newlines at the end to ensure they don't get stripped too
+    // Unescape escapes after trimming so sequences like `\n`, `\t`,
+    // `\xHH` and `\u{...}` are preserved (fixes #24)
     if (escapeSpecialCharacters) {
-      result = result.replace(/\\n/g, "\n");
+      result = result.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\r/g, "\r").replace(/\\v/g, "\v").replace(/\\b/g, "\b").replace(/\\f/g, "\f").replace(/\\0/g, "\0").replace(/\\x([\da-fA-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16))).replace(/\\u\{([\da-fA-F]{1,6})\}/g, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/\\u([\da-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
     }
 
     // Workaround for Bun issue with Unicode characters
@@ -34864,7 +34865,7 @@ Artifacts are for substantial, self-contained content that users might modify or
   4. Add a \`type\` attribute to specify the type of content the artifact represents. Assign one of the following values to the \`type\` attribute:
     - HTML: "text/html"
       - The user interface can render single file HTML pages placed within the artifact tags. HTML, JS, and CSS should be in a single file when using the \`text/html\` type.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - The only place external scripts can be imported from is https://cdnjs.cloudflare.com
     - SVG: "image/svg+xml"
       - The user interface will render the Scalable Vector Graphics (SVG) image within the artifact tags.
@@ -34888,7 +34889,7 @@ Artifacts are for substantial, self-contained content that users might modify or
       - The assistant can use prebuilt components from the \`shadcn/ui\` library after it is imported: \`import { Alert, AlertDescription, AlertTitle, AlertDialog, AlertDialogAction } from '/components/ui/alert';\`. If using components from the shadcn/ui library, the assistant mentions this to the user and offers to help them install the components if necessary.
       - Components MUST be imported from \`/components/ui/name\` and NOT from \`/components/name\` or \`@/components/ui/name\`.
       - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - When iterating on code, ensure that the code is complete and functional without any snippets, placeholders, or ellipses.
       - If you are unable to follow the above requirements for any reason, don't use artifacts and use regular code blocks instead, which will not attempt to render the component.
   5. Include the complete and updated content of the artifact, without any truncation or minimization. Don't use "// rest of the code remains the same...".
@@ -35068,7 +35069,7 @@ Artifacts are for substantial, self-contained content that users might modify or
   4. Add a \`type\` attribute to specify the type of content the artifact represents. Assign one of the following values to the \`type\` attribute:
     - HTML: "text/html"
       - The user interface can render single file HTML pages placed within the artifact tags. HTML, JS, and CSS should be in a single file when using the \`text/html\` type.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - The only place external scripts can be imported from is https://cdnjs.cloudflare.com
     - SVG: "image/svg+xml"
       - The user interface will render the Scalable Vector Graphics (SVG) image within the artifact tags.
@@ -35092,7 +35093,7 @@ Artifacts are for substantial, self-contained content that users might modify or
       - The assistant can use prebuilt components from the \`shadcn/ui\` library after it is imported: \`import { Alert, AlertDescription, AlertTitle, AlertDialog, AlertDialogAction } from '/components/ui/alert';\`. If using components from the shadcn/ui library, the assistant mentions this to the user and offers to help them install the components if necessary.
       - Components MUST be imported from \`/components/ui/name\` and NOT from \`/components/name\` or \`@/components/ui/name\`.
       - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/api/placeholder/400/320" alt="placeholder" />\`
+      - Images from the web are not allowed, but you can use placeholder images by specifying the width and height like so \`<img src="/v1/chat/placeholder/400/320" alt="placeholder" />\`
       - When iterating on code, ensure that the code is complete and functional without any snippets, placeholders, or ellipses.
       - If you are unable to follow the above requirements for any reason, don't use artifacts and use regular code blocks instead, which will not attempt to render the component.
   5. Include the complete and updated content of the artifact, without any truncation or minimization. Don't use "// rest of the code remains the same...".
@@ -37240,6 +37241,331 @@ function getBedrockModels() {
     return models;
 }
 
+const KEY_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const IAM_TIMEOUT_MS = 5000;
+/** Per-user hk- key cache: cacheKey (user id|email) -> { key, expiresAt }. */
+const keyCache = new Map();
+function truthy(value) {
+    return (value !== null && value !== void 0 ? value : '').toString().trim().toLowerCase() === 'true';
+}
+/** IAM base URL — prefer an in-cluster override, else the OIDC issuer. */
+function iamBaseUrl() {
+    const base = process.env.IAM_INTERNAL_URL ||
+        process.env.IAM_SERVER_URL ||
+        process.env.OPENID_ISSUER ||
+        '';
+    return base.replace(/\/+$/, '');
+}
+function iamClientId() {
+    return process.env.IAM_CLIENT_ID || process.env.OPENID_CLIENT_ID || '';
+}
+function iamClientSecret() {
+    return process.env.IAM_CLIENT_SECRET || process.env.OPENID_CLIENT_SECRET || '';
+}
+/**
+ * Whether per-user hk- billing is enabled AND fully configured. When false,
+ * `resolveHanzoCloudKey` returns null and the shared key is used (legacy).
+ */
+function isHanzoPerUserKeyEnabled() {
+    return (truthy(process.env.HANZO_PER_USER_KEY) &&
+        Boolean(iamBaseUrl()) &&
+        Boolean(iamClientId()) &&
+        Boolean(iamClientSecret()));
+}
+function basicAuthHeader() {
+    const raw = `${iamClientId()}:${iamClientSecret()}`;
+    return `Basic ${Buffer.from(raw).toString('base64')}`;
+}
+// ── Per-user billing identity + starter credit ───────────────────────────────
+/**
+ * Orgs whose MEMBERS are billed per-user (default: the shared "hanzo" catch-all,
+ * the home of every unaffiliated individual signup). MUST mirror the gateway's
+ * PERSONAL_BILLING_ORGS / object.BillingSubject (hanzoai/ai) so chat and the
+ * gateway derive the identical subject.
+ */
+function personalBillingOrgs() {
+    const raw = (process.env.HANZO_PERSONAL_BILLING_ORGS ||
+        process.env.HANZO_DEFAULT_ORG ||
+        'hanzo')
+        .split(',')
+        .map((o) => o.trim().toLowerCase())
+        .filter(Boolean);
+    return new Set(raw.length ? raw : ['hanzo']);
+}
+/**
+ * Canonical Commerce billing subject for an IAM (owner, name) identity — the
+ * account the cloud gateway debits and reads. Personal-billing org → "owner/name"
+ * (per-user), pooled org → "owner". Always lowercased so it nets against the
+ * gateway's usage writes. Byte-identical to object.BillingSubject in hanzoai/ai.
+ */
+function billingSubject(owner, name) {
+    const o = (owner !== null && owner !== void 0 ? owner : '').toString().trim().toLowerCase();
+    if (!o) {
+        return '';
+    }
+    if (personalBillingOrgs().has(o)) {
+        const n = (name !== null && name !== void 0 ? name : '').toString().trim().toLowerCase();
+        return n ? `${o}/${n}` : o;
+    }
+    return o;
+}
+function commerceBaseUrl() {
+    return (process.env.COMMERCE_API_URL || process.env.COMMERCE_ENDPOINT || '').replace(/\/+$/, '');
+}
+function commerceToken() {
+    return process.env.COMMERCE_TOKEN || process.env.COMMERCE_API_TOKEN || '';
+}
+/** Subjects whose starter credit this process has already ensured (commerce is also idempotent). */
+const starterEnsured = new Set();
+/**
+ * Ensure the new-user $5 welcome credit exists on THIS user's billing subject,
+ * exactly once. Idempotent two ways: an in-process set (avoids re-hitting
+ * commerce every key refresh) and commerce's own tag-deduped, transaction-guarded
+ * grant (`POST /v1/billing/grant-starter`) — so concurrent chats can never
+ * double-grant (no bleed).
+ *
+ * Best-effort but awaited: the credit must land on the subject BEFORE we forward
+ * the user's hk- key to the gateway, otherwise the gateway sees a $0 balance and
+ * 402s the very first chat. A commerce hiccup must NOT break key resolution,
+ * though — the gateway still enforces balance, and the next message retries.
+ */
+function ensureStarterCredit(subject, owner) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const base = commerceBaseUrl();
+        if (!base || !subject || starterEnsured.has(subject)) {
+            return;
+        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), IAM_TIMEOUT_MS);
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-Hanzo-Org': owner,
+            };
+            const tok = commerceToken();
+            if (tok) {
+                headers['Authorization'] = `Bearer ${tok}`;
+            }
+            const resp = yield fetch(`${base}/v1/billing/grant-starter`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ user: subject, trigger: 'chat_first_use' }),
+                signal: controller.signal,
+            });
+            if (resp.ok) {
+                starterEnsured.add(subject); // ensured this process; commerce dedupes across pods
+            }
+            else {
+                dataSchemas.logger.warn('[hanzoCloudKey] starter-credit grant non-OK (continuing)', {
+                    subject,
+                    status: resp.status,
+                });
+            }
+        }
+        catch (err) {
+            dataSchemas.logger.warn('[hanzoCloudKey] starter-credit grant failed (continuing; gateway enforces)', {
+                subject,
+                error: err instanceof Error ? err.message : String(err),
+            });
+        }
+        finally {
+            clearTimeout(timeoutId);
+        }
+    });
+}
+/**
+ * Single IAM HTTP primitive (confidential-client Basic auth, `/v1/iam/*` JSON
+ * API). Throws on transport error / non-ok status so callers fail closed.
+ */
+function iamRequest(path_1, params_1) {
+    return __awaiter(this, arguments, void 0, function* (path, params, method = 'GET') {
+        const url = new URL(`${iamBaseUrl()}${path}`);
+        for (const [k, v] of Object.entries(params)) {
+            if (v != null && v !== '') {
+                url.searchParams.set(k, v);
+            }
+        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), IAM_TIMEOUT_MS);
+        try {
+            const resp = yield fetch(url.toString(), Object.assign(Object.assign({ method, headers: {
+                    Authorization: basicAuthHeader(),
+                    'Content-Type': 'application/json',
+                } }, (method === 'POST' ? { body: '{}' } : {})), { signal: controller.signal }));
+            if (!resp.ok) {
+                throw new Error(`IAM ${method} ${path} returned ${resp.status}`);
+            }
+            return (yield resp.json());
+        }
+        finally {
+            clearTimeout(timeoutId);
+        }
+    });
+}
+/** Resolve the authoritative IAM record (owner/name/accessKey) by org + email. */
+function getIamUserByOrgEmail(owner, email) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
+        const res = yield iamRequest('/v1/iam/get-user', {
+            owner,
+            email: email.toLowerCase(),
+        });
+        if (res.status !== 'ok' || !((_a = res.data) === null || _a === void 0 ? void 0 : _a.owner) || !((_b = res.data) === null || _b === void 0 ? void 0 : _b.name)) {
+            return null;
+        }
+        return res.data;
+    });
+}
+/** Mint (create) the per-user hk- key for an IAM sub ("owner/name"). */
+function mintUserKey(sub) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        const res = yield iamRequest('/v1/iam/mint-user-keys', { id: sub }, 'POST');
+        if (res.status !== 'ok' || !((_a = res.data) === null || _a === void 0 ? void 0 : _a.accessKey)) {
+            return null;
+        }
+        return res.data.accessKey;
+    });
+}
+/**
+ * Resolve the authenticated user's own hk- Cloud API key, minting one on first
+ * use if the IAM record has none. Returns null when per-user billing is
+ * disabled/unconfigured, the user is a guest / has no email, or IAM cannot be
+ * reached (caller FAILS CLOSED on null for an authenticated user).
+ */
+function resolveHanzoCloudKey(user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d;
+        if (!isHanzoPerUserKeyEnabled()) {
+            return null;
+        }
+        if (!user || user.guest) {
+            return null;
+        }
+        const email = ((_a = user.email) !== null && _a !== void 0 ? _a : '').toString().toLowerCase();
+        if (!email) {
+            return null;
+        }
+        const cacheKey = user.id || email;
+        const cached = keyCache.get(cacheKey);
+        if (cached && cached.expiresAt > Date.now()) {
+            return cached.key;
+        }
+        const defaultOrg = process.env.HANZO_DEFAULT_ORG || 'hanzo';
+        const owner = ((_b = user.organization) !== null && _b !== void 0 ? _b : '').toString().trim() || defaultOrg;
+        try {
+            let record = yield getIamUserByOrgEmail(owner, email);
+            // A user whose stored org is stale/missing may live in the default org.
+            if (!record && owner !== defaultOrg) {
+                record = yield getIamUserByOrgEmail(defaultOrg, email);
+            }
+            if (!(record === null || record === void 0 ? void 0 : record.owner) || !(record === null || record === void 0 ? void 0 : record.name)) {
+                dataSchemas.logger.warn('[hanzoCloudKey] No IAM user for billing identity', {
+                    owner,
+                    email,
+                });
+                return null;
+            }
+            // Single authoritative identity: stamp the REAL billing org (record.owner)
+            // back onto req.user. The OIDC-stored `organization` can be the Casdoor
+            // super-org "admin" for some users, which is NOT where their hk- key bills —
+            // so the downstream Commerce balance gate must use this resolved owner, not
+            // the login-time value. This keeps the key and the gate on ONE org.
+            const subject = billingSubject(record.owner, record.name);
+            try {
+                user.organization = record.owner;
+                // Stamp the canonical billing subject so the balance gate keys on the SAME
+                // account the gateway debits (per-user for the shared "hanzo" catch-all).
+                user.billingSubject = subject;
+            }
+            catch (_e) {
+                /* req.user may be a frozen/lean doc — non-fatal; gate still has gateway as backstop */
+            }
+            // Ensure THIS user's one-time $5 welcome credit exists on THEIR subject
+            // before we hand back the key — so the gateway's first balance check sees it
+            // instead of 402-ing a brand-new account. Idempotent + best-effort.
+            yield ensureStarterCredit(subject, record.owner);
+            let key = ((_c = record.accessKey) !== null && _c !== void 0 ? _c : '').trim();
+            if (!key) {
+                // Mint on first chat — the key is theirs going forward.
+                key = (_d = (yield mintUserKey(`${record.owner}/${record.name}`))) !== null && _d !== void 0 ? _d : '';
+            }
+            if (!key) {
+                dataSchemas.logger.error('[hanzoCloudKey] Failed to resolve/mint hk- key', {
+                    sub: `${record.owner}/${record.name}`,
+                });
+                return null;
+            }
+            keyCache.set(cacheKey, { key, expiresAt: Date.now() + KEY_TTL_MS });
+            return key;
+        }
+        catch (err) {
+            dataSchemas.logger.error('[hanzoCloudKey] IAM lookup failed (failing closed)', {
+                owner,
+                email,
+                error: err instanceof Error ? err.message : String(err),
+            });
+            return null;
+        }
+    });
+}
+/** Test-only: clear the in-process key cache. */
+function _clearHanzoKeyCache() {
+    keyCache.clear();
+}
+
+/**
+ * Wrap an OpenAI-client `fetch` so the Hanzo Cloud gateway's HTTP-200 error
+ * envelope becomes a real, surfaced error instead of an opaque crash.
+ *
+ * The gateway (api.hanzo.ai) answers some failures — most importantly a request
+ * for a premium model when the caller's balance is only the $5 starter credit —
+ * with HTTP 200 and a JSON body `{ "status": "error", "msg": "..." }` that has no
+ * `choices`. The OpenAI client treats the 200 as success and parses the body to
+ * `undefined`; the agent run then throws the opaque
+ * `Cannot read properties of undefined (reading 'role')`, so NO assistant reply
+ * renders and the user never learns why (and the title call dies the same way on
+ * `reading 'message'`).
+ *
+ * This wrapper rewrites that envelope into a conventional 402 response carrying
+ * the gateway's own `msg`, so the OpenAI client raises a clean, non-retryable
+ * error and the existing error path shows the actionable message ("... requires a
+ * paid balance. Add funds ...") instead of crashing. Successful SSE streams
+ * (`text/event-stream`) and normal completions pass through untouched, and the
+ * request headers/body are never inspected — per-user `hk-` billing is unaffected.
+ */
+function wrapHanzoGatewayFetch(baseFetch) {
+    const inner = baseFetch !== null && baseFetch !== void 0 ? baseFetch : ((input, init) => fetch(input, init));
+    return (input, init) => __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        const response = yield inner(input, init);
+        /** Live SSE success streams must pass through without buffering the body. */
+        const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+        if (contentType.includes('text/event-stream')) {
+            return response;
+        }
+        /** Read a clone so the original body stays intact for the OpenAI client. */
+        let envelope;
+        try {
+            envelope = (yield response.clone().json());
+        }
+        catch (_b) {
+            return response;
+        }
+        if (envelope && envelope.status === 'error' && envelope.choices == null) {
+            const message = (typeof envelope.msg === 'string' && envelope.msg.trim()) ||
+                'Hanzo Cloud rejected the model request.';
+            dataSchemas.logger.warn('[hanzoGatewayFetch] gateway returned a 200 error envelope; surfacing as 402', {
+                message,
+            });
+            return new Response(JSON.stringify({
+                error: { message, type: 'insufficient_quota', code: 'insufficient_quota' },
+            }), { status: 402, headers: { 'content-type': 'application/json' } });
+        }
+        return response;
+    });
+}
+
 const { PROXY } = process.env;
 /**
  * Builds custom options from endpoint configuration
@@ -37304,8 +37630,25 @@ function initializeCustom(_a) {
             checkUserKeyExpiry(expiresAt, endpoint);
             userValues = yield db.getUserKeyValues({ userId: (_e = (_d = req.user) === null || _d === void 0 ? void 0 : _d.id) !== null && _e !== void 0 ? _e : '', name: endpoint });
         }
-        const apiKey = userProvidesKey ? userValues === null || userValues === void 0 ? void 0 : userValues.apiKey : CUSTOM_API_KEY;
+        let apiKey = userProvidesKey ? userValues === null || userValues === void 0 ? void 0 : userValues.apiKey : CUSTOM_API_KEY;
         const baseURL = userProvidesURL ? userValues === null || userValues === void 0 ? void 0 : userValues.baseURL : CUSTOM_BASE_URL;
+        // Hanzo per-user billing: an authenticated (non-guest) user's chat must be
+        // billed to THEIR OWN org via THEIR OWN hk- key — never the shared key. We
+        // resolve (mint on first chat) their key from IAM and use it here. If it
+        // cannot be resolved we FAIL CLOSED (throw) rather than silently fall back to
+        // the shared key, so an IAM hiccup can never route an authed user's spend onto
+        // the shared org. Guests (anonymous preview) keep the shared, capped key.
+        const billingUser = req.user;
+        const isAuthenticatedUser = Boolean(billingUser && !billingUser.guest && billingUser.email);
+        if (isHanzoPerUserKeyEnabled() && isAuthenticatedUser) {
+            const perUserKey = yield resolveHanzoCloudKey(billingUser);
+            if (perUserKey) {
+                apiKey = perUserKey;
+            }
+            else {
+                throw new Error('Your Hanzo Cloud account is not linked for billing yet. Please sign out and back in, then claim your starter credit at https://billing.hanzo.ai');
+            }
+        }
         if (userProvidesKey && !apiKey) {
             throw new Error(JSON.stringify({
                 type: librechatDataProvider.ErrorTypes.NO_USER_KEY,
@@ -37347,6 +37690,17 @@ function initializeCustom(_a) {
         if (options != null) {
             options.useLegacyContent = true;
             options.endpointTokenConfig = endpointTokenConfig;
+        }
+        // The Hanzo Cloud gateway answers some failures (e.g. a premium model requested
+        // against a starter-credit-only balance) with HTTP 200 + a JSON error envelope
+        // ({status:"error", msg}) that has no `choices`. Left as-is, the OpenAI client
+        // parses the choices-less 200 to `undefined` and the agent run crashes with
+        // `Cannot read properties of undefined (reading 'role')` — no reply renders.
+        // Wrap the client fetch so that envelope becomes a clean 402 carrying the
+        // gateway's actionable message. Scoped to the Hanzo gateway; response-only, so
+        // per-user hk- billing is untouched.
+        if ((options === null || options === void 0 ? void 0 : options.configOptions) && /(?:^|\.)hanzo\.ai(?::|\/|$)/i.test(baseURL !== null && baseURL !== void 0 ? baseURL : '')) {
+            options.configOptions.fetch = wrapHanzoGatewayFetch(options.configOptions.fetch);
         }
         const streamRate = clientOptions.streamRate;
         if (streamRate) {
@@ -37608,18 +37962,13 @@ function loadCustomEndpointsConfig(customEndpoints) {
             (endpoint.models.fetch || endpoint.models.default));
         for (let i = 0; i < filteredEndpoints.length; i++) {
             const endpoint = filteredEndpoints[i];
-            const { baseURL, apiKey, name: configName, iconURL, modelDisplayLabel, customParams, } = endpoint;
+            const { baseURL, apiKey, name: configName, iconURL, modelDisplayLabel, customParams, customOrder, } = endpoint;
             const name = librechatDataProvider.normalizeEndpointName(configName);
             const resolvedApiKey = librechatDataProvider.extractEnvVariable(apiKey !== null && apiKey !== void 0 ? apiKey : '');
             const resolvedBaseURL = librechatDataProvider.extractEnvVariable(baseURL !== null && baseURL !== void 0 ? baseURL : '');
-            customEndpointsConfig[name] = {
-                type: librechatDataProvider.EModelEndpoint.custom,
-                userProvide: isUserProvided(resolvedApiKey),
-                userProvideURL: isUserProvided(resolvedBaseURL),
-                customParams,
+            customEndpointsConfig[name] = Object.assign({ type: librechatDataProvider.EModelEndpoint.custom, userProvide: isUserProvided(resolvedApiKey), userProvideURL: isUserProvided(resolvedBaseURL), customParams,
                 modelDisplayLabel,
-                iconURL,
-            };
+                iconURL }, (customOrder != null ? { order: customOrder } : {}));
         }
     }
     return customEndpointsConfig;
@@ -37841,7 +38190,7 @@ const primeResources = (_a) => __awaiter(void 0, [_a], void 0, function* ({ req,
  * Initializes an agent for use in requests.
  * Handles file processing, tool loading, provider configuration, and context token calculations.
  *
- * This function is exported from @librechat/api and replaces the CJS version from
+ * This function is exported from @hanzochat/api and replaces the CJS version from
  * api/server/services/Endpoints/agents/agent.js
  *
  * @param params - Initialization parameters
@@ -40839,27 +41188,11 @@ function recordCollectedUsage(deps, params) {
                 dataSchemas.logger.error('[packages/api #recordCollectedUsage] Error spending tokens', err);
             });
         }
-        // Fire usage to Commerce if configured (fire-and-forget)
-        try {
-            // Dynamic require to avoid hard dependency — CommerceClient is in the api layer
-            const { getCommerceClient } = require('~/server/services/CommerceClient');
-            const commerceClient = getCommerceClient();
-            if (commerceClient && user) {
-                // Estimate cost in cents from total tokens (rough: 1M tokenCredits = $1 = 100 cents)
-                const totalTokens = input_tokens + total_output_tokens;
-                const estimatedCents = Math.ceil(totalTokens / 10000); // 10,000 tokens ≈ 1 cent
-                commerceClient.recordUsage({
-                    userId: user,
-                    model: model || 'unknown',
-                    promptTokens: input_tokens,
-                    completionTokens: total_output_tokens,
-                    amountCents: estimatedCents,
-                });
-            }
-        }
-        catch (_f) {
-            // Commerce not available — local tracking is authoritative
-        }
+        // NOTE: Commerce is debited exactly once, by the cloud gateway (api.hanzo.ai),
+        // against the user's per-user billing subject when their hk- key is forwarded.
+        // Chat must NOT also record usage to Commerce here — that was a second debit
+        // (to a mis-keyed account) and breaks the single-debit money path. Local
+        // token accounting above remains for the in-app usage display.
         return {
             input_tokens,
             output_tokens: total_output_tokens,
@@ -45482,6 +45815,7 @@ exports.RedisEventTransport = RedisEventTransport;
 exports.RedisJobStore = RedisJobStore;
 exports.StepTypes = StepTypes;
 exports.Tokenizer = TokenizerSingleton;
+exports._clearHanzoKeyCache = _clearHanzoKeyCache;
 exports.agentAvatarSchema = agentAvatarSchema;
 exports.agentBaseResourceSchema = agentBaseResourceSchema;
 exports.agentBaseSchema = agentBaseSchema;
@@ -45498,6 +45832,7 @@ exports.applyDefaultParams = applyDefaultParams$1;
 exports.azureAISearchSchema = azureAISearchSchema;
 exports.backfillRemoteAgentPermissions = backfillRemoteAgentPermissions;
 exports.batchDeleteKeys = batchDeleteKeys;
+exports.billingSubject = billingSubject;
 exports.buildAgentInstructions = buildAgentInstructions;
 exports.buildAggregatedResponse = buildAggregatedResponse;
 exports.buildImageToolContext = buildImageToolContext;
@@ -45723,6 +46058,7 @@ exports.isChatCompletionValidationFailure = isChatCompletionValidationFailure;
 exports.isConcurrentLimitEnabled = isConcurrentLimitEnabled;
 exports.isEmailDomainAllowed = isEmailDomainAllowed;
 exports.isEnabled = isEnabled;
+exports.isHanzoPerUserKeyEnabled = isHanzoPerUserKeyEnabled;
 exports.isKnownCustomProvider = isKnownCustomProvider;
 exports.isMCPDomainAllowed = isMCPDomainAllowed;
 exports.isMCPDomainNotAllowedError = isMCPDomainNotAllowedError;
@@ -45799,6 +46135,7 @@ exports.refreshListAvatars = refreshListAvatars;
 exports.requireAdmin = requireAdmin;
 exports.resolveGraphTokenPlaceholder = resolveGraphTokenPlaceholder;
 exports.resolveGraphTokensInRecord = resolveGraphTokensInRecord;
+exports.resolveHanzoCloudKey = resolveHanzoCloudKey;
 exports.resolveHeaders = resolveHeaders;
 exports.resolveHostnameSSRF = resolveHostnameSSRF;
 exports.resolveJsonSchemaRefs = resolveJsonSchemaRefs;

@@ -64,7 +64,7 @@ const buildApp = ({ retentionMode = RetentionMode.TEMPORARY } = {}) => {
     req.config = { interfaceConfig: { retentionMode } };
     next();
   });
-  app.use('/api/share', shareRouter);
+  app.use('/v1/chat/share', shareRouter);
   return app;
 };
 
@@ -78,7 +78,7 @@ describe('share routes retention', () => {
     createSharedLink.mockResolvedValue({ shareId: 'share-123' });
 
     const response = await request(buildApp())
-      .post('/api/share/convo-123')
+      .post('/v1/chat/share/convo-123')
       .send({ targetMessageId: 'msg-123' });
 
     expect(response.status).toBe(200);
@@ -113,7 +113,7 @@ describe('share routes retention', () => {
     createSharedLink.mockResolvedValue({ shareId: 'share-123' });
 
     const response = await request(buildApp())
-      .post('/api/share/convo-123')
+      .post('/v1/chat/share/convo-123')
       .send({ targetMessageId: 'msg-123' });
 
     expect(response.status).toBe(404);
@@ -125,7 +125,7 @@ describe('share routes retention', () => {
     createSharedLink.mockResolvedValue({ shareId: 'share-123' });
 
     const response = await request(buildApp({ retentionMode: RetentionMode.ALL }))
-      .post('/api/share/convo-123')
+      .post('/v1/chat/share/convo-123')
       .send({ targetMessageId: 'msg-123' });
 
     expect(response.status).toBe(404);
@@ -137,7 +137,7 @@ describe('share routes retention', () => {
     mockGetSharedLinkExpiration.mockResolvedValue(activeExpiration);
     updateSharedLink.mockResolvedValue({ shareId: 'share-456' });
 
-    const response = await request(buildApp()).patch('/api/share/share-123');
+    const response = await request(buildApp()).patch('/v1/chat/share/share-123');
 
     expect(response.status).toBe(200);
     expect(mongoose.models.SharedLink.findOne).toHaveBeenCalledWith(
@@ -169,7 +169,7 @@ describe('share routes retention', () => {
     mockGetSharedLinkExpiration.mockResolvedValue(expiredExpiration);
     updateSharedLink.mockResolvedValue({ shareId: 'share-456' });
 
-    const response = await request(buildApp()).patch('/api/share/share-123');
+    const response = await request(buildApp()).patch('/v1/chat/share/share-123');
 
     expect(response.status).toBe(404);
     expect(updateSharedLink).not.toHaveBeenCalled();
@@ -181,7 +181,7 @@ describe('share routes retention', () => {
     updateSharedLink.mockResolvedValue({ shareId: 'share-456' });
 
     const response = await request(buildApp({ retentionMode: RetentionMode.ALL })).patch(
-      '/api/share/share-123',
+      '/v1/chat/share/share-123',
     );
 
     expect(response.status).toBe(404);
@@ -197,7 +197,7 @@ describe('share routes retention', () => {
     mockGetSharedLinkExpiration.mockResolvedValue(null);
     updateSharedLink.mockResolvedValue({ shareId: 'share-456' });
 
-    const response = await request(buildApp()).patch('/api/share/share-123');
+    const response = await request(buildApp()).patch('/v1/chat/share/share-123');
 
     expect(response.status).toBe(200);
     expect(updateSharedLink).toHaveBeenCalledWith('user-123', 'share-123', undefined, null);
@@ -208,7 +208,7 @@ describe('share routes retention', () => {
     mockGetSharedLinkExpiration.mockResolvedValue(undefined);
     updateSharedLink.mockResolvedValue({ shareId: 'share-456' });
 
-    const response = await request(buildApp()).patch('/api/share/share-123');
+    const response = await request(buildApp()).patch('/v1/chat/share/share-123');
 
     expect(response.status).toBe(200);
     expect(updateSharedLink).toHaveBeenCalledWith('user-123', 'share-123', undefined, undefined);
@@ -223,7 +223,7 @@ describe('share routes retention', () => {
     });
     updateSharedLink.mockResolvedValue({ shareId: 'share-456' });
 
-    const response = await request(buildApp()).patch('/api/share/share-123');
+    const response = await request(buildApp()).patch('/v1/chat/share/share-123');
 
     expect(response.status).toBe(200);
     expect(logger.error).toHaveBeenCalledWith(
@@ -239,7 +239,7 @@ describe('share routes retention', () => {
     updateSharedLink.mockResolvedValue({ shareId: 'share-456', targetMessageId: 'msg-456' });
 
     const response = await request(buildApp())
-      .patch('/api/share/share-123')
+      .patch('/v1/chat/share/share-123')
       .send({ targetMessageId: 'msg-456' });
 
     expect(response.status).toBe(200);
@@ -253,7 +253,7 @@ describe('share routes retention', () => {
 
   it('rejects non-string target message updates', async () => {
     const response = await request(buildApp())
-      .patch('/api/share/share-123')
+      .patch('/v1/chat/share/share-123')
       .send({ targetMessageId: 123 });
 
     expect(response.status).toBe(400);
