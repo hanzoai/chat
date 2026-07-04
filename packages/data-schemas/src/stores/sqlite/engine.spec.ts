@@ -127,6 +127,45 @@ describe('sqlite engine — applyUpdate', () => {
   });
 });
 
+describe('sqlite engine — prototype pollution guard', () => {
+  afterEach(() => {
+    // Fail loudly if any case leaked onto a shared prototype.
+    delete ({} as Record<string, unknown>).polluted;
+    delete (Object.prototype as Record<string, unknown>).polluted;
+  });
+
+  it('ignores a dotted __proto__ write in $set (no global pollution)', () => {
+    const out = applyUpdate({ a: 1 }, { $set: { '__proto__.polluted': 'yes' } }, false);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    expect((Object.prototype as Record<string, unknown>).polluted).toBeUndefined();
+    expect(out).toEqual({ a: 1 });
+  });
+
+  it('ignores constructor.prototype pollution in $set', () => {
+    applyUpdate({}, { $set: { 'constructor.prototype.polluted': 'yes' } }, false);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
+  it('ignores a single-segment own __proto__ key (JSON-sourced payload)', () => {
+    // JSON.parse creates a real own "__proto__" key (unlike an object literal,
+    // which would set the prototype) — the shape a malicious request body takes.
+    const malicious = JSON.parse('{"__proto__":{"polluted":"yes"}}');
+    const out = applyUpdate({ a: 1 }, { $set: malicious }, false);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    expect(out).toEqual({ a: 1 });
+  });
+
+  it('ignores __proto__ paths via $setOnInsert and $inc', () => {
+    applyUpdate({}, { $setOnInsert: { '__proto__.polluted': 1 } }, true);
+    applyUpdate({}, { $inc: { '__proto__.polluted': 1 } }, false);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
+  it('still writes legitimate nested paths', () => {
+    expect(applyUpdate({}, { $set: { 'a.b.c': 1 } }, false)).toEqual({ a: { b: { c: 1 } } });
+  });
+});
+
 describe('sqlite engine — projection & sort', () => {
   const doc = { _id: '1', a: 1, b: 2, c: 3 };
 
