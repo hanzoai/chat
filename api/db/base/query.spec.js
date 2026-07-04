@@ -1,5 +1,5 @@
 'use strict';
-const { matches, applyUpdate, parseProjection, project, sortDocs } = require('./query');
+const { matches, applyUpdate, parseProjection, applyProjection, sortDocs } = require('./query');
 
 describe('base/query matcher', () => {
   const doc = {
@@ -69,12 +69,32 @@ describe('base/query applyUpdate', () => {
 });
 
 describe('base/query projection + sort', () => {
-  const d = { _id: '1', a: 1, b: 2, c: 3 };
+  const d = { _id: '1', a: 1, b: 2, c: 3, password: 'secret' };
+  const hidden = new Set(['password']);
   test('inclusion projection keeps _id', () => {
-    expect(project(d, parseProjection('a b'))).toEqual({ _id: '1', a: 1, b: 2 });
+    expect(applyProjection(d, parseProjection('a b'), hidden)).toEqual({ _id: '1', a: 1, b: 2 });
   });
   test('exclusion projection', () => {
-    expect(project(d, parseProjection('-b -c'))).toEqual({ _id: '1', a: 1 });
+    expect(applyProjection(d, parseProjection('-b -c -password'), hidden)).toEqual({ _id: '1', a: 1 });
+  });
+  test('select:false field hidden by default', () => {
+    expect(applyProjection(d, null, hidden)).toEqual({ _id: '1', a: 1, b: 2, c: 3 });
+  });
+  test('+field re-includes a select:false field on top of default', () => {
+    expect(applyProjection(d, parseProjection('+password'), hidden)).toEqual({
+      _id: '1',
+      a: 1,
+      b: 2,
+      c: 3,
+      password: 'secret',
+    });
+  });
+  test('explicit inclusion can return a select:false field', () => {
+    expect(applyProjection(d, parseProjection('a password'), hidden)).toEqual({
+      _id: '1',
+      a: 1,
+      password: 'secret',
+    });
   });
   test('sort by multiple keys / directions', () => {
     const rows = [

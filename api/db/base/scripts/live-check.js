@@ -36,13 +36,18 @@ async function main() {
   assert(userId, 'createUser returned an id');
   ok('createUser (User + Balance grant)');
 
-  const user = await methods.findUser({ email: email.toUpperCase() }); // email normalized
-  assert(user && user.email === email, 'findUser by (normalized) email');
-  assert.strictEqual(user.role, undefined === user.role ? user.role : user.role); // role optional
+  // Default read hides select:false secrets (password/totpSecret) — regression guard.
+  const safeUser = await methods.findUser({ email: email.toUpperCase() }); // email normalized
+  assert(safeUser && safeUser.email === email, 'findUser by (normalized) email');
+  assert.strictEqual(safeUser.password, undefined, 'password NOT returned by default (select:false)');
+  ok('findUser default view hides the password hash (select:false honored)');
+
+  // Real login path selects +password explicitly (see api/strategies/localStrategy.js).
+  const user = await methods.findUser({ email }, '+password');
   const match = await bcrypt.compare(plain, user.password);
   assert.strictEqual(match, true, 'bcrypt.compare succeeds — password stored hashed');
   assert.notStrictEqual(user.password, plain, 'password is NOT plaintext');
-  ok('findUser + bcrypt password verification (hashed, never plaintext)');
+  ok('findUser(+password) + bcrypt verification (hashed, never plaintext)');
 
   const balance = await models.Balance.findOne({ user: user._id }).lean();
   assert.strictEqual(balance.tokenCredits, 100000, 'balance granted via $inc upsert');

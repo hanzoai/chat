@@ -18,9 +18,10 @@ const {
   matches,
   applyUpdate,
   parseProjection,
-  project,
+  applyProjection,
   sortDocs,
   getPath,
+  setPath,
   idString,
 } = require('./query');
 const { describeSchema, resolveDefault } = require('./schema');
@@ -65,6 +66,8 @@ class BaseModel {
     this._timestamps = desc.timestamps;
     this._promoted = desc.promoted;
     this._promotedNames = desc.promoted.map((p) => p.name);
+    this._deselected = desc.deselected;
+    this._dateFields = desc.dateFields;
   }
 
   /** Register/verify this collection's schema in Base. Idempotent. */
@@ -90,13 +93,13 @@ class BaseModel {
     return record;
   }
 
-  /** Materialize a stored Mongo doc into a plain object with Date timestamps. */
+  /** Materialize a stored Mongo doc: all Date-typed fields become Date objects. */
   _hydrate(doc) {
-    if (this._timestamps) {
-      for (const f of [this._timestamps.createdAt, this._timestamps.updatedAt]) {
-        if (typeof doc[f] === 'string') {
-          doc[f] = new Date(doc[f]);
-        }
+    for (const f of this._dateFields) {
+      const v = getPath(doc, f);
+      // Cast ISO strings and epoch numbers (e.g. `default: Date.now`) to Date.
+      if (typeof v === 'string' || typeof v === 'number') {
+        setPath(doc, f, new Date(v));
       }
     }
     return doc;
@@ -415,7 +418,7 @@ class BaseModel {
           docs = [{ [arg]: docs.length }];
           break;
         case '$project':
-          docs = docs.map((d) => project(d, parseProjection(arg)));
+          docs = docs.map((d) => applyProjection(d, parseProjection(arg)));
           break;
         case '$unwind': {
           const field = (typeof arg === 'string' ? arg : arg.path).replace(/^\$/, '');
@@ -614,7 +617,7 @@ class Query {
       if (!doc) {
         return null;
       }
-      doc = project(doc, parseProjection(this._projection));
+      doc = applyProjection(doc, parseProjection(this._projection), model._deselected);
       return this._lean ? doc : makeDocument(model, doc);
     }
     if (this.op === 'findOneAndDelete') {
@@ -624,7 +627,11 @@ class Query {
         return null;
       }
       await model.store.delete(model.collectionName, hit.baseId);
-      const doc = project(model._hydrate({ ...hit.doc }), parseProjection(this._projection));
+      const doc = applyProjection(
+        model._hydrate({ ...hit.doc }),
+        parseProjection(this._projection),
+        model._deselected,
+      );
       return this._lean ? doc : makeDocument(model, doc);
     }
 
@@ -642,14 +649,20 @@ class Query {
       if (!doc) {
         return null;
       }
-      const out = project(model._hydrate({ ...doc }), parseProjection(this._projection));
+      const out = applyProjection(
+        model._hydrate({ ...doc }),
+        parseProjection(this._projection),
+        model._deselected,
+      );
       return this._lean ? out : makeDocument(model, out);
     }
     if (this._limit != null) {
       docs = docs.slice(0, this._limit);
     }
     const projection = parseProjection(this._projection);
-    const out = docs.map((d) => project(model._hydrate({ ...d }), projection));
+    const out = docs.map((d) =>
+      applyProjection(model._hydrate({ ...d }), projection, model._deselected),
+    );
     return this._lean ? out : out.map((d) => makeDocument(model, d));
   }
 
