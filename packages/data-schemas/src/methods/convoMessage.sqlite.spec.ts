@@ -234,7 +234,7 @@ describe('Conversation domain on SQLite (real methods)', () => {
 
 describe('data path is mongoose-free', () => {
   it('never requires mongoose to satisfy the conversations+messages contract', () => {
-    // The handle is pure node:sqlite; the methods above ran green against it.
+    // The handle is a pure SQLite store; the methods above ran green against it.
     expect(handle.models.Conversation.constructor.name).toBe('DocModel');
     expect(handle.models.Message.constructor.name).toBe('DocModel');
   });

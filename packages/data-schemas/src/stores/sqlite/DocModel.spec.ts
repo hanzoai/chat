@@ -1,7 +1,7 @@
 import { createSqliteHandle, type SqliteHandle } from './index';
 import type { DocModel } from './DocModel';
 
-describe('DocModel (node:sqlite backend)', () => {
+describe('DocModel (better-sqlite3 backend)', () => {
   let handle: SqliteHandle;
   let Message: DocModel;
   let Conversation: DocModel;

@@ -27,6 +27,7 @@ import { createMemoryModel } from './memory';
 import { createAccessRoleModel } from './accessRole';
 import { createAclEntryModel } from './aclEntry';
 import { createGroupModel } from './group';
+import { createSystemGrantModel } from './systemGrant';
 import {
   createSqliteHandle,
   createDualWriteModel,
@@ -64,7 +65,7 @@ function parseStoreCsv(value?: string): string[] {
 }
 
 /**
- * One SQLite handle (one `node:sqlite` connection) per process, shared across
+ * One SQLite handle (one driver connection) per process, shared across
  * every `createModels` call — the api requires the data-schemas index from three
  * entry points, and a per-call handle would open three connections to the same
  * file and race for the WAL write lock. Keyed by the collection set so a changed
@@ -140,6 +141,7 @@ export function createModels(mongoose: typeof import('mongoose')) {
     AccessRole: createAccessRoleModel(mongoose),
     AclEntry: createAclEntryModel(mongoose),
     Group: createGroupModel(mongoose),
+    SystemGrant: createSystemGrantModel(mongoose),
   };
   return applySqliteOverrides(models);
 }
