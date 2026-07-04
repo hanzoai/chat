@@ -6421,6 +6421,10 @@ let sharedHandleKey = '';
 function sharedSqliteHandle(names) {
     const key = [...names].sort().join(',');
     if (!sharedHandle || sharedHandleKey !== key) {
+        // Close the prior native connection before replacing it — a bare reassign
+        // leaks the better-sqlite3 handle (its late GC finalizer corrupts sibling
+        // SQLite state in a shared worker; latent prod leak on any rekey).
+        sharedHandle === null || sharedHandle === void 0 ? void 0 : sharedHandle.close();
         sharedHandle = createSqliteHandle(names);
         sharedHandleKey = key;
     }
