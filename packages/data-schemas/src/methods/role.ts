@@ -5,13 +5,13 @@ import type { DataHandle } from '~/common/dataHandle';
 export function createRoleMethods(handle: DataHandle) {
   /**
    * Initialize default roles in the system.
-   * Creates the default roles (ADMIN, USER) if they don't exist in the database.
-   * Updates existing roles with new permission types if they're missing.
+   * Creates the default roles (ADMIN, USER, GUEST) if they don't exist in the
+   * database. Updates existing roles with new permission types if they're missing.
    */
   async function initializeRoles() {
     const Role = handle.models.Role;
 
-    for (const roleName of [SystemRoles.ADMIN, SystemRoles.USER]) {
+    for (const roleName of [SystemRoles.ADMIN, SystemRoles.USER, SystemRoles.GUEST]) {
       const role = await Role.findOne({ name: roleName }).lean();
       const defaultPerms = roleDefaults[roleName].permissions;
 

@@ -114,6 +114,10 @@ const defaultRolesSchema = z.object({
     name: z.literal(SystemRoles.USER),
     permissions: permissionsSchema,
   }),
+  [SystemRoles.GUEST]: roleSchema.extend({
+    name: z.literal(SystemRoles.GUEST),
+    permissions: permissionsSchema,
+  }),
 });
 
 export const roleDefaults = defaultRolesSchema.parse({
@@ -184,6 +188,37 @@ export const roleDefaults = defaultRolesSchema.parse({
   },
   [SystemRoles.USER]: {
     name: SystemRoles.USER,
+    permissions: {
+      [PermissionTypes.PROMPTS]: {},
+      [PermissionTypes.BOOKMARKS]: {},
+      [PermissionTypes.MEMORIES]: {},
+      [PermissionTypes.AGENTS]: {},
+      [PermissionTypes.MULTI_CONVO]: {},
+      [PermissionTypes.TEMPORARY_CHAT]: {},
+      [PermissionTypes.RUN_CODE]: {},
+      [PermissionTypes.WEB_SEARCH]: {},
+      [PermissionTypes.PEOPLE_PICKER]: {
+        [Permissions.VIEW_USERS]: false,
+        [Permissions.VIEW_GROUPS]: false,
+        [Permissions.VIEW_ROLES]: false,
+      },
+      [PermissionTypes.MARKETPLACE]: {
+        [Permissions.USE]: false,
+      },
+      [PermissionTypes.FILE_SEARCH]: {},
+      [PermissionTypes.FILE_CITATIONS]: {},
+      [PermissionTypes.MCP_SERVERS]: {},
+      [PermissionTypes.REMOTE_AGENTS]: {},
+    },
+  },
+  // Ephemeral anonymous guests (never persisted, scoped to the free Zen
+  // endpoint by enforceGuestScope middleware). Their JWT carries role GUEST,
+  // so getRoleByName('GUEST') must resolve to a real, named role or every
+  // guest generation dies at the role lookup. Mirrors USER's minimal grant;
+  // guest containment (endpoint/model/rate) is enforced at the middleware
+  // layer, not by these permissions.
+  [SystemRoles.GUEST]: {
+    name: SystemRoles.GUEST,
     permissions: {
       [PermissionTypes.PROMPTS]: {},
       [PermissionTypes.BOOKMARKS]: {},
