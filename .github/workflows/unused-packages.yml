@@ -248,35 +248,35 @@ jobs:
             cd ..
           fi
 
+      # Post via github-script (Octokit + the built-in token) rather than the gh
+      # CLI: gh is not installed on the self-hosted ARC runners, so `gh api` here
+      # exits 127. The job already grants `pull-requests: write`.
       - name: Post comment on PR if unused dependencies are found
         if: env.ROOT_UNUSED != '' || env.CLIENT_UNUSED != '' || env.API_UNUSED != ''
-        run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-
-          ROOT_LIST=$(echo "$ROOT_UNUSED" | awk '{print "- `" $0 "`"}')
-          CLIENT_LIST=$(echo "$CLIENT_UNUSED" | awk '{print "- `" $0 "`"}')
-          API_LIST=$(echo "$API_UNUSED" | awk '{print "- `" $0 "`"}')
-
-          COMMENT_BODY=$(cat <<EOF
-          ### 🚨 Unused NPM Packages Detected
-
-          The following **unused dependencies** were found:
-
-          $(if [[ ! -z "$ROOT_UNUSED" ]]; then echo "#### 📂 Root \`package.json\`"; echo ""; echo "$ROOT_LIST"; echo ""; fi)
-
-          $(if [[ ! -z "$CLIENT_UNUSED" ]]; then echo "#### 📂 Client \`client/package.json\`"; echo ""; echo "$CLIENT_LIST"; echo ""; fi)
-
-          $(if [[ ! -z "$API_UNUSED" ]]; then echo "#### 📂 API \`api/package.json\`"; echo ""; echo "$API_LIST"; echo ""; fi)
-
-          ⚠️ **Please remove these unused dependencies to keep your project clean.**
-          EOF
-          )
-
-          gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
-            -f body="$COMMENT_BODY" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const section = (title, val) => {
+              const items = (val || '').split('\n').map((s) => s.trim()).filter(Boolean);
+              if (!items.length) return '';
+              return `#### 📂 ${title}\n\n${items.map((i) => `- \`${i}\``).join('\n')}\n`;
+            };
+            const body = [
+              '### 🚨 Unused NPM Packages Detected',
+              '',
+              'The following **unused dependencies** were found:',
+              '',
+              section('Root `package.json`', process.env.ROOT_UNUSED),
+              section('Client `client/package.json`', process.env.CLIENT_UNUSED),
+              section('API `api/package.json`', process.env.API_UNUSED),
+              '⚠️ **Please remove these unused dependencies to keep your project clean.**',
+            ].filter(Boolean).join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
 
       - name: Fail workflow if unused dependencies found
         if: env.ROOT_UNUSED != '' || env.CLIENT_UNUSED != '' || env.API_UNUSED != ''
