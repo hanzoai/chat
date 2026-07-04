@@ -10,7 +10,7 @@
  * handle or this SQLite handle. A networked Hanzo Base / cloud `/v1` backend is
  * a future third implementation of the same handle shape.
  */
-import { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync } from 'node:sqlite';
 import { DocModel, type CollectionSpec } from './DocModel';
 import { CHAT_COLLECTION_SPECS } from './collections';
 import { ObjectId } from './engine';
@@ -31,8 +31,14 @@ export interface SqliteHandle {
  * in-memory database (used by tests). WAL + NORMAL sync for durable throughput.
  */
 export function openDatabase(dbPath?: string): DatabaseSync {
+  // `node:sqlite` (DatabaseSync) exists only on Node >= 22.5. This store is
+  // inert by default (unset CHAT_STORE_SQLITE) yet the data-schemas index is
+  // loaded at server boot, so a static import would crash the Node 20 runtime.
+  // Require it lazily — only when a database is actually opened.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sqlite = require('node:sqlite') as typeof import('node:sqlite');
   const path = dbPath ?? process.env.CHAT_SQLITE_PATH ?? ':memory:';
-  const db = new DatabaseSync(path);
+  const db = new sqlite.DatabaseSync(path);
   if (path !== ':memory:') {
     db.exec('PRAGMA journal_mode = WAL');
     db.exec('PRAGMA synchronous = NORMAL');
