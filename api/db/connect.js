@@ -5,9 +5,11 @@ const { logger } = require('@librechat/data-schemas');
 const mongoose = require('mongoose');
 const MONGO_URI = process.env.MONGO_URI;
 
-if (!MONGO_URI) {
-  throw new Error('Please define the MONGO_URI environment variable');
-}
+// MONGO_URI is intentionally optional: in SQLite-only mode (every collection
+// served from CHAT_STORE_SQLITE, chat-docdb deleted) there is no Mongo to
+// connect to. connectDb() below handles the unset case by skipping the
+// connection rather than failing boot. When MONGO_URI IS set (default and the
+// dual-write migration window) the connection is required as before.
 /** The maximum number of connections in the connection pool. */
 const maxPoolSize = parseInt(process.env.MONGO_MAX_POOL_SIZE) || undefined;
 /** The minimum number of connections in the connection pool. */
@@ -45,6 +47,16 @@ mongoose.connection.on('error', (err) => {
 });
 
 async function connectDb() {
+  if (!MONGO_URI) {
+    // SQLite-only mode: skip Mongo entirely. Disable command buffering so any
+    // stray mongoose query (e.g. Meili indexSync, which still references
+    // mongoose.models directly) fails fast and is swallowed by its caller
+    // instead of hanging forever on a pool that will never connect.
+    mongoose.set('bufferCommands', false);
+    logger.info('[connectDb] MONGO_URI unset — SQLite-only mode, skipping MongoDB connection');
+    return null;
+  }
+
   if (cached.conn && cached.conn?._readyState === 1) {
     return cached.conn;
   }
