@@ -1,9 +1,12 @@
 import mongoose from 'mongoose';
-import { createModels } from './index';
+import { createModels, closeSharedSqliteHandle } from './index';
 
 describe('createModels — per-domain store registry', () => {
   afterEach(() => {
     delete process.env.CHAT_STORE_SQLITE;
+    // Rekeying createModels opens the shared native handle; close it so no open
+    // SQLite connection leaks into a sibling spec sharing this jest worker.
+    closeSharedSqliteHandle();
   });
 
   it('defaults to mongoose for every collection (live path unchanged)', () => {
