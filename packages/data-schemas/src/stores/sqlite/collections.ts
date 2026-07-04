@@ -41,6 +41,9 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     unique: ['messageId'],
     index: ['conversationId', 'user', 'organization', 'parentMessageId', 'createdAt', 'expiredAt'],
     dateFields: ['createdAt', 'updatedAt', 'expiredAt'],
+    // `_meiliIndex` is `select:false` upstream — an internal search-sync flag,
+    // never returned to clients.
+    deselected: ['_meiliIndex'],
   },
 
   // ---- Batch 2: self-contained chat documents (no tenant plugin) ----
@@ -152,6 +155,9 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     name: 'AgentApiKey',
     index: ['userId', 'name', 'keyPrefix', 'expiresAt'],
     dateFields: ['lastUsedAt', 'expiresAt', 'createdAt', 'updatedAt'],
+    // `keyHash` is `select:false` — the secret API-key hash. Queried by value
+    // (findOne({keyHash})) but never returned unless a `+keyHash` asks for it.
+    deselected: ['keyHash'],
   },
   Assistant: {
     name: 'Assistant',
@@ -224,6 +230,10 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     unique: ['email', 'openidId', 'googleId', 'githubId'],
     index: ['organization', 'provider', 'username', 'idOnTheSource', 'role'],
     dateFields: ['createdAt', 'updatedAt', 'expiresAt'],
+    // `totpSecret` + `backupCodes` are `select:false` — 2FA secrets. Hidden on
+    // every read unless a `+totpSecret`/`+backupCodes` projection requests them
+    // (as TwoFactorAuthController does).
+    deselected: ['totpSecret', 'backupCodes'],
   },
   Session: {
     name: 'Session',

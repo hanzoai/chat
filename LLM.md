@@ -258,6 +258,38 @@ store that is NOT on the Go backend.
   cutover. Until then Mongo stays (ripping it = data loss + dead chat).
   **Coordinate with the openapi agent** (canonical spec + SDK regen).
 
+### SQLite store — encryption at rest (envelope CEK/KMS keying)
+
+The embedded SQLite backend (`packages/data-schemas/src/stores/sqlite/`) encrypts
+its file with SQLCipher AES-256, byte-compatible with the canonical Go driver
+`hanzoai/sqlite` (proven by a Go↔Node cross-open of the same file). Keying is the
+rotation-safe **envelope** model — a JS port of `hanzoai/sqlite`'s `cek.go`:
+
+- `cek.ts` — pure crypto: `deriveKEK` = HKDF-SHA256(master, salt=32×0x00,
+  info=`lp(type)||lp(id)`); `newDEK`/`wrapDEK`/`unwrapDEK` (AES-256-GCM, blob =
+  `version(1)||nonce(12)||ct(32)||tag(16)`, principal-binding AAD). Golden vector:
+  `deriveKEK(0x00..1f,"global","hanzo-chat")=9654df53…a777dda2`.
+- `keying.ts` — lifecycle: chat keys under ONE principal **PrincipalGlobal /
+  `"hanzo-chat"`** (single shared DB file, row-level tenant isolation — NOT
+  per-org files). A per-file random DEK (the page key) lives wrapped in a sidecar
+  at `${dbPath}.dek` (atomic write, 0600). `rewrapSidecar(old,new)` rotates the
+  master by rewrapping the DEK — pages untouched, O(1), never bricks.
+- `openDatabase()` reads master key from env **`CHAT_SQLITE_MASTER_KEY`** (64-hex
+  = 32 bytes). Unset → opens UNENCRYPTED (tests/local dev). SQLCipher params on
+  the Node `better-sqlite3-multiple-ciphers` side: `PRAGMA cipher='sqlcipher';
+  legacy=4; key="x'HEX'"` — `legacy=4` = byte-compatible with SQLCipher **v4**
+  (the format real libsqlcipher/`hanzoai/sqlite` uses); it is NOT "deprecated".
+
+**KMS provisioning (CTO provisions at cutover — documented, NOT applied here):**
+`CHAT_SQLITE_MASTER_KEY` is a 32-byte hex secret sourced from KMS (kms.hanzo.ai),
+synced into the existing `chat-secrets` K8s Secret via a KMSSecret CRD, and mounted
+into the pod as the env var of the same name. In `universe infra/k8s/chat/`:
+add secret **`chat-sqlite-master-key`** (KMS path `chat/CHAT_SQLITE_MASTER_KEY`)
+to the chat KMSSecret spec, key `CHAT_SQLITE_MASTER_KEY`; reference it from the
+Deployment `env` (`secretKeyRef: { name: chat-secrets, key: CHAT_SQLITE_MASTER_KEY }`).
+Rotation = `kms rotate` the secret + call `rewrapSidecar` per DB file (no page
+rewrite). NEVER commit the key; NEVER log master/KEK/DEK/sidecar/keyed-DSN.
+
 ### IAM-native auth (HIP-0111) — federated to hanzo.id, LIVE
 
 - **Prod (backend-proxied)**: LibreChat passport `openid-client` strategy,

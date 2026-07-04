@@ -21,6 +21,8 @@ const JEST = join(dirname(require.resolve('jest/package.json')), 'bin', 'jest.js
 /** Native-driver specs — each run in its own process. */
 const ISOLATED = [
   'src/stores/sqlite/DocModel.spec.ts',
+  'src/stores/sqlite/deselect.spec.ts',
+  'src/stores/sqlite/keying.spec.ts',
   'src/stores/sqlite/DualWriteModel.spec.ts',
   'src/models/storeRegistry.spec.ts',
   'src/models/plugins/tenantIsolation.coverage.spec.ts',

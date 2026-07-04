@@ -61,6 +61,15 @@ export interface CollectionSpec {
    * SystemGrant). Fail-closed under `TENANT_ISOLATION_STRICT=true`.
    */
   tenantIsolated?: boolean;
+  /**
+   * Fields the mongoose schema marks `select: false` (secrets like
+   * `User.totpSecret`/`backupCodes`, `AgentApiKey.keyHash`, and internal flags
+   * like `Message._meiliIndex`). They are STRIPPED from every read result unless
+   * explicitly requested via a `+field` projection (Mongoose semantics), so a
+   * projection-less read never leaks them — the store enforces the same hiding
+   * mongoose does at the schema layer.
+   */
+  deselected?: string[];
 }
 
 interface WriteResult {
@@ -96,6 +105,8 @@ export class DocModel {
   private readonly refs: Record<string, string>;
   private readonly defaults: Record<string, unknown>;
   private readonly tenantIsolated: boolean;
+  /** Schema `select:false` fields, hidden on read unless a `+field` requests them. */
+  private readonly deselected: ReadonlySet<string>;
   /** Resolves sibling collections for `.populate()`; wired by createSqliteHandle. */
   resolver?: (name: string) => DocModel | undefined;
 
@@ -108,6 +119,7 @@ export class DocModel {
     this.refs = spec.refs ?? {};
     this.defaults = spec.defaults ?? {};
     this.tenantIsolated = spec.tenantIsolated ?? false;
+    this.deselected = new Set(spec.deselected ?? []);
     this.ensureTable(spec);
   }
 
@@ -221,7 +233,7 @@ export class DocModel {
   /** Fetches a doc by `_id` and applies a projection — used by `.populate()`. */
   getByIdProjected(id: string, projection?: string | Record<string, 0 | 1>): Doc | null {
     const doc = this.getRawById(id);
-    return doc ? projectDoc(doc, projection) : null;
+    return doc ? projectDoc(doc, projection, this.deselected) : null;
   }
 
   private get table(): string {
@@ -388,7 +400,7 @@ export class DocModel {
           this.applyPopulate(d, opts.populate);
         }
       }
-      docs = docs.map((d) => projectDoc(d, opts.projection));
+      docs = docs.map((d) => projectDoc(d, opts.projection, this.deselected));
       if (!opts.lean) {
         docs = docs.map((d) => hydrate(d));
       }
@@ -418,7 +430,7 @@ export class DocModel {
         this.applyPopulate(d, opts.populate);
       }
     }
-    docs = docs.map((d) => projectDoc(d, opts.projection));
+    docs = docs.map((d) => projectDoc(d, opts.projection, this.deselected));
     if (!opts.lean) {
       docs = docs.map((d) => hydrate(d));
     }
@@ -647,8 +659,14 @@ export class DocModel {
       } else if (op === '$limit') {
         docs = docs.slice(0, stage.$limit as number);
       } else if (op === '$project') {
-        docs = docs.map((d) => projectDoc(d, stage.$project as Record<string, 0 | 1>));
+        docs = docs.map((d) => projectDoc(d, stage.$project as Record<string, 0 | 1>, this.deselected));
       }
+    }
+    // Fail-secure: strip schema `select:false` fields from aggregate output too.
+    // Mongoose aggregation bypasses `select:false`; this store does NOT, so a
+    // secret can never leak through a pipeline that forgot to `$project` it out.
+    if (this.deselected.size) {
+      docs = docs.map((d) => projectDoc(d, undefined, this.deselected));
     }
     return docs;
   }
@@ -816,8 +834,10 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
     this.projection = opts.projection;
   }
 
-  select(projection: string | Record<string, 0 | 1>): this {
-    this.projection = projection;
+  select(projection: string | string[] | Record<string, 0 | 1>): this {
+    // Mongoose accepts an array of field tokens (e.g. `['+totpSecret','name']`);
+    // normalize it to the space-separated string form the engine parses.
+    this.projection = Array.isArray(projection) ? projection.join(' ') : projection;
     return this;
   }
 

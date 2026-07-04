@@ -14,11 +14,20 @@ import type Database from 'better-sqlite3-multiple-ciphers';
 import { DocModel, type CollectionSpec } from './DocModel';
 import { CHAT_COLLECTION_SPECS } from './collections';
 import { ObjectId } from './engine';
+import { keySqlcipher, loadOrCreateDEK, masterKeyFromEnv } from './keying';
 
 export { DocModel, type CollectionSpec } from './DocModel';
 export { CHAT_COLLECTION_SPECS } from './collections';
 export { ObjectId } from './engine';
 export { createDualWriteModel, DualWriteModel } from './DualWriteModel';
+export {
+  CHAT_PRINCIPAL,
+  MASTER_KEY_ENV,
+  loadOrCreateDEK,
+  masterKeyFromEnv,
+  rewrapSidecar,
+  sidecarPath,
+} from './keying';
 
 export interface SqliteHandle {
   models: Record<string, DocModel>;
@@ -30,9 +39,17 @@ export interface SqliteHandle {
 /**
  * Opens a SQLite database. Defaults to the path in `CHAT_SQLITE_PATH`, else an
  * in-memory database (used by tests). WAL + NORMAL sync for durable throughput.
- * A non-memory file is opened encrypted (SQLCipher AES-256, `hanzoai/sqlite`
- * contract) when `CHAT_SQLITE_KEY` holds a 64-hex-char raw key; unset opens
- * unencrypted (tests + local dev).
+ *
+ * Encryption at rest (SQLCipher AES-256, byte-compatible with the canonical Go
+ * driver `hanzoai/sqlite`) is driven by the rotation-safe ENVELOPE model — one
+ * canonical production path, no raw-key env seam:
+ *   - `CHAT_SQLITE_MASTER_KEY` (64-hex = 32 bytes, sourced from KMS) is the KMS
+ *     master key. Unset → the file is opened UNENCRYPTED (tests + local dev).
+ *   - A per-file random DEK (the SQLCipher page key) lives WRAPPED under a KEK
+ *     derived from the master key in a sidecar at `${dbPath}.dek`. On open the
+ *     sidecar is unwrapped (or minted+written on first open); the raw DEK keys
+ *     SQLCipher and is never persisted or logged. Rotating the master key rewraps
+ *     the sidecar (DEK unchanged → pages untouched); see `rewrapSidecar`.
  */
 export function openDatabase(dbPath?: string): Database.Database {
   // `better-sqlite3-multiple-ciphers` is a native addon. The data-schemas index
@@ -44,17 +61,11 @@ export function openDatabase(dbPath?: string): Database.Database {
   const path = dbPath ?? process.env.CHAT_SQLITE_PATH ?? ':memory:';
   const db = new DatabaseCtor(path);
   if (path !== ':memory:') {
-    // SQLCipher keying MUST precede any statement that touches DB pages. Never
-    // log the key or the keyed path. KMS/CEK derivation is a later milestone;
-    // this only honors a raw key supplied out-of-band.
-    const key = process.env.CHAT_SQLITE_KEY;
-    if (key) {
-      if (!/^[0-9a-f]{64}$/i.test(key)) {
-        throw new Error('[sqlite-store] CHAT_SQLITE_KEY must be a 64-hex-char raw key');
-      }
-      db.pragma("cipher='sqlcipher'");
-      db.pragma('legacy=4');
-      db.pragma(`key="x'${key}'"`);
+    // SQLCipher keying MUST precede any statement that touches DB pages. An
+    // in-memory database has no file at rest and no sidecar, so it is never keyed.
+    const masterKey = masterKeyFromEnv();
+    if (masterKey) {
+      keySqlcipher(db, loadOrCreateDEK(path, masterKey));
     }
     db.exec('PRAGMA journal_mode = WAL');
     db.exec('PRAGMA synchronous = NORMAL');

@@ -533,43 +533,155 @@ function isEachSpec(v: unknown): boolean {
  * Applies a Mongo string projection ('a b -c') or object projection.
  * Inclusion projections always keep `_id` unless explicitly excluded.
  */
-export function projectDoc(doc: Doc, projection?: string | Record<string, 0 | 1>): Doc {
-  if (!projection) {
-    return doc;
-  }
-  const spec: Record<string, 0 | 1> = {};
+interface ParsedProjection {
+  mode: 'inclusion' | 'exclusion' | 'none';
+  /** Fields to project IN under inclusion mode: plain includes + `+` overrides. */
+  include: string[];
+  /** Fields to remove under exclusion mode. */
+  exclude: string[];
+  /** Whether `_id` survives (mongoose keeps it unless `{_id:0}` / `-_id`). */
+  includeId: boolean;
+  /** Fields explicitly requested (object `:1`, string bare, or `+field`) → bypass deselection. */
+  requested: Set<string>;
+}
+
+/**
+ * Parses a mongoose-shaped projection into inclusion/exclusion intent plus the
+ * set of explicitly-requested fields. Supports the `+field` string prefix, which
+ * mongoose uses to re-include a schema `select:false` (deselected) field WITHOUT
+ * turning the query into an inclusion projection — so `'+totpSecret'` yields the
+ * full document plus that one deselected field.
+ */
+function parseProjection(projection?: string | Record<string, 0 | 1>): ParsedProjection {
+  const plain: string[] = [];
+  const plus: string[] = [];
+  const exclude: string[] = [];
+  let includeId = true;
   if (typeof projection === 'string') {
     for (const raw of projection.split(/\s+/).filter(Boolean)) {
-      if (raw.startsWith('-')) {
-        spec[raw.slice(1)] = 0;
+      if (raw.startsWith('+')) {
+        plus.push(raw.slice(1));
+      } else if (raw.startsWith('-')) {
+        const f = raw.slice(1);
+        if (f === '_id') {
+          includeId = false; // `-_id` only drops _id; never triggers inclusion
+        } else {
+          exclude.push(f);
+        }
       } else {
-        spec[raw] = 1;
+        // A bare token (including `_id`) is an inclusion field: `.select('_id')`
+        // returns ONLY _id, matching mongoose.
+        plain.push(raw);
       }
     }
-  } else {
-    Object.assign(spec, projection);
+  } else if (projection) {
+    for (const [k, v] of Object.entries(projection)) {
+      if (k === '_id') {
+        if (v === 0) {
+          includeId = false;
+        } else {
+          plain.push('_id'); // `{_id:1}` is an inclusion of only _id
+        }
+      } else if (v === 1) {
+        plain.push(k);
+      } else if (v === 0) {
+        exclude.push(k);
+      }
+    }
   }
+  // A bare include (plain field or object `:1`) selects inclusion mode. A projection
+  // of only `-`/`+` (or object `:0`) is exclusion-from-the-full-document; a `+`
+  // override alone must NOT collapse the result to just that field, so it is
+  // exclusion mode with an empty exclude list.
+  const mode: ParsedProjection['mode'] = plain.length
+    ? 'inclusion'
+    : exclude.length || plus.length
+      ? 'exclusion'
+      : 'none';
+  return {
+    mode,
+    include: [...plain, ...plus],
+    exclude,
+    includeId,
+    requested: new Set([...plain, ...plus]),
+  };
+}
 
-  const isInclusion = Object.values(spec).some((v) => v === 1);
+/**
+ * Deep-copies the plain-object/array STRUCTURE of a value while passing Dates and
+ * any non-plain object through by reference. Used by projection: it must not
+ * mutate the source doc when deleting keys, but it also must not re-instantiate
+ * Dates (which `structuredClone`/JSON round-trips would), because a rebuilt Date
+ * loses `instanceof Date` across realms and breaks the engine's date comparisons.
+ */
+function cloneStructure(v: unknown): unknown {
+  if (v === null || typeof v !== 'object' || v instanceof Date) {
+    return v;
+  }
+  if (Array.isArray(v)) {
+    return v.map(cloneStructure);
+  }
+  // Only clone plain objects; anything exotic (Buffer, ObjectId, …) is shared.
+  const proto = Object.getPrototypeOf(v);
+  if (proto !== Object.prototype && proto !== null) {
+    return v;
+  }
+  const out: Doc = {};
+  for (const [k, val] of Object.entries(v as Doc)) {
+    out[k] = cloneStructure(val);
+  }
+  return out;
+}
 
-  if (isInclusion) {
-    const out: Doc = {};
-    if (spec._id !== 0 && '_id' in doc) {
+/**
+ * Projects a document per a mongoose-shaped `projection`, then enforces the
+ * collection's `deselected` fields (schema `select:false` — secrets like
+ * `totpSecret`/`keyHash`/`backupCodes` and internal flags like `_meiliIndex`):
+ * any deselected field NOT explicitly requested (via a `+field` override or an
+ * inclusion of it) is stripped on EVERY read. This closes the store-layer leak
+ * where a projection-less read returned schema-hidden secrets that mongoose omits.
+ */
+export function projectDoc(
+  doc: Doc,
+  projection?: string | Record<string, 0 | 1>,
+  deselected?: ReadonlySet<string>,
+): Doc {
+  const enforceDeselect = deselected != null && deselected.size > 0;
+  if (!projection && !enforceDeselect) {
+    return doc;
+  }
+  const p = parseProjection(projection);
+  let out: Doc;
+  if (p.mode === 'inclusion') {
+    out = {};
+    if (p.includeId && '_id' in doc) {
       out._id = doc._id;
     }
-    for (const [k, v] of Object.entries(spec)) {
-      if (k !== '_id' && v === 1 && hasPath(doc, k)) {
+    for (const k of p.include) {
+      if (k !== '_id' && hasPath(doc, k)) {
         setPath(out, k, getPath(doc, k));
       }
     }
-    return out;
-  }
-
-  // Exclusion projection
-  const out: Doc = structuredClone(doc);
-  for (const [k, v] of Object.entries(spec)) {
-    if (v === 0) {
+  } else {
+    // 'exclusion' or 'none' → start from a copy of the full document. Clone the
+    // STRUCTURE (so deleting a key never mutates the stored/source doc) while
+    // sharing Date (and other class) instances by reference — projection only
+    // deletes keys, never mutates values. `structuredClone` is avoided on purpose:
+    // it rebuilds Dates against Node's primordial realm, so the result would fail
+    // `instanceof Date` under a test/VM realm and break downstream date compares.
+    out = cloneStructure(doc);
+    for (const k of p.exclude) {
       deletePath(out, k);
+    }
+    if (!p.includeId) {
+      deletePath(out, '_id');
+    }
+  }
+  if (enforceDeselect) {
+    for (const f of deselected!) {
+      if (!p.requested.has(f)) {
+        deletePath(out, f);
+      }
     }
   }
   return out;
