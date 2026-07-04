@@ -686,6 +686,27 @@ export class DocModel {
     return hydrate(this.insertDoc(doc));
   }
 
+  /**
+   * Exact by-`_id` upsert — the shared primitive for the dual-write mirror and
+   * the Mongo→SQLite backfill. Writes the document verbatim: ObjectId-like
+   * values coerced to hex (so a doc read from a mongoose `.lean()` serializes
+   * correctly), Dates preserved, keyed by the document's own `_id`. NO timestamp
+   * stamping, NO schema defaults, NO tenant scoping — the source store already
+   * owns those. Idempotent: re-running with the same `_id` replaces the row, so
+   * the backfill and live mirroring converge on the same keyspace and never
+   * duplicate (both sides key on the primary store's `_id`).
+   */
+  upsertRaw(input: Doc): void {
+    const doc = deepCoerceIds(input) as Doc;
+    const id = doc._id;
+    if (id == null) {
+      throw new Error(`[DocModel:${this.modelName}] upsertRaw requires _id`);
+    }
+    this.db
+      .prepare(`INSERT OR REPLACE INTO ${this.table} (_id, doc) VALUES (?, ?)`)
+      .run(String(id), this.serialize(doc));
+  }
+
   async bulkWrite(
     ops: Array<Record<string, unknown>>,
   ): Promise<BulkResult> {
