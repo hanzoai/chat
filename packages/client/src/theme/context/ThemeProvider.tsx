@@ -59,10 +59,11 @@ const isValidThemeColors = (value: unknown): value is IThemeRGB => {
 };
 
 /**
- * Get initial theme from localStorage or default to 'system'
+ * Get initial theme from localStorage. Hard default is 'dark' (true-black) — the
+ * brand canvas — unless the user has explicitly chosen light or system.
  */
 const getInitialTheme = (): string => {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') return 'dark';
   try {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored && ['light', 'dark', 'system'].includes(stored)) {
@@ -71,7 +72,7 @@ const getInitialTheme = (): string => {
   } catch {
     // localStorage not available
   }
-  return 'system';
+  return 'dark';
 };
 
 /**

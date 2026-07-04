@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <base href="/" />
-    <meta name="theme-color" content="#171717" />
+    <meta name="theme-color" content="#000000" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -24,21 +24,15 @@
       }
     </style>
     <script>
-      const theme = localStorage.getItem('color-theme');
+      // Hard default: true-black dark, unless the user explicitly picked light or system-light.
+      // Applied on <html> synchronously here to avoid any light flash before React hydrates.
+      const stored = localStorage.getItem('color-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = stored === 'light' ? false : stored === 'system' ? prefersDark : true;
+      document.documentElement.classList.add(isDark ? 'dark' : 'light');
+
       const loadingContainerStyle = document.createElement('style');
-      let backgroundColor;
-
-      if (theme === 'dark') {
-        backgroundColor = '#070b13';
-      } else if (theme === 'light') {
-        backgroundColor = '#ffffff';
-      } else if (theme === 'system') {
-        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        backgroundColor = prefersDarkScheme ? '#070b13' : '#ffffff';
-      } else {
-        backgroundColor = '#ffffff';
-      }
-
+      const backgroundColor = isDark ? '#000000' : '#ffffff';
       loadingContainerStyle.innerHTML = `
         #loading-container {
           display: flex;
