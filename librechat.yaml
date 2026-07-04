@@ -113,10 +113,15 @@ endpoints:
           - "zen3-nano"
         fetch: false
       titleConvo: true
-      # zen3-nano is the known-good small model the gateway serves (guest default +
-      # test baseline). zen5-nano is not in the live /v1/models catalog, so the
-      # #titleConvo path 404'd and new chats never auto-titled. Point title/summary
-      # at zen3-nano so titles generate.
+      # zen3-nano is the in-catalog Zen small model (guest/chat baseline), so the
+      # #titleConvo call no longer 404s (zen5-nano was not in the live catalog).
+      # KNOWN LIMITATION: the title route still doesn't reliably produce a title —
+      # zen3-nano is a reasoning model whose think can exceed the 45s title timeout,
+      # and models NOT on the gateway's title path (e.g. llama-3.1-8b) come back as a
+      # 200 + error-envelope with no `choices`, which the title client mis-parses
+      # ("Cannot read properties of undefined (reading 'message')"). Full auto-title
+      # needs the gateway-envelope rewrite applied to the #titleConvo path (as was
+      # done for agent runs) + a fast NON-reasoning title model. Tracked separately.
       titleModel: "zen3-nano"
       summarize: true
       summaryModel: "zen3-nano"
