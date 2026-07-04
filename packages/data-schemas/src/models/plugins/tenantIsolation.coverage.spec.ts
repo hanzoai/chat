@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { createModels } from '../index';
+import { createModels, closeSharedSqliteHandle } from '../index';
 
 /**
  * Global symbol set by applyTenantIsolation() on every schema it processes.
@@ -23,6 +23,12 @@ function isPluginApplied(schema: mongoose.Schema): boolean {
 describe('tenant-isolation plugin coverage', () => {
   beforeAll(() => {
     createModels(mongoose);
+  });
+
+  afterAll(() => {
+    // If store flags are set in the environment, createModels opens the shared
+    // native handle — close it so no open SQLite connection leaks past this file.
+    closeSharedSqliteHandle();
   });
 
   it('applies the tenant-isolation plugin to every model that has a tenantId field', () => {

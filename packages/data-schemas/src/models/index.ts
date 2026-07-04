@@ -77,10 +77,25 @@ let sharedHandleKey = '';
 function sharedSqliteHandle(names: string[]): SqliteHandle {
   const key = [...names].sort().join(',');
   if (!sharedHandle || sharedHandleKey !== key) {
+    // Close the prior native connection before replacing it — a bare reassign
+    // leaks the better-sqlite3 handle (its late GC finalizer corrupts sibling
+    // SQLite state in a shared worker; latent prod leak on any rekey).
+    sharedHandle?.close();
     sharedHandle = createSqliteHandle(names);
     sharedHandleKey = key;
   }
   return sharedHandle;
+}
+
+/**
+ * Closes and clears the process-shared SQLite handle. Idempotent. The prod path
+ * keeps one handle for the process lifetime; this exists so tests that build the
+ * handle tear it down — every native Database opened MUST be closed.
+ */
+export function closeSharedSqliteHandle(): void {
+  sharedHandle?.close();
+  sharedHandle = undefined;
+  sharedHandleKey = '';
 }
 
 function applySqliteOverrides<T extends Record<string, unknown>>(models: T): T {

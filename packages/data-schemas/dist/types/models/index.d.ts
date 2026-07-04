@@ -1,4 +1,10 @@
 /**
+ * Closes and clears the process-shared SQLite handle. Idempotent. The prod path
+ * keeps one handle for the process lifetime; this exists so tests that build the
+ * handle tear it down — every native Database opened MUST be closed.
+ */
+export declare function closeSharedSqliteHandle(): void;
+/**
  * Creates all database models for all collections
  */
 export declare function createModels(mongoose: typeof import('mongoose')): {
