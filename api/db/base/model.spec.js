@@ -38,7 +38,7 @@ function memStore() {
 const convoSchema = new Schema(
   {
     conversationId: { type: String, unique: true, required: true, index: true },
-    title: { type: String, default: 'New Chat' },
+    title: { type: String, default: 'New Chat', meiliIndex: true },
     user: { type: String, index: true },
     tags: { type: [String], default: [] },
     expiredAt: { type: Date },
@@ -50,7 +50,7 @@ const messageSchema = new Schema(
     messageId: { type: String, unique: true, required: true, index: true },
     conversationId: { type: String, index: true, required: true },
     user: { type: String, index: true, required: true, default: null },
-    text: { type: String },
+    text: { type: String, meiliIndex: true },
   },
   { timestamps: true },
 );
@@ -223,6 +223,23 @@ describe('chat hot path', () => {
     ]);
     expect(res.upsertedCount).toBe(2);
     expect(await Conversation.countDocuments({ conversationId: { $in: ['c1', 'c2'] } })).toBe(2);
+  });
+
+  test('meiliSearch (Base/SQLite FTS) — title + text, user-scoped', async () => {
+    const other = '507f1f77bcf86cd799439099';
+    await Conversation.findOneAndUpdate({ conversationId: 'c1', user: uid }, { $set: { title: 'Quantum physics notes' } }, { upsert: true, new: true });
+    await Conversation.findOneAndUpdate({ conversationId: 'c2', user: uid }, { $set: { title: 'Grocery list' } }, { upsert: true, new: true });
+    await Conversation.findOneAndUpdate({ conversationId: 'c3', user: other }, { $set: { title: 'Quantum leaps' } }, { upsert: true, new: true });
+
+    const conv = await Conversation.meiliSearch('quantum', { filter: `user = "${uid}"` });
+    expect(conv.hits.map((h) => h.conversationId)).toEqual(['c1']); // case-insensitive, user-scoped
+
+    await Message.create({ messageId: 'm1', conversationId: 'c1', user: uid, text: 'the WAVEFUNCTION collapses' });
+    await Message.create({ messageId: 'm2', conversationId: 'c1', user: uid, text: 'unrelated chatter' });
+    const msg = await Message.meiliSearch('wavefunction', { filter: `user = "${uid}"` });
+    expect(msg.hits.map((h) => h.messageId)).toEqual(['m1']);
+
+    expect((await Conversation.meiliSearch('', { filter: `user = "${uid}"` })).hits).toEqual([]);
   });
 
   test('findOneAndUpdate new:false returns pre-update doc', async () => {

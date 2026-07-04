@@ -95,7 +95,27 @@ async function main() {
   assert.strictEqual(raw.items[0].conversationId, 'conv-live-1', 'promoted column mirrored for filter');
   ok('RAW Base REST confirms the document physically persisted to Base/SQLite');
 
-  console.log('\nLIVE proof PASSED — login + conversation + message persist to Hanzo Base.');
+  // ---- FTS (Base/SQLite search replaces MeiliSearch) -----------------------
+  const convoHits = await models.Conversation.meiliSearch('hello', { filter: `user = "${uid}"` });
+  assert.ok(
+    convoHits.hits.some((h) => h.conversationId === 'conv-live-1'),
+    'conversation search returns the matching convo by title',
+  );
+  ok('Conversation.meiliSearch — real title hit from Base/SQLite');
+
+  const msgHits = await models.Message.meiliSearch('hanzo base', { filter: `user = "${uid}"` });
+  assert.ok(
+    msgHits.hits.some((h) => h.messageId === 'msg-live-1'),
+    'message search returns the matching message by text',
+  );
+  assert.strictEqual(
+    (await models.Conversation.meiliSearch('zzz-no-such-term', { filter: `user = "${uid}"` })).hits.length,
+    0,
+    'no false positives',
+  );
+  ok('Message.meiliSearch — real text hit from Base/SQLite (Meili dropped)');
+
+  console.log('\nLIVE proof PASSED — login + conversation + message + SEARCH on Hanzo Base.');
   console.log(`   user collection id space, email=${email}`);
   process.exit(0);
 }

@@ -31,6 +31,24 @@ function now() {
   return new Date();
 }
 
+/**
+ * Parse a MeiliSearch-style filter string (e.g. `user = "abc"`) into a Mongo
+ * equality filter for scoping. Supports the `field = "value"` / `field = 'value'`
+ * clauses the chat app emits; unknown syntax is ignored (no scoping).
+ */
+function parseMeiliFilter(filter) {
+  const scope = {};
+  if (typeof filter !== 'string') {
+    return scope;
+  }
+  const re = /(\w+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+  let m;
+  while ((m = re.exec(filter)) !== null) {
+    scope[m[1]] = m[2] !== undefined ? m[2] : m[3];
+  }
+  return scope;
+}
+
 /** Extract top-level equality conditions from a filter (for upsert seeding). */
 function equalitySeed(filter) {
   const seed = {};
@@ -68,6 +86,7 @@ class BaseModel {
     this._promotedNames = desc.promoted.map((p) => p.name);
     this._deselected = desc.deselected;
     this._dateFields = desc.dateFields;
+    this._searchable = desc.searchable;
   }
 
   /** Register/verify this collection's schema in Base. Idempotent. */
@@ -344,9 +363,33 @@ class BaseModel {
     return hit ? { _id: hit.doc._id } : null;
   }
 
-  /** Phase 1: FTS lives in MeiliSearch (disabled) → empty result. Phase 2: Base FTS. */
-  async meiliSearch() {
-    return { hits: [] };
+  /**
+   * Full-text search over Base/SQLite (replaces MeiliSearch).
+   * Case-insensitive substring match across the model's searchable content
+   * fields (title, text, …), scoped by the Meili-style `opts.filter` string
+   * (e.g. `user = "abc"`). Returns MeiliSearch-shaped `{ hits }`.
+   */
+  async meiliSearch(query, opts = {}) {
+    const terms = (query || '').trim().toLowerCase();
+    if (!terms || !this._searchable.size) {
+      return { hits: [] };
+    }
+    const scope = parseMeiliFilter(opts.filter);
+    const candidates = await this._candidates(scope);
+    const hits = [];
+    for (const c of candidates) {
+      if (!matches(c.doc, scope)) {
+        continue;
+      }
+      for (const field of this._searchable) {
+        const value = getPath(c.doc, field);
+        if (typeof value === 'string' && value.toLowerCase().includes(terms)) {
+          hits.push(this._hydrate({ ...c.doc }));
+          break;
+        }
+      }
+    }
+    return { hits };
   }
 
   async syncWithMeili() {
