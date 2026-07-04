@@ -1,0 +1,12 @@
+# depcheck configuration.
+#
+# ignores: dependencies that are present on purpose but never imported directly,
+# so depcheck's static scan reports them as a false positive.
+#   - @opentelemetry/core: intentional version-pin. It is a transitive
+#     requirement of the OpenTelemetry stack we do use (@opentelemetry/sdk-node,
+#     sdk-trace-base, exporter-trace-otlp-http); pinning it at the top level
+#     keeps a single, aligned core version across the tree. Never imported by
+#     name, so depcheck flags it — this is expected, not dead. Do NOT remove the
+#     dependency (that would unpin the otel core version).
+ignores:
+  - "@opentelemetry/core"
