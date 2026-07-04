@@ -1,12 +1,13 @@
 import React, { useState, useMemo, memo } from 'react';
 import { useRecoilState } from 'recoil';
+import { AppWindow } from 'lucide-react';
 import type { TConversation, TMessage, TFeedback } from 'librechat-data-provider';
 import { EditIcon, Clipboard, CheckMark, ContinueIcon, RegenerateIcon } from '@librechat/client';
 import { useGenerationsByLatest, useLocalize } from '~/hooks';
 import { Fork } from '~/components/Conversations';
 import MessageAudio from './MessageAudio';
 import Feedback from './Feedback';
-import { cn } from '~/utils';
+import { cn, openAppBuilder } from '~/utils';
 import store from '~/store';
 
 type THoverButtons = {
@@ -231,6 +232,16 @@ const HoverButtons = ({
           isDisabled={hideEditButton}
           isLast={isLast}
           className={isCreatedByUser ? '' : 'active'}
+        />
+      )}
+
+      {/* Build-as-app: hand off this assistant reply to the hanzo.app builder */}
+      {!isCreatedByUser && (
+        <HoverButton
+          onClick={() => openAppBuilder(extractMessageContent(message))}
+          title={localize('com_ui_build_app_message')}
+          icon={<AppWindow size="19" />}
+          isLast={isLast}
         />
       )}
 
