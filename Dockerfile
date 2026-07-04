@@ -1,10 +1,9 @@
 # v0.8.3-rc1
 
-# Base node image — Node 22 (parity with Dockerfile.static). Node >= 22.5 ships
-# `node:sqlite` (DatabaseSync), required by the SQLite document store once
-# CHAT_STORE_SQLITE / CHAT_STORE_DUALWRITE is enabled. The store lazy-requires it
-# (see stores/sqlite/index.ts) so the runtime still boots with the flag unset.
-FROM node:22-alpine AS node
+# Base node image — Hanzo Node 24 (Alpine) base: node:sqlite (DatabaseSync) is
+# built in and native better-sqlite3 compiles (build-base + python3 + g++ baked
+# in), so the CHAT_STORE_SQLITE document store runs. Node 20 lacked node:sqlite.
+FROM ghcr.io/hanzoai/nodejs:v24.18.0 AS node
 
 # Install jemalloc
 RUN apk add --no-cache jemalloc

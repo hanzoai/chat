@@ -6,7 +6,7 @@
 # Build: docker build -f Dockerfile.static -t ghcr.io/hanzoai/chat:latest .
 # Run:   docker run -p 3080:3080 ghcr.io/hanzoai/chat:latest
 
-FROM node:22-alpine
+FROM ghcr.io/hanzoai/nodejs:v24.18.0
 
 RUN npm install -g serve@14
 
