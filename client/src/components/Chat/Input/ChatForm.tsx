@@ -23,8 +23,9 @@ import { useRunCloudAgent } from '~/hooks/Agents';
 import { mainTextareaId, BadgeItem } from '~/common';
 import AttachFileChat from './Files/AttachFileChat';
 import FileFormChat from './Files/FileFormChat';
-import { cn, removeFocusRings, parseAgentCommand } from '~/utils';
+import { cn, removeFocusRings, parseAgentCommand, parseBuildCommand, openAppBuilder } from '~/utils';
 import TextareaHeader from './TextareaHeader';
+import BuildAppButton from './BuildAppButton';
 import PromptsCommand from './PromptsCommand';
 import AgentsCommand from './AgentsCommand';
 import AudioRecorder from './AudioRecorder';
@@ -141,7 +142,15 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
    */
   const onSubmit = useCallback(
     (data?: { text: string }) => {
-      const command = parseAgentCommand(data?.text ?? '');
+      const text = data?.text ?? '';
+      /** `/build [prompt]` hands off to the hanzo.app builder (new tab). */
+      const buildPrompt = parseBuildCommand(text);
+      if (buildPrompt !== null) {
+        methods.reset();
+        openAppBuilder(buildPrompt);
+        return;
+      }
+      const command = parseAgentCommand(text);
       if (command) {
         methods.reset();
         setShowAgentsPopover(false);
@@ -343,6 +352,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
               <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
                 <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
               </div>
+              <BuildAppButton />
               <BadgeRow
                 showEphemeralBadges={
                   !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
