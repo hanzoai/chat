@@ -31,4 +31,5 @@ export declare function createModels(mongoose: typeof import('mongoose')): {
     AccessRole: import("mongoose").Model<any, {}, {}, {}, any, any>;
     AclEntry: import("mongoose").Model<any, {}, {}, {}, any, any>;
     Group: import("mongoose").Model<any, {}, {}, {}, any, any>;
+    SystemGrant: import("mongoose").Model<any, {}, {}, {}, any, any>;
 };

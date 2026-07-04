@@ -11,7 +11,7 @@
  * CollectionSpec when migrated). MeiliSearch stays a separate concern: `.meiliSearch`
  * is intentionally absent, matching a mongoose model with no MEILI_HOST configured.
  */
-import type { DatabaseSync } from 'node:sqlite';
+import type Database from 'better-sqlite3-multiple-ciphers';
 import { getTenantId, SYSTEM_TENANT_ID } from '~/config/tenantContext';
 import {
   matchesFilter,
@@ -90,7 +90,7 @@ const SQL_SAFE_FIELD = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 export class DocModel {
   readonly modelName: string;
-  private readonly db: DatabaseSync;
+  private readonly db: Database.Database;
   private readonly dateFields: Set<string>;
   private readonly anchorFields: Set<string>;
   private readonly refs: Record<string, string>;
@@ -99,7 +99,7 @@ export class DocModel {
   /** Resolves sibling collections for `.populate()`; wired by createSqliteHandle. */
   resolver?: (name: string) => DocModel | undefined;
 
-  constructor(db: DatabaseSync, spec: CollectionSpec) {
+  constructor(db: Database.Database, spec: CollectionSpec) {
     this.db = db;
     this.modelName = spec.name;
     this.dateFields = new Set(spec.dateFields ?? ['createdAt', 'updatedAt', 'expiredAt']);
@@ -273,8 +273,9 @@ export class DocModel {
           // array-contains (Mongo {field: value} over an array) — and remains a
           // superset prefilter (the JS matcher is authoritative).
           clauses.push(`EXISTS (SELECT 1 FROM json_each(doc, '$.${key}') WHERE value = ?)`);
-          // node:sqlite binds only null/number/bigint/string/blob. json_each
-          // yields 1/0 for JSON booleans, so map booleans; dates -> ISO.
+          // The driver binds only null/number/bigint/string/Buffer (boolean and
+          // undefined throw). json_each yields 1/0 for JSON booleans, so map
+          // booleans to 1/0; dates -> ISO.
           const param =
             c instanceof Date ? c.toISOString() : typeof c === 'boolean' ? (c ? 1 : 0) : c;
           params.push(param);
@@ -849,7 +850,7 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
     return this;
   }
 
-  /** No-op: node:sqlite is a single connection; Mongo sessions don't apply. */
+  /** No-op: the store is a single connection; Mongo sessions don't apply. */
   session(_session?: unknown): this {
     return this;
   }
