@@ -359,6 +359,16 @@ html {
   src: url('$fonts/roboto-mono-latin-400-italic.woff2') format('woff2');
 }
 
+/* Crisp type: never synthesize weights/italics — Basel ships 400 + 500 only, so
+   faux-bold would blur. Hierarchy comes from size + the real Medium face, not
+   smeared glyphs. Antialiased for a clean Linear/Claude-caliber render. */
+html {
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 /*
 
 The default ChatGPT fonts, according to OpenAI's brand guidelines, are proprietary and require appropriate font license according to your use case.
@@ -1212,11 +1222,13 @@ pre {
 code,
 pre {
   font-family:
-    Consolas,
-    Söhne Mono,
+    'Geist Mono',
+    'Roboto Mono',
+    ui-monospace,
+    'SF Mono',
+    Menlo,
     Monaco,
-    Andale Mono,
-    Ubuntu Mono,
+    Consolas,
     monospace !important;
 }
 code.language-text,

@@ -113,9 +113,13 @@ endpoints:
           - "zen3-nano"
         fetch: false
       titleConvo: true
-      titleModel: "zen5-nano"
+      # zen3-nano is the known-good small model the gateway serves (guest default +
+      # test baseline). zen5-nano is not in the live /v1/models catalog, so the
+      # #titleConvo path 404'd and new chats never auto-titled. Point title/summary
+      # at zen3-nano so titles generate.
+      titleModel: "zen3-nano"
       summarize: true
-      summaryModel: "zen5-nano"
+      summaryModel: "zen3-nano"
       modelDisplayLabel: "Hanzo"
     # Third-party provider families — same api.hanzo.ai/v1 gateway + per-user
     # ${HANZO_API_KEY} (identical Commerce metering). CURRENT-GEN models only from
