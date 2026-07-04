@@ -58,16 +58,24 @@ const userSchema = new Schema(
   {
     email: { type: String, required: true, unique: true },
     role: { type: String, default: 'USER' },
-    password: { type: String },
+    password: { type: String, select: false },
+    totpSecret: { type: String, select: false },
   },
   { timestamps: true },
 );
 const balanceSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', index: true, required: true },
   tokenCredits: { type: Number, default: 0 },
+  expiresAt: { type: Date, default: null },
+  lastRefill: { type: Date, default: Date.now },
+});
+const sessionSchema = new Schema({
+  refreshTokenHash: { type: String, index: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+  expiration: { type: Date, required: true, index: true },
 });
 
-let store, Conversation, Message, User, Balance;
+let store, Conversation, Message, User, Balance, Session;
 
 beforeEach(async () => {
   store = memStore();
@@ -75,7 +83,8 @@ beforeEach(async () => {
   Message = new BaseModel('Message', messageSchema, store);
   User = new BaseModel('User', userSchema, store);
   Balance = new BaseModel('Balance', balanceSchema, store);
-  for (const m of [Conversation, Message, User, Balance]) await m.ensure();
+  Session = new BaseModel('Session', sessionSchema, store);
+  for (const m of [Conversation, Message, User, Balance, Session]) await m.ensure();
 });
 
 describe('schema introspection', () => {
@@ -106,6 +115,34 @@ describe('login-path reads', () => {
     expect(found.password).toBe('hashed');
     expect(found.role).toBeUndefined();
     expect(found._id).toBeTruthy();
+  });
+
+  test('select:false secrets (password/totpSecret) hidden by default', async () => {
+    await User.create({ email: 'z@zoo.ngo', password: 'hashed', totpSecret: 'seed' });
+    const def = await User.findOne({ email: 'z@zoo.ngo' }).lean();
+    expect(def.password).toBeUndefined();
+    expect(def.totpSecret).toBeUndefined();
+    expect(def.email).toBe('z@zoo.ngo');
+    // login path explicitly requests +password
+    const withPw = await User.findOne({ email: 'z@zoo.ngo' }, '+password').lean();
+    expect(withPw.password).toBe('hashed');
+    expect(withPw.totpSecret).toBeUndefined(); // still hidden
+  });
+});
+
+describe('date hydration (non-timestamp Date fields)', () => {
+  test('session.expiration and balance dates hydrate to Date', async () => {
+    const exp = new Date(Date.now() + 3600_000);
+    await Session.create({ user: '507f1f77bcf86cd799439011', expiration: exp });
+    const s = await Session.findOne({ user: '507f1f77bcf86cd799439011' }).lean();
+    expect(s.expiration).toBeInstanceOf(Date);
+    expect(typeof s.expiration.getTime()).toBe('number'); // would throw on a string
+    const bal = await Balance.findOneAndUpdate(
+      { user: '507f1f77bcf86cd799439011' },
+      { $inc: { tokenCredits: 1 } },
+      { upsert: true, new: true },
+    ).lean();
+    expect(bal.lastRefill).toBeInstanceOf(Date);
   });
 });
 

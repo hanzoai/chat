@@ -402,52 +402,68 @@ function applyUpdate(doc, update, opts = {}) {
 
 /**
  * Parse a projection spec (space string or object) into
- * { fields:Set, mode:'include'|'exclude' } or null for no projection.
+ * { plain:Set, plus:Set, exclude:Set } or null for no projection.
+ *   - `field`  -> plain inclusion
+ *   - `+field` -> force-include a `select:false` field on top of the default set
+ *   - `-field` -> exclusion
  */
 function parseProjection(spec) {
   if (!spec) {
     return null;
   }
-  const include = new Set();
+  const plain = new Set();
+  const plus = new Set();
   const exclude = new Set();
   if (typeof spec === 'string') {
     for (const token of spec.split(/\s+/).filter(Boolean)) {
       if (token.startsWith('-')) {
         exclude.add(token.slice(1));
+      } else if (token.startsWith('+')) {
+        plus.add(token.slice(1));
       } else {
-        include.add(token);
+        plain.add(token);
       }
     }
   } else if (typeof spec === 'object') {
     for (const [k, v] of Object.entries(spec)) {
       if (v) {
-        include.add(k);
+        plain.add(k);
       } else {
         exclude.add(k);
       }
     }
   }
-  if (include.size) {
-    include.add('_id'); // Mongo always includes _id unless explicitly excluded
-    if (exclude.has('_id')) {
-      include.delete('_id');
-    }
-    return { fields: include, mode: 'include' };
+  if (!plain.size && !plus.size && !exclude.size) {
+    return null;
   }
-  if (exclude.size) {
-    return { fields: exclude, mode: 'exclude' };
-  }
-  return null;
+  return { plain, plus, exclude };
 }
 
-/** Apply a parsed projection to a document, returning a new object. */
-function project(doc, projection) {
+/**
+ * Apply a parsed projection with Mongoose `select:false` semantics, returning a
+ * new object. `deselected` are fields excluded from reads by default (secrets).
+ */
+function applyProjection(doc, projection, deselected) {
+  const hidden = deselected || EMPTY_SET;
+  // No projection: default view = everything minus deselected (secrets).
   if (!projection) {
-    return doc;
+    if (!hidden.size) {
+      return doc;
+    }
+    const out = { ...doc };
+    for (const f of hidden) {
+      unsetPath(out, f);
+    }
+    return out;
   }
-  if (projection.mode === 'include') {
+  // Inclusion mode: return only the named fields (+plus), _id unless -_id.
+  if (projection.plain.size) {
+    const fields = new Set([...projection.plain, ...projection.plus]);
+    if (!projection.exclude.has('_id')) {
+      fields.add('_id');
+    }
     const out = {};
-    for (const f of projection.fields) {
+    for (const f of fields) {
       const v = getPath(doc, f);
       if (v !== undefined) {
         setPath(out, f, v);
@@ -455,12 +471,20 @@ function project(doc, projection) {
     }
     return out;
   }
+  // Default + adjustments: base minus deselected (unless +included) minus -excluded.
   const out = { ...doc };
-  for (const f of projection.fields) {
+  for (const f of hidden) {
+    if (!projection.plus.has(f)) {
+      unsetPath(out, f);
+    }
+  }
+  for (const f of projection.exclude) {
     unsetPath(out, f);
   }
   return out;
 }
+
+const EMPTY_SET = new Set();
 
 /** Sort documents by a Mongo sort spec ({ field: 1|-1 }). Returns a new array. */
 function sortDocs(docs, sortSpec) {
@@ -484,7 +508,7 @@ module.exports = {
   applyUpdate,
   normalizeUpdate,
   parseProjection,
-  project,
+  applyProjection,
   sortDocs,
   getPath,
   setPath,

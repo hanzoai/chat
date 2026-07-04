@@ -35,11 +35,15 @@ function baseColumnType(instance) {
  *   defaults: Array<[string, unknown]>,
  *   timestamps: { createdAt: string, updatedAt: string } | null,
  *   promoted: Array<{ name: string, type: string, unique: boolean }>,
+ *   deselected: Set<string>,
+ *   dateFields: Set<string>,
  * }}
  */
 function describeSchema(schema) {
   const defaults = [];
   const promoted = new Map();
+  const deselected = new Set();
+  const dateFields = new Set();
 
   // Always promote _id so document lookup by id is a real, unique Base column.
   promoted.set('_id', { name: '_id', type: 'text', unique: true });
@@ -51,6 +55,19 @@ function describeSchema(schema) {
     }
     const type = paths[name];
     const options = type.options || {};
+
+    // Fields marked `select: false` are excluded from reads by default
+    // (Mongoose semantics) — critical for secrets: password, totpSecret,
+    // backupCodes, keyHash. Only returned when explicitly `+selected`.
+    if (options.select === false) {
+      deselected.add(name);
+    }
+
+    // All Date-typed paths must be re-hydrated to Date objects on read so
+    // callers can safely call `.getTime()` / date methods (e.g. session.expiration).
+    if (type.instance === 'Date') {
+      dateFields.add(name);
+    }
 
     // Collect declared defaults for primitive top-level paths (no dots).
     if (!name.includes('.') && Object.prototype.hasOwnProperty.call(options, 'default')) {
@@ -93,13 +110,14 @@ function describeSchema(schema) {
             updatedAt: tsOpt.updatedAt || 'updatedAt',
           };
     for (const f of [timestamps.createdAt, timestamps.updatedAt]) {
+      dateFields.add(f);
       if (!promoted.has(f)) {
         promoted.set(f, { name: f, type: 'date', unique: false });
       }
     }
   }
 
-  return { defaults, timestamps, promoted: [...promoted.values()] };
+  return { defaults, timestamps, promoted: [...promoted.values()], deselected, dateFields };
 }
 
 /** Resolve a schema default (calling it if it is a function). */
