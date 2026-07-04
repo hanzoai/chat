@@ -80,4 +80,20 @@ describe('wrapHanzoGatewayFetch', () => {
       spy.mockRestore();
     }
   });
+
+  it('is idempotent under double-wrapping (title path re-wraps the agent-run fetch)', async () => {
+    // #titleConvo re-applies the wrapper on top of the fetch initializeCustom
+    // already wrapped for agent runs. The second pass must not corrupt the result:
+    // it sees the inner pass's 402 `{error:{...}}` (no top-level `status:"error"`),
+    // so it passes through unchanged.
+    const envelope = JSON.stringify({ status: 'error', msg: 'invalid API key', data: null });
+    const doubleWrapped = wrapHanzoGatewayFetch(
+      wrapHanzoGatewayFetch(async () => makeResponse(envelope)),
+    );
+    const res = await doubleWrapped('https://api.hanzo.ai/v1/chat/completions');
+    expect(res.status).toBe(402);
+    const parsed = (await res.json()) as { error?: { message?: string; code?: string } };
+    expect(parsed.error?.message).toContain('invalid API key');
+    expect(parsed.error?.code).toBe('insufficient_quota');
+  });
 });

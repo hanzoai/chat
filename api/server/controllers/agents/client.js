@@ -15,6 +15,7 @@ const {
   getBalanceConfig,
   getProviderConfig,
   omitTitleOptions,
+  wrapHanzoGatewayFetch,
   memoryInstructions,
   applyContextToAgent,
   createTokenCounter,
@@ -1067,6 +1068,22 @@ class AgentClient extends BaseClient {
     clientOptions = { ...options.llmConfig };
     if (options.configOptions) {
       clientOptions.configuration = options.configOptions;
+    }
+
+    // Envelope-safety for the title path (parity with agent runs). The Hanzo Cloud
+    // gateway answers some failures with HTTP 200 + a JSON error-envelope
+    // ({status:"error", msg}) that carries no `choices`. Left raw, the OpenAI client
+    // parses the 200 to `undefined` and #titleConvo crashes on
+    // `reading 'message'` — so no title is ever written. Wrap the title client's
+    // fetch exactly as `initializeCustom` does for agent runs, so the envelope
+    // becomes a clean, catchable error the outer try/catch skips gracefully.
+    // Response-only + idempotent (a re-wrap sees a 402, not a 200 envelope), so
+    // per-user hk- billing and normal completions are untouched.
+    if (
+      clientOptions.configuration &&
+      /(?:^|\.)hanzo\.ai(?::|\/|$)/i.test(clientOptions.configuration.baseURL ?? '')
+    ) {
+      clientOptions.configuration.fetch = wrapHanzoGatewayFetch(clientOptions.configuration.fetch);
     }
 
     if (clientOptions.maxTokens != null) {
