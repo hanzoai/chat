@@ -10,6 +10,12 @@ jobs:
   test:
     runs-on: hanzo-build-linux-amd64
 
+    # The packages/api rollup build peaks ~5 GiB RSS and OOMs at Node's default
+    # ~2 GiB old-space heap. Match the heap the review workflows already use
+    # (well under the 8 GiB runner limit). One knob, same expression everywhere.
+    env:
+      NODE_OPTIONS: '--max-old-space-size=${{ secrets.NODE_MAX_OLD_SPACE_SIZE || 6144 }}'
+
     services:
       mongodb:
         image: mongo:7
