@@ -113,18 +113,17 @@ endpoints:
           - "zen3-nano"
         fetch: false
       titleConvo: true
-      # zen3-nano is the in-catalog Zen small model (guest/chat baseline), so the
-      # #titleConvo call no longer 404s (zen5-nano was not in the live catalog).
-      # KNOWN LIMITATION: the title route still doesn't reliably produce a title —
-      # zen3-nano is a reasoning model whose think can exceed the 45s title timeout,
-      # and models NOT on the gateway's title path (e.g. llama-3.1-8b) come back as a
-      # 200 + error-envelope with no `choices`, which the title client mis-parses
-      # ("Cannot read properties of undefined (reading 'message')"). Full auto-title
-      # needs the gateway-envelope rewrite applied to the #titleConvo path (as was
-      # done for agent runs) + a fast NON-reasoning title model. Tracked separately.
-      titleModel: "zen3-nano"
+      # Title/summary model = zen5-flash: a FAST, NON-reasoning, in-catalog model
+      # (live upstream deepseek-4-flash) that returns a clean single-line title in
+      # ~1-2s. Replaces zen3-nano, which maps to the reasoning model qwen3-8b and
+      # took 16-31s — routinely near the 45s #titleConvo timeout, so new chats often
+      # never got a title. zen5-flash was picked by direct api.hanzo.ai/v1 probes:
+      # zen5-flash ~1.5s clean, zen3-nano 16-31s, zen5-mini 10-20s, zen5/zen3-vl >40s.
+      # The #titleConvo path is also envelope-safe now (wrapHanzoGatewayFetch parity
+      # with agent runs), so a 200 error-envelope degrades to a clean skip, not a crash.
+      titleModel: "zen5-flash"
       summarize: true
-      summaryModel: "zen3-nano"
+      summaryModel: "zen5-flash"
       modelDisplayLabel: "Hanzo"
     # Third-party provider families — same api.hanzo.ai/v1 gateway + per-user
     # ${HANZO_API_KEY} (identical Commerce metering). CURRENT-GEN models only from
@@ -142,7 +141,7 @@ endpoints:
           - "qwen3-32b"
         fetch: false
       titleConvo: true
-      titleModel: "qwen3-coder-flash"
+      titleModel: "zen5-flash"
       modelDisplayLabel: "Qwen"
     - name: "Meta Llama"
       customOrder: 2
@@ -155,7 +154,7 @@ endpoints:
           - "llama-3.1-8b"
         fetch: false
       titleConvo: true
-      titleModel: "llama-3.1-8b"
+      titleModel: "zen5-flash"
       modelDisplayLabel: "Meta Llama"
     - name: "DeepSeek"
       customOrder: 3
@@ -169,7 +168,7 @@ endpoints:
           - "deepseek-3.2"
         fetch: false
       titleConvo: true
-      titleModel: "deepseek-v4-flash"
+      titleModel: "zen5-flash"
       modelDisplayLabel: "DeepSeek"
     - name: "Mistral"
       customOrder: 4
@@ -183,7 +182,7 @@ endpoints:
           - "mistral-nemo"
         fetch: false
       titleConvo: true
-      titleModel: "mistral-nemo"
+      titleModel: "zen5-flash"
       modelDisplayLabel: "Mistral"
     - name: "Google Gemma"
       customOrder: 5
@@ -195,7 +194,7 @@ endpoints:
           - "gemma-3-31b"
         fetch: false
       titleConvo: true
-      titleModel: "gemma-3-31b"
+      titleModel: "zen5-flash"
       modelDisplayLabel: "Google Gemma"
     - name: "OpenAI GPT-OSS"
       customOrder: 6
@@ -207,7 +206,7 @@ endpoints:
           - "gpt-oss-20b"
         fetch: false
       titleConvo: true
-      titleModel: "gpt-oss-20b"
+      titleModel: "zen5-flash"
       modelDisplayLabel: "OpenAI GPT-OSS"
 balance:
   enabled: false
