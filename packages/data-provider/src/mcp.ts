@@ -20,6 +20,8 @@ const BaseOptionsSchema = z.object({
   iconPath: z.string().optional(),
   timeout: z.number().optional(),
   initTimeout: z.number().optional(),
+  /** Idle read timeout (ms) for streamable-HTTP GET SSE streams between server pushes */
+  sseReadTimeout: z.number().int().positive().optional(),
   /** Controls visibility in chat dropdown menu (MCPSelect) */
   chatMenu: z.boolean().optional(),
   /**
@@ -101,6 +103,30 @@ const BaseOptionsSchema = z.object({
     .optional(),
 });
 
+/**
+ * Outbound proxy URL for a remote MCP transport. Accepts http(s) and SOCKS
+ * proxies; the value may reference an env var via `${VAR}` which is resolved
+ * before validation. Admin-only — never accepted from UI/API input.
+ */
+const ProxyUrlSchema = z
+  .string()
+  .transform((val: string) => extractEnvVariable(val))
+  .pipe(z.string().url())
+  .refine(
+    (val: string) => {
+      const protocol = new URL(val).protocol;
+      return (
+        protocol === 'http:' ||
+        protocol === 'https:' ||
+        protocol === 'socks:' ||
+        protocol === 'socks5:'
+      );
+    },
+    {
+      message: 'Proxy URL must use http://, https://, socks://, or socks5://',
+    },
+  );
+
 export const StdioOptionsSchema = BaseOptionsSchema.extend({
   type: z.literal('stdio').optional(),
   /**
@@ -161,6 +187,8 @@ export const WebSocketOptionsSchema = BaseOptionsSchema.extend({
 export const SSEOptionsSchema = BaseOptionsSchema.extend({
   type: z.literal('sse').optional(),
   headers: z.record(z.string(), z.string()).optional(),
+  /** Optional outbound proxy URL for this remote MCP transport */
+  proxy: ProxyUrlSchema.optional(),
   url: z
     .string()
     .transform((val: string) => extractEnvVariable(val))
@@ -179,6 +207,8 @@ export const SSEOptionsSchema = BaseOptionsSchema.extend({
 export const StreamableHTTPOptionsSchema = BaseOptionsSchema.extend({
   type: z.union([z.literal('streamable-http'), z.literal('http')]),
   headers: z.record(z.string(), z.string()).optional(),
+  /** Optional outbound proxy URL for this remote MCP transport */
+  proxy: ProxyUrlSchema.optional(),
   url: z
     .string()
     .transform((val: string) => extractEnvVariable(val))
@@ -213,6 +243,7 @@ const omitServerManagedFields = <T extends z.ZodObject<z.ZodRawShape>>(schema: T
     startup: true,
     timeout: true,
     initTimeout: true,
+    sseReadTimeout: true,
     chatMenu: true,
     serverInstructions: true,
     requiresOAuth: true,
@@ -232,8 +263,14 @@ const omitServerManagedFields = <T extends z.ZodObject<z.ZodRawShape>>(schema: T
  */
 export const MCPServerUserInputSchema = z.union([
   omitServerManagedFields(WebSocketOptionsSchema),
-  omitServerManagedFields(SSEOptionsSchema),
-  omitServerManagedFields(StreamableHTTPOptionsSchema),
+  omitServerManagedFields(SSEOptionsSchema).extend({
+    /** SECURITY: outbound proxy is admin-only; never accepted from UI/API input */
+    proxy: z.never().optional(),
+  }),
+  omitServerManagedFields(StreamableHTTPOptionsSchema).extend({
+    /** SECURITY: outbound proxy is admin-only; never accepted from UI/API input */
+    proxy: z.never().optional(),
+  }),
 ]);
 
 export type MCPServerUserInput = z.infer<typeof MCPServerUserInputSchema>;
