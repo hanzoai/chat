@@ -10,6 +10,7 @@ import { ChatContext, AddedChatContext, useFileMapContext, ChatFormProvider } fr
 import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } from '~/hooks';
 import ConversationStarters from './Input/ConversationStarters';
 import { useGetMessagesByConvoId } from '~/data-provider';
+import BuildPreviewPane from '~/components/BuildApp/BuildPreviewPane';
 import MessagesView from './Messages/MessagesView';
 import Presentation from './Presentation';
 import ChatForm from './Input/ChatForm';
@@ -33,6 +34,7 @@ function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
   const rootSubmission = useRecoilValue(store.submissionByIndex(index));
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
+  const buildMode = useRecoilValue(store.buildMode);
 
   const fileMap = useFileMapContext();
 
@@ -76,36 +78,53 @@ function ChatView({ index = 0 }: { index?: number }) {
     content = <Landing centerFormOnLanding={centerFormOnLanding} />;
   }
 
+  const chatColumn = (
+    <div
+      className={cn(
+        'relative flex h-full flex-col',
+        buildMode ? 'min-w-0 flex-1' : 'w-full',
+      )}
+    >
+      {!isLoading && <Header />}
+      <>
+        <div
+          className={cn(
+            'flex flex-col',
+            isLandingPage
+              ? 'flex-1 items-center justify-end sm:justify-center'
+              : 'h-full overflow-y-auto',
+          )}
+        >
+          {content}
+          <div
+            className={cn(
+              'w-full',
+              isLandingPage && 'max-w-3xl transition-all duration-200 xl:max-w-4xl',
+            )}
+          >
+            <ChatForm index={index} />
+            {isLandingPage ? <ConversationStarters /> : <Footer />}
+          </div>
+        </div>
+        {isLandingPage && <Footer />}
+      </>
+    </div>
+  );
+
   return (
     <ChatFormProvider {...methods}>
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation>
-            <div className="relative flex h-full w-full flex-col">
-              {!isLoading && <Header />}
-              <>
-                <div
-                  className={cn(
-                    'flex flex-col',
-                    isLandingPage
-                      ? 'flex-1 items-center justify-end sm:justify-center'
-                      : 'h-full overflow-y-auto',
-                  )}
-                >
-                  {content}
-                  <div
-                    className={cn(
-                      'w-full',
-                      isLandingPage && 'max-w-3xl transition-all duration-200 xl:max-w-4xl',
-                    )}
-                  >
-                    <ChatForm index={index} />
-                    {isLandingPage ? <ConversationStarters /> : <Footer />}
-                  </div>
-                </div>
-                {isLandingPage && <Footer />}
-              </>
-            </div>
+            {/* Inline "build an app" mode: chat thread + side preview pane (scaffold). */}
+            {buildMode ? (
+              <div className="flex h-full w-full flex-row">
+                {chatColumn}
+                <BuildPreviewPane />
+              </div>
+            ) : (
+              chatColumn
+            )}
           </Presentation>
         </AddedChatContext.Provider>
       </ChatContext.Provider>
