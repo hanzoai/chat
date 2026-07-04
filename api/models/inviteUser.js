@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('~/db/base');
 const { logger, hashToken, getRandomValues } = require('@librechat/data-schemas');
 const { createToken, findToken } = require('~/models');
 

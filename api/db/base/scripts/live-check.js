@@ -115,6 +115,21 @@ async function main() {
   );
   ok('Message.meiliSearch — real text hit from Base/SQLite (Meili dropped)');
 
+  // ---- Base UNIQUE index on natural key rejects a duplicate (race-safety) ----
+  let rejected = false;
+  try {
+    await store.create('conversation', {
+      _id: '0'.repeat(24),
+      conversationId: 'conv-live-1', // duplicate of the one saved above
+      user: uid,
+      data: { _id: '0'.repeat(24), conversationId: 'conv-live-1', user: uid },
+    });
+  } catch (err) {
+    rejected = true;
+  }
+  assert.ok(rejected, 'Base UNIQUE index on conversationId rejects a duplicate insert');
+  ok('Base UNIQUE index enforces conversationId uniqueness (race-safety)');
+
   console.log('\nLIVE proof PASSED — login + conversation + message + SEARCH on Hanzo Base.');
   console.log(`   user collection id space, email=${email}`);
   process.exit(0);

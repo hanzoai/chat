@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('~/db/base');
 const { isEnabled } = require('@librechat/api');
 const { getTransactionSupport, logger } = require('@librechat/data-schemas');
 const { ResourceType, PrincipalType, PrincipalModel } = require('librechat-data-provider');

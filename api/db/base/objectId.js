@@ -42,4 +42,52 @@ function isValidObjectId(value) {
   return false;
 }
 
-module.exports = { generateObjectId, isValidObjectId, HEX_24 };
+/**
+ * A minimal, dependency-free ObjectId compatible with the surface the chat code
+ * uses from `mongoose.Types.ObjectId`: `new ObjectId()`, `new ObjectId(hex)`,
+ * `.isValid()`, `.createFromHexString()`, and instances that stringify / JSON /
+ * compare as their 24-hex value. Lets us drop the `mongoose` runtime dependency.
+ */
+class ObjectId {
+  constructor(id) {
+    if (id == null) {
+      this._id = generateObjectId();
+    } else if (typeof id === 'string') {
+      this._id = id;
+    } else if (id instanceof ObjectId) {
+      this._id = id._id;
+    } else if (typeof id.toHexString === 'function') {
+      this._id = id.toHexString();
+    } else {
+      this._id = String(id);
+    }
+  }
+
+  toString() {
+    return this._id;
+  }
+  toHexString() {
+    return this._id;
+  }
+  toJSON() {
+    return this._id;
+  }
+  valueOf() {
+    return this._id;
+  }
+  equals(other) {
+    if (other == null) {
+      return false;
+    }
+    return String(typeof other.toHexString === 'function' ? other.toHexString() : other) === this._id;
+  }
+
+  static isValid(value) {
+    return isValidObjectId(value);
+  }
+  static createFromHexString(hex) {
+    return new ObjectId(hex);
+  }
+}
+
+module.exports = { generateObjectId, isValidObjectId, HEX_24, ObjectId };

@@ -2,7 +2,7 @@
  * @import { TUpdateResourcePermissionsRequest, TUpdateResourcePermissionsResponse } from 'librechat-data-provider'
  */
 
-const mongoose = require('mongoose');
+const { mongoose } = require('~/db/base');
 const { logger } = require('@librechat/data-schemas');
 const { ResourceType, PrincipalType, PermissionBits } = require('librechat-data-provider');
 const { enrichRemoteAgentPrincipals, backfillRemoteAgentPermissions } = require('@librechat/api');
