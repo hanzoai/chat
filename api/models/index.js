@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('~/db/base');
 const { createMethods } = require('@librechat/data-schemas');
 const methods = createMethods(mongoose);
 const { comparePassword } = require('./userMethods');

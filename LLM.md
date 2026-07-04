@@ -46,7 +46,8 @@ npm run format           # Prettier
 ```
 api/                 # Express backend (port 3080)
   server/            # Entry point, routes, controllers, middleware
-  models/            # Mongoose models (MongoDB)
+  db/base/           # Hanzo Base data-layer adapter (replaces MongoDB) — see below
+  models/            # Model method wrappers (persist to Base via the adapter)
 client/              # React frontend (Vite)
   src/components/    # UI components
   src/routes/        # Client-side routing
@@ -59,6 +60,89 @@ packages/
   agents/            # Agent definitions
   mcp/               # MCP server integration
 ```
+
+## Data Layer — Hanzo Base (MongoDB dropped)
+
+Hanzo Chat does **not** use MongoDB. Persistence runs on **Hanzo Base** (the Go
+PocketBase-lineage server; SQLite embedded for dev, Postgres for prod). The
+"drop mongo completely" directive (#48) is realised by a thin adapter under
+`api/db/base/` that presents a Mongoose-Model-compatible surface backed by the
+`@hanzo/base` JS client. There is **one** adapter; every model comes along.
+
+### How it works (one adapter, all models)
+`@librechat/data-schemas` builds its schemas with real `mongoose` purely as a
+schema DSL, then asks a mongoose instance to turn them into models
+(`createModels`/`createMethods`). We hand it a **facade** instead of real
+mongoose:
+
+- `api/db/base/mongoose.js` — a `mongoose`-compatible facade. Delegates
+  schema/ObjectId/type concerns to real mongoose (never connected) but
+  overrides `model()`/`models`/`connect`/`connection`. `model(name, schema)`
+  returns a Mongoose-style **constructor** (statics + `new Model(data)` docs).
+- `api/db/base/model.js` — `BaseModel`: the Mongoose Model static surface
+  (`find/findOne/findOneAndUpdate/create/insertMany/updateOne/updateMany/
+  deleteOne/deleteMany/countDocuments/bulkWrite/aggregate/distinct/exists`),
+  a chainable/thenable `Query` (`select/sort/limit/skip/lean/populate` +
+  `find(A).deleteMany(B)`), and lightweight documents (`toObject/save`).
+- `api/db/base/query.js` — a correct in-JS Mongo query/update engine
+  (`$or/$and/$in/$nin/$gt../$exists/$regex/$elemMatch`, update ops
+  `$set/$unset/$inc/$push/$addToSet/$pull/$setOnInsert`, projection, sort).
+  This is the correctness backstop — every predicate is evaluated here.
+- `api/db/base/store.js` — the Base backend via `@hanzo/base` `BaseClient`.
+  Each model → one Base collection whose records hold the **full document as a
+  JSON `data` field** plus promoted scalar columns (from indexed/unique schema
+  paths) used only for **filter pushdown** (a guaranteed superset; the JS
+  engine then narrows). `@hanzo/base` is ESM-only → loaded via dynamic
+  `import()` from this CommonJS code.
+- `api/db/base/schema.js` — introspects a Mongoose schema for defaults,
+  timestamps, and promotable columns.
+- `api/db/base/index.js` — `connectDb()` inits the Base client, health-checks,
+  and provisions every registered model's collection (idempotent).
+
+### Wiring (hot path off mongoose)
+`api/db/connect.js`, `api/db/models.js`, `api/db/index.js` and
+`api/models/index.js` import the facade (`~/db/base`) — not `mongoose`. Boot
+sequence is unchanged: `connectDb()` → `indexSync()` (Meili, Phase 2) →
+`seedDatabase()`. **Nothing calls `mongoose.connect`.** `_id` is a real 24-hex
+ObjectId string stored inside the document; conversations/messages remain keyed
+by their `conversationId`/`messageId` UUIDs.
+
+### Env / running
+```
+HANZO_BASE_URL=http://…      # Hanzo Base instance (replaces MONGO_URI)
+HANZO_BASE_TOKEN=…           # Base superuser/service token (IAM in prod)
+```
+Local Base for dev: build a pure-SQLite launcher from `~/work/hanzo/base`
+(`base.New()` without the IAM platform plugin), `serve --http=127.0.0.1:8090`;
+the first serve prints a 30-min superuser installer token. API prefix is `/v1`.
+
+### Tests
+- `api/db/base/query.spec.js`, `api/db/base/model.spec.js` — jest, in-memory
+  store, no Base/Mongo needed (CI). `cd api && npx jest db/base`.
+- `api/db/base/scripts/live-check.js` — real data-schemas factories vs a live
+  Base: createUser + balance grant + findUser + bcrypt + saveConvo + saveMessage,
+  verified via raw Base REST. Env-gated (`HANZO_BASE_URL`/`HANZO_BASE_TOKEN`).
+- `api/db/base/scripts/boot-smoke.js` — drives the wired `~/db` + `~/models`
+  boot path (`connectDb` + `seedDatabase`) against live Base.
+
+### Phased plan (this is Phase 1)
+- **Phase 1 (done):** adapter + core hot-path verified on Base (User, Balance,
+  Conversation, Message, Agent, plus Role/Session/Token/Category via the same
+  adapter — 29 collections provisioned). Hot-path entry points off mongoose;
+  nothing connects to Mongo.
+- **Phase 2 — FTS:** replace MeiliSearch (`api/db/indexSync.js`,
+  `Conversation.meiliSearch`) with Base/SQLite FTS. Adapter currently stubs
+  `meiliSearch → { hits: [] }`, so search returns empty (not broken).
+- **Phase 3 — finish the tail:** remove the remaining direct `require('mongoose')`
+  (ObjectId utilities / migration): `api/models/Agent.js`,
+  `api/models/inviteUser.js`, `api/server/services/PermissionService.js`,
+  `api/server/controllers/PermissionsController.js`,
+  `api/server/services/initializeMCPs.js`,
+  `api/server/services/start/migration.js`. Then drop the `mongoose`/
+  `mongodb-memory-server` devDeps so `grep -riE 'mongoose|mongodb'` in `api/` is 0.
+- **Phase 3 — concurrency:** adapter upsert is find-then-write; add a Base
+  unique index on natural keys (conversationId/messageId) + retry for
+  race-safety under multi-replica load (single `_id` unique index today).
 
 ## Configuration
 
