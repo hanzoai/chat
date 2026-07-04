@@ -1,6 +1,5 @@
 const {
   CacheKeys,
-  SystemRoles,
   roleDefaults,
   permissionsSchema,
   removeNullishValues,
@@ -31,7 +30,13 @@ const getRoleByName = async function (roleName, fieldsToSelect = null) {
     }
     let role = await query.lean().exec();
 
-    if (!role && SystemRoles[roleName]) {
+    // Only self-heal a missing system role when we actually hold its canonical
+    // defaults. Keying on SystemRoles[roleName] (enum membership) alone let a
+    // role that exists in the enum but lacks a roleDefaults entry (e.g. GUEST)
+    // fall into `new Role(undefined).save()` -> "name is required" -> every
+    // generation for that role died. roleDefaults[roleName] always carries a
+    // name, so this guard makes the nameless create structurally impossible.
+    if (!role && roleDefaults[roleName]) {
       role = await new Role(roleDefaults[roleName]).save();
       await cache.set(roleName, role);
       return role.toObject();
