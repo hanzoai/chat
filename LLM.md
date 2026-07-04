@@ -99,13 +99,30 @@ mongoose:
 - `api/db/base/index.js` — `connectDb()` inits the Base client, health-checks,
   and provisions every registered model's collection (idempotent).
 
-### Wiring (hot path off mongoose)
-`api/db/connect.js`, `api/db/models.js`, `api/db/index.js` and
-`api/models/index.js` import the facade (`~/db/base`) — not `mongoose`. Boot
-sequence is unchanged: `connectDb()` → `indexSync()` (Meili, Phase 2) →
-`seedDatabase()`. **Nothing calls `mongoose.connect`.** `_id` is a real 24-hex
-ObjectId string stored inside the document; conversations/messages remain keyed
-by their `conversationId`/`messageId` UUIDs.
+### Wiring (all app code off mongoose)
+`api/db/{connect,models,index}.js`, `api/models/index.js`, and every remaining
+app file (`Agent`, `inviteUser`, `PermissionService`, `PermissionsController`,
+`initializeMCPs`, `migration`) import the facade (`~/db/base`) — not `mongoose`.
+The facade itself carries **no `mongoose` runtime dependency** (own ObjectId,
+Schema.Types shim, no-op session/connection). `grep "require('mongoose')"` over
+non-test `api/` is **zero**; **nothing calls `mongoose.connect`**. `_id` is a
+real 24-hex ObjectId string stored inside the document; conversations/messages
+remain keyed by their `conversationId`/`messageId` UUIDs.
+
+### Search (FTS on Base/SQLite)
+MeiliSearch is dropped. `BaseModel.meiliSearch(query, {filter})` runs a
+user-scoped, case-insensitive substring search over content fields flagged
+`meiliIndex` (title, text), returning Meili-shaped `{ hits }`. `indexSync.js`
+is a no-op (no external index); `/search/enable` reports availability from Base
+(set `SEARCH=false` to disable). A future optimisation is a SQLite FTS5 index
+instead of the per-user scan.
+
+### Uniqueness / concurrency
+Collections carry a Base **UNIQUE** index on always-present unique keys (`_id`,
+`conversationId`, `messageId`, `email`); optional/sparse unique fields
+(`googleId`, `openidId`, …) stay plain-indexed to avoid null conflicts, with
+logical uniqueness enforced by the adapter upsert. The unique index is the
+race-safety net (verified: a duplicate `conversationId` insert is rejected).
 
 ### Env / running
 ```
@@ -125,24 +142,25 @@ the first serve prints a 30-min superuser installer token. API prefix is `/v1`.
 - `api/db/base/scripts/boot-smoke.js` — drives the wired `~/db` + `~/models`
   boot path (`connectDb` + `seedDatabase`) against live Base.
 
-### Phased plan (this is Phase 1)
-- **Phase 1 (done):** adapter + core hot-path verified on Base (User, Balance,
+### Phased status
+- **Phase 1 (done):** adapter + core hot path verified on Base (User, Balance,
   Conversation, Message, Agent, plus Role/Session/Token/Category via the same
-  adapter — 29 collections provisioned). Hot-path entry points off mongoose;
-  nothing connects to Mongo.
-- **Phase 2 — FTS:** replace MeiliSearch (`api/db/indexSync.js`,
-  `Conversation.meiliSearch`) with Base/SQLite FTS. Adapter currently stubs
-  `meiliSearch → { hits: [] }`, so search returns empty (not broken).
-- **Phase 3 — finish the tail:** remove the remaining direct `require('mongoose')`
-  (ObjectId utilities / migration): `api/models/Agent.js`,
-  `api/models/inviteUser.js`, `api/server/services/PermissionService.js`,
-  `api/server/controllers/PermissionsController.js`,
-  `api/server/services/initializeMCPs.js`,
-  `api/server/services/start/migration.js`. Then drop the `mongoose`/
-  `mongodb-memory-server` devDeps so `grep -riE 'mongoose|mongodb'` in `api/` is 0.
-- **Phase 3 — concurrency:** adapter upsert is find-then-write; add a Base
-  unique index on natural keys (conversationId/messageId) + retry for
-  race-safety under multi-replica load (single `_id` unique index today).
+  adapter — 29 collections provisioned). Nothing connects to Mongo.
+- **Phase 2 (done):** Base/SQLite full-text search replaces MeiliSearch;
+  `indexSync` no-op; dead Meili helpers removed. Live-verified real hits.
+- **Phase 3 (done):** all app code off `mongoose` (self-contained facade);
+  Base UNIQUE indexes on natural keys (race-safety, live-verified);
+  `select:false` secrets honored; all Date fields hydrated.
+- **Remaining tail (test migration):** ~28 legacy `*.spec.js` still build models
+  on real `mongoose` + `mongodb-memory-server` (e.g. `api/models/*.spec.js`).
+  They're incompatible with the port (they expect mongoose-backed models) and
+  must be migrated to the adapter (in-memory store harness) — that is what gates
+  dropping the `mongoose`/`mongodb-memory-server` devDeps and a literal
+  `grep -riE 'mongoose|mongodb' api/` = 0. The adapter's own suites
+  (`api/db/base/*.spec.js`) are the migration template.
+- **Deploy:** build image via CI → `registry.hanzo.ai`, deploy to DOKS with a
+  Base instance + IAM service token (`HANZO_BASE_URL`/`HANZO_BASE_TOKEN`), then
+  Playwright-verify login+chat+agent+search in the browser. Gated on cluster access.
 
 ## Configuration
 
