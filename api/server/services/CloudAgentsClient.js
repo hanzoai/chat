@@ -50,15 +50,25 @@ const MAX_RESPONSE = 4 * 1024 * 1024;
  */
 const MAX_CONCURRENT = Number(process.env.CLOUD_AGENT_MAX_CONCURRENT) || 50;
 
+/**
+ * HTTP timeout (ms) for a cloud call. A run is a real chat completion — a
+ * zen5-mini answer routinely takes ~25-30s and larger models/prompts longer — so
+ * the old 30s default aborted mid-run, surfacing as an in-UI 502 even though the
+ * cloud run finished and recorded. 180s gives real runs headroom; override with
+ * CLOUD_AGENT_TIMEOUT. (List/get are fast; the ceiling only matters for /run.)
+ */
+const DEFAULT_TIMEOUT = Number(process.env.CLOUD_AGENT_TIMEOUT) || 180000;
+
 class CloudAgentsClient {
   /**
    * @param {Object} opts
    * @param {string} opts.endpoint  - Cloud base URL (e.g. https://api.hanzo.ai)
-   * @param {number} [opts.timeout] - HTTP timeout in ms (default 30000; a run is
-   *   a real chat completion so it needs more headroom than a metadata read)
+   * @param {number} [opts.timeout] - HTTP timeout in ms (default DEFAULT_TIMEOUT,
+   *   180s; a run is a real chat completion so it needs far more headroom than a
+   *   metadata read — 30s aborted long runs mid-flight)
    * @param {number} [opts.maxConcurrent] - process-wide in-flight ceiling
    */
-  constructor({ endpoint, timeout = 30000, maxConcurrent = MAX_CONCURRENT }) {
+  constructor({ endpoint, timeout = DEFAULT_TIMEOUT, maxConcurrent = MAX_CONCURRENT }) {
     this.endpoint = endpoint.replace(/\/+$/, '');
     this.timeout = timeout;
     this.maxConcurrent = maxConcurrent;

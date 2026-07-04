@@ -210,6 +210,36 @@ describe('CloudAgentsClient', () => {
     });
   });
 
+  describe('run timeout (headroom for long completions)', () => {
+    it('defaults to 180s so a long run is not aborted mid-flight (the 30s -> 502 bug)', () => {
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai' });
+      expect(client.timeout).toBe(180000);
+    });
+
+    it('honors an explicit constructor timeout', () => {
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai', timeout: 5000 });
+      expect(client.timeout).toBe(5000);
+    });
+
+    it('is overridable via CLOUD_AGENT_TIMEOUT (mirrors CLOUD_AGENT_MAX_CONCURRENT)', () => {
+      const saved = process.env.CLOUD_AGENT_TIMEOUT;
+      process.env.CLOUD_AGENT_TIMEOUT = '90000';
+      // DEFAULT_TIMEOUT is read at module load, so re-require in isolation.
+      jest.resetModules();
+      const { CloudAgentsClient: Fresh } = require('./CloudAgentsClient');
+      try {
+        expect(new Fresh({ endpoint: 'https://api.hanzo.ai' }).timeout).toBe(90000);
+      } finally {
+        if (saved === undefined) {
+          delete process.env.CLOUD_AGENT_TIMEOUT;
+        } else {
+          process.env.CLOUD_AGENT_TIMEOUT = saved;
+        }
+        jest.resetModules();
+      }
+    });
+  });
+
   describe('getCloudAgentsClient (env wiring)', () => {
     const saved = {};
     beforeEach(() => {
