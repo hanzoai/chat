@@ -126,7 +126,7 @@ export const CustomMenuSeparator = React.forwardRef<HTMLHRElement, Ariakit.MenuS
         ref={ref}
         {...props}
         className={cn(
-          'my-0.5 h-0 w-full border-t border-slate-200 dark:border-slate-700',
+          'my-0.5 h-0 w-full border-t border-border-light',
           props.className,
         )}
       />
