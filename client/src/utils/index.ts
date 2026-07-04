@@ -11,6 +11,7 @@ export * from './latex';
 export * from './forms';
 export * from './agents';
 export * from './agentCommand';
+export * from './buildApp';
 export * from './drafts';
 export * from './convos';
 export * from './routes';
