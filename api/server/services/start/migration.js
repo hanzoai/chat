@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('~/db/base');
 const { logger } = require('@librechat/data-schemas');
 const {
   logAgentMigrationWarning,

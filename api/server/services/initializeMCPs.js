@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('~/db/base');
 const { logger } = require('@librechat/data-schemas');
 const { mergeAppTools, getAppConfig } = require('./Config');
 const { createMCPServersRegistry, createMCPManager } = require('~/config');

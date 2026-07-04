@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('~/db/base');
 const crypto = require('node:crypto');
 const { logger } = require('@librechat/data-schemas');
 const { getCustomEndpointConfig } = require('@hanzochat/api');

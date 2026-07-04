@@ -1,22 +1,24 @@
 'use strict';
 
 /**
- * A drop-in `mongoose`-compatible facade backed by Hanzo Base.
+ * A self-contained, `mongoose`-shaped facade backed by Hanzo Base.
  *
- * `@librechat/data-schemas` builds its schemas with the real `mongoose` as a
- * pure schema DSL and then asks a mongoose instance to turn those schemas into
- * models (`createModels`/`createMethods`). We hand it THIS facade instead: it
- * delegates schema/ObjectId/type concerns to the real mongoose (never
- * connecting it) but overrides model creation so every model is a BaseModel
- * persisting to Base — never MongoDB.
+ * `@librechat/data-schemas` builds its schemas with real `mongoose` (a pure
+ * schema DSL inside that package) and then asks a mongoose instance to turn
+ * those schemas into models (`createModels`/`createMethods`). We hand it THIS
+ * facade instead: it registers every model as a BaseModel persisting to Base —
+ * never MongoDB — and provides just the mongoose surface the data layer uses at
+ * runtime (`model`, `models`, `Types.ObjectId`, `Schema.Types`, a no-op session
+ * / connection). It carries **no `mongoose` runtime dependency**; schema objects
+ * are passed in already-built, so this module never imports the driver.
  *
  * Result: one adapter, and the entire data-schemas model+method surface
  * (User, Session, Token, Role, Balance, Conversation, Message, Agent, …) runs
  * on Base with zero per-model porting.
  */
 
-const realMongoose = require('mongoose');
 const { BaseModel, makeModelCtor } = require('./model');
+const { ObjectId, isValidObjectId } = require('./objectId');
 const store = require('./store');
 
 /** Shared model registry (mirrors `mongoose.models`) — values are model ctors. */
@@ -38,6 +40,22 @@ function model(name, schema) {
   return ctor;
 }
 
+/** No-op session: Base has no multi-document transactions (see adapter notes). */
+function makeSession() {
+  return {
+    startTransaction() {},
+    async commitTransaction() {},
+    async abortTransaction() {},
+    async endSession() {},
+    async withTransaction(fn) {
+      return fn();
+    },
+    inTransaction() {
+      return false;
+    },
+  };
+}
+
 /** Connection stub — the real Base connection lives in ./index.js connectDb(). */
 const connection = {
   readyState: 1,
@@ -57,33 +75,48 @@ const connection = {
   },
 };
 
-const facade = new Proxy(realMongoose, {
-  get(target, prop) {
-    switch (prop) {
-      case 'model':
-        return model;
-      case 'models':
-        return models;
-      case 'connection':
-        return connection;
-      case 'connections':
-        return [connection];
-      case 'connect':
-        return async () => facade;
-      case 'createConnection':
-        return () => connection;
-      case 'disconnect':
-        return async () => {};
-      case 'set':
-        return () => facade;
-      case 'Model':
-        return BaseModel;
-      case '__isBaseFacade':
-        return true;
-      default:
-        return target[prop];
-    }
+/** Minimal Schema.Types surface for the few `mongoose.Schema.Types.*` runtime uses. */
+class Mixed {}
+const SchemaTypes = {
+  ObjectId,
+  Mixed,
+  String,
+  Number,
+  Boolean,
+  Date,
+  Array,
+  Buffer,
+  Map,
+};
+
+const facade = {
+  __isBaseFacade: true,
+  model,
+  models,
+  connection,
+  connections: [connection],
+  Types: { ObjectId, Decimal128: Number, Mixed },
+  Schema: { Types: SchemaTypes },
+  Model: BaseModel,
+  isValidObjectId,
+  async connect() {
+    return facade;
   },
-});
+  createConnection() {
+    return connection;
+  },
+  async disconnect() {},
+  startSession() {
+    return makeSession();
+  },
+  set() {
+    return facade;
+  },
+  get() {
+    return undefined;
+  },
+  /** Access the underlying BaseModel instances (used by connectDb). */
+  baseModels,
+};
 
 module.exports = facade;

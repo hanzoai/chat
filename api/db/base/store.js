@@ -145,15 +145,14 @@ class DocumentStore {
     }
 
     const fields = [{ name: 'data', type: 'json', maxSize: DATA_FIELD_MAX_SIZE }];
+    const indexes = [];
     for (const col of promoted) {
       fields.push({ name: col.name, type: col.type });
+      const safe = col.name.replace(/[^A-Za-z0-9_]/g, '_');
+      const kind = col.unique ? 'UNIQUE INDEX' : 'INDEX';
+      indexes.push(`CREATE ${kind} \`idx_${name}_${safe}\` ON \`${name}\` (\`${col.name}\`)`);
     }
-    const body = {
-      name,
-      type: 'base',
-      fields,
-      indexes: [`CREATE UNIQUE INDEX \`idx_${name}__id\` ON \`${name}\` (\`_id\`)`],
-    };
+    const body = { name, type: 'base', fields, indexes };
     try {
       await this.client.send('/v1/collections', {
         method: 'POST',

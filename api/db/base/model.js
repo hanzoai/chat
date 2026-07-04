@@ -615,6 +615,10 @@ class Query {
     return this;
   }
 
+  session() {
+    return this; // Base has no transactions; sessions are inert
+  }
+
   hint() {
     return this;
   }

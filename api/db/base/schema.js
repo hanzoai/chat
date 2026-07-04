@@ -95,11 +95,17 @@ function describeSchema(schema) {
     }
 
     // Promote indexed / unique primitive fields to Base columns for filtering.
-    // NOTE: promoted as PLAIN columns (not DB-unique) to avoid sparse-null
-    // uniqueness conflicts; adapter-level upsert enforces logical uniqueness.
+    // A DB-level UNIQUE index is only safe for always-present unique keys
+    // (unique && required) — e.g. conversationId, messageId — to avoid the
+    // sparse-null conflicts of optional unique fields (googleId, openidId, …),
+    // whose logical uniqueness stays enforced by the adapter-level upsert.
     if (!name.includes('.') && PRIMITIVE_INSTANCES.has(type.instance)) {
       if ((options.index || options.unique) && !promoted.has(name)) {
-        promoted.set(name, { name, type: baseColumnType(type.instance), unique: false });
+        promoted.set(name, {
+          name,
+          type: baseColumnType(type.instance),
+          unique: !!(options.unique && options.required),
+        });
       }
     }
   }
