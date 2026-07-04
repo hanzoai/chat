@@ -11,7 +11,7 @@
  * CollectionSpec when migrated). MeiliSearch stays a separate concern: `.meiliSearch`
  * is intentionally absent, matching a mongoose model with no MEILI_HOST configured.
  */
-import { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync } from 'node:sqlite';
 import { getTenantId, SYSTEM_TENANT_ID } from '~/config/tenantContext';
 import {
   matchesFilter,
