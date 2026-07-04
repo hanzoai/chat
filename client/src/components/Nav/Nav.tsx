@@ -78,7 +78,10 @@ const Nav = memo(
     const { isAuthenticated } = useAuthContext();
     useTitleGeneration(isAuthenticated);
 
-    const isSmallScreen = useMediaQuery('(max-width: 768px)');
+    // 767px (not 768) so the exact md breakpoint (768) resolves to the DOCKED
+    // desktop sidebar. At 768 the mobile hamburger (`md:hidden`) is hidden, so a
+    // 768px `max-width` here would strand the off-canvas drawer with no opener.
+    const isSmallScreen = useMediaQuery('(max-width: 767px)');
     const [newUser, setNewUser] = useLocalStorage('newUser', true);
     const [isChatsExpanded, setIsChatsExpanded] = useLocalStorage('chatsExpanded', true);
     const [showLoading, setShowLoading] = useState(false);

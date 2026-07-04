@@ -50,7 +50,10 @@ export default function Root() {
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, token]);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  // 767px to match Nav's drawer breakpoint: at exactly 768 (the md breakpoint)
+  // the docked sidebar is used and the mobile hamburger (`md:hidden`) is hidden,
+  // so the translateX drawer shift must not engage.
+  const isSmallScreen = useMediaQuery('(max-width: 767px)');
 
   // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);

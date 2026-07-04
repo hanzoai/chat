@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { OGDialog, OGDialogTemplate, Button } from '@librechat/client';
-import { getHanzoIamSdk, isStaticIamMode } from '~/utils/iam';
+import { startHanzoLogin } from '~/utils';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 
@@ -21,18 +21,7 @@ export default function GuestLimitDialog() {
     return () => window.removeEventListener('guestLimitReached', handler);
   }, []);
 
-  const handleLogin = useCallback(() => {
-    const iamSdk = getHanzoIamSdk();
-    if (isStaticIamMode() && iamSdk) {
-      iamSdk.signinRedirect();
-      return;
-    }
-    if (startupConfig?.openidLoginEnabled && startupConfig?.serverDomain) {
-      window.location.href = `${startupConfig.serverDomain}/oauth/openid`;
-      return;
-    }
-    window.location.href = '/login';
-  }, [startupConfig]);
+  const handleLogin = useCallback(() => startHanzoLogin(startupConfig), [startupConfig]);
 
   return (
     <OGDialog open={open} onOpenChange={setOpen}>

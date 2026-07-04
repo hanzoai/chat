@@ -1,16 +1,17 @@
 import { useState, memo, useRef } from 'react';
 import * as Select from '@ariakit/react/select';
-import { FileText, LogOut, CreditCard } from 'lucide-react';
+import { FileText, LogOut, LogIn, CreditCard } from 'lucide-react';
 import { LinkIcon, GearIcon, DropdownMenuSeparator, Avatar } from '@librechat/client';
 import { MyFilesModal } from '~/components/Chat/Input/Files/MyFilesModal';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { startHanzoLogin } from '~/utils';
 import { useLocalize } from '~/hooks';
 import Settings from './Settings';
 
 function AccountSettings() {
   const localize = useLocalize();
-  const { user, isAuthenticated, logout } = useAuthContext();
+  const { user, isAuthenticated, isGuest, logout } = useAuthContext();
   const { data: startupConfig } = useGetStartupConfig();
   const balanceQuery = useGetUserBalance({
     enabled: !!isAuthenticated && startupConfig?.balance?.enabled,
@@ -88,14 +89,16 @@ function AccountSettings() {
             </>
           );
         })()}
-        <Select.SelectItem
-          value=""
-          onClick={() => setShowFiles(true)}
-          className="select-item text-sm"
-        >
-          <FileText className="icon-md" aria-hidden="true" />
-          {localize('com_nav_my_files')}
-        </Select.SelectItem>
+        {!isGuest && (
+          <Select.SelectItem
+            value=""
+            onClick={() => setShowFiles(true)}
+            className="select-item text-sm"
+          >
+            <FileText className="icon-md" aria-hidden="true" />
+            {localize('com_nav_my_files')}
+          </Select.SelectItem>
+        )}
         {startupConfig?.helpAndFaqURL !== '/' && (
           <Select.SelectItem
             value=""
@@ -115,15 +118,27 @@ function AccountSettings() {
           {localize('com_nav_settings')}
         </Select.SelectItem>
         <DropdownMenuSeparator />
-        <Select.SelectItem
-          aria-selected={true}
-          onClick={() => logout()}
-          value="logout"
-          className="select-item text-sm"
-        >
-          <LogOut className="icon-md" aria-hidden="true" />
-          {localize('com_nav_log_out')}
-        </Select.SelectItem>
+        {isGuest ? (
+          <Select.SelectItem
+            aria-selected={true}
+            onClick={() => startHanzoLogin(startupConfig)}
+            value="login"
+            className="select-item text-sm"
+          >
+            <LogIn className="icon-md" aria-hidden="true" />
+            {localize('com_auth_sign_in')}
+          </Select.SelectItem>
+        ) : (
+          <Select.SelectItem
+            aria-selected={true}
+            onClick={() => logout()}
+            value="logout"
+            className="select-item text-sm"
+          >
+            <LogOut className="icon-md" aria-hidden="true" />
+            {localize('com_nav_log_out')}
+          </Select.SelectItem>
+        )}
       </Select.SelectPopover>
       {showFiles && (
         <MyFilesModal
