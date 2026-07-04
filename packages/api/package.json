@@ -20,6 +20,7 @@
     "build:watch:prod": "rollup -c -w --bundleConfigAsCjs",
     "test": "jest --coverage --watch --testPathIgnorePatterns=\"\\.*integration\\.|\\.*helper\\.\"",
     "test:ci": "jest --coverage --ci --testPathIgnorePatterns=\"\\.*integration\\.|\\.*helper\\.\"",
+    "test:transport": "jest --ci --coverage=false --testPathPatterns=\"MCPConnection|MCPRedirectSSRFGuard|reconnection-storm|MCPManager|auth/domain\\.spec|auth/agent\\.spec|oauth/hardenedFetch|oauth/OAuthReconnection\"",
     "test:cache-integration:core": "jest --testPathPatterns=\"src/cache/.*\\.cache_integration\\.spec\\.ts$\" --coverage=false",
     "test:cache-integration:cluster": "jest --testPathPatterns=\"src/cluster/.*\\.cache_integration\\.spec\\.ts$\" --coverage=false --runInBand",
     "test:cache-integration:mcp": "jest --testPathPatterns=\"src/mcp/.*\\.cache_integration\\.spec\\.ts$\" --coverage=false",
