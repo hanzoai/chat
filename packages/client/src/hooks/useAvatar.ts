@@ -26,22 +26,9 @@ const useAvatar = (user: TUser | undefined) => {
       fontFamily: ['Verdana'],
       fontSize: 36,
       backgroundType: ['solid'],
-      backgroundColor: [
-        'd81b60',
-        '8e24aa',
-        '5e35b1',
-        '3949ab',
-        'DB3733',
-        '1B79CC',
-        '027CB8',
-        '008291',
-        '008577',
-        '58802F',
-        '8A761D',
-        '9C6D00',
-        'B06200',
-        'D1451A',
-      ],
+      // Monochrome brand: neutral grey ramp only — no colored avatars in the UI chrome.
+      // The seed still hashes to one of these, so avatars stay subtly distinct yet neutral.
+      backgroundColor: ['404040', '525252', '2f2f2f', '595959', '343434', '4d4d4d'],
       textColor: ['ffffff'],
     });
 
