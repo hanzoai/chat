@@ -117,6 +117,20 @@ is a no-op (no external index); `/search/enable` reports availability from Base
 (set `SEARCH=false` to disable). A future optimisation is a SQLite FTS5 index
 instead of the per-user scan.
 
+### Security invariants (do not regress — from blue+red review)
+- **Prototype pollution:** `query.js` path helpers reject `__proto__` /
+  `constructor` / `prototype` segments (attacker update keys flow in via
+  `saveConvo` / conversation import). Keep the guard.
+- **`select:false`:** secrets (password, totpSecret, backupCodes, keyHash) are
+  excluded from reads by default; only `+field` returns them. `save()` merges
+  onto the stored record so a projected load never erases them.
+- **Pushdown = SUPERSET:** `store.js buildFilter` must only ever broaden; the JS
+  matcher narrows. Never push a predicate that could wrongly exclude — Date
+  columns and non-finite numbers are intentionally NOT pushed (Base date-column
+  normalization vs ISO would silently drop records).
+- **DSL injection:** `quote()` escapes `\` and `'`; verified a crafted
+  `conversationId` cannot inject `||`/operators.
+
 ### Uniqueness / concurrency
 Collections carry a Base **UNIQUE** index on always-present unique keys (`_id`,
 `conversationId`, `messageId`, `email`); optional/sparse unique fields
