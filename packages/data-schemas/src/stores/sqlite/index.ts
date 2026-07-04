@@ -18,6 +18,7 @@ import { ObjectId } from './engine';
 export { DocModel, type CollectionSpec } from './DocModel';
 export { CHAT_COLLECTION_SPECS } from './collections';
 export { ObjectId } from './engine';
+export { createDualWriteModel, DualWriteModel } from './DualWriteModel';
 
 export interface SqliteHandle {
   models: Record<string, DocModel>;
@@ -42,6 +43,10 @@ export function openDatabase(dbPath?: string): DatabaseSync {
   if (path !== ':memory:') {
     db.exec('PRAGMA journal_mode = WAL');
     db.exec('PRAGMA synchronous = NORMAL');
+    // The one-shot Mongo→SQLite backfill runs as a SEPARATE process against this
+    // same file; WAL permits one writer at a time, so wait for the lock rather
+    // than erroring when the live pod and the backfill overlap.
+    db.exec('PRAGMA busy_timeout = 5000');
   }
   db.exec('PRAGMA foreign_keys = ON');
   return db;
