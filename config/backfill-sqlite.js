@@ -17,8 +17,19 @@
  *   node config/backfill-sqlite.js
  * Optional: pass a comma list of collection (model) names to limit scope.
  */
+const path = require('path');
 const { MongoClient } = require('mongodb');
-const { createSqliteHandle, CHAT_COLLECTION_SPECS } = require('@librechat/data-schemas');
+// The built package. The pnpm workspace does not hoist a bare
+// `@librechat/data-schemas` symlink to the app root (where this script runs via
+// `node config/backfill-sqlite.js`), so fall back to the workspace path.
+function loadDataSchemas() {
+  try {
+    return require('@librechat/data-schemas');
+  } catch {
+    return require(path.resolve(__dirname, '../packages/data-schemas'));
+  }
+}
+const { createSqliteHandle, CHAT_COLLECTION_SPECS } = loadDataSchemas();
 
 // model (spec) name -> mongo collection name. Explicit, not derived, so the
 // mapping is auditable and never depends on mongoose pluralization quirks.
