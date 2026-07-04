@@ -119,30 +119,31 @@ jobs:
             echo "unused_keys=[]" >> $GITHUB_ENV
           fi
 
+      # Post via github-script (Octokit + the built-in token) rather than the gh
+      # CLI: gh is not installed on the self-hosted ARC runners, so `gh api` here
+      # exits 127. The job already grants `pull-requests: write`.
       - name: Post verified comment on PR
         if: env.unused_keys != '[]'
-        run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-
-          # Format the unused keys list as checkboxes for easy manual checking.
-          FILTERED_KEYS=$(echo "$unused_keys" | jq -r '.[]' | grep -v '^\s*$' | sed 's/^/- [ ] `/;s/$/`/' )
-
-          COMMENT_BODY=$(cat <<EOF
-          ### 🚨 Unused i18next Keys Detected
-
-          The following translation keys are defined in \`translation.json\` but are **not used** in the codebase:
-
-          $FILTERED_KEYS
-
-          ⚠️ **Please remove these unused keys to keep the translation files clean.**
-          EOF
-          )
-
-          gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
-            -f body="$COMMENT_BODY" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const keys = JSON.parse(process.env.unused_keys || '[]').filter(Boolean);
+            const list = keys.map((k) => `- [ ] \`${k}\``).join('\n');
+            const body = [
+              '### 🚨 Unused i18next Keys Detected',
+              '',
+              'The following translation keys are defined in `translation.json` but are **not used** in the codebase:',
+              '',
+              list,
+              '',
+              '⚠️ **Please remove these unused keys to keep the translation files clean.**',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
 
       - name: Fail workflow if unused keys found
         if: env.unused_keys != '[]'
