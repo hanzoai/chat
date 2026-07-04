@@ -2,11 +2,15 @@
 #
 # ignores: dependencies that are present on purpose but never imported directly,
 # so depcheck's static scan reports them as a false positive.
-#   - @opentelemetry/core: intentional version-pin. It is a transitive
-#     requirement of the OpenTelemetry stack we do use (@opentelemetry/sdk-node,
-#     sdk-trace-base, exporter-trace-otlp-http); pinning it at the top level
-#     keeps a single, aligned core version across the tree. Never imported by
-#     name, so depcheck flags it — this is expected, not dead. Do NOT remove the
-#     dependency (that would unpin the otel core version).
+#
+# The three @opentelemetry/* entries below are all transitive dependencies of
+# @opentelemetry/sdk-node, which we DO import and drive (NodeSDK in
+# packages/api/src/telemetry/sdk.ts). They are pinned at the top level to keep
+# every otel package on one aligned version (mismatched otel versions break at
+# runtime). None is imported by name, so depcheck flags them — expected, not
+# dead. Do NOT remove them (that would unpin the otel version set). Only
+# @opentelemetry/api is imported directly and stays checked.
 ignores:
   - "@opentelemetry/core"
+  - "@opentelemetry/exporter-trace-otlp-http"
+  - "@opentelemetry/sdk-trace-base"
