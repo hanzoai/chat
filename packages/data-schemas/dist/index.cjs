@@ -4,6 +4,7 @@ var librechatDataProvider = require('librechat-data-provider');
 var winston = require('winston');
 require('winston-daily-rotate-file');
 var klona = require('klona');
+var async_hooks = require('async_hooks');
 var path = require('path');
 var require$$0 = require('fs');
 var require$$2 = require('os');
@@ -254,10 +255,25 @@ function traverse(obj) {
     };
 }
 
+/** Sentinel value for deliberate cross-tenant system operations */
+const SYSTEM_TENANT_ID = '__SYSTEM__';
+/**
+ * AsyncLocalStorage instance for propagating tenant context.
+ * Callbacks passed to `tenantStorage.run()` must be `async` for the context to propagate
+ * through Mongoose query execution. Sync callbacks returning a Mongoose thenable will lose context.
+ */
+const tenantStorage = new async_hooks.AsyncLocalStorage();
+/** Returns the current tenant ID from async context, or undefined if none is set */
+function getTenantId() {
+    var _a;
+    return (_a = tenantStorage.getStore()) === null || _a === void 0 ? void 0 : _a.tenantId;
+}
+
 const SPLAT_SYMBOL = Symbol.for('splat');
 const MESSAGE_SYMBOL = Symbol.for('message');
 const CONSOLE_JSON_STRING_LENGTH = parseInt(process.env.CONSOLE_JSON_STRING_LENGTH || '', 10) || 255;
 const DEBUG_MESSAGE_LENGTH = parseInt(process.env.DEBUG_MESSAGE_LENGTH || '', 10) || 150;
+const LOG_CONTEXT_KEYS = ['tenantId', 'userId', 'requestId'];
 const sensitiveKeys = [
     /^(sk-)[^\s]+/, // OpenAI API key pattern
     /(Bearer )[^\s]+/, // Header: Bearer token pattern
@@ -341,6 +357,28 @@ const condenseArray = (item) => {
     return item;
 };
 /**
+ * Serializes request-scoped identity (tenant / user / request ids) into a
+ * compact JSON suffix, omitting the internal `__SYSTEM__` tenant sentinel so it
+ * never leaks into logs.
+ */
+function formatRequestContext(metadata) {
+    const context = {};
+    LOG_CONTEXT_KEYS.forEach((key) => {
+        const value = metadata[key];
+        if (key === 'tenantId' && value === SYSTEM_TENANT_ID) {
+            return;
+        }
+        if (typeof value === 'string' && value) {
+            context[key] = value;
+        }
+    });
+    return Object.keys(context).length > 0 ? JSON.stringify(context) : '';
+}
+function appendRequestContext(line, metadata) {
+    const context = formatRequestContext(metadata);
+    return context ? `${line} ${context}` : line;
+}
+/**
  * Formats log messages for debugging purposes.
  * - Truncates long strings within log messages.
  * - Condenses arrays by truncating long strings and objects as strings within array items.
@@ -363,7 +401,7 @@ const debugTraverse = winston.format.printf(({ level, message, timestamp, ...met
     ];
     try {
         if (level !== 'debug') {
-            return msgParts[0];
+            return appendRequestContext(msgParts[0], metadata);
         }
         if (!metadata) {
             return msgParts[0];
@@ -373,18 +411,21 @@ const debugTraverse = winston.format.printf(({ level, message, timestamp, ...met
         const splatArray = metadataRecord[SPLAT_SYMBOL];
         const debugValue = Array.isArray(splatArray) ? splatArray[0] : undefined;
         if (!debugValue) {
-            return msgParts[0];
+            return appendRequestContext(msgParts[0], metadata);
         }
         if (debugValue && Array.isArray(debugValue)) {
             msgParts.push(`\n${JSON.stringify(debugValue.map(condenseArray))}`);
-            return msgParts.join('');
+            return appendRequestContext(msgParts.join(''), metadata);
         }
         if (typeof debugValue !== 'object') {
             msgParts.push(` ${debugValue}`);
-            return msgParts.join('');
+            return appendRequestContext(msgParts.join(''), metadata);
         }
         msgParts.push('\n{');
         const copy = klona.klona(metadata);
+        if (copy.tenantId === SYSTEM_TENANT_ID) {
+            delete copy.tenantId;
+        }
         try {
             const traversal = traverse(copy);
             traversal.forEach(function (value) {
@@ -3073,13 +3114,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         default: false,
     },
-    password: {
-        type: String,
-        trim: true,
-        minlength: 8,
-        maxlength: 128,
-        select: false,
-    },
+    // No local password credential. Identity is owned by Hanzo IAM (hanzo.id):
+    // authenticated chat is OIDC-only (provider='openid', keyed by openidId=sub),
+    // so the User doc is a thin IAM projection, never a second credential store.
+    // Local email registration / password reset are removed (see AuthService).
     avatar: {
         type: String,
         required: false,
@@ -4208,11 +4246,2217 @@ function createGroupModel(mongoose) {
     return mongoose.models.Group || mongoose.model('Group', groupSchema);
 }
 
+// ---------------------------------------------------------------------------
+// System Capabilities
+// ---------------------------------------------------------------------------
+/**
+ * The canonical set of base system capabilities.
+ *
+ * These are used by the admin panel and LibreChat API to gate access to
+ * admin features. Config-section-derived capabilities (e.g.
+ * `manage:configs:endpoints`) are built on top of these where the
+ * configSchema is available.
+ */
+const SystemCapabilities = {
+    ACCESS_ADMIN: 'access:admin',
+    READ_USERS: 'read:users',
+    MANAGE_USERS: 'manage:users',
+    READ_GROUPS: 'read:groups',
+    MANAGE_GROUPS: 'manage:groups',
+    READ_ROLES: 'read:roles',
+    MANAGE_ROLES: 'manage:roles',
+    READ_CONFIGS: 'read:configs',
+    MANAGE_CONFIGS: 'manage:configs',
+    ASSIGN_CONFIGS: 'assign:configs',
+    READ_USAGE: 'read:usage',
+    READ_AGENTS: 'read:agents',
+    MANAGE_AGENTS: 'manage:agents',
+    MANAGE_MCP_SERVERS: 'manage:mcpservers',
+    READ_PROMPTS: 'read:prompts',
+    MANAGE_PROMPTS: 'manage:prompts',
+    READ_SKILLS: 'read:skills',
+    MANAGE_SKILLS: 'manage:skills',
+    /** Reserved — not yet enforced by any middleware. */
+    READ_ASSISTANTS: 'read:assistants',
+    MANAGE_ASSISTANTS: 'manage:assistants',
+};
+/**
+ * Capabilities that are implied by holding a broader capability.
+ * e.g. `MANAGE_USERS` implies `READ_USERS`.
+ */
+const CapabilityImplications = {
+    [SystemCapabilities.MANAGE_USERS]: [SystemCapabilities.READ_USERS],
+    [SystemCapabilities.MANAGE_GROUPS]: [SystemCapabilities.READ_GROUPS],
+    [SystemCapabilities.MANAGE_ROLES]: [SystemCapabilities.READ_ROLES],
+    [SystemCapabilities.MANAGE_CONFIGS]: [SystemCapabilities.READ_CONFIGS],
+    [SystemCapabilities.MANAGE_AGENTS]: [SystemCapabilities.READ_AGENTS],
+    [SystemCapabilities.MANAGE_PROMPTS]: [SystemCapabilities.READ_PROMPTS],
+    [SystemCapabilities.MANAGE_SKILLS]: [SystemCapabilities.READ_SKILLS],
+    [SystemCapabilities.MANAGE_ASSISTANTS]: [SystemCapabilities.READ_ASSISTANTS],
+};
+// ---------------------------------------------------------------------------
+// Capability validation
+// ---------------------------------------------------------------------------
+const baseCapabilitySet = new Set(Object.values(SystemCapabilities));
+const sectionCapPattern = /^(?:manage|read):configs:\w+$/;
+const assignCapPattern = /^assign:configs:(?:user|group|role)$/;
+/**
+ * Runtime validator for the full `SystemCapability` union:
+ * base capabilities, section-level config capabilities, and config assignment capabilities.
+ */
+function isValidCapability(value) {
+    return (baseCapabilitySet.has(value) || sectionCapPattern.test(value) || assignCapPattern.test(value));
+}
+// ---------------------------------------------------------------------------
+// Capability utility functions
+// ---------------------------------------------------------------------------
+/** Reverse map: for a given read capability, which manage capabilities imply it? */
+const impliedByMap = {};
+for (const [manage, reads] of Object.entries(CapabilityImplications)) {
+    for (const read of reads) {
+        if (!impliedByMap[read]) {
+            impliedByMap[read] = [];
+        }
+        impliedByMap[read].push(manage);
+    }
+}
+// ---------------------------------------------------------------------------
+// Resource & config capability mappings
+// ---------------------------------------------------------------------------
+/**
+ * Maps each ACL ResourceType to the SystemCapability that grants
+ * unrestricted management access. Typed as `Record<ResourceType, …>`
+ * so adding a new ResourceType variant causes a compile error until a
+ * capability is assigned here.
+ */
+({
+    [librechatDataProvider.ResourceType.AGENT]: SystemCapabilities.MANAGE_AGENTS,
+    [librechatDataProvider.ResourceType.PROMPTGROUP]: SystemCapabilities.MANAGE_PROMPTS,
+    [librechatDataProvider.ResourceType.MCPSERVER]: SystemCapabilities.MANAGE_MCP_SERVERS,
+    [librechatDataProvider.ResourceType.REMOTE_AGENT]: SystemCapabilities.MANAGE_AGENTS,
+    [librechatDataProvider.ResourceType.SKILL]: SystemCapabilities.MANAGE_SKILLS,
+});
+
+const systemGrantSchema = new mongoose.Schema({
+    principalType: {
+        type: String,
+        enum: Object.values(librechatDataProvider.PrincipalType),
+        required: true,
+    },
+    principalId: {
+        type: mongoose.Schema.Types.Mixed,
+        required: true,
+    },
+    capability: {
+        type: String,
+        required: true,
+        validate: {
+            validator: isValidCapability,
+            message: 'Invalid capability string: "{VALUE}"',
+        },
+    },
+    /**
+     * Platform-level grants MUST omit this field entirely — never set it to null.
+     * Queries for platform-level grants use `{ tenantId: { $exists: false } }`, which
+     * matches absent fields but NOT `null`. A document stored with `{ tenantId: null }`
+     * would silently match neither platform-level nor tenant-scoped queries.
+     */
+    tenantId: {
+        type: String,
+        required: false,
+        validate: {
+            validator: (v) => v !== null && v !== '',
+            message: 'tenantId must be a non-empty string or omitted entirely — never null or empty',
+        },
+    },
+    grantedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
+    grantedAt: {
+        type: Date,
+        default: Date.now,
+    },
+    /** Reserved for future TTL enforcement — time-bounded / temporary grants. Not enforced yet. */
+    expiresAt: {
+        type: Date,
+        required: false,
+    },
+}, { timestamps: true });
+/*
+ * principalId normalization (string → ObjectId for USER/GROUP) is handled
+ * explicitly by grantCapability — the only sanctioned write path.
+ * All writes MUST go through grantCapability; do not use Model.create()
+ * or save() directly, as there is no schema-level normalization hook.
+ */
+systemGrantSchema.index({ principalType: 1, principalId: 1, capability: 1, tenantId: 1 }, { unique: true });
+systemGrantSchema.index({ capability: 1, tenantId: 1 });
+systemGrantSchema.index({ principalType: 1, capability: 1, tenantId: 1 });
+
+/**
+ * SystemGrant is a cross-tenant control plane — its query logic in systemGrant methods
+ * explicitly handles tenantId conditions (platform-level vs tenant-scoped grants).
+ * Do NOT apply tenant isolation plugin here; it would inject a hard tenantId equality
+ * filter that conflicts with the $and/$or logic in hasCapabilityForPrincipals.
+ */
+function createSystemGrantModel(mongoose) {
+    return (mongoose.models.SystemGrant || mongoose.model('SystemGrant', systemGrantSchema));
+}
+
+/**
+ * Pure document-store engine: Mongo-shaped query matching, update application,
+ * projection, and sorting over plain JS objects. No I/O, no SQLite, no mongoose.
+ *
+ * This is the correctness core of the SQLite-backed store. Keeping it pure and
+ * dependency-free makes the Mongo semantics exhaustively unit-testable and lets
+ * the storage layer (DocModel) stay a thin SQLite adapter around it.
+ *
+ * Supported operators are exactly the surface the migrated chat data methods
+ * use, plus the cheap adjacent ones so the engine is reusable across the
+ * remaining collections without re-touching this file:
+ *   filter:  $eq $ne $in $nin $gt $gte $lt $lte $exists $regex $not $and $or $nor
+ *   update:  (implicit $set) $set $unset $setOnInsert $inc $push $pull $addToSet
+ */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+/* ------------------------------------------------------------------ paths */
+function getPath(doc, path) {
+    if (!path.includes('.')) {
+        return doc[path];
+    }
+    let cur = doc;
+    for (const key of path.split('.')) {
+        if (cur == null || typeof cur !== 'object') {
+            return undefined;
+        }
+        cur = cur[key];
+    }
+    return cur;
+}
+function hasPath(doc, path) {
+    if (!path.includes('.')) {
+        return Object.prototype.hasOwnProperty.call(doc, path);
+    }
+    let cur = doc;
+    const keys = path.split('.');
+    for (let i = 0; i < keys.length; i++) {
+        if (cur == null || typeof cur !== 'object') {
+            return false;
+        }
+        if (i === keys.length - 1) {
+            return Object.prototype.hasOwnProperty.call(cur, keys[i]);
+        }
+        cur = cur[keys[i]];
+    }
+    return false;
+}
+/**
+ * Keys that must never be walked or written through a dotted update path:
+ * writing `__proto__.x` or `constructor.prototype.x` would mutate a shared
+ * prototype (prototype pollution). Update keys are attacker-influenced — they
+ * arrive verbatim from `$set`/`$unset`/`$inc`/`$push`/… documents (conversation
+ * import, `saveConvo`, agent metadata) — so a malicious dotted key is neutralised
+ * here rather than trusted. A path containing any unsafe segment is a no-op.
+ */
+const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+function hasUnsafeSegment(keys) {
+    return keys.some((k) => UNSAFE_KEYS.has(k));
+}
+function setPath(doc, path, value) {
+    if (!path.includes('.')) {
+        if (UNSAFE_KEYS.has(path)) {
+            return;
+        }
+        doc[path] = value;
+        return;
+    }
+    const keys = path.split('.');
+    if (hasUnsafeSegment(keys)) {
+        return;
+    }
+    let cur = doc;
+    for (let i = 0; i < keys.length - 1; i++) {
+        const next = cur[keys[i]];
+        if (next == null || typeof next !== 'object') {
+            cur[keys[i]] = {};
+        }
+        cur = cur[keys[i]];
+    }
+    cur[keys[keys.length - 1]] = value;
+}
+function deletePath(doc, path) {
+    if (!path.includes('.')) {
+        if (UNSAFE_KEYS.has(path)) {
+            return;
+        }
+        delete doc[path];
+        return;
+    }
+    const keys = path.split('.');
+    if (hasUnsafeSegment(keys)) {
+        return;
+    }
+    let cur = doc;
+    for (let i = 0; i < keys.length - 1; i++) {
+        const next = cur[keys[i]];
+        if (next == null || typeof next !== 'object') {
+            return;
+        }
+        cur = next;
+    }
+    delete cur[keys[keys.length - 1]];
+}
+/* ------------------------------------------------------------ comparison */
+/**
+ * Coerces a BSON ObjectId (real mongoose, or any `{ toHexString() }`) to its hex
+ * string, so filters carrying ObjectId operands compare against the hex strings
+ * this store persists (docs stringify ObjectIds to hex on write; `_id`s are
+ * generated in ObjectId-hex format). Leaves everything else untouched.
+ */
+function coerceId(v) {
+    if (v != null && typeof v === 'object') {
+        const o = v;
+        if (typeof o.toHexString === 'function') {
+            return o.toHexString();
+        }
+    }
+    return v;
+}
+/**
+ * Recursively coerces ObjectId-like values (real mongoose or the shim) to their
+ * hex string. Used on input documents before `structuredClone` — which would
+ * otherwise strip an ObjectId's methods, leaving a `{ }`-shaped husk that
+ * serializes wrong. Dates and everything else pass through untouched.
+ */
+function deepCoerceIds(v) {
+    if (v == null || typeof v !== 'object') {
+        return v;
+    }
+    if (typeof v.toHexString === 'function') {
+        return v.toHexString();
+    }
+    if (v instanceof Date) {
+        return v;
+    }
+    if (Array.isArray(v)) {
+        return v.map(deepCoerceIds);
+    }
+    const out = {};
+    for (const [k, val] of Object.entries(v)) {
+        out[k] = deepCoerceIds(val);
+    }
+    return out;
+}
+/** Coerce a value to a comparable primitive: dates/ISO-strings -> epoch ms. */
+function comparable(raw) {
+    const v = coerceId(raw);
+    if (v == null) {
+        return null;
+    }
+    if (v instanceof Date) {
+        return v.getTime();
+    }
+    if (typeof v === 'string' && ISO_DATE.test(v)) {
+        return Date.parse(v);
+    }
+    if (typeof v === 'boolean') {
+        return v;
+    }
+    return v;
+}
+/** Ordering comparator. null sorts lowest. Returns -1 | 0 | 1. */
+function compareValues(a, b) {
+    const ca = comparable(a);
+    const cb = comparable(b);
+    if (ca === null && cb === null) {
+        return 0;
+    }
+    if (ca === null) {
+        return -1;
+    }
+    if (cb === null) {
+        return 1;
+    }
+    if (typeof ca === 'number' && typeof cb === 'number') {
+        return ca < cb ? -1 : ca > cb ? 1 : 0;
+    }
+    const sa = String(ca);
+    const sb = String(cb);
+    return sa < sb ? -1 : sa > sb ? 1 : 0;
+}
+function valueEquals(rawA, rawB) {
+    const a = coerceId(rawA);
+    const b = coerceId(rawB);
+    if (a instanceof Date || b instanceof Date || isIsoDate(a) || isIsoDate(b)) {
+        const ca = comparable(a);
+        const cb = comparable(b);
+        if (typeof ca === 'number' && typeof cb === 'number') {
+            return ca === cb;
+        }
+    }
+    if (a === b) {
+        return true;
+    }
+    if (a == null || b == null) {
+        return a == null && b == null;
+    }
+    if (typeof a === 'object' && typeof b === 'object') {
+        return JSON.stringify(a) === JSON.stringify(b);
+    }
+    return false;
+}
+function isIsoDate(v) {
+    return typeof v === 'string' && ISO_DATE.test(v);
+}
+/**
+ * Casts a comparison operand to match the stored value's type, mirroring
+ * Mongoose's schema-driven query casting. The critical case: cursor pagination
+ * passes `String(date)` (a non-ISO `Date.toString()`) as a range operand against
+ * a Date field — coerce it back to a Date so the comparison is chronological,
+ * not lexical. Non-date strings are left untouched.
+ */
+function coerceOperand(ref, operand) {
+    if (ref instanceof Date && typeof operand === 'string') {
+        const t = Date.parse(operand);
+        if (!Number.isNaN(t)) {
+            return new Date(t);
+        }
+    }
+    return operand;
+}
+/* --------------------------------------------------------------- matching */
+/** Mongo equality: {field: value}. Array fields match on membership. */
+function matchEquality(docVal, value) {
+    if (value === null) {
+        // {field: null} matches null OR missing (missing => docVal === undefined)
+        return docVal == null;
+    }
+    if (Array.isArray(docVal) && !Array.isArray(value)) {
+        return docVal.some((el) => valueEquals(el, value));
+    }
+    return valueEquals(docVal, value);
+}
+function matchOperator(docVal, op, operand, present) {
+    switch (op) {
+        case '$eq':
+            return matchEquality(docVal, operand);
+        case '$ne':
+            return !matchEquality(docVal, operand);
+        case '$in': {
+            const arr = operand;
+            if (Array.isArray(docVal)) {
+                return docVal.some((el) => arr.some((o) => valueEquals(el, o)));
+            }
+            return arr.some((o) => matchEquality(docVal, o));
+        }
+        case '$nin': {
+            const arr = operand;
+            if (Array.isArray(docVal)) {
+                return !docVal.some((el) => arr.some((o) => valueEquals(el, o)));
+            }
+            return !arr.some((o) => matchEquality(docVal, o));
+        }
+        case '$gt':
+            return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) > 0;
+        case '$gte':
+            return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) >= 0;
+        case '$lt':
+            return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) < 0;
+        case '$lte':
+            return docVal != null && compareValues(docVal, coerceOperand(docVal, operand)) <= 0;
+        case '$exists':
+            return operand ? present : !present;
+        case '$regex': {
+            if (typeof docVal !== 'string') {
+                return false;
+            }
+            const re = operand instanceof RegExp ? operand : new RegExp(operand);
+            return re.test(docVal);
+        }
+        case '$not': {
+            // operand is an operator object or regex
+            if (operand instanceof RegExp) {
+                return !(typeof docVal === 'string' && operand.test(docVal));
+            }
+            return !matchFieldConditions(docVal, operand, present);
+        }
+        case '$bitsAllSet':
+        case '$bitsAnySet':
+        case '$bitsAllClear':
+        case '$bitsAnyClear': {
+            if (typeof docVal !== 'number') {
+                return false;
+            }
+            const mask = Array.isArray(operand)
+                ? operand.reduce((m, bit) => m | (1 << bit), 0)
+                : operand;
+            const set = docVal & mask;
+            if (op === '$bitsAllSet')
+                return set === mask;
+            if (op === '$bitsAnySet')
+                return set !== 0;
+            if (op === '$bitsAllClear')
+                return set === 0;
+            return set !== mask; // $bitsAnyClear
+        }
+        case '$size':
+            return Array.isArray(docVal) && docVal.length === operand;
+        case '$all':
+            return (Array.isArray(docVal) &&
+                operand.every((o) => docVal.some((el) => valueEquals(el, o))));
+        case '$elemMatch':
+            return (Array.isArray(docVal) &&
+                docVal.some((el) => matchesFilter(el, operand)));
+        default:
+            // Unknown operator on a field is treated as an equality against the
+            // operator object (mongo would error; we fail closed to no-match).
+            return false;
+    }
+}
+function isOperatorObject(v) {
+    if (v == null || typeof v !== 'object' || Array.isArray(v) || v instanceof Date) {
+        return false;
+    }
+    const keys = Object.keys(v);
+    return keys.length > 0 && keys.every((k) => k.startsWith('$'));
+}
+function matchFieldConditions(docVal, conditions, present) {
+    for (const [op, operand] of Object.entries(conditions)) {
+        if (!matchOperator(docVal, op, operand, present)) {
+            return false;
+        }
+    }
+    return true;
+}
+/** Returns true if `doc` satisfies the Mongo-shaped `filter`. */
+function matchesFilter(doc, filter) {
+    for (const [key, cond] of Object.entries(filter)) {
+        if (key === '$and') {
+            if (!cond.every((f) => matchesFilter(doc, f))) {
+                return false;
+            }
+        }
+        else if (key === '$or') {
+            if (!cond.some((f) => matchesFilter(doc, f))) {
+                return false;
+            }
+        }
+        else if (key === '$nor') {
+            if (cond.some((f) => matchesFilter(doc, f))) {
+                return false;
+            }
+        }
+        else {
+            const docVal = getPath(doc, key);
+            const present = hasPath(doc, key);
+            if (isOperatorObject(cond)) {
+                if (!matchFieldConditions(docVal, cond, present)) {
+                    return false;
+                }
+            }
+            else if (!matchEquality(docVal, cond)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+/* ---------------------------------------------------------------- updates */
+/** True if the update document uses operator syntax ($set, $inc, ...). */
+function isOperatorUpdate(update) {
+    return Object.keys(update).some((k) => k.startsWith('$'));
+}
+/**
+ * Normalizes an update to pure operator form. A plain update becomes `$set`.
+ * A mixed update (top-level fields alongside operators, e.g. `{a:1, $setOnInsert}`)
+ * folds the plain fields into `$set` — mongoose's semantics.
+ */
+function normalizeUpdate(update) {
+    var _a;
+    if (!isOperatorUpdate(update)) {
+        return { $set: update };
+    }
+    const operators = {};
+    const implicitSet = {};
+    for (const [k, v] of Object.entries(update)) {
+        if (k.startsWith('$')) {
+            operators[k] = v;
+        }
+        else {
+            implicitSet[k] = v;
+        }
+    }
+    if (Object.keys(implicitSet).length > 0) {
+        operators.$set = { ...implicitSet, ...((_a = operators.$set) !== null && _a !== void 0 ? _a : {}) };
+    }
+    return operators;
+}
+/** Equality clauses of a filter, used to seed an upsert-inserted document. */
+function equalitySeed(filter) {
+    const seed = {};
+    for (const [key, cond] of Object.entries(filter)) {
+        if (key.startsWith('$')) {
+            continue;
+        }
+        if (!isOperatorObject(cond)) {
+            seed[key] = cond;
+        }
+    }
+    return seed;
+}
+/**
+ * Applies a Mongo-shaped update to a base document, returning a new document.
+ * `$setOnInsert` is applied only when `isInsert` is true.
+ */
+function applyUpdate(base, update, isInsert) {
+    var _a, _b, _c, _d, _e;
+    // deepCoerceIds first: an upsert seed (equalitySeed of a filter) can carry
+    // ObjectId shims, which structuredClone would strip to a husk. No-op for
+    // already-stored docs (hex strings + Dates pass through untouched).
+    const doc = structuredClone(deepCoerceIds(base));
+    const ops = normalizeUpdate(update);
+    for (const [op, payload] of Object.entries(ops)) {
+        const fields = payload;
+        switch (op) {
+            case '$set':
+                for (const [k, v] of Object.entries(fields)) {
+                    setPath(doc, k, v);
+                }
+                break;
+            case '$setOnInsert':
+                if (isInsert) {
+                    for (const [k, v] of Object.entries(fields)) {
+                        setPath(doc, k, v);
+                    }
+                }
+                break;
+            case '$unset':
+                for (const k of Object.keys(fields)) {
+                    deletePath(doc, k);
+                }
+                break;
+            case '$inc':
+                for (const [k, v] of Object.entries(fields)) {
+                    setPath(doc, k, ((_a = getPath(doc, k)) !== null && _a !== void 0 ? _a : 0) + v);
+                }
+                break;
+            case '$push':
+                for (const [k, v] of Object.entries(fields)) {
+                    const arr = (_b = getPath(doc, k)) !== null && _b !== void 0 ? _b : [];
+                    const each = isEachSpec(v) ? v.$each : [v];
+                    setPath(doc, k, [...arr, ...each]);
+                }
+                break;
+            case '$addToSet':
+                for (const [k, v] of Object.entries(fields)) {
+                    const arr = ((_c = getPath(doc, k)) !== null && _c !== void 0 ? _c : []).slice();
+                    const each = isEachSpec(v) ? v.$each : [v];
+                    for (const el of each) {
+                        if (!arr.some((x) => valueEquals(x, el))) {
+                            arr.push(el);
+                        }
+                    }
+                    setPath(doc, k, arr);
+                }
+                break;
+            case '$pull':
+                for (const [k, v] of Object.entries(fields)) {
+                    const arr = (_d = getPath(doc, k)) !== null && _d !== void 0 ? _d : [];
+                    const pred = isOperatorObject(v)
+                        ? (el) => matchFieldConditions(el, v, true)
+                        : (el) => matchEquality(el, v);
+                    setPath(doc, k, arr.filter((el) => !pred(el)));
+                }
+                break;
+            case '$pullAll':
+                for (const [k, v] of Object.entries(fields)) {
+                    const arr = (_e = getPath(doc, k)) !== null && _e !== void 0 ? _e : [];
+                    const remove = v;
+                    setPath(doc, k, arr.filter((el) => !remove.some((r) => valueEquals(el, r))));
+                }
+                break;
+        }
+    }
+    return doc;
+}
+function isEachSpec(v) {
+    return (v != null &&
+        typeof v === 'object' &&
+        !Array.isArray(v) &&
+        Object.prototype.hasOwnProperty.call(v, '$each'));
+}
+/* ----------------------------------------------------- projection & sort */
+/**
+ * Applies a Mongo string projection ('a b -c') or object projection.
+ * Inclusion projections always keep `_id` unless explicitly excluded.
+ */
+function projectDoc(doc, projection) {
+    if (!projection) {
+        return doc;
+    }
+    const spec = {};
+    if (typeof projection === 'string') {
+        for (const raw of projection.split(/\s+/).filter(Boolean)) {
+            if (raw.startsWith('-')) {
+                spec[raw.slice(1)] = 0;
+            }
+            else {
+                spec[raw] = 1;
+            }
+        }
+    }
+    else {
+        Object.assign(spec, projection);
+    }
+    const isInclusion = Object.values(spec).some((v) => v === 1);
+    if (isInclusion) {
+        const out = {};
+        if (spec._id !== 0 && '_id' in doc) {
+            out._id = doc._id;
+        }
+        for (const [k, v] of Object.entries(spec)) {
+            if (k !== '_id' && v === 1 && hasPath(doc, k)) {
+                setPath(out, k, getPath(doc, k));
+            }
+        }
+        return out;
+    }
+    // Exclusion projection
+    const out = structuredClone(doc);
+    for (const [k, v] of Object.entries(spec)) {
+        if (v === 0) {
+            deletePath(out, k);
+        }
+    }
+    return out;
+}
+/** Stable multi-key sort honoring date-aware comparison. Mutates and returns. */
+function sortDocs(docs, sort) {
+    const keys = Object.entries(sort);
+    if (keys.length === 0) {
+        return docs;
+    }
+    return docs.sort((a, b) => {
+        for (const [field, dir] of keys) {
+            const cmp = compareValues(getPath(a, field), getPath(b, field));
+            if (cmp !== 0) {
+                return dir === 1 ? cmp : -cmp;
+            }
+        }
+        return 0;
+    });
+}
+/* -------------------------------------------------------------- id / util */
+let counter = crypto.randomBytes(3).readUIntBE(0, 3);
+/** Generates a 24-hex-char, roughly monotonic ObjectId-compatible identifier. */
+function objectId() {
+    const ts = Math.floor(Date.now() / 1000);
+    counter = (counter + 1) & 0xffffff;
+    const tsHex = ts.toString(16).padStart(8, '0');
+    const rand = crypto.randomBytes(5).toString('hex');
+    const cntHex = counter.toString(16).padStart(6, '0');
+    return tsHex + rand + cntHex;
+}
+const HEX24 = /^[0-9a-f]{24}$/i;
+/**
+ * Minimal BSON-ObjectId shim exposed as `handle.Types.ObjectId` for method files
+ * that construct ObjectIds (Skill, MCPServer). Store `_id`s are already
+ * ObjectId-hex and `coerceId` resolves this to hex for comparison/storage, so
+ * this only needs to hold a hex string and stringify to it. Timestamp-prefixed
+ * generation keeps `_id` ordering ~chronological (used by `_id` cursors).
+ */
+class ObjectId {
+    constructor(id) {
+        if (id == null) {
+            this.hex = objectId();
+        }
+        else if (typeof id === 'string') {
+            if (!HEX24.test(id)) {
+                throw new TypeError(`[sqlite-store] invalid ObjectId hex: ${id}`);
+            }
+            this.hex = id.toLowerCase();
+        }
+        else {
+            this.hex = id.toHexString();
+        }
+    }
+    toHexString() {
+        return this.hex;
+    }
+    toString() {
+        return this.hex;
+    }
+    toJSON() {
+        return this.hex;
+    }
+    equals(other) {
+        return String(coerceId(other)) === this.hex;
+    }
+    static isValid(v) {
+        return v instanceof ObjectId || (typeof v === 'string' && HEX24.test(v));
+    }
+}
+
+const SQL_SAFE_FIELD = /^[A-Za-z_][A-Za-z0-9_]*$/;
+class DocModel {
+    constructor(db, spec) {
+        var _a, _b, _c, _d, _e, _f;
+        this.db = db;
+        this.modelName = spec.name;
+        this.dateFields = new Set((_a = spec.dateFields) !== null && _a !== void 0 ? _a : ['createdAt', 'updatedAt', 'expiredAt']);
+        const uniqueFields = ((_b = spec.unique) !== null && _b !== void 0 ? _b : []).flatMap((u) => (Array.isArray(u) ? u : [u]));
+        this.anchorFields = new Set([...uniqueFields, ...((_c = spec.index) !== null && _c !== void 0 ? _c : [])]);
+        this.refs = (_d = spec.refs) !== null && _d !== void 0 ? _d : {};
+        this.defaults = (_e = spec.defaults) !== null && _e !== void 0 ? _e : {};
+        this.tenantIsolated = (_f = spec.tenantIsolated) !== null && _f !== void 0 ? _f : false;
+        this.ensureTable(spec);
+    }
+    /* ------------------------------------------------------- tenant isolation */
+    static tenantStrict() {
+        return process.env.TENANT_ISOLATION_STRICT === 'true';
+    }
+    /** Scopes a filter to the active tenant (mirrors the plugin query middleware). */
+    scopeFilter(filter) {
+        if (!this.tenantIsolated) {
+            return filter;
+        }
+        const tenantId = getTenantId();
+        if (!tenantId) {
+            if (DocModel.tenantStrict()) {
+                throw new Error('[TenantIsolation] Query attempted without tenant context in strict mode');
+            }
+            return filter;
+        }
+        if (tenantId === SYSTEM_TENANT_ID) {
+            return filter;
+        }
+        return { $and: [filter, { tenantId }] };
+    }
+    /** Stamps tenantId onto an inserted doc (mirrors the plugin save/insertMany hook). */
+    stampTenant(doc) {
+        if (!this.tenantIsolated) {
+            return;
+        }
+        const tenantId = getTenantId();
+        if (!tenantId) {
+            if (DocModel.tenantStrict()) {
+                throw new Error('[TenantIsolation] Save attempted without tenant context in strict mode');
+            }
+            return;
+        }
+        if (tenantId === SYSTEM_TENANT_ID) {
+            return;
+        }
+        if (doc.tenantId == null) {
+            doc.tenantId = tenantId;
+        }
+        else if (DocModel.tenantStrict() && doc.tenantId !== tenantId) {
+            throw new Error('[TenantIsolation] Document tenantId does not match current tenant context');
+        }
+    }
+    /** Strips tenantId mutations from an update (mirrors the plugin update guard). */
+    sanitizeTenantUpdate(update) {
+        if (!this.tenantIsolated) {
+            return;
+        }
+        const tenantId = getTenantId();
+        if (tenantId === SYSTEM_TENANT_ID) {
+            return;
+        }
+        const stripValue = (payload) => {
+            if (payload && typeof payload === 'object' && 'tenantId' in payload) {
+                if (tenantId && payload.tenantId !== tenantId) {
+                    throw new Error('[TenantIsolation] Cross-tenant tenantId mutation is not allowed');
+                }
+                delete payload.tenantId;
+            }
+        };
+        stripValue(update.$set);
+        stripValue(update.$setOnInsert);
+        for (const op of ['$unset', '$rename']) {
+            const payload = update[op];
+            if (payload && 'tenantId' in payload) {
+                delete payload.tenantId;
+            }
+        }
+        stripValue(update);
+    }
+    ensureTable(spec) {
+        var _a, _b;
+        this.assertField(this.modelName);
+        const t = this.table;
+        const n = this.modelName;
+        this.db.exec(`CREATE TABLE IF NOT EXISTS ${t} (_id TEXT PRIMARY KEY, doc TEXT NOT NULL)`);
+        for (const u of (_a = spec.unique) !== null && _a !== void 0 ? _a : []) {
+            const fields = Array.isArray(u) ? u : [u];
+            fields.forEach((f) => this.assertField(f));
+            const cols = fields.map((f) => `json_extract(doc, '$.${f}')`).join(', ');
+            this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS "ux_${n}_${fields.join('_')}" ON ${t} (${cols})`);
+        }
+        for (const field of (_b = spec.index) !== null && _b !== void 0 ? _b : []) {
+            this.assertField(field);
+            this.db.exec(`CREATE INDEX IF NOT EXISTS "ix_${n}_${field}" ON ${t} (json_extract(doc, '$.${field}'))`);
+        }
+    }
+    /** Casts ref fields to `_id` on write, mirroring mongoose ObjectId-ref casting. */
+    castRefs(doc) {
+        for (const field of Object.keys(this.refs)) {
+            const v = doc[field];
+            if (Array.isArray(v)) {
+                doc[field] = v.map(refId);
+            }
+            else if (v != null) {
+                doc[field] = refId(v);
+            }
+        }
+    }
+    /** Fetches a doc by `_id` and applies a projection — used by `.populate()`. */
+    getByIdProjected(id, projection) {
+        const doc = this.getRawById(id);
+        return doc ? projectDoc(doc, projection) : null;
+    }
+    get table() {
+        return `"${this.modelName}"`;
+    }
+    assertField(field) {
+        if (!SQL_SAFE_FIELD.test(field)) {
+            throw new Error(`[DocModel:${this.modelName}] unsafe index field: ${field}`);
+        }
+    }
+    /* --------------------------------------------------------- read helpers */
+    rehydrate(raw) {
+        const doc = JSON.parse(raw);
+        for (const field of this.dateFields) {
+            const v = doc[field];
+            if (typeof v === 'string' && v.length > 0) {
+                doc[field] = new Date(v);
+            }
+        }
+        return doc;
+    }
+    /** Builds an indexed prefilter from top-level and $and equality clauses. */
+    anchorWhere(filter) {
+        const clauses = [];
+        const params = [];
+        const consider = (f) => {
+            for (const [key, cond] of Object.entries(f)) {
+                if (key === '$and' && Array.isArray(cond)) {
+                    for (const sub of cond) {
+                        consider(sub);
+                    }
+                    continue;
+                }
+                if (key.startsWith('$')) {
+                    continue;
+                }
+                if (!this.anchorFields.has(key)) {
+                    continue;
+                }
+                const c = coerceId(cond); // ObjectId -> hex string, so it can anchor
+                const isScalar = c == null || typeof c !== 'object' || c instanceof Date;
+                if (isScalar && c != null) {
+                    // json_each iterates array elements AND yields a scalar field as one
+                    // row, so this equality anchor is correct for BOTH scalar fields and
+                    // array-contains (Mongo {field: value} over an array) — and remains a
+                    // superset prefilter (the JS matcher is authoritative).
+                    clauses.push(`EXISTS (SELECT 1 FROM json_each(doc, '$.${key}') WHERE value = ?)`);
+                    // The driver binds only null/number/bigint/string/Buffer (boolean and
+                    // undefined throw). json_each yields 1/0 for JSON booleans, so map
+                    // booleans to 1/0; dates -> ISO.
+                    const param = c instanceof Date ? c.toISOString() : typeof c === 'boolean' ? (c ? 1 : 0) : c;
+                    params.push(param);
+                }
+            }
+        };
+        consider(filter);
+        return {
+            sql: clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '',
+            params,
+        };
+    }
+    /** Candidate rows narrowed by index anchors, then authoritatively JS-filtered. */
+    candidates(rawFilter) {
+        const filter = this.scopeFilter(rawFilter);
+        const { sql, params } = this.anchorWhere(filter);
+        const rows = this.db.prepare(`SELECT doc FROM ${this.table}${sql}`).all(...params);
+        const out = [];
+        for (const row of rows) {
+            const doc = this.rehydrate(row.doc);
+            if (matchesFilter(doc, filter)) {
+                out.push(doc);
+            }
+        }
+        return out;
+    }
+    getRawById(id) {
+        const row = this.db.prepare(`SELECT doc FROM ${this.table} WHERE _id = ?`).get(id);
+        return row ? this.rehydrate(row.doc) : null;
+    }
+    /* --------------------------------------------------------- write helpers */
+    serialize(doc) {
+        return JSON.stringify(doc);
+    }
+    insertDoc(doc) {
+        if (!doc._id) {
+            doc._id = objectId();
+        }
+        for (const [k, v] of Object.entries(this.defaults)) {
+            if (!(k in doc) || doc[k] === undefined) {
+                doc[k] = v;
+            }
+        }
+        this.stampTenant(doc);
+        this.castRefs(doc);
+        this.db
+            .prepare(`INSERT INTO ${this.table} (_id, doc) VALUES (?, ?)`)
+            .run(doc._id, this.serialize(doc));
+        return doc;
+    }
+    replaceDoc(doc) {
+        this.castRefs(doc);
+        this.db
+            .prepare(`UPDATE ${this.table} SET doc = ? WHERE _id = ?`)
+            .run(this.serialize(doc), doc._id);
+    }
+    stampTimestamps(doc, isInsert, enabled) {
+        if (!enabled) {
+            return;
+        }
+        const now = new Date();
+        if (isInsert && doc.createdAt === undefined) {
+            doc.createdAt = now;
+        }
+        doc.updatedAt = now;
+    }
+    /* ------------------------------------------------------------- Model API */
+    findOne(filter = {}, projection) {
+        return new QueryBuilder(this, filter, { single: true, projection });
+    }
+    find(filter = {}, projection) {
+        return new QueryBuilder(this, filter, { single: false, projection });
+    }
+    findById(id, projection) {
+        return new QueryBuilder(this, { _id: id }, { single: true, projection });
+    }
+    /** Internal: executes a find/findOne with projection/sort/limit/skip/lean/populate. */
+    execQuery(opts) {
+        var _a, _b, _c, _d;
+        // findOneAndUpdate: perform the write, then project/populate/lean the result.
+        if (opts.mutate) {
+            const resultDoc = this.mutateOne(opts.filter, opts.mutate);
+            let docs = resultDoc ? [resultDoc] : [];
+            if ((_a = opts.populate) === null || _a === void 0 ? void 0 : _a.length) {
+                for (const d of docs) {
+                    this.applyPopulate(d, opts.populate);
+                }
+            }
+            docs = docs.map((d) => projectDoc(d, opts.projection));
+            if (!opts.lean) {
+                docs = docs.map((d) => hydrate(d));
+            }
+            return (_b = docs[0]) !== null && _b !== void 0 ? _b : null;
+        }
+        let docs = this.candidates(opts.filter);
+        if (opts.sort) {
+            docs = sortDocs(docs, opts.sort);
+        }
+        if (opts.skip) {
+            docs = docs.slice(opts.skip);
+        }
+        if (opts.single) {
+            docs = docs.slice(0, 1);
+        }
+        else if (opts.limit != null) {
+            docs = docs.slice(0, opts.limit);
+        }
+        if (opts.deleteAfter) {
+            const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
+            for (const d of docs) {
+                del.run(d._id);
+            }
+        }
+        if ((_c = opts.populate) === null || _c === void 0 ? void 0 : _c.length) {
+            for (const d of docs) {
+                this.applyPopulate(d, opts.populate);
+            }
+        }
+        docs = docs.map((d) => projectDoc(d, opts.projection));
+        if (!opts.lean) {
+            docs = docs.map((d) => hydrate(d));
+        }
+        if (opts.single) {
+            return (_d = docs[0]) !== null && _d !== void 0 ? _d : null;
+        }
+        return docs;
+    }
+    applyPopulate(doc, populate) {
+        var _a;
+        for (const { path, select } of populate) {
+            const target = (_a = this.resolver) === null || _a === void 0 ? void 0 : _a.call(this, this.refs[path]);
+            if (!target) {
+                continue;
+            }
+            const v = doc[path];
+            if (Array.isArray(v)) {
+                doc[path] = v
+                    .map((id) => target.getByIdProjected(String(id), select))
+                    .filter((d) => d != null);
+            }
+            else if (v != null) {
+                doc[path] = target.getByIdProjected(String(v), select);
+            }
+        }
+    }
+    /** Core write for findOneAndUpdate/findByIdAndUpdate. Returns the raw doc. */
+    mutateOne(filter, m) {
+        var _a, _b, _c;
+        this.sanitizeTenantUpdate(m.update);
+        const returnNew = (_a = m.new) !== null && _a !== void 0 ? _a : false;
+        const timestamps = (_b = m.timestamps) !== null && _b !== void 0 ? _b : true;
+        const existing = (_c = this.candidates(filter)[0]) !== null && _c !== void 0 ? _c : null;
+        if (existing) {
+            const updated = applyUpdate(existing, m.update, false);
+            this.stampTimestamps(updated, false, timestamps);
+            updated._id = existing._id;
+            this.replaceDoc(updated);
+            return returnNew ? updated : existing;
+        }
+        if (!m.upsert) {
+            return null;
+        }
+        const seeded = applyUpdate(equalitySeed(filter), m.update, true);
+        this.stampTimestamps(seeded, true, timestamps);
+        const inserted = this.insertDoc(seeded);
+        // Mongoose semantics: on an upsert-insert, `new:false` returns null (there is
+        // no pre-image). upsertSkillFile relies on this for new-vs-replace detection.
+        return returnNew ? inserted : null;
+    }
+    findByIdAndUpdate(id, update, options = {}) {
+        return this.findOneAndUpdate({ _id: id }, update, options);
+    }
+    findOneAndDelete(filter, projection) {
+        return new QueryBuilder(this, filter, { single: true, projection, deleteAfter: true });
+    }
+    findOneAndUpdate(filter, update, options = {}) {
+        const qb = new QueryBuilder(this, filter, {
+            single: true,
+            mutate: {
+                update,
+                upsert: options.upsert,
+                new: options.new,
+                timestamps: options.timestamps,
+            },
+        });
+        if (options.lean) {
+            qb.lean();
+        }
+        return qb;
+    }
+    async updateOne(filter, update, options = {}) {
+        var _a, _b;
+        this.sanitizeTenantUpdate(update);
+        const timestamps = (_a = options.timestamps) !== null && _a !== void 0 ? _a : true;
+        const existing = (_b = this.candidates(filter)[0]) !== null && _b !== void 0 ? _b : null;
+        if (existing) {
+            const updated = applyUpdate(existing, update, false);
+            this.stampTimestamps(updated, false, timestamps);
+            updated._id = existing._id;
+            this.replaceDoc(updated);
+            return { acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0, upsertedId: null };
+        }
+        if (options.upsert) {
+            const seeded = applyUpdate(equalitySeed(filter), update, true);
+            this.stampTimestamps(seeded, true, timestamps);
+            const inserted = this.insertDoc(seeded);
+            return {
+                acknowledged: true,
+                matchedCount: 0,
+                modifiedCount: 0,
+                upsertedCount: 1,
+                upsertedId: inserted._id,
+            };
+        }
+        return { acknowledged: true, matchedCount: 0, modifiedCount: 0, upsertedCount: 0, upsertedId: null };
+    }
+    async updateMany(filter, update, options = {}) {
+        var _a;
+        this.sanitizeTenantUpdate(update);
+        const timestamps = (_a = options.timestamps) !== null && _a !== void 0 ? _a : true;
+        const docs = this.candidates(filter);
+        for (const existing of docs) {
+            const updated = applyUpdate(existing, update, false);
+            this.stampTimestamps(updated, false, timestamps);
+            updated._id = existing._id;
+            this.replaceDoc(updated);
+        }
+        return {
+            acknowledged: true,
+            matchedCount: docs.length,
+            modifiedCount: docs.length,
+            upsertedCount: 0,
+            upsertedId: null,
+        };
+    }
+    async deleteMany(filter = {}) {
+        const docs = this.candidates(filter);
+        const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
+        for (const doc of docs) {
+            del.run(doc._id);
+        }
+        return { acknowledged: true, deletedCount: docs.length };
+    }
+    async deleteOne(filter = {}) {
+        const doc = this.candidates(filter)[0];
+        if (!doc) {
+            return { acknowledged: true, deletedCount: 0 };
+        }
+        this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id);
+        return { acknowledged: true, deletedCount: 1 };
+    }
+    async countDocuments(filter = {}) {
+        return this.candidates(filter).length;
+    }
+    /** Mongoose `exists`: returns `{ _id }` of the first match, else null. */
+    async exists(filter = {}) {
+        const doc = this.candidates(filter)[0];
+        return doc ? { _id: doc._id } : null;
+    }
+    /**
+     * Aggregation pipeline — the bounded stage set the chat methods use:
+     * `$match $lookup $unwind $sort $limit $project`. Runs in JS over candidate
+     * docs. `$lookup` resolves `from` (a mongo collection name) to a sibling model
+     * via the naive singular-capitalized mapping (`prompts` -> `Prompt`).
+     */
+    async aggregate(pipeline) {
+        var _a;
+        let docs = this.candidates({});
+        for (const stage of pipeline) {
+            const op = Object.keys(stage)[0];
+            if (op === '$match') {
+                const f = stage.$match;
+                docs = docs.filter((d) => matchesFilter(d, f));
+            }
+            else if (op === '$lookup') {
+                const { from, localField, foreignField, as } = stage.$lookup;
+                const modelName = from.charAt(0).toUpperCase() + from.slice(1).replace(/s$/, '');
+                const target = (_a = this.resolver) === null || _a === void 0 ? void 0 : _a.call(this, modelName);
+                docs = docs.map((d) => {
+                    const local = coerceId(getPath(d, localField));
+                    const joined = target ? target.candidates({ [foreignField]: local }) : [];
+                    return { ...d, [as]: joined };
+                });
+            }
+            else if (op === '$unwind') {
+                const spec = stage.$unwind;
+                const path = (typeof spec === 'string' ? spec : spec.path).replace(/^\$/, '');
+                const preserve = typeof spec === 'object' && spec.preserveNullAndEmptyArrays === true;
+                const out = [];
+                for (const d of docs) {
+                    const v = getPath(d, path);
+                    if (Array.isArray(v)) {
+                        for (const el of v) {
+                            out.push({ ...d, [path]: el });
+                        }
+                        if (v.length === 0 && preserve) {
+                            const c = { ...d };
+                            delete c[path];
+                            out.push(c);
+                        }
+                    }
+                    else if (v != null) {
+                        out.push(d);
+                    }
+                    else if (preserve) {
+                        const c = { ...d };
+                        delete c[path];
+                        out.push(c);
+                    }
+                }
+                docs = out;
+            }
+            else if (op === '$group') {
+                docs = groupStage(docs, stage.$group);
+            }
+            else if (op === '$sort') {
+                docs = sortDocs(docs, stage.$sort);
+            }
+            else if (op === '$limit') {
+                docs = docs.slice(0, stage.$limit);
+            }
+            else if (op === '$project') {
+                docs = docs.map((d) => projectDoc(d, stage.$project));
+            }
+        }
+        return docs;
+    }
+    async distinct(field, filter = {}) {
+        const seen = new Set();
+        const out = [];
+        for (const doc of this.candidates(filter)) {
+            const v = doc[field];
+            const values = Array.isArray(v) ? v : [v];
+            for (const el of values) {
+                const key = el instanceof Date ? el.getTime() : el;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    out.push(el);
+                }
+            }
+        }
+        return out;
+    }
+    async create(input) {
+        if (Array.isArray(input)) {
+            return input.map((d) => this.createOne(d));
+        }
+        return this.createOne(input);
+    }
+    async insertMany(docs) {
+        return docs.map((d) => this.createOne(d));
+    }
+    createOne(input) {
+        const doc = structuredClone(deepCoerceIds(input));
+        this.stampTimestamps(doc, true, true);
+        return hydrate(this.insertDoc(doc));
+    }
+    /**
+     * Exact by-`_id` upsert — the shared primitive for the dual-write mirror and
+     * the Mongo→SQLite backfill. Writes the document verbatim: ObjectId-like
+     * values coerced to hex (so a doc read from a mongoose `.lean()` serializes
+     * correctly), Dates preserved, keyed by the document's own `_id`. NO timestamp
+     * stamping, NO schema defaults, NO tenant scoping — the source store already
+     * owns those. Idempotent: re-running with the same `_id` replaces the row, so
+     * the backfill and live mirroring converge on the same keyspace and never
+     * duplicate (both sides key on the primary store's `_id`).
+     */
+    upsertRaw(input) {
+        const doc = deepCoerceIds(input);
+        const id = doc._id;
+        if (id == null) {
+            throw new Error(`[DocModel:${this.modelName}] upsertRaw requires _id`);
+        }
+        this.db
+            .prepare(`INSERT OR REPLACE INTO ${this.table} (_id, doc) VALUES (?, ?)`)
+            .run(String(id), this.serialize(doc));
+    }
+    async bulkWrite(ops) {
+        const result = {
+            insertedCount: 0,
+            matchedCount: 0,
+            modifiedCount: 0,
+            deletedCount: 0,
+            upsertedCount: 0,
+            upsertedIds: {},
+            insertedIds: {},
+        };
+        this.db.exec('BEGIN');
+        try {
+            ops.forEach((op, i) => {
+                var _a;
+                if ('updateOne' in op) {
+                    const { filter, update, upsert, timestamps } = op.updateOne;
+                    const enabled = timestamps !== null && timestamps !== void 0 ? timestamps : true;
+                    this.sanitizeTenantUpdate(update);
+                    const existing = (_a = this.candidates(filter)[0]) !== null && _a !== void 0 ? _a : null;
+                    if (existing) {
+                        const updated = applyUpdate(existing, update, false);
+                        this.stampTimestamps(updated, false, enabled);
+                        updated._id = existing._id;
+                        this.replaceDoc(updated);
+                        result.matchedCount++;
+                        result.modifiedCount++;
+                    }
+                    else if (upsert) {
+                        const seeded = applyUpdate(equalitySeed(filter), update, true);
+                        this.stampTimestamps(seeded, true, enabled);
+                        const inserted = this.insertDoc(seeded);
+                        result.upsertedCount++;
+                        result.upsertedIds[i] = inserted._id;
+                    }
+                }
+                else if ('insertOne' in op) {
+                    const { document } = op.insertOne;
+                    const doc = structuredClone(deepCoerceIds(document));
+                    this.stampTimestamps(doc, true, true);
+                    const inserted = this.insertDoc(doc);
+                    result.insertedCount++;
+                    result.insertedIds[i] = inserted._id;
+                }
+                else if ('deleteOne' in op) {
+                    const { filter } = op.deleteOne;
+                    const doc = this.candidates(filter)[0];
+                    if (doc) {
+                        this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id);
+                        result.deletedCount++;
+                    }
+                }
+                else if ('deleteMany' in op) {
+                    const { filter } = op.deleteMany;
+                    for (const doc of this.candidates(filter)) {
+                        this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id);
+                        result.deletedCount++;
+                    }
+                }
+                else if ('updateMany' in op) {
+                    const { filter, update } = op.updateMany;
+                    for (const existing of this.candidates(filter)) {
+                        const updated = applyUpdate(existing, update, false);
+                        this.stampTimestamps(updated, false, true);
+                        updated._id = existing._id;
+                        this.replaceDoc(updated);
+                        result.matchedCount++;
+                        result.modifiedCount++;
+                    }
+                }
+            });
+            this.db.exec('COMMIT');
+        }
+        catch (err) {
+            this.db.exec('ROLLBACK');
+            throw err;
+        }
+        return result;
+    }
+}
+/* --------------------------------------------------------- query builder */
+/**
+ * Thenable chainable query for `find`/`findOne`. Mirrors the Mongoose query
+ * surface the methods use: `.select() .sort() .limit() .skip() .lean()
+ * .deleteMany()` and awaiting resolves the documents.
+ */
+class QueryBuilder {
+    constructor(model, filter, opts) {
+        this.model = model;
+        this.filter = filter;
+        this.opts = opts;
+        this.leanFlag = false;
+        this.populates = [];
+        this.projection = opts.projection;
+    }
+    select(projection) {
+        this.projection = projection;
+        return this;
+    }
+    populate(spec) {
+        this.populates.push(typeof spec === 'string' ? { path: spec } : spec);
+        return this;
+    }
+    sort(spec) {
+        if (typeof spec === 'string') {
+            const parsed = {};
+            for (const token of spec.split(/\s+/).filter(Boolean)) {
+                if (token.startsWith('-')) {
+                    parsed[token.slice(1)] = -1;
+                }
+                else {
+                    parsed[token] = 1;
+                }
+            }
+            this.sortSpec = parsed;
+        }
+        else {
+            this.sortSpec = spec;
+        }
+        return this;
+    }
+    limit(n) {
+        this.limitN = n;
+        return this;
+    }
+    /** No-op: the store is a single connection; Mongo sessions don't apply. */
+    session(_session) {
+        return this;
+    }
+    skip(n) {
+        this.skipN = n;
+        return this;
+    }
+    lean() {
+        this.leanFlag = true;
+        return this;
+    }
+    exec() {
+        return Promise.resolve(this.model.execQuery({
+            filter: this.filter,
+            single: this.opts.single,
+            projection: this.projection,
+            sort: this.sortSpec,
+            limit: this.limitN,
+            skip: this.skipN,
+            lean: this.leanFlag,
+            populate: this.populates.length ? this.populates : undefined,
+            deleteAfter: this.opts.deleteAfter,
+            mutate: this.opts.mutate,
+        }));
+    }
+    /** `Model.find(A).deleteMany(B)` deletes docs matching A AND B. */
+    deleteMany(extra = {}) {
+        return this.model.deleteMany({ $and: [this.filter, extra] });
+    }
+    then(onfulfilled, onrejected) {
+        return this.exec().then(onfulfilled, onrejected);
+    }
+    catch(onrejected) {
+        return this.exec().catch(onrejected);
+    }
+}
+/* ------------------------------------------------------------- hydration */
+/**
+ * Adds the Mongoose hydrated-document surface the methods touch:
+ * `.toObject()`, `.$isDefault()`. `$isDefault` returns false (fields in this
+ * store are always explicitly persisted; the callers' `== null` branch covers
+ * the unset case, so the return value never changes observable state — it only
+ * gates a redundant idempotent write).
+ */
+function hydrate(doc) {
+    Object.defineProperty(doc, 'toObject', {
+        value: () => structuredClone(stripMethods(doc)),
+        enumerable: false,
+        configurable: true,
+    });
+    Object.defineProperty(doc, '$isDefault', {
+        value: () => false,
+        enumerable: false,
+        configurable: true,
+    });
+    return doc;
+}
+function stripMethods(doc) {
+    const out = {};
+    for (const key of Object.keys(doc)) {
+        out[key] = doc[key];
+    }
+    return out;
+}
+/** Resolves a `$field` reference (or literal) against a doc, for aggregate exprs. */
+function resolveExpr(expr, doc) {
+    if (typeof expr === 'string' && expr.startsWith('$')) {
+        return getPath(doc, expr.slice(1));
+    }
+    return expr;
+}
+/**
+ * `$group` stage: groups candidate docs by `_id` and applies accumulators. The
+ * accumulator set the chat methods use — `$sum` (count/field), plus the cheap
+ * adjacent `$first/$last/$max/$min/$push/$addToSet`.
+ */
+function groupStage(docs, spec) {
+    var _a, _b, _c;
+    const groups = new Map();
+    const order = [];
+    for (const doc of docs) {
+        const key = resolveExpr(spec._id, doc);
+        const keyStr = JSON.stringify(key !== null && key !== void 0 ? key : null);
+        let g = groups.get(keyStr);
+        if (!g) {
+            g = { _id: key !== null && key !== void 0 ? key : null };
+            groups.set(keyStr, g);
+            order.push(keyStr);
+        }
+        for (const [field, acc] of Object.entries(spec)) {
+            if (field === '_id') {
+                continue;
+            }
+            const accOp = Object.keys(acc)[0];
+            const arg = acc[accOp];
+            const val = resolveExpr(arg, doc);
+            switch (accOp) {
+                case '$sum':
+                    g[field] = ((_a = g[field]) !== null && _a !== void 0 ? _a : 0) + (Number(val) || 0);
+                    break;
+                case '$first':
+                    if (!(field in g)) {
+                        g[field] = val;
+                    }
+                    break;
+                case '$last':
+                    g[field] = val;
+                    break;
+                case '$max':
+                    if (!(field in g) || compareValuesForGroup(val, g[field]) > 0) {
+                        g[field] = val;
+                    }
+                    break;
+                case '$min':
+                    if (!(field in g) || compareValuesForGroup(val, g[field]) < 0) {
+                        g[field] = val;
+                    }
+                    break;
+                case '$push':
+                    (g[field] = (_b = g[field]) !== null && _b !== void 0 ? _b : []).push(val);
+                    break;
+                case '$addToSet':
+                    g[field] = (_c = g[field]) !== null && _c !== void 0 ? _c : [];
+                    if (!g[field].some((x) => JSON.stringify(x) === JSON.stringify(val))) {
+                        g[field].push(val);
+                    }
+                    break;
+            }
+        }
+    }
+    return order.map((k) => groups.get(k));
+}
+function compareValuesForGroup(a, b) {
+    if (a === b)
+        return 0;
+    return a > b ? 1 : -1;
+}
+/** Extracts the `_id` from a ref value (a doc or an id), mirroring mongoose casting. */
+function refId(v) {
+    if (v != null && typeof v === 'object' && '_id' in v) {
+        return String(v._id);
+    }
+    return v;
+}
+
+/**
+ * Per-collection storage specs for the SQLite document store.
+ *
+ * Only the fields that need a unique constraint or query/sort acceleration are
+ * declared; every other field lives in the JSON `doc` blob and is still fully
+ * queryable via the engine. This is the single place that grows as each domain
+ * is migrated off mongoose.
+ *
+ * REALTIME vs STORAGE (verified 2026-07): the chat client's live updates are
+ * SSE token streams (`text/event-stream` via `sendEvent`, and the agent
+ * `GenerationJobManager`) tied to the active generation REQUEST — application
+ * layer, independent of the persistence backend. A codebase-wide scan found
+ * ZERO Mongo change-streams / tailable cursors / `.watch()` / DB-driven
+ * subscriptions. Conversation/message reads are plain request/response
+ * (getConvosByCursor / getMessages). Therefore NO migrated domain here needs a
+ * DB-subscription replacement — the plain SQLite store is correct for all of them.
+ *
+ * CUTOVER TARGET (per architecture directive "Base for realtime, SQLite for
+ * storage"): the live-chat domains — **Conversation** and **Message** — are the
+ * ones a multi-device / live-sync UX would subscribe to, so at cutover they
+ * target Hanzo Base (which provides native realtime subscriptions over the same
+ * SQLite substrate), not a bare table. Every other migrated domain here (Preset,
+ * ConversationTag, SharedLink, Project, File, Key, PluginAuth, Banner) is pure
+ * storage → SQLite/Base storage tier, no subscription.
+ *
+ * The DocModel handle abstraction makes this a backend swap, not a code change:
+ * the methods call the same Model API whether it resolves to embedded SQLite or a
+ * Base-backed handle. No Mongo, no Mongo-wire, no FerretDB anywhere.
+ */
+const CHAT_COLLECTION_SPECS = {
+    Conversation: {
+        name: 'Conversation',
+        unique: ['conversationId'],
+        index: ['user', 'organization', 'agent_id', 'updatedAt', 'createdAt', 'expiredAt'],
+        dateFields: ['createdAt', 'updatedAt', 'expiredAt'],
+    },
+    Message: {
+        name: 'Message',
+        unique: ['messageId'],
+        index: ['conversationId', 'user', 'organization', 'parentMessageId', 'createdAt', 'expiredAt'],
+        dateFields: ['createdAt', 'updatedAt', 'expiredAt'],
+    },
+    // ---- Batch 2: self-contained chat documents (no tenant plugin) ----
+    Preset: {
+        name: 'Preset',
+        unique: ['presetId'],
+        index: ['user', 'order'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    ConversationTag: {
+        name: 'ConversationTag',
+        unique: [['tag', 'user']],
+        index: ['user', 'position'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    SharedLink: {
+        name: 'SharedLink',
+        index: ['shareId', 'conversationId', 'user', 'targetMessageId', 'createdAt'],
+        dateFields: ['createdAt', 'updatedAt'],
+        refs: { messages: 'Message' },
+        defaults: { isPublic: true },
+    },
+    // ---- Batch 3: Project (mechanical; prompt library group membership) ----
+    Project: {
+        name: 'Project',
+        index: ['name'],
+        dateFields: ['createdAt', 'updatedAt'],
+        defaults: { promptGroupIds: [], agentIds: [] },
+    },
+    // ---- Batch 4: non-tenant storage domains ----
+    File: {
+        name: 'File',
+        index: ['file_id', 'user', 'conversationId', 'messageId'],
+        dateFields: ['createdAt', 'updatedAt', 'expiresAt'],
+    },
+    Key: {
+        name: 'Key',
+        index: ['userId', 'name', 'expiresAt'],
+        dateFields: ['expiresAt', 'createdAt', 'updatedAt'],
+    },
+    PluginAuth: {
+        name: 'PluginAuth',
+        index: ['userId', 'pluginKey', 'authField'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    Banner: {
+        name: 'Banner',
+        index: ['bannerId', 'type'],
+        dateFields: ['displayFrom', 'displayTo', 'createdAt', 'updatedAt'],
+        defaults: { isPublic: false, type: 'banner' },
+    },
+    // ---- Batch 5/6: tenant-isolated domains ----
+    Config: {
+        name: 'Config',
+        unique: [['principalType', 'principalId', 'tenantId']],
+        index: ['principalType', 'principalId', 'isActive', 'priority', 'tenantId'],
+        dateFields: ['createdAt', 'updatedAt'],
+        tenantIsolated: true,
+    },
+    SystemGrant: {
+        name: 'SystemGrant',
+        unique: [['principalType', 'principalId', 'capability', 'tenantId']],
+        index: ['capability', 'tenantId', 'principalType', 'principalId'],
+        dateFields: ['grantedAt', 'expiresAt', 'createdAt', 'updatedAt'],
+        tenantIsolated: true,
+    },
+    // ---- Batch 7: ObjectId-coupled domains (need handle.Types.ObjectId) ----
+    MCPServer: {
+        name: 'MCPServer',
+        unique: ['serverName'],
+        index: ['author', 'updatedAt'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    Skill: {
+        name: 'Skill',
+        unique: [['name', 'author', 'tenantId']],
+        index: ['author', 'category', 'tenantId', 'alwaysApply', 'updatedAt'],
+        dateFields: ['createdAt', 'updatedAt'],
+        tenantIsolated: true,
+    },
+    SkillFile: {
+        name: 'SkillFile',
+        unique: [['skillId', 'relativePath']],
+        index: ['skillId', 'category', 'author', 'tenantId', 'file_id'],
+        dateFields: ['createdAt', 'updatedAt'],
+        tenantIsolated: true,
+    },
+    Prompt: {
+        name: 'Prompt',
+        index: ['groupId', 'author', 'type', 'createdAt', 'updatedAt'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    PromptGroup: {
+        name: 'PromptGroup',
+        index: ['author', 'category', 'productionId', 'command', 'createdAt', 'updatedAt'],
+        dateFields: ['createdAt', 'updatedAt'],
+        refs: { productionId: 'Prompt', prompts: 'Prompt' },
+    },
+    // ---- Batch 8: chat-native domains with no external subsystem owner ----
+    // (Agent family + memory + app-domain authz; NOT delegated — see collections
+    // header note. Cloud /v1/agents is an additive read+execute feature, there is
+    // no /v1/memory, and Role/AccessRole/AclEntry/Group have no IAM equivalent.)
+    AgentApiKey: {
+        name: 'AgentApiKey',
+        index: ['userId', 'name', 'keyPrefix', 'expiresAt'],
+        dateFields: ['lastUsedAt', 'expiresAt', 'createdAt', 'updatedAt'],
+    },
+    Assistant: {
+        name: 'Assistant',
+        index: ['user', 'assistant_id'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    Action: {
+        name: 'Action',
+        index: ['user', 'action_id', 'agent_id', 'assistant_id'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    ToolCall: {
+        name: 'ToolCall',
+        index: ['messageId', 'user', 'conversationId', 'toolId'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    MemoryEntry: {
+        name: 'MemoryEntry',
+        index: ['userId', 'key'],
+        dateFields: ['updated_at', 'createdAt', 'updatedAt'],
+    },
+    Role: {
+        name: 'Role',
+        unique: ['name'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    AccessRole: {
+        name: 'AccessRole',
+        unique: ['accessRoleId'],
+        index: ['resourceType', 'name'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    // ---- Batch 8b: Agent family + ACL (ObjectId + aggregate $group) ----
+    Agent: {
+        name: 'Agent',
+        unique: ['id'],
+        index: ['author', 'category', 'is_promoted', 'updatedAt'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    AgentCategory: {
+        name: 'AgentCategory',
+        unique: ['value'],
+        index: ['isActive', 'order', 'label'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    AclEntry: {
+        name: 'AclEntry',
+        index: ['principalId', 'principalType', 'resourceType', 'resourceId', 'permBits'],
+        dateFields: ['grantedAt', 'createdAt', 'updatedAt'],
+    },
+    Group: {
+        name: 'Group',
+        index: ['source', 'idOnTheSource', 'name', 'memberIds'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+    // ---- Batch 9: auth + billing — the collections that ACTUALLY hold live data
+    // in chat-docdb outside the domains above (users/sessions/transactions/balances
+    // are populated; tokens is on the same auth path). These must move to SQLite
+    // for chat-docdb to be deletable without data loss — User is the hot-path record
+    // that every authenticated request loads and that every conversation references
+    // by `_id`, so its `_id` MUST survive the migration (backfill preserves it).
+    // Their data methods read `.models`/`.Types` off the seam handle, so they route
+    // here once flagged (see methods/index.ts, api/models/Transaction.js). Uniques
+    // on the sparse social/openid ids are safe: an absent id is NULL in json_extract
+    // and SQLite treats NULLs as distinct, so it mirrors the mongoose `sparse`.
+    User: {
+        name: 'User',
+        unique: ['email', 'openidId', 'googleId', 'githubId'],
+        index: ['organization', 'provider', 'username', 'idOnTheSource', 'role'],
+        dateFields: ['createdAt', 'updatedAt', 'expiresAt'],
+    },
+    Session: {
+        name: 'Session',
+        index: ['refreshToken', 'user', 'expiration'],
+        dateFields: ['expiration', 'createdAt', 'updatedAt'],
+    },
+    Token: {
+        name: 'Token',
+        index: ['userId', 'token', 'email', 'type', 'identifier'],
+        dateFields: ['createdAt', 'expiresAt'],
+    },
+    Balance: {
+        name: 'Balance',
+        index: ['user', 'commerceUserId'],
+        dateFields: ['lastRefill', 'expiresAt', 'creditsGrantedAt', 'createdAt', 'updatedAt'],
+    },
+    Transaction: {
+        name: 'Transaction',
+        index: ['user', 'conversationId', 'model', 'createdAt'],
+        dateFields: ['createdAt', 'updatedAt'],
+    },
+};
+
+/**
+ * Dual-write mirror — the migration bridge between the mongoose store and the
+ * SQLite document store.
+ *
+ * A `DualWriteModel` wraps a `primary` model (the one that SERVES reads) and a
+ * `mirror` model (kept convergent for the escape hatch / the flip). Every read
+ * and every non-write property falls through to `primary` unchanged; the ten
+ * write methods run on `primary` first, then replicate the resulting document
+ * state to `mirror` KEYED BY THE PRIMARY'S `_id` (upsert if the doc still
+ * exists, delete if it was removed). Because the mirror is addressed by the
+ * primary's `_id` — never by value — the live mirror and the one-shot backfill
+ * write the same keyspace and converge without duplicating.
+ *
+ * It is symmetric, so it powers both migration directions with the same code:
+ *   - pre-flip  (CHAT_STORE_DUALWRITE only):  primary = mongoose, mirror = SQLite
+ *   - post-flip (CHAT_STORE_SQLITE + DUALWRITE): primary = SQLite, mirror = mongoose
+ *
+ * `primary` / `mirror` are each either a mongoose `Model` or a `DocModel`; both
+ * expose the same bounded Model API the chat data methods use (the pure-SQLite
+ * seam already proves the app runs against that subset), so the wrapper only has
+ * to special-case the mirror WRITE primitives per store kind.
+ */
+function idOf(doc) {
+    var _a;
+    if (doc == null) {
+        return null;
+    }
+    const id = (_a = doc._id) !== null && _a !== void 0 ? _a : doc;
+    return id == null ? null : String(id.toString());
+}
+/** Extracts the id list from a bulkWrite result's insertedIds/upsertedIds map. */
+function idsFromResultMap(map) {
+    if (map == null || typeof map !== 'object') {
+        return [];
+    }
+    return Object.values(map)
+        .map((v) => idOf(v))
+        .filter((v) => v != null);
+}
+class DualWriteModel {
+    constructor(primary, mirror) {
+        var _a;
+        this.primary = primary;
+        this.mirror = mirror;
+        this.mirrorIsSqlite = mirror instanceof DocModel;
+        if (!this.mirrorIsSqlite) {
+            // mongoose Model: `.base` is the mongoose instance carrying Types.ObjectId.
+            const base = mirror.base;
+            this.ObjectId = (_a = base === null || base === void 0 ? void 0 : base.Types) === null || _a === void 0 ? void 0 : _a.ObjectId;
+        }
+    }
+    /* ---------------------------------------------------------- mirror sync */
+    /**
+     * Re-reads each id from `primary` and makes `mirror` match (upsert or delete).
+     * A mirror failure is logged, never thrown: the primary (served) write already
+     * succeeded, so the request must not fail because the insurance copy hiccuped.
+     * Any gap is caught by the pre-flip count reconcile + the idempotent backfill.
+     */
+    async syncIds(ids) {
+        const uniq = [...new Set(ids.map((i) => (i == null ? null : String(i))))].filter((i) => !!i);
+        for (const id of uniq) {
+            try {
+                const doc = await this.primary.findById(id).lean();
+                if (doc) {
+                    await this.mirrorUpsert(doc);
+                }
+                else {
+                    await this.mirrorDelete(id);
+                }
+            }
+            catch (err) {
+                // eslint-disable-next-line no-console
+                console.error(`[dual-write] mirror sync failed for _id=${id}:`, err === null || err === void 0 ? void 0 : err.message);
+            }
+        }
+    }
+    async mirrorUpsert(doc) {
+        if (this.mirrorIsSqlite) {
+            this.mirror.upsertRaw(doc);
+            return;
+        }
+        // mongoose mirror: write verbatim through the native driver (bypasses schema
+        // casting + timestamp stamping) so the copy is exact. Top-level `_id` must be
+        // a real ObjectId for mongo; nested id refs stay as stored (acceptable — the
+        // mongo mirror is the escape hatch, never the served store post-flip).
+        const oid = this.toObjectId(doc._id);
+        const raw = { ...doc, _id: oid };
+        await this.mirror.collection.replaceOne({ _id: oid }, raw, { upsert: true });
+    }
+    async mirrorDelete(id) {
+        if (this.mirrorIsSqlite) {
+            await this.mirror.deleteOne({ _id: id });
+            return;
+        }
+        await this.mirror.collection.deleteOne({
+            _id: this.toObjectId(id),
+        });
+    }
+    toObjectId(id) {
+        const hex = String(id.toString());
+        if (this.ObjectId && /^[0-9a-fA-F]{24}$/.test(hex)) {
+            return new this.ObjectId(hex);
+        }
+        return id;
+    }
+    /* ------------------------------------------------------------ writes */
+    async create(...args) {
+        const res = await this.primary.create(...args);
+        const docs = Array.isArray(res) ? res : [res];
+        await this.syncIds(docs.map(idOf));
+        return res;
+    }
+    async insertMany(docs, options) {
+        const res = await this.primary.insertMany(docs, options);
+        const arr = Array.isArray(res) ? res : [res];
+        await this.syncIds(arr.map(idOf));
+        return res;
+    }
+    async updateOne(filter, update, options) {
+        const pre = await this.primary.findOne(filter).select('_id').lean();
+        const res = await this.primary.updateOne(filter, update, options);
+        await this.syncIds([idOf(pre), idOf(res === null || res === void 0 ? void 0 : res.upsertedId)]);
+        return res;
+    }
+    async updateMany(filter, update, options) {
+        const pre = await this.primary.find(filter).select('_id').lean();
+        const res = await this.primary.updateMany(filter, update, options);
+        await this.syncIds([...pre.map(idOf), idOf(res === null || res === void 0 ? void 0 : res.upsertedId)]);
+        return res;
+    }
+    async deleteOne(filter) {
+        const pre = await this.primary.findOne(filter).select('_id').lean();
+        const res = await this.primary.deleteOne(filter);
+        await this.syncIds([idOf(pre)]);
+        return res;
+    }
+    async deleteMany(filter) {
+        const pre = await this.primary.find(filter).select('_id').lean();
+        const res = await this.primary.deleteMany(filter);
+        await this.syncIds(pre.map(idOf));
+        return res;
+    }
+    async bulkWrite(ops, options) {
+        var _a, _b;
+        const preIds = [];
+        for (const op of ops) {
+            const one = ((_a = op.updateOne) !== null && _a !== void 0 ? _a : op.deleteOne);
+            const many = ((_b = op.updateMany) !== null && _b !== void 0 ? _b : op.deleteMany);
+            if (many === null || many === void 0 ? void 0 : many.filter) {
+                const rows = await this.primary.find(many.filter).select('_id').lean();
+                preIds.push(...rows.map(idOf));
+            }
+            else if (one === null || one === void 0 ? void 0 : one.filter) {
+                const row = await this.primary.findOne(one.filter).select('_id').lean();
+                preIds.push(idOf(row));
+            }
+        }
+        const res = await this.primary.bulkWrite(ops, options);
+        await this.syncIds([
+            ...preIds,
+            ...idsFromResultMap(res === null || res === void 0 ? void 0 : res.insertedIds),
+            ...idsFromResultMap(res === null || res === void 0 ? void 0 : res.upsertedIds),
+        ]);
+        return res;
+    }
+    findOneAndUpdate(filter, update, options = {}) {
+        return new DualWriteQuery(this, () => this.primary.findOneAndUpdate(filter, update, options), filter, !!options.upsert);
+    }
+    findByIdAndUpdate(id, update, options = {}) {
+        return new DualWriteQuery(this, () => this.primary.findByIdAndUpdate(id, update, options), { _id: id }, !!options.upsert);
+    }
+    findOneAndDelete(filter, projection) {
+        return new DualWriteQuery(this, () => this.primary.findOneAndDelete(filter, projection), filter, false);
+    }
+}
+/**
+ * Lazy, chainable result for the `findOneAnd*` methods. Forwards the mongoose /
+ * DocModel query-builder chain (`select/lean/populate/sort/session/…`) to the
+ * primary query so the caller's return shape is preserved, and mirrors the
+ * affected document once the write resolves. Order matters: the pre-image id is
+ * captured BEFORE the (lazy) primary query executes its write.
+ */
+class DualWriteQuery {
+    constructor(dwm, makePrimaryQuery, filter, upsert) {
+        this.dwm = dwm;
+        this.makePrimaryQuery = makePrimaryQuery;
+        this.filter = filter;
+        this.upsert = upsert;
+        this.pq = null;
+    }
+    query() {
+        if (!this.pq) {
+            this.pq = this.makePrimaryQuery();
+        }
+        return this.pq;
+    }
+    chain(method, ...args) {
+        const q = this.query();
+        if (typeof q[method] === 'function') {
+            q[method](...args);
+        }
+        return this;
+    }
+    select(p) {
+        return this.chain('select', p);
+    }
+    lean() {
+        return this.chain('lean');
+    }
+    populate(p) {
+        return this.chain('populate', p);
+    }
+    sort(p) {
+        return this.chain('sort', p);
+    }
+    skip(n) {
+        return this.chain('skip', n);
+    }
+    limit(n) {
+        return this.chain('limit', n);
+    }
+    session(s) {
+        return this.chain('session', s);
+    }
+    async run() {
+        const primary = this.dwm.primary;
+        const pre = await primary.findOne(this.filter).select('_id').lean();
+        const result = await this.query();
+        const ids = [idOf(pre), idOf(result)];
+        if (!pre && !result && this.upsert) {
+            const seeded = await primary.findOne(this.filter).select('_id').lean();
+            ids.push(idOf(seeded));
+        }
+        await this.dwm['syncIds'](ids);
+        return result;
+    }
+    then(onfulfilled, onrejected) {
+        return this.run().then(onfulfilled, onrejected);
+    }
+    catch(onrejected) {
+        return this.run().catch(onrejected);
+    }
+    exec() {
+        return this.run();
+    }
+}
+/**
+ * Builds a dual-write model as a Proxy: the write methods above take precedence,
+ * every other access (find/findOne/aggregate/countDocuments/modelName/…) falls
+ * through to `primary`, so the wrapper's surface is exactly the primary's plus
+ * mirrored writes. `syncIds` is private but reached by DualWriteQuery via the
+ * bracket accessor, so it must resolve on the target, not the primary.
+ */
+function createDualWriteModel(primary, mirror) {
+    const dwm = new DualWriteModel(primary, mirror);
+    return new Proxy(dwm, {
+        get(target, prop, receiver) {
+            if (prop in target) {
+                return Reflect.get(target, prop, receiver);
+            }
+            const value = primary[prop];
+            return typeof value === 'function' ? value.bind(primary) : value;
+        },
+    });
+}
+
+/**
+ * Opens a SQLite database. Defaults to the path in `CHAT_SQLITE_PATH`, else an
+ * in-memory database (used by tests). WAL + NORMAL sync for durable throughput.
+ * A non-memory file is opened encrypted (SQLCipher AES-256, `hanzoai/sqlite`
+ * contract) when `CHAT_SQLITE_KEY` holds a 64-hex-char raw key; unset opens
+ * unencrypted (tests + local dev).
+ */
+function openDatabase(dbPath) {
+    var _a;
+    // `better-sqlite3-multiple-ciphers` is a native addon. The data-schemas index
+    // is loaded at server boot even when the store is inert (unset
+    // CHAT_STORE_SQLITE), so require it lazily — only when a database is actually
+    // opened — keeping module import side-effect-free.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const DatabaseCtor = require('better-sqlite3-multiple-ciphers');
+    const path = (_a = dbPath !== null && dbPath !== void 0 ? dbPath : process.env.CHAT_SQLITE_PATH) !== null && _a !== void 0 ? _a : ':memory:';
+    const db = new DatabaseCtor(path);
+    if (path !== ':memory:') {
+        // SQLCipher keying MUST precede any statement that touches DB pages. Never
+        // log the key or the keyed path. KMS/CEK derivation is a later milestone;
+        // this only honors a raw key supplied out-of-band.
+        const key = process.env.CHAT_SQLITE_KEY;
+        if (key) {
+            if (!/^[0-9a-f]{64}$/i.test(key)) {
+                throw new Error('[sqlite-store] CHAT_SQLITE_KEY must be a 64-hex-char raw key');
+            }
+            db.pragma("cipher='sqlcipher'");
+            db.pragma('legacy=4');
+            db.pragma(`key="x'${key}'"`);
+        }
+        db.exec('PRAGMA journal_mode = WAL');
+        db.exec('PRAGMA synchronous = NORMAL');
+        // The one-shot Mongo→SQLite backfill runs as a SEPARATE process against this
+        // same file; WAL permits one writer at a time, so wait for the lock rather
+        // than erroring when the live pod and the backfill overlap.
+        db.exec('PRAGMA busy_timeout = 5000');
+    }
+    db.exec('PRAGMA foreign_keys = ON');
+    return db;
+}
+/**
+ * Builds a mongoose-shaped handle backed by SQLite for the given collection
+ * names (defaults to all known chat collection specs). Pass a shared
+ * `Database` to co-locate collections in one file.
+ */
+function createSqliteHandle(names, options = {}) {
+    var _a, _b;
+    const specs = (_a = options.specs) !== null && _a !== void 0 ? _a : CHAT_COLLECTION_SPECS;
+    const db = (_b = options.db) !== null && _b !== void 0 ? _b : openDatabase(options.dbPath);
+    const selected = names !== null && names !== void 0 ? names : Object.keys(specs);
+    const models = {};
+    for (const name of selected) {
+        const spec = specs[name];
+        if (!spec) {
+            throw new Error(`[sqlite-store] no CollectionSpec for '${name}'`);
+        }
+        models[name] = new DocModel(db, spec);
+    }
+    // Wire cross-collection resolution for `.populate()`.
+    for (const model of Object.values(models)) {
+        model.resolver = (name) => models[name];
+    }
+    return {
+        models,
+        db,
+        Types: { ObjectId },
+        close: () => db.close(),
+    };
+}
+
+/**
+ * Per-domain backend selection — the migration seam. Two orthogonal CSV env
+ * flags of collection names (only names with a CollectionSpec are honored;
+ * unknown names are ignored, failing closed):
+ *
+ *   CHAT_STORE_SQLITE     — collections SERVED from the SQLite document store
+ *                           (reads + the primary write target).
+ *   CHAT_STORE_DUALWRITE  — collections written to BOTH stores, mirrored by the
+ *                           primary store's `_id`.
+ *
+ * The four states this yields drive the whole Mongo→SQLite cutover, and any one
+ * is a pure config change (no redeploy of logic):
+ *
+ *   neither            → mongoose only (untouched default).
+ *   dualwrite only     → mongoose primary (served) + SQLite mirror   [pre-flip].
+ *   sqlite + dualwrite → SQLite primary (served) + mongoose mirror   [post-flip,
+ *                        Mongo kept intact as the instant escape hatch].
+ *   sqlite only        → SQLite only, no mirror                      [Mongo gone].
+ *
+ * Unsetting CHAT_STORE_SQLITE reverts serving to mongoose instantly (the mirror
+ * kept it current), so the flip is reversible until Mongo is deleted.
+ */
+function parseStoreCsv(value) {
+    return (value !== null && value !== void 0 ? value : '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s in CHAT_COLLECTION_SPECS);
+}
+/**
+ * One SQLite handle (one driver connection) per process, shared across
+ * every `createModels` call — the api requires the data-schemas index from three
+ * entry points, and a per-call handle would open three connections to the same
+ * file and race for the WAL write lock. Keyed by the collection set so a changed
+ * flag set (only happens across a restart) rebuilds cleanly.
+ */
+let sharedHandle;
+let sharedHandleKey = '';
+function sharedSqliteHandle(names) {
+    const key = [...names].sort().join(',');
+    if (!sharedHandle || sharedHandleKey !== key) {
+        sharedHandle = createSqliteHandle(names);
+        sharedHandleKey = key;
+    }
+    return sharedHandle;
+}
+function applySqliteOverrides(models) {
+    const sqliteNames = new Set(parseStoreCsv(process.env.CHAT_STORE_SQLITE));
+    const dualNames = new Set(parseStoreCsv(process.env.CHAT_STORE_DUALWRITE));
+    const union = [...new Set([...sqliteNames, ...dualNames])];
+    if (union.length === 0) {
+        return models;
+    }
+    const handle = sharedSqliteHandle(union);
+    const out = { ...models };
+    for (const name of union) {
+        const mongooseModel = models[name];
+        const sqliteModel = handle.models[name];
+        const sqlitePrimary = sqliteNames.has(name);
+        if (dualNames.has(name)) {
+            const primary = sqlitePrimary ? sqliteModel : mongooseModel;
+            const mirror = sqlitePrimary ? mongooseModel : sqliteModel;
+            out[name] = createDualWriteModel(primary, mirror);
+        }
+        else {
+            out[name] = sqliteModel;
+        }
+    }
+    return out;
+}
 /**
  * Creates all database models for all collections
  */
 function createModels(mongoose) {
-    return {
+    const models = {
         User: createUserModel(mongoose),
         Token: createTokenModel(mongoose),
         Session: createSessionModel(mongoose),
@@ -4242,7 +6486,9 @@ function createModels(mongoose) {
         AccessRole: createAccessRoleModel(mongoose),
         AclEntry: createAclEntryModel(mongoose),
         Group: createGroupModel(mongoose),
+        SystemGrant: createSystemGrantModel(mongoose),
     };
+    return applySqliteOverrides(models);
 }
 
 class SessionError extends Error {
@@ -4569,31 +6815,30 @@ function createTokenMethods(mongoose) {
 }
 
 // Factory function that takes mongoose instance and returns the methods
-function createRoleMethods(mongoose) {
+function createRoleMethods(handle) {
     /**
      * Initialize default roles in the system.
-     * Creates the default roles (ADMIN, USER) if they don't exist in the database.
-     * Updates existing roles with new permission types if they're missing.
+     * Creates the default roles (ADMIN, USER, GUEST) if they don't exist in the
+     * database. Updates existing roles with new permission types if they're missing.
      */
     async function initializeRoles() {
-        var _a, _b;
-        const Role = mongoose.models.Role;
-        for (const roleName of [librechatDataProvider.SystemRoles.ADMIN, librechatDataProvider.SystemRoles.USER]) {
-            let role = await Role.findOne({ name: roleName });
+        var _a;
+        const Role = handle.models.Role;
+        for (const roleName of [librechatDataProvider.SystemRoles.ADMIN, librechatDataProvider.SystemRoles.USER, librechatDataProvider.SystemRoles.GUEST]) {
+            const role = await Role.findOne({ name: roleName }).lean();
             const defaultPerms = librechatDataProvider.roleDefaults[roleName].permissions;
             if (!role) {
-                role = new Role(librechatDataProvider.roleDefaults[roleName]);
+                await Role.create(librechatDataProvider.roleDefaults[roleName]);
+                continue;
             }
-            else {
-                const permissions = (_b = (_a = role.toObject()) === null || _a === void 0 ? void 0 : _a.permissions) !== null && _b !== void 0 ? _b : {};
-                role.permissions = role.permissions || {};
-                for (const permType of Object.keys(defaultPerms)) {
-                    if (permissions[permType] == null || Object.keys(permissions[permType]).length === 0) {
-                        role.permissions[permType] = defaultPerms[permType];
-                    }
+            const permissions = { ...((_a = role.permissions) !== null && _a !== void 0 ? _a : {}) };
+            for (const permType of Object.keys(defaultPerms)) {
+                const cur = permissions[permType];
+                if (cur == null || Object.keys(cur).length === 0) {
+                    permissions[permType] = defaultPerms[permType];
                 }
             }
-            await role.save();
+            await Role.updateOne({ name: roleName }, { $set: { permissions } });
         }
     }
     /**
@@ -4601,7 +6846,7 @@ function createRoleMethods(mongoose) {
      * Returns an array of all roles with their names and permissions
      */
     async function listRoles() {
-        const Role = mongoose.models.Role;
+        const Role = handle.models.Role;
         return await Role.find({}).select('name permissions').lean();
     }
     // Return all methods you want to expose
@@ -4889,7 +7134,7 @@ function createUserMethods(mongoose) {
 }
 
 /** Factory function that takes mongoose instance and returns the key methods */
-function createKeyMethods(mongoose) {
+function createKeyMethods(handle) {
     /**
      * Retrieves and decrypts the key value for a given user identified by userId and identifier name.
      * @param params - The parameters object
@@ -4903,7 +7148,7 @@ function createKeyMethods(mongoose) {
      */
     async function getUserKey(params) {
         const { userId, name } = params;
-        const Key = mongoose.models.Key;
+        const Key = handle.models.Key;
         const keyValue = (await Key.findOne({ userId, name }).lean());
         if (!keyValue) {
             throw new Error(JSON.stringify({
@@ -4947,7 +7192,7 @@ function createKeyMethods(mongoose) {
      */
     async function getUserKeyExpiry(params) {
         const { userId, name } = params;
-        const Key = mongoose.models.Key;
+        const Key = handle.models.Key;
         const keyValue = (await Key.findOne({ userId, name }).lean());
         if (!keyValue) {
             return { expiresAt: null };
@@ -4967,7 +7212,7 @@ function createKeyMethods(mongoose) {
      */
     async function updateUserKey(params) {
         const { userId, name, value, expiresAt = null } = params;
-        const Key = mongoose.models.Key;
+        const Key = handle.models.Key;
         const encryptedValue = await encrypt(value);
         const updateObject = {
             userId,
@@ -5001,7 +7246,7 @@ function createKeyMethods(mongoose) {
      */
     async function deleteUserKey(params) {
         const { userId, name, all = false } = params;
-        const Key = mongoose.models.Key;
+        const Key = handle.models.Key;
         if (all) {
             return await Key.deleteMany({ userId });
         }
@@ -5017,7 +7262,7 @@ function createKeyMethods(mongoose) {
 }
 
 /** Factory function that takes mongoose instance and returns the file methods */
-function createFileMethods(mongoose) {
+function createFileMethods(handle) {
     /**
      * Finds a file by its file_id with additional query options.
      * @param file_id - The unique identifier of the file
@@ -5025,7 +7270,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to the file document or null
      */
     async function findFileById(file_id, options = {}) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         return File.findOne({ file_id, ...options }).lean();
     }
     /**
@@ -5037,7 +7282,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to an array of file documents
      */
     async function getFiles(filter, _sortOptions, selectFields) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         const sortOptions = { updatedAt: -1, ..._sortOptions };
         const query = File.find(filter);
         if (selectFields != null) {
@@ -5160,7 +7405,7 @@ function createFileMethods(mongoose) {
      * converge on a single record instead of creating duplicates.
      */
     async function claimCodeFile(data) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         const result = await File.findOneAndUpdate({
             filename: data.filename,
             conversationId: data.conversationId,
@@ -5178,7 +7423,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to the created file document
      */
     async function createFile(data, disableTTL) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         const fileData = {
             ...data,
             expiresAt: new Date(Date.now() + 3600 * 1000),
@@ -5197,7 +7442,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to the updated file document
      */
     async function updateFile(data) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         const { file_id, ...update } = data;
         const updateOperation = {
             $set: update,
@@ -5213,7 +7458,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to the updated file document
      */
     async function updateFileUsage(data) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         const { file_id, inc = 1 } = data;
         const updateOperation = {
             $inc: { usage: inc },
@@ -5229,7 +7474,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to the deleted file document or null
      */
     async function deleteFile(file_id) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         return File.findOneAndDelete({ file_id }).lean();
     }
     /**
@@ -5238,7 +7483,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to the deleted file document or null
      */
     async function deleteFileByFilter(filter) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         return File.findOneAndDelete(filter).lean();
     }
     /**
@@ -5248,7 +7493,7 @@ function createFileMethods(mongoose) {
      * @returns A promise that resolves to the result of the deletion operation
      */
     async function deleteFiles(file_ids, user) {
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         let deleteQuery = { file_id: { $in: file_ids } };
         if (user) {
             deleteQuery = { user: user };
@@ -5263,7 +7508,7 @@ function createFileMethods(mongoose) {
         if (!updates || updates.length === 0) {
             return;
         }
-        const File = mongoose.models.File;
+        const File = handle.models.File;
         const bulkOperations = updates.map((update) => ({
             updateOne: {
                 filter: { file_id: update.file_id },
@@ -5331,7 +7576,7 @@ const formatDate = (date) => {
     return date.toISOString().split('T')[0];
 };
 // Factory function that takes mongoose instance and returns the methods
-function createMemoryMethods(mongoose) {
+function createMemoryMethods(handle) {
     /**
      * Creates a new memory entry for a user
      * Throws an error if a memory with the same key already exists
@@ -5341,7 +7586,7 @@ function createMemoryMethods(mongoose) {
             if ((key === null || key === void 0 ? void 0 : key.toLowerCase()) === 'nothing') {
                 return { ok: false };
             }
-            const MemoryEntry = mongoose.models.MemoryEntry;
+            const MemoryEntry = handle.models.MemoryEntry;
             const existingMemory = await MemoryEntry.findOne({ userId, key });
             if (existingMemory) {
                 throw new Error('Memory with this key already exists');
@@ -5367,7 +7612,7 @@ function createMemoryMethods(mongoose) {
             if ((key === null || key === void 0 ? void 0 : key.toLowerCase()) === 'nothing') {
                 return { ok: false };
             }
-            const MemoryEntry = mongoose.models.MemoryEntry;
+            const MemoryEntry = handle.models.MemoryEntry;
             await MemoryEntry.findOneAndUpdate({ userId, key }, {
                 value,
                 tokenCount,
@@ -5387,7 +7632,7 @@ function createMemoryMethods(mongoose) {
      */
     async function deleteMemory({ userId, key }) {
         try {
-            const MemoryEntry = mongoose.models.MemoryEntry;
+            const MemoryEntry = handle.models.MemoryEntry;
             const result = await MemoryEntry.findOneAndDelete({ userId, key });
             return { ok: !!result };
         }
@@ -5400,7 +7645,7 @@ function createMemoryMethods(mongoose) {
      */
     async function getAllUserMemories(userId) {
         try {
-            const MemoryEntry = mongoose.models.MemoryEntry;
+            const MemoryEntry = handle.models.MemoryEntry;
             return (await MemoryEntry.find({ userId }).lean());
         }
         catch (error) {
@@ -5449,13 +7694,13 @@ function createMemoryMethods(mongoose) {
     };
 }
 
-function createAgentCategoryMethods(mongoose) {
+function createAgentCategoryMethods(handle) {
     /**
      * Get all active categories sorted by order
      * @returns Array of active categories
      */
     async function getActiveCategories() {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         return await AgentCategory.find({ isActive: true }).sort({ order: 1, label: 1 }).lean();
     }
     /**
@@ -5463,7 +7708,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns Categories with agent counts
      */
     async function getCategoriesWithCounts() {
-        const Agent = mongoose.models.Agent;
+        const Agent = handle.models.Agent;
         const categoryCounts = await Agent.aggregate([
             { $match: { category: { $exists: true, $ne: null } } },
             { $group: { _id: '$category', count: { $sum: 1 } } },
@@ -5480,7 +7725,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns Array of valid category values
      */
     async function getValidCategoryValues() {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         return await AgentCategory.find({ isActive: true }).distinct('value').lean();
     }
     /**
@@ -5489,7 +7734,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns Bulk write result
      */
     async function seedCategories(categories) {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         const operations = categories.map((category, index) => ({
             updateOne: {
                 filter: { value: category.value },
@@ -5514,7 +7759,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns The category document or null
      */
     async function findCategoryByValue(value) {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         return await AgentCategory.findOne({ value }).lean();
     }
     /**
@@ -5523,7 +7768,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns The created category
      */
     async function createCategory(categoryData) {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         const category = await AgentCategory.create(categoryData);
         return category.toObject();
     }
@@ -5534,7 +7779,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns The updated category or null
      */
     async function updateCategory(value, updateData) {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         return await AgentCategory.findOneAndUpdate({ value }, { $set: updateData }, { new: true, runValidators: true }).lean();
     }
     /**
@@ -5543,7 +7788,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns Whether the deletion was successful
      */
     async function deleteCategory(value) {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         const result = await AgentCategory.deleteOne({ value });
         return result.deletedCount > 0;
     }
@@ -5553,7 +7798,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns The category document or null
      */
     async function findCategoryById(id) {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         return await AgentCategory.findById(id).lean();
     }
     /**
@@ -5561,7 +7806,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns Array of all categories
      */
     async function getAllCategories() {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         return await AgentCategory.find({}).sort({ order: 1, label: 1 }).lean();
     }
     /**
@@ -5569,7 +7814,7 @@ function createAgentCategoryMethods(mongoose) {
      * @returns Promise<boolean> - true if categories were created/updated, false if no changes
      */
     async function ensureDefaultCategories() {
-        const AgentCategory = mongoose.models.AgentCategory;
+        const AgentCategory = handle.models.AgentCategory;
         const defaultCategories = [
             {
                 value: 'general',
@@ -5673,7 +7918,7 @@ function createAgentCategoryMethods(mongoose) {
 
 const API_KEY_PREFIX = 'sk-';
 const API_KEY_LENGTH = 32;
-function createAgentApiKeyMethods(mongoose) {
+function createAgentApiKeyMethods(handle) {
     async function generateApiKey() {
         const randomPart = await getRandomValues(API_KEY_LENGTH);
         const key = `${API_KEY_PREFIX}${randomPart}`;
@@ -5683,7 +7928,7 @@ function createAgentApiKeyMethods(mongoose) {
     }
     async function createAgentApiKey(data) {
         try {
-            const AgentApiKey = mongoose.models.AgentApiKey;
+            const AgentApiKey = handle.models.AgentApiKey;
             const { key, keyHash, keyPrefix } = await generateApiKey();
             const apiKeyDoc = await AgentApiKey.create({
                 userId: data.userId,
@@ -5708,7 +7953,7 @@ function createAgentApiKeyMethods(mongoose) {
     }
     async function validateAgentApiKey(apiKey) {
         try {
-            const AgentApiKey = mongoose.models.AgentApiKey;
+            const AgentApiKey = handle.models.AgentApiKey;
             const keyHash = await hashToken(apiKey);
             const keyDoc = (await AgentApiKey.findOne({ keyHash }).lean());
             if (!keyDoc) {
@@ -5730,7 +7975,7 @@ function createAgentApiKeyMethods(mongoose) {
     }
     async function listAgentApiKeys(userId) {
         try {
-            const AgentApiKey = mongoose.models.AgentApiKey;
+            const AgentApiKey = handle.models.AgentApiKey;
             const keys = (await AgentApiKey.find({ userId })
                 .sort({ createdAt: -1 })
                 .lean());
@@ -5750,7 +7995,7 @@ function createAgentApiKeyMethods(mongoose) {
     }
     async function deleteAgentApiKey(keyId, userId) {
         try {
-            const AgentApiKey = mongoose.models.AgentApiKey;
+            const AgentApiKey = handle.models.AgentApiKey;
             const result = await AgentApiKey.deleteOne({ _id: keyId, userId });
             return result.deletedCount > 0;
         }
@@ -5761,7 +8006,7 @@ function createAgentApiKeyMethods(mongoose) {
     }
     async function deleteAllAgentApiKeys(userId) {
         try {
-            const AgentApiKey = mongoose.models.AgentApiKey;
+            const AgentApiKey = handle.models.AgentApiKey;
             const result = await AgentApiKey.deleteMany({ userId });
             return result.deletedCount;
         }
@@ -5772,7 +8017,7 @@ function createAgentApiKeyMethods(mongoose) {
     }
     async function getAgentApiKeyById(keyId, userId) {
         try {
-            const AgentApiKey = mongoose.models.AgentApiKey;
+            const AgentApiKey = handle.models.AgentApiKey;
             const keyDoc = (await AgentApiKey.findOne({
                 _id: keyId,
                 userId,
@@ -5839,13 +8084,13 @@ function generateServerNameFromTitle(title) {
         .replace(/^-|-$/g, ''); // Trim leading/trailing hyphens
     return slug || 'mcp-server'; // Fallback if empty
 }
-function createMCPServerMethods(mongoose) {
+function createMCPServerMethods(handle) {
     /**
      * Finds the next available server name by checking for duplicates.
      * If baseName exists, returns baseName-2, baseName-3, etc.
      */
     async function findNextAvailableServerName(baseName) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         // Find all servers with matching base name pattern (baseName or baseName-N)
         const escapedBaseName = escapeRegex(baseName);
         const existing = await MCPServer.find({
@@ -5874,7 +8119,7 @@ function createMCPServerMethods(mongoose) {
      * @returns The created MCP server document
      */
     async function createMCPServer(data) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         let lastError;
         for (let attempt = 0; attempt < MAX_CREATE_RETRIES; attempt++) {
             try {
@@ -5918,7 +8163,7 @@ function createMCPServerMethods(mongoose) {
      * @returns The MCP server document or null
      */
     async function findMCPServerByServerName(serverName) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         return await MCPServer.findOne({ serverName }).lean();
     }
     /**
@@ -5927,7 +8172,7 @@ function createMCPServerMethods(mongoose) {
      * @returns The MCP server document or null
      */
     async function findMCPServerByObjectId(_id) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         return await MCPServer.findById(_id).lean();
     }
     /**
@@ -5936,7 +8181,7 @@ function createMCPServerMethods(mongoose) {
      * @returns Array of MCP server documents
      */
     async function findMCPServersByAuthor(authorId) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         return await MCPServer.find({ author: authorId }).sort({ updatedAt: -1 }).lean();
     }
     /**
@@ -5948,7 +8193,7 @@ function createMCPServerMethods(mongoose) {
      * @returns Paginated list of MCP servers
      */
     async function getListMCPServersByIds({ ids = [], otherParams = {}, limit = null, after = null, }) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         const isPaginated = limit !== null && limit !== undefined;
         const normalizedLimit = isPaginated
             ? Math.min(Math.max(1, parseInt(String(limit)) || NORMALIZED_LIMIT_DEFAULT), 100)
@@ -5963,7 +8208,7 @@ function createMCPServerMethods(mongoose) {
                 const cursorCondition = {
                     $or: [
                         { updatedAt: { $lt: new Date(updatedAt) } },
-                        { updatedAt: new Date(updatedAt), _id: { $gt: new mongoose.Types.ObjectId(_id) } },
+                        { updatedAt: new Date(updatedAt), _id: { $gt: new handle.Types.ObjectId(_id) } },
                     ],
                 };
                 // Merge cursor condition with base query
@@ -6019,7 +8264,7 @@ function createMCPServerMethods(mongoose) {
      * @returns The updated MCP server document or null
      */
     async function updateMCPServer(serverName, updateData) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         return await MCPServer.findOneAndUpdate({ serverName }, { $set: updateData }, { new: true, runValidators: true }).lean();
     }
     /**
@@ -6028,7 +8273,7 @@ function createMCPServerMethods(mongoose) {
      * @returns The deleted MCP server document or null
      */
     async function deleteMCPServer(serverName) {
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         return await MCPServer.findOneAndDelete({ serverName }).lean();
     }
     /**
@@ -6040,7 +8285,7 @@ function createMCPServerMethods(mongoose) {
         if (names.length === 0) {
             return { data: [] };
         }
-        const MCPServer = mongoose.models.MCPServer;
+        const MCPServer = handle.models.MCPServer;
         const servers = await MCPServer.find({ serverName: { $in: names } }).lean();
         return { data: servers };
     }
@@ -6057,13 +8302,13 @@ function createMCPServerMethods(mongoose) {
 }
 
 // Factory function that takes mongoose instance and returns the methods
-function createPluginAuthMethods(mongoose) {
+function createPluginAuthMethods(handle) {
     /**
      * Finds a single plugin auth entry by userId and authField (and optionally pluginKey)
      */
     async function findOnePluginAuth({ userId, authField, pluginKey, }) {
         try {
-            const PluginAuth = mongoose.models.PluginAuth;
+            const PluginAuth = handle.models.PluginAuth;
             return await PluginAuth.findOne({
                 userId,
                 authField,
@@ -6082,7 +8327,7 @@ function createPluginAuthMethods(mongoose) {
             if (!pluginKeys || pluginKeys.length === 0) {
                 return [];
             }
-            const PluginAuth = mongoose.models.PluginAuth;
+            const PluginAuth = handle.models.PluginAuth;
             return await PluginAuth.find({
                 userId,
                 pluginKey: { $in: pluginKeys },
@@ -6097,19 +8342,20 @@ function createPluginAuthMethods(mongoose) {
      */
     async function updatePluginAuth({ userId, authField, pluginKey, value, }) {
         try {
-            const PluginAuth = mongoose.models.PluginAuth;
+            const PluginAuth = handle.models.PluginAuth;
             const existingAuth = await PluginAuth.findOne({ userId, pluginKey, authField }).lean();
             if (existingAuth) {
                 return await PluginAuth.findOneAndUpdate({ userId, pluginKey, authField }, { $set: { value } }, { new: true, upsert: true }).lean();
             }
             else {
-                const newPluginAuth = await new PluginAuth({
+                // Model.create is equivalent to `new Model(doc).save()` on mongoose and
+                // is part of the shared Model API (works on the SQLite DocModel too).
+                const newPluginAuth = await PluginAuth.create({
                     userId,
                     authField,
                     value,
                     pluginKey,
                 });
-                await newPluginAuth.save();
                 return newPluginAuth.toObject();
             }
         }
@@ -6122,7 +8368,7 @@ function createPluginAuthMethods(mongoose) {
      */
     async function deletePluginAuth({ userId, authField, pluginKey, all = false, }) {
         try {
-            const PluginAuth = mongoose.models.PluginAuth;
+            const PluginAuth = handle.models.PluginAuth;
             if (all) {
                 const filter = { userId };
                 if (pluginKey) {
@@ -6144,7 +8390,7 @@ function createPluginAuthMethods(mongoose) {
      */
     async function deleteAllUserPluginAuths(userId) {
         try {
-            const PluginAuth = mongoose.models.PluginAuth;
+            const PluginAuth = handle.models.PluginAuth;
             return await PluginAuth.deleteMany({ userId });
         }
         catch (error) {
@@ -6160,14 +8406,14 @@ function createPluginAuthMethods(mongoose) {
     };
 }
 
-function createAccessRoleMethods(mongoose) {
+function createAccessRoleMethods(handle) {
     /**
      * Find an access role by its ID
      * @param roleId - The role ID
      * @returns The role document or null if not found
      */
     async function findRoleById(roleId) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.findById(roleId).lean();
     }
     /**
@@ -6176,7 +8422,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns The role document or null if not found
      */
     async function findRoleByIdentifier(accessRoleId) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.findOne({ accessRoleId }).lean();
     }
     /**
@@ -6185,7 +8431,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns Array of role documents
      */
     async function findRolesByResourceType(resourceType) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.find({ resourceType }).lean();
     }
     /**
@@ -6195,7 +8441,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns The role document or null if not found
      */
     async function findRoleByPermissions(resourceType, permBits) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.findOne({ resourceType, permBits }).lean();
     }
     /**
@@ -6204,7 +8450,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns The created role document
      */
     async function createRole(roleData) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.create(roleData);
     }
     /**
@@ -6214,7 +8460,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns The updated role document or null if not found
      */
     async function updateRole(accessRoleId, updateData) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.findOneAndUpdate({ accessRoleId }, { $set: updateData }, { new: true }).lean();
     }
     /**
@@ -6223,7 +8469,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns The result of the delete operation
      */
     async function deleteRole(accessRoleId) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.deleteOne({ accessRoleId });
     }
     /**
@@ -6231,7 +8477,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns Array of all role documents
      */
     async function getAllRoles() {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         return await AccessRole.find().lean();
     }
     /**
@@ -6239,7 +8485,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns Object containing created roles
      */
     async function seedDefaultRoles() {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         const defaultRoles = [
             {
                 accessRoleId: librechatDataProvider.AccessRoleIds.AGENT_VIEWER,
@@ -6340,7 +8586,7 @@ function createAccessRoleMethods(mongoose) {
      * @returns The matching role or null if none found
      */
     async function getRoleForPermissions(resourceType, permBits) {
-        const AccessRole = mongoose.models.AccessRole;
+        const AccessRole = handle.models.AccessRole;
         const exactMatch = await AccessRole.findOne({ resourceType, permBits }).lean();
         if (exactMatch) {
             return exactMatch;
@@ -6363,7 +8609,7 @@ function createAccessRoleMethods(mongoose) {
     };
 }
 
-function createUserGroupMethods(mongoose$1) {
+function createUserGroupMethods(handle) {
     /**
      * Find a group by its ID
      * @param groupId - The group ID
@@ -6372,7 +8618,7 @@ function createUserGroupMethods(mongoose$1) {
      * @returns The group document or null if not found
      */
     async function findGroupById(groupId, projection = {}, session) {
-        const Group = mongoose$1.models.Group;
+        const Group = handle.models.Group;
         const query = Group.findOne({ _id: groupId }, projection);
         if (session) {
             query.session(session);
@@ -6388,7 +8634,7 @@ function createUserGroupMethods(mongoose$1) {
      * @returns The group document or null if not found
      */
     async function findGroupByExternalId(idOnTheSource, source = 'entra', projection = {}, session) {
-        const Group = mongoose$1.models.Group;
+        const Group = handle.models.Group;
         const query = Group.findOne({ idOnTheSource, source }, projection);
         if (session) {
             query.session(session);
@@ -6404,7 +8650,7 @@ function createUserGroupMethods(mongoose$1) {
      * @returns Array of matching groups
      */
     async function findGroupsByNamePattern(namePattern, source = null, limit = 20, session) {
-        const Group = mongoose$1.models.Group;
+        const Group = handle.models.Group;
         const regex = new RegExp(namePattern, 'i');
         const query = {
             $or: [{ name: regex }, { email: regex }, { description: regex }],
@@ -6425,8 +8671,8 @@ function createUserGroupMethods(mongoose$1) {
      * @returns Array of groups the user is a member of
      */
     async function findGroupsByMemberId(userId, session) {
-        const User = mongoose$1.models.User;
-        const Group = mongoose$1.models.Group;
+        const User = handle.models.User;
+        const Group = handle.models.Group;
         const userQuery = User.findById(userId, 'idOnTheSource');
         if (session) {
             userQuery.session(session);
@@ -6449,7 +8695,7 @@ function createUserGroupMethods(mongoose$1) {
      * @returns The created group
      */
     async function createGroup(groupData, session) {
-        const Group = mongoose$1.models.Group;
+        const Group = handle.models.Group;
         const options = session ? { session } : {};
         return await Group.create([groupData], options).then((groups) => groups[0]);
     }
@@ -6462,7 +8708,7 @@ function createUserGroupMethods(mongoose$1) {
      * @returns The updated or created group
      */
     async function upsertGroupByExternalId(idOnTheSource, source, updateData, session) {
-        const Group = mongoose$1.models.Group;
+        const Group = handle.models.Group;
         const options = {
             new: true,
             upsert: true,
@@ -6481,8 +8727,8 @@ function createUserGroupMethods(mongoose$1) {
      * @returns The user and updated group documents
      */
     async function addUserToGroup(userId, groupId, session) {
-        const User = mongoose$1.models.User;
-        const Group = mongoose$1.models.Group;
+        const User = handle.models.User;
+        const Group = handle.models.Group;
         const options = { new: true, ...(session ? { session } : {}) };
         const user = (await User.findById(userId, 'idOnTheSource', options).lean());
         if (!user) {
@@ -6503,8 +8749,8 @@ function createUserGroupMethods(mongoose$1) {
      * @returns The user and updated group documents
      */
     async function removeUserFromGroup(userId, groupId, session) {
-        const User = mongoose$1.models.User;
-        const Group = mongoose$1.models.Group;
+        const User = handle.models.User;
+        const Group = handle.models.Group;
         const options = { new: true, ...(session ? { session } : {}) };
         const user = (await User.findById(userId, 'idOnTheSource', options).lean());
         if (!user) {
@@ -6542,7 +8788,7 @@ function createUserGroupMethods(mongoose$1) {
         // If role is not provided, query user to get it
         let userRole = role;
         if (userRole === undefined) {
-            const User = mongoose$1.models.User;
+            const User = handle.models.User;
             const query = User.findById(userId).select('role');
             if (session) {
                 query.session(session);
@@ -6572,8 +8818,8 @@ function createUserGroupMethods(mongoose$1) {
      */
     async function syncUserEntraGroups(userId, entraGroups, session) {
         var _a;
-        const User = mongoose$1.models.User;
-        const Group = mongoose$1.models.Group;
+        const User = handle.models.User;
+        const Group = handle.models.Group;
         const query = User.findById(userId, { idOnTheSource: 1 });
         if (session) {
             query.session(session);
@@ -6748,7 +8994,7 @@ function createUserGroupMethods(mongoose$1) {
             /** Note: searchUsers is imported from ~/models and needs to be passed in or implemented */
             const userFields = 'name email username avatar provider idOnTheSource';
             /** For now, we'll use a direct query instead of searchUsers */
-            const User = mongoose$1.models.User;
+            const User = handle.models.User;
             const regex = new RegExp(trimmedPattern, 'i');
             const userQuery = User.find({
                 $or: [{ name: regex }, { email: regex }, { username: regex }],
@@ -6781,7 +9027,7 @@ function createUserGroupMethods(mongoose$1) {
             promises.push(Promise.resolve([]));
         }
         if (!typeFilter || typeFilter.includes(librechatDataProvider.PrincipalType.ROLE)) {
-            const Role = mongoose$1.models.Role;
+            const Role = handle.models.Role;
             if (Role) {
                 const regex = new RegExp(trimmedPattern, 'i');
                 const roleQuery = Role.find({ name: regex }).select('name').limit(limitPerType);
@@ -6823,7 +9069,7 @@ function createUserGroupMethods(mongoose$1) {
     };
 }
 
-function createAclEntryMethods(mongoose$1) {
+function createAclEntryMethods(handle) {
     /**
      * Find ACL entries for a specific principal (user or group)
      * @param principalType - The type of principal ('user', 'group')
@@ -6832,7 +9078,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns Array of ACL entries
      */
     async function findEntriesByPrincipal(principalType, principalId, resourceType) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const query = { principalType, principalId };
         if (resourceType) {
             query.resourceType = resourceType;
@@ -6846,7 +9092,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns Array of ACL entries
      */
     async function findEntriesByResource(resourceType, resourceId) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         return await AclEntry.find({ resourceType, resourceId }).lean();
     }
     /**
@@ -6857,7 +9103,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns Array of matching ACL entries
      */
     async function findEntriesByPrincipalsAndResource(principalsList, resourceType, resourceId) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
             ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
@@ -6877,7 +9123,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns Whether any of the principals has the permission
      */
     async function hasPermission(principalsList, resourceType, resourceId, permissionBit) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
             ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
@@ -6928,7 +9174,7 @@ function createAclEntryMethods(mongoose$1) {
         if (!Array.isArray(resourceIds) || resourceIds.length === 0) {
             return new Map();
         }
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
             ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
@@ -6961,7 +9207,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns The created or updated ACL entry
      */
     async function grantPermission(principalType, principalId, resourceType, resourceId, permBits, grantedBy, session, roleId) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const query = {
             principalType,
             resourceType,
@@ -7007,7 +9253,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns The result of the delete operation
      */
     async function revokePermission(principalType, principalId, resourceType, resourceId, session) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const query = {
             principalType,
             resourceType,
@@ -7034,7 +9280,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns The updated ACL entry
      */
     async function modifyPermissionBits(principalType, principalId, resourceType, resourceId, addBits, removeBits, session) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const query = {
             principalType,
             resourceType,
@@ -7070,7 +9316,7 @@ function createAclEntryMethods(mongoose$1) {
      * @returns Array of resource IDs
      */
     async function findAccessibleResources(principalsList, resourceType, requiredPermBit) {
-        const AclEntry = mongoose$1.models.AclEntry;
+        const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
             ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
@@ -7217,13 +9463,13 @@ function getMessagesUpToTarget(messages, targetMessageId) {
     return Array.from(results);
 }
 /** Factory function that takes mongoose instance and returns the methods */
-function createShareMethods(mongoose) {
+function createShareMethods(handle) {
     /**
      * Get shared messages for a public share link
      */
     async function getSharedMessages(shareId) {
         try {
-            const SharedLink = mongoose.models.SharedLink;
+            const SharedLink = handle.models.SharedLink;
             const share = (await SharedLink.findOne({ shareId, isPublic: true })
                 .populate({
                 path: 'messages',
@@ -7265,8 +9511,8 @@ function createShareMethods(mongoose) {
     async function getSharedLinks(user, pageParam, pageSize = 10, isPublic = true, sortBy = 'createdAt', sortDirection = 'desc', search) {
         var _a;
         try {
-            const SharedLink = mongoose.models.SharedLink;
-            const Conversation = mongoose.models.Conversation;
+            const SharedLink = handle.models.SharedLink;
+            const Conversation = handle.models.Conversation;
             const query = { user, isPublic };
             if (pageParam) {
                 if (sortDirection === 'desc') {
@@ -7340,7 +9586,7 @@ function createShareMethods(mongoose) {
      */
     async function deleteAllSharedLinks(user) {
         try {
-            const SharedLink = mongoose.models.SharedLink;
+            const SharedLink = handle.models.SharedLink;
             const result = await SharedLink.deleteMany({ user });
             return {
                 message: 'All shared links deleted successfully',
@@ -7363,7 +9609,7 @@ function createShareMethods(mongoose) {
             throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
         }
         try {
-            const SharedLink = mongoose.models.SharedLink;
+            const SharedLink = handle.models.SharedLink;
             const result = await SharedLink.deleteMany({ user, conversationId });
             return {
                 message: 'Shared links deleted successfully',
@@ -7387,9 +9633,9 @@ function createShareMethods(mongoose) {
             throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
         }
         try {
-            const Message = mongoose.models.Message;
-            const SharedLink = mongoose.models.SharedLink;
-            const Conversation = mongoose.models.Conversation;
+            const Message = handle.models.Message;
+            const SharedLink = handle.models.SharedLink;
+            const Conversation = handle.models.Conversation;
             const [existingShare, conversationMessages] = await Promise.all([
                 SharedLink.findOne({
                     conversationId,
@@ -7458,7 +9704,7 @@ function createShareMethods(mongoose) {
             throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
         }
         try {
-            const SharedLink = mongoose.models.SharedLink;
+            const SharedLink = handle.models.SharedLink;
             const share = (await SharedLink.findOne({ conversationId, user, isPublic: true })
                 .select('shareId -_id')
                 .lean());
@@ -7484,8 +9730,8 @@ function createShareMethods(mongoose) {
             throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
         }
         try {
-            const SharedLink = mongoose.models.SharedLink;
-            const Message = mongoose.models.Message;
+            const SharedLink = handle.models.SharedLink;
+            const Message = handle.models.Message;
             const share = (await SharedLink.findOne({ shareId, user })
                 .select('-_id -__v -user')
                 .lean());
@@ -7529,7 +9775,7 @@ function createShareMethods(mongoose) {
             throw new ShareServiceError('Missing required parameters', 'INVALID_PARAMS');
         }
         try {
-            const SharedLink = mongoose.models.SharedLink;
+            const SharedLink = handle.models.SharedLink;
             const result = await SharedLink.findOneAndDelete({ shareId, user }).lean();
             if (!result) {
                 return null;
@@ -7567,28 +9813,38 @@ function createShareMethods(mongoose) {
  * @param mongoose - Mongoose instance
  */
 function createMethods(mongoose) {
+    // Registry-aware handle so migrated domains resolve to the backend selected by
+    // CHAT_STORE_SQLITE / CHAT_STORE_DUALWRITE. Unset flags => createModels returns
+    // pure mongoose => unchanged. User/Session/Token read only `.models`/`.Types`,
+    // both of which this handle provides, so they route through the seam via the
+    // cast below without any edit to their factory bodies (a mongoose instance is
+    // itself structurally `{ models, Types }`, and so is this handle).
+    const dbHandle = { models: createModels(mongoose), Types: mongoose.Types };
+    const storeHandle = dbHandle;
     return {
-        ...createUserMethods(mongoose),
-        ...createSessionMethods(mongoose),
-        ...createTokenMethods(mongoose),
-        ...createRoleMethods(mongoose),
-        ...createKeyMethods(mongoose),
-        ...createFileMethods(mongoose),
-        ...createMemoryMethods(mongoose),
-        ...createAgentCategoryMethods(mongoose),
-        ...createAgentApiKeyMethods(mongoose),
-        ...createMCPServerMethods(mongoose),
-        ...createAccessRoleMethods(mongoose),
-        ...createUserGroupMethods(mongoose),
-        ...createAclEntryMethods(mongoose),
-        ...createShareMethods(mongoose),
-        ...createPluginAuthMethods(mongoose),
+        ...createUserMethods(storeHandle),
+        ...createSessionMethods(storeHandle),
+        ...createTokenMethods(storeHandle),
+        ...createRoleMethods(dbHandle),
+        ...createKeyMethods(dbHandle),
+        ...createFileMethods(dbHandle),
+        ...createMemoryMethods(dbHandle),
+        ...createAgentCategoryMethods(dbHandle),
+        ...createAgentApiKeyMethods(dbHandle),
+        ...createMCPServerMethods(dbHandle),
+        ...createAccessRoleMethods(dbHandle),
+        ...createUserGroupMethods(dbHandle),
+        ...createAclEntryMethods(dbHandle),
+        ...createShareMethods(dbHandle),
+        ...createPluginAuthMethods(dbHandle),
     };
 }
 
 exports.AppService = AppService;
+exports.CHAT_COLLECTION_SPECS = CHAT_COLLECTION_SPECS;
 exports.DEFAULT_REFRESH_TOKEN_EXPIRY = DEFAULT_REFRESH_TOKEN_EXPIRY;
 exports.DEFAULT_SESSION_EXPIRY = DEFAULT_SESSION_EXPIRY;
+exports.DocModel = DocModel;
 exports.actionSchema = Action;
 exports.agentApiKeySchema = agentApiKeySchema;
 exports.agentCategorySchema = agentCategorySchema;
@@ -7602,6 +9858,7 @@ exports.conversationTagSchema = conversationTag;
 exports.convoSchema = convoSchema;
 exports.createMethods = createMethods;
 exports.createModels = createModels;
+exports.createSqliteHandle = createSqliteHandle;
 exports.decrypt = decrypt;
 exports.decryptV2 = decryptV2;
 exports.decryptV3 = decryptV3;
@@ -7624,6 +9881,7 @@ exports.logger = logger$1;
 exports.meiliLogger = logger;
 exports.memorySchema = MemoryEntrySchema;
 exports.messageSchema = messageSchema;
+exports.openDatabase = openDatabase;
 exports.pluginAuthSchema = pluginAuthSchema;
 exports.presetSchema = presetSchema;
 exports.processModelSpecs = processModelSpecs;
