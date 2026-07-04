@@ -54,12 +54,32 @@ export function hasPath(doc: Doc, path: string): boolean {
   return false;
 }
 
+/**
+ * Keys that must never be walked or written through a dotted update path:
+ * writing `__proto__.x` or `constructor.prototype.x` would mutate a shared
+ * prototype (prototype pollution). Update keys are attacker-influenced — they
+ * arrive verbatim from `$set`/`$unset`/`$inc`/`$push`/… documents (conversation
+ * import, `saveConvo`, agent metadata) — so a malicious dotted key is neutralised
+ * here rather than trusted. A path containing any unsafe segment is a no-op.
+ */
+const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
+function hasUnsafeSegment(keys: string[]): boolean {
+  return keys.some((k) => UNSAFE_KEYS.has(k));
+}
+
 function setPath(doc: Doc, path: string, value: unknown): void {
   if (!path.includes('.')) {
+    if (UNSAFE_KEYS.has(path)) {
+      return;
+    }
     doc[path] = value;
     return;
   }
   const keys = path.split('.');
+  if (hasUnsafeSegment(keys)) {
+    return;
+  }
   let cur: Doc = doc;
   for (let i = 0; i < keys.length - 1; i++) {
     const next = cur[keys[i]];
@@ -73,10 +93,16 @@ function setPath(doc: Doc, path: string, value: unknown): void {
 
 function deletePath(doc: Doc, path: string): void {
   if (!path.includes('.')) {
+    if (UNSAFE_KEYS.has(path)) {
+      return;
+    }
     delete doc[path];
     return;
   }
   const keys = path.split('.');
+  if (hasUnsafeSegment(keys)) {
+    return;
+  }
   let cur: Doc = doc;
   for (let i = 0; i < keys.length - 1; i++) {
     const next = cur[keys[i]];
