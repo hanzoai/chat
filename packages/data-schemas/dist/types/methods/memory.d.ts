@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type * as t from '~/types';
-export declare function createMemoryMethods(mongoose: typeof import('mongoose')): {
+export declare function createMemoryMethods(handle: DataHandle): {
     setMemory: ({ userId, key, value, tokenCount, }: t.SetMemoryParams) => Promise<t.MemoryResult>;
     createMemory: ({ userId, key, value, tokenCount, }: t.SetMemoryParams) => Promise<t.MemoryResult>;
     deleteMemory: ({ userId, key }: t.DeleteMemoryParams) => Promise<t.MemoryResult>;

@@ -1,6 +1,7 @@
+import type { DataHandle } from '~/common/dataHandle';
 import type * as t from '~/types';
 /** Factory function that takes mongoose instance and returns the methods */
-export declare function createShareMethods(mongoose: typeof import('mongoose')): {
+export declare function createShareMethods(handle: DataHandle): {
     getSharedLink: (user: string, conversationId: string) => Promise<t.GetShareLinkResult>;
     getSharedLinks: (user: string, pageParam?: Date, pageSize?: number, isPublic?: boolean, sortBy?: string, sortDirection?: string, search?: string) => Promise<t.SharedLinksResult>;
     createSharedLink: (user: string, conversationId: string, targetMessageId?: string) => Promise<t.CreateShareResult>;

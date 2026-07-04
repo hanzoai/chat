@@ -36,5 +36,5 @@ export default {
     }),
   ],
   // Do not bundle these external dependencies
-  external: ['mongoose', 'node:sqlite', 'node:crypto'],
+  external: ['mongoose', 'better-sqlite3-multiple-ciphers', 'node:crypto'],
 };

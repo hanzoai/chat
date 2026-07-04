@@ -15,7 +15,7 @@ import type { CollectionSpec } from './DocModel';
  * ZERO Mongo change-streams / tailable cursors / `.watch()` / DB-driven
  * subscriptions. Conversation/message reads are plain request/response
  * (getConvosByCursor / getMessages). Therefore NO migrated domain here needs a
- * DB-subscription replacement — plain node:sqlite is correct for all of them.
+ * DB-subscription replacement — the plain SQLite store is correct for all of them.
  *
  * CUTOVER TARGET (per architecture directive "Base for realtime, SQLite for
  * storage"): the live-chat domains — **Conversation** and **Message** — are the

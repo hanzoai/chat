@@ -190,7 +190,8 @@
       "sharp",
       "protobufjs",
       "mongodb-memory-server",
-      "unrs-resolver"
+      "unrs-resolver",
+      "better-sqlite3-multiple-ciphers"
     ],
     "overrides": {
       "@ariakit/react": "0.4.29",
