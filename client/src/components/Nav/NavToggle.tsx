@@ -72,7 +72,7 @@ export default function NavToggle({
         <span className="" data-state="closed">
           <div
             className="flex h-[72px] w-8 items-center justify-center"
-            style={{ ...transition, opacity: isHovering ? 1 : 0.25 }}
+            style={{ ...transition, opacity: isHovering ? 1 : 0 }}
           >
             <div className="flex h-6 w-6 flex-col items-center">
               {/* Top bar */}
