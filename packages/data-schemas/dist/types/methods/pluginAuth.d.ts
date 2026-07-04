@@ -1,6 +1,7 @@
 import type { DeleteResult } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type { FindPluginAuthsByKeysParams, UpdatePluginAuthParams, DeletePluginAuthParams, FindPluginAuthParams, IPluginAuth } from '~/types';
-export declare function createPluginAuthMethods(mongoose: typeof import('mongoose')): {
+export declare function createPluginAuthMethods(handle: DataHandle): {
     findOnePluginAuth: ({ userId, authField, pluginKey, }: FindPluginAuthParams) => Promise<IPluginAuth | null>;
     findPluginAuthsByKeys: ({ userId, pluginKeys, }: FindPluginAuthsByKeysParams) => Promise<IPluginAuth[]>;
     updatePluginAuth: ({ userId, authField, pluginKey, value, }: UpdatePluginAuthParams) => Promise<IPluginAuth>;

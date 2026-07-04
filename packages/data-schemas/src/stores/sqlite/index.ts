@@ -10,7 +10,7 @@
  * handle or this SQLite handle. A networked Hanzo Base / cloud `/v1` backend is
  * a future third implementation of the same handle shape.
  */
-import type { DatabaseSync } from 'node:sqlite';
+import type Database from 'better-sqlite3-multiple-ciphers';
 import { DocModel, type CollectionSpec } from './DocModel';
 import { CHAT_COLLECTION_SPECS } from './collections';
 import { ObjectId } from './engine';
@@ -22,7 +22,7 @@ export { createDualWriteModel, DualWriteModel } from './DualWriteModel';
 
 export interface SqliteHandle {
   models: Record<string, DocModel>;
-  db: DatabaseSync;
+  db: Database.Database;
   Types: { ObjectId: typeof ObjectId };
   close(): void;
 }
@@ -30,17 +30,32 @@ export interface SqliteHandle {
 /**
  * Opens a SQLite database. Defaults to the path in `CHAT_SQLITE_PATH`, else an
  * in-memory database (used by tests). WAL + NORMAL sync for durable throughput.
+ * A non-memory file is opened encrypted (SQLCipher AES-256, `hanzoai/sqlite`
+ * contract) when `CHAT_SQLITE_KEY` holds a 64-hex-char raw key; unset opens
+ * unencrypted (tests + local dev).
  */
-export function openDatabase(dbPath?: string): DatabaseSync {
-  // `node:sqlite` (DatabaseSync) exists only on Node >= 22.5. This store is
-  // inert by default (unset CHAT_STORE_SQLITE) yet the data-schemas index is
-  // loaded at server boot, so a static import would crash the Node 20 runtime.
-  // Require it lazily — only when a database is actually opened.
+export function openDatabase(dbPath?: string): Database.Database {
+  // `better-sqlite3-multiple-ciphers` is a native addon. The data-schemas index
+  // is loaded at server boot even when the store is inert (unset
+  // CHAT_STORE_SQLITE), so require it lazily — only when a database is actually
+  // opened — keeping module import side-effect-free.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const sqlite = require('node:sqlite') as typeof import('node:sqlite');
+  const DatabaseCtor = require('better-sqlite3-multiple-ciphers') as typeof import('better-sqlite3-multiple-ciphers');
   const path = dbPath ?? process.env.CHAT_SQLITE_PATH ?? ':memory:';
-  const db = new sqlite.DatabaseSync(path);
+  const db = new DatabaseCtor(path);
   if (path !== ':memory:') {
+    // SQLCipher keying MUST precede any statement that touches DB pages. Never
+    // log the key or the keyed path. KMS/CEK derivation is a later milestone;
+    // this only honors a raw key supplied out-of-band.
+    const key = process.env.CHAT_SQLITE_KEY;
+    if (key) {
+      if (!/^[0-9a-f]{64}$/i.test(key)) {
+        throw new Error('[sqlite-store] CHAT_SQLITE_KEY must be a 64-hex-char raw key');
+      }
+      db.pragma("cipher='sqlcipher'");
+      db.pragma('legacy=4');
+      db.pragma(`key="x'${key}'"`);
+    }
     db.exec('PRAGMA journal_mode = WAL');
     db.exec('PRAGMA synchronous = NORMAL');
     // The one-shot Mongo→SQLite backfill runs as a SEPARATE process against this
@@ -55,11 +70,11 @@ export function openDatabase(dbPath?: string): DatabaseSync {
 /**
  * Builds a mongoose-shaped handle backed by SQLite for the given collection
  * names (defaults to all known chat collection specs). Pass a shared
- * `DatabaseSync` to co-locate collections in one file.
+ * `Database` to co-locate collections in one file.
  */
 export function createSqliteHandle(
   names?: string[],
-  options: { db?: DatabaseSync; dbPath?: string; specs?: Record<string, CollectionSpec> } = {},
+  options: { db?: Database.Database; dbPath?: string; specs?: Record<string, CollectionSpec> } = {},
 ): SqliteHandle {
   const specs = options.specs ?? CHAT_COLLECTION_SPECS;
   const db = options.db ?? openDatabase(options.dbPath);

@@ -1,9 +1,6 @@
-export declare function createRoleMethods(mongoose: typeof import('mongoose')): {
-    listRoles: () => Promise<(import("mongoose").FlattenMaps<any> & Required<{
-        _id: unknown;
-    }> & {
-        __v: number;
-    })[]>;
+import type { DataHandle } from '~/common/dataHandle';
+export declare function createRoleMethods(handle: DataHandle): {
+    listRoles: () => Promise<any>;
     initializeRoles: () => Promise<void>;
 };
 export type RoleMethods = ReturnType<typeof createRoleMethods>;
