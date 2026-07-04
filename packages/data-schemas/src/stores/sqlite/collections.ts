@@ -208,4 +208,41 @@ export const CHAT_COLLECTION_SPECS: Record<string, CollectionSpec> = {
     index: ['source', 'idOnTheSource', 'name', 'memberIds'],
     dateFields: ['createdAt', 'updatedAt'],
   },
+
+  // ---- Batch 9: auth + billing — the collections that ACTUALLY hold live data
+  // in chat-docdb outside the domains above (users/sessions/transactions/balances
+  // are populated; tokens is on the same auth path). These must move to SQLite
+  // for chat-docdb to be deletable without data loss — User is the hot-path record
+  // that every authenticated request loads and that every conversation references
+  // by `_id`, so its `_id` MUST survive the migration (backfill preserves it).
+  // Their data methods read `.models`/`.Types` off the seam handle, so they route
+  // here once flagged (see methods/index.ts, api/models/Transaction.js). Uniques
+  // on the sparse social/openid ids are safe: an absent id is NULL in json_extract
+  // and SQLite treats NULLs as distinct, so it mirrors the mongoose `sparse`.
+  User: {
+    name: 'User',
+    unique: ['email', 'openidId', 'googleId', 'githubId'],
+    index: ['organization', 'provider', 'username', 'idOnTheSource', 'role'],
+    dateFields: ['createdAt', 'updatedAt', 'expiresAt'],
+  },
+  Session: {
+    name: 'Session',
+    index: ['refreshToken', 'user', 'expiration'],
+    dateFields: ['expiration', 'createdAt', 'updatedAt'],
+  },
+  Token: {
+    name: 'Token',
+    index: ['userId', 'token', 'email', 'type', 'identifier'],
+    dateFields: ['createdAt', 'expiresAt'],
+  },
+  Balance: {
+    name: 'Balance',
+    index: ['user', 'commerceUserId'],
+    dateFields: ['lastRefill', 'expiresAt', 'creditsGrantedAt', 'createdAt', 'updatedAt'],
+  },
+  Transaction: {
+    name: 'Transaction',
+    index: ['user', 'conversationId', 'model', 'createdAt'],
+    dateFields: ['createdAt', 'updatedAt'],
+  },
 };

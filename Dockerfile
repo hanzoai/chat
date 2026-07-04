@@ -1,7 +1,9 @@
 # v0.8.3-rc1
 
-# Base node image
-FROM node:20-alpine AS node
+# Base node image — Hanzo Node 24 (Alpine) base: node:sqlite (DatabaseSync) is
+# built in and native better-sqlite3 compiles (build-base + python3 + g++ baked
+# in), so the CHAT_STORE_SQLITE document store runs. Node 20 lacked node:sqlite.
+FROM ghcr.io/hanzoai/nodejs:v24.18.0 AS node
 
 # Install jemalloc
 RUN apk add --no-cache jemalloc
