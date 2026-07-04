@@ -10,17 +10,25 @@
  * filter DSL (see store.js) is only ever a best-effort pushdown optimisation.
  */
 
+/**
+ * Path segments that must never be traversed or written — guards against
+ * prototype pollution via attacker-controlled dotted keys (e.g. an update or
+ * imported document containing `__proto__.x`). Mongoose sanitized these; the
+ * adapter must too.
+ */
+const FORBIDDEN_SEGMENTS = new Set(['__proto__', 'constructor', 'prototype']);
+
 /** Resolve a possibly-dotted path against a document. */
 function getPath(doc, path) {
   if (doc == null) {
     return undefined;
   }
   if (!path.includes('.')) {
-    return doc[path];
+    return FORBIDDEN_SEGMENTS.has(path) ? undefined : doc[path];
   }
   let cur = doc;
   for (const part of path.split('.')) {
-    if (cur == null) {
+    if (cur == null || FORBIDDEN_SEGMENTS.has(part)) {
       return undefined;
     }
     cur = cur[part];
@@ -28,13 +36,18 @@ function getPath(doc, path) {
   return cur;
 }
 
-/** Set a possibly-dotted path on a document (mutates). */
+/** Set a possibly-dotted path on a document (mutates). No-op on forbidden segments. */
 function setPath(doc, path, value) {
   if (!path.includes('.')) {
-    doc[path] = value;
+    if (!FORBIDDEN_SEGMENTS.has(path)) {
+      doc[path] = value;
+    }
     return;
   }
   const parts = path.split('.');
+  if (parts.some((p) => FORBIDDEN_SEGMENTS.has(p))) {
+    return;
+  }
   let cur = doc;
   for (let i = 0; i < parts.length - 1; i++) {
     if (cur[parts[i]] == null || typeof cur[parts[i]] !== 'object') {
@@ -45,13 +58,18 @@ function setPath(doc, path, value) {
   cur[parts[parts.length - 1]] = value;
 }
 
-/** Delete a possibly-dotted path (mutates). */
+/** Delete a possibly-dotted path (mutates). No-op on forbidden segments. */
 function unsetPath(doc, path) {
   if (!path.includes('.')) {
-    delete doc[path];
+    if (!FORBIDDEN_SEGMENTS.has(path)) {
+      delete doc[path];
+    }
     return;
   }
   const parts = path.split('.');
+  if (parts.some((p) => FORBIDDEN_SEGMENTS.has(p))) {
+    return;
+  }
   let cur = doc;
   for (let i = 0; i < parts.length - 1; i++) {
     if (cur[parts[i]] == null) {

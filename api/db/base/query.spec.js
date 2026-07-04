@@ -66,6 +66,22 @@ describe('base/query applyUpdate', () => {
     expect(applyUpdate({}, { $setOnInsert: { a: 1 } }, { isInsert: true })).toEqual({ a: 1 });
     expect(applyUpdate({}, { $setOnInsert: { a: 1 } }, { isInsert: false })).toEqual({});
   });
+
+  test('prototype pollution is blocked (dotted + bare keys, every operator)', () => {
+    applyUpdate({}, { $set: { '__proto__.polluted': 'x' } });
+    applyUpdate({}, { '__proto__.polluted2': 'y' }); // implicit $set
+    applyUpdate({}, { $inc: { '__proto__.count': 5 } });
+    applyUpdate({}, { $set: { 'constructor.prototype.polluted3': 'z' } });
+    applyUpdate({}, { $set: { __proto__: { polluted4: 'w' } } });
+    applyUpdate({}, { $rename: { a: '__proto__.x' } });
+    expect({}.polluted).toBeUndefined();
+    expect({}.polluted2).toBeUndefined();
+    expect({}.count).toBeUndefined();
+    expect({}.polluted3).toBeUndefined();
+    expect({}.polluted4).toBeUndefined();
+    expect({}.x).toBeUndefined();
+    expect(Object.prototype.polluted).toBeUndefined();
+  });
 });
 
 describe('base/query projection + sort', () => {

@@ -37,11 +37,18 @@ function literal(value) {
   if (v === null || v === undefined) {
     return undefined;
   }
-  if (typeof v === 'number' || typeof v === 'boolean') {
+  if (typeof v === 'number') {
+    return Number.isFinite(v) ? String(v) : undefined; // never emit `= NaN/Infinity`
+  }
+  if (typeof v === 'boolean') {
     return String(v);
   }
+  // Dates are intentionally NOT pushed down: Base normalizes its date columns to
+  // a `YYYY-MM-DD HH:MM:SS.sssZ` (space) form that never string-matches an ISO
+  // `T` literal, which would wrongly EXCLUDE the record (superset invariant
+  // violation). The JS matcher (query.js) handles all date predicates.
   if (v instanceof Date) {
-    return quote(v.toISOString());
+    return undefined;
   }
   if (typeof v === 'string') {
     return quote(v);
@@ -149,8 +156,15 @@ class DocumentStore {
     for (const col of promoted) {
       fields.push({ name: col.name, type: col.type });
       const safe = col.name.replace(/[^A-Za-z0-9_]/g, '_');
-      const kind = col.unique ? 'UNIQUE INDEX' : 'INDEX';
-      indexes.push(`CREATE ${kind} \`idx_${name}_${safe}\` ON \`${name}\` (\`${col.name}\`)`);
+      const idx = `\`idx_${name}_${safe}\` ON \`${name}\` (\`${col.name}\`)`;
+      if (col.unique) {
+        indexes.push(`CREATE UNIQUE INDEX ${idx}`);
+      } else if (col.sparseUnique) {
+        // Partial unique: allow many empty values, enforce uniqueness on real ones.
+        indexes.push(`CREATE UNIQUE INDEX ${idx} WHERE \`${col.name}\` != ''`);
+      } else {
+        indexes.push(`CREATE INDEX ${idx}`);
+      }
     }
     const body = { name, type: 'base', fields, indexes };
     try {

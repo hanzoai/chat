@@ -384,7 +384,7 @@ class BaseModel {
       for (const field of this._searchable) {
         const value = getPath(c.doc, field);
         if (typeof value === 'string' && value.toLowerCase().includes(terms)) {
-          hits.push(this._hydrate({ ...c.doc }));
+          hits.push(applyProjection(this._hydrate({ ...c.doc }), null, this._deselected));
           break;
         }
       }
@@ -764,7 +764,9 @@ function makeDocument(model, doc) {
     const plain = this.toObject();
     const hit = candidates.find((c) => c.doc._id === this._id);
     if (hit) {
-      await model._replace(hit.baseId, plain, { touch: true });
+      // Merge over the stored record so a doc loaded with a narrowed projection
+      // (e.g. without select:false secrets) never erases the unloaded fields.
+      await model._replace(hit.baseId, { ...hit.doc, ...plain }, { touch: true });
     } else {
       await model._insert(model._newDoc(plain));
     }
