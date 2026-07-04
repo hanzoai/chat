@@ -18,6 +18,7 @@ import { ObjectId } from './engine';
 export { DocModel, type CollectionSpec } from './DocModel';
 export { CHAT_COLLECTION_SPECS } from './collections';
 export { ObjectId } from './engine';
+export { createDualWriteModel } from './DualWriteModel';
 
 export interface SqliteHandle {
   models: Record<string, DocModel>;
@@ -42,6 +43,11 @@ export function openDatabase(dbPath?: string): DatabaseSync {
   if (path !== ':memory:') {
     db.exec('PRAGMA journal_mode = WAL');
     db.exec('PRAGMA synchronous = NORMAL');
+    // Wait (don't error) if another reader/writer holds the lock — the
+    // hanzoai/replicate sidecar reads the same WAL, and dual-write may briefly
+    // contend during checkpoints. Without this a transient lock surfaces as
+    // SQLITE_BUSY; the app should block up to 5s instead.
+    db.exec('PRAGMA busy_timeout = 5000');
   }
   db.exec('PRAGMA foreign_keys = ON');
   return db;
