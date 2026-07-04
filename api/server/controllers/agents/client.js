@@ -1102,6 +1102,16 @@ class AgentClient extends BaseClient {
       ),
     );
 
+    // Force the title generation onto the STREAMING (SSE) path. The Hanzo Cloud
+    // gateway's non-streaming (`stream:false`) chat.completion body — though a
+    // valid `{choices:[{message}]}` — is parsed to ZERO generations by the pinned
+    // langchain ChatOpenAI, so `invoke()` then throws
+    // `Cannot read properties of undefined (reading 'message')` and NO title is
+    // ever written. The streaming path (which every agent RUN already uses, hence
+    // generation works) parses the same gateway correctly. `streaming` is stripped
+    // by `omitTitleOptions` above, so it must be (re)set here, after the filter.
+    clientOptions.streaming = true;
+
     if (
       provider === Providers.GOOGLE &&
       (endpointConfig?.titleMethod === TitleMethod.FUNCTIONS ||
