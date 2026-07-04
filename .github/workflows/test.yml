@@ -66,5 +66,15 @@ jobs:
         MEILI_HOST: http://localhost:7700
         MEILI_MASTER_KEY: test_master_key
 
+    # Gate against tests-without-implementation drift in the MCP connection/
+    # transport layer (proxy, response-size caps, WS SSRF, allowedAddresses).
+    # These suites live in packages/api and were never run by this workflow —
+    # which is how the connection.ts port drifted from its byte-identical tests.
+    # A future half-port now fails here loudly.
+    - name: Run MCP connection/transport tests
+      run: cd packages/api && pnpm run test:transport
+      env:
+        NODE_ENV: test
+
     - name: Run client tests
       run: pnpm run test:client
