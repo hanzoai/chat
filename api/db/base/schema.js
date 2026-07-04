@@ -101,10 +101,16 @@ function describeSchema(schema) {
     // whose logical uniqueness stays enforced by the adapter-level upsert.
     if (!name.includes('.') && PRIMITIVE_INSTANCES.has(type.instance)) {
       if ((options.index || options.unique) && !promoted.has(name)) {
+        const columnType = baseColumnType(type.instance);
         promoted.set(name, {
           name,
-          type: baseColumnType(type.instance),
+          type: columnType,
+          // Full UNIQUE for always-present keys (conversationId, messageId, email).
           unique: !!(options.unique && options.required),
+          // Partial UNIQUE (WHERE != '') for optional unique text keys
+          // (googleId, openidId, username, …): DB-level race safety without the
+          // sparse-null conflict.
+          sparseUnique: !!(options.unique && !options.required && columnType === 'text'),
         });
       }
     }

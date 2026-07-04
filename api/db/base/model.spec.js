@@ -130,6 +130,34 @@ describe('login-path reads', () => {
   });
 });
 
+describe('date-equality reads (H1 — no broken date pushdown)', () => {
+  test('find by an exact Date value returns the record', async () => {
+    const exp = new Date('2026-07-04T12:34:56.789Z');
+    await Conversation.findOneAndUpdate(
+      { conversationId: 'd1', user: '507f1f77bcf86cd799439011' },
+      { $set: { expiredAt: exp } },
+      { upsert: true, new: true },
+    );
+    const byDate = await Conversation.find({ expiredAt: exp }).lean();
+    expect(byDate.map((c) => c.conversationId)).toEqual(['d1']);
+    const gt = await Conversation.find({ expiredAt: { $gt: new Date('2026-07-01T00:00:00Z') } }).lean();
+    expect(gt.some((c) => c.conversationId === 'd1')).toBe(true);
+  });
+});
+
+describe('save() preserves select:false fields after a projected load (M2)', () => {
+  test('mutate a default-loaded user + save keeps password/totpSecret', async () => {
+    await User.create({ email: 'z@zoo.ngo', password: 'hashed', totpSecret: 'seed' });
+    const u = await User.findOne({ email: 'z@zoo.ngo' }); // default view: secrets hidden
+    expect(u.password).toBeUndefined();
+    u.name = 'Renamed';
+    await u.save();
+    const reloaded = await User.findOne({ email: 'z@zoo.ngo' }, '+password').lean();
+    expect(reloaded.password).toBe('hashed'); // not erased by save()
+    expect(reloaded.name).toBe('Renamed');
+  });
+});
+
 describe('date hydration (non-timestamp Date fields)', () => {
   test('session.expiration and balance dates hydrate to Date', async () => {
     const exp = new Date(Date.now() + 3600_000);
