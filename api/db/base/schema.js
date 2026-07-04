@@ -15,6 +15,19 @@
 
 const PRIMITIVE_INSTANCES = new Set(['String', 'Number', 'Date', 'Boolean', 'ObjectID', 'ObjectId']);
 
+/** Identifier / scoping fields that are `meiliIndex` but not useful free-text search targets. */
+const SEARCH_STOPLIST = new Set([
+  '_id',
+  '_meiliIndex',
+  'conversationId',
+  'messageId',
+  'user',
+  'organization',
+  'endpoint',
+  'model',
+  'sender',
+]);
+
 /** Map a Mongoose SchemaType instance to a Base column type. */
 function baseColumnType(instance) {
   switch (instance) {
@@ -44,6 +57,7 @@ function describeSchema(schema) {
   const promoted = new Map();
   const deselected = new Set();
   const dateFields = new Set();
+  const searchable = new Set();
 
   // Always promote _id so document lookup by id is a real, unique Base column.
   promoted.set('_id', { name: '_id', type: 'text', unique: true });
@@ -67,6 +81,12 @@ function describeSchema(schema) {
     // callers can safely call `.getTime()` / date methods (e.g. session.expiration).
     if (type.instance === 'Date') {
       dateFields.add(name);
+    }
+
+    // Free-text search targets: fields flagged for MeiliSearch that are actual
+    // content (title, text, …), not identifiers. Used by Base/SQLite FTS.
+    if (options.meiliIndex && type.instance === 'String' && !SEARCH_STOPLIST.has(name)) {
+      searchable.add(name);
     }
 
     // Collect declared defaults for primitive top-level paths (no dots).
@@ -117,7 +137,14 @@ function describeSchema(schema) {
     }
   }
 
-  return { defaults, timestamps, promoted: [...promoted.values()], deselected, dateFields };
+  return {
+    defaults,
+    timestamps,
+    promoted: [...promoted.values()],
+    deselected,
+    dateFields,
+    searchable,
+  };
 }
 
 /** Resolve a schema default (calling it if it is a function). */

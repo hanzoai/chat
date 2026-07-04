@@ -1,5 +1,4 @@
 const express = require('express');
-const { MeiliSearch } = require('meilisearch');
 const { isEnabled } = require('@librechat/api');
 const requireJwtAuth = require('~/server/middleware/requireJwtAuth');
 
@@ -7,22 +6,15 @@ const router = express.Router();
 
 router.use(requireJwtAuth);
 
+/**
+ * Reports whether conversation/message search is available.
+ *
+ * Search now runs on Hanzo Base/SQLite (via the data-layer adapter), so it is
+ * always available unless explicitly disabled with `SEARCH=false`.
+ */
 router.get('/enable', async function (req, res) {
-  if (!isEnabled(process.env.SEARCH)) {
-    return res.send(false);
-  }
-
-  try {
-    const client = new MeiliSearch({
-      host: process.env.MEILI_HOST,
-      apiKey: process.env.MEILI_MASTER_KEY,
-    });
-
-    const { status } = await client.health();
-    return res.send(status === 'available');
-  } catch (error) {
-    return res.send(false);
-  }
+  const disabled = 'SEARCH' in process.env && !isEnabled(process.env.SEARCH);
+  return res.send(!disabled);
 });
 
 module.exports = router;
