@@ -21,6 +21,9 @@ jobs:
     runs-on: hanzo-build-linux-amd64
     env:
       CI: true
+      # pnpm run frontend builds packages/api (rollup, ~5 GiB peak) + the client;
+      # the default ~2 GiB heap OOMs. Match the review workflows' heap knob.
+      NODE_OPTIONS: '--max-old-space-size=${{ secrets.NODE_MAX_OLD_SPACE_SIZE || 6144 }}'
       NODE_ENV: CI
       SEARCH: false
       MONGO_URI: mongodb://localhost:27017/librechat-test
