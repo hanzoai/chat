@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { EModelEndpoint, KnownEndpoints } from 'librechat-data-provider';
 import { CustomMinimalIcon, XAIcon, MoonshotIcon } from '@librechat/client';
+import ZenLogoIcon from '~/components/svg/ZenLogoIcon';
 import { IconContext } from '~/common';
 import { cn } from '~/utils';
 
@@ -24,6 +25,12 @@ const knownEndpointAssets = {
   [KnownEndpoints.shuttleai]: 'assets/shuttleai.png',
   [KnownEndpoints['together.ai']]: 'assets/together.png',
   [KnownEndpoints.unify]: 'assets/unify.webp',
+  // Hanzo's custom provider families are matched by their lowercased endpoint
+  // NAME (the KnownEndpoints enum lacks qwen/google/openai keys, so those fall
+  // through). Gives each family its real provider mark in the model picker.
+  qwen: 'assets/qwen.svg',
+  'google gemma': 'assets/google.svg',
+  'openai gpt-oss': 'assets/openai.svg',
 };
 
 const knownEndpointClasses = {
@@ -68,6 +75,12 @@ function UnknownIcon({
   }
 
   const currentEndpoint = endpoint.toLowerCase();
+
+  // Hanzo's house endpoint (the Zen family) renders the ensō (円相), matching the
+  // assistant message avatar. Without this it fell through to the generic bot glyph.
+  if (currentEndpoint === 'hanzo' || currentEndpoint === 'zen') {
+    return <ZenLogoIcon className={cn(className, 'text-black dark:text-white')} />;
+  }
 
   if (currentEndpoint === KnownEndpoints.xai) {
     return <XAIcon className={cn(className, 'text-black dark:text-white')} />;

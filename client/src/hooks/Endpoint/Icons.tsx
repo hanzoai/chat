@@ -1,5 +1,4 @@
 import HanzoLogoIcon from '~/components/svg/HanzoLogoIcon';
-import ZenLogoIcon from '~/components/svg/ZenLogoIcon';
 import { EModelEndpoint } from 'librechat-data-provider';
 import {
   GPTIcon,
@@ -9,6 +8,7 @@ import {
   AnthropicIcon,
   AzureMinimalIcon,
   GoogleMinimalIcon,
+  CustomMinimalIcon,
 } from '@librechat/client';
 import type { IconMapProps, AgentIconMapProps, IconsRecord } from '~/common';
 import UnknownIcon from './UnknownIcon';
@@ -58,20 +58,12 @@ const Bedrock = ({ className = '' }: IconMapProps) => {
   return <BedrockIcon className={cn(className, 'h-full w-full')} />;
 };
 
-// Zen ensō (円相) — the house mark for Hanzo's custom Zen endpoint. Replaces the
-// generic lucide "bot" so the welcome screen, model pill and menu all read as Zen.
-const ZenAvatar = ({ className = '', size, context }: IconMapProps) => {
-  return (
-    <ZenLogoIcon className={cn(context === 'landing' ? 'icon-2xl' : '', className)} size={size} />
-  );
-};
-
 export const icons: IconsRecord = {
   [EModelEndpoint.azureOpenAI]: AzureMinimalIcon,
   [EModelEndpoint.openAI]: GPTIcon,
   [EModelEndpoint.anthropic]: AnthropicIcon,
   [EModelEndpoint.google]: GoogleMinimalIcon,
-  [EModelEndpoint.custom]: ZenAvatar,
+  [EModelEndpoint.custom]: CustomMinimalIcon,
   [EModelEndpoint.assistants]: AssistantAvatar,
   [EModelEndpoint.azureAssistants]: AssistantAvatar,
   [EModelEndpoint.agents]: AgentAvatar,
