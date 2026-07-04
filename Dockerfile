@@ -1,7 +1,10 @@
 # v0.8.3-rc1
 
-# Base node image
-FROM node:20-alpine AS node
+# Base node image — Node 22 (parity with Dockerfile.static). Node >= 22.5 ships
+# `node:sqlite` (DatabaseSync), required by the SQLite document store once
+# CHAT_STORE_SQLITE / CHAT_STORE_DUALWRITE is enabled. The store lazy-requires it
+# (see stores/sqlite/index.ts) so the runtime still boots with the flag unset.
+FROM node:22-alpine AS node
 
 # Install jemalloc
 RUN apk add --no-cache jemalloc
