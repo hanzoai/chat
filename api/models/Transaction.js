@@ -151,6 +151,28 @@ function calculateTokenValue(txn) {
 }
 
 /**
+ * Persists a transaction via the store-aware `Transaction` model (`~/db/models`),
+ * which resolves to the SQLite DocModel / DualWriteModel under the CHAT_STORE_SQLITE
+ * flip — where the mongoose-document constructor (`new Transaction()`) + `.save()`
+ * throws "Transaction is not a constructor". The provided calculator mutates the
+ * working object with the derived fields (rate/tokenValue/rateDetail) BEFORE the
+ * insert, then the non-schema calculator inputs (endpointTokenConfig/inputTokenCount)
+ * and rateDetail are stripped so the persisted document matches the mongoose path
+ * (mongoose drops non-schema paths on save; the document store does not).
+ * @param {object} txData
+ * @param {(txn: object) => void} calculate
+ * @returns {Promise<object>} the created transaction document
+ */
+async function persistTransaction(txData, calculate) {
+  const txn = { ...txData };
+  calculate(txn);
+  delete txn.endpointTokenConfig;
+  delete txn.inputTokenCount;
+  delete txn.rateDetail;
+  return Transaction.create(txn);
+}
+
+/**
  * New static method to create an auto-refill transaction that does NOT trigger a balance update.
  * @param {object} txData - Transaction data.
  * @param {string} txData.user - The user ID.
@@ -163,11 +185,7 @@ async function createAutoRefillTransaction(txData) {
   if (txData.rawAmount != null && isNaN(txData.rawAmount)) {
     return;
   }
-  const transaction = new Transaction(txData);
-  transaction.endpointTokenConfig = txData.endpointTokenConfig;
-  transaction.inputTokenCount = txData.inputTokenCount;
-  calculateTokenValue(transaction);
-  await transaction.save();
+  const transaction = await persistTransaction(txData, calculateTokenValue);
 
   const balanceResponse = await updateBalance({
     user: transaction.user,
@@ -198,12 +216,7 @@ async function createTransaction(_txData) {
     return;
   }
 
-  const transaction = new Transaction(txData);
-  transaction.endpointTokenConfig = txData.endpointTokenConfig;
-  transaction.inputTokenCount = txData.inputTokenCount;
-  calculateTokenValue(transaction);
-
-  await transaction.save();
+  const transaction = await persistTransaction(txData, calculateTokenValue);
   if (!balance?.enabled) {
     return;
   }
@@ -240,13 +253,7 @@ async function createStructuredTransaction(_txData) {
     return;
   }
 
-  const transaction = new Transaction(txData);
-  transaction.endpointTokenConfig = txData.endpointTokenConfig;
-  transaction.inputTokenCount = txData.inputTokenCount;
-
-  calculateStructuredTokenValue(transaction);
-
-  await transaction.save();
+  const transaction = await persistTransaction(txData, calculateStructuredTokenValue);
 
   if (!balance?.enabled) {
     return;
