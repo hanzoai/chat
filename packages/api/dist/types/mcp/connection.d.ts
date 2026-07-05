@@ -8,6 +8,7 @@ interface MCPConnectionParams {
     userId?: string;
     oauthTokens?: MCPOAuthTokens | null;
     useSSRFProtection?: boolean;
+    allowedAddresses?: string[] | null;
 }
 export declare class MCPConnection extends EventEmitter {
     client: Client;
@@ -21,21 +22,34 @@ export declare class MCPConnection extends EventEmitter {
     private isReconnecting;
     private isInitializing;
     private reconnectAttempts;
+    private agents;
     private readonly userId?;
     private lastPingTime;
     private lastConnectionCheckAt;
     private oauthTokens?;
     private requestHeaders?;
     private oauthRequired;
+    private oauthRecovery;
     private readonly useSSRFProtection;
+    private readonly allowedAddresses?;
+    private readonly proxyConfig?;
     iconPath?: string;
     timeout?: number;
+    sseReadTimeout?: number;
     url?: string;
     /**
      * Timestamp when this connection was created.
      * Used to detect if connection is stale compared to updated config.
      */
     readonly createdAt: number;
+    private static circuitBreakers;
+    static clearCooldown(serverName: string): void;
+    private getCircuitBreaker;
+    private isCircuitOpen;
+    private recordCycle;
+    private recordFailedRound;
+    private resetFailedRounds;
+    static decrementCycleCount(serverName: string): void;
     setRequestHeaders(headers: Record<string, string> | null): void;
     getRequestHeaders(): Record<string, string> | null | undefined;
     constructor(params: MCPConnectionParams);
@@ -45,9 +59,9 @@ export declare class MCPConnection extends EventEmitter {
      * Factory function to create fetch functions without capturing the entire `this` context.
      * This helps prevent memory leaks by only passing necessary dependencies.
      *
-     * @param getHeaders Function to retrieve request headers
-     * @param timeout Timeout value for the agent (in milliseconds)
-     * @returns A fetch function that merges headers appropriately
+     * When `sseBodyTimeout` is provided, a second Agent is created with a much longer
+     * body timeout for GET requests (the Streamable HTTP SSE stream). POST requests
+     * continue using the normal timeout so they fail fast on real errors.
      */
     private createFetchFunction;
     private emitError;
@@ -56,10 +70,12 @@ export declare class MCPConnection extends EventEmitter {
     private handleReconnection;
     private subscribeToResources;
     connectClient(): Promise<void>;
-    private setupTransportDebugHandlers;
+    private patchTransportSend;
+    private setupTransportOnMessageHandler;
     connect(): Promise<void>;
     private setupTransportErrorHandlers;
-    disconnect(): Promise<void>;
+    private closeAgents;
+    disconnect(resetCycleTracking?: boolean): Promise<void>;
     fetchResources(): Promise<t.MCPResource[]>;
     fetchTools(): Promise<{
         name: string;
