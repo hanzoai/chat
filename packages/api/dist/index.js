@@ -35,6 +35,7 @@ var session = require('express-session');
 var connectRedis = require('connect-redis');
 var auth_js$1 = require('@modelcontextprotocol/sdk/shared/auth.js');
 var auth_js = require('@modelcontextprotocol/sdk/client/auth.js');
+var node_net = require('node:net');
 var undici = require('undici');
 var stdio_js = require('@modelcontextprotocol/sdk/client/stdio.js');
 var index_js = require('@modelcontextprotocol/sdk/client/index.js');
@@ -3432,6 +3433,264 @@ function checkWebSearchConfig(webSearchConfig) {
 }
 
 /**
+ * IPv4/IPv6 private-range detection.
+ *
+ * Lifted out of `domain.ts` so leaf modules like `allowedAddresses.ts` can
+ * depend on `isPrivateIP` without forming a cycle (`domain` re-exports the
+ * `isPrivateIP` symbol below for backward compatibility with existing
+ * callers, but this is the canonical location).
+ *
+ * Coverage:
+ *  - IPv4: 0.0.0.0/8, 10/8, 100.64/10 (CGNAT), 127/8, 169.254/16,
+ *    172.16/12, 192.0.0/24 (RFC 5736), 192.168/16, 198.18/15 (benchmarking),
+ *    224/3 (multicast/reserved).
+ *  - IPv6: ::1, ::, fc00::/7 (unique-local), fe80::/10 (link-local).
+ *  - 4-in-6 mappings: ::ffff:A.B.C.D and the hex form ::ffff:HHHH:HHHH.
+ *  - Embedded private IPv4 in 6to4 (2002::/16), NAT64 (64:ff9b::/96), and
+ *    Teredo (2001::/32) addresses.
+ */
+/** Checks if IPv4 octets fall within private, reserved, or non-routable ranges */
+function isPrivateIPv4(a, b, c) {
+    if (a === 0) {
+        return true;
+    }
+    if (a === 10) {
+        return true;
+    }
+    if (a === 127) {
+        return true;
+    }
+    if (a === 100 && b >= 64 && b <= 127) {
+        return true;
+    }
+    if (a === 169 && b === 254) {
+        return true;
+    }
+    if (a === 172 && b >= 16 && b <= 31) {
+        return true;
+    }
+    if (a === 192 && b === 168) {
+        return true;
+    }
+    if (a === 192 && b === 0 && c === 0) {
+        return true;
+    }
+    if (a === 198 && (b === 18 || b === 19)) {
+        return true;
+    }
+    if (a >= 224) {
+        return true;
+    }
+    return false;
+}
+/** Checks if a pre-normalized (lowercase, bracket-stripped) IPv6 address falls within fe80::/10 */
+function isIPv6LinkLocal(ipv6) {
+    if (!ipv6.includes(':')) {
+        return false;
+    }
+    const firstHextet = ipv6.split(':', 1)[0];
+    if (!firstHextet || !/^[0-9a-f]{1,4}$/.test(firstHextet)) {
+        return false;
+    }
+    const hextet = parseInt(firstHextet, 16);
+    // /10 mask (0xffc0) preserves top 10 bits: fe80 = 1111_1110_10xx_xxxx
+    return (hextet & 0xffc0) === 0xfe80;
+}
+/** Checks if an IPv6 address embeds a private IPv4 via 6to4, NAT64, or Teredo */
+function hasPrivateEmbeddedIPv4(ipv6) {
+    if (!ipv6.startsWith('2002:') && !ipv6.startsWith('64:ff9b::') && !ipv6.startsWith('2001::')) {
+        return false;
+    }
+    const segments = ipv6.split(':').filter((s) => s !== '');
+    if (ipv6.startsWith('2002:') && segments.length >= 3) {
+        const hi = parseInt(segments[1], 16);
+        const lo = parseInt(segments[2], 16);
+        if (!isNaN(hi) && !isNaN(lo)) {
+            return isPrivateIPv4((hi >> 8) & 0xff, hi & 0xff, (lo >> 8) & 0xff);
+        }
+    }
+    if (ipv6.startsWith('64:ff9b::')) {
+        const lastTwo = segments.slice(-2);
+        if (lastTwo.length === 2) {
+            const hi = parseInt(lastTwo[0], 16);
+            const lo = parseInt(lastTwo[1], 16);
+            if (!isNaN(hi) && !isNaN(lo)) {
+                return isPrivateIPv4((hi >> 8) & 0xff, hi & 0xff, (lo >> 8) & 0xff);
+            }
+        }
+    }
+    // RFC 4380: Teredo stores external IPv4 as bitwise complement in last 32 bits
+    if (ipv6.startsWith('2001::')) {
+        const lastTwo = segments.slice(-2);
+        if (lastTwo.length === 2) {
+            const hi = parseInt(lastTwo[0], 16);
+            const lo = parseInt(lastTwo[1], 16);
+            if (!isNaN(hi) && !isNaN(lo)) {
+                return isPrivateIPv4((~hi >> 8) & 0xff, ~hi & 0xff, (~lo >> 8) & 0xff);
+            }
+        }
+    }
+    return false;
+}
+/**
+ * Checks if an IP address belongs to a private, reserved, or link-local range.
+ * Handles IPv4, IPv6, and IPv4-mapped IPv6 addresses (::ffff:A.B.C.D).
+ */
+function isPrivateIP(ip) {
+    const normalized = ip
+        .toLowerCase()
+        .trim()
+        .replace(/^\[|\]$/g, '');
+    const mappedMatch = normalized.match(/^::ffff:(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (mappedMatch) {
+        const [, a, b, c] = mappedMatch.map(Number);
+        return isPrivateIPv4(a, b, c);
+    }
+    const hexMappedMatch = normalized.match(/^(?:::ffff:|::)([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+    if (hexMappedMatch) {
+        const hi = parseInt(hexMappedMatch[1], 16);
+        const lo = parseInt(hexMappedMatch[2], 16);
+        return isPrivateIPv4((hi >> 8) & 0xff, hi & 0xff, (lo >> 8) & 0xff);
+    }
+    const ipv4Match = normalized.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipv4Match) {
+        const [, a, b, c] = ipv4Match.map(Number);
+        return isPrivateIPv4(a, b, c);
+    }
+    if (normalized === '::1' ||
+        normalized === '::' ||
+        normalized.startsWith('fc') || // fc00::/7 — exactly prefixes 'fc' and 'fd'
+        normalized.startsWith('fd') ||
+        isIPv6LinkLocal(normalized) // fe80::/10 — spans 0xfe80–0xfebf; bitwise check required
+    ) {
+        return true;
+    }
+    if (hasPrivateEmbeddedIPv4(normalized)) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Shared normalization for `allowedAddresses` entries used by both the
+ * preflight SSRF helpers in `domain.ts` and the connect-time DNS lookup in
+ * `agent.ts`. Keeping this in one module avoids subtle divergence between
+ * the two paths (e.g. one rejecting tabs but not the other), which would
+ * weaken defense-in-depth.
+ *
+ * SECURITY — scoped to private IP space:
+ *  - Reject URLs (`://`), paths/CIDR (`/`), all whitespace (`\s`), and
+ *    bare host/IP shapes. Entries must be scoped as `host:port` or
+ *    `[ipv6]:port` so an exemption cannot silently trust every service on a
+ *    private host. The runtime guard exists so a list assembled
+ *    programmatically never silently grants exemption.
+ *  - Drop public IP literals — public IPs are never SSRF targets, so an
+ *    exemption there has no defensive purpose and must not grant "trusted"
+ *    status. Hostnames pass through; their resolved IP is checked
+ *    separately by callers (e.g. `resolveHostnameSSRF`).
+ */
+const ADDRESS_PORT_SEPARATOR = '\0';
+const MAX_PORT = 65535;
+/** Returns true when the (already-normalized) string looks like an IPv4 or IPv6 literal. */
+function isIPLiteral(normalized) {
+    if (/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.test(normalized)) {
+        return true;
+    }
+    return normalized.includes(':');
+}
+function normalizePort(port) {
+    if (typeof port !== 'string' && typeof port !== 'number')
+        return '';
+    const portString = String(port).trim();
+    if (!/^\d+$/.test(portString))
+        return '';
+    const parsed = Number(portString);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > MAX_PORT)
+        return '';
+    return String(parsed);
+}
+function addressPortKey(address, port) {
+    return `${address}${ADDRESS_PORT_SEPARATOR}${port}`;
+}
+function normalizeAddressCandidate(candidate) {
+    const normalized = candidate
+        .toLowerCase()
+        .trim()
+        .replace(/^\[|\]$/g, '');
+    if (!normalized)
+        return '';
+    if (isIPLiteral(normalized) && !isPrivateIP(normalized))
+        return '';
+    return normalized;
+}
+function parseAddressPortEntry(entry) {
+    var _a, _b, _c, _d;
+    const trimmed = entry.toLowerCase().trim();
+    const bracketedIPv6 = trimmed.match(/^\[([^\]]+)\]:(\d+)$/);
+    const hostPort = bracketedIPv6 ? null : trimmed.match(/^([^:]+):(\d+)$/);
+    const address = (_b = (_a = bracketedIPv6 === null || bracketedIPv6 === void 0 ? void 0 : bracketedIPv6[1]) !== null && _a !== void 0 ? _a : hostPort === null || hostPort === void 0 ? void 0 : hostPort[1]) !== null && _b !== void 0 ? _b : '';
+    const port = normalizePort((_d = (_c = bracketedIPv6 === null || bracketedIPv6 === void 0 ? void 0 : bracketedIPv6[2]) !== null && _c !== void 0 ? _c : hostPort === null || hostPort === void 0 ? void 0 : hostPort[2]) !== null && _d !== void 0 ? _d : '');
+    if (!address || !port)
+        return null;
+    const normalizedAddress = normalizeAddressCandidate(address);
+    if (!normalizedAddress)
+        return null;
+    return { address: normalizedAddress, port };
+}
+/**
+ * Normalizes a single `allowedAddresses` entry. Returns the canonical form
+ * when the entry is acceptable, or `''` when it must be ignored (URL, path,
+ * whitespace, bare host/IP, public IP literal, invalid port, or empty after
+ * trimming).
+ */
+function normalizeAddressEntry(entry) {
+    if (typeof entry !== 'string')
+        return '';
+    if (entry.includes('://') || entry.includes('/') || /\s/.test(entry))
+        return '';
+    const parsed = parseAddressPortEntry(entry);
+    if (!parsed)
+        return '';
+    return addressPortKey(parsed.address, parsed.port);
+}
+/**
+ * Pre-normalizes an admin list into a `Set<string>` for O(1) membership
+ * checks on the connect-time hot path. Entries that fail validation are
+ * silently dropped here; the Zod schema reports them at config load.
+ */
+function normalizeAllowedAddressesSet(allowedAddresses) {
+    if (!Array.isArray(allowedAddresses) || allowedAddresses.length === 0) {
+        return null;
+    }
+    const set = new Set();
+    for (const entry of allowedAddresses) {
+        const normalized = normalizeAddressEntry(entry);
+        if (normalized)
+            set.add(normalized);
+    }
+    return set.size > 0 ? set : null;
+}
+/**
+ * Checks whether a hostname or IP literal should be exempted from the SSRF
+ * block. Mirrors the scoping rules of `normalizeAddressEntry`: the exemption
+ * must match both address and port, and an IP candidate must itself be private
+ * to be exemptable.
+ */
+function isAddressInAllowedSet(candidate, set, port) {
+    var _a, _b;
+    if (!set)
+        return false;
+    const parsedCandidate = port == null ? parseAddressPortEntry(candidate) : null;
+    const normalizedPort = (_a = parsedCandidate === null || parsedCandidate === void 0 ? void 0 : parsedCandidate.port) !== null && _a !== void 0 ? _a : normalizePort(port);
+    if (!normalizedPort)
+        return false;
+    const normalizedAddress = (_b = parsedCandidate === null || parsedCandidate === void 0 ? void 0 : parsedCandidate.address) !== null && _b !== void 0 ? _b : normalizeAddressCandidate(candidate);
+    if (!normalizedAddress)
+        return false;
+    return set.has(addressPortKey(normalizedAddress, normalizedPort));
+}
+
+/**
  * @param email
  * @param allowedDomains
  */
@@ -3451,73 +3710,46 @@ function isEmailDomainAllowed(email, allowedDomains) {
     }
     return allowedDomains.some((allowedDomain) => (allowedDomain === null || allowedDomain === void 0 ? void 0 : allowedDomain.toLowerCase()) === domain);
 }
-/** Checks if IPv4 octets fall within private, reserved, or link-local ranges */
-function isPrivateIPv4(a, b, c) {
-    if (a === 127) {
-        return true;
-    }
-    if (a === 10) {
-        return true;
-    }
-    if (a === 172 && b >= 16 && b <= 31) {
-        return true;
-    }
-    if (a === 192 && b === 168) {
-        return true;
-    }
-    if (a === 169 && b === 254) {
-        return true;
-    }
-    if (a === 0 && b === 0 && c === 0) {
-        return true;
-    }
-    return false;
+/**
+ * Checks whether a hostname/IP literal and port appear in an admin-supplied
+ * exemption list. Address match is case-insensitive and bracket-stripped, so
+ * `[::1]` matches `::1` and `LOCALHOST` matches `localhost` when the port
+ * also matches.
+ *
+ * The normalization and scoping rules live in `./allowedAddresses` so the
+ * connect-time DNS lookup in `agent.ts` and this preflight helper share a
+ * single implementation. See that module for the security invariants.
+ */
+function isAddressAllowed(hostnameOrIP, allowedAddresses, port) {
+    const set = normalizeAllowedAddressesSet(allowedAddresses);
+    return isAddressInAllowedSet(hostnameOrIP, set, port);
 }
 /**
- * Checks if an IP address belongs to a private, reserved, or link-local range.
- * Handles IPv4, IPv6, and IPv4-mapped IPv6 addresses (::ffff:A.B.C.D).
+ * Checks if a hostname resolves to a private/reserved IP address.
+ * Directly validates literal IPv4 and IPv6 addresses without DNS lookup.
+ * For hostnames, resolves via DNS and checks all returned addresses.
+ * Fails open on DNS errors (returns false), since the HTTP request would also fail.
+ *
+ * When `allowedAddresses` is provided, the hostname/port and any resolved
+ * IP/port are matched against the list — a match short-circuits to `false`
+ * so admin-exempted private services bypass the SSRF block.
  */
-function isPrivateIP(ip) {
-    const normalized = ip.toLowerCase().trim();
-    const mappedMatch = normalized.match(/^::ffff:(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-    if (mappedMatch) {
-        const [, a, b, c] = mappedMatch.map(Number);
-        return isPrivateIPv4(a, b, c);
-    }
-    const ipv4Match = normalized.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-    if (ipv4Match) {
-        const [, a, b, c] = ipv4Match.map(Number);
-        return isPrivateIPv4(a, b, c);
-    }
-    const ipv6 = normalized.replace(/^\[|\]$/g, '');
-    if (ipv6 === '::1' ||
-        ipv6 === '::' ||
-        ipv6.startsWith('fc') ||
-        ipv6.startsWith('fd') ||
-        ipv6.startsWith('fe80')) {
-        return true;
-    }
-    return false;
-}
-/**
- * Resolves a hostname via DNS and checks if any resolved address is a private/reserved IP.
- * Detects DNS-based SSRF bypasses (e.g., nip.io wildcard DNS, attacker-controlled nameservers).
- * Fails open: returns false if DNS resolution fails, since hostname-only checks still apply
- * and the actual HTTP request would also fail.
- */
-function resolveHostnameSSRF(hostname) {
+function resolveHostnameSSRF(hostname, allowedAddresses, port) {
     return __awaiter(this, void 0, void 0, function* () {
         const normalizedHost = hostname.toLowerCase().trim();
-        if (/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.test(normalizedHost)) {
+        if (isAddressAllowed(normalizedHost, allowedAddresses, port)) {
             return false;
+        }
+        if (/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.test(normalizedHost)) {
+            return isPrivateIP(normalizedHost);
         }
         const ipv6Check = normalizedHost.replace(/^\[|\]$/g, '');
         if (ipv6Check.includes(':')) {
-            return false;
+            return isPrivateIP(ipv6Check);
         }
         try {
             const addresses = yield promises$1.lookup(hostname, { all: true });
-            return addresses.some((entry) => isPrivateIP(entry.address));
+            return addresses.some((entry) => isPrivateIP(entry.address) && !isAddressAllowed(entry.address, allowedAddresses, port));
         }
         catch (_a) {
             return false;
@@ -3527,11 +3759,21 @@ function resolveHostnameSSRF(hostname) {
 /**
  * SSRF Protection: Checks if a hostname/IP is a potentially dangerous internal target.
  * Blocks private IPs, localhost, cloud metadata IPs, and common internal hostnames.
+ *
+ * When `allowedAddresses` is provided, a literal host:port match exempts the
+ * target — used by admins to permit known-good internal services (self-hosted
+ * Ollama, Docker host, etc.) without disabling SSRF protection for every port
+ * on the same host.
+ *
  * @param hostname - The hostname or IP to check
+ * @param allowedAddresses - Optional admin exemption list of host:port pairs
  * @returns true if the target is blocked (SSRF risk), false if safe
  */
-function isSSRFTarget(hostname) {
+function isSSRFTarget(hostname, allowedAddresses, port) {
     const normalizedHost = hostname.toLowerCase().trim();
+    if (isAddressAllowed(normalizedHost, allowedAddresses, port)) {
+        return false;
+    }
     if (normalizedHost === 'localhost' ||
         normalizedHost === 'localhost.localdomain' ||
         normalizedHost.endsWith('.localhost')) {
@@ -3649,14 +3891,26 @@ function hostnameMatches(inputHostname, allowedSpec) {
 /** Protocol sets for different use cases */
 const HTTP_PROTOCOLS = ['http:', 'https:'];
 const MCP_PROTOCOLS = ['http:', 'https:', 'ws:', 'wss:'];
+function defaultPortForProtocol(protocol) {
+    if (protocol === 'http:' || protocol === 'ws:')
+        return '80';
+    if (protocol === 'https:' || protocol === 'wss:')
+        return '443';
+    return '';
+}
+function getEffectivePort(protocol, port) {
+    return normalizePort(port ? port : defaultPortForProtocol(protocol));
+}
 /**
  * Core domain validation logic with configurable protocol support.
  * SECURITY: When no allowedDomains is configured, blocks SSRF-prone targets.
  * @param domain - The domain to check (can include protocol/port)
  * @param allowedDomains - List of allowed domain patterns
  * @param supportedProtocols - Protocols to accept (others are rejected)
+ * @param allowedAddresses - Optional admin exemption list of host:port pairs
+ *   that bypass the private-IP block when no allowedDomains whitelist is active
  */
-function isDomainAllowedCore(domain, allowedDomains, supportedProtocols) {
+function isDomainAllowedCore(domain, allowedDomains, supportedProtocols, allowedAddresses) {
     return __awaiter(this, void 0, void 0, function* () {
         const inputSpec = parseDomainSpec(domain);
         if (!inputSpec) {
@@ -3668,12 +3922,13 @@ function isDomainAllowedCore(domain, allowedDomains, supportedProtocols) {
         }
         /** If no domain restrictions configured, block SSRF targets but allow all else */
         if (!Array.isArray(allowedDomains) || !allowedDomains.length) {
+            const effectivePort = getEffectivePort(inputSpec.protocol, inputSpec.port);
             /** SECURITY: Block SSRF-prone targets when no allowlist is configured */
-            if (isSSRFTarget(inputSpec.hostname)) {
+            if (isSSRFTarget(inputSpec.hostname, allowedAddresses, effectivePort)) {
                 return false;
             }
             /** SECURITY: Resolve hostname and block if it points to a private/reserved IP */
-            if (yield resolveHostnameSSRF(inputSpec.hostname)) {
+            if (yield resolveHostnameSSRF(inputSpec.hostname, allowedAddresses, effectivePort)) {
                 return false;
             }
             return true;
@@ -3717,19 +3972,23 @@ function isDomainAllowedCore(domain, allowedDomains, supportedProtocols) {
  * SECURITY: WebSocket protocols are NOT allowed per OpenAPI specification.
  * @param domain - The domain to check (can include protocol/port)
  * @param allowedDomains - List of allowed domain patterns
+ * @param allowedAddresses - Optional admin exemption list of host:port pairs
  */
-function isActionDomainAllowed(domain, allowedDomains) {
+function isActionDomainAllowed(domain, allowedDomains, allowedAddresses) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!domain || typeof domain !== 'string') {
             return false;
         }
-        return isDomainAllowedCore(domain, allowedDomains, HTTP_PROTOCOLS);
+        return isDomainAllowedCore(domain, allowedDomains, HTTP_PROTOCOLS, allowedAddresses);
     });
 }
 /**
  * Extracts full domain spec (protocol://hostname:port) from MCP server config URL.
  * Returns the full origin for proper protocol/port matching against allowedDomains.
- * Returns null for stdio transports (no URL) or invalid URLs.
+ * @returns The full origin string, or null when:
+ *   - No `url` property, non-string, or empty (stdio transport — always allowed upstream)
+ *   - URL string present but cannot be parsed (rejected fail-closed upstream when allowlist active)
+ *   Callers must distinguish these two null cases; see {@link isMCPDomainAllowed}.
  * @param config - MCP server configuration (accepts any config with optional url field)
  */
 function extractMCPServerDomain(config) {
@@ -3752,18 +4011,145 @@ function extractMCPServerDomain(config) {
  * Validates MCP server domain against allowedDomains.
  * Supports HTTP, HTTPS, WS, and WSS protocols (per MCP specification).
  * Stdio transports (no URL) are always allowed.
+ * Configs with a non-empty URL that cannot be parsed are rejected fail-closed when an
+ * allowlist is active, preventing template placeholders (e.g. `{{HOST}}`) from bypassing
+ * domain validation after `processMCPEnv` resolves them at connection time.
+ * When no allowlist is configured, unparseable URLs fall through to connection-level
+ * SSRF protection (`createSSRFSafeUndiciConnect`).
  * @param config - MCP server configuration with optional url field
  * @param allowedDomains - List of allowed domains (with wildcard support)
  */
-function isMCPDomainAllowed(config, allowedDomains) {
+function isMCPDomainAllowed(config, allowedDomains, allowedAddresses) {
     return __awaiter(this, void 0, void 0, function* () {
         const domain = extractMCPServerDomain(config);
-        // Stdio transports don't have domains - always allowed
+        const hasAllowlist = Array.isArray(allowedDomains) && allowedDomains.length > 0;
+        const hasExplicitUrl = Object.prototype.hasOwnProperty.call(config, 'url') &&
+            typeof config.url === 'string' &&
+            config.url.trim().length > 0;
+        if (!domain && hasExplicitUrl && hasAllowlist) {
+            return false;
+        }
+        // Stdio transports (no URL) are always allowed
         if (!domain) {
             return true;
         }
         // Use MCP_PROTOCOLS (HTTP/HTTPS/WS/WSS) for MCP server validation
-        return isDomainAllowedCore(domain, allowedDomains, MCP_PROTOCOLS);
+        return isDomainAllowedCore(domain, allowedDomains, MCP_PROTOCOLS, allowedAddresses);
+    });
+}
+/**
+ * Checks whether an OAuth URL matches any entry in the MCP allowedDomains list,
+ * honoring protocol and port constraints when specified by the admin.
+ *
+ * Mirrors the allowlist-matching logic of {@link isDomainAllowedCore} (hostname,
+ * protocol, and explicit-port checks) but is synchronous — no DNS resolution is
+ * needed because the caller is deciding whether to *skip* the subsequent
+ * SSRF/DNS checks, not replace them.
+ *
+ * @remarks `parseDomainSpec` normalizes `www.` prefixes, so both the input URL
+ * and allowedDomains entries starting with `www.` are matched without that prefix.
+ */
+function isOAuthUrlAllowed(url, allowedDomains, allowedAddresses) {
+    /**
+     * Require an absolute URL with an explicit scheme. `parseDomainSpec` is
+     * lenient: it prepends `https://` to schemeless inputs so a value like
+     * `10.0.0.5/oauth` would otherwise short-circuit the trust-bypass via
+     * `allowedAddresses` and skip `validateOAuthUrl`'s strict `new URL(url)`
+     * parse-or-throw check, only to fail later in OAuth discovery with a less
+     * clear error. Falling through here lets the caller's strict parse run.
+     */
+    try {
+        new URL(url);
+    }
+    catch (_a) {
+        return false;
+    }
+    const inputSpec = parseDomainSpec(url);
+    if (!inputSpec) {
+        return false;
+    }
+    /**
+     * When `allowedDomains` is configured, treat it as the authoritative bound
+     * on which OAuth URLs may bypass the SSRF/DNS check. `allowedAddresses` is
+     * an SSRF-private-IP exemption, not a domain allowlist — letting it
+     * short-circuit here would broaden a strict admin-configured OAuth scope
+     * (e.g. an MCP server could advertise OAuth endpoints at any address the
+     * admin permitted for an unrelated reason like a self-hosted LLM).
+     */
+    if (Array.isArray(allowedDomains) && allowedDomains.length > 0) {
+        for (const allowedDomain of allowedDomains) {
+            const allowedSpec = parseDomainSpec(allowedDomain);
+            if (!allowedSpec) {
+                continue;
+            }
+            if (!hostnameMatches(inputSpec.hostname, allowedSpec)) {
+                continue;
+            }
+            if (allowedSpec.protocol !== null) {
+                if (inputSpec.protocol === null || inputSpec.protocol !== allowedSpec.protocol) {
+                    continue;
+                }
+            }
+            if (allowedSpec.explicitPort) {
+                if (!inputSpec.explicitPort || inputSpec.port !== allowedSpec.port) {
+                    continue;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    /**
+     * No `allowedDomains` configured: the address exemption may permit specific
+     * private host:port pairs (matches the semantics of `validateOAuthUrl`'s
+     * downstream SSRF checks, which also consult `allowedAddresses`).
+     */
+    return isAddressAllowed(inputSpec.hostname, allowedAddresses, getEffectivePort(inputSpec.protocol, inputSpec.port));
+}
+/** Matches ErrorTypes.INVALID_BASE_URL — string literal avoids build-time dependency on data-provider */
+const INVALID_BASE_URL_TYPE = 'invalid_base_url';
+function throwInvalidBaseURL(message) {
+    throw new Error(JSON.stringify({ type: INVALID_BASE_URL_TYPE, message }));
+}
+/**
+ * Validates that a user-provided endpoint URL does not target private/internal addresses.
+ * Throws if the URL is unparseable, uses a non-HTTP(S) scheme, targets a known SSRF hostname,
+ * or DNS-resolves to a private IP.
+ *
+ * When `allowedAddresses` is provided, hostname/IP + port pairs are matched
+ * against the list — admin-exempted private services bypass the SSRF block.
+ * This lets operators permit known-good private services (self-hosted Ollama,
+ * Docker host, etc.) without disabling protection for every port on the same host.
+ *
+ * @note DNS rebinding: validation performs a single DNS lookup. An adversary controlling
+ *   DNS with TTL=0 could respond with a public IP at validation time and a private IP
+ *   at request time. This is an accepted limitation of point-in-time DNS checks.
+ * @note Fail-open on DNS errors: a resolution failure here implies a failure at request
+ *   time as well, matching {@link resolveHostnameSSRF} semantics.
+ */
+function validateEndpointURL(url, endpoint, allowedAddresses) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let hostname;
+        let protocol;
+        let port;
+        try {
+            const parsed = new URL(url);
+            hostname = parsed.hostname;
+            protocol = parsed.protocol;
+            port = getEffectivePort(protocol, parsed.port);
+        }
+        catch (_a) {
+            throwInvalidBaseURL(`Invalid base URL for ${endpoint}: unable to parse URL.`);
+        }
+        if (protocol !== 'http:' && protocol !== 'https:') {
+            throwInvalidBaseURL(`Invalid base URL for ${endpoint}: only HTTP and HTTPS are permitted.`);
+        }
+        if (isSSRFTarget(hostname, allowedAddresses, port)) {
+            throwInvalidBaseURL(`Base URL for ${endpoint} targets a restricted address.`);
+        }
+        if (yield resolveHostnameSSRF(hostname, allowedAddresses, port)) {
+            throwInvalidBaseURL(`Base URL for ${endpoint} resolves to a restricted address.`);
+        }
     });
 }
 
@@ -3904,27 +4290,64 @@ function isAdminPanelRedirect(redirectUri, adminPanelUrl, domainClient) {
     }
 }
 
-/** DNS lookup wrapper that blocks resolution to private/reserved IP addresses */
-const ssrfSafeLookup = (hostname, options, callback) => {
-    dns.lookup(hostname, options, (err, address, family) => {
-        if (err) {
-            callback(err, '', 0);
-            return;
-        }
-        if (typeof address === 'string' && isPrivateIP(address)) {
-            const ssrfError = Object.assign(new Error(`SSRF protection: ${hostname} resolved to blocked address ${address}`), { code: 'ESSRF' });
-            callback(ssrfError, address, family);
-            return;
-        }
-        callback(null, address, family);
-    });
-};
+function createSSRFLookupError(hostname, address) {
+    return Object.assign(new Error(`SSRF protection: ${hostname} resolved to blocked address ${address}`), { code: 'ESSRF' });
+}
+function getBlockedLookupAddress(lookupResult, hostnameAllowed, exemptSet, normalizedPort) {
+    var _a;
+    if (hostnameAllowed) {
+        return null;
+    }
+    const addresses = Array.isArray(lookupResult)
+        ? lookupResult.map(({ address }) => address)
+        : [lookupResult];
+    return ((_a = addresses.find((address) => isPrivateIP(address) && !isAddressInAllowedSet(address, exemptSet, normalizedPort))) !== null && _a !== void 0 ? _a : null);
+}
+/**
+ * Builds a DNS lookup wrapper that blocks resolution to private/reserved IP
+ * addresses. When `allowedAddresses` is provided, hostname/IP + port pairs
+ * matching the list bypass the block — admins can permit known-good internal
+ * services (self-hosted Ollama, Docker host, etc.) without disabling SSRF
+ * protection for every port on the same host.
+ *
+ * The exemption list is pre-normalized once at construction so the per-
+ * connection lookup runs an O(1) Set membership check. Normalization and
+ * scoping rules live in `./allowedAddresses`, shared with the preflight
+ * helper in `./domain` so the two layers cannot diverge.
+ */
+function buildSSRFSafeLookup(allowedAddresses, port) {
+    const exemptSet = normalizeAllowedAddressesSet(allowedAddresses);
+    const normalizedPort = normalizePort(port);
+    return (hostname, options, callback) => {
+        const hostnameAllowed = isAddressInAllowedSet(hostname, exemptSet, normalizedPort);
+        dns.lookup(hostname, options, (err, address, family) => {
+            if (err) {
+                callback(err, '', 0);
+                return;
+            }
+            const blockedAddress = getBlockedLookupAddress(address, hostnameAllowed, exemptSet, normalizedPort);
+            if (blockedAddress) {
+                callback(createSSRFLookupError(hostname, blockedAddress), blockedAddress, family);
+                return;
+            }
+            callback(null, address, family);
+        });
+    };
+}
+/** Default lookup with no exemptions. Kept for callers that don't need allowedAddresses. */
+const ssrfSafeLookup = buildSSRFSafeLookup();
+function getConnectionPort(options) {
+    var _a;
+    return normalizePort((_a = options.port) !== null && _a !== void 0 ? _a : options.defaultPort);
+}
 /** Patches an agent instance to inject SSRF-safe DNS lookup at connect time */
-function withSSRFProtection(agent) {
+function withSSRFProtection(agent, allowedAddresses) {
     const internal = agent;
     const origCreate = internal.createConnection.bind(agent);
     internal.createConnection = (options, oncreate) => {
-        options.lookup = ssrfSafeLookup;
+        options.lookup = (allowedAddresses === null || allowedAddresses === void 0 ? void 0 : allowedAddresses.length)
+            ? buildSSRFSafeLookup(allowedAddresses, getConnectionPort(options))
+            : ssrfSafeLookup;
         return origCreate(options, oncreate);
     };
     return agent;
@@ -3934,19 +4357,26 @@ function withSSRFProtection(agent) {
  * Provides TOCTOU-safe SSRF protection by validating the resolved IP at connect time,
  * preventing DNS rebinding attacks where a hostname resolves to a public IP during
  * pre-validation but to a private IP when the actual connection is made.
+ *
+ * @param allowedAddresses - Optional admin exemption list of host:port pairs that bypass the block.
  */
-function createSSRFSafeAgents() {
+function createSSRFSafeAgents(allowedAddresses) {
     return {
-        httpAgent: withSSRFProtection(new http.Agent()),
-        httpsAgent: withSSRFProtection(new https.Agent()),
+        httpAgent: withSSRFProtection(new http.Agent(), allowedAddresses),
+        httpsAgent: withSSRFProtection(new https.Agent(), allowedAddresses),
     };
 }
 /**
  * Returns undici-compatible `connect` options with SSRF-safe DNS lookup.
  * Pass the result as the `connect` property when constructing an undici `Agent`.
+ *
+ * @param allowedAddresses - Optional admin exemption list of host:port pairs that bypass the block.
  */
-function createSSRFSafeUndiciConnect() {
-    return { lookup: ssrfSafeLookup };
+function createSSRFSafeUndiciConnect(allowedAddresses, port) {
+    const lookup = (allowedAddresses === null || allowedAddresses === void 0 ? void 0 : allowedAddresses.length)
+        ? buildSSRFSafeLookup(allowedAddresses, port)
+        : ssrfSafeLookup;
+    return { lookup };
 }
 
 class AgentApiKeyService {
@@ -24014,7 +24444,7 @@ class MCPTokenStorage {
     }
 }
 
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
 /**
  * Centralized configuration for MCP-related environment variables.
  * Provides typed access to MCP settings with default values.
@@ -24025,6 +24455,20 @@ const mcpConfig = {
     CONNECTION_CHECK_TTL: math((_c = process.env.MCP_CONNECTION_CHECK_TTL) !== null && _c !== void 0 ? _c : 60000),
     /** Idle timeout (ms) after which user connections are disconnected. Default: 15 minutes */
     USER_CONNECTION_IDLE_TIMEOUT: math((_d = process.env.MCP_USER_CONNECTION_IDLE_TIMEOUT) !== null && _d !== void 0 ? _d : 15 * 60 * 1000),
+    /** Max connect/disconnect cycles before the circuit breaker trips. Default: 7 */
+    CB_MAX_CYCLES: math((_e = process.env.MCP_CB_MAX_CYCLES) !== null && _e !== void 0 ? _e : 7),
+    /** Sliding window (ms) for counting cycles. Default: 45s */
+    CB_CYCLE_WINDOW_MS: math((_f = process.env.MCP_CB_CYCLE_WINDOW_MS) !== null && _f !== void 0 ? _f : 45000),
+    /** Cooldown (ms) after the cycle breaker trips. Default: 15s */
+    CB_CYCLE_COOLDOWN_MS: math((_g = process.env.MCP_CB_CYCLE_COOLDOWN_MS) !== null && _g !== void 0 ? _g : 15000),
+    /** Max consecutive failed connection rounds before backoff. Default: 3 */
+    CB_MAX_FAILED_ROUNDS: math((_h = process.env.MCP_CB_MAX_FAILED_ROUNDS) !== null && _h !== void 0 ? _h : 3),
+    /** Sliding window (ms) for counting failed rounds. Default: 120s */
+    CB_FAILED_WINDOW_MS: math((_j = process.env.MCP_CB_FAILED_WINDOW_MS) !== null && _j !== void 0 ? _j : 120000),
+    /** Base backoff (ms) after failed round threshold is reached. Default: 30s */
+    CB_BASE_BACKOFF_MS: math((_k = process.env.MCP_CB_BASE_BACKOFF_MS) !== null && _k !== void 0 ? _k : 30000),
+    /** Max backoff cap (ms) for exponential backoff. Default: 300s */
+    CB_MAX_BACKOFF_MS: math((_l = process.env.MCP_CB_MAX_BACKOFF_MS) !== null && _l !== void 0 ? _l : 300000),
 };
 
 // ATTENTION: If you modify OAuth detection logic in this file, run the integration tests to verify:
@@ -24184,6 +24628,33 @@ function checkAuthErrorFallback(serverUrl) {
     });
 }
 
+/** @see https://github.com/langchain-ai/langchainjs — @langchain/core RunTree ALS */
+const TRACING_ALS_KEY = Symbol.for('ls:tracing_async_local_storage');
+let warnedMissing = false;
+/**
+ * Runs `fn` outside the LangGraph/LangSmith tracing AsyncLocalStorage context
+ * so I/O handles (child processes, sockets, timers) created during `fn`
+ * do not permanently retain the RunTree → graph config → message data chain.
+ *
+ * Relies on the private symbol `ls:tracing_async_local_storage` from `@langchain/core`.
+ * If the symbol is absent, falls back to calling `fn()` directly.
+ */
+function runOutsideTracing(fn) {
+    const storage = globalThis[TRACING_ALS_KEY];
+    if (!storage && !warnedMissing && isEnabled(process.env.LANGCHAIN_TRACING_V2)) {
+        warnedMissing = true;
+        dataSchemas.logger.warn('[runOutsideTracing] LANGCHAIN_TRACING_V2 is set but ALS not found — ' +
+            'runOutsideTracing will be a no-op. ' +
+            'Verify @langchain/core version still uses Symbol.for("ls:tracing_async_local_storage").');
+    }
+    return storage ? storage.run(undefined, fn) : fn();
+}
+
+const BIGINT_ZERO = BigInt(0);
+const BIGINT_ONE = BigInt(1);
+const BIGINT_EIGHT = BigInt(8);
+const BIGINT_SIXTEEN = BigInt(16);
+const UINT16_MASK = BigInt(0xffff);
 function isStdioOptions(options) {
     return 'command' in options;
 }
@@ -24225,6 +24696,662 @@ const FIVE_MINUTES = 5 * 60 * 1000;
 const DEFAULT_TIMEOUT = 60000;
 /** SSE connections through proxies may need longer initial handshake time */
 const SSE_CONNECT_TIMEOUT = 120000;
+const DEFAULT_INIT_TIMEOUT = 30000;
+/** Max 307/308 redirects to follow per request (prevents redirect loops) */
+const MAX_REDIRECTS = 5;
+const DEFAULT_MCP_STREAMABLE_HTTP_MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
+const DEFAULT_MCP_STREAMABLE_HTTP_MAX_LINE_BYTES = 5 * 1024 * 1024;
+function getNonNegativeIntegerEnv(name, defaultValue) {
+    const raw = process.env[name];
+    if (raw == null || raw.trim() === '') {
+        return defaultValue;
+    }
+    const trimmed = raw.trim();
+    if (!/^\d+$/.test(trimmed)) {
+        return defaultValue;
+    }
+    const parsed = Number(trimmed);
+    return Number.isSafeInteger(parsed) ? parsed : defaultValue;
+}
+function bytesToMiB(bytes) {
+    return `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
+}
+function getMemoryDebugSnapshot() {
+    var _a;
+    const mem = process.memoryUsage();
+    return {
+        rss: bytesToMiB(mem.rss),
+        heapUsed: bytesToMiB(mem.heapUsed),
+        heapTotal: bytesToMiB(mem.heapTotal),
+        external: bytesToMiB(mem.external),
+        arrayBuffers: bytesToMiB((_a = mem.arrayBuffers) !== null && _a !== void 0 ? _a : 0),
+    };
+}
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+function getChunkBytes(chunk) {
+    if (typeof chunk === 'string') {
+        return textEncoder.encode(chunk);
+    }
+    if (chunk instanceof ArrayBuffer) {
+        return new Uint8Array(chunk);
+    }
+    if (ArrayBuffer.isView(chunk)) {
+        const view = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+        return new Uint8Array(view);
+    }
+    return new Uint8Array();
+}
+function copyBytes(bytes) {
+    const copy = new Uint8Array(bytes.byteLength);
+    copy.set(bytes);
+    return copy;
+}
+function concatBytes(chunks) {
+    if (chunks.length === 0) {
+        return new Uint8Array();
+    }
+    if (chunks.length === 1) {
+        return chunks[0];
+    }
+    const totalLength = chunks.reduce((total, chunk) => total + chunk.byteLength, 0);
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+        combined.set(chunk, offset);
+        offset += chunk.byteLength;
+    }
+    return combined;
+}
+function getBodyText(body) {
+    if (typeof body === 'string') {
+        return body;
+    }
+    if (body instanceof ArrayBuffer) {
+        return textDecoder.decode(new Uint8Array(body));
+    }
+    if (ArrayBuffer.isView(body)) {
+        return textDecoder.decode(new Uint8Array(body.buffer, body.byteOffset, body.byteLength));
+    }
+    return null;
+}
+function getJSONRPCRequestIds(body) {
+    const bodyText = getBodyText(body);
+    if (!bodyText) {
+        return [];
+    }
+    let parsed;
+    try {
+        parsed = JSON.parse(bodyText);
+    }
+    catch (_a) {
+        return [];
+    }
+    const messages = Array.isArray(parsed) ? parsed : [parsed];
+    return messages.flatMap((message) => {
+        if (!message || typeof message !== 'object') {
+            return [];
+        }
+        const jsonrpcMessage = message;
+        const { id } = jsonrpcMessage;
+        if (typeof jsonrpcMessage.method !== 'string') {
+            return [];
+        }
+        if (typeof id !== 'string' && typeof id !== 'number') {
+            return [];
+        }
+        return [id];
+    });
+}
+function buildBlockedMCPResponseMessage(reason, details) {
+    const limitDetails = reason === 'MCP response exceeded byte limit'
+        ? `limit=${details.maxResponseBytes} bytes, observed=${details.totalBytes} bytes`
+        : `lineLimit=${details.maxLineBytes} bytes, observedLine=${details.currentLineBytes} bytes, observedTotal=${details.totalBytes} bytes`;
+    return `[MCP] ${reason} (${limitDetails}, chunks=${details.chunkCount}). The MCP server returned an unsafe streamable HTTP response; narrow the tool result or retry after the server response is fixed.`;
+}
+function buildBlockedMCPResponseSSE(requestIds, message) {
+    const events = requestIds
+        .map((id) => {
+        const payload = {
+            jsonrpc: '2.0',
+            id,
+            error: {
+                code: -32e3,
+                message,
+            },
+        };
+        return `data: ${JSON.stringify(payload)}\n\n`;
+    })
+        .join('');
+    return textEncoder.encode(events);
+}
+function getMCPStreamableHTTPResponseLimits() {
+    return {
+        maxResponseBytes: getNonNegativeIntegerEnv('MCP_STREAMABLE_HTTP_MAX_RESPONSE_BYTES', DEFAULT_MCP_STREAMABLE_HTTP_MAX_RESPONSE_BYTES),
+        maxLineBytes: getNonNegativeIntegerEnv('MCP_STREAMABLE_HTTP_MAX_LINE_BYTES', DEFAULT_MCP_STREAMABLE_HTTP_MAX_LINE_BYTES),
+    };
+}
+function guardMCPStreamableHTTPResponse(response, context) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
+        if (context.method === 'GET' || !response.body) {
+            return response;
+        }
+        const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+        const isEventStream = contentType.toLowerCase().includes('text/event-stream');
+        const { maxResponseBytes, maxLineBytes } = getMCPStreamableHTTPResponseLimits();
+        const canEmitFallbackSSEError = isEventStream && maxLineBytes > 0;
+        if (!isEventStream && maxResponseBytes === 0) {
+            return response;
+        }
+        if (maxResponseBytes === 0 && maxLineBytes === 0) {
+            return response;
+        }
+        let totalBytes = 0;
+        let currentLineBytes = 0;
+        let chunkCount = 0;
+        let pendingSSELineChunks = [];
+        const sseEventDataLines = [];
+        const unresolvedRequestIds = new Set((_b = context.requestIds) !== null && _b !== void 0 ? _b : []);
+        const buildAndLogBlockedError = (reason, details) => {
+            const message = buildBlockedMCPResponseMessage(reason, {
+                maxResponseBytes,
+                maxLineBytes,
+                totalBytes,
+                currentLineBytes,
+                chunkCount,
+            });
+            dataSchemas.logger.warn(`${context.logPrefix} MCP streamable HTTP response blocked: ${reason}`, Object.assign(Object.assign({ method: context.method, url: sanitizeUrlForLogging(context.url), status: response.status, contentType,
+                maxResponseBytes,
+                maxLineBytes,
+                totalBytes,
+                currentLineBytes,
+                chunkCount }, details), { memory: getMemoryDebugSnapshot() }));
+            return new Error(message);
+        };
+        const trackSSELineForResolvedIds = (lineBytes) => {
+            if (unresolvedRequestIds.size === 0) {
+                return;
+            }
+            const rawLine = textDecoder.decode(lineBytes).replace(/[\r\n]+$/, '');
+            if (rawLine === '') {
+                if (sseEventDataLines.length === 0) {
+                    return;
+                }
+                const data = sseEventDataLines.join('\n');
+                sseEventDataLines.length = 0;
+                try {
+                    const parsed = JSON.parse(data);
+                    if (typeof parsed.id === 'string' || typeof parsed.id === 'number') {
+                        unresolvedRequestIds.delete(parsed.id);
+                    }
+                }
+                catch (_a) {
+                    /** Ignore malformed SSE data here; the SDK parser will report it. */
+                }
+                return;
+            }
+            const separatorIndex = rawLine.indexOf(':');
+            const field = separatorIndex === -1 ? rawLine : rawLine.slice(0, separatorIndex);
+            if (field !== 'data') {
+                return;
+            }
+            let value = separatorIndex === -1 ? '' : rawLine.slice(separatorIndex + 1);
+            if (value.startsWith(' ')) {
+                value = value.slice(1);
+            }
+            sseEventDataLines.push(value);
+        };
+        const enqueuePendingSSELine = (controller) => {
+            if (pendingSSELineChunks.length === 0) {
+                return;
+            }
+            const lineBytes = concatBytes(pendingSSELineChunks);
+            pendingSSELineChunks = [];
+            trackSSELineForResolvedIds(lineBytes);
+            controller.enqueue(lineBytes);
+        };
+        const blockResponse = (controller, reason, details) => {
+            const error = buildAndLogBlockedError(reason, details);
+            const fallbackRequestIds = [...unresolvedRequestIds];
+            if (canEmitFallbackSSEError && fallbackRequestIds.length > 0) {
+                controller.enqueue(buildBlockedMCPResponseSSE(fallbackRequestIds, error.message));
+                controller.terminate();
+                return;
+            }
+            throw error;
+        };
+        const guardedBody = response.body.pipeThrough(new TransformStream({
+            transform(chunk, controller) {
+                const bytes = getChunkBytes(chunk);
+                if (bytes.byteLength === 0) {
+                    return;
+                }
+                chunkCount += 1;
+                totalBytes += bytes.byteLength;
+                if (maxResponseBytes > 0 && totalBytes > maxResponseBytes) {
+                    blockResponse(controller, 'MCP response exceeded byte limit', {
+                        chunkBytes: bytes.byteLength,
+                    });
+                    return;
+                }
+                if (isEventStream && maxLineBytes > 0) {
+                    let segmentStart = 0;
+                    for (let i = 0; i < bytes.byteLength; i++) {
+                        const byte = bytes[i];
+                        if (byte === 10 || byte === 13) {
+                            if (i + 1 > segmentStart) {
+                                pendingSSELineChunks.push(copyBytes(bytes.subarray(segmentStart, i + 1)));
+                            }
+                            enqueuePendingSSELine(controller);
+                            segmentStart = i + 1;
+                            currentLineBytes = 0;
+                            continue;
+                        }
+                        currentLineBytes += 1;
+                        if (currentLineBytes > maxLineBytes) {
+                            blockResponse(controller, 'MCP response contained an oversized SSE line', {
+                                chunkBytes: bytes.byteLength,
+                            });
+                            return;
+                        }
+                    }
+                    if (segmentStart < bytes.byteLength) {
+                        pendingSSELineChunks.push(copyBytes(bytes.subarray(segmentStart)));
+                    }
+                    return;
+                }
+                controller.enqueue(bytes);
+            },
+            flush(controller) {
+                enqueuePendingSSELine(controller);
+            },
+        }));
+        return new Response(guardedBody, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+        });
+    });
+}
+/**
+ * Headers stripped before forwarding a request across an origin boundary on
+ * 307/308 redirects, mirroring browser/Fetch-spec behavior. These headers can
+ * carry credentials (OAuth bearer, MCP session, cookies) that an attacker
+ * controlling a redirecting MCP endpoint could otherwise exfiltrate by sending
+ * a `Location` to a host they own.
+ */
+const CROSS_ORIGIN_FORBIDDEN_HEADERS = new Set([
+    'authorization',
+    'proxy-authorization',
+    'cookie',
+    'mcp-session-id',
+]);
+/**
+ * Normalizes a fetch input + init pair so the redirect loop only ever has
+ * to deal with `(string, init)`. When `input` is a `Request`, its method,
+ * headers, and body are baked into the returned init — explicit init values
+ * win (matching Fetch-spec semantics) and the body is buffered with
+ * `arrayBuffer()` so 307/308 retries can replay it on the new URL. Without
+ * this, switching `url` to a `Location` string on redirect would silently
+ * drop the original POST method and request payload.
+ */
+function resolveFetchInput(input, init) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d;
+        if (typeof input === 'string') {
+            return { urlString: input, resolvedInit: init };
+        }
+        if (input instanceof URL) {
+            return { urlString: input.href, resolvedInit: init };
+        }
+        /**
+         * Treat anything else as a `Request`. Duck-typed instead of
+         * `instanceof undici.Request` because requests handed to a generic fetch
+         * wrapper can come from a different undici realm and fail the prototype
+         * check while still implementing the same shape. The `as unknown as` cast
+         * is needed because undici's `Headers` and DOM's `Headers` have
+         * incompatible declared shapes even though they are interchangeable at
+         * runtime for the methods we use.
+         */
+        const req = input;
+        const reqHeaders = Object.fromEntries(req.headers.entries());
+        const initHeaders = normalizeInitHeaders(init);
+        const mergedHeaders = Object.assign(Object.assign({}, reqHeaders), initHeaders);
+        /** Body must be buffered before we hand it off — the original stream is
+         * single-shot, so a redirect retry with the same stream would crash with
+         * `body has been read`. Empty/no-body Requests skip the read entirely. */
+        const reqBody = req.body ? yield req.arrayBuffer() : undefined;
+        /** Forward the `Request`'s abort signal so callers that wired up an
+         * `AbortController` (for timeout / user-cancellation) keep working after
+         * we re-shape the input into `(string, init)`. Explicit `init.signal`
+         * still wins per Fetch-spec semantics. */
+        const signal = (_b = (_a = init === null || init === void 0 ? void 0 : init.signal) !== null && _a !== void 0 ? _a : req.signal) !== null && _b !== void 0 ? _b : undefined;
+        return {
+            urlString: req.url,
+            resolvedInit: Object.assign(Object.assign({}, init), { method: (_c = init === null || init === void 0 ? void 0 : init.method) !== null && _c !== void 0 ? _c : req.method, body: (_d = init === null || init === void 0 ? void 0 : init.body) !== null && _d !== void 0 ? _d : reqBody, headers: mergedHeaders, signal }),
+        };
+    });
+}
+function normalizeInitHeaders(init) {
+    if (!(init === null || init === void 0 ? void 0 : init.headers)) {
+        return {};
+    }
+    if (init.headers instanceof Headers) {
+        return Object.fromEntries(init.headers.entries());
+    }
+    if (Array.isArray(init.headers)) {
+        return Object.fromEntries(init.headers);
+    }
+    return init.headers;
+}
+function buildFetchInit(init, dispatcher, requestHeaders) {
+    const hasInitHeaders = (init === null || init === void 0 ? void 0 : init.headers) != null;
+    const hasRuntimeHeaders = requestHeaders != null && Object.keys(requestHeaders).length > 0;
+    /**
+     * If neither `init.headers` nor runtime headers contribute anything, leave
+     * `headers` off the returned init entirely. Setting `headers: {}` would
+     * blow away the headers carried on a `Request` input — auth/session tokens
+     * and protocol negotiation headers — even when no redirect is involved.
+     */
+    if (!hasInitHeaders && !hasRuntimeHeaders) {
+        return Object.assign(Object.assign({}, init), { redirect: 'manual', dispatcher });
+    }
+    const initHeaders = normalizeInitHeaders(init);
+    const headers = hasRuntimeHeaders ? Object.assign(Object.assign({}, initHeaders), requestHeaders) : initHeaders;
+    return Object.assign(Object.assign({}, init), { redirect: 'manual', headers,
+        dispatcher });
+}
+function getUrlPort(url) {
+    const parsed = typeof url === 'string' ? new URL(url) : url;
+    if (parsed.port)
+        return parsed.port;
+    if (parsed.protocol === 'http:' || parsed.protocol === 'ws:')
+        return '80';
+    if (parsed.protocol === 'https:' || parsed.protocol === 'wss:')
+        return '443';
+    return '';
+}
+function getTrimmedEnv(...keys) {
+    for (const key of keys) {
+        const rawValue = process.env[key];
+        if (rawValue != null) {
+            return rawValue.trim() || undefined;
+        }
+    }
+    return undefined;
+}
+function getMCPProxyConfig(options) {
+    var _a, _b;
+    const configuredProxy = 'proxy' in options && typeof options.proxy === 'string' ? options.proxy.trim() : '';
+    if (configuredProxy) {
+        return { type: 'explicit', proxyUrl: configuredProxy };
+    }
+    const libreChatProxy = (_b = (_a = process.env.PROXY) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : '';
+    if (libreChatProxy) {
+        return { type: 'explicit', proxyUrl: libreChatProxy };
+    }
+    const httpProxy = getTrimmedEnv('http_proxy', 'HTTP_PROXY');
+    const httpsProxy = getTrimmedEnv('https_proxy', 'HTTPS_PROXY');
+    if (!httpProxy && !httpsProxy) {
+        return undefined;
+    }
+    return {
+        type: 'env',
+        httpProxy,
+        httpsProxy,
+        noProxy: getTrimmedEnv('no_proxy', 'NO_PROXY'),
+    };
+}
+function parseIPv4ToBigInt(ip) {
+    const octets = ip.split('.');
+    if (octets.length !== 4) {
+        return null;
+    }
+    let value = BIGINT_ZERO;
+    for (const octet of octets) {
+        if (!/^\d{1,3}$/.test(octet)) {
+            return null;
+        }
+        const parsed = Number.parseInt(octet, 10);
+        if (!Number.isInteger(parsed) || parsed < 0 || parsed > 255) {
+            return null;
+        }
+        value = (value << BIGINT_EIGHT) + BigInt(parsed);
+    }
+    return value;
+}
+function parseIPv6ToBigInt(ip) {
+    let normalized = ip.toLowerCase().replace(/^\[|\]$/g, '');
+    const zoneIndex = normalized.indexOf('%');
+    if (zoneIndex !== -1) {
+        normalized = normalized.slice(0, zoneIndex);
+    }
+    if (normalized.includes('.')) {
+        const lastColon = normalized.lastIndexOf(':');
+        if (lastColon === -1) {
+            return null;
+        }
+        const ipv4Value = parseIPv4ToBigInt(normalized.slice(lastColon + 1));
+        if (ipv4Value == null) {
+            return null;
+        }
+        const hi = Number((ipv4Value >> BIGINT_SIXTEEN) & UINT16_MASK).toString(16);
+        const lo = Number(ipv4Value & UINT16_MASK).toString(16);
+        normalized = `${normalized.slice(0, lastColon)}:${hi}:${lo}`;
+    }
+    const halves = normalized.split('::');
+    if (halves.length > 2) {
+        return null;
+    }
+    const left = halves[0] ? halves[0].split(':') : [];
+    const right = halves.length === 2 && halves[1] ? halves[1].split(':') : [];
+    const missing = halves.length === 2 ? 8 - left.length - right.length : 0;
+    if (missing < 0 || (halves.length === 1 && left.length !== 8)) {
+        return null;
+    }
+    const parts = [...left, ...Array(missing).fill('0'), ...right];
+    if (parts.length !== 8 || parts.some((part) => !/^[0-9a-f]{1,4}$/.test(part))) {
+        return null;
+    }
+    return parts.reduce((value, part) => (value << BIGINT_SIXTEEN) + BigInt(Number.parseInt(part, 16)), BIGINT_ZERO);
+}
+function parseIPLiteral(value) {
+    const normalized = value
+        .toLowerCase()
+        .trim()
+        .replace(/^\[|\]$/g, '');
+    const version = node_net.isIP(normalized);
+    if (version === 4) {
+        const parsed = parseIPv4ToBigInt(normalized);
+        return parsed == null ? null : { version: 4, bits: 32, value: parsed };
+    }
+    if (version === 6) {
+        const parsed = parseIPv6ToBigInt(normalized);
+        return parsed == null ? null : { version: 6, bits: 128, value: parsed };
+    }
+    return null;
+}
+function ipMatchesCIDR(hostname, cidr) {
+    const [rangeAddress, prefixLength, extra] = cidr.split('/');
+    if (!rangeAddress || prefixLength == null || extra != null || !/^\d+$/.test(prefixLength)) {
+        return false;
+    }
+    const hostIP = parseIPLiteral(hostname);
+    const rangeIP = parseIPLiteral(rangeAddress);
+    if (!hostIP || !rangeIP || hostIP.version !== rangeIP.version) {
+        return false;
+    }
+    const prefix = Number.parseInt(prefixLength, 10);
+    if (!Number.isInteger(prefix) || prefix < 0 || prefix > rangeIP.bits) {
+        return false;
+    }
+    const bits = BigInt(rangeIP.bits);
+    const mask = prefix === 0
+        ? BIGINT_ZERO
+        : (((BIGINT_ONE << bits) - BIGINT_ONE) << BigInt(rangeIP.bits - prefix)) &
+            ((BIGINT_ONE << bits) - BIGINT_ONE);
+    return (hostIP.value & mask) === (rangeIP.value & mask);
+}
+function ipMatchesRange(hostname, range) {
+    const [startAddress, endAddress, extra] = range.split('-');
+    if (!startAddress || !endAddress || extra != null) {
+        return false;
+    }
+    const hostIP = parseIPLiteral(hostname);
+    const startIP = parseIPLiteral(startAddress);
+    const endIP = parseIPLiteral(endAddress);
+    if (!hostIP ||
+        !startIP ||
+        !endIP ||
+        hostIP.version !== startIP.version ||
+        hostIP.version !== endIP.version) {
+        return false;
+    }
+    const min = startIP.value <= endIP.value ? startIP.value : endIP.value;
+    const max = startIP.value <= endIP.value ? endIP.value : startIP.value;
+    return hostIP.value >= min && hostIP.value <= max;
+}
+function matchesNoProxyIPPattern(hostname, entryHostname) {
+    if (entryHostname.includes('/')) {
+        return ipMatchesCIDR(hostname, entryHostname);
+    }
+    if (entryHostname.includes('-')) {
+        return ipMatchesRange(hostname, entryHostname);
+    }
+    return false;
+}
+function getProxyEntryPort(entry) {
+    var _a;
+    const trimmed = entry.trim();
+    const bracketed = trimmed.match(/^\[([^\]]+)\](?::(\d+))?$/);
+    if (bracketed) {
+        return {
+            hostname: bracketed[1].toLowerCase(),
+            port: bracketed[2] ? Number.parseInt(bracketed[2], 10) : 0,
+        };
+    }
+    const separatorCount = ((_a = trimmed.match(/:/g)) !== null && _a !== void 0 ? _a : []).length;
+    const parsed = separatorCount === 1 ? trimmed.match(/^(.+):(\d+)$/) : null;
+    const hostname = (parsed ? parsed[1] : trimmed).replace(/^\[|\]$/g, '').toLowerCase();
+    return {
+        hostname: hostname.replace(/^\*?\./, ''),
+        port: parsed ? Number.parseInt(parsed[2], 10) : 0,
+    };
+}
+function shouldBypassEnvProxy(url, noProxy) {
+    if (!noProxy) {
+        return false;
+    }
+    const trimmed = noProxy.trim();
+    if (!trimmed) {
+        return false;
+    }
+    if (trimmed === '*') {
+        return true;
+    }
+    const hostname = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+    const port = Number.parseInt(getUrlPort(url), 10) || 0;
+    for (const entry of trimmed.split(/[,\s]/)) {
+        if (!entry) {
+            continue;
+        }
+        if (entry === '*') {
+            return true;
+        }
+        const proxyEntry = getProxyEntryPort(entry);
+        if (proxyEntry.port && proxyEntry.port !== port) {
+            continue;
+        }
+        if (matchesNoProxyIPPattern(hostname, proxyEntry.hostname)) {
+            return true;
+        }
+        if (hostname === proxyEntry.hostname || hostname.endsWith(`.${proxyEntry.hostname}`)) {
+            return true;
+        }
+    }
+    return false;
+}
+function getProxyUrlForRequest(proxyConfig, urlString) {
+    var _a;
+    if (!proxyConfig || !urlString) {
+        return undefined;
+    }
+    if (proxyConfig.type === 'explicit') {
+        return proxyConfig.proxyUrl;
+    }
+    const url = new URL(urlString);
+    if (shouldBypassEnvProxy(url, proxyConfig.noProxy)) {
+        return undefined;
+    }
+    if (url.protocol === 'https:') {
+        return (_a = proxyConfig.httpsProxy) !== null && _a !== void 0 ? _a : proxyConfig.httpProxy;
+    }
+    if (url.protocol === 'http:') {
+        return proxyConfig.httpProxy;
+    }
+    return undefined;
+}
+function createMCPDispatcher(options) {
+    const { bodyTimeout, headersTimeout, proxyUrl, keepAliveTimeout, keepAliveMaxTimeout, connect } = options;
+    const baseOptions = Object.assign(Object.assign({ bodyTimeout,
+        headersTimeout }, (keepAliveTimeout != null ? { keepAliveTimeout } : {})), (keepAliveMaxTimeout != null ? { keepAliveMaxTimeout } : {}));
+    if (proxyUrl) {
+        return new undici.ProxyAgent(Object.assign({ uri: proxyUrl }, baseOptions));
+    }
+    return new undici.Agent(Object.assign(Object.assign({}, baseOptions), (connect != null ? { connect } : {})));
+}
+function assertProxiedRequestTargetAllowed(urlString, proxyConfig, useSSRFProtection, allowedAddresses) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const proxyUrl = getProxyUrlForRequest(proxyConfig, urlString);
+        if (!proxyUrl || !useSSRFProtection) {
+            return;
+        }
+        const targetUrl = new URL(urlString);
+        const port = getUrlPort(targetUrl);
+        if (isAddressAllowed(targetUrl.hostname, allowedAddresses, port)) {
+            return;
+        }
+        if (!parseIPLiteral(targetUrl.hostname)) {
+            throw new Error(`SSRF protection: proxied MCP request target "${targetUrl.hostname}" must be an IP literal or an explicitly allowed host`);
+        }
+        const isBlockedTarget = isSSRFTarget(targetUrl.hostname, allowedAddresses, port) ||
+            (yield resolveHostnameSSRF(targetUrl.hostname, allowedAddresses, port));
+        if (!isBlockedTarget) {
+            return;
+        }
+        throw new Error(`SSRF protection: proxied MCP request target "${targetUrl.hostname}" resolved to a private/reserved address`);
+    });
+}
+/**
+ * Drops credential-bearing headers when a 307/308 redirect crosses an origin
+ * boundary. Removes the always-forbidden set plus any caller-supplied secret
+ * headers (runtime `setRequestHeaders` values and config-level API keys).
+ */
+function stripCrossOriginHeaders(headers, secretHeaderKeys) {
+    const stripped = {};
+    for (const [key, value] of Object.entries(headers)) {
+        const lowered = key.toLowerCase();
+        if (CROSS_ORIGIN_FORBIDDEN_HEADERS.has(lowered)) {
+            continue;
+        }
+        if (secretHeaderKeys.has(lowered)) {
+            continue;
+        }
+        stripped[key] = value;
+    }
+    return stripped;
+}
+/** Default body timeout for Streamable HTTP GET SSE streams that idle between server pushes */
+const DEFAULT_SSE_READ_TIMEOUT = FIVE_MINUTES;
+/**
+ * Error message prefixes emitted by the MCP SDK's StreamableHTTPClientTransport
+ * (client/streamableHttp.ts → _handleSseStream / _scheduleReconnection).
+ * These are SDK-internal strings, not part of a public API. If the SDK changes
+ * them, suppression in setupTransportErrorHandlers will silently stop working.
+ */
+const SDK_SSE_STREAM_DISCONNECTED = 'SSE stream disconnected';
+const SDK_SSE_RECONNECT_FAILED = 'Failed to reconnect SSE stream';
 /**
  * Headers for SSE connections.
  *
@@ -24338,6 +25465,19 @@ function extractSSEErrorMessage(error) {
             isTransient: isServerError,
         };
     }
+    /**
+     * "fetch failed" is a generic undici TypeError that occurs when an in-flight HTTP request
+     * is aborted (e.g. after an MCP protocol-level timeout fires). The transport itself is still
+     * functional — only the individual request was lost — so treat this as transient.
+     */
+    if (rawMessage === 'fetch failed') {
+        return {
+            message: 'fetch failed (request aborted, likely after a timeout — connection may still be usable)',
+            code,
+            isProxyHint: false,
+            isTransient: true,
+        };
+    }
     return {
         message: rawMessage,
         code,
@@ -24346,6 +25486,72 @@ function extractSSEErrorMessage(error) {
     };
 }
 class MCPConnection extends events.EventEmitter {
+    static clearCooldown(serverName) {
+        MCPConnection.circuitBreakers.delete(serverName);
+        dataSchemas.logger.debug(`[MCP][${serverName}] Circuit breaker state cleared`);
+    }
+    getCircuitBreaker() {
+        let cb = MCPConnection.circuitBreakers.get(this.serverName);
+        if (!cb) {
+            cb = {
+                cycleCount: 0,
+                cycleWindowStart: Date.now(),
+                cooldownUntil: 0,
+                failedRounds: 0,
+                failedWindowStart: Date.now(),
+                failedBackoffUntil: 0,
+            };
+            MCPConnection.circuitBreakers.set(this.serverName, cb);
+        }
+        return cb;
+    }
+    isCircuitOpen() {
+        const cb = this.getCircuitBreaker();
+        const now = Date.now();
+        return now < cb.cooldownUntil || now < cb.failedBackoffUntil;
+    }
+    recordCycle() {
+        const cb = this.getCircuitBreaker();
+        const now = Date.now();
+        if (now - cb.cycleWindowStart > mcpConfig.CB_CYCLE_WINDOW_MS) {
+            cb.cycleCount = 0;
+            cb.cycleWindowStart = now;
+        }
+        cb.cycleCount++;
+        if (cb.cycleCount >= mcpConfig.CB_MAX_CYCLES) {
+            cb.cooldownUntil = now + mcpConfig.CB_CYCLE_COOLDOWN_MS;
+            cb.cycleCount = 0;
+            cb.cycleWindowStart = now;
+            dataSchemas.logger.warn(`${this.getLogPrefix()} Circuit breaker: too many cycles, cooling down for ${mcpConfig.CB_CYCLE_COOLDOWN_MS}ms`);
+        }
+    }
+    recordFailedRound() {
+        const cb = this.getCircuitBreaker();
+        const now = Date.now();
+        if (now - cb.failedWindowStart > mcpConfig.CB_FAILED_WINDOW_MS) {
+            cb.failedRounds = 0;
+            cb.failedWindowStart = now;
+        }
+        cb.failedRounds++;
+        if (cb.failedRounds >= mcpConfig.CB_MAX_FAILED_ROUNDS) {
+            const backoff = Math.min(mcpConfig.CB_BASE_BACKOFF_MS *
+                Math.pow(2, cb.failedRounds - mcpConfig.CB_MAX_FAILED_ROUNDS), mcpConfig.CB_MAX_BACKOFF_MS);
+            cb.failedBackoffUntil = now + backoff;
+            dataSchemas.logger.warn(`${this.getLogPrefix()} Circuit breaker: too many failures, backing off for ${backoff}ms`);
+        }
+    }
+    resetFailedRounds() {
+        const cb = this.getCircuitBreaker();
+        cb.failedRounds = 0;
+        cb.failedWindowStart = Date.now();
+        cb.failedBackoffUntil = 0;
+    }
+    static decrementCycleCount(serverName) {
+        const cb = MCPConnection.circuitBreakers.get(serverName);
+        if (cb && cb.cycleCount > 0) {
+            cb.cycleCount--;
+        }
+    }
     setRequestHeaders(headers) {
         if (!headers) {
             return;
@@ -24360,6 +25566,7 @@ class MCPConnection extends events.EventEmitter {
         return this.requestHeaders;
     }
     constructor(params) {
+        var _a;
         super();
         this.transport = null; // Make this nullable
         this.connectionState = 'disconnected';
@@ -24369,14 +25576,19 @@ class MCPConnection extends events.EventEmitter {
         this.isReconnecting = false;
         this.isInitializing = false;
         this.reconnectAttempts = 0;
+        this.agents = [];
         this.lastConnectionCheckAt = 0;
         this.oauthRequired = false;
+        this.oauthRecovery = false;
         this.options = params.serverConfig;
         this.serverName = params.serverName;
         this.userId = params.userId;
         this.useSSRFProtection = params.useSSRFProtection === true;
+        this.allowedAddresses = (_a = params.allowedAddresses) !== null && _a !== void 0 ? _a : null;
+        this.proxyConfig = getMCPProxyConfig(params.serverConfig);
         this.iconPath = params.serverConfig.iconPath;
         this.timeout = params.serverConfig.timeout;
+        this.sseReadTimeout = params.serverConfig.sseReadTimeout;
         this.lastPingTime = Date.now();
         this.createdAt = Date.now(); // Record creation timestamp for staleness detection
         if (params.oauthTokens) {
@@ -24399,32 +25611,160 @@ class MCPConnection extends events.EventEmitter {
      * Factory function to create fetch functions without capturing the entire `this` context.
      * This helps prevent memory leaks by only passing necessary dependencies.
      *
-     * @param getHeaders Function to retrieve request headers
-     * @param timeout Timeout value for the agent (in milliseconds)
-     * @returns A fetch function that merges headers appropriately
+     * When `sseBodyTimeout` is provided, a second Agent is created with a much longer
+     * body timeout for GET requests (the Streamable HTTP SSE stream). POST requests
+     * continue using the normal timeout so they fail fast on real errors.
      */
-    createFetchFunction(getHeaders, timeout) {
-        const ssrfConnect = this.useSSRFProtection ? createSSRFSafeUndiciConnect() : undefined;
+    createFetchFunction(getHeaders, timeout, sseBodyTimeout, configuredSecretHeaderKeys, baseUrl, guardStreamableHTTPResponses = false) {
+        const proxyConfig = this.proxyConfig;
+        const useSSRFProtection = this.useSSRFProtection;
+        const allowedAddresses = this.allowedAddresses;
+        /** Capture only the fields needed by the fetch closure; see factory note above. */
+        const agents = this.agents;
+        const logPrefix = this.getLogPrefix();
+        const effectiveTimeout = timeout || DEFAULT_TIMEOUT;
+        const requestDispatchers = new Map();
+        const ssrfConnects = new Map();
+        const getSSRFConnect = (targetPort, dispatcherAllowedAddresses, forceSafeDirectConnect) => {
+            const key = `${forceSafeDirectConnect ? 'redirect' : 'configured'}:${targetPort}`;
+            const existingConnect = ssrfConnects.get(key);
+            if (existingConnect) {
+                return existingConnect;
+            }
+            const connect = forceSafeDirectConnect
+                ? createSSRFSafeUndiciConnect()
+                : createSSRFSafeUndiciConnect(dispatcherAllowedAddresses, targetPort);
+            ssrfConnects.set(key, connect);
+            return connect;
+        };
+        /**
+         * Proxy selection depends on the resolved request URL, not just the
+         * configured MCP base URL. SSE message endpoints can be absolute URLs, so
+         * cache dispatchers by the target URL's proxy decision and connect policy.
+         */
+        const getRequestDispatcher = (isGetRequest, targetUrlString, dispatcherAllowedAddresses, forceSafeDirectConnect = false) => {
+            const bodyTimeout = isGetRequest && sseBodyTimeout != null ? sseBodyTimeout : effectiveTimeout;
+            const proxyUrl = getProxyUrlForRequest(proxyConfig, targetUrlString);
+            const targetPort = getUrlPort(targetUrlString);
+            const needsSSRFConnect = !proxyUrl && (useSSRFProtection || forceSafeDirectConnect);
+            const key = [
+                bodyTimeout,
+                proxyUrl !== null && proxyUrl !== void 0 ? proxyUrl : 'direct',
+                needsSSRFConnect ? targetPort : 'open',
+                forceSafeDirectConnect ? 'redirect' : 'configured',
+            ].join(':');
+            const existingAgent = requestDispatchers.get(key);
+            if (existingAgent) {
+                return existingAgent;
+            }
+            const connect = needsSSRFConnect
+                ? getSSRFConnect(targetPort, dispatcherAllowedAddresses, forceSafeDirectConnect)
+                : undefined;
+            const agent = createMCPDispatcher(Object.assign({ bodyTimeout, headersTimeout: effectiveTimeout, proxyUrl }, (connect != null ? { connect } : {})));
+            requestDispatchers.set(key, agent);
+            agents.push(agent);
+            return agent;
+        };
+        if (baseUrl) {
+            getRequestDispatcher(false, baseUrl, allowedAddresses);
+            if (sseBodyTimeout != null) {
+                getRequestDispatcher(true, baseUrl, allowedAddresses);
+            }
+        }
         return function customFetch(input, init) {
-            const requestHeaders = getHeaders();
-            const effectiveTimeout = timeout || DEFAULT_TIMEOUT;
-            const agent = new undici.Agent(Object.assign({ bodyTimeout: effectiveTimeout, headersTimeout: effectiveTimeout }, (ssrfConnect != null ? { connect: ssrfConnect } : {})));
-            if (!requestHeaders) {
-                return undici.fetch(input, Object.assign(Object.assign({}, init), { dispatcher: agent }));
-            }
-            let initHeaders = {};
-            if (init === null || init === void 0 ? void 0 : init.headers) {
-                if (init.headers instanceof Headers) {
-                    initHeaders = Object.fromEntries(init.headers.entries());
+            return __awaiter(this, void 0, void 0, function* () {
+                var _a, _b, _c;
+                /**
+                 * Resolve the input shape upfront so the redirect loop can work with a
+                 * (string url, init) pair uniformly. When `input` is a `Request`, we
+                 * pull its method, headers, and body into the init — the body is
+                 * buffered because `Request.body` is a one-shot stream that can't be
+                 * replayed across redirect hops, and switching `url` to the new
+                 * `Location` would otherwise drop the original method/body and turn a
+                 * redirected POST into a GET with no payload.
+                 */
+                const { urlString, resolvedInit } = yield resolveFetchInput(input, init);
+                const isGet = ((_a = resolvedInit === null || resolvedInit === void 0 ? void 0 : resolvedInit.method) !== null && _a !== void 0 ? _a : 'GET').toUpperCase() === 'GET';
+                const requestHeaders = getHeaders();
+                /**
+                 * Headers that originated from user/server configuration — runtime
+                 * `setRequestHeaders` plus any keys baked into the transport at
+                 * construction time (e.g. `serverConfig.headers` API keys). All are
+                 * treated as credentials and stripped on cross-origin redirect.
+                 */
+                const secretHeaderKeys = new Set([
+                    ...Object.keys(requestHeaders !== null && requestHeaders !== void 0 ? requestHeaders : {}).map((key) => key.toLowerCase()),
+                    ...(configuredSecretHeaderKeys !== null && configuredSecretHeaderKeys !== void 0 ? configuredSecretHeaderKeys : []),
+                ]);
+                let currentUrlString = urlString;
+                let currentAllowedAddresses = allowedAddresses;
+                let forceRedirectSSRFConnect = false;
+                let currentInit = buildFetchInit(resolvedInit, getRequestDispatcher(isGet, currentUrlString, currentAllowedAddresses), requestHeaders);
+                const originalOrigin = new URL(currentUrlString).origin;
+                for (let redirects = 0;; redirects++) {
+                    yield assertProxiedRequestTargetAllowed(currentUrlString, proxyConfig, useSSRFProtection, currentAllowedAddresses);
+                    const response = yield undici.fetch(currentUrlString, currentInit);
+                    const isMethodPreservingRedirect = response.status === 307 || response.status === 308;
+                    const responseContext = {
+                        logPrefix,
+                        method: ((_b = currentInit === null || currentInit === void 0 ? void 0 : currentInit.method) !== null && _b !== void 0 ? _b : 'GET').toUpperCase(),
+                        url: currentUrlString,
+                        requestIds: getJSONRPCRequestIds(currentInit === null || currentInit === void 0 ? void 0 : currentInit.body),
+                    };
+                    if (!isMethodPreservingRedirect || redirects >= MAX_REDIRECTS) {
+                        return guardStreamableHTTPResponses
+                            ? guardMCPStreamableHTTPResponse(response, responseContext)
+                            : response;
+                    }
+                    const location = response.headers.get('location');
+                    if (!location) {
+                        return guardStreamableHTTPResponses
+                            ? guardMCPStreamableHTTPResponse(response, responseContext)
+                            : response;
+                    }
+                    const targetUrl = new URL(location, currentUrlString);
+                    const isCrossOriginRedirect = targetUrl.origin !== originalOrigin;
+                    /**
+                     * Keep the standalone check for immediate literal/current-DNS blocks.
+                     * Cross-origin allowlist redirects also switch to a connect-time
+                     * SSRF-safe dispatcher below so DNS rebinding cannot change the
+                     * address between this check and the socket connection.
+                     *
+                     * `allowedAddresses` is intentionally NOT consulted on either layer:
+                     * redirect targets are server-controlled (the MCP server's response
+                     * chooses where to send us), so they must not inherit the admin's
+                     * exemption for the originally-configured URL. A legitimate self-
+                     * redirect from a permitted private host is still blocked here, by
+                     * design — letting redirect targets inherit the exemption would open
+                     * an SSRF amplification primitive.
+                     */
+                    if (isSSRFTarget(targetUrl.hostname) || (yield resolveHostnameSSRF(targetUrl.hostname))) {
+                        dataSchemas.logger.warn(`[MCP] Blocked redirect to private/reserved address: ${sanitizeUrlForLogging(targetUrl)}`);
+                        return response;
+                    }
+                    yield ((_c = response.body) === null || _c === void 0 ? void 0 : _c.cancel().catch(() => undefined));
+                    if (isCrossOriginRedirect && currentInit.headers != null) {
+                        currentInit = Object.assign(Object.assign({}, currentInit), { headers: stripCrossOriginHeaders(currentInit.headers, secretHeaderKeys) });
+                    }
+                    if (isCrossOriginRedirect) {
+                        currentAllowedAddresses = null;
+                        forceRedirectSSRFConnect = true;
+                        /**
+                         * Once a server-controlled cross-origin hop is seen, keep the safe
+                         * dispatcher for the rest of this redirect chain. Restoring the
+                         * original dispatcher on a later hop back to the original origin
+                         * would re-open the allowlist-mode rebinding gap. When the original
+                         * dispatcher carries `allowedAddresses`, this also prevents a
+                         * redirect from inheriting that port-scoped exemption.
+                         */
+                        currentInit = Object.assign(Object.assign({}, currentInit), { dispatcher: getRequestDispatcher(isGet, targetUrl.href, currentAllowedAddresses, forceRedirectSSRFConnect) });
+                    }
+                    else {
+                        currentInit = Object.assign(Object.assign({}, currentInit), { dispatcher: getRequestDispatcher(isGet, targetUrl.href, currentAllowedAddresses, forceRedirectSSRFConnect) });
+                    }
+                    currentUrlString = targetUrl.href;
                 }
-                else if (Array.isArray(init.headers)) {
-                    initHeaders = Object.fromEntries(init.headers);
-                }
-                else {
-                    initHeaders = init.headers;
-                }
-            }
-            return undici.fetch(input, Object.assign(Object.assign({}, init), { headers: Object.assign(Object.assign({}, initHeaders), requestHeaders), dispatcher: agent }));
+            });
         };
     }
     emitError(error, errorContext) {
@@ -24464,19 +25804,28 @@ class MCPConnection extends events.EventEmitter {
                             // https://github.com/modelcontextprotocol/typescript-sdk/issues/216
                             env: Object.assign(Object.assign({}, stdio_js.getDefaultEnvironment()), ((_a = options.env) !== null && _a !== void 0 ? _a : {})),
                         });
-                    case 'websocket':
+                    case 'websocket': {
                         if (!isWebSocketOptions(options)) {
                             throw new Error('Invalid options for websocket transport.');
                         }
                         this.url = options.url;
-                        if (this.useSSRFProtection) {
-                            const wsHostname = new URL(options.url).hostname;
-                            const isSSRF = yield resolveHostnameSSRF(wsHostname);
-                            if (isSSRF) {
-                                throw new Error(`SSRF protection: WebSocket host "${wsHostname}" resolved to a private/reserved IP address`);
-                            }
+                        /**
+                         * SSRF pre-check: always validate resolved IPs for WebSocket, regardless
+                         * of allowlist configuration. Allowlisting a domain grants trust to that
+                         * name, not to whatever IP it resolves to at runtime (DNS rebinding).
+                         *
+                         * Note: WebSocketClientTransport does its own DNS resolution, creating a
+                         * small TOCTOU window. This is an SDK limitation — the transport accepts
+                         * only a URL with no custom DNS lookup hook.
+                         */
+                        const wsUrl = new URL(options.url);
+                        const wsHostname = wsUrl.hostname;
+                        const isSSRF = yield resolveHostnameSSRF(wsHostname, this.allowedAddresses, getUrlPort(wsUrl));
+                        if (isSSRF) {
+                            throw new Error(`SSRF protection: WebSocket host "${wsHostname}" resolved to a private/reserved IP address`);
                         }
                         return new websocket_js.WebSocketClientTransport(new URL(options.url));
+                    }
                     case 'sse': {
                         if (!isSSEOptions(options)) {
                             throw new Error('Invalid options for sse transport.');
@@ -24495,7 +25844,25 @@ class MCPConnection extends events.EventEmitter {
                          * The connect timeout is extended because proxies may delay initial response.
                          */
                         const sseTimeout = this.timeout || SSE_CONNECT_TIMEOUT;
-                        const ssrfConnect = this.useSSRFProtection ? createSSRFSafeUndiciConnect() : undefined;
+                        const sseAgents = new Map();
+                        const getSSEDispatcher = (targetUrlString) => {
+                            const proxyUrl = getProxyUrlForRequest(this.proxyConfig, targetUrlString);
+                            const targetPort = getUrlPort(targetUrlString);
+                            const key = `${proxyUrl !== null && proxyUrl !== void 0 ? proxyUrl : 'direct'}:${this.useSSRFProtection && !proxyUrl ? targetPort : 'open'}`;
+                            const existingAgent = sseAgents.get(key);
+                            if (existingAgent) {
+                                return existingAgent;
+                            }
+                            const connect = this.useSSRFProtection && !proxyUrl
+                                ? createSSRFSafeUndiciConnect(this.allowedAddresses, targetPort)
+                                : undefined;
+                            const agent = createMCPDispatcher(Object.assign({ bodyTimeout: sseTimeout, headersTimeout: sseTimeout, keepAliveTimeout: sseTimeout, keepAliveMaxTimeout: sseTimeout * 2, proxyUrl }, (connect != null ? { connect } : {})));
+                            sseAgents.set(key, agent);
+                            this.agents.push(agent);
+                            return agent;
+                        };
+                        getSSEDispatcher(options.url);
+                        const sseConfiguredSecretHeaderKeys = new Set(Object.keys(headers).map((key) => key.toLowerCase()));
                         const transport = new sse_js.SSEClientTransport(url, {
                             requestInit: {
                                 /** User/OAuth headers override SSE defaults */
@@ -24503,23 +25870,19 @@ class MCPConnection extends events.EventEmitter {
                                 signal: abortController.signal,
                             },
                             eventSourceInit: {
-                                fetch: (url, init) => {
+                                fetch: (url, init) => __awaiter(this, void 0, void 0, function* () {
+                                    const { urlString, resolvedInit } = yield resolveFetchInput(url, init);
+                                    yield assertProxiedRequestTargetAllowed(urlString, this.proxyConfig, this.useSSRFProtection, this.allowedAddresses);
                                     /** Merge headers: SSE defaults < init headers < user headers (user wins) */
-                                    const fetchHeaders = new Headers(Object.assign({}, SSE_REQUEST_HEADERS, init === null || init === void 0 ? void 0 : init.headers, headers));
-                                    const agent = new undici.Agent(Object.assign({ bodyTimeout: sseTimeout, headersTimeout: sseTimeout, 
-                                        /** Extended keep-alive for long-lived SSE connections */
-                                        keepAliveTimeout: sseTimeout, keepAliveMaxTimeout: sseTimeout * 2 }, (ssrfConnect != null ? { connect: ssrfConnect } : {})));
-                                    return undici.fetch(url, Object.assign(Object.assign({}, init), { dispatcher: agent, headers: fetchHeaders }));
-                                },
+                                    const fetchHeaders = new Headers(Object.assign({}, SSE_REQUEST_HEADERS, resolvedInit === null || resolvedInit === void 0 ? void 0 : resolvedInit.headers, headers));
+                                    return undici.fetch(urlString, Object.assign(Object.assign({}, resolvedInit), { redirect: 'manual', dispatcher: getSSEDispatcher(urlString), headers: fetchHeaders }));
+                                }),
                             },
-                            fetch: this.createFetchFunction(this.getRequestHeaders.bind(this), sseTimeout),
+                            fetch: this.createFetchFunction(this.getRequestHeaders.bind(this), sseTimeout, undefined, sseConfiguredSecretHeaderKeys, options.url),
                         });
                         transport.onclose = () => {
                             dataSchemas.logger.info(`${this.getLogPrefix()} SSE transport closed`);
                             this.emit('connectionChange', 'disconnected');
-                        };
-                        transport.onmessage = (message) => {
-                            dataSchemas.logger.info(`${this.getLogPrefix()} Message received: ${JSON.stringify(message)}`);
                         };
                         this.setupTransportErrorHandlers(transport);
                         return transport;
@@ -24537,19 +25900,17 @@ class MCPConnection extends events.EventEmitter {
                         if ((_c = this.oauthTokens) === null || _c === void 0 ? void 0 : _c.access_token) {
                             headers['Authorization'] = `Bearer ${this.oauthTokens.access_token}`;
                         }
+                        const httpConfiguredSecretHeaderKeys = new Set(Object.keys(headers).map((key) => key.toLowerCase()));
                         const transport = new streamableHttp_js.StreamableHTTPClientTransport(url, {
                             requestInit: {
                                 headers,
                                 signal: abortController.signal,
                             },
-                            fetch: this.createFetchFunction(this.getRequestHeaders.bind(this), this.timeout),
+                            fetch: this.createFetchFunction(this.getRequestHeaders.bind(this), this.timeout, this.sseReadTimeout || DEFAULT_SSE_READ_TIMEOUT, httpConfiguredSecretHeaderKeys, options.url, true),
                         });
                         transport.onclose = () => {
                             dataSchemas.logger.info(`${this.getLogPrefix()} Streamable-http transport closed`);
                             this.emit('connectionChange', 'disconnected');
-                        };
-                        transport.onmessage = (message) => {
-                            dataSchemas.logger.info(`${this.getLogPrefix()} Message received: ${JSON.stringify(message)}`);
                         };
                         this.setupTransportErrorHandlers(transport);
                         return transport;
@@ -24667,6 +26028,11 @@ class MCPConnection extends events.EventEmitter {
             if (this.shouldStopReconnecting) {
                 return;
             }
+            if (this.isCircuitOpen()) {
+                this.connectionState = 'error';
+                this.emit('connectionChange', 'error');
+                throw new Error(`${this.getLogPrefix()} Circuit breaker is open, connection attempt blocked`);
+            }
             this.emit('connectionChange', 'connecting');
             this.connectPromise = (() => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b;
@@ -24674,19 +26040,27 @@ class MCPConnection extends events.EventEmitter {
                     if (this.transport) {
                         try {
                             yield this.client.close();
-                            this.transport = null;
                         }
                         catch (error) {
                             dataSchemas.logger.warn(`${this.getLogPrefix()} Error closing connection:`, error);
                         }
+                        this.transport = null;
+                        yield this.closeAgents();
                     }
-                    this.transport = yield this.constructTransport(this.options);
-                    this.setupTransportDebugHandlers();
-                    const connectTimeout = (_a = this.options.initTimeout) !== null && _a !== void 0 ? _a : 120000;
-                    yield withTimeout(this.client.connect(this.transport), connectTimeout, `Connection timeout after ${connectTimeout}ms`);
+                    this.transport = yield runOutsideTracing(() => this.constructTransport(this.options));
+                    this.patchTransportSend();
+                    const connectTimeout = (_a = this.options.initTimeout) !== null && _a !== void 0 ? _a : DEFAULT_INIT_TIMEOUT;
+                    yield runOutsideTracing(() => withTimeout(this.client.connect(this.transport), connectTimeout, `Connection timeout after ${connectTimeout}ms`));
+                    this.setupTransportOnMessageHandler();
                     this.connectionState = 'connected';
                     this.emit('connectionChange', 'connected');
                     this.reconnectAttempts = 0;
+                    this.resetFailedRounds();
+                    if (this.oauthRecovery) {
+                        MCPConnection.decrementCycleCount(this.serverName);
+                        this.oauthRecovery = false;
+                        dataSchemas.logger.debug(`${this.getLogPrefix()} OAuth recovery: decremented cycle count after successful reconnect`);
+                    }
                 }
                 catch (error) {
                     // Check if it's a rate limit error - stop immediately to avoid making it worse
@@ -24760,9 +26134,8 @@ class MCPConnection extends events.EventEmitter {
                         try {
                             // Wait for OAuth to be handled
                             yield oauthHandledPromise;
-                            // Reset the oauthRequired flag
                             this.oauthRequired = false;
-                            // Don't throw the error - just return so connection can be retried
+                            this.oauthRecovery = true;
                             dataSchemas.logger.info(`${this.getLogPrefix()} OAuth handled successfully, connection will be retried`);
                             return;
                         }
@@ -24776,6 +26149,7 @@ class MCPConnection extends events.EventEmitter {
                     }
                     this.connectionState = 'error';
                     this.emit('connectionChange', 'error');
+                    this.recordFailedRound();
                     throw error;
                 }
                 finally {
@@ -24785,13 +26159,10 @@ class MCPConnection extends events.EventEmitter {
             return this.connectPromise;
         });
     }
-    setupTransportDebugHandlers() {
+    patchTransportSend() {
         if (!this.transport) {
             return;
         }
-        this.transport.onmessage = (msg) => {
-            dataSchemas.logger.debug(`${this.getLogPrefix()} Transport received: ${JSON.stringify(msg)}`);
-        };
         const originalSend = this.transport.send.bind(this.transport);
         this.transport.send = (msg) => __awaiter(this, void 0, void 0, function* () {
             var _a;
@@ -24801,14 +26172,30 @@ class MCPConnection extends events.EventEmitter {
                 }
                 this.lastPingTime = Date.now();
             }
-            dataSchemas.logger.debug(`${this.getLogPrefix()} Transport sending: ${JSON.stringify(msg)}`);
+            const method = 'method' in msg ? msg.method : undefined;
+            const id = 'id' in msg ? msg.id : undefined;
+            dataSchemas.logger.debug(`${this.getLogPrefix()} Transport sending: method=${method !== null && method !== void 0 ? method : 'response'} id=${id !== null && id !== void 0 ? id : 'none'}`);
             return originalSend(msg);
         });
+    }
+    setupTransportOnMessageHandler() {
+        var _a;
+        if (!((_a = this.transport) === null || _a === void 0 ? void 0 : _a.onmessage)) {
+            return;
+        }
+        const sdkHandler = this.transport.onmessage;
+        this.transport.onmessage = (msg) => {
+            const method = 'method' in msg ? msg.method : undefined;
+            const id = 'id' in msg ? msg.id : undefined;
+            dataSchemas.logger.debug(`${this.getLogPrefix()} Transport received: method=${method !== null && method !== void 0 ? method : 'response'} id=${id !== null && id !== void 0 ? id : 'none'}`);
+            sdkHandler(msg);
+        };
     }
     connect() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.disconnect();
+                // preserve cycle tracking across reconnects so the circuit breaker can detect rapid cycling
+                yield this.disconnect(false);
                 yield this.connectClient();
                 if (!(yield this.isConnected())) {
                     throw new Error('Connection not established');
@@ -24822,12 +26209,34 @@ class MCPConnection extends events.EventEmitter {
     }
     setupTransportErrorHandlers(transport) {
         transport.onerror = (error) => {
-            // Extract meaningful error information (handles "SSE error: undefined" cases)
-            const { message: errorMessage, code: errorCode, isProxyHint, isTransient, } = extractSSEErrorMessage(error);
-            // Ignore SSE 404 errors for servers that don't support SSE
-            if (errorCode === 404 && errorMessage.toLowerCase().includes('failed to open sse stream')) {
-                dataSchemas.logger.warn(`${this.getLogPrefix()} SSE stream not available (404). Ignoring.`);
+            var _a;
+            const rawMessage = error && typeof error === 'object' ? ((_a = error.message) !== null && _a !== void 0 ? _a : '') : '';
+            /**
+             * The MCP SDK's StreamableHTTPClientTransport fires onerror for SSE GET stream
+             * disconnects but also handles reconnection internally via _scheduleReconnection.
+             * Escalating these to a full transport rebuild creates a redundant reconnection
+             * loop. Log at debug level and let the SDK recover the GET stream on its own.
+             *
+             * "Maximum reconnection attempts … exceeded" means the SDK gave up — that one
+             * must fall through so our higher-level reconnection takes over.
+             */
+            if (rawMessage.startsWith(SDK_SSE_STREAM_DISCONNECTED) ||
+                rawMessage.startsWith(SDK_SSE_RECONNECT_FAILED)) {
+                dataSchemas.logger.debug(`${this.getLogPrefix()} SDK SSE stream recovery in progress: ${rawMessage}`);
                 return;
+            }
+            const { message: errorMessage, code: errorCode, isProxyHint, isTransient, } = extractSSEErrorMessage(error);
+            if (errorCode === 400 || errorCode === 404 || errorCode === 405 || errorCode === 406) {
+                const hasSession = 'sessionId' in transport &&
+                    transport.sessionId != null &&
+                    transport.sessionId !== '';
+                if (!hasSession && errorMessage.toLowerCase().includes('failed to open sse stream')) {
+                    dataSchemas.logger.warn(`${this.getLogPrefix()} SSE stream not available (${errorCode}), no session. Ignoring.`);
+                    return;
+                }
+                if (hasSession) {
+                    dataSchemas.logger.warn(`${this.getLogPrefix()} ${errorCode} with active session — session lost, triggering reconnection.`);
+                }
             }
             // Check if it's an OAuth authentication error
             if (this.isOAuthError(error)) {
@@ -24875,13 +26284,24 @@ class MCPConnection extends events.EventEmitter {
             this.emit('connectionChange', 'error');
         };
     }
-    disconnect() {
+    closeAgents() {
         return __awaiter(this, void 0, void 0, function* () {
+            const logPrefix = this.getLogPrefix();
+            const closing = this.agents.map((agent) => agent.close().catch((err) => {
+                dataSchemas.logger.debug(`${logPrefix} Agent close error (non-fatal):`, err);
+            }));
+            this.agents = [];
+            yield Promise.all(closing);
+        });
+    }
+    disconnect() {
+        return __awaiter(this, arguments, void 0, function* (resetCycleTracking = true) {
             try {
                 if (this.transport) {
                     yield this.client.close();
                     this.transport = null;
                 }
+                yield this.closeAgents();
                 if (this.connectionState === 'disconnected') {
                     return;
                 }
@@ -24890,6 +26310,9 @@ class MCPConnection extends events.EventEmitter {
             }
             finally {
                 this.connectPromise = null;
+                if (!resetCycleTracking) {
+                    this.recordCycle();
+                }
             }
         });
     }
@@ -25033,6 +26456,10 @@ class MCPConnection extends events.EventEmitter {
             if (message.includes('authentication required') || message.includes('unauthorized')) {
                 return true;
             }
+            // Check for missing authorization values (e.g., Amazon Ads MCP returns HTTP 400 with this)
+            if (message.includes('no authorization')) {
+                return true;
+            }
         }
         return false;
     }
@@ -25063,6 +26490,7 @@ class MCPConnection extends events.EventEmitter {
         return false;
     }
 }
+MCPConnection.circuitBreakers = new Map();
 
 /**
  * Factory for creating MCP connections with optional OAuth authentication.
@@ -30571,7 +31999,7 @@ const OAUTH_CSRF_COOKIE = 'oauth_csrf';
 const OAUTH_CSRF_MAX_AGE = 10 * 60 * 1000;
 const OAUTH_SESSION_COOKIE = 'oauth_session';
 const OAUTH_SESSION_MAX_AGE = 24 * 60 * 60 * 1000;
-const OAUTH_SESSION_COOKIE_PATH = '/api';
+const OAUTH_SESSION_COOKIE_PATH = '/v1/chat';
 /**
  * Determines if secure cookies should be used.
  * Returns `true` in production unless the server is running on localhost (HTTP).
@@ -30871,10 +32299,10 @@ function getAccessToken(_a, _b) {
     });
 }
 
+const COOLDOWN_SCHEDULE_MS = [5 * 60 * 1000, 10 * 60 * 1000, 20 * 60 * 1000, 30 * 60 * 1000];
 class OAuthReconnectionTracker {
     constructor() {
-        /** Map of userId -> Set of serverNames that have failed reconnection */
-        this.failed = new Map();
+        this.failedMeta = new Map();
         /** Map of userId -> Set of serverNames that are actively reconnecting */
         this.active = new Map();
         /** Map of userId:serverName -> timestamp when reconnection started */
@@ -30883,8 +32311,18 @@ class OAuthReconnectionTracker {
         this.RECONNECTION_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
     }
     isFailed(userId, serverName) {
-        var _a, _b;
-        return (_b = (_a = this.failed.get(userId)) === null || _a === void 0 ? void 0 : _a.has(serverName)) !== null && _b !== void 0 ? _b : false;
+        var _a;
+        const meta = (_a = this.failedMeta.get(userId)) === null || _a === void 0 ? void 0 : _a.get(serverName);
+        if (!meta) {
+            return false;
+        }
+        const idx = Math.min(meta.attempts - 1, COOLDOWN_SCHEDULE_MS.length - 1);
+        const cooldown = COOLDOWN_SCHEDULE_MS[idx];
+        const elapsed = Date.now() - meta.lastFailedAt;
+        if (elapsed >= cooldown) {
+            return false;
+        }
+        return true;
     }
     /** Check if server is in the active set (original simple check) */
     isActive(userId, serverName) {
@@ -30916,10 +32354,15 @@ class OAuthReconnectionTracker {
     }
     setFailed(userId, serverName) {
         var _a;
-        if (!this.failed.has(userId)) {
-            this.failed.set(userId, new Set());
+        if (!this.failedMeta.has(userId)) {
+            this.failedMeta.set(userId, new Map());
         }
-        (_a = this.failed.get(userId)) === null || _a === void 0 ? void 0 : _a.add(serverName);
+        const userMap = this.failedMeta.get(userId);
+        const existing = userMap.get(serverName);
+        userMap.set(serverName, {
+            attempts: ((_a = existing === null || existing === void 0 ? void 0 : existing.attempts) !== null && _a !== void 0 ? _a : 0) + 1,
+            lastFailedAt: Date.now(),
+        });
     }
     setActive(userId, serverName) {
         var _a;
@@ -30932,10 +32375,10 @@ class OAuthReconnectionTracker {
         this.activeTimestamps.set(key, Date.now());
     }
     removeFailed(userId, serverName) {
-        const userServers = this.failed.get(userId);
-        userServers === null || userServers === void 0 ? void 0 : userServers.delete(serverName);
-        if ((userServers === null || userServers === void 0 ? void 0 : userServers.size) === 0) {
-            this.failed.delete(userId);
+        const userMap = this.failedMeta.get(userId);
+        userMap === null || userMap === void 0 ? void 0 : userMap.delete(serverName);
+        if ((userMap === null || userMap === void 0 ? void 0 : userMap.size) === 0) {
+            this.failedMeta.delete(userId);
         }
     }
     removeActive(userId, serverName) {
@@ -30947,6 +32390,14 @@ class OAuthReconnectionTracker {
         /** Clear timestamp tracking */
         const key = `${userId}:${serverName}`;
         this.activeTimestamps.delete(key);
+    }
+    /** Returns map sizes for diagnostics */
+    getStats() {
+        return {
+            usersWithFailedServers: this.failedMeta.size,
+            usersWithActiveReconnections: this.active.size,
+            activeTimestamps: this.activeTimestamps.size,
+        };
     }
 }
 
@@ -46052,6 +47503,7 @@ exports.initializeOpenAI = initializeOpenAI;
 exports.initializeS3 = initializeS3;
 exports.inputSchema = inputSchema;
 exports.isActionDomainAllowed = isActionDomainAllowed;
+exports.isAddressAllowed = isAddressAllowed;
 exports.isAdminPanelRedirect = isAdminPanelRedirect;
 exports.isAnthropicVertexCredentials = isAnthropicVertexCredentials;
 exports.isChatCompletionValidationFailure = isChatCompletionValidationFailure;
@@ -46065,6 +47517,7 @@ exports.isMCPDomainNotAllowedError = isMCPDomainNotAllowedError;
 exports.isMCPInspectionFailedError = isMCPInspectionFailedError;
 exports.isMCPTool = isMCPTool;
 exports.isMemoryEnabled = isMemoryEnabled;
+exports.isOAuthUrlAllowed = isOAuthUrlAllowed;
 exports.isOpenIDAvailable = isOpenIDAvailable;
 exports.isOpenIDTokenValid = isOpenIDTokenValid;
 exports.isPrivateIP = isPrivateIP;
@@ -46179,6 +47632,7 @@ exports.uploadGoogleVertexMistralOCR = uploadGoogleVertexMistralOCR;
 exports.uploadMistralOCR = uploadMistralOCR;
 exports.validateAgentModel = validateAgentModel;
 exports.validateAudio = validateAudio;
+exports.validateEndpointURL = validateEndpointURL;
 exports.validateImage = validateImage;
 exports.validateOAuthCsrf = validateOAuthCsrf;
 exports.validateOAuthSession = validateOAuthSession;
@@ -46191,6 +47645,7 @@ exports.violationCache = violationCache;
 exports.violationFile = violationFile;
 exports.withTimeout = withTimeout;
 exports.wolframSchema = wolframSchema;
+exports.wrapHanzoGatewayFetch = wrapHanzoGatewayFetch;
 exports.writeAttachmentEvent = writeAttachmentEvent;
 exports.writeDone = writeDone;
 exports.writeEvent = writeEvent;
