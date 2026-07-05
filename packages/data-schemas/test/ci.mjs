@@ -35,6 +35,7 @@ const ISOLATED = [
   'src/methods/batch7b.sqlite.spec.ts',
   'src/methods/batch8a.sqlite.spec.ts',
   'src/methods/batch8b.sqlite.spec.ts',
+  'src/methods/authStore.sqlite.spec.ts',
 ];
 
 const runJest = (args) =>
