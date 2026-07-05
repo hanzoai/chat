@@ -1,5 +1,6 @@
 import logger from '~/config/winston';
 import type { FilterQuery, Model, Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import type { IBalance, IBalanceUpdate, TransactionData } from '~/types';
 import type { ITransaction } from '~/schema/transaction';
 
@@ -65,12 +66,34 @@ export interface TransactionResult {
 }
 
 export function createTransactionMethods(
-  mongoose: typeof import('mongoose'),
+  handle: DataHandle,
   txMethods: {
     getMultiplier: (params: MultiplierParams) => number;
     getCacheMultiplier: (params: CacheMultiplierParams) => number | null;
   },
 ) {
+  /**
+   * Persists a transaction through the store-aware handle. The token-value
+   * calculators mutate a plain working object with derived fields (rate,
+   * tokenValue, rateDetail) plus the pass-through calculator inputs
+   * (endpointTokenConfig, inputTokenCount) that are NOT part of the Transaction
+   * schema. Mongoose silently strips non-schema paths on save; the SQLite
+   * DocModel does not, so strip those transient inputs here to keep the persisted
+   * document identical across both backends. Replaces `new Transaction()` +
+   * `.save()` with the bounded `.create()`.
+   */
+  async function persistTransaction(
+    txn: InternalTxDoc & Record<string, unknown>,
+  ): Promise<ITransaction> {
+    const Transaction = handle.models.Transaction as Model<ITransaction>;
+    const {
+      endpointTokenConfig: _endpointTokenConfig,
+      inputTokenCount: _inputTokenCount,
+      rateDetail: _rateDetail,
+      ...doc
+    } = txn;
+    return (await Transaction.create(doc as unknown as ITransaction)) as unknown as ITransaction;
+  }
   /** Calculate and set the tokenValue for a transaction */
   function calculateTokenValue(txn: InternalTxDoc) {
     const { valueKey, tokenType, model, endpointTokenConfig, inputTokenCount } = txn;
@@ -182,7 +205,7 @@ export function createTransactionMethods(
     incrementValue: number;
     setValues?: IBalanceUpdate;
   }): Promise<IBalance> {
-    const Balance = mongoose.models.Balance as Model<IBalance>;
+    const Balance = handle.models.Balance as Model<IBalance>;
     const maxRetries = 10;
     let delay = 50;
     let lastError: Error | null = null;
@@ -269,21 +292,18 @@ export function createTransactionMethods(
     if (txData.rawAmount != null && isNaN(txData.rawAmount)) {
       return;
     }
-    const Transaction = mongoose.models.Transaction;
-    const transaction = new Transaction(txData);
-    transaction.endpointTokenConfig = txData.endpointTokenConfig;
-    transaction.inputTokenCount = txData.inputTokenCount;
-    calculateTokenValue(transaction);
-    await transaction.save();
+    const txn = { ...txData } as InternalTxDoc & Record<string, unknown>;
+    calculateTokenValue(txn);
+    const transaction = await persistTransaction(txn);
 
     const balanceResponse = await updateBalance({
-      user: transaction.user as string,
+      user: String(transaction.user),
       incrementValue: txData.rawAmount ?? 0,
       setValues: { lastRefill: new Date() },
     });
     const result = {
       rate: transaction.rate as number,
-      user: transaction.user.toString() as string,
+      user: String(transaction.user),
       balance: balanceResponse.tokenCredits,
       transaction,
     };
@@ -304,26 +324,22 @@ export function createTransactionMethods(
       return;
     }
 
-    const Transaction = mongoose.models.Transaction;
-    const transaction = new Transaction(txData);
-    transaction.endpointTokenConfig = txData.endpointTokenConfig;
-    transaction.inputTokenCount = txData.inputTokenCount;
-    calculateTokenValue(transaction);
-
-    await transaction.save();
+    const txn = { ...txData } as InternalTxDoc & Record<string, unknown>;
+    calculateTokenValue(txn);
+    const transaction = await persistTransaction(txn);
     if (!balance?.enabled) {
       return;
     }
 
     const incrementValue = transaction.tokenValue as number;
     const balanceResponse = await updateBalance({
-      user: transaction.user as string,
+      user: String(transaction.user),
       incrementValue,
     });
 
     return {
       rate: transaction.rate as number,
-      user: transaction.user.toString() as string,
+      user: String(transaction.user),
       balance: balanceResponse.tokenCredits,
       [transaction.tokenType as string]: incrementValue,
     } as TransactionResult;
@@ -340,14 +356,9 @@ export function createTransactionMethods(
       return;
     }
 
-    const Transaction = mongoose.models.Transaction;
-    const transaction = new Transaction(txData);
-    transaction.endpointTokenConfig = txData.endpointTokenConfig;
-    transaction.inputTokenCount = txData.inputTokenCount;
-
-    calculateStructuredTokenValue(transaction);
-
-    await transaction.save();
+    const txn = { ...txData } as InternalTxDoc & Record<string, unknown>;
+    calculateStructuredTokenValue(txn);
+    const transaction = await persistTransaction(txn);
 
     if (!balance?.enabled) {
       return;
@@ -356,13 +367,13 @@ export function createTransactionMethods(
     const incrementValue = transaction.tokenValue as number;
 
     const balanceResponse = await updateBalance({
-      user: transaction.user as string,
+      user: String(transaction.user),
       incrementValue,
     });
 
     return {
       rate: transaction.rate as number,
-      user: transaction.user.toString() as string,
+      user: String(transaction.user),
       balance: balanceResponse.tokenCredits,
       [transaction.tokenType as string]: incrementValue,
     } as TransactionResult;
@@ -373,7 +384,7 @@ export function createTransactionMethods(
    */
   async function getTransactions(filter: FilterQuery<ITransaction>) {
     try {
-      const Transaction = mongoose.models.Transaction;
+      const Transaction = handle.models.Transaction as Model<ITransaction>;
       return await Transaction.find(filter).lean();
     } catch (error) {
       logger.error('Error querying transactions:', error);
@@ -383,7 +394,7 @@ export function createTransactionMethods(
 
   /** Retrieves a user's balance record. */
   async function findBalanceByUser(user: string): Promise<IBalance | null> {
-    const Balance = mongoose.models.Balance as Model<IBalance>;
+    const Balance = handle.models.Balance as Model<IBalance>;
     return Balance.findOne({ user }).lean<IBalance>();
   }
 
@@ -392,7 +403,7 @@ export function createTransactionMethods(
     user: string,
     fields: IBalanceUpdate,
   ): Promise<IBalance | null> {
-    const Balance = mongoose.models.Balance as Model<IBalance>;
+    const Balance = handle.models.Balance as Model<IBalance>;
     return Balance.findOneAndUpdate(
       { user },
       { $set: fields },
@@ -402,13 +413,13 @@ export function createTransactionMethods(
 
   /** Deletes transactions matching a filter. */
   async function deleteTransactions(filter: FilterQuery<ITransaction>) {
-    const Transaction = mongoose.models.Transaction;
+    const Transaction = handle.models.Transaction as Model<ITransaction>;
     return Transaction.deleteMany(filter);
   }
 
   /** Deletes balance records matching a filter. */
   async function deleteBalances(filter: FilterQuery<IBalance>) {
-    const Balance = mongoose.models.Balance as Model<IBalance>;
+    const Balance = handle.models.Balance as Model<IBalance>;
     return Balance.deleteMany(filter);
   }
 
@@ -417,7 +428,7 @@ export function createTransactionMethods(
       return;
     }
     try {
-      const Transaction = mongoose.models.Transaction;
+      const Transaction = handle.models.Transaction as Model<ITransaction>;
       await Transaction.insertMany(docs);
     } catch (error) {
       logger.error('[bulkInsertTransactions] Error inserting transaction docs:', error);
