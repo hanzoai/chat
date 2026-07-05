@@ -46,16 +46,15 @@ export type AllMethods = UserMethods &
 export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
   // Registry-aware handle so migrated domains resolve to the backend selected by
   // CHAT_STORE_SQLITE / CHAT_STORE_DUALWRITE. Unset flags => createModels returns
-  // pure mongoose => unchanged. User/Session/Token read only `.models`/`.Types`,
-  // both of which this handle provides, so they route through the seam via the
-  // cast below without any edit to their factory bodies (a mongoose instance is
-  // itself structurally `{ models, Types }`, and so is this handle).
+  // pure mongoose => unchanged. EVERY domain — including User/Session/Token — now
+  // takes this `DataHandle` and reads `.models`/`.Types` off it, the one seam the
+  // 28 migrated domains use; none construct mongoose documents (`new Model()`),
+  // so all route through the store uniformly.
   const dbHandle = { models: createModels(mongoose), Types: mongoose.Types };
-  const storeHandle = dbHandle as unknown as typeof import('mongoose');
   return {
-    ...createUserMethods(storeHandle),
-    ...createSessionMethods(storeHandle),
-    ...createTokenMethods(storeHandle),
+    ...createUserMethods(dbHandle),
+    ...createSessionMethods(dbHandle),
+    ...createTokenMethods(dbHandle),
     ...createRoleMethods(dbHandle),
     ...createKeyMethods(dbHandle),
     ...createFileMethods(dbHandle),

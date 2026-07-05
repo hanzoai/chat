@@ -1,12 +1,18 @@
-import mongoose, { FilterQuery } from 'mongoose';
-import type { IUser, BalanceConfig, CreateUserRequest, UserDeleteResult } from '~/types';
+import type { FilterQuery, Model, Types } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
+import type { IUser, IBalance, BalanceConfig, CreateUserRequest, UserDeleteResult } from '~/types';
 import { signPayload } from '~/crypto';
 
 /** Default JWT session expiry: 15 minutes in milliseconds */
 export const DEFAULT_SESSION_EXPIRY = 1000 * 60 * 15;
 
-/** Factory function that takes mongoose instance and returns the methods */
-export function createUserMethods(mongoose: typeof import('mongoose')) {
+/**
+ * Factory that returns the user methods bound to a store-aware `DataHandle`
+ * (same seam as the migrated domains). `handle.models.User` / `.Balance` resolve
+ * to the backend selected by `createModels()` + `applySqliteOverrides()`; every
+ * method speaks only the bounded Model API, never `new User()` / `doc.save()`.
+ */
+export function createUserMethods(handle: DataHandle) {
   /**
    * Normalizes email fields in search criteria to lowercase and trimmed.
    * Handles both direct email fields and $or arrays containing email conditions.
@@ -35,7 +41,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     searchCriteria: FilterQuery<IUser>,
     fieldsToSelect?: string | string[] | null,
   ): Promise<IUser | null> {
-    const User = mongoose.models.User;
+    const User = handle.models.User as Model<IUser>;
     const normalizedCriteria = normalizeEmailInCriteria(searchCriteria);
     const query = User.findOne(normalizedCriteria);
     if (fieldsToSelect) {
@@ -48,7 +54,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
    * Count the number of user documents in the collection based on the provided filter.
    */
   async function countUsers(filter: FilterQuery<IUser> = {}): Promise<number> {
-    const User = mongoose.models.User;
+    const User = handle.models.User as Model<IUser>;
     return await User.countDocuments(filter);
   }
 
@@ -60,9 +66,9 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     balanceConfig?: BalanceConfig,
     disableTTL: boolean = true,
     returnUser: boolean = false,
-  ): Promise<mongoose.Types.ObjectId | Partial<IUser>> {
-    const User = mongoose.models.User;
-    const Balance = mongoose.models.Balance;
+  ): Promise<Types.ObjectId | Partial<IUser>> {
+    const User = handle.models.User as Model<IUser>;
+    const Balance = handle.models.Balance as Model<IBalance>;
 
     const userData: Partial<IUser> = {
       ...data,
@@ -122,14 +128,14 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     if (returnUser) {
       return user.toObject() as Partial<IUser>;
     }
-    return user._id as mongoose.Types.ObjectId;
+    return user._id as unknown as Types.ObjectId;
   }
 
   /**
    * Update a user with new data without overwriting existing properties.
    */
   async function updateUser(userId: string, updateData: Partial<IUser>): Promise<IUser | null> {
-    const User = mongoose.models.User;
+    const User = handle.models.User as Model<IUser>;
     const updateOperation = {
       $set: updateData,
       $unset: { expiresAt: '' }, // Remove the expiresAt field to prevent TTL
@@ -147,7 +153,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     userId: string,
     fieldsToSelect?: string | string[] | null,
   ): Promise<IUser | null> {
-    const User = mongoose.models.User;
+    const User = handle.models.User as Model<IUser>;
     const query = User.findById(userId);
     if (fieldsToSelect) {
       query.select(fieldsToSelect);
@@ -160,7 +166,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
    */
   async function deleteUserById(userId: string): Promise<UserDeleteResult> {
     try {
-      const User = mongoose.models.User;
+      const User = handle.models.User as Model<IUser>;
       const result = await User.deleteOne({ _id: userId });
       if (result.deletedCount === 0) {
         return { deletedCount: 0, message: 'No user found with that ID.' };
@@ -204,7 +210,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     userId: string,
     memoriesEnabled: boolean,
   ): Promise<IUser | null> {
-    const User = mongoose.models.User;
+    const User = handle.models.User as Model<IUser>;
 
     // First, ensure the personalization object exists
     const user = await User.findById(userId);
@@ -240,13 +246,13 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     searchPattern: string;
     limit?: number;
     fieldsToSelect?: string | string[] | null;
-  }) {
+  }): Promise<IUser[]> {
     if (!searchPattern || searchPattern.trim().length === 0) {
       return [];
     }
 
     const regex = new RegExp(searchPattern.trim(), 'i');
-    const User = mongoose.models.User;
+    const User = handle.models.User as Model<IUser>;
 
     const query = User.find({
       $or: [{ email: regex }, { name: regex }, { username: regex }],
@@ -263,7 +269,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     const startsWithPattern = searchPattern.trim().toLowerCase();
 
     const scoredUsers = users.map((user) => {
-      const searchableFields = [user.name, user.email, user.username].filter(Boolean);
+      const searchableFields = [user.name, user.email, user.username].filter(Boolean) as string[];
       let maxScore = 0;
 
       for (const field of searchableFields) {
@@ -301,7 +307,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
         // Remove the search score from final results
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { _searchScore, ...userWithoutScore } = user;
-        return userWithoutScore;
+        return userWithoutScore as unknown as IUser;
       });
   };
 
