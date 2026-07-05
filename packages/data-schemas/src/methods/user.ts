@@ -246,7 +246,7 @@ export function createUserMethods(handle: DataHandle) {
     searchPattern: string;
     limit?: number;
     fieldsToSelect?: string | string[] | null;
-  }) {
+  }): Promise<IUser[]> {
     if (!searchPattern || searchPattern.trim().length === 0) {
       return [];
     }
@@ -307,7 +307,7 @@ export function createUserMethods(handle: DataHandle) {
         // Remove the search score from final results
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { _searchScore, ...userWithoutScore } = user;
-        return userWithoutScore;
+        return userWithoutScore as unknown as IUser;
       });
   };
 

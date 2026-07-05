@@ -288,7 +288,11 @@ export function createTransactionMethods(
   /**
    * Creates an auto-refill transaction that also updates balance.
    */
-  async function createAutoRefillTransaction(txData: TxData) {
+  async function createAutoRefillTransaction(
+    txData: TxData,
+  ): Promise<
+    { rate: number; user: string; balance: number; transaction: ITransaction } | undefined
+  > {
     if (txData.rawAmount != null && isNaN(txData.rawAmount)) {
       return;
     }
@@ -382,10 +386,10 @@ export function createTransactionMethods(
   /**
    * Queries and retrieves transactions based on a given filter.
    */
-  async function getTransactions(filter: FilterQuery<ITransaction>) {
+  async function getTransactions(filter: FilterQuery<ITransaction>): Promise<ITransaction[]> {
     try {
       const Transaction = handle.models.Transaction as Model<ITransaction>;
-      return await Transaction.find(filter).lean();
+      return (await Transaction.find(filter).lean()) as unknown as ITransaction[];
     } catch (error) {
       logger.error('Error querying transactions:', error);
       throw error;
@@ -412,13 +416,17 @@ export function createTransactionMethods(
   }
 
   /** Deletes transactions matching a filter. */
-  async function deleteTransactions(filter: FilterQuery<ITransaction>) {
+  async function deleteTransactions(
+    filter: FilterQuery<ITransaction>,
+  ): Promise<{ deletedCount?: number }> {
     const Transaction = handle.models.Transaction as Model<ITransaction>;
     return Transaction.deleteMany(filter);
   }
 
   /** Deletes balance records matching a filter. */
-  async function deleteBalances(filter: FilterQuery<IBalance>) {
+  async function deleteBalances(
+    filter: FilterQuery<IBalance>,
+  ): Promise<{ deletedCount?: number }> {
     const Balance = handle.models.Balance as Model<IBalance>;
     return Balance.deleteMany(filter);
   }
