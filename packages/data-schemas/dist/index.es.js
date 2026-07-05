@@ -6528,10 +6528,45 @@ class SessionError extends Error {
 }
 /** Default refresh token expiry: 7 days in milliseconds */
 const DEFAULT_REFRESH_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 * 7;
-// Factory function that takes mongoose instance and returns the methods
-function createSessionMethods(mongoose) {
+/**
+ * Factory that returns the session methods bound to a store-aware `DataHandle`
+ * (the same seam the 28 migrated domains use). `handle.models.Session` resolves
+ * to whichever backend `createModels()` + `applySqliteOverrides()` selected — a
+ * mongoose `Model`, a SQLite `DocModel`, or a `DualWriteModel` — so every method
+ * here speaks ONLY the bounded Model API (`.create/.findOne/.updateOne/
+ * .findByIdAndUpdate/.deleteOne/.deleteMany/.countDocuments`). It never uses the
+ * mongoose-document constructor (`new Session()`) or `doc.save()`, which are
+ * absent from the document-store models and were the P1 that broke cold logins
+ * once Session was flipped to the SQLite store.
+ */
+function createSessionMethods(handle) {
     /**
-     * Creates a new session for a user
+     * The seam's ObjectId constructor. Both mongoose `Types.ObjectId` and the
+     * SQLite handle's shim carry the static `isValid`, which the bare `DataHandle`
+     * constructor type does not declare — so narrow it here at the single seam.
+     */
+    const objectIdCtor = () => handle.Types.ObjectId;
+    /**
+     * Signs a refresh-token JWT that binds the user and session ids. Kept internal
+     * so both createSession (insert) and generateRefreshToken (rotate) sign with
+     * identical claims + expiry math.
+     */
+    async function signRefreshToken(userId, sessionId, expiration) {
+        const expiresAt = expiration ? expiration.getTime() : Date.now() + DEFAULT_REFRESH_TOKEN_EXPIRY;
+        return await signPayload({
+            payload: {
+                id: userId,
+                sessionId,
+            },
+            secret: process.env.JWT_REFRESH_SECRET,
+            expirationTime: Math.floor((expiresAt - Date.now()) / 1000),
+        });
+    }
+    /**
+     * Creates a new session for a user. Generates the session `_id` up front so the
+     * refresh token can bind it, then persists the session (with its hashed refresh
+     * token) in a single `.create()` — the store-agnostic equivalent of the old
+     * `new Session({...})` + `session.save()`.
      */
     async function createSession(userId, options = {}) {
         var _a;
@@ -6540,13 +6575,18 @@ function createSessionMethods(mongoose) {
         }
         const expiresIn = (_a = options.expiresIn) !== null && _a !== void 0 ? _a : DEFAULT_REFRESH_TOKEN_EXPIRY;
         try {
-            const Session = mongoose.models.Session;
-            const currentSession = new Session({
+            const Session = handle.models.Session;
+            const expiration = options.expiration || new Date(Date.now() + expiresIn);
+            const _id = new (objectIdCtor())();
+            const refreshToken = await signRefreshToken(userId, _id, expiration);
+            const refreshTokenHash = await hashToken(refreshToken);
+            const session = (await Session.create({
+                _id,
                 user: userId,
-                expiration: options.expiration || new Date(Date.now() + expiresIn),
-            });
-            const refreshToken = await generateRefreshToken(currentSession);
-            return { session: currentSession, refreshToken };
+                expiration,
+                refreshTokenHash,
+            }));
+            return { session, refreshToken };
         }
         catch (error) {
             logger$1.error('[createSession] Error creating session:', error);
@@ -6558,7 +6598,7 @@ function createSessionMethods(mongoose) {
      */
     async function findSession(params, options = { lean: true }) {
         try {
-            const Session = mongoose.models.Session;
+            const Session = handle.models.Session;
             const query = {};
             if (!params.refreshToken && !params.userId && !params.sessionId) {
                 throw new SessionError('At least one search parameter is required', 'INVALID_SEARCH_PARAMS');
@@ -6576,7 +6616,7 @@ function createSessionMethods(mongoose) {
                     'sessionId' in params.sessionId
                     ? params.sessionId.sessionId
                     : params.sessionId;
-                if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+                if (!objectIdCtor().isValid(sessionId)) {
                     throw new SessionError('Invalid session ID format', 'INVALID_SESSION_ID');
                 }
                 query._id = sessionId;
@@ -6587,7 +6627,7 @@ function createSessionMethods(mongoose) {
             if (options.lean) {
                 return (await sessionQuery.lean());
             }
-            return await sessionQuery.exec();
+            return (await sessionQuery.exec());
         }
         catch (error) {
             logger$1.error('[findSession] Error finding session:', error);
@@ -6595,19 +6635,25 @@ function createSessionMethods(mongoose) {
         }
     }
     /**
-     * Updates session expiration
+     * Updates session expiration. Accepts either a session id or a session object;
+     * persists the new expiration via the bounded `.findByIdAndUpdate()` (was
+     * `doc.save()`), returning the updated session.
      */
     async function updateExpiration(session, newExpiration, options = {}) {
         var _a;
         const expiresIn = (_a = options.expiresIn) !== null && _a !== void 0 ? _a : DEFAULT_REFRESH_TOKEN_EXPIRY;
         try {
-            const Session = mongoose.models.Session;
-            const sessionDoc = typeof session === 'string' ? await Session.findById(session) : session;
-            if (!sessionDoc) {
+            const Session = handle.models.Session;
+            const sessionId = typeof session === 'string' ? session : session === null || session === void 0 ? void 0 : session._id;
+            if (sessionId == null) {
                 throw new SessionError('Session not found', 'SESSION_NOT_FOUND');
             }
-            sessionDoc.expiration = newExpiration || new Date(Date.now() + expiresIn);
-            return await sessionDoc.save();
+            const expiration = newExpiration || new Date(Date.now() + expiresIn);
+            const updated = (await Session.findByIdAndUpdate(sessionId, { $set: { expiration } }, { new: true }));
+            if (!updated) {
+                throw new SessionError('Session not found', 'SESSION_NOT_FOUND');
+            }
+            return updated;
         }
         catch (error) {
             logger$1.error('[updateExpiration] Error updating session:', error);
@@ -6619,7 +6665,7 @@ function createSessionMethods(mongoose) {
      */
     async function deleteSession(params) {
         try {
-            const Session = mongoose.models.Session;
+            const Session = handle.models.Session;
             if (!params.refreshToken && !params.sessionId) {
                 throw new SessionError('Either refreshToken or sessionId is required', 'INVALID_DELETE_PARAMS');
             }
@@ -6646,12 +6692,12 @@ function createSessionMethods(mongoose) {
      */
     async function deleteAllUserSessions(userId, options = {}) {
         try {
-            const Session = mongoose.models.Session;
+            const Session = handle.models.Session;
             if (!userId) {
                 throw new SessionError('User ID is required', 'INVALID_USER_ID');
             }
             const userIdString = typeof userId === 'object' && userId !== null ? userId.userId : userId;
-            if (!mongoose.Types.ObjectId.isValid(userIdString)) {
+            if (!objectIdCtor().isValid(userIdString)) {
                 throw new SessionError('Invalid user ID format', 'INVALID_USER_ID_FORMAT');
             }
             const query = { user: userIdString };
@@ -6670,29 +6716,25 @@ function createSessionMethods(mongoose) {
         }
     }
     /**
-     * Generates a refresh token for a session
+     * Rotates the refresh token for an EXISTING (already-persisted) session: signs a
+     * fresh token bound to the session, then persists the new hash via the bounded
+     * `.updateOne()` (was `doc.save()`). The initial insert lives in createSession.
      */
     async function generateRefreshToken(session) {
+        var _a;
         if (!session || !session.user) {
             throw new SessionError('Invalid session object', 'INVALID_SESSION');
         }
         try {
-            const expiresIn = session.expiration
-                ? session.expiration.getTime()
-                : Date.now() + DEFAULT_REFRESH_TOKEN_EXPIRY;
+            const expiration = (_a = session.expiration) !== null && _a !== void 0 ? _a : new Date(Date.now() + DEFAULT_REFRESH_TOKEN_EXPIRY);
             if (!session.expiration) {
-                session.expiration = new Date(expiresIn);
+                session.expiration = expiration;
             }
-            const refreshToken = await signPayload({
-                payload: {
-                    id: session.user,
-                    sessionId: session._id,
-                },
-                secret: process.env.JWT_REFRESH_SECRET,
-                expirationTime: Math.floor((expiresIn - Date.now()) / 1000),
-            });
-            session.refreshTokenHash = await hashToken(refreshToken);
-            await session.save();
+            const refreshToken = await signRefreshToken(session.user, session._id, expiration);
+            const refreshTokenHash = await hashToken(refreshToken);
+            session.refreshTokenHash = refreshTokenHash;
+            const Session = handle.models.Session;
+            await Session.updateOne({ _id: session._id }, { $set: { refreshTokenHash } });
             return refreshToken;
         }
         catch (error) {
@@ -6705,7 +6747,7 @@ function createSessionMethods(mongoose) {
      */
     async function countActiveSessions(userId) {
         try {
-            const Session = mongoose.models.Session;
+            const Session = handle.models.Session;
             if (!userId) {
                 throw new SessionError('User ID is required', 'INVALID_USER_ID');
             }
@@ -6731,14 +6773,20 @@ function createSessionMethods(mongoose) {
     };
 }
 
-// Factory function that takes mongoose instance and returns the methods
-function createTokenMethods(mongoose) {
+/**
+ * Factory that returns the token methods bound to a store-aware `DataHandle`
+ * (same seam as the migrated domains). `handle.models.Token` resolves to the
+ * backend selected by `createModels()` + `applySqliteOverrides()` (mongoose
+ * `Model`, SQLite `DocModel`, or `DualWriteModel`); every method speaks only the
+ * bounded Model API, never `new Token()` / `doc.save()`.
+ */
+function createTokenMethods(handle) {
     /**
      * Creates a new Token instance.
      */
     async function createToken(tokenData) {
         try {
-            const Token = mongoose.models.Token;
+            const Token = handle.models.Token;
             const currentTime = new Date();
             const expiresAt = new Date(currentTime.getTime() + tokenData.expiresIn * 1000);
             const newTokenData = {
@@ -6758,7 +6806,7 @@ function createTokenMethods(mongoose) {
      */
     async function updateToken(query, updateData) {
         try {
-            const Token = mongoose.models.Token;
+            const Token = handle.models.Token;
             const dataToUpdate = { ...updateData };
             if ((updateData === null || updateData === void 0 ? void 0 : updateData.expiresIn) !== undefined) {
                 dataToUpdate.expiresAt = new Date(Date.now() + updateData.expiresIn * 1000);
@@ -6776,7 +6824,7 @@ function createTokenMethods(mongoose) {
      */
     async function deleteTokens(query) {
         try {
-            const Token = mongoose.models.Token;
+            const Token = handle.models.Token;
             const conditions = [];
             if (query.userId !== undefined) {
                 conditions.push({ userId: query.userId });
@@ -6811,7 +6859,7 @@ function createTokenMethods(mongoose) {
      */
     async function findToken(query, options) {
         try {
-            const Token = mongoose.models.Token;
+            const Token = handle.models.Token;
             const conditions = [];
             if (query.userId) {
                 conditions.push({ userId: query.userId });
@@ -6886,8 +6934,13 @@ function createRoleMethods(handle) {
 
 /** Default JWT session expiry: 15 minutes in milliseconds */
 const DEFAULT_SESSION_EXPIRY = 1000 * 60 * 15;
-/** Factory function that takes mongoose instance and returns the methods */
-function createUserMethods(mongoose) {
+/**
+ * Factory that returns the user methods bound to a store-aware `DataHandle`
+ * (same seam as the migrated domains). `handle.models.User` / `.Balance` resolve
+ * to the backend selected by `createModels()` + `applySqliteOverrides()`; every
+ * method speaks only the bounded Model API, never `new User()` / `doc.save()`.
+ */
+function createUserMethods(handle) {
     /**
      * Normalizes email fields in search criteria to lowercase and trimmed.
      * Handles both direct email fields and $or arrays containing email conditions.
@@ -6912,7 +6965,7 @@ function createUserMethods(mongoose) {
      * Email fields in searchCriteria are automatically normalized to lowercase for case-insensitive matching.
      */
     async function findUser(searchCriteria, fieldsToSelect) {
-        const User = mongoose.models.User;
+        const User = handle.models.User;
         const normalizedCriteria = normalizeEmailInCriteria(searchCriteria);
         const query = User.findOne(normalizedCriteria);
         if (fieldsToSelect) {
@@ -6924,15 +6977,15 @@ function createUserMethods(mongoose) {
      * Count the number of user documents in the collection based on the provided filter.
      */
     async function countUsers(filter = {}) {
-        const User = mongoose.models.User;
+        const User = handle.models.User;
         return await User.countDocuments(filter);
     }
     /**
      * Creates a new user, optionally with a TTL of 1 week.
      */
     async function createUser(data, balanceConfig, disableTTL = true, returnUser = false) {
-        const User = mongoose.models.User;
-        const Balance = mongoose.models.Balance;
+        const User = handle.models.User;
+        const Balance = handle.models.Balance;
         const userData = {
             ...data,
             expiresAt: disableTTL ? undefined : new Date(Date.now() + 604800 * 1000), // 1 week in milliseconds
@@ -6986,7 +7039,7 @@ function createUserMethods(mongoose) {
      * Update a user with new data without overwriting existing properties.
      */
     async function updateUser(userId, updateData) {
-        const User = mongoose.models.User;
+        const User = handle.models.User;
         const updateOperation = {
             $set: updateData,
             $unset: { expiresAt: '' }, // Remove the expiresAt field to prevent TTL
@@ -7000,7 +7053,7 @@ function createUserMethods(mongoose) {
      * Retrieve a user by ID and convert the found user document to a plain object.
      */
     async function getUserById(userId, fieldsToSelect) {
-        const User = mongoose.models.User;
+        const User = handle.models.User;
         const query = User.findById(userId);
         if (fieldsToSelect) {
             query.select(fieldsToSelect);
@@ -7012,7 +7065,7 @@ function createUserMethods(mongoose) {
      */
     async function deleteUserById(userId) {
         try {
-            const User = mongoose.models.User;
+            const User = handle.models.User;
             const result = await User.deleteOne({ _id: userId });
             if (result.deletedCount === 0) {
                 return { deletedCount: 0, message: 'No user found with that ID.' };
@@ -7050,7 +7103,7 @@ function createUserMethods(mongoose) {
      * Handles the edge case where the personalization object doesn't exist.
      */
     async function toggleUserMemories(userId, memoriesEnabled) {
-        const User = mongoose.models.User;
+        const User = handle.models.User;
         // First, ensure the personalization object exists
         const user = await User.findById(userId);
         if (!user) {
@@ -7079,7 +7132,7 @@ function createUserMethods(mongoose) {
             return [];
         }
         const regex = new RegExp(searchPattern.trim(), 'i');
-        const User = mongoose.models.User;
+        const User = handle.models.User;
         const query = User.find({
             $or: [{ email: regex }, { name: regex }, { username: regex }],
         }).limit(limit * 2); // Get more results to allow for relevance sorting
@@ -9843,16 +9896,15 @@ function createShareMethods(handle) {
 function createMethods(mongoose) {
     // Registry-aware handle so migrated domains resolve to the backend selected by
     // CHAT_STORE_SQLITE / CHAT_STORE_DUALWRITE. Unset flags => createModels returns
-    // pure mongoose => unchanged. User/Session/Token read only `.models`/`.Types`,
-    // both of which this handle provides, so they route through the seam via the
-    // cast below without any edit to their factory bodies (a mongoose instance is
-    // itself structurally `{ models, Types }`, and so is this handle).
+    // pure mongoose => unchanged. EVERY domain — including User/Session/Token — now
+    // takes this `DataHandle` and reads `.models`/`.Types` off it, the one seam the
+    // 28 migrated domains use; none construct mongoose documents (`new Model()`),
+    // so all route through the store uniformly.
     const dbHandle = { models: createModels(mongoose), Types: mongoose.Types };
-    const storeHandle = dbHandle;
     return {
-        ...createUserMethods(storeHandle),
-        ...createSessionMethods(storeHandle),
-        ...createTokenMethods(storeHandle),
+        ...createUserMethods(dbHandle),
+        ...createSessionMethods(dbHandle),
+        ...createTokenMethods(dbHandle),
         ...createRoleMethods(dbHandle),
         ...createKeyMethods(dbHandle),
         ...createFileMethods(dbHandle),

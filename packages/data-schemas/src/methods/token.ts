@@ -1,15 +1,22 @@
-import type { QueryOptions } from 'mongoose';
+import type { Model, QueryOptions } from 'mongoose';
+import type { DataHandle } from '~/common/dataHandle';
 import { IToken, TokenCreateData, TokenQuery, TokenUpdateData, TokenDeleteResult } from '~/types';
 import logger from '~/config/winston';
 
-// Factory function that takes mongoose instance and returns the methods
-export function createTokenMethods(mongoose: typeof import('mongoose')) {
+/**
+ * Factory that returns the token methods bound to a store-aware `DataHandle`
+ * (same seam as the migrated domains). `handle.models.Token` resolves to the
+ * backend selected by `createModels()` + `applySqliteOverrides()` (mongoose
+ * `Model`, SQLite `DocModel`, or `DualWriteModel`); every method speaks only the
+ * bounded Model API, never `new Token()` / `doc.save()`.
+ */
+export function createTokenMethods(handle: DataHandle) {
   /**
    * Creates a new Token instance.
    */
   async function createToken(tokenData: TokenCreateData): Promise<IToken> {
     try {
-      const Token = mongoose.models.Token;
+      const Token = handle.models.Token as Model<IToken>;
       const currentTime = new Date();
       const expiresAt = new Date(currentTime.getTime() + tokenData.expiresIn * 1000);
 
@@ -34,7 +41,7 @@ export function createTokenMethods(mongoose: typeof import('mongoose')) {
     updateData: TokenUpdateData,
   ): Promise<IToken | null> {
     try {
-      const Token = mongoose.models.Token;
+      const Token = handle.models.Token as Model<IToken>;
 
       const dataToUpdate = { ...updateData };
       if (updateData?.expiresIn !== undefined) {
@@ -54,7 +61,7 @@ export function createTokenMethods(mongoose: typeof import('mongoose')) {
    */
   async function deleteTokens(query: TokenQuery): Promise<TokenDeleteResult> {
     try {
-      const Token = mongoose.models.Token;
+      const Token = handle.models.Token as Model<IToken>;
       const conditions = [];
 
       if (query.userId !== undefined) {
@@ -92,7 +99,7 @@ export function createTokenMethods(mongoose: typeof import('mongoose')) {
    */
   async function findToken(query: TokenQuery, options?: QueryOptions): Promise<IToken | null> {
     try {
-      const Token = mongoose.models.Token;
+      const Token = handle.models.Token as Model<IToken>;
       const conditions = [];
 
       if (query.userId) {
