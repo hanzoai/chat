@@ -10,8 +10,7 @@
  * handle or this SQLite handle. A networked Hanzo Base / cloud `/v1` backend is
  * a future third implementation of the same handle shape.
  */
-import type Database from 'better-sqlite3-multiple-ciphers';
-import { DocModel, type CollectionSpec } from './DocModel';
+import { DocModel, type CollectionSpec, type SqliteDatabase } from './DocModel';
 import { CHAT_COLLECTION_SPECS } from './collections';
 import { ObjectId } from './engine';
 
@@ -22,7 +21,7 @@ export { createDualWriteModel, DualWriteModel } from './DualWriteModel';
 
 export interface SqliteHandle {
   models: Record<string, DocModel>;
-  db: Database.Database;
+  db: SqliteDatabase;
   Types: { ObjectId: typeof ObjectId };
   close(): void;
 }
@@ -34,13 +33,16 @@ export interface SqliteHandle {
  * contract) when `CHAT_SQLITE_KEY` holds a 64-hex-char raw key; unset opens
  * unencrypted (tests + local dev).
  */
-export function openDatabase(dbPath?: string): Database.Database {
+export function openDatabase(dbPath?: string): SqliteDatabase {
   // `better-sqlite3-multiple-ciphers` is a native addon. The data-schemas index
   // is loaded at server boot even when the store is inert (unset
   // CHAT_STORE_SQLITE), so require it lazily — only when a database is actually
-  // opened — keeping module import side-effect-free.
+  // opened — keeping module import side-effect-free. Typed as the minimal
+  // `SqliteDatabase` ctor (not the driver's heavy types — see DocModel.ts).
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const DatabaseCtor = require('better-sqlite3-multiple-ciphers') as typeof import('better-sqlite3-multiple-ciphers');
+  const DatabaseCtor = require('better-sqlite3-multiple-ciphers') as new (
+    path: string,
+  ) => SqliteDatabase;
   const path = dbPath ?? process.env.CHAT_SQLITE_PATH ?? ':memory:';
   const db = new DatabaseCtor(path);
   if (path !== ':memory:') {
@@ -74,7 +76,7 @@ export function openDatabase(dbPath?: string): Database.Database {
  */
 export function createSqliteHandle(
   names?: string[],
-  options: { db?: Database.Database; dbPath?: string; specs?: Record<string, CollectionSpec> } = {},
+  options: { db?: SqliteDatabase; dbPath?: string; specs?: Record<string, CollectionSpec> } = {},
 ): SqliteHandle {
   const specs = options.specs ?? CHAT_COLLECTION_SPECS;
   const db = options.db ?? openDatabase(options.dbPath);
