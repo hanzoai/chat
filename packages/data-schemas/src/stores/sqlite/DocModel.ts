@@ -11,7 +11,6 @@
  * CollectionSpec when migrated). MeiliSearch stays a separate concern: `.meiliSearch`
  * is intentionally absent, matching a mongoose model with no MEILI_HOST configured.
  */
-import type Database from 'better-sqlite3-multiple-ciphers';
 import { getTenantId, SYSTEM_TENANT_ID } from '~/config/tenantContext';
 import {
   matchesFilter,
@@ -28,6 +27,27 @@ import {
   type Update,
   type SortSpec,
 } from './engine';
+
+/**
+ * The minimal `better-sqlite3-multiple-ciphers` surface the store uses, declared
+ * structurally instead of imported from the driver. The driver's shipped types
+ * are large and conditional-generic-heavy (`prepare<...>` → `Statement<...>`);
+ * pulling them into a consumer's program (`@hanzochat/api` imports this package's
+ * public types) makes the TypeScript checker's structural-relation pass explode
+ * (`recursiveTypeRelatedTo` → the build type-checks for >27 min and is canceled).
+ * The real native handle satisfies this contract at runtime, unchanged.
+ */
+export interface SqliteStatement {
+  run(...params: unknown[]): unknown;
+  get(...params: unknown[]): unknown;
+  all(...params: unknown[]): unknown[];
+}
+export interface SqliteDatabase {
+  exec(sql: string): void;
+  prepare(sql: string): SqliteStatement;
+  pragma(source: string): unknown;
+  close(): void;
+}
 
 export interface CollectionSpec {
   /** Collection / table name (matches the mongoose model name). */
@@ -90,7 +110,7 @@ const SQL_SAFE_FIELD = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 export class DocModel {
   readonly modelName: string;
-  private readonly db: Database.Database;
+  private readonly db: SqliteDatabase;
   private readonly dateFields: Set<string>;
   private readonly anchorFields: Set<string>;
   private readonly refs: Record<string, string>;
@@ -99,7 +119,7 @@ export class DocModel {
   /** Resolves sibling collections for `.populate()`; wired by createSqliteHandle. */
   resolver?: (name: string) => DocModel | undefined;
 
-  constructor(db: Database.Database, spec: CollectionSpec) {
+  constructor(db: SqliteDatabase, spec: CollectionSpec) {
     this.db = db;
     this.modelName = spec.name;
     this.dateFields = new Set(spec.dateFields ?? ['createdAt', 'updatedAt', 'expiredAt']);

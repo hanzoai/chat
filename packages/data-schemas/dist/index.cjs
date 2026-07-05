@@ -4996,6 +4996,19 @@ class ObjectId {
     }
 }
 
+/**
+ * SQLite-backed document model presenting the subset of the Mongoose Model API
+ * that the chat data-access methods use. Documents are stored as JSON (`doc`
+ * column) keyed by `_id`; query semantics are delegated to the pure engine so
+ * behavior matches MongoDB exactly. Index-accelerated by extracting equality
+ * anchors (user / id fields) from filters; the authoritative match always runs
+ * in JS via `matchesFilter`.
+ *
+ * No mongoose. No tenant middleware (Conversation/Message are not tenant-plugged
+ * upstream; collections that are — skill/config/systemGrant — declare it in their
+ * CollectionSpec when migrated). MeiliSearch stays a separate concern: `.meiliSearch`
+ * is intentionally absent, matching a mongoose model with no MEILI_HOST configured.
+ */
 const SQL_SAFE_FIELD = /^[A-Za-z_][A-Za-z0-9_]*$/;
 class DocModel {
     constructor(db, spec) {
@@ -6314,6 +6327,18 @@ function createDualWriteModel(primary, mirror) {
 }
 
 /**
+ * SQLite document store — the embedded default backend for the chat data layer.
+ *
+ * `createSqliteHandle(names)` returns a mongoose-shaped handle whose
+ * `.models.<Name>` are SQLite-backed `DocModel`s satisfying the Model API the
+ * data methods use. The unchanged `createConversationMethods(handle, ...)` /
+ * `createMessageMethods(handle)` run against it verbatim — this is the seam.
+ *
+ * Backend selection is orthogonal: the same method code runs on the mongoose
+ * handle or this SQLite handle. A networked Hanzo Base / cloud `/v1` backend is
+ * a future third implementation of the same handle shape.
+ */
+/**
  * Opens a SQLite database. Defaults to the path in `CHAT_SQLITE_PATH`, else an
  * in-memory database (used by tests). WAL + NORMAL sync for durable throughput.
  * A non-memory file is opened encrypted (SQLCipher AES-256, `hanzoai/sqlite`
@@ -6325,7 +6350,8 @@ function openDatabase(dbPath) {
     // `better-sqlite3-multiple-ciphers` is a native addon. The data-schemas index
     // is loaded at server boot even when the store is inert (unset
     // CHAT_STORE_SQLITE), so require it lazily — only when a database is actually
-    // opened — keeping module import side-effect-free.
+    // opened — keeping module import side-effect-free. Typed as the minimal
+    // `SqliteDatabase` ctor (not the driver's heavy types — see DocModel.ts).
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const DatabaseCtor = require('better-sqlite3-multiple-ciphers');
     const path = (_a = dbPath !== null && dbPath !== void 0 ? dbPath : process.env.CHAT_SQLITE_PATH) !== null && _a !== void 0 ? _a : ':memory:';
