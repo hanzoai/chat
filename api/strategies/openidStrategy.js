@@ -699,16 +699,30 @@ async function setupOpenId() {
   try {
     const shouldGenerateNonce = isEnabled(process.env.OPENID_GENERATE_NONCE);
 
+    // PUBLIC PKCE client is the canonical (and only) mode: no client secret is
+    // sent, and the token endpoint auth method is `none`. Security is PKCE
+    // (code_challenge S256, OPENID_USE_PKCE=true) + the signed state, not a
+    // shared secret shipped with a browser-delivered app. A confidential secret
+    // is honored ONLY if one is still explicitly configured (legacy), never
+    // required — its absence must never block strategy registration.
+    const clientSecret = process.env.OPENID_CLIENT_SECRET;
+
     /** @type {ClientMetadata} */
     const clientMetadata = {
       client_id: process.env.OPENID_CLIENT_ID,
-      client_secret: process.env.OPENID_CLIENT_SECRET,
     };
+    if (clientSecret) {
+      clientMetadata.client_secret = clientSecret;
+    } else {
+      clientMetadata.token_endpoint_auth_method = 'none';
+    }
 
     if (shouldGenerateNonce) {
       clientMetadata.response_types = ['code'];
       clientMetadata.grant_types = ['authorization_code'];
-      clientMetadata.token_endpoint_auth_method = 'client_secret_post';
+      if (clientSecret) {
+        clientMetadata.token_endpoint_auth_method = 'client_secret_post';
+      }
     }
 
     /** @type {Configuration} */
@@ -735,7 +749,10 @@ async function setupOpenId() {
         scope: process.env.OPENID_SCOPE,
         callbackURL: process.env.DOMAIN_SERVER + process.env.OPENID_CALLBACK_URL,
         clockTolerance: process.env.OPENID_CLOCK_TOLERANCE || 300,
-        usePKCE: isEnabled(process.env.OPENID_USE_PKCE),
+        // A public client (no secret) REQUIRES PKCE — force it on regardless of
+        // the env toggle so a secretless deploy can never fall back to a bare,
+        // uncertified code exchange.
+        usePKCE: isEnabled(process.env.OPENID_USE_PKCE) || !clientSecret,
       },
       createOpenIDCallback(),
     );
