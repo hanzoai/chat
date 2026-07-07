@@ -1,6 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { EModelEndpoint } = require('librechat-data-provider');
-const { getGuestConfig } = require('~/server/services/guestConfig');
+const { getGuestConfig, resolveGuestModel } = require('~/server/services/guestConfig');
 
 /**
  * Server-side capability scope for guest principals.
@@ -35,14 +35,22 @@ const enforceGuestScope = (req, res, next) => {
     return res.status(403).json({ message: 'Guests may only use the free preview model' });
   }
 
-  if (model != null && model !== config.model) {
-    logger.warn(`[enforceGuestScope] Guest ${req.user.id} rejected model: ${model}`);
-    return res.status(403).json({ message: 'Guests may only use the free preview model' });
+  // Honor a deep-linked model IF it's on the free-tier allowlist; a paid/flagship
+  // model is NOT silently downgraded — signal the client to open login so the
+  // visitor can sign in and use it. Guests are never served an off-list model.
+  const { model: resolvedModel, allowed } = resolveGuestModel(model);
+  if (!allowed) {
+    logger.info(`[enforceGuestScope] Guest ${req.user.id} model requires login: ${model}`);
+    return res.status(402).json({
+      type: 'MODEL_REQUIRES_LOGIN',
+      model,
+      message: 'Sign in to use this model',
+    });
   }
 
   body.endpoint = config.endpoint;
   body.endpointType = EModelEndpoint.custom;
-  body.model = config.model;
+  body.model = resolvedModel;
 
   delete body.agent_id;
   delete body.spec;
