@@ -2,8 +2,6 @@ const createTTSLimiters = require('./ttsLimiters');
 const createSTTLimiters = require('./sttLimiters');
 
 const loginLimiter = require('./loginLimiter');
-const { guestTokenLimiter } = require('./guestLimiters');
-const { guestMessageLimiter } = require('./guestMessageLimiter');
 const importLimiters = require('./importLimiters');
 const uploadLimiters = require('./uploadLimiters');
 const forkLimiters = require('./forkLimiters');
@@ -20,8 +18,6 @@ module.exports = {
   ...messageLimiters,
   ...forkLimiters,
   loginLimiter,
-  guestTokenLimiter,
-  guestMessageLimiter,
   registerLimiter,
   toolCallLimiter,
   cloudAgentLimiter,

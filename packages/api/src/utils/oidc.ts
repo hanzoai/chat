@@ -183,9 +183,11 @@ export function createBearerAuthHeader(tokenInfo: OpenIDTokenInfo | null): strin
 }
 
 export function isOpenIDAvailable(): boolean {
+  // PUBLIC PKCE client: availability requires only a client id + issuer. A public
+  // client has no secret, so requiring one would report OIDC as unavailable and
+  // suppress login on a correctly-configured secretless deploy.
   const openidClientId = process.env.OPENID_CLIENT_ID;
-  const openidClientSecret = process.env.OPENID_CLIENT_SECRET;
   const openidIssuer = process.env.OPENID_ISSUER;
 
-  return !!(openidClientId && openidClientSecret && openidIssuer);
+  return !!(openidClientId && openidIssuer);
 }
