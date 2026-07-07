@@ -72,9 +72,6 @@ const updateFavoritesController = async (req, res) => {
 
 const getFavoritesController = async (req, res) => {
   try {
-    if (req.user?.guest === true) {
-      return res.status(200).json([]);
-    }
     const userId = req.user.id;
     const user = await getUserById(userId, 'favorites');
 
