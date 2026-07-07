@@ -12,8 +12,8 @@ const {
   loadWebSearchAuth,
   buildImageToolContext,
   buildWebSearchContext,
-  resolveHanzoCloudKey,
-  isHanzoPerUserKeyEnabled,
+  resolveTenantBearer,
+  OPENID_BEARER_SENTINEL,
 } = require('@hanzochat/api');
 const { getMCPServersRegistry } = require('~/config');
 const {
@@ -243,18 +243,17 @@ const loadTools = async ({
     customConstructors.dalle = async () => {
       const authFields = getAuthFields('dalle');
       const authValues = await loadAuthValues({ userId: user, authFields });
-      const billingUser = options.req?.user;
-      const isAuthenticatedUser = Boolean(
-        billingUser && !billingUser.guest && billingUser.email,
-      );
-      if (isHanzoPerUserKeyEnabled() && isAuthenticatedUser) {
-        const perUserKey = await resolveHanzoCloudKey(billingUser);
-        if (!perUserKey) {
-          throw new Error(
-            'Your Hanzo Cloud account is not linked for billing yet. Please sign out and back in, then claim your starter credit at https://billing.hanzo.ai',
-          );
+      // Canonical Hanzo Cloud billing (mirrors custom/initialize.ts): when the
+      // image endpoint is configured to forward the user's IAM bearer
+      // (DALLE3_API_KEY === the OIDC-token sentinel), resolve the signed-in
+      // user's own IAM token and forward it so cloud meters THEIR org. Fail
+      // closed if there is no forwardable bearer — no shared key to spend.
+      if (authValues.DALLE3_API_KEY === OPENID_BEARER_SENTINEL) {
+        const bearer = resolveTenantBearer(options.req);
+        if (!bearer) {
+          throw new Error('Sign in with Hanzo to generate images — your Hanzo account funds this request.');
         }
-        authValues.DALLE3_API_KEY = perUserKey;
+        authValues.DALLE3_API_KEY = bearer;
       }
       return new DALLE3({ ...imageGenOptions, ...authValues, userId: user });
     };

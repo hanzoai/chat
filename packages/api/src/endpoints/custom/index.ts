@@ -1,4 +1,4 @@
 export * from './config';
-export * from './hanzoCloudKey';
+export * from './tenantBearer';
 export * from './hanzoGatewayFetch';
 export * from './initialize';

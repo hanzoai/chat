@@ -471,10 +471,12 @@ function createBearerAuthHeader(tokenInfo) {
     return `Bearer ${tokenInfo.accessToken}`;
 }
 function isOpenIDAvailable() {
+    // PUBLIC PKCE client: availability requires only a client id + issuer. A public
+    // client has no secret, so requiring one would report OIDC as unavailable and
+    // suppress login on a correctly-configured secretless deploy.
     const openidClientId = process.env.OPENID_CLIENT_ID;
-    const openidClientSecret = process.env.OPENID_CLIENT_SECRET;
     const openidIssuer = process.env.OPENID_ISSUER;
-    return !!(openidClientId && openidClientSecret && openidIssuer);
+    return !!(openidClientId && openidIssuer);
 }
 
 /**
@@ -38692,278 +38694,100 @@ function getBedrockModels() {
     return models;
 }
 
-const KEY_TTL_MS = 10 * 60 * 1000; // 10 minutes
-const IAM_TIMEOUT_MS = 5000;
-/** Per-user hk- key cache: cacheKey (user id|email) -> { key, expiresAt }. */
-const keyCache = new Map();
-function truthy(value) {
-    return (value !== null && value !== void 0 ? value : '').toString().trim().toLowerCase() === 'true';
-}
-/** IAM base URL — prefer an in-cluster override, else the OIDC issuer. */
-function iamBaseUrl() {
-    const base = process.env.IAM_INTERNAL_URL ||
-        process.env.IAM_SERVER_URL ||
-        process.env.OPENID_ISSUER ||
-        '';
-    return base.replace(/\/+$/, '');
-}
-function iamClientId() {
-    return process.env.IAM_CLIENT_ID || process.env.OPENID_CLIENT_ID || '';
-}
-function iamClientSecret() {
-    return process.env.IAM_CLIENT_SECRET || process.env.OPENID_CLIENT_SECRET || '';
-}
-/**
- * Whether per-user hk- billing is enabled AND fully configured. When false,
- * `resolveHanzoCloudKey` returns null and the shared key is used (legacy).
- */
-function isHanzoPerUserKeyEnabled() {
-    return (truthy(process.env.HANZO_PER_USER_KEY) &&
-        Boolean(iamBaseUrl()) &&
-        Boolean(iamClientId()) &&
-        Boolean(iamClientSecret()));
-}
-function basicAuthHeader() {
-    const raw = `${iamClientId()}:${iamClientSecret()}`;
-    return `Basic ${Buffer.from(raw).toString('base64')}`;
-}
-// ── Per-user billing identity + starter credit ───────────────────────────────
-/**
- * Orgs whose MEMBERS are billed per-user (default: the shared "hanzo" catch-all,
- * the home of every unaffiliated individual signup). MUST mirror the gateway's
- * PERSONAL_BILLING_ORGS / object.BillingSubject (hanzoai/ai) so chat and the
- * gateway derive the identical subject.
- */
-function personalBillingOrgs() {
-    const raw = (process.env.HANZO_PERSONAL_BILLING_ORGS ||
-        process.env.HANZO_DEFAULT_ORG ||
-        'hanzo')
-        .split(',')
-        .map((o) => o.trim().toLowerCase())
-        .filter(Boolean);
-    return new Set(raw.length ? raw : ['hanzo']);
-}
-/**
- * Canonical Commerce billing subject for an IAM (owner, name) identity — the
- * account the cloud gateway debits and reads. Personal-billing org → "owner/name"
- * (per-user), pooled org → "owner". Always lowercased so it nets against the
- * gateway's usage writes. Byte-identical to object.BillingSubject in hanzoai/ai.
- */
-function billingSubject(owner, name) {
-    const o = (owner !== null && owner !== void 0 ? owner : '').toString().trim().toLowerCase();
-    if (!o) {
-        return '';
+/** Parse a Cookie header into a flat map (no dependency; RFC 6265 name=value pairs). */
+function parseCookies(header) {
+    const out = {};
+    if (!header) {
+        return out;
     }
-    if (personalBillingOrgs().has(o)) {
-        const n = (name !== null && name !== void 0 ? name : '').toString().trim().toLowerCase();
-        return n ? `${o}/${n}` : o;
+    for (const part of header.split(';')) {
+        const idx = part.indexOf('=');
+        if (idx < 0) {
+            continue;
+        }
+        const key = part.slice(0, idx).trim();
+        if (key && out[key] === undefined) {
+            out[key] = decodeURIComponent(part.slice(idx + 1).trim());
+        }
     }
-    return o;
+    return out;
 }
-function commerceBaseUrl() {
-    return (process.env.COMMERCE_API_URL || process.env.COMMERCE_ENDPOINT || '').replace(/\/+$/, '');
-}
-function commerceToken() {
-    return process.env.COMMERCE_TOKEN || process.env.COMMERCE_API_TOKEN || '';
-}
-/** Subjects whose starter credit this process has already ensured (commerce is also idempotent). */
-const starterEnsured = new Set();
 /**
- * Ensure the new-user $5 welcome credit exists on THIS user's billing subject,
- * exactly once. Idempotent two ways: an in-process set (avoids re-hitting
- * commerce every key refresh) and commerce's own tag-deduped, transaction-guarded
- * grant (`POST /v1/billing/grant-starter`) — so concurrent chats can never
- * double-grant (no bleed).
+ * Is this token safe to forward on-behalf-of `user`? Fail-secure gates, ALL
+ * mandatory — the function only ever REMOVES a token from consideration:
+ *  - Decodable JWT: hanzo.id (the only cloud IdP) always issues JWTs; an
+ *    opaque/garbage token cannot be principal-bound, so it is never forwarded.
+ *  - Principal binding (MANDATORY): the token must NAME the authenticated user
+ *    (`sub === user.openidId`). If the binding cannot be ASSERTED — no
+ *    `openidId`, no `sub`, or a mismatch — the token is NOT forwarded. This keeps
+ *    "forwarded principal == req.user" true by construction, closing the
+ *    credential-mixing confused deputy (a session/cookie carrying a different
+ *    user's token) with no fail-open when binding data is absent.
+ *  - Expiry: never forward a token past its own `exp`.
  *
- * Best-effort but awaited: the credit must land on the subject BEFORE we forward
- * the user's hk- key to the gateway, otherwise the gateway sees a $0 balance and
- * 402s the very first chat. A commerce hiccup must NOT break key resolution,
- * though — the gateway still enforces balance, and the next message retries.
+ * Decode-only (no signature verification): cloud performs the authoritative
+ * JWKS + claim validation over the SAME claims, so it runs as exactly this
+ * `sub`. A forged/tampered token gains nothing here — changing `sub` fails the
+ * binding; an intact `sub` is rejected by cloud on signature.
  */
-function ensureStarterCredit(subject, owner) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const base = commerceBaseUrl();
-        if (!base || !subject || starterEnsured.has(subject)) {
-            return;
-        }
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), IAM_TIMEOUT_MS);
-        try {
-            const headers = {
-                'Content-Type': 'application/json',
-                'X-Hanzo-Org': owner,
-            };
-            const tok = commerceToken();
-            if (tok) {
-                headers['Authorization'] = `Bearer ${tok}`;
-            }
-            const resp = yield fetch(`${base}/v1/billing/grant-starter`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ user: subject, trigger: 'chat_first_use' }),
-                signal: controller.signal,
-            });
-            if (resp.ok) {
-                starterEnsured.add(subject); // ensured this process; commerce dedupes across pods
-            }
-            else {
-                dataSchemas.logger.warn('[hanzoCloudKey] starter-credit grant non-OK (continuing)', {
-                    subject,
-                    status: resp.status,
-                });
-            }
-        }
-        catch (err) {
-            dataSchemas.logger.warn('[hanzoCloudKey] starter-credit grant failed (continuing; gateway enforces)', {
-                subject,
-                error: err instanceof Error ? err.message : String(err),
-            });
-        }
-        finally {
-            clearTimeout(timeoutId);
-        }
-    });
+function isForwardableToken(token, openidId) {
+    if (!token || !openidId) {
+        return false;
+    }
+    const claims = jwt.decode(token);
+    if (!claims || typeof claims !== 'object') {
+        return false;
+    }
+    const c = claims;
+    if (c.sub !== openidId) {
+        return false;
+    }
+    if (typeof c.exp === 'number' && c.exp * 1000 <= Date.now()) {
+        return false;
+    }
+    return true;
 }
 /**
- * Single IAM HTTP primitive (confidential-client Basic auth, `/v1/iam/*` JSON
- * API). Throws on transport error / non-ok status so callers fail closed.
+ * Resolve the caller's forwardable Hanzo IAM bearer, or null.
+ *
+ * Keyed off the VALIDATED principal (`req.user.provider === 'openid'` — the
+ * authoritative user loaded by requireJwtAuth), NOT any cookie. A local user
+ * never carries a hanzo.id token, so a stale OpenID session in the browser can
+ * never be forwarded under a local identity.
+ *
+ * Every candidate — session first, then the httpOnly cookie fallback; id_token
+ * preferred, access_token second — must pass `isForwardableToken`. Returns null
+ * for an honest 401, never a wrong-principal / expired / unbound token.
  */
-function iamRequest(path_1, params_1) {
-    return __awaiter(this, arguments, void 0, function* (path, params, method = 'GET') {
-        const url = new URL(`${iamBaseUrl()}${path}`);
-        for (const [k, v] of Object.entries(params)) {
-            if (v != null && v !== '') {
-                url.searchParams.set(k, v);
-            }
-        }
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), IAM_TIMEOUT_MS);
-        try {
-            const resp = yield fetch(url.toString(), Object.assign(Object.assign({ method, headers: {
-                    Authorization: basicAuthHeader(),
-                    'Content-Type': 'application/json',
-                } }, (method === 'POST' ? { body: '{}' } : {})), { signal: controller.signal }));
-            if (!resp.ok) {
-                throw new Error(`IAM ${method} ${path} returned ${resp.status}`);
-            }
-            return (yield resp.json());
-        }
-        finally {
-            clearTimeout(timeoutId);
-        }
+function resolveTenantBearer(req) {
+    var _a, _b;
+    const user = req.user;
+    if (!user || user.provider !== 'openid') {
+        return null;
+    }
+    const session = (_a = req.session) === null || _a === void 0 ? void 0 : _a.openidTokens;
+    const cookies = parseCookies((_b = req.headers) === null || _b === void 0 ? void 0 : _b.cookie);
+    const idToken = (session === null || session === void 0 ? void 0 : session.idToken) || cookies.openid_id_token;
+    if (isForwardableToken(idToken, user.openidId)) {
+        return idToken;
+    }
+    const accessToken = (session === null || session === void 0 ? void 0 : session.accessToken) || cookies.openid_access_token;
+    if (isForwardableToken(accessToken, user.openidId)) {
+        return accessToken;
+    }
+    dataSchemas.logger.debug('[tenantBearer] no forwardable IAM bearer for principal', {
+        openidId: user.openidId,
     });
-}
-/** Resolve the authoritative IAM record (owner/name/accessKey) by org + email. */
-function getIamUserByOrgEmail(owner, email) {
-    return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
-        const res = yield iamRequest('/v1/iam/get-user', {
-            owner,
-            email: email.toLowerCase(),
-        });
-        if (res.status !== 'ok' || !((_a = res.data) === null || _a === void 0 ? void 0 : _a.owner) || !((_b = res.data) === null || _b === void 0 ? void 0 : _b.name)) {
-            return null;
-        }
-        return res.data;
-    });
-}
-/** Mint (create) the per-user hk- key for an IAM sub ("owner/name"). */
-function mintUserKey(sub) {
-    return __awaiter(this, void 0, void 0, function* () {
-        var _a;
-        const res = yield iamRequest('/v1/iam/mint-user-keys', { id: sub }, 'POST');
-        if (res.status !== 'ok' || !((_a = res.data) === null || _a === void 0 ? void 0 : _a.accessKey)) {
-            return null;
-        }
-        return res.data.accessKey;
-    });
+    return null;
 }
 /**
- * Resolve the authenticated user's own hk- Cloud API key, minting one on first
- * use if the IAM record has none. Returns null when per-user billing is
- * disabled/unconfigured, the user is a guest / has no email, or IAM cannot be
- * reached (caller FAILS CLOSED on null for an authenticated user).
+ * The endpoint-config sentinel that opts a custom endpoint into IAM-bearer
+ * forwarding. An endpoint whose `apiKey` is this value bills the signed-in user's
+ * own org via their forwarded IAM token (the canonical Hanzo Cloud path) instead
+ * of any static key. This reuses LibreChat's existing OIDC-token placeholder name
+ * so librechat.yaml stays self-documenting.
  */
-function resolveHanzoCloudKey(user) {
-    return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
-        if (!isHanzoPerUserKeyEnabled()) {
-            return null;
-        }
-        if (!user || user.guest) {
-            return null;
-        }
-        const email = ((_a = user.email) !== null && _a !== void 0 ? _a : '').toString().toLowerCase();
-        if (!email) {
-            return null;
-        }
-        const cacheKey = user.id || email;
-        const cached = keyCache.get(cacheKey);
-        if (cached && cached.expiresAt > Date.now()) {
-            return cached.key;
-        }
-        const defaultOrg = process.env.HANZO_DEFAULT_ORG || 'hanzo';
-        const owner = ((_b = user.organization) !== null && _b !== void 0 ? _b : '').toString().trim() || defaultOrg;
-        try {
-            let record = yield getIamUserByOrgEmail(owner, email);
-            // A user whose stored org is stale/missing may live in the default org.
-            if (!record && owner !== defaultOrg) {
-                record = yield getIamUserByOrgEmail(defaultOrg, email);
-            }
-            if (!(record === null || record === void 0 ? void 0 : record.owner) || !(record === null || record === void 0 ? void 0 : record.name)) {
-                dataSchemas.logger.warn('[hanzoCloudKey] No IAM user for billing identity', {
-                    owner,
-                    email,
-                });
-                return null;
-            }
-            // Single authoritative identity: stamp the REAL billing org (record.owner)
-            // back onto req.user. The OIDC-stored `organization` can be the Casdoor
-            // super-org "admin" for some users, which is NOT where their hk- key bills —
-            // so the downstream Commerce balance gate must use this resolved owner, not
-            // the login-time value. This keeps the key and the gate on ONE org.
-            const subject = billingSubject(record.owner, record.name);
-            try {
-                user.organization = record.owner;
-                // Stamp the canonical billing subject so the balance gate keys on the SAME
-                // account the gateway debits (per-user for the shared "hanzo" catch-all).
-                user.billingSubject = subject;
-            }
-            catch (_e) {
-                /* req.user may be a frozen/lean doc — non-fatal; gate still has gateway as backstop */
-            }
-            // Ensure THIS user's one-time $5 welcome credit exists on THEIR subject
-            // before we hand back the key — so the gateway's first balance check sees it
-            // instead of 402-ing a brand-new account. Idempotent + best-effort.
-            yield ensureStarterCredit(subject, record.owner);
-            let key = ((_c = record.accessKey) !== null && _c !== void 0 ? _c : '').trim();
-            if (!key) {
-                // Mint on first chat — the key is theirs going forward.
-                key = (_d = (yield mintUserKey(`${record.owner}/${record.name}`))) !== null && _d !== void 0 ? _d : '';
-            }
-            if (!key) {
-                dataSchemas.logger.error('[hanzoCloudKey] Failed to resolve/mint hk- key', {
-                    sub: `${record.owner}/${record.name}`,
-                });
-                return null;
-            }
-            keyCache.set(cacheKey, { key, expiresAt: Date.now() + KEY_TTL_MS });
-            return key;
-        }
-        catch (err) {
-            dataSchemas.logger.error('[hanzoCloudKey] IAM lookup failed (failing closed)', {
-                owner,
-                email,
-                error: err instanceof Error ? err.message : String(err),
-            });
-            return null;
-        }
-    });
-}
-/** Test-only: clear the in-process key cache. */
-function _clearHanzoKeyCache() {
-    keyCache.clear();
-}
+const OPENID_BEARER_SENTINEL = '{{LIBRECHAT_OPENID_TOKEN}}';
 
 /**
  * Wrap an OpenAI-client `fetch` so the Hanzo Cloud gateway's HTTP-200 error
@@ -39083,22 +38907,20 @@ function initializeCustom(_a) {
         }
         let apiKey = userProvidesKey ? userValues === null || userValues === void 0 ? void 0 : userValues.apiKey : CUSTOM_API_KEY;
         const baseURL = userProvidesURL ? userValues === null || userValues === void 0 ? void 0 : userValues.baseURL : CUSTOM_BASE_URL;
-        // Hanzo per-user billing: an authenticated (non-guest) user's chat must be
-        // billed to THEIR OWN org via THEIR OWN hk- key — never the shared key. We
-        // resolve (mint on first chat) their key from IAM and use it here. If it
-        // cannot be resolved we FAIL CLOSED (throw) rather than silently fall back to
-        // the shared key, so an IAM hiccup can never route an authed user's spend onto
-        // the shared org. Guests (anonymous preview) keep the shared, capped key.
-        const billingUser = req.user;
-        const isAuthenticatedUser = Boolean(billingUser && !billingUser.guest && billingUser.email);
-        if (isHanzoPerUserKeyEnabled() && isAuthenticatedUser) {
-            const perUserKey = yield resolveHanzoCloudKey(billingUser);
-            if (perUserKey) {
-                apiKey = perUserKey;
+        // Canonical Hanzo Cloud auth+billing: an endpoint that declares
+        // `apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"` bills the signed-in user's OWN org by
+        // forwarding THEIR IAM bearer to cloud (api.hanzo.ai) as the request
+        // credential. cloud validates the JWT, pins the tenant org from the verified
+        // `owner` claim, and meters the org's shared plan then PAYG — no shared key, no
+        // per-user minted key (see AUTH_BILLING_CONTRACT.md in hanzoai/cloud). If no
+        // forwardable bearer exists (signed out / expired) we FAIL CLOSED: the user
+        // must sign in with Hanzo. There is no fallback credential to spend on.
+        if (apiKey === OPENID_BEARER_SENTINEL) {
+            const bearer = resolveTenantBearer(req);
+            if (!bearer) {
+                throw new Error('Sign in with Hanzo to chat — your Hanzo account funds this request.');
             }
-            else {
-                throw new Error('Your Hanzo Cloud account is not linked for billing yet. Please sign out and back in, then claim your starter credit at https://billing.hanzo.ai');
-            }
+            apiKey = bearer;
         }
         if (userProvidesKey && !apiKey) {
             throw new Error(JSON.stringify({
@@ -47255,6 +47077,7 @@ exports.OAUTH_SESSION_COOKIE = OAUTH_SESSION_COOKIE;
 exports.OAUTH_SESSION_COOKIE_PATH = OAUTH_SESSION_COOKIE_PATH;
 exports.OAUTH_SESSION_MAX_AGE = OAUTH_SESSION_MAX_AGE;
 exports.OAuthReconnectionManager = OAuthReconnectionManager;
+exports.OPENID_BEARER_SENTINEL = OPENID_BEARER_SENTINEL;
 exports.OpenAIChatModelStreamHandler = OpenAIChatModelStreamHandler;
 exports.OpenAIMessageDeltaHandler = OpenAIMessageDeltaHandler;
 exports.OpenAIModelEndHandler = OpenAIModelEndHandler;
@@ -47266,7 +47089,6 @@ exports.RedisEventTransport = RedisEventTransport;
 exports.RedisJobStore = RedisJobStore;
 exports.StepTypes = StepTypes;
 exports.Tokenizer = TokenizerSingleton;
-exports._clearHanzoKeyCache = _clearHanzoKeyCache;
 exports.agentAvatarSchema = agentAvatarSchema;
 exports.agentBaseResourceSchema = agentBaseResourceSchema;
 exports.agentBaseSchema = agentBaseSchema;
@@ -47283,7 +47105,6 @@ exports.applyDefaultParams = applyDefaultParams$1;
 exports.azureAISearchSchema = azureAISearchSchema;
 exports.backfillRemoteAgentPermissions = backfillRemoteAgentPermissions;
 exports.batchDeleteKeys = batchDeleteKeys;
-exports.billingSubject = billingSubject;
 exports.buildAgentInstructions = buildAgentInstructions;
 exports.buildAggregatedResponse = buildAggregatedResponse;
 exports.buildImageToolContext = buildImageToolContext;
@@ -47510,7 +47331,7 @@ exports.isChatCompletionValidationFailure = isChatCompletionValidationFailure;
 exports.isConcurrentLimitEnabled = isConcurrentLimitEnabled;
 exports.isEmailDomainAllowed = isEmailDomainAllowed;
 exports.isEnabled = isEnabled;
-exports.isHanzoPerUserKeyEnabled = isHanzoPerUserKeyEnabled;
+exports.isForwardableToken = isForwardableToken;
 exports.isKnownCustomProvider = isKnownCustomProvider;
 exports.isMCPDomainAllowed = isMCPDomainAllowed;
 exports.isMCPDomainNotAllowedError = isMCPDomainNotAllowedError;
@@ -47588,11 +47409,11 @@ exports.refreshListAvatars = refreshListAvatars;
 exports.requireAdmin = requireAdmin;
 exports.resolveGraphTokenPlaceholder = resolveGraphTokenPlaceholder;
 exports.resolveGraphTokensInRecord = resolveGraphTokensInRecord;
-exports.resolveHanzoCloudKey = resolveHanzoCloudKey;
 exports.resolveHeaders = resolveHeaders;
 exports.resolveHostnameSSRF = resolveHostnameSSRF;
 exports.resolveJsonSchemaRefs = resolveJsonSchemaRefs;
 exports.resolveNestedObject = resolveNestedObject;
+exports.resolveTenantBearer = resolveTenantBearer;
 exports.safeStringify = safeStringify;
 exports.safeValidatePromptGroupUpdate = safeValidatePromptGroupUpdate;
 exports.sanitizeFileForTransmit = sanitizeFileForTransmit;

@@ -13,11 +13,7 @@ import { getCustomEndpointConfig } from '~/app/config';
 import { fetchModels } from '~/endpoints/models';
 import { isUserProvided, checkUserKeyExpiry } from '~/utils';
 import { standardCache } from '~/cache';
-import {
-  isHanzoPerUserKeyEnabled,
-  resolveHanzoCloudKey,
-  type HanzoBillingUser,
-} from './hanzoCloudKey';
+import { resolveTenantBearer, OPENID_BEARER_SENTINEL } from './tenantBearer';
 import { wrapHanzoGatewayFetch, type GatewayFetch } from './hanzoGatewayFetch';
 
 const { PROXY } = process.env;
@@ -105,25 +101,20 @@ export async function initializeCustom({
   let apiKey = userProvidesKey ? userValues?.apiKey : CUSTOM_API_KEY;
   const baseURL = userProvidesURL ? userValues?.baseURL : CUSTOM_BASE_URL;
 
-  // Hanzo per-user billing: an authenticated (non-guest) user's chat must be
-  // billed to THEIR OWN org via THEIR OWN hk- key — never the shared key. We
-  // resolve (mint on first chat) their key from IAM and use it here. If it
-  // cannot be resolved we FAIL CLOSED (throw) rather than silently fall back to
-  // the shared key, so an IAM hiccup can never route an authed user's spend onto
-  // the shared org. Guests (anonymous preview) keep the shared, capped key.
-  const billingUser = req.user as unknown as HanzoBillingUser | undefined;
-  const isAuthenticatedUser = Boolean(
-    billingUser && !billingUser.guest && billingUser.email,
-  );
-  if (isHanzoPerUserKeyEnabled() && isAuthenticatedUser) {
-    const perUserKey = await resolveHanzoCloudKey(billingUser);
-    if (perUserKey) {
-      apiKey = perUserKey;
-    } else {
-      throw new Error(
-        'Your Hanzo Cloud account is not linked for billing yet. Please sign out and back in, then claim your starter credit at https://billing.hanzo.ai',
-      );
+  // Canonical Hanzo Cloud auth+billing: an endpoint that declares
+  // `apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"` bills the signed-in user's OWN org by
+  // forwarding THEIR IAM bearer to cloud (api.hanzo.ai) as the request
+  // credential. cloud validates the JWT, pins the tenant org from the verified
+  // `owner` claim, and meters the org's shared plan then PAYG — no shared key, no
+  // per-user minted key (see AUTH_BILLING_CONTRACT.md in hanzoai/cloud). If no
+  // forwardable bearer exists (signed out / expired) we FAIL CLOSED: the user
+  // must sign in with Hanzo. There is no fallback credential to spend on.
+  if (apiKey === OPENID_BEARER_SENTINEL) {
+    const bearer = resolveTenantBearer(req as unknown as Parameters<typeof resolveTenantBearer>[0]);
+    if (!bearer) {
+      throw new Error('Sign in with Hanzo to chat — your Hanzo account funds this request.');
     }
+    apiKey = bearer;
   }
 
   if (userProvidesKey && !apiKey) {
