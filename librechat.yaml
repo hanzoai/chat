@@ -88,7 +88,7 @@ endpoints:
       # completion path that carries the per-user hk- key) instead of bare
       # `agents`, which requires an explicit agent_id and 400s on first send.
       customOrder: 0
-      apiKey: "${HANZO_API_KEY}"
+      apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"
       baseURL: "https://api.hanzo.ai/v1"
       # zen* now route to DigitalOcean GenAI (do-ai) and return content
       # (cloud >= 1.785.11). fetch:false keeps the menu curated to the
@@ -131,7 +131,7 @@ endpoints:
     # CM. Zen ("Hanzo") stays house brand + default at order 0.
     - name: "Qwen"
       customOrder: 1
-      apiKey: "${HANZO_API_KEY}"
+      apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"
       baseURL: "https://api.hanzo.ai/v1"
       models:
         default:
@@ -145,7 +145,7 @@ endpoints:
       modelDisplayLabel: "Qwen"
     - name: "Meta Llama"
       customOrder: 2
-      apiKey: "${HANZO_API_KEY}"
+      apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"
       baseURL: "https://api.hanzo.ai/v1"
       models:
         default:
@@ -158,7 +158,7 @@ endpoints:
       modelDisplayLabel: "Meta Llama"
     - name: "DeepSeek"
       customOrder: 3
-      apiKey: "${HANZO_API_KEY}"
+      apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"
       baseURL: "https://api.hanzo.ai/v1"
       models:
         default:
@@ -172,7 +172,7 @@ endpoints:
       modelDisplayLabel: "DeepSeek"
     - name: "Mistral"
       customOrder: 4
-      apiKey: "${HANZO_API_KEY}"
+      apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"
       baseURL: "https://api.hanzo.ai/v1"
       iconURL: "/assets/mistral.png"
       models:
@@ -186,7 +186,7 @@ endpoints:
       modelDisplayLabel: "Mistral"
     - name: "Google Gemma"
       customOrder: 5
-      apiKey: "${HANZO_API_KEY}"
+      apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"
       baseURL: "https://api.hanzo.ai/v1"
       models:
         default:
@@ -198,7 +198,7 @@ endpoints:
       modelDisplayLabel: "Google Gemma"
     - name: "OpenAI GPT-OSS"
       customOrder: 6
-      apiKey: "${HANZO_API_KEY}"
+      apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"
       baseURL: "https://api.hanzo.ai/v1"
       models:
         default:

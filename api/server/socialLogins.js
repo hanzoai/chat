@@ -71,9 +71,12 @@ const configureSocialLogins = async (app) => {
   if (process.env.APPLE_CLIENT_ID && process.env.APPLE_PRIVATE_KEY_PATH) {
     passport.use(appleLogin());
   }
+  // PUBLIC PKCE client: registration MUST NOT be gated on a client secret. A
+  // public client has none (security is PKCE + signed state), and gating on
+  // OPENID_CLIENT_SECRET is exactly what left the `openid` strategy unregistered
+  // ("OpenID strategy not registered") and login dead. See AUTH_BILLING_CONTRACT.md.
   if (
     process.env.OPENID_CLIENT_ID &&
-    process.env.OPENID_CLIENT_SECRET &&
     process.env.OPENID_ISSUER &&
     process.env.OPENID_SCOPE &&
     process.env.OPENID_SESSION_SECRET

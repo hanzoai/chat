@@ -8,9 +8,6 @@ const {
   messageIpLimiter,
   configMiddleware,
   messageUserLimiter,
-  enforceGuestScope,
-  guestMessageLimiter,
-  requireGuestOrJwtAuth,
 } = require('~/server/middleware');
 const { saveMessage } = require('~/models');
 const openai = require('./openai');
@@ -38,15 +35,11 @@ router.use('/v1/responses', responses);
 router.use('/v1', openai);
 
 /**
- * Guest-capable chat completion router.
- *
- * Mounted before the JWT-only routes below so anonymous guests (when
- * `ALLOW_GUEST_CHAT` is enabled) can reach ONLY the completion endpoints. Auth
- * here accepts either a guest token or a real JWT; `enforceGuestScope` then pins
- * guests to the free Zen endpoint/model and strips every other capability, and
- * `guestMessageLimiter` enforces the per-IP guest quota. Every other agents route
- * (management, CRUD, files) remains gated by the strict `requireJwtAuth` below,
- * which rejects guest tokens.
+ * Chat completion router. Every request is gated by the strict `requireJwtAuth`
+ * (there is no guest chat — a signed-in IAM identity is required so the request
+ * bills to the user's own org via their forwarded bearer). Split from the parent
+ * router only so the completion middleware chain (ban/uaParser/config/limiters)
+ * applies to completions but not to management/CRUD routes.
  */
 const RESERVED_CHAT_SUBPATHS = new Set(['stream', 'active', 'status', 'abort']);
 
@@ -63,12 +56,10 @@ chatRouter.use((req, res, next) => {
   }
   return next();
 });
-chatRouter.use(requireGuestOrJwtAuth);
+chatRouter.use(requireJwtAuth);
 chatRouter.use(checkBan);
 chatRouter.use(uaParser);
 chatRouter.use(configMiddleware);
-chatRouter.use(enforceGuestScope);
-chatRouter.use(guestMessageLimiter);
 
 if (isEnabled(LIMIT_MESSAGE_IP)) {
   chatRouter.use(messageIpLimiter);
@@ -81,19 +72,6 @@ if (isEnabled(LIMIT_MESSAGE_USER)) {
 chatRouter.use('/', chat);
 
 router.use('/chat', chatRouter);
-
-/**
- * Guest-safe active-jobs poll. Guests never own a generation job, so this
- * returns an empty set without a DB/user lookup. Registered BEFORE the strict
- * JWT guard below so the composer's bootstrap poll doesn't 401-loop for guests;
- * every other agents route stays JWT-only and rejects guest tokens.
- */
-router.get('/chat/active', requireGuestOrJwtAuth, async (req, res, next) => {
-  if (req.user?.guest === true) {
-    return res.json({ activeJobIds: [] });
-  }
-  return next();
-});
 
 router.use(requireJwtAuth);
 router.use(checkBan);
