@@ -8,9 +8,10 @@ jest.mock('librechat-data-provider', () => ({
 
 jest.mock('~/server/services/guestConfig', () => ({
   getGuestConfig: jest.fn(),
+  resolveGuestModel: jest.fn(),
 }));
 
-const { getGuestConfig } = require('~/server/services/guestConfig');
+const { getGuestConfig, resolveGuestModel } = require('~/server/services/guestConfig');
 const enforceGuestScope = require('../enforceGuestScope');
 
 const mockRes = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() });
@@ -22,8 +23,15 @@ describe('enforceGuestScope', () => {
       enabled: true,
       endpoint: 'Hanzo',
       model: 'zen3-nano',
+      models: ['zen3-nano'],
       messageMax: 3,
     });
+    // default: only zen3-nano (the free default) is allowed; anything else gates to login
+    resolveGuestModel.mockImplementation((m) =>
+      !m || m === 'zen3-nano'
+        ? { model: 'zen3-nano', allowed: true, requested: m }
+        : { model: 'zen3-nano', allowed: false, requested: m },
+    );
   });
 
   it('passes non-guest requests through untouched', () => {
@@ -44,13 +52,26 @@ describe('enforceGuestScope', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('rejects a guest naming a different (paid) model (403)', () => {
+  it('gates a guest naming an off-allowlist (paid) model to login (402)', () => {
     const req = { user: { id: 'g1', guest: true }, body: { endpoint: 'Hanzo', model: 'zen4-max' } };
     const res = mockRes();
     const next = jest.fn();
     enforceGuestScope(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.status).toHaveBeenCalledWith(402);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'MODEL_REQUIRES_LOGIN', model: 'zen4-max' }),
+    );
     expect(next).not.toHaveBeenCalled();
+  });
+
+  it('honors a deep-linked model that IS on the free-tier allowlist', () => {
+    resolveGuestModel.mockReturnValue({ model: 'zen4-coder-flash', allowed: true, requested: 'zen4-coder-flash' });
+    const req = { user: { id: 'g1', guest: true }, body: { endpoint: 'Hanzo', model: 'zen4-coder-flash' } };
+    const next = jest.fn();
+    enforceGuestScope(req, mockRes(), next);
+    expect(next).toHaveBeenCalledWith();
+    expect(req.body.model).toBe('zen4-coder-flash');
+    expect(req.body.endpoint).toBe('Hanzo');
   });
 
   it('pins endpoint, type, and model for a compliant guest request', () => {

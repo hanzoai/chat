@@ -7,6 +7,12 @@ const DEFAULT_GUEST_MESSAGE_MAX = 3;
 const DEFAULT_GUEST_TOKEN_EXPIRY_MS = 60 * 60 * 1000;
 const DEFAULT_GUEST_ENDPOINT = 'Hanzo';
 const DEFAULT_GUEST_MODEL = 'zen3-nano';
+// Free-tier allowlist: the models a guest may use within GUEST_MESSAGE_MAX. The
+// first entry is the default when nothing specific is requested. Widen it with
+// GUEST_MODELS (CSV) to offer a flagship taste (e.g. `zen4-max,zen3-nano`); a
+// requested model OUTSIDE this list is not silently downgraded — it falls through
+// to the normal 402→login gate so a deep-link stays honest (paid stays paid).
+const DEFAULT_GUEST_MODELS = [DEFAULT_GUEST_MODEL];
 
 /**
  * Resolves the guest-chat configuration from the environment.
@@ -18,11 +24,22 @@ const DEFAULT_GUEST_MODEL = 'zen3-nano';
  *   tokenExpiryMs: number,
  *   endpoint: string,
  *   model: string,
+ *   models: string[],
  * }}
  */
 const getGuestConfig = () => {
   const messageMax = Number.parseInt(process.env.GUEST_MESSAGE_MAX, 10);
   const tokenExpiryMs = Number.parseInt(process.env.GUEST_TOKEN_EXPIRY, 10);
+
+  const csv = (process.env.GUEST_MODELS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const models = csv.length
+    ? csv
+    : process.env.GUEST_MODEL
+      ? [process.env.GUEST_MODEL]
+      : DEFAULT_GUEST_MODELS;
 
   return {
     enabled: isEnabled(process.env.ALLOW_GUEST_CHAT),
@@ -33,8 +50,26 @@ const getGuestConfig = () => {
         ? tokenExpiryMs
         : DEFAULT_GUEST_TOKEN_EXPIRY_MS,
     endpoint: process.env.GUEST_ENDPOINT || DEFAULT_GUEST_ENDPOINT,
-    model: process.env.GUEST_MODEL || DEFAULT_GUEST_MODEL,
+    model: models[0],
+    models,
   };
+};
+
+/**
+ * Resolves a requested guest model against the free-tier allowlist.
+ * - No request           → the default guest model, allowed.
+ * - Requested ∈ allowlist → that model, allowed (free taste).
+ * - Requested ∉ allowlist → the default model + `allowed:false`, so the caller
+ *   gates the requested (paid) model behind login instead of silently serving it.
+ *
+ * @param {string} [requested]
+ * @returns {{ model: string, allowed: boolean, requested: (string|undefined) }}
+ */
+const resolveGuestModel = (requested) => {
+  const { models, model } = getGuestConfig();
+  if (!requested) return { model, allowed: true, requested };
+  if (models.includes(requested)) return { model: requested, allowed: true, requested };
+  return { model, allowed: false, requested };
 };
 
 /**
@@ -97,14 +132,15 @@ const buildGuestEndpointsConfig = () => {
  * @returns {Record<string, string[]>}
  */
 const buildGuestModelsConfig = () => {
-  const { endpoint, model } = getGuestConfig();
+  const { endpoint, models } = getGuestConfig();
   return {
-    [endpoint]: [model],
+    [endpoint]: models,
   };
 };
 
 module.exports = {
   getGuestConfig,
+  resolveGuestModel,
   buildGuestPrincipal,
   buildGuestUser,
   buildGuestEndpointsConfig,
@@ -115,4 +151,5 @@ module.exports = {
   DEFAULT_GUEST_TOKEN_EXPIRY_MS,
   DEFAULT_GUEST_ENDPOINT,
   DEFAULT_GUEST_MODEL,
+  DEFAULT_GUEST_MODELS,
 };
