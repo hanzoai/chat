@@ -1,8 +1,8 @@
 const express = require('express');
-const requireGuestOrJwtAuth = require('~/server/middleware/requireGuestOrJwtAuth');
+const requireJwtAuth = require('~/server/middleware/requireJwtAuth');
 const endpointController = require('~/server/controllers/EndpointController');
 
 const router = express.Router();
-router.get('/', requireGuestOrJwtAuth, endpointController);
+router.get('/', requireJwtAuth, endpointController);
 
 module.exports = router;
