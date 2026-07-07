@@ -1,0 +1,43 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Core capability: usage-config filesystem reads + chat/provider HTTP.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        { "path": "$HOME/.codex/**" },
+        { "path": "$HOME/.claude/**" },
+        { "path": "$HOME/.hanzo/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [
+        { "path": "$HOME/.codex/**" },
+        { "path": "$HOME/.claude/**" },
+        { "path": "$HOME/.hanzo/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$HOME/.hanzo/**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "$HOME/.hanzo/**" }]
+    },
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://chatgpt.com/*" },
+        { "url": "https://api.anthropic.com/*" },
+        { "url": "https://api.hanzo.ai/*" },
+        { "url": "https://claude.ai/*" },
+        { "url": "https://hanzo.chat/*" }
+      ]
+    }
+  ]
+}
