@@ -700,3 +700,23 @@ export type TBalanceResponse = {
   trialCredits?: number;
   paidCredits?: number;
 };
+
+/** One usage window — mirrors @hanzo/usage UsageTotals + ProviderCostSnapshot. */
+export type TUsageWindow = {
+  totals: { tokens: number; requests: number };
+  providerCost: { used: number; currencyCode: string };
+};
+
+/** Per-user unified usage payload (mirrors @hanzo/usage UsageSnapshot shape). */
+export type TUsageResponse = {
+  providerId: string;
+  currencyCode: string;
+  tier: string;
+  windows: {
+    today: TUsageWindow;
+    '7d': TUsageWindow;
+    '30d': TUsageWindow;
+  };
+  models: { model: string; tokens: number; requests: number; cost: number }[];
+  updatedAt: string;
+};
