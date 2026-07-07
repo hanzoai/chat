@@ -124,6 +124,10 @@ export function getUserBalance(): Promise<t.TBalanceResponse> {
   return request.get(endpoints.balance());
 }
 
+export function getUserUsage(): Promise<t.TUsageResponse> {
+  return request.get(endpoints.usage());
+}
+
 export const updateTokenCount = (text: string) => {
   return request.post(endpoints.tokenizer(), { arg: text });
 };
