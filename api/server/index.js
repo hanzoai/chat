@@ -188,6 +188,7 @@ const startServer = async () => {
   app.use('/v1/chat/categories', routes.categories);
   app.use('/v1/chat/endpoints', routes.endpoints);
   app.use('/v1/chat/balance', routes.balance);
+  app.use('/v1/chat/usage', routes.usage);
   app.use('/v1/chat/models', routes.models);
   app.use('/v1/chat/config', routes.config);
   app.use('/v1/chat/assistants', routes.assistants);
