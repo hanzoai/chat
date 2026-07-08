@@ -31,6 +31,8 @@ import {
   getDefaultEndpoint,
   getModelSpecPreset,
   buildDefaultConvo,
+  isHanzoEndpoint,
+  SMART_ROUTING_MODEL,
   logger,
 } from '~/utils';
 import { useDeleteFilesMutation, useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
@@ -51,6 +53,7 @@ const useNewConvo = (index = 0) => {
   const { setConversation } = store.useCreateConversationAtom(index);
   const [files, setFiles] = useRecoilState(store.filesByIndex(index));
   const saveBadgesState = useRecoilValue<boolean>(store.saveBadgesState);
+  const smartRouting = useRecoilValue<boolean>(store.smartRouting);
   const clearAllLatestMessages = store.useClearLatestMessages(`useNewConvo ${index}`);
   const setSubmission = useSetRecoilState<TSubmission | null>(store.submissionByIndex(index));
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
@@ -109,6 +112,11 @@ const useNewConvo = (index = 0) => {
             activePreset.presetId === defaultPreset?.presetId);
 
         if (buildDefaultConversation) {
+          // Did the user explicitly pick a model for THIS new conversation
+          // (model menu / preset)? If so, never override it — smart routing only
+          // sets the *default* model, it doesn't rewrite an explicit choice.
+          const userSelectedModel = !!(conversation.model ?? activePreset?.model);
+
           let defaultEndpoint = getDefaultEndpoint({
             convoSetup: activePreset ?? conversation,
             endpointsConfig,
@@ -200,6 +208,15 @@ const useNewConvo = (index = 0) => {
             models,
             defaultParamsEndpoint,
           });
+
+          // Smart routing: default a fresh Hanzo-endpoint conversation to the
+          // gateway's `auto` model (routes to the best/cheapest capable model).
+          // Scoped to the Hanzo endpoint and only when the user hasn't picked a
+          // model explicitly — provider families and explicit choices are left
+          // untouched.
+          if (smartRouting && !userSelectedModel && isHanzoEndpoint(defaultEndpoint)) {
+            conversation.model = SMART_ROUTING_MODEL;
+          }
         }
 
         if (disableParams === true) {
@@ -252,7 +269,14 @@ const useNewConvo = (index = 0) => {
           state: disableFocus ? {} : { focusChat: true },
         });
       },
-    [endpointsConfig, defaultPreset, assistantsListMap, modelsQuery.data, hasAgentAccess],
+    [
+      endpointsConfig,
+      defaultPreset,
+      assistantsListMap,
+      modelsQuery.data,
+      hasAgentAccess,
+      smartRouting,
+    ],
   );
 
   const newConversation = useCallback(
