@@ -31,6 +31,7 @@ import { createSystemGrantModel } from './systemGrant';
 import {
   createSqliteHandle,
   createDualWriteModel,
+  attachMeili,
   CHAT_COLLECTION_SPECS,
   type SqliteHandle,
 } from '~/stores/sqlite';
@@ -106,6 +107,10 @@ function applySqliteOverrides<T extends Record<string, unknown>>(models: T): T {
     return models;
   }
   const handle = sharedSqliteHandle(union);
+  // Drive MeiliSearch from the store: wire live indexing + store-hydrated search
+  // onto the SQLite Conversation/Message models (env-gated + idempotent). Attached
+  // to the raw store models so both the direct and DualWrite-wrapped forms index.
+  attachMeili(handle.models);
   const out = { ...models } as Record<string, unknown>;
   for (const name of union) {
     const mongooseModel = models[name];
