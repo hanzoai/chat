@@ -4,6 +4,7 @@
  */
 import React, { useCallback } from 'react';
 import { useAuthContext } from '~/hooks';
+import NetworkWallet from './NetworkWallet';
 
 // Use require() to bypass Vite CJS static analysis for @hanzo/ui
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -30,6 +31,7 @@ export default function ChatHanzoHeader() {
     <HanzoHeaderComponent
       currentApp="Chat"
       currentAppId="chat"
+      headerRight={<NetworkWallet />}
       user={
         user
           ? {
