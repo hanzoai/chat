@@ -1,6 +1,11 @@
 import { EModelEndpoint, getEndpointField } from 'librechat-data-provider';
 import type { TEndpointsConfig, TConfig } from 'librechat-data-provider';
-import { getAvailableEndpoints, getEndpointsFilter, mapEndpoints } from './endpoints';
+import {
+  getAvailableEndpoints,
+  getEndpointsFilter,
+  mapEndpoints,
+  resolveSmartRouting,
+} from './endpoints';
 
 const mockEndpointsConfig: TEndpointsConfig = {
   [EModelEndpoint.openAI]: { type: undefined, iconURL: 'openAI_icon.png', order: 0 },
@@ -81,5 +86,29 @@ describe('mapEndpoints', () => {
   it('returns sorted available endpoints', () => {
     const expectedOrder = [EModelEndpoint.openAI, EModelEndpoint.google, 'Mistral'];
     expect(mapEndpoints(mockEndpointsConfig)).toEqual(expectedOrder);
+  });
+});
+
+describe('resolveSmartRouting', () => {
+  it('locks off when the org disabled auto-routing, regardless of local/org values', () => {
+    expect(resolveSmartRouting(true, true, false)).toEqual({ enabled: false, toggleDisabled: true });
+    expect(resolveSmartRouting(null, true, false)).toEqual({ enabled: false, toggleDisabled: true });
+    expect(resolveSmartRouting(false, null, false)).toEqual({ enabled: false, toggleDisabled: true });
+  });
+
+  it('honors an explicit user override over the org default', () => {
+    expect(resolveSmartRouting(true, false, true)).toEqual({ enabled: true, toggleDisabled: false });
+    expect(resolveSmartRouting(false, true, true)).toEqual({ enabled: false, toggleDisabled: false });
+  });
+
+  it('follows the org default when the user never set an override', () => {
+    expect(resolveSmartRouting(null, true, true)).toEqual({ enabled: true, toggleDisabled: false });
+    expect(resolveSmartRouting(null, false, true)).toEqual({ enabled: false, toggleDisabled: false });
+  });
+
+  it('falls back to off (today behavior) when there is no server signal', () => {
+    // orgDefault null + active true === older cloud-api / fail-soft fetch
+    expect(resolveSmartRouting(null, null, true)).toEqual({ enabled: false, toggleDisabled: false });
+    expect(resolveSmartRouting(true, null, true)).toEqual({ enabled: true, toggleDisabled: false });
   });
 });
