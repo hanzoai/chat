@@ -24,6 +24,9 @@ module.exports = {
     './src/**/*.{js,jsx,ts,tsx}',
     // Include component library files
     '../packages/client/src/**/*.{js,jsx,ts,tsx}',
+    // Shared @hanzo/ui components (network switcher / wallet menu)
+    './node_modules/@hanzo/ui/dist/network/**/*.{js,mjs}',
+    './node_modules/@hanzo/ui/dist/wallet/**/*.{js,mjs}',
   ],
   // darkMode: 'class',
   darkMode: ['class'],
@@ -164,6 +167,13 @@ module.exports = {
         muted: {
           DEFAULT: 'hsl(var(--muted))',
           foreground: 'hsl(var(--muted-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover, var(--background)))',
+          foreground: 'hsl(var(--popover-foreground, var(--foreground)))',
+        },
+        destructive: {
+          DEFAULT: 'var(--text-destructive)',
         },
         accent: {
           DEFAULT: 'hsl(var(--accent))',
