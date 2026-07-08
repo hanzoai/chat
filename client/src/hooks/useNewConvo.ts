@@ -33,9 +33,15 @@ import {
   buildDefaultConvo,
   isHanzoEndpoint,
   SMART_ROUTING_MODEL,
+  resolveSmartRouting,
   logger,
 } from '~/utils';
-import { useDeleteFilesMutation, useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
+import {
+  useDeleteFilesMutation,
+  useGetEndpointsQuery,
+  useGetStartupConfig,
+  useGetRoutingDefaults,
+} from '~/data-provider';
 import useAssistantListMap from './Assistants/useAssistantListMap';
 import { useResetChatBadges } from './useChatBadges';
 import { useApplyModelSpecEffects } from './Agents';
@@ -53,7 +59,15 @@ const useNewConvo = (index = 0) => {
   const { setConversation } = store.useCreateConversationAtom(index);
   const [files, setFiles] = useRecoilState(store.filesByIndex(index));
   const saveBadgesState = useRecoilValue<boolean>(store.saveBadgesState);
-  const smartRouting = useRecoilValue<boolean>(store.smartRouting);
+  const smartRoutingPref = useRecoilValue<boolean | null>(store.smartRouting);
+  // Server-driven org defaults (fail-soft: `available:false` when the endpoint is
+  // absent/older cloud-api — resolveSmartRouting then keeps today's behavior).
+  const { data: routingDefaults } = useGetRoutingDefaults();
+  const { enabled: smartRouting } = resolveSmartRouting(
+    smartRoutingPref,
+    routingDefaults?.available ? routingDefaults.default_session_routing ?? null : null,
+    routingDefaults?.available ? routingDefaults.auto_routing_active !== false : true,
+  );
   const clearAllLatestMessages = store.useClearLatestMessages(`useNewConvo ${index}`);
   const setSubmission = useSetRecoilState<TSubmission | null>(store.submissionByIndex(index));
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
