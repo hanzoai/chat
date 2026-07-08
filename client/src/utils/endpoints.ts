@@ -14,6 +14,23 @@ import type { LocalizeFunction, IconsRecord } from '~/common';
 import { getTimestampedValue } from './timestamps';
 
 /**
+ * The house-brand Hanzo endpoint name (custom endpoint in librechat.yaml,
+ * `api.hanzo.ai/v1`). Canonical everywhere: config, guest scope (`GUEST_ENDPOINT`
+ * default), and here. Smart routing's `auto` model is scoped to this endpoint —
+ * the explicit provider families (Qwen, Meta Llama, …) are deliberate picks and
+ * must never be silently re-routed.
+ */
+export const HANZO_ENDPOINT = 'Hanzo';
+
+/** The gateway model that routes each prompt to the best/cheapest capable model. */
+export const SMART_ROUTING_MODEL = 'auto';
+
+/** True when the endpoint is the Hanzo house-brand endpoint (auto-routing home). */
+export function isHanzoEndpoint(endpoint?: EModelEndpoint | string | null): boolean {
+  return endpoint === HANZO_ENDPOINT;
+}
+
+/**
  * Clears model for non-ephemeral agent conversations.
  * Agents use their configured model internally, so the conversation model should be undefined.
  * Mutates the template in place.
