@@ -720,3 +720,15 @@ export type TUsageResponse = {
   models: { model: string; tokens: number; requests: number; cost: number }[];
   updatedAt: string;
 };
+
+/**
+ * Org-scoped auto-routing defaults from cloud (`GET /v1/get-routing-defaults`),
+ * proxied by the chat backend. `available` is false when the endpoint is absent
+ * (older cloud-api) or the fetch failed soft — the client then behaves exactly as
+ * today (local preference only).
+ */
+export type TRoutingDefaultsResponse = {
+  available: boolean;
+  auto_routing_active?: boolean;
+  default_session_routing?: boolean;
+};
