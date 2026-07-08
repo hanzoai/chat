@@ -3,7 +3,13 @@ import { Button, Paragraph, ScrollView, Spinner, Switch, Text, XStack, YStack } 
 import { useUsage } from '@hanzo/usage/react'
 import type { UsageStore, ProviderState, RateWindow } from '@hanzo/usage'
 import { createUsageStore, isTauri } from '../lib/usage'
-import { getSmartRouting, setSmartRouting } from '../lib/settings'
+import { getSmartRoutingPref, setSmartRoutingPref } from '../lib/settings'
+import {
+  resolveSmartRouting,
+  orgDefaultRouting,
+  orgAutoRoutingActive,
+  type RoutingDefaults,
+} from '../lib/routing'
 
 const PROVIDERS: Array<{ id: string; label: string }> = [
   { id: 'hanzo', label: 'Hanzo' },
@@ -14,7 +20,7 @@ const PROVIDERS: Array<{ id: string; label: string }> = [
 // Usage screen: provider cards from @hanzo/usage. Needs a filesystem host
 // (Tauri) to read ~/.codex, ~/.claude, ~/.hanzo — outside Tauri we show a
 // connect empty-state.
-export function Usage() {
+export function Usage({ routingDefaults }: { routingDefaults: RoutingDefaults | null }) {
   const [store, setStore] = useState<UsageStore | null>(null)
   const [ready, setReady] = useState(false)
 
@@ -43,7 +49,7 @@ export function Usage() {
   return (
     <YStack flex={1} backgroundColor="$background">
       <YStack padding={12} paddingBottom={0}>
-        <SmartRoutingToggle />
+        <SmartRoutingToggle routingDefaults={routingDefaults} />
       </YStack>
       {!ready ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
@@ -58,13 +64,21 @@ export function Usage() {
   )
 }
 
-// Persisted (localStorage) toggle: flips chat between the configured model and
-// the gateway's "auto" smart-routing model. See lib/settings + lib/api.
-function SmartRoutingToggle() {
-  const [smartRouting, setSmartRoutingState] = useState(getSmartRouting)
+// Smart-routing toggle: flips new chats between the configured model and the
+// gateway's "auto" smart-routing model. The effective state is resolved from the
+// local override (null === follow org default) against the org's server-driven
+// defaults (fail-soft: absent === today's local-only behavior). When the org has
+// disabled auto-routing the toggle is locked off. See lib/routing + lib/settings.
+function SmartRoutingToggle({ routingDefaults }: { routingDefaults: RoutingDefaults | null }) {
+  const [pref, setPref] = useState<boolean | null>(getSmartRoutingPref)
+  const { enabled, toggleDisabled } = resolveSmartRouting(
+    pref,
+    orgDefaultRouting(routingDefaults),
+    orgAutoRoutingActive(routingDefaults),
+  )
   const onChange = (value: boolean) => {
-    setSmartRoutingState(value)
-    setSmartRouting(value)
+    setPref(value)
+    setSmartRoutingPref(value)
   }
   return (
     <YStack backgroundColor="$color2" borderRadius="$5" padding="$4" gap="$2">
@@ -72,13 +86,14 @@ function SmartRoutingToggle() {
         <Text fontSize="$5" fontWeight="600" color="$color">
           Smart routing
         </Text>
-        <Switch size="$3" checked={smartRouting} onCheckedChange={onChange}>
+        <Switch size="$3" checked={enabled} disabled={toggleDisabled} onCheckedChange={onChange}>
           <Switch.Thumb />
         </Switch>
       </XStack>
       <Paragraph fontSize="$2" color="$color10">
-        Automatically route each message to the best, cheapest capable model. You're billed for
-        whichever model serves it. Learn more at docs.hanzo.ai/docs/usage/routing
+        {toggleDisabled
+          ? 'Disabled for your organization'
+          : "Automatically route each message to the best, cheapest capable model. You're billed for whichever model serves it. Learn more at docs.hanzo.ai/docs/usage/routing"}
       </Paragraph>
     </YStack>
   )
