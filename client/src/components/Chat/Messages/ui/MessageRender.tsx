@@ -10,7 +10,7 @@ import HoverButtons from '~/components/Chat/Messages/HoverButtons';
 import MessageIcon from '~/components/Chat/Messages/MessageIcon';
 import { useLocalize, useMessageActions, useContentMetadata } from '~/hooks';
 import SubRow from '~/components/Chat/Messages/SubRow';
-import { cn, getMessageAriaLabel } from '~/utils';
+import { cn, getMessageAriaLabel, SMART_ROUTING_MODEL } from '~/utils';
 import { fontSizeAtom } from '~/store/fontSize';
 import { MessageContext } from '~/Providers';
 import store from '~/store';
@@ -85,6 +85,22 @@ const MessageRender = memo(
       ],
     );
 
+    /**
+     * When smart routing served this conversation (`model === 'auto'`), the
+     * response echoes the model that actually ran in `msg.model`. Surface it so
+     * the user sees which model handled their prompt.
+     */
+    const routedModel = useMemo(() => {
+      if (msg?.isCreatedByUser === true || conversation?.model !== SMART_ROUTING_MODEL) {
+        return null;
+      }
+      const served = msg?.model;
+      if (!served || served === SMART_ROUTING_MODEL) {
+        return null;
+      }
+      return served;
+    }, [msg?.isCreatedByUser, msg?.model, conversation?.model]);
+
     const { hasParallelContent } = useContentMetadata(msg);
 
     if (!msg) {
@@ -137,7 +153,17 @@ const MessageRender = memo(
           )}
         >
           {!hasParallelContent && (
-            <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
+            <h2 className={cn('flex select-none items-center gap-1.5 font-semibold', fontSize)}>
+              {messageLabel}
+              {routedModel != null && (
+                <span
+                  className="rounded bg-surface-tertiary px-1.5 py-0.5 text-xs font-normal text-text-secondary"
+                  title={localize('com_ui_routed_to', { 0: routedModel })}
+                >
+                  {routedModel}
+                </span>
+              )}
+            </h2>
           )}
 
           <div className="flex flex-col gap-1">
