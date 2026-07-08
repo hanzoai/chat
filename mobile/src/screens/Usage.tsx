@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Button, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from '@hanzo/gui'
+import { Button, Paragraph, ScrollView, Spinner, Switch, Text, XStack, YStack } from '@hanzo/gui'
 import { useUsage } from '@hanzo/usage/react'
 import type { UsageStore, ProviderState, RateWindow } from '@hanzo/usage'
 import { createUsageStore, isTauri } from '../lib/usage'
+import { getSmartRouting, setSmartRouting } from '../lib/settings'
 
 const PROVIDERS: Array<{ id: string; label: string }> = [
   { id: 'hanzo', label: 'Hanzo' },
@@ -37,16 +38,50 @@ export function Usage() {
     }
   }, [])
 
-  if (!ready) {
-    return (
-      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$background">
-        <Spinner size="large" color="$color10" />
+  // Smart routing is a chat setting, not usage data — keep it visible in every
+  // state (loading, connected, empty).
+  return (
+    <YStack flex={1} backgroundColor="$background">
+      <YStack padding={12} paddingBottom={0}>
+        <SmartRoutingToggle />
       </YStack>
-    )
-  }
+      {!ready ? (
+        <YStack flex={1} alignItems="center" justifyContent="center">
+          <Spinner size="large" color="$color10" />
+        </YStack>
+      ) : !store ? (
+        <ConnectEmptyState />
+      ) : (
+        <UsageCards store={store} />
+      )}
+    </YStack>
+  )
+}
 
-  if (!store) return <ConnectEmptyState />
-  return <UsageCards store={store} />
+// Persisted (localStorage) toggle: flips chat between the configured model and
+// the gateway's "auto" smart-routing model. See lib/settings + lib/api.
+function SmartRoutingToggle() {
+  const [smartRouting, setSmartRoutingState] = useState(getSmartRouting)
+  const onChange = (value: boolean) => {
+    setSmartRoutingState(value)
+    setSmartRouting(value)
+  }
+  return (
+    <YStack backgroundColor="$color2" borderRadius="$5" padding="$4" gap="$2">
+      <XStack justifyContent="space-between" alignItems="center" gap="$3">
+        <Text fontSize="$5" fontWeight="600" color="$color">
+          Smart routing
+        </Text>
+        <Switch size="$3" checked={smartRouting} onCheckedChange={onChange}>
+          <Switch.Thumb />
+        </Switch>
+      </XStack>
+      <Paragraph fontSize="$2" color="$color10">
+        Automatically route each message to the best, cheapest capable model. You're billed for
+        whichever model serves it. Learn more at docs.hanzo.ai/docs/usage/routing
+      </Paragraph>
+    </YStack>
+  )
 }
 
 function ConnectEmptyState() {

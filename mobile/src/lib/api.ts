@@ -19,6 +19,10 @@
 // both, so we send one token.
 
 import { getToken } from './auth'
+import { getSmartRouting } from './settings'
+
+/** Gateway model that routes each prompt to the best/cheapest capable model. */
+const SMART_ROUTING_MODEL = 'auto'
 
 const BASE_URL = (
   (import.meta.env.VITE_CHAT_API_URL as string | undefined) ?? 'https://hanzo.chat'
@@ -86,11 +90,14 @@ export async function chat(
   messages: ChatMessage[],
   opts: { model?: string; signal?: AbortSignal } = {},
 ): Promise<string> {
+  // Explicit opts.model wins; otherwise smart routing flips the default between
+  // "auto" (gateway routes) and the configured VITE_CHAT_MODEL.
+  const model = opts.model ?? (getSmartRouting() ? SMART_ROUTING_MODEL : DEFAULT_MODEL)
   const res = await fetch(`${BASE_URL}/api/agents/v1/chat/completions`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({
-      model: opts.model ?? DEFAULT_MODEL,
+      model,
       messages,
       stream: false,
     }),

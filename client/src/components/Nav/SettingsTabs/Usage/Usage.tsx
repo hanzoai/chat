@@ -1,9 +1,51 @@
 import React from 'react';
-import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3 } from 'lucide-react';
+import { useRecoilState } from 'recoil';
+import { Switch } from '@librechat/client';
+import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3, Sparkles } from 'lucide-react';
 import { useGetStartupConfig, useGetUserUsage } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
+import store from '~/store';
 
 const CONSOLE_URL = 'https://console.hanzo.ai/ai-accounts';
+const ROUTING_DOCS_URL = 'https://docs.hanzo.ai/docs/usage/routing';
+
+/** Smart-routing toggle: default new Hanzo chats to the gateway `auto` model. */
+function SmartRoutingToggle() {
+  const localize = useLocalize();
+  const [smartRouting, setSmartRouting] = useRecoilState<boolean>(store.smartRouting);
+  const labelId = 'smartRouting-label';
+
+  return (
+    <div className="rounded-xl border border-border-medium bg-surface-secondary p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2">
+          <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-text-secondary" />
+          <div id={labelId} className="text-sm font-medium text-text-primary">
+            {localize('com_nav_smart_routing')}
+          </div>
+        </div>
+        <Switch
+          id="smartRouting"
+          checked={smartRouting}
+          onCheckedChange={setSmartRouting}
+          data-testid="smartRouting"
+          aria-labelledby={labelId}
+        />
+      </div>
+      <p className="mt-2 text-xs text-text-secondary">
+        {localize('com_nav_smart_routing_desc')}{' '}
+        <a
+          href={ROUTING_DOCS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-text-primary underline hover:opacity-80"
+        >
+          {localize('com_nav_smart_routing_learn_more')}
+        </a>
+      </p>
+    </div>
+  );
+}
 
 function formatUsd(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -83,6 +125,9 @@ function Usage() {
 
   return (
     <div className="flex flex-col gap-5 p-4 text-sm text-text-primary">
+      {/* Smart routing toggle */}
+      <SmartRoutingToggle />
+
       {/* Spend header card */}
       <div className="rounded-xl border border-border-medium bg-surface-secondary p-4">
         <div className="flex items-start justify-between">
