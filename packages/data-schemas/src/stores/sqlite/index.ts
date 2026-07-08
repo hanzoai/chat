@@ -18,6 +18,7 @@ export { DocModel, type CollectionSpec } from './DocModel';
 export { CHAT_COLLECTION_SPECS } from './collections';
 export { ObjectId } from './engine';
 export { createDualWriteModel, DualWriteModel } from './DualWriteModel';
+export { attachMeili, backfillMeili, isMeiliEnabled } from './meili';
 
 export interface SqliteHandle {
   models: Record<string, DocModel>;

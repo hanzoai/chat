@@ -5011,8 +5011,26 @@ class ObjectId {
  */
 const SQL_SAFE_FIELD = /^[A-Za-z_][A-Za-z0-9_]*$/;
 class DocModel {
+    /** Notifies `onMutate` (buffering mid-bulkWrite so a rollback emits nothing). */
+    emitMutate(op, doc) {
+        if (!this.onMutate) {
+            return;
+        }
+        if (this.mutateBuffer) {
+            this.mutateBuffer.push([op, doc]);
+            return;
+        }
+        this.onMutate(op, doc);
+    }
+    /** Deletes a row by `_id` and notifies the mutation observer. */
+    deleteById(doc) {
+        this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id);
+        this.emitMutate('delete', doc);
+    }
     constructor(db, spec) {
         var _a, _b, _c, _d, _e, _f;
+        /** Buffers mutations during a bulkWrite transaction; flushed only post-COMMIT. */
+        this.mutateBuffer = null;
         this.db = db;
         this.modelName = spec.name;
         this.dateFields = new Set((_a = spec.dateFields) !== null && _a !== void 0 ? _a : ['createdAt', 'updatedAt', 'expiredAt']);
@@ -5222,6 +5240,7 @@ class DocModel {
         this.db
             .prepare(`INSERT INTO ${this.table} (_id, doc) VALUES (?, ?)`)
             .run(doc._id, this.serialize(doc));
+        this.emitMutate('upsert', doc);
         return doc;
     }
     replaceDoc(doc) {
@@ -5229,6 +5248,7 @@ class DocModel {
         this.db
             .prepare(`UPDATE ${this.table} SET doc = ? WHERE _id = ?`)
             .run(this.serialize(doc), doc._id);
+        this.emitMutate('upsert', doc);
     }
     stampTimestamps(doc, isInsert, enabled) {
         if (!enabled) {
@@ -5282,9 +5302,8 @@ class DocModel {
             docs = docs.slice(0, opts.limit);
         }
         if (opts.deleteAfter) {
-            const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
             for (const d of docs) {
-                del.run(d._id);
+                this.deleteById(d);
             }
         }
         if ((_c = opts.populate) === null || _c === void 0 ? void 0 : _c.length) {
@@ -5411,9 +5430,8 @@ class DocModel {
     }
     async deleteMany(filter = {}) {
         const docs = this.candidates(filter);
-        const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
         for (const doc of docs) {
-            del.run(doc._id);
+            this.deleteById(doc);
         }
         return { acknowledged: true, deletedCount: docs.length };
     }
@@ -5422,7 +5440,7 @@ class DocModel {
         if (!doc) {
             return { acknowledged: true, deletedCount: 0 };
         }
-        this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id);
+        this.deleteById(doc);
         return { acknowledged: true, deletedCount: 1 };
     }
     async countDocuments(filter = {}) {
@@ -5501,11 +5519,18 @@ class DocModel {
         }
         return docs;
     }
+    /**
+     * Mongoose `.distinct(field[, filter])`: the set of distinct values of a
+     * (possibly dotted) field over the filtered candidates. Array fields
+     * contribute each element (Mongo semantics). Honors the same filter/tenant
+     * machinery as every other read (via `candidates`), and returns a plain array
+     * — awaiting resolves it, matching mongoose's `.distinct()` return.
+     */
     async distinct(field, filter = {}) {
         const seen = new Set();
         const out = [];
         for (const doc of this.candidates(filter)) {
-            const v = doc[field];
+            const v = getPath(doc, field);
             const values = Array.isArray(v) ? v : [v];
             for (const el of values) {
                 const key = el instanceof Date ? el.getTime() : el;
@@ -5561,6 +5586,9 @@ class DocModel {
             upsertedIds: {},
             insertedIds: {},
         };
+        // Buffer mutation notifications until COMMIT so a mid-batch ROLLBACK emits
+        // nothing to the observer (Meili stays consistent with the rolled-back rows).
+        this.mutateBuffer = this.onMutate ? [] : null;
         this.db.exec('BEGIN');
         try {
             ops.forEach((op, i) => {
@@ -5598,14 +5626,14 @@ class DocModel {
                     const { filter } = op.deleteOne;
                     const doc = this.candidates(filter)[0];
                     if (doc) {
-                        this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id);
+                        this.deleteById(doc);
                         result.deletedCount++;
                     }
                 }
                 else if ('deleteMany' in op) {
                     const { filter } = op.deleteMany;
                     for (const doc of this.candidates(filter)) {
-                        this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id);
+                        this.deleteById(doc);
                         result.deletedCount++;
                     }
                 }
@@ -5625,7 +5653,15 @@ class DocModel {
         }
         catch (err) {
             this.db.exec('ROLLBACK');
+            this.mutateBuffer = null;
             throw err;
+        }
+        const buffered = this.mutateBuffer;
+        this.mutateBuffer = null;
+        if (buffered && this.onMutate) {
+            for (const [op, doc] of buffered) {
+                this.onMutate(op, doc);
+            }
         }
         return result;
     }
@@ -5704,6 +5740,45 @@ class QueryBuilder {
     /** `Model.find(A).deleteMany(B)` deletes docs matching A AND B. */
     deleteMany(extra = {}) {
         return this.model.deleteMany({ $and: [this.filter, extra] });
+    }
+    /**
+     * `Model.find(filter).distinct(field)` — the chained form (mongoose returns a
+     * Query whose op switches to `distinct`). Resolves to the distinct values of
+     * `field` over THIS query's filter; a further `.lean()` is a no-op (the store
+     * already yields plain values). PermissionService / aclEntry / agentCategory
+     * use this exact chain.
+     */
+    distinct(field) {
+        return new DistinctQuery(this.model, this.filter, field);
+    }
+    then(onfulfilled, onrejected) {
+        return this.exec().then(onfulfilled, onrejected);
+    }
+    catch(onrejected) {
+        return this.exec().catch(onrejected);
+    }
+}
+/**
+ * Thenable result of `find(filter).distinct(field)`. Mirrors the mongoose
+ * distinct Query surface the methods touch: awaiting (or `.lean()` then
+ * awaiting) resolves the distinct-value array; `.session()` is a store no-op.
+ */
+class DistinctQuery {
+    constructor(model, filter, field) {
+        this.model = model;
+        this.filter = filter;
+        this.field = field;
+    }
+    /** No-op: the store already returns plain values, not hydrated documents. */
+    lean() {
+        return this;
+    }
+    /** No-op: single-connection store, Mongo sessions don't apply. */
+    session(_session) {
+        return this;
+    }
+    exec() {
+        return this.model.distinct(this.field, this.filter);
     }
     then(onfulfilled, onrejected) {
         return this.exec().then(onfulfilled, onrejected);
@@ -6327,6 +6402,244 @@ function createDualWriteModel(primary, mirror) {
 }
 
 /**
+ * MeiliSearch integration for the SQLite document store — the store-native
+ * replacement for the mongoose `mongoMeili` plugin's save/delete hooks.
+ *
+ * MeiliSearch stays the search ENGINE; only its DATA SOURCE changes from mongoose
+ * to the store. When Conversation/Message are served from SQLite (Mongo=0), the
+ * mongoose schema hooks never fire, so this module drives Meili instead:
+ *
+ *   - live writes  → `DocModel.onMutate('upsert'|'delete', doc)` → Meili
+ *     add/replace or delete, indexing the SAME fields the mongoose plugin did.
+ *   - search       → `model.meiliSearch(q, params, populate)` queries Meili and
+ *     hydrates the hits FROM THE STORE (not mongoose).
+ *   - historical   → `backfillMeili(models)` reads convos+messages from the store
+ *     and indexes them (the one-shot `config/backfill-meili.js` uses this).
+ *
+ * `attachMeili` is idempotent (a WeakSet guards re-wiring) and env-gated, so it is
+ * safe to call from the app's model assembly on every `createModels`.
+ */
+/**
+ * Index config for the two searchable collections. Fields mirror
+ * `schema/convo.ts` + `schema/message.ts` (`meiliIndex: true`) so the store
+ * indexes byte-for-byte what the mongoose plugin indexed.
+ */
+const MEILI_COLLECTIONS = [
+    {
+        modelName: 'Conversation',
+        indexName: 'convos',
+        primaryKey: 'conversationId',
+        attributesToIndex: ['conversationId', 'title', 'user', 'organization', 'tags'],
+    },
+    {
+        modelName: 'Message',
+        indexName: 'messages',
+        primaryKey: 'messageId',
+        attributesToIndex: [
+            'messageId',
+            'conversationId',
+            'user',
+            'organization',
+            'sender',
+            'text',
+            'content',
+        ],
+    },
+];
+/**
+ * Shapes a store document for the Meili index exactly as the mongoose plugin's
+ * `preprocessObjectForIndex` did: pick the indexed attributes, drop `$`-prefixed
+ * keys, sanitize `|` in conversationId, and flatten a `content` parts array into
+ * a searchable `text` field.
+ */
+function preprocessForIndex(doc, attributesToIndex) {
+    const object = _.omitBy(_.pick(doc, attributesToIndex), (_v, k) => k.startsWith('$'));
+    if (typeof object.conversationId === 'string' &&
+        object.conversationId.includes('|')) {
+        object.conversationId = object.conversationId.replace(/\|/g, '--');
+    }
+    if (Array.isArray(object.content)) {
+        object.text = librechatDataProvider.parseTextParts(object.content);
+        delete object.content;
+    }
+    return object;
+}
+/**
+ * Binds one store collection to its MeiliSearch index. Live writes call
+ * `onUpsert`/`onDelete`; reads call `search`. All Meili errors are logged and
+ * swallowed (search is a non-authoritative index; the store is the source of
+ * truth), matching the mongoose plugin's fail-open hooks.
+ */
+class MeiliCollectionSync {
+    constructor(client, config, model) {
+        this.client = client;
+        this.config = config;
+        this.model = model;
+        this.index = client.index(config.indexName);
+    }
+    /** Idempotently ensure the index exists and `user` is filterable. */
+    async ensureIndex() {
+        try {
+            await this.index.getRawInfo();
+        }
+        catch (error) {
+            const code = error === null || error === void 0 ? void 0 : error.code;
+            if (code === 'index_not_found') {
+                try {
+                    await this.client.createIndex(this.config.indexName, {
+                        primaryKey: this.config.primaryKey,
+                    });
+                    logger.info(`[meili] created index ${this.config.indexName}`);
+                }
+                catch (createError) {
+                    logger.debug(`[meili] index ${this.config.indexName} may already exist:`, createError);
+                }
+            }
+            else {
+                logger.error(`[meili] error checking index ${this.config.indexName}:`, error);
+            }
+        }
+        try {
+            await this.index.updateSettings({ filterableAttributes: ['user'] });
+        }
+        catch (settingsError) {
+            logger.error(`[meili] error updating settings for ${this.config.indexName}:`, settingsError);
+        }
+    }
+    /** Add-or-replace the document in the index (skip / evict TTL documents). */
+    onUpsert(doc) {
+        // A doc with a TTL (`expiredAt`) is never indexed; if one gained a TTL on
+        // update, evict any prior entry — mirrors the mongoose plugin's guard.
+        if (doc.expiredAt != null) {
+            this.onDelete(doc);
+            return;
+        }
+        const object = preprocessForIndex(doc, this.config.attributesToIndex);
+        if (object[this.config.primaryKey] == null) {
+            return;
+        }
+        // `addDocuments` is add-or-replace keyed by primaryKey — idempotent for both
+        // create and update, so no `_meiliIndex` bookkeeping is needed.
+        this.index
+            .addDocuments([object], { primaryKey: this.config.primaryKey })
+            .catch((err) => logger.error(`[meili] add to ${this.config.indexName} failed:`, err));
+    }
+    /** Remove the document from the index by its primary key. */
+    onDelete(doc) {
+        const key = doc[this.config.primaryKey];
+        if (key == null) {
+            return;
+        }
+        this.index
+            .deleteDocument(String(key))
+            .catch((err) => logger.error(`[meili] delete from ${this.config.indexName} failed:`, err));
+    }
+    /**
+     * Search the index, optionally hydrating hits FROM THE STORE. The store is the
+     * source of truth: hits are merged over the store document (store fields first,
+     * meili fields — incl. the derived `text` — win on overlap), and a hit with no
+     * store document simply carries only the indexed fields (the message-search
+     * route re-fetches from the store and drops orphans).
+     */
+    async search(q, params, populate) {
+        const data = (await this.index.search(q, params));
+        if (!populate || !Array.isArray(data.hits) || data.hits.length === 0) {
+            return data;
+        }
+        const key = this.config.primaryKey;
+        const ids = data.hits.map((h) => h[key]).filter((v) => v != null);
+        const docs = ids.length
+            ? (await this.model.find({ [key]: { $in: ids } }).lean())
+            : [];
+        const byKey = new Map(docs.map((d) => [String(d[key]), d]));
+        data.hits = data.hits.map((hit) => {
+            const original = byKey.get(String(hit[key]));
+            return { ...(original !== null && original !== void 0 ? original : {}), ...hit };
+        });
+        return data;
+    }
+    /**
+     * One-shot backfill: index every non-expired store document. Awaited (unlike
+     * the live fire-and-forget path) so the caller gets an accurate count.
+     */
+    async backfill(batchSize) {
+        const docs = (await this.model
+            .find({ $or: [{ expiredAt: null }, { expiredAt: { $exists: false } }] })
+            .lean());
+        let indexed = 0;
+        for (let i = 0; i < docs.length; i += batchSize) {
+            const batch = docs
+                .slice(i, i + batchSize)
+                .map((d) => preprocessForIndex(d, this.config.attributesToIndex))
+                .filter((o) => o[this.config.primaryKey] != null);
+            if (batch.length === 0) {
+                continue;
+            }
+            await this.index.addDocuments(batch, { primaryKey: this.config.primaryKey });
+            indexed += batch.length;
+        }
+        return indexed;
+    }
+}
+/** Search is enabled and MeiliSearch is configured (matches mongoMeili). */
+function isMeiliEnabled() {
+    const searchEnabled = process.env.SEARCH != null && process.env.SEARCH.toLowerCase() === 'true';
+    return (searchEnabled && process.env.MEILI_HOST != null && process.env.MEILI_MASTER_KEY != null);
+}
+function buildClient(client) {
+    return (client !== null && client !== void 0 ? client : new meilisearch.MeiliSearch({
+        host: process.env.MEILI_HOST,
+        apiKey: process.env.MEILI_MASTER_KEY,
+    }));
+}
+/** Models already wired, so re-calling attachMeili (3x at boot) is a no-op. */
+const attached = new WeakSet();
+/**
+ * Wires MeiliSearch onto the Conversation/Message store models: their
+ * `onMutate` drives live indexing and `meiliSearch` serves store-hydrated
+ * search. Env-gated (no-op unless SEARCH + MEILI_* are set, or a `client` is
+ * injected for tests) and idempotent.
+ */
+function attachMeili(models, opts = {}) {
+    if (!opts.client && !isMeiliEnabled()) {
+        return;
+    }
+    const client = buildClient(opts.client);
+    for (const config of MEILI_COLLECTIONS) {
+        const model = models[config.modelName];
+        if (!model || attached.has(model)) {
+            continue;
+        }
+        const sync = new MeiliCollectionSync(client, config, model);
+        model.onMutate = (op, doc) => (op === 'upsert' ? sync.onUpsert(doc) : sync.onDelete(doc));
+        model.meiliSearch = (query, params, populate) => sync.search(query, params !== null && params !== void 0 ? params : {}, populate !== null && populate !== void 0 ? populate : false);
+        attached.add(model);
+        void sync.ensureIndex();
+    }
+}
+/**
+ * One-shot backfill of MeiliSearch from the store — indexes existing convo +
+ * message history so it becomes searchable after the flip. Returns a per-index
+ * count. Used by `config/backfill-meili.js`.
+ */
+async function backfillMeili(models, opts = {}) {
+    var _a;
+    const client = buildClient(opts.client);
+    const report = [];
+    for (const config of MEILI_COLLECTIONS) {
+        const model = models[config.modelName];
+        if (!model) {
+            continue;
+        }
+        const sync = new MeiliCollectionSync(client, config, model);
+        await sync.ensureIndex();
+        const indexed = await sync.backfill((_a = opts.batchSize) !== null && _a !== void 0 ? _a : 100);
+        report.push({ collection: config.indexName, indexed });
+    }
+    return report;
+}
+
+/**
  * SQLite document store — the embedded default backend for the chat data layer.
  *
  * `createSqliteHandle(names)` returns a mongoose-shaped handle whose
@@ -6466,6 +6779,10 @@ function applySqliteOverrides(models) {
         return models;
     }
     const handle = sharedSqliteHandle(union);
+    // Drive MeiliSearch from the store: wire live indexing + store-hydrated search
+    // onto the SQLite Conversation/Message models (env-gated + idempotent). Attached
+    // to the raw store models so both the direct and DualWrite-wrapped forms index.
+    attachMeili(handle.models);
     const out = { ...models };
     for (const name of union) {
         const mongooseModel = models[name];
@@ -9933,6 +10250,8 @@ exports.agentCategorySchema = agentCategorySchema;
 exports.agentSchema = agentSchema;
 exports.agentsConfigSetup = agentsConfigSetup;
 exports.assistantSchema = assistantSchema;
+exports.attachMeili = attachMeili;
+exports.backfillMeili = backfillMeili;
 exports.balanceSchema = balanceSchema;
 exports.bannerSchema = bannerSchema;
 exports.categoriesSchema = categoriesSchema;
@@ -9955,6 +10274,7 @@ exports.getWebSearchKeys = getWebSearchKeys;
 exports.groupSchema = groupSchema;
 exports.hashBackupCode = hashBackupCode;
 exports.hashToken = hashToken;
+exports.isMeiliEnabled = isMeiliEnabled;
 exports.keySchema = keySchema;
 exports.loadDefaultInterface = loadDefaultInterface;
 exports.loadTurnstileConfig = loadTurnstileConfig;

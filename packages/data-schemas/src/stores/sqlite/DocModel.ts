@@ -118,6 +118,42 @@ export class DocModel {
   private readonly tenantIsolated: boolean;
   /** Resolves sibling collections for `.populate()`; wired by createSqliteHandle. */
   resolver?: (name: string) => DocModel | undefined;
+  /** Resolves a mongo collection name (e.g. `accessroles`) to its model, for `$lookup`. */
+  collectionResolver?: (from: string) => DocModel | undefined;
+  /**
+   * Post-mutation observer — wired for Conversation/Message when MeiliSearch is
+   * enabled (see `stores/sqlite/meili.ts`). Fires AFTER a committed store write
+   * so a live create/update/delete drives Meili add/update/delete. A cheap
+   * no-op for every other collection (a single truthiness guard). Never wired to
+   * `upsertRaw` (the dual-write mirror / backfill own their own indexing).
+   */
+  onMutate?: (op: 'upsert' | 'delete', doc: Doc) => void;
+  /** MeiliSearch query surface, attached alongside `onMutate`. Store-hydrated. */
+  meiliSearch?: (
+    q: string,
+    params?: Record<string, unknown>,
+    populate?: boolean,
+  ) => Promise<{ hits: Array<Record<string, unknown>> }>;
+  /** Buffers mutations during a bulkWrite transaction; flushed only post-COMMIT. */
+  private mutateBuffer: Array<['upsert' | 'delete', Doc]> | null = null;
+
+  /** Notifies `onMutate` (buffering mid-bulkWrite so a rollback emits nothing). */
+  private emitMutate(op: 'upsert' | 'delete', doc: Doc): void {
+    if (!this.onMutate) {
+      return;
+    }
+    if (this.mutateBuffer) {
+      this.mutateBuffer.push([op, doc]);
+      return;
+    }
+    this.onMutate(op, doc);
+  }
+
+  /** Deletes a row by `_id` and notifies the mutation observer. */
+  private deleteById(doc: Doc): void {
+    this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id as string);
+    this.emitMutate('delete', doc);
+  }
 
   constructor(db: SqliteDatabase, spec: CollectionSpec) {
     this.db = db;
@@ -351,6 +387,7 @@ export class DocModel {
     this.db
       .prepare(`INSERT INTO ${this.table} (_id, doc) VALUES (?, ?)`)
       .run(doc._id as string, this.serialize(doc));
+    this.emitMutate('upsert', doc);
     return doc;
   }
 
@@ -359,6 +396,7 @@ export class DocModel {
     this.db
       .prepare(`UPDATE ${this.table} SET doc = ? WHERE _id = ?`)
       .run(this.serialize(doc), doc._id as string);
+    this.emitMutate('upsert', doc);
   }
 
   private stampTimestamps(doc: Doc, isInsert: boolean, enabled: boolean): void {
@@ -428,9 +466,8 @@ export class DocModel {
       docs = docs.slice(0, opts.limit);
     }
     if (opts.deleteAfter) {
-      const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
       for (const d of docs) {
-        del.run(d._id as string);
+        this.deleteById(d);
       }
     }
     if (opts.populate?.length) {
@@ -582,9 +619,8 @@ export class DocModel {
 
   async deleteMany(filter: Filter = {}): Promise<DeleteResult> {
     const docs = this.candidates(filter);
-    const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
     for (const doc of docs) {
-      del.run(doc._id as string);
+      this.deleteById(doc);
     }
     return { acknowledged: true, deletedCount: docs.length };
   }
@@ -594,7 +630,7 @@ export class DocModel {
     if (!doc) {
       return { acknowledged: true, deletedCount: 0 };
     }
-    this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id as string);
+    this.deleteById(doc);
     return { acknowledged: true, deletedCount: 1 };
   }
 
@@ -747,6 +783,9 @@ export class DocModel {
       upsertedIds: {},
       insertedIds: {},
     };
+    // Buffer mutation notifications until COMMIT so a mid-batch ROLLBACK emits
+    // nothing to the observer (Meili stays consistent with the rolled-back rows).
+    this.mutateBuffer = this.onMutate ? [] : null;
     this.db.exec('BEGIN');
     try {
       ops.forEach((op, i) => {
@@ -785,13 +824,13 @@ export class DocModel {
           const { filter } = op.deleteOne as { filter: Filter };
           const doc = this.candidates(filter)[0];
           if (doc) {
-            this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id as string);
+            this.deleteById(doc);
             result.deletedCount++;
           }
         } else if ('deleteMany' in op) {
           const { filter } = op.deleteMany as { filter: Filter };
           for (const doc of this.candidates(filter)) {
-            this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id as string);
+            this.deleteById(doc);
             result.deletedCount++;
           }
         } else if ('updateMany' in op) {
@@ -809,7 +848,15 @@ export class DocModel {
       this.db.exec('COMMIT');
     } catch (err) {
       this.db.exec('ROLLBACK');
+      this.mutateBuffer = null;
       throw err;
+    }
+    const buffered = this.mutateBuffer;
+    this.mutateBuffer = null;
+    if (buffered && this.onMutate) {
+      for (const [op, doc] of buffered) {
+        this.onMutate(op, doc);
+      }
     }
     return result;
   }

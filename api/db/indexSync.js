@@ -301,6 +301,23 @@ async function indexSync() {
     return;
   }
 
+  // Store-aware gate: this routine is mongoose-native (it drives `syncWithMeili`
+  // / `getSyncProgress` / `.collection` on the mongoose Conversation+Message
+  // models). When those collections are served from the document store (Mongo=0,
+  // or the SQLite-primary dual-write window), the store owns MeiliSearch —
+  // `attachMeili` indexes live writes and `config/backfill-meili.js` backfills
+  // history — so the mongoose sync must not run (and can't: no Mongo connection).
+  const { Conversation, Message } = require('~/db/models');
+  if (
+    typeof Conversation?.syncWithMeili !== 'function' ||
+    typeof Message?.syncWithMeili !== 'function'
+  ) {
+    logger.info(
+      '[indexSync] Conversation/Message served from the document store — store owns MeiliSearch (live writes + config/backfill-meili.js). Skipping mongoose index sync.',
+    );
+    return;
+  }
+
   logger.info('[indexSync] Starting index synchronization check...');
 
   // Get or create FlowStateManager instance
