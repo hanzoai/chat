@@ -673,11 +673,18 @@ export class DocModel {
     return docs;
   }
 
+  /**
+   * Mongoose `.distinct(field[, filter])`: the set of distinct values of a
+   * (possibly dotted) field over the filtered candidates. Array fields
+   * contribute each element (Mongo semantics). Honors the same filter/tenant
+   * machinery as every other read (via `candidates`), and returns a plain array
+   * — awaiting resolves it, matching mongoose's `.distinct()` return.
+   */
   async distinct(field: string, filter: Filter = {}): Promise<unknown[]> {
     const seen = new Set<unknown>();
     const out: unknown[] = [];
     for (const doc of this.candidates(filter)) {
-      const v = doc[field];
+      const v = getPath(doc, field);
       const values = Array.isArray(v) ? v : [v];
       for (const el of values) {
         const key = el instanceof Date ? el.getTime() : el;
@@ -907,6 +914,17 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
     return this.model.deleteMany({ $and: [this.filter, extra] });
   }
 
+  /**
+   * `Model.find(filter).distinct(field)` — the chained form (mongoose returns a
+   * Query whose op switches to `distinct`). Resolves to the distinct values of
+   * `field` over THIS query's filter; a further `.lean()` is a no-op (the store
+   * already yields plain values). PermissionService / aclEntry / agentCategory
+   * use this exact chain.
+   */
+  distinct(field: string): DistinctQuery {
+    return new DistinctQuery(this.model, this.filter, field);
+  }
+
   then<TResult1 = Doc | Doc[] | null, TResult2 = never>(
     onfulfilled?: ((value: Doc | Doc[] | null) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -917,6 +935,46 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
   catch<TResult = never>(
     onrejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null,
   ): Promise<Doc | Doc[] | null | TResult> {
+    return this.exec().catch(onrejected);
+  }
+}
+
+/**
+ * Thenable result of `find(filter).distinct(field)`. Mirrors the mongoose
+ * distinct Query surface the methods touch: awaiting (or `.lean()` then
+ * awaiting) resolves the distinct-value array; `.session()` is a store no-op.
+ */
+export class DistinctQuery implements PromiseLike<unknown[]> {
+  constructor(
+    private readonly model: DocModel,
+    private readonly filter: Filter,
+    private readonly field: string,
+  ) {}
+
+  /** No-op: the store already returns plain values, not hydrated documents. */
+  lean(): this {
+    return this;
+  }
+
+  /** No-op: single-connection store, Mongo sessions don't apply. */
+  session(_session?: unknown): this {
+    return this;
+  }
+
+  exec(): Promise<unknown[]> {
+    return this.model.distinct(this.field, this.filter);
+  }
+
+  then<TResult1 = unknown[], TResult2 = never>(
+    onfulfilled?: ((value: unknown[]) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2> {
+    return this.exec().then(onfulfilled, onrejected);
+  }
+
+  catch<TResult = never>(
+    onrejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null,
+  ): Promise<unknown[] | TResult> {
     return this.exec().catch(onrejected);
   }
 }

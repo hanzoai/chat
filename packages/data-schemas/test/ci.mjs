@@ -25,6 +25,7 @@ const ISOLATED = [
   'src/models/storeRegistry.spec.ts',
   'src/models/plugins/tenantIsolation.coverage.spec.ts',
   'src/methods/convoMessage.sqlite.spec.ts',
+  'src/methods/distinct.sqlite.spec.ts',
   'src/methods/skill.harness.sqlite.spec.ts',
   'src/methods/batch2.sqlite.spec.ts',
   'src/methods/batch3.sqlite.spec.ts',
