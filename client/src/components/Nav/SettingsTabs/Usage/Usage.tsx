@@ -2,8 +2,9 @@ import React from 'react';
 import { useRecoilState } from 'recoil';
 import { Switch } from '@librechat/client';
 import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3, Sparkles } from 'lucide-react';
-import { useGetStartupConfig, useGetUserUsage } from '~/data-provider';
+import { useGetStartupConfig, useGetUserUsage, useGetRoutingDefaults } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
+import { resolveSmartRouting } from '~/utils';
 import store from '~/store';
 
 const CONSOLE_URL = 'https://console.hanzo.ai/ai-accounts';
@@ -12,7 +13,18 @@ const ROUTING_DOCS_URL = 'https://docs.hanzo.ai/docs/usage/routing';
 /** Smart-routing toggle: default new Hanzo chats to the gateway `auto` model. */
 function SmartRoutingToggle() {
   const localize = useLocalize();
-  const [smartRouting, setSmartRouting] = useRecoilState<boolean>(store.smartRouting);
+  // The stored value is the user OVERRIDE (null === follow org default).
+  const [smartRoutingPref, setSmartRouting] = useRecoilState<boolean | null>(store.smartRouting);
+  // Server-driven org defaults (fail-soft: absent === today's local-only behavior).
+  const { data: routingDefaults } = useGetRoutingDefaults();
+  const available = routingDefaults?.available === true;
+  const orgDefault = available ? routingDefaults?.default_session_routing ?? null : null;
+  const autoRoutingActive = available ? routingDefaults?.auto_routing_active !== false : true;
+  const { enabled, toggleDisabled } = resolveSmartRouting(
+    smartRoutingPref,
+    orgDefault,
+    autoRoutingActive,
+  );
   const labelId = 'smartRouting-label';
 
   return (
@@ -26,22 +38,27 @@ function SmartRoutingToggle() {
         </div>
         <Switch
           id="smartRouting"
-          checked={smartRouting}
+          checked={enabled}
+          disabled={toggleDisabled}
           onCheckedChange={setSmartRouting}
           data-testid="smartRouting"
           aria-labelledby={labelId}
         />
       </div>
       <p className="mt-2 text-xs text-text-secondary">
-        {localize('com_nav_smart_routing_desc')}{' '}
-        <a
-          href={ROUTING_DOCS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-text-primary underline hover:opacity-80"
-        >
-          {localize('com_nav_smart_routing_learn_more')}
-        </a>
+        {toggleDisabled
+          ? localize('com_nav_smart_routing_org_disabled')
+          : localize('com_nav_smart_routing_desc')}{' '}
+        {!toggleDisabled && (
+          <a
+            href={ROUTING_DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-text-primary underline hover:opacity-80"
+          >
+            {localize('com_nav_smart_routing_learn_more')}
+          </a>
+        )}
       </p>
     </div>
   );

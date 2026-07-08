@@ -78,6 +78,8 @@ export const balance = () => `${BASE_URL}/v1/chat/balance`;
 
 export const usage = () => `${BASE_URL}/v1/chat/usage`;
 
+export const routingDefaults = () => `${BASE_URL}/v1/chat/routing-defaults`;
+
 export const userPlugins = () => `${BASE_URL}/v1/chat/user/plugins`;
 
 export const deleteUser = () => `${BASE_URL}/v1/chat/user/delete`;
