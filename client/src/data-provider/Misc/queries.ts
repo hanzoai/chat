@@ -44,6 +44,25 @@ export const useGetUserUsage = (
   });
 };
 
+export const useGetRoutingDefaults = (
+  config?: UseQueryOptions<t.TRoutingDefaultsResponse>,
+): QueryObserverResult<t.TRoutingDefaultsResponse> => {
+  const queriesEnabled = useRecoilValue<boolean>(store.queriesEnabled);
+  return useQuery<t.TRoutingDefaultsResponse>(
+    [QueryKeys.routingDefaults],
+    () => dataService.getRoutingDefaults(),
+    {
+      // Org defaults change rarely; never block a boot on this fetch.
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      staleTime: 5 * 60 * 1000,
+      ...config,
+      enabled: (config?.enabled ?? true) === true && queriesEnabled,
+    },
+  );
+};
+
 export const useGetSearchEnabledQuery = (
   config?: UseQueryOptions<boolean>,
 ): QueryObserverResult<boolean> => {
