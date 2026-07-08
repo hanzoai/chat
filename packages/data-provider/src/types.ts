@@ -700,3 +700,35 @@ export type TBalanceResponse = {
   trialCredits?: number;
   paidCredits?: number;
 };
+
+/** One usage window — mirrors @hanzo/usage UsageTotals + ProviderCostSnapshot. */
+export type TUsageWindow = {
+  totals: { tokens: number; requests: number };
+  providerCost: { used: number; currencyCode: string };
+};
+
+/** Per-user unified usage payload (mirrors @hanzo/usage UsageSnapshot shape). */
+export type TUsageResponse = {
+  providerId: string;
+  currencyCode: string;
+  tier: string;
+  windows: {
+    today: TUsageWindow;
+    '7d': TUsageWindow;
+    '30d': TUsageWindow;
+  };
+  models: { model: string; tokens: number; requests: number; cost: number }[];
+  updatedAt: string;
+};
+
+/**
+ * Org-scoped auto-routing defaults from cloud (`GET /v1/get-routing-defaults`),
+ * proxied by the chat backend. `available` is false when the endpoint is absent
+ * (older cloud-api) or the fetch failed soft — the client then behaves exactly as
+ * today (local preference only).
+ */
+export type TRoutingDefaultsResponse = {
+  available: boolean;
+  auto_routing_active?: boolean;
+  default_session_routing?: boolean;
+};

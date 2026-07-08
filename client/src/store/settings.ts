@@ -17,6 +17,12 @@ const staticAtoms = {
 const localStorageAtoms = {
   // General settings
   autoScroll: atomWithLocalStorage('autoScroll', false),
+  // Smart routing user OVERRIDE. `null` (never touched) === follow the org's
+  // server-driven default; `true`/`false` === an explicit user choice that wins.
+  // When on, new conversations on the Hanzo endpoint default to model "auto" (the
+  // gateway routes each prompt to the best/cheapest capable model; billed as
+  // whatever served it). Resolved via resolveSmartRouting (utils/endpoints).
+  smartRouting: atomWithLocalStorage<boolean | null>('smartRouting', null),
   hideSidePanel: atomWithLocalStorage('hideSidePanel', false),
   enableUserMsgMarkdown: atomWithLocalStorage<boolean>(
     LocalStorageKeys.ENABLE_USER_MSG_MARKDOWN,

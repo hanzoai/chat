@@ -15,7 +15,6 @@ const { forkConversation, duplicateConversation } = require('~/server/utils/impo
 const { storage, importFileFilter } = require('~/server/routes/files/multer');
 const { deleteAllSharedLinks, deleteConvoSharedLink } = require('~/models');
 const requireJwtAuth = require('~/server/middleware/requireJwtAuth');
-const requireGuestOrJwtAuth = require('~/server/middleware/requireGuestOrJwtAuth');
 const { importConversations } = require('~/server/utils/import');
 const { deleteToolCalls } = require('~/models/ToolCall');
 const getLogStores = require('~/cache/getLogStores');
@@ -27,16 +26,8 @@ const assistantClients = {
 
 const router = express.Router();
 
-/**
- * Guest-accessible conversation list. Guests have no persisted conversations, so
- * this returns an empty, well-formed page — enough for the UI to mount the chat
- * history pane without a DB lookup. Registered with guest-aware auth BEFORE the
- * strict JWT guard below; every mutation/read-by-id route stays JWT-only.
- */
-router.get('/', requireGuestOrJwtAuth, async (req, res) => {
-  if (req.user?.guest === true) {
-    return res.status(200).json({ conversations: [], nextCursor: null });
-  }
+/** Conversation list — JWT-only (no guest chat). */
+router.get('/', requireJwtAuth, async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const cursor = req.query.cursor;
   const isArchived = isEnabled(req.query.isArchived);

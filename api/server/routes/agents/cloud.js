@@ -1,7 +1,6 @@
-const cookies = require('cookie');
-const jwt = require('jsonwebtoken');
 const express = require('express');
 const { logger } = require('@librechat/data-schemas');
+const { resolveTenantBearer } = require('@hanzochat/api');
 const { requireJwtAuth, cloudAgentLimiter } = require('~/server/middleware');
 const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/CloudAgentsClient');
 
@@ -21,84 +20,17 @@ const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/Cloud
 const router = express.Router();
 
 /**
- * Is this token safe to forward on-behalf-of `user`? Fail-secure gates, ALL
- * mandatory — the function only ever REMOVES a token from consideration, never
- * admits one:
- *  - Decodable JWT: an opaque/garbage token cannot be principal-bound, so it is
- *    never forwarded. hanzo.id — the only cloud IdP — always issues JWTs.
- *  - Principal binding (MANDATORY): the token must NAME the authenticated user
- *    (`sub === user.openidId`). If we cannot ASSERT the binding — no `openidId`
- *    on the principal, no `sub` on the token, or a mismatch — we do NOT forward.
- *    This keeps "forwarded principal == req.user" true by construction, closing
- *    the credential-mixing confused deputy (a session/cookie carrying a
- *    different user's token) with no fail-open when binding data is absent.
- *  - Expiry: never forward a token past its own `exp`.
- *
- * Decode-only (no signature verification): cloud performs the authoritative
- * JWKS + claim validation over the SAME claims, so it runs as exactly this
- * `sub`. A forged/tampered token gains nothing here — changing `sub` fails the
- * binding; an intact `sub` is rejected by cloud on signature.
- *
- * @param {string|undefined} token
- * @param {{openidId?: string}} user
- * @returns {boolean}
- */
-function isForwardableToken(token, user) {
-  if (!token || !user?.openidId) {
-    return false;
-  }
-  const claims = jwt.decode(token);
-  if (!claims || typeof claims !== 'object') {
-    return false;
-  }
-  if (claims.sub !== user.openidId) {
-    return false;
-  }
-  if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-    return false;
-  }
-  return true;
-}
-
-/**
  * Resolve the caller's hanzo.id bearer for the on-behalf-of call to cloud.
- *
- * Keyed off the VALIDATED principal (`req.user.provider === 'openid'` — the
- * authoritative DB user loaded by requireJwtAuth), NOT any cookie. A local user
- * never carries a hanzo.id token, so a stale OpenID session left in the browser
- * can never be forwarded under a local identity — the confused deputy is denied
- * at the identity layer.
- *
- * EVERY candidate — session first, then the httpOnly no-session cookie fallback;
- * id_token preferred, access_token second — must pass `isForwardableToken`:
- * principal-bound to req.user and unexpired. Returns null — for an honest 401,
- * never a wrong-principal, expired, unbound, or fabricated call — otherwise.
- *
+ * Delegates to the ONE canonical resolver (`resolveTenantBearer`, @hanzochat/api)
+ * that the chat-completion path also uses — principal-bound to req.user,
+ * unexpired, id_token preferred with an access_token fallback, session first then
+ * the httpOnly cookie. Returns null for an honest 401 (never a wrong-principal,
+ * expired, unbound, or fabricated call).
  * @param {import('express').Request} req
  * @returns {string|null}
  */
 function getUserCloudBearer(req) {
-  if (req.user?.provider !== 'openid') {
-    return null;
-  }
-
-  const parsed = req.headers.cookie ? cookies.parse(req.headers.cookie) : {};
-  const session = req.session?.openidTokens;
-
-  const idToken = session?.idToken || parsed.openid_id_token;
-  if (isForwardableToken(idToken, req.user)) {
-    return idToken;
-  }
-  /**
-   * access_token fallback (rare: the session/cookie carries no id_token).
-   * hanzo.id issues JWT access tokens too, so this stays principal-bound; an
-   * opaque or foreign access_token fails the gate and is never forwarded.
-   */
-  const accessToken = session?.accessToken || parsed.openid_access_token;
-  if (isForwardableToken(accessToken, req.user)) {
-    return accessToken;
-  }
-  return null;
+  return resolveTenantBearer(req);
 }
 
 router.use(requireJwtAuth);
