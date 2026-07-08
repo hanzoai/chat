@@ -14,6 +14,57 @@ import type { LocalizeFunction, IconsRecord } from '~/common';
 import { getTimestampedValue } from './timestamps';
 
 /**
+ * The house-brand Hanzo endpoint name (custom endpoint in librechat.yaml,
+ * `api.hanzo.ai/v1`). Canonical everywhere: config, guest scope (`GUEST_ENDPOINT`
+ * default), and here. Smart routing's `auto` model is scoped to this endpoint —
+ * the explicit provider families (Qwen, Meta Llama, …) are deliberate picks and
+ * must never be silently re-routed.
+ */
+export const HANZO_ENDPOINT = 'Hanzo';
+
+/** The gateway model that routes each prompt to the best/cheapest capable model. */
+export const SMART_ROUTING_MODEL = 'auto';
+
+/** True when the endpoint is the Hanzo house-brand endpoint (auto-routing home). */
+export function isHanzoEndpoint(endpoint?: EModelEndpoint | string | null): boolean {
+  return endpoint === HANZO_ENDPOINT;
+}
+
+/** Effective smart-routing state for a new conversation and its toggle. */
+export interface SmartRoutingState {
+  /** Whether a fresh Hanzo conversation should default to the `auto` model. */
+  enabled: boolean;
+  /** Whether the user-facing toggle must be locked (org disabled auto-routing). */
+  toggleDisabled: boolean;
+}
+
+/**
+ * Resolve smart routing from the user's local override and the org's
+ * server-driven defaults. The single source of truth for the effective state —
+ * mirrored (not shared as a package) across the Hanzo apps so behavior is uniform.
+ *
+ * - `localPref`: the user override. `null` === never touched (follow org default);
+ *   `true`/`false` === an explicit user choice that wins.
+ * - `orgDefault`: `default_session_routing` from the org (null when the server
+ *   gave no signal — older cloud-api or a fail-soft fetch — in which case we fall
+ *   back to today's off-by-default behavior).
+ * - `autoRoutingActive`: `auto_routing_active` for the org. When false the org has
+ *   disabled auto-routing entirely; the toggle is off and locked. When the fetch
+ *   failed soft, callers pass `true` so nothing changes vs. today.
+ */
+export function resolveSmartRouting(
+  localPref: boolean | null,
+  orgDefault: boolean | null,
+  autoRoutingActive: boolean,
+): SmartRoutingState {
+  if (!autoRoutingActive) {
+    return { enabled: false, toggleDisabled: true };
+  }
+  const enabled = localPref !== null ? localPref : orgDefault === true;
+  return { enabled, toggleDisabled: false };
+}
+
+/**
  * Clears model for non-ephemeral agent conversations.
  * Agents use their configured model internally, so the conversation model should be undefined.
  * Mutates the template in place.
