@@ -18,6 +18,7 @@ import Landing from './Landing';
 import Header from './Header';
 import Footer from './Footer';
 import { cn } from '~/utils';
+import { resolveProjectSlug, projectOpener } from '~/utils/project';
 import store from '~/store';
 
 function LoadingSpinner() {
@@ -58,8 +59,17 @@ function ChatView({ index = 0 }: { index?: number }) {
   // Wait for messages to load before resuming to avoid race condition
   useResumeOnLoad(conversationId, chatHelpers.getMessages, index, !isLoading);
 
+  // Project-scoped chat: when opened via `?project=<slug>` on a NEW conversation,
+  // seed the composer with a short opener so the assistant has the project
+  // context on the first turn. Only ever seeds a fresh conversation; an existing
+  // thread is never touched. The value is read once at mount (useForm keeps its
+  // own state thereafter), so re-seeding on remount can't clobber user edits.
+  const seededProjectSlug =
+    conversationId === Constants.NEW_CONVO || !conversationId
+      ? resolveProjectSlug(typeof window !== 'undefined' ? window.location.search : '')
+      : '';
   const methods = useForm<ChatFormValues>({
-    defaultValues: { text: '' },
+    defaultValues: { text: seededProjectSlug ? projectOpener(seededProjectSlug) : '' },
   });
 
   let content: JSX.Element | null | undefined;

@@ -24,6 +24,7 @@ import { Banner } from '~/components/Banners';
 import LandingPage from '~/components/Landing/LandingPage';
 import GuestLimitDialog from '~/components/Auth/GuestLimitDialog';
 import ChatHanzoHeader from '~/components/Nav/HanzoHeader';
+import ProjectBanner from '~/components/Chat/ProjectBanner';
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
@@ -102,6 +103,7 @@ export default function Root() {
           <AgentsMapContext.Provider value={agentsMap}>
             <PromptGroupsProvider>
               <ChatHanzoHeader />
+              <ProjectBanner />
               {isGuest && <GuestLimitDialog />}
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
