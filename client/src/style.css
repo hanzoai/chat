@@ -135,15 +135,15 @@ html {
   --text-primary: var(--gray-100);
   --text-secondary: var(--gray-300);
   --text-secondary-alt: var(--gray-400);
-  --text-tertiary: var(--gray-500);
+  --text-tertiary: #666;
   --text-warning: var(--gray-400);
   --text-destructive: var(--red-600);
   --header-primary: var(--gray-850);
   --header-hover: var(--gray-800);
   --header-button-hover: var(--gray-800);
-  --surface-active: var(--gray-700);
+  --surface-active: #161616;
   --surface-active-alt: var(--gray-800);
-  --surface-hover: var(--gray-800);
+  --surface-hover: #101010;
   --surface-hover-alt: var(--gray-800);
   --surface-primary: var(--gray-975);
   --surface-primary-alt: var(--gray-925);
@@ -167,8 +167,8 @@ html {
   /* Hanzo dark palette — true-black OLED */
 
   --background: 0 0% 0%;
-  --foreground: 0 0% 95%;
-  --card: 0 0% 3%;
+  --foreground: 0 0% 93%;
+  --card: 0 0% 4%;
   --card-foreground: 0 0% 95%;
   --primary: 0 0% 95%;
   --primary-foreground: 0 0% 9%;
@@ -180,7 +180,7 @@ html {
   --accent-foreground: 0 0% 95%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 11%;
+  --border: 0 0% 12%;
   --input: 0 0% 11%;
   --ring: 0 0% 56%;
   --chart-1: 0 0% 50%;
