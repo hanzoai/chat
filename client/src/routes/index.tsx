@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom';
 import {
   Login,
   VerifyEmail,
@@ -29,6 +29,14 @@ const AuthLayout = () => (
     <ApiErrorWatcher />
   </AuthContextProvider>
 );
+
+// Landing redirect that PRESERVES the query string, so a cross-surface deep link
+// to `/?project=<slug>` reaches `/c/new?project=<slug>` (React Router's plain
+// <Navigate> drops the search) — one canonical destination for either entry URL.
+const NewChatRedirect = () => {
+  const { search } = useLocation();
+  return <Navigate to={{ pathname: '/c/new', search }} replace={true} />;
+};
 
 const baseEl = document.querySelector('base');
 const baseHref = baseEl?.getAttribute('href') || '/';
@@ -117,7 +125,7 @@ export const router = createBrowserRouter(
           children: [
             {
               index: true,
-              element: <Navigate to="/c/new" replace={true} />,
+              element: <NewChatRedirect />,
             },
             {
               path: 'c/:conversationId?',
