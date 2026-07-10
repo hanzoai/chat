@@ -26,7 +26,7 @@ function FileSearch() {
           checked={fileSearchEnabled}
           setValue={debouncedChange}
           label={localize('com_assistants_file_search')}
-          isCheckedClassName="border-green-600/40 bg-green-500/10 hover:bg-green-700/10"
+          isCheckedClassName="border-border-heavy bg-surface-active-alt hover:bg-surface-active-alt"
           icon={<VectorIcon className="icon-md" />}
         />
       )}
