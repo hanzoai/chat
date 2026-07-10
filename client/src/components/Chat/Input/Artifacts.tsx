@@ -81,7 +81,7 @@ function Artifacts() {
         checked={isEnabled}
         setValue={handleToggle}
         label={localize('com_ui_artifacts')}
-        isCheckedClassName="border-amber-600/40 bg-amber-500/10 hover:bg-amber-700/10"
+        isCheckedClassName="border-border-heavy bg-surface-active-alt hover:bg-surface-active-alt"
         icon={<WandSparkles className="icon-md" aria-hidden="true" />}
       />
 
@@ -90,7 +90,7 @@ function Artifacts() {
           <Ariakit.MenuButton
             className={cn(
               'w-7 rounded-l-none rounded-r-full border-b border-l-0 border-r border-t border-border-light md:w-6',
-              'border-amber-600/40 bg-amber-500/10 hover:bg-amber-700/10',
+              'border-border-heavy bg-surface-active-alt hover:bg-surface-active-alt',
               'transition-colors',
             )}
             onClick={handleMenuButtonClick}
