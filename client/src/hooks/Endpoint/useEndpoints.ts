@@ -92,10 +92,17 @@ export const useEndpoints = ({
           ep !== EModelEndpoint.agents &&
           (modelsQuery.data?.[ep]?.length ?? 0) > 0);
 
-      // Base result object with formatted default icon
+      // Base result object with formatted default icon.
+      // Custom endpoints have no `alternateName`; honor their configured
+      // `modelDisplayLabel` as the group label so the house family can present
+      // as "Zen" while its endpoint VALUE stays stable ("Hanzo") — keeping
+      // existing conversations and the pinned guest endpoint intact.
       const result: Endpoint = {
         value: ep,
-        label: alternateName[ep] || ep,
+        label:
+          alternateName[ep] ||
+          (getEndpointField(endpointsConfig, ep, 'modelDisplayLabel') as string | undefined) ||
+          ep,
         hasModels,
         icon: Icon
           ? React.createElement(Icon, {
