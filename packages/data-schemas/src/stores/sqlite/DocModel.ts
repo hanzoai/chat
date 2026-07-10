@@ -815,12 +815,13 @@ export class DocModel {
  * surface the methods use: `.select() .sort() .limit() .skip() .lean()
  * .deleteMany()` and awaiting resolves the documents.
  */
-export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
+export class QueryBuilder implements PromiseLike<Doc | Doc[] | null | unknown[]> {
   private projection?: string | Record<string, 0 | 1>;
   private sortSpec?: SortSpec;
   private limitN?: number;
   private skipN?: number;
   private leanFlag = false;
+  private distinctField?: string;
   private populates: Array<{ path: string; select?: string | Record<string, 0 | 1> }> = [];
 
   constructor(
@@ -838,6 +839,18 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
 
   select(projection: string | Record<string, 0 | 1>): this {
     this.projection = projection;
+    return this;
+  }
+
+  /**
+   * Mongoose `Query.prototype.distinct(field)`: the deduped set of `field`
+   * across all docs matching this query's filter. Chainable and terminal —
+   * awaiting resolves to the value array (a following `.lean()` is a no-op, as
+   * distinct yields raw scalars, matching mongoose). Delegates to the model's
+   * distinct so filter/tenant scoping stay identical to `.find()`.
+   */
+  distinct(field: string): this {
+    this.distinctField = field;
     return this;
   }
 
@@ -885,7 +898,10 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
     return this as unknown as QueryBuilder & PromiseLike<T>;
   }
 
-  exec(): Promise<Doc | Doc[] | null> {
+  exec(): Promise<Doc | Doc[] | null | unknown[]> {
+    if (this.distinctField != null) {
+      return this.model.distinct(this.distinctField, this.filter);
+    }
     return Promise.resolve(
       this.model.execQuery({
         filter: this.filter,
@@ -907,8 +923,8 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
     return this.model.deleteMany({ $and: [this.filter, extra] });
   }
 
-  then<TResult1 = Doc | Doc[] | null, TResult2 = never>(
-    onfulfilled?: ((value: Doc | Doc[] | null) => TResult1 | PromiseLike<TResult1>) | null,
+  then<TResult1 = Doc | Doc[] | null | unknown[], TResult2 = never>(
+    onfulfilled?: ((value: Doc | Doc[] | null | unknown[]) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
@@ -916,7 +932,7 @@ export class QueryBuilder implements PromiseLike<Doc | Doc[] | null> {
 
   catch<TResult = never>(
     onrejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null,
-  ): Promise<Doc | Doc[] | null | TResult> {
+  ): Promise<Doc | Doc[] | null | unknown[] | TResult> {
     return this.exec().catch(onrejected);
   }
 }
