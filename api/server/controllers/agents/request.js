@@ -10,6 +10,7 @@ const {
   checkAndIncrementPendingRequest,
 } = require('@hanzochat/api');
 const { disposeClient, clientRegistry, requestDataMap } = require('~/server/cleanup');
+const { isEmptyAgentResponse } = require('./emptyResponse');
 const { handleAbortError } = require('~/server/middleware');
 const { logViolation } = require('~/cache');
 const { saveMessage } = require('~/models');
@@ -239,6 +240,19 @@ const ResumableAgentController = async (req, res, next, initializeClient, addTit
         };
 
         const response = await client.sendMessage(text, messageOptions);
+
+        // Backstop against a silent empty assistant bubble. The Hanzo Cloud
+        // gateway can end a `stream:true` completion with no content and WITHOUT
+        // throwing (a rejected key or an out-of-credits balance answered as a
+        // 200 event-stream that yields zero deltas), so the run "succeeds" with
+        // an empty response. Surface it as a real error over the existing SSE
+        // error path (caught below → emitError) instead of emitting an empty
+        // message — a dead key or exhausted balance must never be invisible.
+        if (!job.abortController.signal.aborted && isEmptyAgentResponse(response)) {
+          throw new Error(
+            'The model returned an empty response. This usually means the request was rejected upstream (invalid API key or insufficient credits). Please try again or contact support.',
+          );
+        }
 
         const messageId = response.messageId;
         const endpoint = endpointOption.endpoint;
