@@ -28,7 +28,7 @@ function CodeInterpreter() {
         checked={runCode}
         setValue={debouncedChange}
         label={localize('com_assistants_code_interpreter')}
-        isCheckedClassName="border-purple-600/40 bg-purple-500/10 hover:bg-purple-700/10"
+        isCheckedClassName="border-border-heavy bg-surface-active-alt hover:bg-surface-active-alt"
         icon={<TerminalSquareIcon className="icon-md" aria-hidden="true" />}
       />
     )
