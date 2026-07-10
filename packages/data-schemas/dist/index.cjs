@@ -5649,6 +5649,17 @@ class QueryBuilder {
         this.projection = projection;
         return this;
     }
+    /**
+     * Mongoose `Query.prototype.distinct(field)`: the deduped set of `field`
+     * across all docs matching this query's filter. Chainable and terminal —
+     * awaiting resolves to the value array (a following `.lean()` is a no-op, as
+     * distinct yields raw scalars, matching mongoose). Delegates to the model's
+     * distinct so filter/tenant scoping stay identical to `.find()`.
+     */
+    distinct(field) {
+        this.distinctField = field;
+        return this;
+    }
     populate(spec) {
         this.populates.push(typeof spec === 'string' ? { path: spec } : spec);
         return this;
@@ -5688,6 +5699,9 @@ class QueryBuilder {
         return this;
     }
     exec() {
+        if (this.distinctField != null) {
+            return this.model.distinct(this.distinctField, this.filter);
+        }
         return Promise.resolve(this.model.execQuery({
             filter: this.filter,
             single: this.opts.single,
