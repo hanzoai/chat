@@ -95,6 +95,18 @@ router.get('/chat/active', requireGuestOrJwtAuth, async (req, res, next) => {
   return next();
 });
 
+/**
+ * Guest-safe SSE stream read-back. Mounted with `requireGuestOrJwtAuth` BEFORE
+ * the strict `requireJwtAuth` below so a guest can read back its OWN generation's
+ * stream — the strict `jwt` strategy rejects guest tokens by design (401), which
+ * left the guest with an empty bubble even though generation ran server-side. The
+ * handler's ownership check (`job.metadata.userId !== req.user.id`) is the security
+ * boundary: a guest stays pinned to its own ephemeral job (a foreign job is 403,
+ * a missing one 404). `streamHandler` is a hoisted declaration defined below.
+ * Every other agents route stays JWT-only.
+ */
+router.get('/chat/stream/:streamId', requireGuestOrJwtAuth, streamHandler);
+
 router.use(requireJwtAuth);
 router.use(checkBan);
 router.use(uaParser);
@@ -110,18 +122,15 @@ router.use('/cloud', cloud);
 router.use('/', v1);
 
 /**
- * Stream endpoints - mounted before chatRouter to bypass rate limiters
- * These are GET requests and don't need message body validation or rate limiting
- */
-
-/**
  * @route GET /chat/stream/:streamId
  * @desc Subscribe to an ongoing generation job's SSE stream with replay support
- * @access Private
+ * @access Private (guest-or-JWT) — registered above the strict `requireJwtAuth`
+ *   guard so guests can read back their own stream; bypasses rate limiters (a GET
+ *   with no message body). Hoisted so the early registration can reference it.
  * @description Sends sync event with resume state, replays missed chunks, then streams live
  * @query resume=true - Indicates this is a reconnection (sends sync event)
  */
-router.get('/chat/stream/:streamId', async (req, res) => {
+async function streamHandler(req, res) {
   const { streamId } = req.params;
   const isResume = req.query.resume === 'true';
 
@@ -201,7 +210,7 @@ router.get('/chat/stream/:streamId', async (req, res) => {
     logger.debug(`[AgentStream] Client disconnected from ${streamId}`);
     result.unsubscribe();
   });
-});
+}
 
 /**
  * @route GET /chat/active
