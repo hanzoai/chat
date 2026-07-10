@@ -113,6 +113,50 @@ describe('DocModel (better-sqlite3 backend)', () => {
   });
 });
 
+describe('DocModel — QueryBuilder.distinct (ACL path)', () => {
+  let handle: SqliteHandle;
+  let AclEntry: DocModel;
+
+  beforeEach(() => {
+    handle = createSqliteHandle(['AclEntry']);
+    AclEntry = handle.models.AclEntry;
+  });
+  afterEach(() => handle.close());
+
+  it('find(q).distinct(field) returns the deduped set without throwing', async () => {
+    // Two principals, overlapping resources — the distinct set collapses dups.
+    await AclEntry.create({ principalType: 'user', principalId: 'u1', resourceType: 'agent', resourceId: 'r1', permBits: 1 });
+    await AclEntry.create({ principalType: 'user', principalId: 'u1', resourceType: 'agent', resourceId: 'r2', permBits: 1 });
+    await AclEntry.create({ principalType: 'role', principalId: 'admin', resourceType: 'agent', resourceId: 'r1', permBits: 1 });
+    // Different resourceType — must be excluded by the filter.
+    await AclEntry.create({ principalType: 'user', principalId: 'u1', resourceType: 'prompt', resourceId: 'r9', permBits: 1 });
+
+    // This is the exact shape findAccessibleResources / findPubliclyAccessibleResources use.
+    const ids = (await AclEntry.find({
+      $or: [
+        { principalType: 'user', principalId: 'u1' },
+        { principalType: 'role', principalId: 'admin' },
+      ],
+      resourceType: 'agent',
+      permBits: { $bitsAllSet: 1 },
+    }).distinct('resourceId')) as string[];
+
+    expect([...ids].sort()).toEqual(['r1', 'r2']); // deduped, resourceType-scoped
+  });
+
+  it('distinct chains before .lean() (AgentCategory.getValidCategoryValues shape)', async () => {
+    handle.close();
+    handle = createSqliteHandle(['AgentCategory']);
+    const AgentCategory = handle.models.AgentCategory;
+    await AgentCategory.create({ value: 'general', isActive: true });
+    await AgentCategory.create({ value: 'coding', isActive: true });
+    await AgentCategory.create({ value: 'legacy', isActive: false });
+
+    const values = (await AgentCategory.find({ isActive: true }).distinct('value').lean()) as string[];
+    expect([...values].sort()).toEqual(['coding', 'general']);
+  });
+});
+
 describe('DocModel — Batch 2 primitives', () => {
   let handle: SqliteHandle;
 
