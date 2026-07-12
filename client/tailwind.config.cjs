@@ -15,7 +15,10 @@ const mono = {
   700: '#2f2f2f',
   800: '#212121',
   900: '#0d0d0d',
-  950: '#0a0a0a',
+  // True-black token scale: #0a0a0a collapsed to #050505 so every `*-950`
+  // utility (bg-gray-950 / bg-green-950 success panels, etc.) matches the
+  // elevated-surface value instead of reading as a lighter grey.
+  950: '#050505',
 };
 
 /** @type {import('tailwindcss').Config} */
