@@ -29,7 +29,10 @@
   pointer-events: auto;
 }
 
-@media (max-width: 767px) {
+/* 768px matches the nav's JS breakpoint (`useMediaQuery('(max-width: 768px)')`
+   in Nav.tsx) so the capped scrim also covers the 768px tablet portrait width,
+   where the drawer overlay is active but the scrim previously wasn't. */
+@media (max-width: 768px) {
   .nav {
     width: calc(100% - 10px)  ;
     transition: all 0.15s;
@@ -38,11 +41,15 @@
     position: fixed;
     z-index: 105;
     left: 0;
-    right: 0;
     top: 0;
     bottom: 0;
+    /* Cap the dimmed scrim at the drawer width (420px) instead of stretching
+       edge-to-edge. On a tablet the drawer never fills the viewport, so a
+       full-width scrim would dim the still-visible content beside it. */
+    right: auto;
+    width: 100%;
+    max-width: 420px;
     background-color: rgba(7, 7, 7, 0.4);
-    padding-left: 420px;
     padding-top: 12px;
     opacity: 0;
     transition: all 0.5s;
@@ -110,6 +117,16 @@
   {
     visibility: hidden;
   }
+
+  /* Composer action icons: bump the 36px (size-9 / h-9) round buttons — attach,
+     tools, mic, send/stop — up to the 44px minimum touch target on touch-sized
+     viewports. Scoped to the composer action row so surrounding badge pills and
+     text controls keep their compact sizing. */
+  .composer-actions button,
+  .composer-actions [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 .hide-scrollbar {
@@ -149,12 +166,16 @@
   .sidenav-mask {
     position: fixed;
     z-index: 65;
-    left: 0;
+    /* The sidenav opens from the RIGHT (max 320px), so anchor the scrim to the
+       right edge and cap it at 420px — it dims the drawer's footprint, not the
+       whole tablet viewport. */
     right: 0;
+    left: auto;
     top: 0;
     bottom: 0;
+    width: 100%;
+    max-width: 420px;
     background-color: rgba(7, 7, 7, 0.4);
-    padding-left: 420px;
     padding-top: 12px;
     opacity: 0;
     transition: all 0.5s;

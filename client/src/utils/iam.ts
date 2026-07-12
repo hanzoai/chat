@@ -5,12 +5,15 @@
  * from the Vite environment. Returns null when IAM is not configured
  * (i.e. the app is running in backend-proxied mode).
  */
-import { IAM } from '@hanzo/iam';
+// @hanzo/iam (0.4.x) exports the browser SPA client as `BrowserIamSdk`; the old
+// `IAM` alias no longer exists and its named import hard-crashes the app at mount
+// (and fails the Rollup build). The constructor config is identical.
+import { BrowserIamSdk } from '@hanzo/iam';
 
-let instance: IAM | null = null;
+let instance: BrowserIamSdk | null = null;
 let checked = false;
 
-export function getHanzoIamSdk(): IAM | null {
+export function getHanzoIamSdk(): BrowserIamSdk | null {
   if (checked) {
     return instance;
   }
@@ -23,7 +26,7 @@ export function getHanzoIamSdk(): IAM | null {
     return null;
   }
 
-  instance = new IAM({
+  instance = new BrowserIamSdk({
     serverUrl,
     clientId,
     redirectUri: `${window.location.origin}/auth/callback`,
