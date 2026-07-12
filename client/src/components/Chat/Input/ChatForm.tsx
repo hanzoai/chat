@@ -345,7 +345,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             )}
             <div
               className={cn(
-                '@container items-between flex gap-2 pb-2',
+                'composer-actions @container items-between flex gap-2 pb-2',
                 isRTL ? 'flex-row-reverse' : 'flex-row',
               )}
             >

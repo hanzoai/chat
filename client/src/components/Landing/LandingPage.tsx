@@ -7,9 +7,9 @@ import { getHanzoIamSdk } from '~/utils/iam';
 /* ------------------------------------------------------------------ */
 
 const colors = {
-  bg: '#050505',           /* hsl(0, 0%, 2%) */
-  card: '#0a0a0a',         /* hsl(0, 0%, 4%) */
-  muted: '#1a1a1a',        /* hsl(0, 0%, 10%) */
+  bg: '#000000',           /* true-black canvas */
+  card: '#050505',         /* panel — converged off #0a0a0a onto the token scale */
+  muted: '#171717',        /* elevated / border — token scale */
   mutedFg: 'hsla(0, 0%, 70%, 0.85)',
   border: 'hsla(0, 0%, 40%, 0.2)',
   fg: 'hsl(0, 0%, 96%)',
