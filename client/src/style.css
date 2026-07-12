@@ -18,7 +18,11 @@
   --gray-800: #212121;
   --gray-850: #171717;
   --gray-900: #0d0d0d;
-  --gray-925: #0a0a0a;
+  /* Converged onto the true-black token scale: the old #0a0a0a read as a distinct
+     lighter panel against the #050505 / #000 surfaces. Inner panels that key off
+     --gray-925 (--presentation / --surface-primary-alt / --surface-dialog,
+     bg-gray-925) now sit at #050505 with the rest of the elevated surfaces. */
+  --gray-925: #050505;
   --gray-950: #050505;
   --gray-975: #000000;
   /* Monochrome: legacy "green" (was brand red #fd4444) collapsed to the grey ramp. */
@@ -32,7 +36,7 @@
   --green-700: #2f2f2f;
   --green-800: #212121;
   --green-900: #0d0d0d;
-  --green-950: #0a0a0a;
+  --green-950: #050505;
   --red-50: #fef2f2;
   --red-100: #fee2e2;
   --red-200: #fecaca;
