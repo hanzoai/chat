@@ -14,7 +14,7 @@ import React from 'react';
 import { act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
-import type { TSkillSummary } from 'librechat-data-provider';
+import type { TSkillSummary } from '@hanzochat/data-provider';
 
 const CONVO_ID = 'convo-1';
 
@@ -80,8 +80,8 @@ jest.mock('~/hooks', () => ({
   useSkillActiveState: () => ({ isActive: mockIsActive }),
 }));
 
-jest.mock('@librechat/client', () => {
-  const actual = jest.requireActual('@librechat/client');
+jest.mock('@hanzochat/client', () => {
+  const actual = jest.requireActual('@hanzochat/client');
   return {
     ...actual,
     Spinner: () => null,

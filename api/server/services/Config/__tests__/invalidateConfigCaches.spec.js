@@ -13,8 +13,8 @@ jest.mock('~/server/services/start/tools', () => ({
 
 jest.mock('../loadCustomConfig', () => jest.fn().mockResolvedValue({}));
 
-jest.mock('@librechat/data-schemas', () => {
-  const actual = jest.requireActual('@librechat/data-schemas');
+jest.mock('@hanzochat/data-schemas', () => {
+  const actual = jest.requireActual('@hanzochat/data-schemas');
   return { ...actual, AppService: jest.fn(() => ({ availableTools: {} })) };
 });
 

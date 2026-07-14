@@ -1,7 +1,7 @@
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { Readable } = require('stream');
-const { FileSources } = require('librechat-data-provider');
+const { FileSources } = require('@hanzochat/data-provider');
 const {
   PutObjectCommand,
   GetObjectCommand,
@@ -22,7 +22,7 @@ jest.mock('@hanzochat/api', () => ({
   isEnabled: jest.fn((val) => val === 'true'),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -32,7 +32,7 @@ jest.mock('@librechat/data-schemas', () => ({
 }));
 
 const { initializeS3, deleteRagFile } = require('@hanzochat/api');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 
 // Set env vars before requiring crud so module-level constants pick them up
 process.env.AWS_BUCKET_NAME = 'test-bucket';

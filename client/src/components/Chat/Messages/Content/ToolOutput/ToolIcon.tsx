@@ -1,4 +1,4 @@
-import { Constants, isActionTool } from 'librechat-data-provider';
+import { Constants, isActionTool } from '@hanzochat/data-provider';
 import {
   Terminal,
   Globe,

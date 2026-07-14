@@ -1,6 +1,6 @@
 const { isEnabled } = require('@hanzochat/api');
-const { logger } = require('@librechat/data-schemas');
-const { SystemRoles } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { SystemRoles } = require('@hanzochat/data-provider');
 
 /**
  * Checks if the user can delete their account

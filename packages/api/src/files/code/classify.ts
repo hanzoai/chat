@@ -1,4 +1,4 @@
-import { excelMimeTypes } from 'librechat-data-provider';
+import { excelMimeTypes } from '@hanzochat/data-provider';
 
 export type CodeArtifactCategory = 'utf8-text' | 'document' | 'pptx' | 'other';
 

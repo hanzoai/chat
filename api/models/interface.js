@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { updateInterfacePermissions: updateInterfacePerms } = require('@hanzochat/api');
 const { getRoleByName, updateAccessPermissions } = require('./Role');
 

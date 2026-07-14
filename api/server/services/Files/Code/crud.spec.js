@@ -5,7 +5,7 @@ const { Readable } = require('stream');
 const mockAxios = jest.fn();
 mockAxios.post = jest.fn();
 
-jest.mock('@librechat/agents', () => ({
+jest.mock('@hanzochat/agents', () => ({
   getCodeBaseURL: jest.fn(() => 'https://code-api.example.com'),
 }));
 
@@ -181,7 +181,7 @@ describe('Code CRUD', () => {
           url: 'https://code-api.example.com/sessions/session-1/objects/file-1?kind=agent&id=agent-abc',
           headers: expect.objectContaining({
             Authorization: 'Bearer codeapi-token',
-            'User-Agent': 'LibreChat/1.0',
+            'User-Agent': 'Chat/1.0',
           }),
           httpAgent: codeServerHttpAgent,
           httpsAgent: codeServerHttpsAgent,

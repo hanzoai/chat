@@ -3,7 +3,7 @@ const {
   EModelEndpoint,
   extractEnvVariable,
   normalizeEndpointName,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getAppConfig } = require('./app');
 
 /**

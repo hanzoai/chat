@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import { Label } from '@librechat/client';
+import { Label } from '@hanzochat/client';
 import CategoryIcon from '../utils/CategoryIcon';
 import { useLocalize } from '~/hooks';
 

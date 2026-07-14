@@ -1,6 +1,6 @@
-import { RetentionMode } from 'librechat-data-provider';
-import { createFallbackRetentionDate } from '@librechat/data-schemas';
-import type { AppConfig } from '@librechat/data-schemas';
+import { RetentionMode } from '@hanzochat/data-provider';
+import { createFallbackRetentionDate } from '@hanzochat/data-schemas';
+import type { AppConfig } from '@hanzochat/data-schemas';
 
 type InterfaceConfig = AppConfig['interfaceConfig'];
 

@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'crypto';
 import { Router } from 'express';
 import { Registry, collectDefaultMetrics, Counter, Gauge, Histogram } from 'prom-client';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { Mongoose } from 'mongoose';
 
@@ -286,7 +286,7 @@ export function recordMongooseQuery(
 export function instrumentMongooseQueryMetrics(mongoose: Mongoose): void {
   if (!isMetricsConfigured()) return;
 
-  const instrumented = Symbol.for('librechat.mongooseQueryMetrics.instrumented');
+  const instrumented = Symbol.for('chat.mongooseQueryMetrics.instrumented');
   const queryPrototype = mongoose.Query?.prototype as
     | (typeof mongoose.Query.prototype & { [instrumented]?: boolean })
     | undefined;

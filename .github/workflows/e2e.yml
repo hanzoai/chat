@@ -26,7 +26,7 @@ jobs:
       NODE_OPTIONS: '--max-old-space-size=${{ secrets.NODE_MAX_OLD_SPACE_SIZE || 6144 }}'
       NODE_ENV: CI
       SEARCH: false
-      MONGO_URI: mongodb://localhost:27017/librechat-test
+      MONGO_URI: mongodb://localhost:27017/chat-test
       JWT_SECRET: e2e-test-jwt-secret
       JWT_REFRESH_SECRET: e2e-test-jwt-refresh-secret
       CREDS_KEY: e2e-test-creds-key-32chars00000000

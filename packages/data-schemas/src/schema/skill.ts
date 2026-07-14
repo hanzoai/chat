@@ -23,7 +23,7 @@ const skillNamePattern = /^[a-z0-9][a-z0-9-]*$/;
 const RESERVED_NAME_PREFIXES = ['anthropic-', 'claude-'];
 
 /**
- * Slash-command names that collide with LibreChat / Claude Code CLI commands.
+ * Slash-command names that collide with Chat / Claude Code CLI commands.
  * Matched exactly against the full skill name. Keep this in sync with
  * `RESERVED_NAME_WORDS` in `methods/skill.ts`.
  */
@@ -72,7 +72,7 @@ const skillSchema: Schema<ISkillDocument> = new Schema(
       },
     },
     /**
-     * Human-readable label shown in the LibreChat UI (skill list, detail
+     * Human-readable label shown in the Chat UI (skill list, detail
      * header, sharing dialogs). NOT sent to Claude and NOT used to trigger
      * the skill — `name` + `description` drive triggering. Purely cosmetic:
      * useful when the author wants a prettier label than the kebab-case
@@ -182,7 +182,7 @@ const skillSchema: Schema<ISkillDocument> = new Schema(
     /**
      * Provenance of this skill's canonical definition.
      *
-     * - `inline` — authored directly inside LibreChat (the only path wired
+     * - `inline` — authored directly inside Chat (the only path wired
      *   up in phase 1).
      * - `github` / `notion` — **reserved for phase 2+ external sync**. No
      *   code path currently produces these values. The column exists now so

@@ -6,7 +6,7 @@ import {
   AccessRoleIds,
   PrincipalType,
   PermissionBits,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { createAclEntryMethods } from './aclEntry';
 import {
   validateSkillName,

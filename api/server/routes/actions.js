@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { logger } = require('@librechat/data-schemas');
-const { CacheKeys } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys } = require('@hanzochat/data-provider');
 const {
   getBasePath,
   getAccessToken,

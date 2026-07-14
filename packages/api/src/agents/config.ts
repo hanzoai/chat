@@ -1,4 +1,4 @@
-import type { TAgentsEndpoint } from 'librechat-data-provider';
+import type { TAgentsEndpoint } from '@hanzochat/data-provider';
 
 const DEFAULT_RECURSION_LIMIT = 50;
 

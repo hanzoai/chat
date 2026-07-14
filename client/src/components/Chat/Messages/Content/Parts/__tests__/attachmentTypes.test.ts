@@ -1,4 +1,4 @@
-import type { TAttachment } from 'librechat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import { TOOL_ARTIFACT_TYPES } from '~/utils/artifacts';
 import {
   artifactTypeForAttachment,

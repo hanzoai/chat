@@ -5,8 +5,8 @@ import {
   QueryKeys,
   EModelEndpoint,
   isAssistantsEndpoint,
-} from 'librechat-data-provider';
-import type { TConversation, TPreset, Agent } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TConversation, TPreset, Agent } from '@hanzochat/data-provider';
 import useDefaultConvo from '~/hooks/Conversations/useDefaultConvo';
 import { useAgentsMapContext } from '~/Providers/AgentsMapContext';
 import { useChatContext } from '~/Providers/ChatContext';

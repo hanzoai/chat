@@ -1,6 +1,6 @@
-import { Providers } from '@librechat/agents';
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { AppConfig } from '@librechat/data-schemas';
+import { Providers } from '@hanzochat/agents';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
 import { getProviderConfig, providerConfigMap } from './providers';
 
 const buildAppConfig = (
@@ -40,7 +40,7 @@ describe('getProviderConfig', () => {
 
   it('falls back case-insensitively when only a CamelCase match exists', () => {
     // Agent runtime resolved provider to lowercase `"openrouter"`, but the
-    // user's `librechat.yaml` declared `name: "OpenRouter"`.
+    // user's `chat.yaml` declared `name: "OpenRouter"`.
     const appConfig = buildAppConfig([
       { name: 'OpenRouter', baseURL: 'https://openrouter.ai/api/v1', apiKey: 'sk-test' },
     ]);

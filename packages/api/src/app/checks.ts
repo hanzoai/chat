@@ -1,7 +1,7 @@
-import { logger, webSearchKeys } from '@librechat/data-schemas';
-import { Constants, extractVariableName } from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
-import type { AppConfig } from '@librechat/data-schemas';
+import { logger, webSearchKeys } from '@hanzochat/data-schemas';
+import { Constants, extractVariableName } from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
 import { isEnabled, checkEmailConfig } from '~/utils';
 import { handleRateLimits } from './limits';
 
@@ -14,12 +14,12 @@ const deprecatedVariables = [
   {
     key: 'CHECK_BALANCE',
     description:
-      'Please use the `balance` field in the `librechat.yaml` config file instead.\nMore info: https://librechat.ai/docs/configuration/librechat_yaml/object_structure/balance#overview',
+      'Please use the `balance` field in the `chat.yaml` config file instead.\nMore info: https://hanzo.ai/docs/chat/configuration/chat_yaml/object_structure/balance#overview',
   },
   {
     key: 'START_BALANCE',
     description:
-      'Please use the `balance` field in the `librechat.yaml` config file instead.\nMore info: https://librechat.ai/docs/configuration/librechat_yaml/object_structure/balance#overview',
+      'Please use the `balance` field in the `chat.yaml` config file instead.\nMore info: https://hanzo.ai/docs/chat/configuration/chat_yaml/object_structure/balance#overview',
   },
   {
     key: 'GOOGLE_API_KEY',
@@ -83,7 +83,7 @@ function checkPasswordReset() {
       
       Please configure email service for secure password reset functionality.
       
-      https://www.librechat.ai/docs/configuration/authentication/email
+      https://hanzo.ai/docs/chat/configuration/authentication/email
 
       ❗❗❗`,
     );
@@ -114,7 +114,7 @@ export function checkVariables() {
     logger.info(`\u200B
 
     For your convenience, use this tool to generate your own secret values:
-    https://www.librechat.ai/toolkit/creds_generator
+    https://hanzo.chat/toolkit/creds_generator
 
     \u200B`);
   }
@@ -253,7 +253,7 @@ Latest version: ${Constants.CONFIG_VERSION}
 
       Check out the Config changelogs for the latest options and features added.
 
-      https://www.librechat.ai/changelog\n\n`,
+      https://hanzo.chat/changelog\n\n`,
     );
   }
 }
@@ -292,12 +292,12 @@ export function checkWebSearchConfig(webSearchConfig?: Partial<TCustomConfig['we
           
           Current value: "${value.substring(0, 10)}..."
           
-          This is incorrect! You should use environment variable references in your librechat.yaml file, such as:
+          This is incorrect! You should use environment variable references in your chat.yaml file, such as:
           ${key}: "\${YOUR_ENV_VAR_NAME}"
           
           Then set the actual API key in your .env file or environment variables.
           
-          More info: https://www.librechat.ai/docs/configuration/librechat_yaml/web_search`,
+          More info: https://hanzo.ai/docs/chat/configuration/chat_yaml/web_search`,
         );
       }
     }

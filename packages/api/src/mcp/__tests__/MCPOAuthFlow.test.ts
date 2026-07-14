@@ -7,14 +7,14 @@
 
 import { createHash } from 'crypto';
 import { Keyv } from 'keyv';
-import { TokenExchangeMethodEnum } from 'librechat-data-provider';
+import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
 import { MCPTokenStorage, MCPOAuthHandler } from '~/mcp/oauth';
 import { FlowStateManager } from '~/flow/manager';
 import { createOAuthMCPServer, MockKeyv, InMemoryTokenStore } from './helpers/oauthTestServer';
 import type { OAuthTestServer } from './helpers/oauthTestServer';
 import type { MCPOAuthTokens } from '~/mcp/oauth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

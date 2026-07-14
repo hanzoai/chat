@@ -68,7 +68,7 @@ jobs:
       run: pnpm run test:api
       env:
         NODE_ENV: test
-        MONGO_URI: mongodb://localhost:27017/librechat-test
+        MONGO_URI: mongodb://localhost:27017/chat-test
         MEILI_HOST: http://localhost:7700
         MEILI_MASTER_KEY: test_master_key
 

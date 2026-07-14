@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
-import { FileSources } from 'librechat-data-provider';
-import type { Agent, AgentAvatar } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { FileSources } from '@hanzochat/data-provider';
+import type { Agent, AgentAvatar } from '@hanzochat/data-provider';
 
 const MAX_AVATAR_REFRESH_AGENTS = 1000;
 const AVATAR_REFRESH_BATCH_SIZE = 20;

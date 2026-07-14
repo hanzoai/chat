@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { PrincipalType } from 'librechat-data-provider';
+import { PrincipalType } from '@hanzochat/data-provider';
 
 /**
  * Normalizes a principalId to the correct type for MongoDB queries and storage.

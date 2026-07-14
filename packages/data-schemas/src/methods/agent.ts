@@ -6,8 +6,8 @@ import {
   ResourceType,
   actionDelimiter,
   isActionTool,
-} from 'librechat-data-provider';
-import type { AgentToolResources } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { AgentToolResources } from '@hanzochat/data-provider';
 import type { FilterQuery, Model, Types } from 'mongoose';
 import type { IAgent, IAclEntry } from '~/types';
 import logger from '~/config/winston';

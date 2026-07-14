@@ -20,7 +20,7 @@ import { createOAuthMCPServer } from './helpers/oauthTestServer';
 import { MCPConnection } from '~/mcp/connection';
 import { mcpConfig } from '~/mcp/mcpConfig';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

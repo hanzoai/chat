@@ -1,13 +1,13 @@
 import { useMemo, useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
-import { Button } from '@librechat/client';
+import { Button } from '@hanzochat/client';
 import { TriangleAlert } from 'lucide-react';
 import {
   Constants,
   dataService,
   actionDelimiter,
   actionDomainSeparator,
-} from 'librechat-data-provider';
-import type { TAttachment } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import { useLocalize, useProgress } from '~/hooks';
 import { AttachmentGroup } from './Parts';
 import ToolCallInfo from './ToolCallInfo';

@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
-import { PrincipalType } from 'librechat-data-provider';
-import { logger, isValidObjectIdString } from '@librechat/data-schemas';
+import { PrincipalType } from '@hanzochat/data-provider';
+import { logger, isValidObjectIdString } from '@hanzochat/data-schemas';
 import type {
   IGroup,
   IUser,
@@ -8,7 +8,7 @@ import type {
   CreateGroupRequest,
   UpdateGroupRequest,
   GroupFilterOptions,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import type { FilterQuery, ClientSession, DeleteResult } from 'mongoose';
 import type { Response } from 'express';
 import type { ValidationError } from '~/types/error';

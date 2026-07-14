@@ -1,5 +1,5 @@
-import { logger } from '@librechat/data-schemas';
-import type { IUser } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { GraphTokenResolver } from '~/utils/graph';
 import type * as t from '~/mcp/types';
 import { MCPServersInitializer } from '~/mcp/registry/MCPServersInitializer';
@@ -11,7 +11,7 @@ import { MCPManager } from '~/mcp/MCPManager';
 import * as graphUtils from '~/utils/graph';
 
 // Mock external dependencies
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -442,7 +442,7 @@ describe('MCPManager', () => {
         type: 'sse',
         url: 'https://api.example.com',
         headers: {
-          Authorization: 'Bearer {{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
+          Authorization: 'Bearer {{CHAT_GRAPH_ACCESS_TOKEN}}',
           'Content-Type': 'application/json',
         },
       };
@@ -455,7 +455,7 @@ describe('MCPManager', () => {
       (graphUtils.preProcessGraphTokens as jest.Mock).mockImplementation(
         async (options, graphOptions) => {
           if (
-            options.headers?.Authorization?.includes('{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}') &&
+            options.headers?.Authorization?.includes('{{CHAT_GRAPH_ACCESS_TOKEN}}') &&
             graphOptions.graphTokenResolver
           ) {
             return {
@@ -608,7 +608,7 @@ describe('MCPManager', () => {
       // Headers should contain the unresolved placeholder
       expect(mockConnection.setRequestHeaders).toHaveBeenCalledWith(
         expect.objectContaining({
-          Authorization: 'Bearer {{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
+          Authorization: 'Bearer {{CHAT_GRAPH_ACCESS_TOKEN}}',
         }),
       );
     });
@@ -619,14 +619,14 @@ describe('MCPManager', () => {
         command: 'node',
         args: ['server.js'],
         env: {
-          GRAPH_TOKEN: '{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
+          GRAPH_TOKEN: '{{CHAT_GRAPH_ACCESS_TOKEN}}',
           OTHER_VAR: 'static-value',
         },
       };
 
       // Mock resolution for env variables
       (graphUtils.preProcessGraphTokens as jest.Mock).mockImplementation(async (options) => {
-        if (options.env?.GRAPH_TOKEN?.includes('{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}')) {
+        if (options.env?.GRAPH_TOKEN?.includes('{{CHAT_GRAPH_ACCESS_TOKEN}}')) {
           return {
             ...options,
             env: {
@@ -668,12 +668,12 @@ describe('MCPManager', () => {
     it('should resolve graph tokens in URL', async () => {
       const serverConfig: t.SSEOptions = {
         type: 'sse',
-        url: 'https://api.example.com?token={{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
+        url: 'https://api.example.com?token={{CHAT_GRAPH_ACCESS_TOKEN}}',
       };
 
       // Mock resolution for URL
       (graphUtils.preProcessGraphTokens as jest.Mock).mockImplementation(async (options) => {
-        if (options.url?.includes('{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}')) {
+        if (options.url?.includes('{{CHAT_GRAPH_ACCESS_TOKEN}}')) {
           return {
             ...options,
             url: 'https://api.example.com?token=resolved-graph-token',

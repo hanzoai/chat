@@ -1,0 +1,221 @@
+version: 1.3.4
+cache: true
+fileConfig:
+  endpoints:
+    default:
+      fileLimit: 10
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
+        - "application/json"
+        - "application/xml"
+  serverFileSizeLimit: 500
+  avatarSizeLimit: 4
+fileStrategy: "s3"
+interface:
+  customWelcome: "Welcome to Hanzo Chat"
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  sidePanel: true
+  presets: true
+  prompts: true
+  bookmarks: true
+  multiConvo: true
+  agents: true
+  privacyPolicy:
+    externalUrl: 'https://hanzo.ai/privacy'
+    openNewTab: true
+  termsOfService:
+    externalUrl: 'https://hanzo.ai/terms'
+    openNewTab: true
+registration:
+  socialLogins: ['openid']
+actions:
+  allowedDomains:
+    - "hanzo.ai"
+    - "chat.hanzo.ai"
+    - "hanzo.chat"
+    - "api.hanzo.ai"
+    - "lux.network"
+    - "s3.hanzo.ai"
+# Web Search — Hanzo unified backend ONLY, no external SaaS. searxng +
+# firecrawl both point at cloud's /v1/websearch surface (Hanzo
+# metasearch + Hanzo Crawl). Never add Serper/Tavily/Jina/Cohere.
+webSearch:
+  searchProvider: 'searxng'
+  searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'
+  searxngApiKey: '${WEBSEARCH_API_KEY}'
+  scraperProvider: 'firecrawl'
+  firecrawlApiUrl: '${FIRECRAWL_API_URL}'
+  firecrawlApiKey: '${WEBSEARCH_API_KEY}'
+  firecrawlVersion: 'v1'
+# Unified picker (HIP: one source of truth). EVERY endpoint below is the SAME
+# api.hanzo.ai/v1 gateway carrying the per-user ${HANZO_API_KEY}; they differ
+# only by a curated family subset + icon, so metering is identical across all
+# of them (the cloud billing gate). "Hanzo" (Zen house brand) leads at order 0
+# with the zen5-mini default.
+#
+# BRAND POLICY: only families that are GENUINELY INDEPENDENT of the Zen
+# upstreams may be listed. Zen models are derived from GLM/DeepSeek/Kimi/
+# MiniMax/Qwen upstreams, so NEVER list a Qwen or DeepSeek family (that would
+# reveal the Zen mapping). Meta Llama and Mistral are independent open-weight
+# brands Zen's flagship tiers do not build on — safe to resell by real name.
+#
+# Every model listed is served by api.hanzo.ai/v1/models AND verified to return
+# content via a live /v1/chat/completions call — no dead models.
+#
+# OpenAI/Anthropic branded resale is intentionally NOT listed: no funded key
+# path exists yet (direct OPENAI/ANTHROPIC keys unfunded; DO GenAI account
+# lacks proprietary access), so listing them would surface non-invocable
+# models. Add them here the moment a funded key/enablement lands.
+endpoints:
+  # Agent Builder: enable Run Code + Web Search so they show active.
+  agents:
+    capabilities:
+      - 'execute_code'
+      - 'web_search'
+      - 'file_search'
+      - 'actions'
+      - 'tools'
+  custom:
+    - name: "Hanzo"
+      # Primary endpoint: order ahead of the built-in `agents` endpoint
+      # (order 1) so a new /c/new conversation defaults to Hanzo (a working
+      # completion path that carries the per-user hk- key) instead of bare
+      # `agents`, which requires an explicit agent_id and 400s on first send.
+      customOrder: 0
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      # zen* now route to DigitalOcean GenAI (do-ai) and return content
+      # (cloud >= 1.785.11). fetch:false keeps the menu curated to the
+      # tiers we expose.
+      models:
+        # LIVE catalog only — zen4 generation was SUNSET 2026-05-30 (gateway
+        # config.yaml); offering it routed to a dead fallback. Current families
+        # the gateway serves: zen5-* (flagship) + zen3-* (omni/vision). zen5-mini
+        # leads as the default (smart current-gen small model); larger zen5 tiers
+        # meter against balance. Order = the default-selected model for new users.
+        default:
+          - "zen5-mini"
+          - "zen5-flash"
+          - "zen5"
+          - "zen5-pro"
+          - "zen5-max"
+          - "zen5-ultra"
+          - "zen5-coder"
+          - "zen5-nano"
+          - "zen3-omni"
+          - "zen3-vl"
+          - "zen3-nano"
+        fetch: false
+      titleConvo: true
+      # Title/summary model = zen5-flash: a FAST, NON-reasoning, in-catalog model
+      # (live upstream deepseek-4-flash) that returns a clean single-line title in
+      # ~1-2s. Replaces zen3-nano, which maps to the reasoning model qwen3-8b and
+      # took 16-31s — routinely near the 45s #titleConvo timeout, so new chats often
+      # never got a title. zen5-flash was picked by direct api.hanzo.ai/v1 probes:
+      # zen5-flash ~1.5s clean, zen3-nano 16-31s, zen5-mini 10-20s, zen5/zen3-vl >40s.
+      # The #titleConvo path is also envelope-safe now (wrapHanzoGatewayFetch parity
+      # with agent runs), so a 200 error-envelope degrades to a clean skip, not a crash.
+      titleModel: "zen5-flash"
+      summarize: true
+      summaryModel: "zen5-flash"
+      # House family DISPLAY name = "Zen" (owned_by:"hanzo" catalog). The
+      # endpoint VALUE stays "Hanzo" so existing conversations and the pinned
+      # guest endpoint (GUEST_ENDPOINT=Hanzo) keep working; only the picker
+      # group label changes (useEndpoints honors modelDisplayLabel for customs).
+      # Do NOT conflate: "Zen" is the model family; "Hanzo" agents are separate.
+      modelDisplayLabel: "Zen"
+    # Third-party provider families — same api.hanzo.ai/v1 gateway + per-user
+    # ${HANZO_API_KEY} (identical Commerce metering). CURRENT-GEN models only from
+    # the live /v1/models catalog (never sunset gens). Mirrors the live chat-config
+    # CM. Zen ("Hanzo") stays house brand + default at order 0.
+    # Order: Zen (0) → built-in Agents (1) → third-party providers (2+). The
+    # providers start at 2 so the `agents` endpoint (built-in order 1) sits
+    # alone between Zen and the providers — Zen family first, Agents second.
+    - name: "Qwen"
+      customOrder: 2
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "qwen3.5-397b"
+          - "qwen3-coder"
+          - "qwen3-coder-flash"
+          - "qwen3-32b"
+        fetch: false
+      titleConvo: true
+      titleModel: "zen5-flash"
+      modelDisplayLabel: "Qwen"
+    - name: "Meta Llama"
+      customOrder: 3
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "llama-3.3-70b"
+          - "llama-4-maverick"
+          - "llama-3.1-8b"
+        fetch: false
+      titleConvo: true
+      titleModel: "zen5-flash"
+      modelDisplayLabel: "Meta Llama"
+    - name: "DeepSeek"
+      customOrder: 4
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "deepseek-v4-pro"
+          - "deepseek-v4-flash"
+          - "deepseek-reasoner"
+          - "deepseek-3.2"
+        fetch: false
+      titleConvo: true
+      titleModel: "zen5-flash"
+      modelDisplayLabel: "DeepSeek"
+    - name: "Mistral"
+      customOrder: 5
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      iconURL: "/assets/mistral.png"
+      models:
+        default:
+          - "mistral-small"
+          - "mistral-3-14b"
+          - "mistral-nemo"
+        fetch: false
+      titleConvo: true
+      titleModel: "zen5-flash"
+      modelDisplayLabel: "Mistral"
+    - name: "Google Gemma"
+      customOrder: 6
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "gemma-4-31b"
+          - "gemma-3-31b"
+        fetch: false
+      titleConvo: true
+      titleModel: "zen5-flash"
+      modelDisplayLabel: "Google Gemma"
+    - name: "OpenAI GPT-OSS"
+      customOrder: 7
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "gpt-oss-120b"
+          - "gpt-oss-20b"
+        fetch: false
+      titleConvo: true
+      titleModel: "zen5-flash"
+      modelDisplayLabel: "OpenAI GPT-OSS"
+balance:
+  enabled: false
+  startBalance: 0

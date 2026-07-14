@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Constants } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { ChevronDown, Clock, Code2 } from 'lucide-react';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import {
@@ -14,7 +14,7 @@ import {
   OGDialogTrigger,
   AccordionContent,
   OGDialogTemplate,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import type { AgentForm, MCPServerInfo } from '~/common';
 import {
   useAgentCapabilities,

@@ -1,4 +1,4 @@
-const { EModelEndpoint, openAISettings, anthropicSettings } = require('librechat-data-provider');
+const { EModelEndpoint, openAISettings, anthropicSettings } = require('@hanzochat/data-provider');
 
 const mockGetModelsConfig = jest.fn();
 
@@ -6,8 +6,8 @@ jest.mock('~/server/controllers/ModelController', () => ({
   getModelsConfig: (...args) => mockGetModelsConfig(...args),
 }));
 
-jest.mock('@librechat/data-schemas', () => {
-  const actual = jest.requireActual('@librechat/data-schemas');
+jest.mock('@hanzochat/data-schemas', () => {
+  const actual = jest.requireActual('@hanzochat/data-schemas');
   return {
     ...actual,
     getTenantId: () => 'test-tenant',

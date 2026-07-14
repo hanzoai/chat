@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HanzoLogoIcon from '~/components/svg/HanzoLogoIcon';
-import { Skeleton } from '@librechat/client';
-import type t from 'librechat-data-provider';
+import { Skeleton } from '@hanzochat/client';
+import type t from '@hanzochat/data-provider';
 
 /**
  * Extracts the avatar URL from an agent's avatar property

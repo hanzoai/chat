@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { OGDialog, OGDialogTemplate, Button } from '@librechat/client';
+import { OGDialog, OGDialogTemplate, Button } from '@hanzochat/client';
 import { getHanzoIamSdk, isStaticIamMode } from '~/utils/iam';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';

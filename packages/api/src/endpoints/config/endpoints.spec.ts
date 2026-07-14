@@ -5,9 +5,9 @@ import {
   EModelEndpoint,
   PrincipalType,
   defaultAgentCapabilities,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 
-import type { AppConfig, IConfig } from '@librechat/data-schemas';
+import type { AppConfig, IConfig } from '@hanzochat/data-schemas';
 import type { AppConfigServiceDeps } from '~/app/service';
 import type { EndpointsConfigDeps } from './endpoints';
 import type { ServerRequest } from '~/types';

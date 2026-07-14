@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { SystemRoles, PrincipalType } = require('librechat-data-provider');
-const { SystemCapabilities } = require('@librechat/data-schemas');
+const { SystemRoles, PrincipalType } = require('@hanzochat/data-provider');
+const { SystemCapabilities } = require('@hanzochat/data-schemas');
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: { error: jest.fn(), warn: jest.fn(), debug: jest.fn(), info: jest.fn() },
 }));
 

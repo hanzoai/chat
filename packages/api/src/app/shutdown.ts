@@ -1,4 +1,4 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { Server } from 'http';
 
 const SHUTDOWN_TIMEOUT_MS = 60_000;

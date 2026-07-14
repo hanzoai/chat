@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useMemo, memo, useCallback } from 'react';
 import { AutoSizer, List } from 'react-virtualized';
-import { Spinner, useCombobox } from '@librechat/client';
+import { Spinner, useCombobox } from '@hanzochat/client';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
-import type { TPromptGroup } from 'librechat-data-provider';
+import type { TPromptGroup } from '@hanzochat/data-provider';
 import type { PromptOption } from '~/common';
 import VariableDialog from '~/components/Prompts/Groups/VariableDialog';
 import { removeCharIfLast, detectVariables } from '~/utils';

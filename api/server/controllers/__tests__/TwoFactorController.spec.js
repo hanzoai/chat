@@ -5,7 +5,7 @@ const mockGenerateTOTPSecret = jest.fn();
 const mockGenerateBackupCodes = jest.fn();
 const mockEncryptV3 = jest.fn();
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   encryptV3: (...args) => mockEncryptV3(...args),
   logger: { error: jest.fn() },
 }));

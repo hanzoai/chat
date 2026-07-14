@@ -1,10 +1,10 @@
 jest.mock('uuid', () => ({ v4: jest.fn(() => 'mock-uuid') }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock('@librechat/agents', () => ({
+jest.mock('@hanzochat/agents', () => ({
   getCodeBaseURL: jest.fn(() => 'http://localhost:8000'),
 }));
 
@@ -55,8 +55,8 @@ jest.mock('@hanzochat/api', () => {
   };
 });
 
-jest.mock('librechat-data-provider', () => ({
-  ...jest.requireActual('librechat-data-provider'),
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
   mergeFileConfig: jest.fn(() => ({ serverFileSizeLimit: 100 * 1024 * 1024 })),
   getEndpointFileConfig: jest.fn(() => ({
     fileSizeLimit: 100 * 1024 * 1024,

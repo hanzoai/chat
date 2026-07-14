@@ -1,5 +1,5 @@
-import { logger } from '@librechat/data-schemas';
-import { GraphEvents, Constants } from '@librechat/agents';
+import { logger } from '@hanzochat/data-schemas';
+import { GraphEvents, Constants } from '@hanzochat/agents';
 import type {
   LCTool,
   EventHandler,
@@ -7,7 +7,7 @@ import type {
   ToolCallRequest,
   ToolExecuteResult,
   ToolExecuteBatchRequest,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 
 export interface ToolEndCallbackData {

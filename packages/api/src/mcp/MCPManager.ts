@@ -1,8 +1,8 @@
 import pick from 'lodash/pick';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { CallToolResultSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import type { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol.js';
-import type { TokenMethods, IUser } from '@librechat/data-schemas';
+import type { TokenMethods, IUser } from '@hanzochat/data-schemas';
 import type { GraphTokenResolver } from '~/utils/graph';
 import type { FlowStateManager } from '~/flow/manager';
 import type { MCPOAuthTokens } from './oauth';
@@ -230,7 +230,7 @@ Please follow these instructions when using tools from the respective MCP server
    * for user-specific connections upon successful call initiation.
    *
    * @param graphTokenResolver - Optional function to resolve Graph API tokens via OBO flow.
-   *   When provided and the server config contains `{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}` placeholders,
+   *   When provided and the server config contains `{{CHAT_GRAPH_ACCESS_TOKEN}}` placeholders,
    *   they will be resolved to actual Graph API tokens before the tool call.
    */
   async callTool({

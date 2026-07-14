@@ -1,8 +1,8 @@
 import React, { useMemo, useCallback, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Button, useToastContext } from '@librechat/client';
+import { Button, useToastContext } from '@hanzochat/client';
 import { useWatch, useForm, FormProvider } from 'react-hook-form';
-import { useGetModelsQuery } from 'librechat-data-provider/react-query';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import {
   Tools,
   SystemRoles,
@@ -10,9 +10,9 @@ import {
   EModelEndpoint,
   PermissionBits,
   isAssistantsEndpoint,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { FieldNamesMarkedBoolean } from 'react-hook-form';
-import type { Agent } from 'librechat-data-provider';
+import type { Agent } from '@hanzochat/data-provider';
 import type { TranslationKeys } from '~/hooks/useLocalize';
 import type { AgentForm, StringOption } from '~/common';
 import {

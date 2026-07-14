@@ -1,19 +1,19 @@
 /**
- * Shared BrowserIamSdk singleton for Hanzo IAM OIDC flows.
+ * Shared Hanzo IAM (`IAM`) singleton for Hanzo IAM OIDC flows.
  *
  * Reads VITE_HANZO_IAM_URL, VITE_HANZO_IAM_APP, and VITE_HANZO_API_URL
  * from the Vite environment. Returns null when IAM is not configured
  * (i.e. the app is running in backend-proxied mode).
  */
-// @hanzo/iam (0.4.x) exports the browser SPA client as `BrowserIamSdk`; the old
-// `IAM` alias no longer exists and its named import hard-crashes the app at mount
-// (and fails the Rollup build). The constructor config is identical.
-import { BrowserIamSdk } from '@hanzo/iam';
+// @hanzo/iam (0.13.x) exports the browser SPA client as the `IAM` class; the
+// constructor config (serverUrl, clientId, redirectUri, scope, proxyBaseUrl) is
+// unchanged from the earlier `BrowserIamSdk` name.
+import { IAM } from '@hanzo/iam';
 
-let instance: BrowserIamSdk | null = null;
+let instance: IAM | null = null;
 let checked = false;
 
-export function getHanzoIamSdk(): BrowserIamSdk | null {
+export function getHanzoIamSdk(): IAM | null {
   if (checked) {
     return instance;
   }
@@ -26,7 +26,7 @@ export function getHanzoIamSdk(): BrowserIamSdk | null {
     return null;
   }
 
-  instance = new BrowserIamSdk({
+  instance = new IAM({
     serverUrl,
     clientId,
     redirectUri: `${window.location.origin}/auth/callback`,

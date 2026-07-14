@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Button } from '@librechat/client';
+import { Button } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 
 function PanelNavigation({

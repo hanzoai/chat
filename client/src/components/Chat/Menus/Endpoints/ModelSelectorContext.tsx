@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
-import type * as t from 'librechat-data-provider';
+import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
+import type * as t from '@hanzochat/data-provider';
 import type { Endpoint, SelectedValues } from '~/common';
 import {
   useAgentDefaultPermissionLevel,

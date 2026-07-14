@@ -1,5 +1,5 @@
 import mongoose, { Types } from 'mongoose';
-import { PrincipalType, SystemRoles } from 'librechat-data-provider';
+import { PrincipalType, SystemRoles } from '@hanzochat/data-provider';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import type * as t from '~/types';
 import type { SystemCapability } from '~/types/admin';

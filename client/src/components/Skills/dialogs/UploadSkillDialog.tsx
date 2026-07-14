@@ -1,12 +1,12 @@
 import { useRef, useCallback, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { OGDialog, OGDialogContent, Spinner, useToastContext } from '@librechat/client';
+import { OGDialog, OGDialogContent, Spinner, useToastContext } from '@hanzochat/client';
 import {
   megabyte,
   mergeFileConfig,
   fileConfig as defaultFileConfig,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { useGetFileConfig, useImportSkillMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';

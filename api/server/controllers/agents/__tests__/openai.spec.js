@@ -15,7 +15,7 @@ jest.mock('nanoid', () => ({
   nanoid: jest.fn(() => 'mock-nanoid-123'),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
@@ -23,7 +23,7 @@ jest.mock('@librechat/data-schemas', () => ({
   },
 }));
 
-jest.mock('@librechat/agents', () => ({
+jest.mock('@hanzochat/agents', () => ({
   Callback: { TOOL_ERROR: 'TOOL_ERROR' },
   ToolEndHandler: jest.fn(),
   formatAgentMessages: jest.fn().mockReturnValue({

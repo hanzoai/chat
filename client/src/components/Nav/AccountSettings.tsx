@@ -1,7 +1,7 @@
 import { useState, memo, useRef } from 'react';
 import * as Select from '@ariakit/react/select';
-import { FileText, LogOut, CreditCard } from 'lucide-react';
-import { LinkIcon, GearIcon, DropdownMenuSeparator, Avatar } from '@librechat/client';
+import { FileText, LogOut, CreditCard, Building2, FolderGit2, UserCog, LayoutDashboard } from 'lucide-react';
+import { LinkIcon, GearIcon, DropdownMenuSeparator, Avatar } from '@hanzochat/client';
 import { MyFilesModal } from '~/components/Chat/Input/Files/MyFilesModal';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
@@ -18,6 +18,22 @@ function AccountSettings() {
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
   const accountSettingsButtonRef = useRef<HTMLButtonElement>(null);
+
+  const currentOrg = user?.organization ?? '';
+  const otherOrgs = (user?.groups ?? []).filter((g) => g && g !== currentOrg);
+  const switchOrg = async (organization: string) => {
+    try {
+      await fetch('/v1/chat/user/active-org', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organization }),
+        credentials: 'include',
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error('[AccountSettings] org switch failed', error);
+    }
+  };
 
   return (
     <Select.SelectProvider>
@@ -49,6 +65,34 @@ function AccountSettings() {
         <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
           {user?.email ?? localize('com_nav_user')}
         </div>
+        {currentOrg ? (
+          <>
+            <DropdownMenuSeparator />
+            <div className="ml-3 mr-2 py-1.5 text-xs" role="note">
+              <div className="flex items-center gap-1.5 text-text-primary">
+                <Building2 className="icon-sm opacity-70" aria-hidden="true" />
+                <span className="truncate font-medium">{currentOrg}</span>
+              </div>
+              {user?.project ? (
+                <div className="mt-1 flex items-center gap-1.5 text-token-text-secondary">
+                  <FolderGit2 className="icon-sm" aria-hidden="true" />
+                  <span className="truncate">{user.project}</span>
+                </div>
+              ) : null}
+            </div>
+            {otherOrgs.map((org) => (
+              <Select.SelectItem
+                key={org}
+                value=""
+                onClick={() => switchOrg(org)}
+                className="select-item text-sm"
+              >
+                <Building2 className="icon-md opacity-70" aria-hidden="true" />
+                {org}
+              </Select.SelectItem>
+            ))}
+          </>
+        ) : null}
         <DropdownMenuSeparator />
         {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (() => {
           const credits = balanceQuery.data.tokenCredits;
@@ -106,6 +150,22 @@ function AccountSettings() {
             {localize('com_nav_help_faq')}
           </Select.SelectItem>
         )}
+        <Select.SelectItem
+          value=""
+          onClick={() => window.open('https://hanzo.id/account', '_blank')}
+          className="select-item text-sm"
+        >
+          <UserCog className="icon-md" aria-hidden="true" />
+          Account
+        </Select.SelectItem>
+        <Select.SelectItem
+          value=""
+          onClick={() => window.open('https://console.hanzo.ai', '_blank')}
+          className="select-item text-sm"
+        >
+          <LayoutDashboard className="icon-md" aria-hidden="true" />
+          Console
+        </Select.SelectItem>
         <Select.SelectItem
           value=""
           onClick={() => setShowSettings(true)}

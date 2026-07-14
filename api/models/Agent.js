@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const crypto = require('node:crypto');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { getCustomEndpointConfig } = require('@hanzochat/api');
 const {
   Tools,
@@ -10,8 +10,8 @@ const {
   isAgentsEndpoint,
   isEphemeralAgentId,
   encodeEphemeralAgentId,
-} = require('librechat-data-provider');
-const { mcp_all, mcp_delimiter } = require('librechat-data-provider').Constants;
+} = require('@hanzochat/data-provider');
+const { mcp_all, mcp_delimiter } = require('@hanzochat/data-provider').Constants;
 const {
   removeAgentFromAllProjects,
   removeAgentIdsFromProject,
@@ -96,7 +96,7 @@ const getAgents = async (searchParameter) => await Agent.find(searchParameter).l
  * @param {string} params.spec
  * @param {string} params.agent_id
  * @param {string} params.endpoint
- * @param {import('@librechat/agents').ClientOptions} [params.model_parameters]
+ * @param {import('@hanzochat/agents').ClientOptions} [params.model_parameters]
  * @returns {Promise<Agent|null>} The agent document as a plain object, or null if not found.
  */
 const loadEphemeralAgent = async ({ req, spec, endpoint, model_parameters: _m }) => {
@@ -189,7 +189,7 @@ const loadEphemeralAgent = async ({ req, spec, endpoint, model_parameters: _m })
  * @param {string} params.spec
  * @param {string} params.agent_id
  * @param {string} params.endpoint
- * @param {import('@librechat/agents').ClientOptions} [params.model_parameters]
+ * @param {import('@hanzochat/agents').ClientOptions} [params.model_parameters]
  * @returns {Promise<Agent|null>} The agent document as a plain object, or null if not found.
  */
 const loadAgent = async ({ req, spec, agent_id, endpoint, model_parameters }) => {

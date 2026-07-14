@@ -8,12 +8,12 @@ const mockGetMCPManager = jest.fn();
 const mockGetFlowStateManager = jest.fn();
 const mockGetMCPServersRegistry = jest.fn();
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
   webSearchKeys: [],
 }));
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   Tools: {},
   CacheKeys: { FLOWS: 'flows' },
   Constants: { mcp_delimiter: '_mcp_', mcp_prefix: 'mcp_' },
@@ -78,7 +78,7 @@ jest.mock('~/cache', () => ({
   getLogStores: (...args) => mockGetLogStores(...args),
 }));
 
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { MCPTokenStorage, MCPOAuthHandler } = require('@hanzochat/api');
 const { updateUserPluginsController } = require('~/server/controllers/UserController');
 

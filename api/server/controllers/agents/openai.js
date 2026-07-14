@@ -1,7 +1,7 @@
 const { nanoid } = require('nanoid');
-const { logger } = require('@librechat/data-schemas');
-const { Callback, ToolEndHandler, formatAgentMessages } = require('@librechat/agents');
-const { EModelEndpoint, ResourceType, PermissionBits } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { Callback, ToolEndHandler, formatAgentMessages } = require('@hanzochat/agents');
+const { EModelEndpoint, ResourceType, PermissionBits } = require('@hanzochat/data-provider');
 const {
   writeSSE,
   createRun,
@@ -249,7 +249,7 @@ const OpenAIChatCompletionController = async (req, res) => {
       : null;
 
     const collectedUsage = [];
-    /** @type {Promise<import('librechat-data-provider').TAttachment | null>[]} */
+    /** @type {Promise<import('@hanzochat/data-provider').TAttachment | null>[]} */
     const artifactPromises = [];
 
     const toolEndCallback = createToolEndCallback({ req, res, artifactPromises, streamId: null });
@@ -606,11 +606,11 @@ const ListModelsController = async (req, res) => {
       id: agent.id,
       object: 'model',
       created: Math.floor(new Date(agent.createdAt || Date.now()).getTime() / 1000),
-      owned_by: 'librechat',
+      owned_by: 'chat',
       permission: [],
       root: agent.id,
       parent: null,
-      // LibreChat extensions
+      // Chat extensions
       name: agent.name,
       description: agent.description,
       provider: agent.provider,
@@ -678,11 +678,11 @@ const GetModelController = async (req, res) => {
       id: agent.id,
       object: 'model',
       created: Math.floor(new Date(agent.createdAt || Date.now()).getTime() / 1000),
-      owned_by: 'librechat',
+      owned_by: 'chat',
       permission: [],
       root: agent.id,
       parent: null,
-      // LibreChat extensions
+      // Chat extensions
       name: agent.name,
       description: agent.description,
       provider: agent.provider,

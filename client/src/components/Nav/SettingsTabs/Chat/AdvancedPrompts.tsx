@@ -1,6 +1,6 @@
 import { useCallback, useId } from 'react';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { Switch, InfoHoverCard, ESide } from '@librechat/client';
+import { Switch, InfoHoverCard, ESide } from '@hanzochat/client';
 import { PromptsEditorMode } from '~/common';
 import { useLocalize } from '~/hooks';
 import store from '~/store';

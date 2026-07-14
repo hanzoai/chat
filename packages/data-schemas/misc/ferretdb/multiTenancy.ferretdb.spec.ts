@@ -35,7 +35,7 @@ import mcpServerSchema from '~/schema/mcpServer';
 /**
  * FerretDB Multi-Tenancy Benchmark
  *
- * Validates whether FerretDB can handle LibreChat's multi-tenancy model
+ * Validates whether FerretDB can handle Chat's multi-tenancy model
  * at scale using database-per-org isolation via Mongoose useDb().
  *
  * Phases:
@@ -51,7 +51,7 @@ import mcpServerSchema from '~/schema/mcpServer';
  *
  * Env vars:
  *   FERRETDB_URI     — Required. FerretDB connection string.
- *   PG_CONTAINER     — Docker container name for psql (default: librechat-ferretdb-postgres-1)
+ *   PG_CONTAINER     — Docker container name for psql (default: chat-ferretdb-postgres-1)
  *   SCALE_TIERS      — Comma-separated org counts (default: 10,50,100)
  *   WRITE_AMP_DOCS   — Number of docs for write amp test (default: 200)
  */
@@ -59,7 +59,7 @@ import mcpServerSchema from '~/schema/mcpServer';
 const FERRETDB_URI = process.env.FERRETDB_URI;
 const describeIfFerretDB = FERRETDB_URI ? describe : describe.skip;
 
-const PG_CONTAINER = process.env.PG_CONTAINER || 'librechat-ferretdb-postgres-1';
+const PG_CONTAINER = process.env.PG_CONTAINER || 'chat-ferretdb-postgres-1';
 const PG_USER = 'ferretdb';
 const ORG_PREFIX = 'mt_bench_';
 
@@ -70,7 +70,7 @@ const SCALE_TIERS: number[] = process.env.SCALE_TIERS
 
 const WRITE_AMP_DOCS = parseInt(process.env.WRITE_AMP_DOCS || '200', 10);
 
-/** All 29 LibreChat schemas by Mongoose model name */
+/** All 29 Chat schemas by Mongoose model name */
 const MODEL_SCHEMAS: Record<string, mongoose.Schema> = {
   User: userSchema,
   Token: tokenSchema,

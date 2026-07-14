@@ -1,5 +1,5 @@
 const { handleError } = require('@hanzochat/api');
-const { ViolationTypes } = require('librechat-data-provider');
+const { ViolationTypes } = require('@hanzochat/data-provider');
 const { getModelsConfig } = require('~/server/controllers/ModelController');
 const { logViolation } = require('~/cache');
 /**

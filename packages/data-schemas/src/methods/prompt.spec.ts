@@ -7,7 +7,7 @@ import {
   AccessRoleIds,
   PrincipalType,
   PermissionBits,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { IPromptGroup, AccessRole as TAccessRole, AclEntry as TAclEntry } from '..';
 import { createAclEntryMethods } from './aclEntry';
 import { logger, createModels } from '..';

@@ -1,5 +1,5 @@
-import { useToastContext } from '@librechat/client';
-import { Permissions, PermissionTypes } from 'librechat-data-provider';
+import { useToastContext } from '@hanzochat/client';
+import { Permissions, PermissionTypes } from '@hanzochat/data-provider';
 import type { PermissionConfig } from '~/components/ui';
 import { useUpdateSkillPermissionsMutation } from '~/data-provider';
 import { AdminSettingsDialog } from '~/components/ui';

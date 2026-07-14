@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { EModelEndpoint, defaultModels } from 'librechat-data-provider';
+import { EModelEndpoint, defaultModels } from '@hanzochat/data-provider';
 import {
   fetchModels,
   splitAndTrim,
@@ -28,8 +28,8 @@ jest.mock('~/utils', () => {
   };
 });
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     error: jest.fn(),
     warn: jest.fn(),

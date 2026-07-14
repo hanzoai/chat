@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Tools, EToolResources } from 'librechat-data-provider';
-import type { TEphemeralAgent } from 'librechat-data-provider';
+import { Tools, EToolResources } from '@hanzochat/data-provider';
+import type { TEphemeralAgent } from '@hanzochat/data-provider';
 import { useGetAgentByIdQuery } from '~/data-provider';
 import { useAgentsMapContext } from '~/Providers';
 import { isEphemeralAgent } from '~/common';

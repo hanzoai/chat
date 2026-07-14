@@ -14,7 +14,7 @@ import { HANZO_APP_BUILDER_URL } from './buildApp';
 /** The query param carrying the project slug across every surface. */
 export const PROJECT_PARAM = 'project';
 
-/** sessionStorage key that keeps the active project scope through LibreChat's
+/** sessionStorage key that keeps the active project scope through Chat's
  *  `/c/new` -> `/c/:id` navigation (which drops the query string). */
 const STORE_KEY = 'hanzo:activeProject';
 

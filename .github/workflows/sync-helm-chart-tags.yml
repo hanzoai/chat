@@ -39,14 +39,14 @@ jobs:
     env:
       BASE_REF: refs/remotes/origin/main
       BACKFILL_FROM_VERSION: 1.9.0
-      CHART_PATH: helm/librechat/Chart.yaml
+      CHART_PATH: helm/chat/Chart.yaml
       DEFAULT_BRANCH: main
       DISPATCH_WORKFLOW: helmcharts.yml
       GITHUB_SERVER_URL: ${{ github.server_url }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPOSITORY: ${{ github.repository }}
       RELEASE_EXISTING_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_existing_tag || '' }}
-      REPO_DIR: /tmp/librechat-sync
+      REPO_DIR: /tmp/chat-sync
       TAG_PREFIX: chart-
     steps:
       - name: Fetch main and tags

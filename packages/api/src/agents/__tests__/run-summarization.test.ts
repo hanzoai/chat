@@ -1,15 +1,15 @@
-import { logger } from '@librechat/data-schemas';
-import type { AppConfig } from '@librechat/data-schemas';
-import type { SummarizationConfig, TEndpoint } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import type { AppConfig } from '@hanzochat/data-schemas';
+import type { SummarizationConfig, TEndpoint } from '@hanzochat/data-provider';
 import {
   EModelEndpoint,
   FileSources,
   MAX_SUBAGENT_DEPTH,
   MAX_SUBAGENT_RUN_CONFIGS,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { createRun } from '~/agents/run';
 
-// Mock winston logger — `format` must be callable so @librechat/data-schemas
+// Mock winston logger — `format` must be callable so @hanzochat/data-schemas
 // dist module-load completes cleanly; see api/test/__mocks__/logger.js.
 jest.mock('winston', () => ({
   createLogger: jest.fn(() => ({
@@ -46,8 +46,8 @@ jest.mock('~/utils/env', () => ({
   createSafeUser: jest.fn(() => ({})),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     debug: jest.fn(),
     warn: jest.fn(),
@@ -57,8 +57,8 @@ jest.mock('@librechat/data-schemas', () => ({
 }));
 
 // Mock Run.create to capture the graphConfig it receives
-jest.mock('@librechat/agents', () => {
-  const actual = jest.requireActual('@librechat/agents');
+jest.mock('@hanzochat/agents', () => {
+  const actual = jest.requireActual('@hanzochat/agents');
   return {
     ...actual,
     Run: {
@@ -69,7 +69,7 @@ jest.mock('@librechat/agents', () => {
   };
 });
 
-import { Run } from '@librechat/agents';
+import { Run } from '@hanzochat/agents';
 
 /** Minimal RunAgent factory */
 function makeAgent(
@@ -175,7 +175,7 @@ type TestCustomEndpoint = Partial<TEndpoint> & {
 };
 
 /**
- * Shape of summarization parameters used in tests. The LibreChat config
+ * Shape of summarization parameters used in tests. The Chat config
  * schema restricts yaml `parameters` to primitive values, but the SDK
  * passes any record through as-is — tests need the wider shape to exercise
  * cross-endpoint `configuration` merging.

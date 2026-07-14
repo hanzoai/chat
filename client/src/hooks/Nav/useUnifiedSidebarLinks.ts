@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { MessagesSquare } from 'lucide-react';
-import { useUserKeyQuery } from 'librechat-data-provider/react-query';
-import { getConfigDefaults, getEndpointField } from 'librechat-data-provider';
-import type { TEndpointsConfig } from 'librechat-data-provider';
+import { useUserKeyQuery } from '@hanzochat/data-provider/react-query';
+import { getConfigDefaults, getEndpointField } from '@hanzochat/data-provider';
+import type { TEndpointsConfig } from '@hanzochat/data-provider';
 import type { NavLink } from '~/common';
 import ConversationsSection from '~/components/UnifiedSidebar/ConversationsSection';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';

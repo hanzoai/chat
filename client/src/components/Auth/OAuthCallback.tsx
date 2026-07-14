@@ -2,15 +2,15 @@
  * OAuth Callback Handler for Hanzo IAM (hanzo.id)
  *
  * Flow:
- * 1. User clicks "Sign in" -> redirects to hanzo.id OIDC (via BrowserIamSdk)
+ * 1. User clicks "Sign in" -> redirects to hanzo.id OIDC (via IAM)
  * 2. After auth, hanzo.id redirects back with ?code=xxx&state=yyy
- * 3. BrowserIamSdk.handleCallback() exchanges the code for tokens (PKCE)
+ * 3. IAM.handleCallback() exchanges the code for tokens (PKCE)
  * 4. We set the access token header and redirect to /c/new
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setTokenHeader } from 'librechat-data-provider';
-import { Spinner } from '@librechat/client';
+import { setTokenHeader } from '@hanzochat/data-provider';
+import { Spinner } from '@hanzochat/client';
 import { getHanzoIamSdk } from '~/utils/iam';
 
 export default function OAuthCallback() {

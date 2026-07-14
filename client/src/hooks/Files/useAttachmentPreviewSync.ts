@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useRecoilCallback, useSetRecoilState } from 'recoil';
-import type { TAttachment, TFile, TFilePreview } from 'librechat-data-provider';
+import type { TAttachment, TFile, TFilePreview } from '@hanzochat/data-provider';
 import { useFilePreview } from '~/data-provider';
 import store from '~/store';
 

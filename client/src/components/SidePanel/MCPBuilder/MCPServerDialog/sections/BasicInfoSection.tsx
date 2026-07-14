@@ -1,5 +1,5 @@
 import { useFormContext } from 'react-hook-form';
-import { Input, Label, Textarea } from '@librechat/client';
+import { Input, Label, Textarea } from '@hanzochat/client';
 import type { MCPServerFormData } from '../hooks/useMCPServerForm';
 import MCPIcon from '~/components/SidePanel/Agents/MCPIcon';
 import { useLocalize } from '~/hooks';

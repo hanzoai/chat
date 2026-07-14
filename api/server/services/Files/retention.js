@@ -1,5 +1,5 @@
 const { getRetentionExpiry: getRetentionExpiryWithDeps } = require('@hanzochat/api');
-const { logger, createTempChatExpirationDate } = require('@librechat/data-schemas');
+const { logger, createTempChatExpirationDate } = require('@hanzochat/data-schemas');
 const db = require('~/models');
 
 /**

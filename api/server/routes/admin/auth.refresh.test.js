@@ -9,11 +9,11 @@ jest.mock('openid-client', () => ({
   refreshTokenGrant: jest.fn(),
 }));
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   CacheKeys: { ADMIN_OAUTH_EXCHANGE: 'admin-oauth-exchange' },
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
@@ -103,7 +103,7 @@ jest.mock('~/server/middleware', () => ({
 }));
 
 const openIdClient = require('openid-client');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { isEnabled, applyAdminRefresh, buildOpenIDRefreshParams } = require('@hanzochat/api');
 const { getOpenIdConfig } = require('~/strategies');
 const adminAuthRouter = require('./auth');

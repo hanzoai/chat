@@ -19,7 +19,7 @@ import { useEffect } from 'react';
 import { renderHook } from '@testing-library/react';
 import { RecoilRoot, useRecoilValue, useSetRecoilState } from 'recoil';
 import type { ReactNode } from 'react';
-import type { TAttachment, TFilePreview } from 'librechat-data-provider';
+import type { TAttachment, TFilePreview } from '@hanzochat/data-provider';
 import store from '~/store';
 
 const mockUseFilePreview = jest.fn();

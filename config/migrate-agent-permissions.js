@@ -1,8 +1,8 @@
 const path = require('path');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { ensureRequiredCollectionsExist } = require('@hanzochat/api');
-const { AccessRoleIds, ResourceType, PrincipalType } = require('librechat-data-provider');
-const { GLOBAL_PROJECT_NAME } = require('librechat-data-provider').Constants;
+const { AccessRoleIds, ResourceType, PrincipalType } = require('@hanzochat/data-provider');
+const { GLOBAL_PROJECT_NAME } = require('@hanzochat/data-provider').Constants;
 
 require('module-alias')({ base: path.resolve(__dirname, '..', 'api') });
 const connect = require('./connect');

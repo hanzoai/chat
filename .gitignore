@@ -121,12 +121,12 @@ docker-compose.override.yml
 dump.rdb
 helm/**/.values.yaml
 helm/**/charts/
-helm/librechat/Chart.lock
+helm/chat/Chart.lock
 hive-mind-prompt-*.txt
 junit.xml
 lib-cov
-librechat.yaml
-librechat.yml
+chat.yaml
+chat.yml
 logs
 meili_data*
 meili_data/

@@ -20,7 +20,7 @@ import {
   balanceSchema,
   transactionSchema,
   premiumTokenValues,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import type { PricingFns, TxMetadata } from './transactions';
 import {
   prepareStructuredTokenSpend,
@@ -48,8 +48,8 @@ function matchModelName(modelName: string, _endpoint?: string): string | undefin
   return typeof modelName === 'string' ? modelName : undefined;
 }
 
-jest.mock('@librechat/data-schemas', () => {
-  const actual = jest.requireActual('@librechat/data-schemas');
+jest.mock('@hanzochat/data-schemas', () => {
+  const actual = jest.requireActual('@hanzochat/data-schemas');
   return {
     ...actual,
     logger: { debug: jest.fn(), error: jest.fn(), warn: jest.fn(), info: jest.fn() },

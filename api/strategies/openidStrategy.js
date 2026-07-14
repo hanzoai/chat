@@ -5,9 +5,9 @@ const passport = require('passport');
 const client = require('openid-client');
 const jwtDecode = require('jsonwebtoken/decode');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { hashToken, logger } = require('@librechat/data-schemas');
+const { hashToken, logger } = require('@hanzochat/data-schemas');
 const { Strategy: OpenIDStrategy } = require('openid-client/passport');
-const { CacheKeys, ErrorTypes, SystemRoles } = require('librechat-data-provider');
+const { CacheKeys, ErrorTypes, SystemRoles } = require('@hanzochat/data-provider');
 const {
   isEnabled,
   logHeaders,
@@ -499,11 +499,14 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
     throw new Error('User does not exist');
   }
 
-  // Extract organization info from Hanzo IAM claims
-  // IAM uses 'owner' for the organization name
+  // Extract tenancy from Hanzo IAM claims — the JWT is the source of truth.
+  // IAM emits owner→organization, the org's default `project`, and `groups`
+  // (org memberships); the gateway mints X-Org-Id / X-Project-Id from these.
   const organization = userinfo.owner || userinfo.organization || userinfo.org || '';
   const organizationTitle = userinfo.title || '';
   const organizationTag = userinfo.tag || '';
+  const project = userinfo.project || '';
+  const groups = Array.isArray(userinfo.groups) ? userinfo.groups : [];
 
   if (!user) {
     user = {
@@ -517,6 +520,8 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
       organization,
       organizationTitle,
       organizationTag,
+      project,
+      groups,
     };
 
     const balanceConfig = getBalanceConfig(appConfig);
@@ -530,6 +535,8 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
     user.organization = organization;
     user.organizationTitle = organizationTitle;
     user.organizationTag = organizationTag;
+    user.project = project;
+    user.groups = groups;
     if (email && email !== user.email) {
       user.email = email;
       user.emailVerified = userinfo.email_verified || false;

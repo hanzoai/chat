@@ -8,13 +8,13 @@ import {
   isAgentsEndpoint,
   isEphemeralAgentId,
   isAssistantsEndpoint,
-} from 'librechat-data-provider';
-import type * as t from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type * as t from '@hanzochat/data-provider';
 import type { LocalizeFunction, IconsRecord } from '~/common';
 import { getTimestampedValue } from './timestamps';
 
 /**
- * The house-brand Hanzo endpoint name (custom endpoint in librechat.yaml,
+ * The house-brand Hanzo endpoint name (custom endpoint in chat.yaml,
  * `api.hanzo.ai/v1`). Canonical everywhere: config, guest scope (`GUEST_ENDPOINT`
  * default), and here. Smart routing's `auto` model is scoped to this endpoint —
  * the explicit provider families (Qwen, Meta Llama, …) are deliberate picks and

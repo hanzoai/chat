@@ -9,14 +9,14 @@
  */
 
 import { Keyv } from 'keyv';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { OAuthTestServer } from './helpers/oauthTestServer';
 import type { MCPOAuthTokens } from '~/mcp/oauth';
 import { MCPTokenStorage, MCPOAuthHandler, ReauthenticationRequiredError } from '~/mcp/oauth';
 import { MockKeyv, createOAuthMCPServer } from './helpers/oauthTestServer';
 import { FlowStateManager } from '~/flow/manager';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
