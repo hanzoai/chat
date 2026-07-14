@@ -1,4 +1,4 @@
-import { ErrorTypes } from 'librechat-data-provider';
+import { ErrorTypes } from '@hanzochat/data-provider';
 import type { DataHandle } from '~/common/dataHandle';
 // Note: checkUserKeyExpiry moved to @hanzochat/api (utils/key.ts) as it's a pure validation utility
 import { encrypt, decrypt } from '~/crypto';

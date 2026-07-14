@@ -4,7 +4,7 @@ import type { Attributes, Span } from '@opentelemetry/api';
 import type { Response } from 'express';
 import type { ServerRequest } from '~/types';
 
-const STREAM_SPAN_NAME = 'librechat.sse.stream';
+const STREAM_SPAN_NAME = 'chat.sse.stream';
 const STREAM_ROUTE = '/v1/chat/agents/chat/stream/:streamId';
 
 type StreamEndReason = 'done' | 'client_aborted' | 'server_error' | 'subscribe_failed';
@@ -37,16 +37,16 @@ class SseStreamSpanTelemetry implements SseStreamTelemetry {
   private plannedEndReason: StreamEndReason | undefined;
 
   constructor({ isResume, req, res, streamId }: SseStreamTelemetryOptions) {
-    this.span = trace.getTracer('librechat.telemetry').startSpan(
+    this.span = trace.getTracer('chat.telemetry').startSpan(
       STREAM_SPAN_NAME,
       {
         kind: SpanKind.INTERNAL,
         attributes: {
           'http.request.method': req.method,
           'http.route': STREAM_ROUTE,
-          'librechat.stream.id': streamId,
-          'librechat.stream.resume': isResume,
-          'librechat.stream.route': STREAM_ROUTE,
+          'chat.stream.id': streamId,
+          'chat.stream.resume': isResume,
+          'chat.stream.route': STREAM_ROUTE,
         },
       },
       context.active(),
@@ -69,7 +69,7 @@ class SseStreamSpanTelemetry implements SseStreamTelemetry {
 
   recordHeadersFlushed(): void {
     this.span.addEvent('headers_flushed');
-    this.span.setAttribute('librechat.stream.headers_flushed', true);
+    this.span.setAttribute('chat.stream.headers_flushed', true);
   }
 
   recordWrite(payload: string, options?: { final?: boolean }): void {
@@ -83,7 +83,7 @@ class SseStreamSpanTelemetry implements SseStreamTelemetry {
     if (this.firstChunkMs === undefined) {
       this.firstChunkMs = performance.now() - this.startTimeMs;
       this.span.addEvent('first_chunk');
-      this.span.setAttribute('librechat.stream.time_to_first_chunk_ms', this.firstChunkMs);
+      this.span.setAttribute('chat.stream.time_to_first_chunk_ms', this.firstChunkMs);
     }
 
     if (options?.final) {
@@ -117,18 +117,18 @@ class SseStreamSpanTelemetry implements SseStreamTelemetry {
     this.ended = true;
     const attributes: Attributes = {
       'http.response.body.size': this.bytesSent,
-      'librechat.stream.bytes.sent': this.bytesSent,
-      'librechat.stream.chunks.count': this.chunksCount,
-      'librechat.stream.completed': reason === 'done',
-      'librechat.stream.duration_ms': performance.now() - this.startTimeMs,
-      'librechat.stream.end_reason': reason,
-      'librechat.stream.error_event_emitted': this.errorEventEmitted,
-      'librechat.stream.final_event_emitted': this.finalEventEmitted,
-      'librechat.stream.final_event_written': this.finalEventWritten,
+      'chat.stream.bytes.sent': this.bytesSent,
+      'chat.stream.chunks.count': this.chunksCount,
+      'chat.stream.completed': reason === 'done',
+      'chat.stream.duration_ms': performance.now() - this.startTimeMs,
+      'chat.stream.end_reason': reason,
+      'chat.stream.error_event_emitted': this.errorEventEmitted,
+      'chat.stream.final_event_emitted': this.finalEventEmitted,
+      'chat.stream.final_event_written': this.finalEventWritten,
     };
 
     if (this.firstChunkMs !== undefined) {
-      attributes['librechat.stream.time_to_first_chunk_ms'] = this.firstChunkMs;
+      attributes['chat.stream.time_to_first_chunk_ms'] = this.firstChunkMs;
     }
 
     this.span.setAttributes(attributes);

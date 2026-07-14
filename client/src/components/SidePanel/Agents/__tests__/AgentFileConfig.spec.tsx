@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { EModelEndpoint, mergeFileConfig, resolveEndpointType } from 'librechat-data-provider';
-import type { TEndpointsConfig } from 'librechat-data-provider';
+import { EModelEndpoint, mergeFileConfig, resolveEndpointType } from '@hanzochat/data-provider';
+import type { TEndpointsConfig } from '@hanzochat/data-provider';
 import type { AgentForm } from '~/common';
 import useAgentFileConfig from '~/hooks/Agents/useAgentFileConfig';
 

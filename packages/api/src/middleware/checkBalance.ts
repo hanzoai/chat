@@ -1,7 +1,7 @@
-import { logger } from '@librechat/data-schemas';
-import { getRefillEligibilityDate, ViolationTypes } from 'librechat-data-provider';
-import type { BalanceConfig, IBalanceUpdate } from '@librechat/data-schemas';
-import type { RefillIntervalUnit } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { getRefillEligibilityDate, ViolationTypes } from '@hanzochat/data-provider';
+import type { BalanceConfig, IBalanceUpdate } from '@hanzochat/data-schemas';
+import type { RefillIntervalUnit } from '@hanzochat/data-provider';
 import type { Response } from 'express';
 import type { ServerRequest } from '~/types/http';
 

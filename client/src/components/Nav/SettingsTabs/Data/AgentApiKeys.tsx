@@ -3,8 +3,8 @@ import {
   useGetAgentApiKeysQuery,
   useCreateAgentApiKeyMutation,
   useDeleteAgentApiKeyMutation,
-} from 'librechat-data-provider/react-query';
-import { Permissions, PermissionTypes } from 'librechat-data-provider';
+} from '@hanzochat/data-provider/react-query';
+import { Permissions, PermissionTypes } from '@hanzochat/data-provider';
 import { Plus, Trash2, Copy, CopyCheck, Key, Eye, EyeOff, ShieldEllipsis } from 'lucide-react';
 import {
   Button,
@@ -18,7 +18,7 @@ import {
   OGDialogContent,
   OGDialogTrigger,
   useToastContext,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import type { PermissionConfig } from '~/components/ui';
 import { useUpdateRemoteAgentsPermissionsMutation } from '~/data-provider';
 import { useLocalize, useCopyToClipboard } from '~/hooks';

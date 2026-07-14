@@ -2,7 +2,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { randomUUID } from 'crypto';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { CodeArtifactCategory } from './classify';
 import { parseDocument } from '~/files/documents/crud';
 import { bufferToOfficeHtml, officeHtmlBucket } from '~/files/documents/html';

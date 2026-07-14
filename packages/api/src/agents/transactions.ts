@@ -1,6 +1,6 @@
-import { CANCEL_RATE } from '@librechat/data-schemas';
-import type { TCustomConfig, TTransactionsConfig } from 'librechat-data-provider';
-import type { TransactionData } from '@librechat/data-schemas';
+import { CANCEL_RATE } from '@hanzochat/data-schemas';
+import type { TCustomConfig, TTransactionsConfig } from '@hanzochat/data-provider';
+import type { TransactionData } from '@hanzochat/data-schemas';
 import type { EndpointTokenConfig } from '~/types/tokens';
 
 type TokenType = 'prompt' | 'completion';

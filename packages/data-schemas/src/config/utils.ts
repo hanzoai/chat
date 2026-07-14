@@ -3,7 +3,7 @@ import path from 'path';
 /**
  * Determine the log directory in a cross-compatible way.
  * Priority:
- * 1. LIBRECHAT_LOG_DIR environment variable
+ * 1. CHAT_LOG_DIR environment variable
  * 2. If running within Hanzo Chat monorepo (when cwd ends with /api), use api/logs
  * 3. If api/logs exists relative to cwd, use that (for running from project root)
  * 4. Otherwise, use logs directory relative to process.cwd()
@@ -11,8 +11,8 @@ import path from 'path';
  * This avoids using __dirname which is not available in ESM modules
  */
 export const getLogDirectory = (): string => {
-  if (process.env.LIBRECHAT_LOG_DIR) {
-    return process.env.LIBRECHAT_LOG_DIR;
+  if (process.env.CHAT_LOG_DIR) {
+    return process.env.CHAT_LOG_DIR;
   }
 
   const cwd = process.cwd();
@@ -27,8 +27,8 @@ export const getLogDirectory = (): string => {
   const apiLogsPath = path.join(cwd, 'api', 'logs');
 
   // For Hanzo Chat project structure, use api/logs
-  // For external consumers, they should set LIBRECHAT_LOG_DIR
-  if (cwd.includes('LibreChat') || cwd.includes('hanzo/chat') || cwd.includes('hanzo-chat')) {
+  // For external consumers, they should set CHAT_LOG_DIR
+  if (cwd.includes('Chat') || cwd.includes('hanzo/chat') || cwd.includes('hanzo-chat')) {
     return apiLogsPath;
   }
 

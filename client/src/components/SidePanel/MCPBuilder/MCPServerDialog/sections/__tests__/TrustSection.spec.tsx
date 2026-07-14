@@ -44,7 +44,7 @@ jest.mock('~/hooks', () => ({
 }));
 
 jest.mock(
-  '@librechat/client',
+  '@hanzochat/client',
   () => {
     const React = jest.requireActual<typeof import('react')>('react');
     return {

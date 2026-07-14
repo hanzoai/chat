@@ -1,7 +1,7 @@
 const fs = require('fs');
 const fetch = require('node-fetch');
-const { logger } = require('@librechat/data-schemas');
-const { FileSources } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { FileSources } = require('@hanzochat/data-provider');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { initializeS3, deleteRagFile, isEnabled } = require('@hanzochat/api');
 const {

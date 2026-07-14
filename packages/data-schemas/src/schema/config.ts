@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { PrincipalType, PrincipalModel } from 'librechat-data-provider';
+import { PrincipalType, PrincipalModel } from '@hanzochat/data-provider';
 import type { IConfig } from '~/types';
 
 const configSchema = new Schema<IConfig>(

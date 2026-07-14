@@ -1,5 +1,5 @@
 import React from 'react';
-import { EModelEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import { useFormContext, Controller } from 'react-hook-form';
 import { useLocalize } from '~/hooks';
 import InputWithLabel from './InputWithLabel';

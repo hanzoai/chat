@@ -1,5 +1,5 @@
-const { Providers } = require('@librechat/agents');
-const { EModelEndpoint } = require('librechat-data-provider');
+const { Providers } = require('@hanzochat/agents');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { getCustomEndpointConfig } = require('@hanzochat/api');
 const initAnthropic = require('~/server/services/Endpoints/anthropic/initialize');
 const getBedrockOptions = require('~/server/services/Endpoints/bedrock/options');

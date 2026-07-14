@@ -37,7 +37,7 @@ jest.mock('~/hooks', () => ({
   useHasAccess: () => mockCanUseMcp,
 }));
 
-jest.mock('@librechat/client', () => {
+jest.mock('@hanzochat/client', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const R = require('react');
   return {

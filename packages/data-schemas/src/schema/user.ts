@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { SystemRoles } from 'librechat-data-provider';
+import { SystemRoles } from '@hanzochat/data-provider';
 import { IUser } from '~/types';
 
 // Session sub-schema
@@ -166,6 +166,16 @@ const userSchema = new Schema<IUser>(
     /** User's tag within their organization (e.g. 'founder', 'member') */
     organizationTag: {
       type: String,
+    },
+    /** Org's default project from the Hanzo IAM 'project' claim; the gateway mints X-Project-Id from it */
+    project: {
+      type: String,
+      index: true,
+    },
+    /** Org/role memberships from the Hanzo IAM 'groups' claim */
+    groups: {
+      type: [String],
+      default: [],
     },
   },
   { timestamps: true },

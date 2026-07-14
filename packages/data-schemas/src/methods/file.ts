@@ -1,6 +1,6 @@
 import logger from '../config/winston';
 import type { DataHandle } from '~/common/dataHandle';
-import { EToolResources, FileContext } from 'librechat-data-provider';
+import { EToolResources, FileContext } from '@hanzochat/data-provider';
 import type { FilterQuery, SortOrder, Model } from 'mongoose';
 import type { IMongoFile } from '~/types/file';
 

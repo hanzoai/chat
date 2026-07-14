@@ -1,6 +1,6 @@
 const express = require('express');
 const request = require('supertest');
-const { SystemRoles, roleDefaults } = require('librechat-data-provider');
+const { SystemRoles, roleDefaults } = require('@hanzochat/data-provider');
 
 const mockGetRoleByName = jest.fn();
 const mockHasCapability = jest.fn();

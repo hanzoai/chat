@@ -1,5 +1,5 @@
-import { getConfigDefaults } from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
+import { getConfigDefaults } from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
 import { loadDefaultInterface } from './interface';
 
 describe('loadDefaultInterface', () => {

@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
-import type { TCustomConfig } from 'librechat-data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
 
 import { isMemoryAgentEnabled, isMemoryEnabled, loadMemoryConfig } from './config';
 

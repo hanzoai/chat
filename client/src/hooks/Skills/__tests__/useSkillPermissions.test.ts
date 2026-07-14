@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
-import { PermissionBits, SystemRoles } from 'librechat-data-provider';
-import type { TSkill } from 'librechat-data-provider';
+import { PermissionBits, SystemRoles } from '@hanzochat/data-provider';
+import type { TSkill } from '@hanzochat/data-provider';
 import useSkillPermissions from '../useSkillPermissions';
 
 jest.mock('~/hooks/useResourcePermissions', () => ({

@@ -1,4 +1,4 @@
-import { AuthTypeEnum } from 'librechat-data-provider';
+import { AuthTypeEnum } from '@hanzochat/data-provider';
 
 import { validateEndpointURL } from '~/auth';
 

@@ -2,7 +2,7 @@
  * Coverage for the `scope` parameter fallback on the OAuth refresh_token grant
  * (support case 00046259 — Salesforce).
  *
- * LibreChat sends `scope` on refresh by default because some authorization servers
+ * Chat sends `scope` on refresh by default because some authorization servers
  * expect it (added in the original MCP OAuth support, PR #7924). Salesforce, however,
  * rejects any `scope` on the refresh grant with HTTP 400 "scope parameter not
  * supported", which broke token refresh in production and forced re-authentication
@@ -18,7 +18,7 @@
 import type { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { MCPOAuthHandler } from '~/mcp/oauth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 

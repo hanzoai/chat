@@ -1,6 +1,6 @@
 const { nanoid } = require('nanoid');
-const { Tools } = require('librechat-data-provider');
-const { logger } = require('@librechat/data-schemas');
+const { Tools } = require('@hanzochat/data-provider');
+const { logger } = require('@hanzochat/data-schemas');
 const { GenerationJobManager } = require('@hanzochat/api');
 
 /**

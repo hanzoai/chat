@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Live integration tests for the Responses API endpoint.
-# Sends curl requests to a running LibreChat server to verify
+# Sends curl requests to a running Chat server to verify
 # multi-turn conversations with output_text / refusal blocks work.
 #
 # Usage:

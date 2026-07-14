@@ -1,4 +1,4 @@
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { error: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('@hanzochat/api', () => ({

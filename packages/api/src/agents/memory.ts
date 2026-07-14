@@ -1,10 +1,10 @@
 /** Memories */
 import { z } from 'zod';
 import { tool } from '@langchain/core/tools';
-import { Tools } from 'librechat-data-provider';
-import { logger } from '@librechat/data-schemas';
+import { Tools } from '@hanzochat/data-provider';
+import { logger } from '@hanzochat/data-schemas';
 import { HumanMessage } from '@langchain/core/messages';
-import { Run, Providers, GraphEvents } from '@librechat/agents';
+import { Run, Providers, GraphEvents } from '@hanzochat/agents';
 import type {
   OpenAIClientOptions,
   StreamEventData,
@@ -13,9 +13,9 @@ import type {
   EventHandler,
   ToolEndData,
   LLMConfig,
-} from '@librechat/agents';
-import type { ObjectId, MemoryMethods, IUser } from '@librechat/data-schemas';
-import type { TAttachment, MemoryArtifact } from 'librechat-data-provider';
+} from '@hanzochat/agents';
+import type { ObjectId, MemoryMethods, IUser } from '@hanzochat/data-schemas';
+import type { TAttachment, MemoryArtifact } from '@hanzochat/data-provider';
 import type { BaseMessage, ToolMessage } from '@langchain/core/messages';
 import type { Response as ServerResponse } from 'express';
 import { GenerationJobManager } from '~/stream/GenerationJobManager';

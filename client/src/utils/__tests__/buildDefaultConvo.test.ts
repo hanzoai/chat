@@ -1,5 +1,5 @@
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { TConversation } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { TConversation } from '@hanzochat/data-provider';
 import buildDefaultConvo from '../buildDefaultConvo';
 
 jest.mock('../localStorage', () => ({

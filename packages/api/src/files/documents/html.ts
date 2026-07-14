@@ -1,5 +1,5 @@
 import yauzl from 'yauzl';
-import { excelMimeTypes, megabyte } from 'librechat-data-provider';
+import { excelMimeTypes, megabyte } from '@hanzochat/data-provider';
 import { tryLibreOfficePreview } from './libreoffice';
 import { assertSafeZipSize } from './zipSafety';
 
@@ -387,7 +387,7 @@ function buildDocxCdnDocument(base64: string, mammothFallbackHtml: string): stri
    *     with CSP violations every time DevTools is open)
    *
    * Exfiltration risk is minimal: the iframe is cross-origin to the
-   * LibreChat host so an attacker can't read application data from it,
+   * Chat host so an attacker can't read application data from it,
    * and the only meaningful target ('self' or jsdelivr) isn't useful
    * for exfiltrating slide content to a host the attacker controls. */
   const csp = [
@@ -1100,7 +1100,7 @@ function buildPptxCdnDocument(base64: string, slideListFallbackBody: string): st
    *     violations every time DevTools is open)
    *
    * Exfiltration risk is minimal: the iframe is cross-origin to the
-   * LibreChat host so an attacker can't read application data, and
+   * Chat host so an attacker can't read application data, and
    * the only meaningful targets ('self' or jsdelivr) aren't useful
    * for exfiltrating slide content to a host the attacker controls. */
   const csp = [

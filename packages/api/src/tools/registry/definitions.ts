@@ -2,7 +2,7 @@ import {
   WebSearchToolDefinition,
   CalculatorToolDefinition,
   CodeExecutionToolDefinition,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 
 /** Extended JSON Schema type that includes standard validation keywords */
 export type ExtendedJsonSchema = {
@@ -602,7 +602,7 @@ Generated image IDs will be returned in the response, so you can refer to them i
   },
 };
 
-/** Tool definitions from @librechat/agents */
+/** Tool definitions from @hanzochat/agents */
 const agentToolDefinitions: Record<string, ToolRegistryDefinition> = {
   [CalculatorToolDefinition.name]: {
     name: CalculatorToolDefinition.name,

@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithStorage } from 'jotai/utils';
-import { Constants, LocalStorageKeys } from 'librechat-data-provider';
+import { Constants, LocalStorageKeys } from '@hanzochat/data-provider';
 import { createTabIsolatedStorage } from './jotai-utils';
 
 /**

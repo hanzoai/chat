@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
-/** The fetch signature LibreChat threads through the OpenAI client configuration. */
+/** The fetch signature Chat threads through the OpenAI client configuration. */
 export type GatewayFetch = (
   input: string | URL | Request,
   init?: RequestInit,

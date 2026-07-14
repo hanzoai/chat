@@ -1,7 +1,7 @@
 import React from 'react';
-import { SystemRoles } from 'librechat-data-provider';
+import { SystemRoles } from '@hanzochat/data-provider';
 import { render, screen } from '@testing-library/react';
-import type { TUser } from 'librechat-data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 import Account from './Account';
 
 jest.mock('./DisplayUsernameMessages', () => () => <div data-testid="display-username" />);

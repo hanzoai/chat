@@ -1,5 +1,5 @@
-import { FileSources } from 'librechat-data-provider';
-import type { IMongoFile } from '@librechat/data-schemas';
+import { FileSources } from '@hanzochat/data-provider';
+import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { ServerRequest } from '~/types';
 import {
   collectFileIds,

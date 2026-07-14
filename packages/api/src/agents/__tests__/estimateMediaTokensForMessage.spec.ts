@@ -1,7 +1,7 @@
 import { estimateMediaTokensForMessage } from '../client';
 
-jest.mock('@librechat/agents', () => ({
-  ...jest.requireActual('@librechat/agents'),
+jest.mock('@hanzochat/agents', () => ({
+  ...jest.requireActual('@hanzochat/agents'),
   extractImageDimensions: jest.fn((data: string) => {
     if (data.includes('VALID_PNG')) {
       return { width: 800, height: 600 };

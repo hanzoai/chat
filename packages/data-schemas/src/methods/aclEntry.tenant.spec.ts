@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { PrincipalType, PrincipalModel, PermissionBits } from 'librechat-data-provider';
+import { PrincipalType, PrincipalModel, PermissionBits } from '@hanzochat/data-provider';
 import type { IAclEntry } from '..';
 import { createAclEntryMethods } from './aclEntry';
 import { createModels } from '../models';

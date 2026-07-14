@@ -1,5 +1,5 @@
 import { getSignedCookies } from '@aws-sdk/cloudfront-signer';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
 import type { NextFunction, Response } from 'express';
 
@@ -16,7 +16,7 @@ const REQUIRED_CF_COOKIES = [
   'CloudFront-Key-Pair-Id',
 ] as const;
 
-export const CLOUDFRONT_SCOPE_COOKIE = 'LibreChat-CloudFront-Scope';
+export const CLOUDFRONT_SCOPE_COOKIE = 'Chat-CloudFront-Scope';
 const unsafePolicySegmentPattern = /[?*[\]\s]/;
 
 export interface CloudFrontCookieScope {

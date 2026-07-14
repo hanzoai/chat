@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 
 /**
  * CommerceClient is chat's READ-ONLY window into Hanzo Commerce (balance, tier,

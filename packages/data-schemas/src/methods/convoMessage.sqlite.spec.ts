@@ -20,13 +20,13 @@ jest.mock('~/config/winston', () => ({
 
 /**
  * Isolate the unit-under-test from an unrelated, pre-existing fork gap: this
- * repo's `librechat-data-provider` never synced the `RetentionMode` enum that
+ * repo's `@hanzochat/data-provider` never synced the `RetentionMode` enum that
  * upstream PR #13049 added, so both message.ts and conversation.ts (mongoose
  * path included) reference an undefined export. Both files import ONLY this enum
  * from the package; we supply the upstream value shape so the retention gate
  * evaluates instead of throwing. Our tests do not exercise retentionMode paths.
  */
-jest.mock('librechat-data-provider', () => ({ RetentionMode: { ANY: 'any', ALL: 'all' } }));
+jest.mock('@hanzochat/data-provider', () => ({ RetentionMode: { ANY: 'any', ALL: 'all' } }));
 
 let handle: SqliteHandle;
 let msg: ReturnType<typeof createMessageMethods>;

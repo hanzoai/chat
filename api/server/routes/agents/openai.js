@@ -1,8 +1,8 @@
 /**
- * OpenAI-compatible API routes for LibreChat agents.
+ * OpenAI-compatible API routes for Chat agents.
  *
  * Provides a /v1/chat/completions compatible interface for
- * interacting with LibreChat agents remotely via API.
+ * interacting with Chat agents remotely via API.
  *
  * Usage:
  *   POST /v1/chat/completions - Chat with an agent
@@ -17,7 +17,7 @@
  *   }
  */
 const express = require('express');
-const { PermissionTypes, Permissions } = require('librechat-data-provider');
+const { PermissionTypes, Permissions } = require('@hanzochat/data-provider');
 const {
   generateCheckAccess,
   createRequireApiKeyAuth,

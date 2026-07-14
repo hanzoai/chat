@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { logAxiosError, validateImage } = require('@hanzochat/api');
 const {
   FileSources,
@@ -9,7 +9,7 @@ const {
   EModelEndpoint,
   mergeFileConfig,
   getEndpointFileConfig,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 
 /**

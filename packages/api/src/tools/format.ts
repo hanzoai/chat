@@ -1,5 +1,5 @@
-import { AuthType, EToolResources } from 'librechat-data-provider';
-import type { TPlugin } from 'librechat-data-provider';
+import { AuthType, EToolResources } from '@hanzochat/data-provider';
+import type { TPlugin } from '@hanzochat/data-provider';
 
 /**
  * Filters out duplicate plugins from the list of plugins.

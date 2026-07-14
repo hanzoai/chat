@@ -1,12 +1,12 @@
 import axios from 'axios';
-import { decryptV2 } from '@librechat/data-schemas';
-import { TokenExchangeMethodEnum } from 'librechat-data-provider';
+import { decryptV2 } from '@hanzochat/data-schemas';
+import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
 import type { AxiosRequestConfig } from 'axios';
 import { getAccessToken, refreshAccessToken } from './tokens';
 
 jest.mock('axios');
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),

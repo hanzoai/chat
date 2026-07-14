@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import copy from 'copy-to-clipboard';
 import { Check, Copy } from 'lucide-react';
-import { Constants } from 'librechat-data-provider';
-import type { TStartupConfig } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
+import type { TStartupConfig } from '@hanzochat/data-provider';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 

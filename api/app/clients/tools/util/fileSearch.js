@@ -1,8 +1,8 @@
 const axios = require('axios');
 const { tool } = require('@langchain/core/tools');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { generateShortLivedToken } = require('@hanzochat/api');
-const { Tools, EToolResources } = require('librechat-data-provider');
+const { Tools, EToolResources } = require('@hanzochat/data-provider');
 const { filterFilesByAgentAccess } = require('~/server/services/Files/permissions');
 const { getFiles } = require('~/models');
 
@@ -97,7 +97,7 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
       }
 
       /**
-       * @param {import('librechat-data-provider').TFile} file
+       * @param {import('@hanzochat/data-provider').TFile} file
        * @returns {{ file_id: string, query: string, k: number, entity_id?: string }}
        */
       const createQueryBody = (file) => {

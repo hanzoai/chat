@@ -1,5 +1,5 @@
 import yauzl from 'yauzl';
-import { megabyte } from 'librechat-data-provider';
+import { megabyte } from '@hanzochat/data-provider';
 
 /**
  * Default per-archive total decompressed-size cap. Office documents in

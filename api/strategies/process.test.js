@@ -1,4 +1,4 @@
-const { FileSources } = require('librechat-data-provider');
+const { FileSources } = require('@hanzochat/data-provider');
 const { handleExistingUser } = require('./process');
 
 jest.mock('~/server/services/Files/strategies', () => ({

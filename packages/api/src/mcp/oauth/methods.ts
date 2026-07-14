@@ -1,4 +1,4 @@
-import { TokenExchangeMethodEnum } from 'librechat-data-provider';
+import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
 
 type ClientAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'none';
 

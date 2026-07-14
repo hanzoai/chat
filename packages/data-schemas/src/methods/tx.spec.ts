@@ -1,6 +1,6 @@
 /** Note: No hard-coded values should be used in this file. */
 import { matchModelName, findMatchingPattern } from './test-helpers';
-import { EModelEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import {
   createTxMethods,
   tokenValues,

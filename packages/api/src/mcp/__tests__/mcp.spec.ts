@@ -2,9 +2,9 @@ import {
   MCPOptions,
   StdioOptionsSchema,
   StreamableHTTPOptionsSchema,
-} from 'librechat-data-provider';
-import type { TUser } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+} from '@hanzochat/data-provider';
+import type { TUser } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { GraphTokenResolver } from '~/utils/graph';
 import { preProcessGraphTokens } from '~/utils/graph';
 import { processMCPEnv } from '~/utils/env';
@@ -229,7 +229,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         url: 'https://example.com',
         headers: {
           Authorization: '${TEST_API_KEY}',
-          'User-Id': '{{LIBRECHAT_USER_ID}}',
+          'User-Id': '{{CHAT_USER_ID}}',
           'Content-Type': 'application/json',
         },
       };
@@ -269,7 +269,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'User-Id': '{{LIBRECHAT_USER_ID}}',
+          'User-Id': '{{CHAT_USER_ID}}',
           'API-Key': '${TEST_API_KEY}',
         },
       };
@@ -294,7 +294,7 @@ describe('Environment Variable Extraction (MCP)', () => {
       }
 
       // Original config should be unchanged
-      expect(baseConfig.headers?.['User-Id']).toBe('{{LIBRECHAT_USER_ID}}');
+      expect(baseConfig.headers?.['User-Id']).toBe('{{CHAT_USER_ID}}');
 
       // Second user's config should be unchanged
       expect('headers' in resultUser2 && resultUser2.headers?.['User-Id']).toBe('user-456');
@@ -307,7 +307,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         url: 'https://example.com',
         headers: {
           Authorization: '${TEST_API_KEY}',
-          'User-Id': '{{LIBRECHAT_USER_ID}}',
+          'User-Id': '{{CHAT_USER_ID}}',
           'Content-Type': 'application/json',
         },
       };
@@ -350,7 +350,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         url: 'https://example.com',
         headers: {
           Authorization: '${TEST_API_KEY}',
-          'User-Id': '{{LIBRECHAT_USER_ID}}',
+          'User-Id': '{{CHAT_USER_ID}}',
           'Content-Type': 'application/json',
         },
       };
@@ -378,12 +378,12 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'User-Email': '{{LIBRECHAT_USER_EMAIL}}',
-          'User-Name': '{{LIBRECHAT_USER_USERNAME}}',
-          OpenID: '{{LIBRECHAT_USER_OPENIDID}}',
-          'Google-ID': '{{LIBRECHAT_USER_GOOGLEID}}',
-          'Email-Verified': '{{LIBRECHAT_USER_EMAILVERIFIED}}',
-          'User-Role': '{{LIBRECHAT_USER_ROLE}}',
+          'User-Email': '{{CHAT_USER_EMAIL}}',
+          'User-Name': '{{CHAT_USER_USERNAME}}',
+          OpenID: '{{CHAT_USER_OPENIDID}}',
+          'Google-ID': '{{CHAT_USER_GOOGLEID}}',
+          'Email-Verified': '{{CHAT_USER_EMAILVERIFIED}}',
+          'User-Role': '{{CHAT_USER_ROLE}}',
           'Content-Type': 'application/json',
         },
       };
@@ -411,8 +411,8 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'User-Email': '{{LIBRECHAT_USER_EMAIL}}',
-          'User-Name': '{{LIBRECHAT_USER_USERNAME}}',
+          'User-Email': '{{CHAT_USER_EMAIL}}',
+          'User-Name': '{{CHAT_USER_USERNAME}}',
           'Content-Type': 'application/json',
         },
       };
@@ -436,8 +436,8 @@ describe('Environment Variable Extraction (MCP)', () => {
         command: 'node',
         args: ['server.js'],
         env: {
-          USER_EMAIL: '{{LIBRECHAT_USER_EMAIL}}',
-          LDAP_ID: '{{LIBRECHAT_USER_LDAPID}}',
+          USER_EMAIL: '{{CHAT_USER_EMAIL}}',
+          LDAP_ID: '{{CHAT_USER_LDAPID}}',
           API_KEY: '${TEST_API_KEY}',
         },
       };
@@ -458,7 +458,7 @@ describe('Environment Variable Extraction (MCP)', () => {
       });
       const options: MCPOptions = {
         type: 'sse',
-        url: 'https://example.com/api/{{LIBRECHAT_USER_USERNAME}}/stream',
+        url: 'https://example.com/api/{{CHAT_USER_USERNAME}}/stream',
       };
 
       const result = processMCPEnv({ options, user });
@@ -477,9 +477,9 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'Email-Verified': '{{LIBRECHAT_USER_EMAILVERIFIED}}',
-          'Two-Factor': '{{LIBRECHAT_USER_TWOFACTORENABLED}}',
-          'Terms-Accepted': '{{LIBRECHAT_USER_TERMSACCEPTED}}',
+          'Email-Verified': '{{CHAT_USER_EMAILVERIFIED}}',
+          'Two-Factor': '{{CHAT_USER_TWOFACTORENABLED}}',
+          'Terms-Accepted': '{{CHAT_USER_TERMSACCEPTED}}',
         },
       };
 
@@ -502,8 +502,8 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'User-Email': '{{LIBRECHAT_USER_EMAIL}}',
-          'User-Password': '{{LIBRECHAT_USER_PASSWORD}}', // This should not be processed
+          'User-Email': '{{CHAT_USER_EMAIL}}',
+          'User-Password': '{{CHAT_USER_PASSWORD}}', // This should not be processed
         },
       };
 
@@ -511,7 +511,7 @@ describe('Environment Variable Extraction (MCP)', () => {
 
       expect('headers' in result && result.headers).toEqual({
         'User-Email': 'test@example.com',
-        'User-Password': '{{LIBRECHAT_USER_PASSWORD}}', // Unchanged
+        'User-Password': '{{CHAT_USER_PASSWORD}}', // Unchanged
       });
     });
 
@@ -524,9 +524,9 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'Primary-Email': '{{LIBRECHAT_USER_EMAIL}}',
-          'Secondary-Email': '{{LIBRECHAT_USER_EMAIL}}',
-          'Backup-Email': '{{LIBRECHAT_USER_EMAIL}}',
+          'Primary-Email': '{{CHAT_USER_EMAIL}}',
+          'Secondary-Email': '{{CHAT_USER_EMAIL}}',
+          'Backup-Email': '{{CHAT_USER_EMAIL}}',
         },
       };
 
@@ -539,7 +539,7 @@ describe('Environment Variable Extraction (MCP)', () => {
       });
     });
 
-    it('should support both id and _id properties for LIBRECHAT_USER_ID', () => {
+    it('should support both id and _id properties for CHAT_USER_ID', () => {
       // Test with 'id' property
       const userWithId = createTestUser({
         id: 'user-123',
@@ -549,7 +549,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'User-Id': '{{LIBRECHAT_USER_ID}}',
+          'User-Id': '{{CHAT_USER_ID}}',
         },
       };
 
@@ -566,13 +566,13 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'User-Id': '{{LIBRECHAT_USER_ID}}',
+          'User-Id': '{{CHAT_USER_ID}}',
         },
       };
 
       const result2 = processMCPEnv({ options: obj2, user: userWithUnderscore });
       // Since we don't check _id, the placeholder should remain unchanged
-      expect('headers' in result2 && result2.headers?.['User-Id']).toBe('{{LIBRECHAT_USER_ID}}');
+      expect('headers' in result2 && result2.headers?.['User-Id']).toBe('{{CHAT_USER_ID}}');
 
       // Test with both properties (id takes precedence)
       const userWithBoth = createTestUser({
@@ -584,7 +584,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          'User-Id': '{{LIBRECHAT_USER_ID}}',
+          'User-Id': '{{CHAT_USER_ID}}',
         },
       };
 
@@ -605,7 +605,7 @@ describe('Environment Variable Extraction (MCP)', () => {
           VAR_A: '{{CUSTOM_VAR_1}}',
           VAR_B: 'Value with {{CUSTOM_VAR_2}}',
           VAR_C: '${TEST_API_KEY}',
-          VAR_D: '{{LIBRECHAT_USER_EMAIL}}',
+          VAR_D: '{{CHAT_USER_EMAIL}}',
         },
       };
 
@@ -632,7 +632,7 @@ describe('Environment Variable Extraction (MCP)', () => {
           Authorization: 'Bearer {{USER_TOKEN}}',
           'X-Region': '{{REGION}}',
           'X-System-Key': '${TEST_API_KEY}',
-          'X-User-Id': '{{LIBRECHAT_USER_ID}}',
+          'X-User-Id': '{{CHAT_USER_ID}}',
         },
       };
 
@@ -654,7 +654,7 @@ describe('Environment Variable Extraction (MCP)', () => {
       };
       const options: MCPOptions = {
         type: 'websocket',
-        url: 'wss://example.com/{{TENANT_ID}}/api/{{API_VERSION}}?user={{LIBRECHAT_USER_ID}}&key=${TEST_API_KEY}',
+        url: 'wss://example.com/{{TENANT_ID}}/api/{{API_VERSION}}?user={{CHAT_USER_ID}}&key=${TEST_API_KEY}',
       };
 
       const result = processMCPEnv({ options, user, customUserVars });
@@ -685,7 +685,7 @@ describe('Environment Variable Extraction (MCP)', () => {
           '--profile',
           '{{PROFILE_NAME}}',
           '--user',
-          '{{LIBRECHAT_USER_EMAIL}}',
+          '{{CHAT_USER_EMAIL}}',
         ],
       };
 
@@ -708,16 +708,16 @@ describe('Environment Variable Extraction (MCP)', () => {
     it('should prioritize customUserVars over user fields and system env vars if placeholders are the same (though not recommended)', () => {
       // This tests the order of operations: customUserVars -> userFields -> systemEnv
       // BUt it's generally not recommended to have overlapping placeholder names.
-      process.env.LIBRECHAT_USER_EMAIL = 'system-email-should-be-overridden';
+      process.env.CHAT_USER_EMAIL = 'system-email-should-be-overridden';
       const user = createTestUser({ email: 'user-email-should-be-overridden' });
       const customUserVars = {
-        LIBRECHAT_USER_EMAIL: 'custom-email-wins',
+        CHAT_USER_EMAIL: 'custom-email-wins',
       };
       const options: MCPOptions = {
         type: 'sse',
         url: 'https://example.com/api',
         headers: {
-          'Test-Email': '{{LIBRECHAT_USER_EMAIL}}', // Placeholder that could match custom, user, or system
+          'Test-Email': '{{CHAT_USER_EMAIL}}', // Placeholder that could match custom, user, or system
         },
       };
 
@@ -725,7 +725,7 @@ describe('Environment Variable Extraction (MCP)', () => {
       expect('headers' in result && result.headers?.['Test-Email']).toBe('custom-email-wins');
 
       // Clean up env var
-      delete process.env.LIBRECHAT_USER_EMAIL;
+      delete process.env.CHAT_USER_EMAIL;
     });
 
     it('should handle customUserVars with no matching placeholders', () => {
@@ -755,7 +755,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://example.com/api',
         headers: {
-          'User-Email-Header': '{{LIBRECHAT_USER_EMAIL}}', // Should use user.email
+          'User-Email-Header': '{{CHAT_USER_EMAIL}}', // Should use user.email
           'System-Key-Header': '${TEST_API_KEY}', // Should use process.env.TEST_API_KEY
           'Non-Existent-Custom': '{{NON_EXISTENT_CUSTOM_VAR}}', // Should remain as placeholder
         },
@@ -778,15 +778,15 @@ describe('Environment Variable Extraction (MCP)', () => {
 
       const obj = {
         type: 'streamable-http' as const,
-        url: 'https://{{CUSTOM_ENDPOINT_ID}}.example.com/users/{{LIBRECHAT_USER_USERNAME}}',
+        url: 'https://{{CUSTOM_ENDPOINT_ID}}.example.com/users/{{CHAT_USER_USERNAME}}',
         headers: {
           'X-Auth-Token': '{{CUSTOM_TOKEN_FROM_USER_SETTINGS}}', // Assuming this would be a custom var
-          'X-User-ID': '{{LIBRECHAT_USER_ID}}',
+          'X-User-ID': '{{CHAT_USER_ID}}',
           'X-System-Test-Key': '${TEST_API_KEY}', // Using existing env var from beforeEach
         },
         env: {
           PROCESS_MODE: '{{PROCESS_MODE_CUSTOM}}', // Another custom var
-          USER_HOME_DIR: '/home/{{LIBRECHAT_USER_USERNAME}}',
+          USER_HOME_DIR: '/home/{{CHAT_USER_USERNAME}}',
           SYSTEM_PATH: '${PATH}', // Example of a system env var
         },
       };
@@ -826,7 +826,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         PAT_TOKEN: 'ghp_1234567890abcdef1234567890abcdef12345678', // GitHub Personal Access Token
       };
 
-      // Simulate the GitHub MCP server configuration from librechat.yaml
+      // Simulate the GitHub MCP server configuration from chat.yaml
       const options: MCPOptions = {
         type: 'streamable-http',
         url: 'https://api.githubcopilot.com/mcp/',
@@ -868,14 +868,14 @@ describe('Environment Variable Extraction (MCP)', () => {
       });
     });
 
-    it('should leave {{LIBRECHAT_GRAPH_ACCESS_TOKEN}} unchanged (resolved by preProcessGraphTokens)', () => {
+    it('should leave {{CHAT_GRAPH_ACCESS_TOKEN}} unchanged (resolved by preProcessGraphTokens)', () => {
       const user = createTestUser({ id: 'user-123' });
       const options: MCPOptions = {
         type: 'sse',
         url: 'https://example.com',
         headers: {
-          Authorization: 'Bearer {{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
-          'X-User-Id': '{{LIBRECHAT_USER_ID}}',
+          Authorization: 'Bearer {{CHAT_GRAPH_ACCESS_TOKEN}}',
+          'X-User-Id': '{{CHAT_USER_ID}}',
         },
       };
 
@@ -883,7 +883,7 @@ describe('Environment Variable Extraction (MCP)', () => {
 
       expect('headers' in result && result.headers).toEqual({
         // Graph token placeholder remains - it should be resolved by preProcessGraphTokens before processMCPEnv
-        Authorization: 'Bearer {{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
+        Authorization: 'Bearer {{CHAT_GRAPH_ACCESS_TOKEN}}',
         // User ID is resolved by processMCPEnv
         'X-User-Id': 'user-123',
       });
@@ -924,9 +924,9 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://graph.microsoft.com/v1.0/me',
         headers: {
-          Authorization: 'Bearer {{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
-          'X-User-Id': '{{LIBRECHAT_USER_ID}}',
-          'X-User-Email': '{{LIBRECHAT_USER_EMAIL}}',
+          Authorization: 'Bearer {{CHAT_GRAPH_ACCESS_TOKEN}}',
+          'X-User-Id': '{{CHAT_USER_ID}}',
+          'X-User-Email': '{{CHAT_USER_EMAIL}}',
           'Content-Type': 'application/json',
         },
       };
@@ -960,10 +960,10 @@ describe('Environment Variable Extraction (MCP)', () => {
 
       const options: MCPOptions = {
         command: 'node',
-        args: ['mcp-server.js', '--user', '{{LIBRECHAT_USER_USERNAME}}'],
+        args: ['mcp-server.js', '--user', '{{CHAT_USER_USERNAME}}'],
         env: {
-          GRAPH_ACCESS_TOKEN: '{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
-          USER_ID: '{{LIBRECHAT_USER_ID}}',
+          GRAPH_ACCESS_TOKEN: '{{CHAT_GRAPH_ACCESS_TOKEN}}',
+          USER_ID: '{{CHAT_USER_ID}}',
           API_KEY: '${TEST_API_KEY}',
         },
       };
@@ -1005,7 +1005,7 @@ describe('Environment Variable Extraction (MCP)', () => {
 
       const options: MCPOptions = {
         type: 'sse',
-        url: 'https://{{TENANT_ID}}.example.com/api?token={{LIBRECHAT_GRAPH_ACCESS_TOKEN}}&user={{LIBRECHAT_USER_ID}}',
+        url: 'https://{{TENANT_ID}}.example.com/api?token={{CHAT_GRAPH_ACCESS_TOKEN}}&user={{CHAT_USER_ID}}',
       };
 
       // Step 1: preProcessGraphTokens
@@ -1036,8 +1036,8 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://api.example.com',
         headers: {
-          'X-User-Id': '{{LIBRECHAT_USER_ID}}',
-          'X-User-Email': '{{LIBRECHAT_USER_EMAIL}}',
+          'X-User-Id': '{{CHAT_USER_ID}}',
+          'X-User-Email': '{{CHAT_USER_EMAIL}}',
         },
       };
 
@@ -1072,7 +1072,7 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://graph.microsoft.com/v1.0/me',
         headers: {
-          Authorization: 'Bearer {{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
+          Authorization: 'Bearer {{CHAT_GRAPH_ACCESS_TOKEN}}',
           'Content-Type': 'application/json',
         },
       };
@@ -1108,8 +1108,8 @@ describe('Environment Variable Extraction (MCP)', () => {
         type: 'sse',
         url: 'https://api.example.com',
         headers: {
-          Authorization: 'Bearer {{LIBRECHAT_GRAPH_ACCESS_TOKEN}}',
-          'X-User-Id': '{{LIBRECHAT_USER_ID}}',
+          Authorization: 'Bearer {{CHAT_GRAPH_ACCESS_TOKEN}}',
+          'X-User-Id': '{{CHAT_USER_ID}}',
         },
       };
 

@@ -79,7 +79,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { hashToken, getRandomValues, createModels } = require('@librechat/data-schemas');
+const { hashToken, getRandomValues, createModels } = require('@hanzochat/data-schemas');
 const {
   SystemRoles,
   ResourceType,
@@ -88,7 +88,7 @@ const {
   PrincipalModel,
   PermissionBits,
   EModelEndpoint,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 
 /** @type {import('mongoose').Model} */
 let Agent;
@@ -170,9 +170,9 @@ const VALID_STREAMING_EVENT_TYPES = new Set([
   'response.reasoning_summary_text.done',
   'response.output_text.annotation.added',
   'error',
-  // LibreChat extension events (prefixed per Open Responses spec)
+  // Chat extension events (prefixed per Open Responses spec)
   // @see https://openresponses.org/specification#extending-streaming-events
-  'librechat:attachment',
+  'chat:attachment',
 ]);
 
 /**

@@ -1,8 +1,8 @@
-const { CacheKeys } = require('librechat-data-provider');
+const { CacheKeys } = require('@hanzochat/data-provider');
 const { getCachedTools, getAppConfig } = require('~/server/services/Config');
 const { getLogStores } = require('~/cache');
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),

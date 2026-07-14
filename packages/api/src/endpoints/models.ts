@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { CacheKeys, KnownEndpoints, EModelEndpoint, defaultModels } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+import { CacheKeys, KnownEndpoints, EModelEndpoint, defaultModels } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import {
   processModelData,
   extractBaseURL,

@@ -3,7 +3,7 @@ const path = require('path');
 const mime = require('mime');
 const axios = require('axios');
 const fetch = require('node-fetch');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { getAzureContainerClient, deleteRagFile } = require('@hanzochat/api');
 
 const defaultBasePath = 'images';

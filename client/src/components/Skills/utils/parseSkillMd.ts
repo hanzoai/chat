@@ -1,4 +1,4 @@
-import { InvocationMode } from 'librechat-data-provider';
+import { InvocationMode } from '@hanzochat/data-provider';
 import { parseFrontmatter } from './frontmatter';
 
 export interface ParsedSkillMd {

@@ -1,6 +1,6 @@
-import { extractEnvVariable } from 'librechat-data-provider';
-import type { MCPOptions } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+import { extractEnvVariable } from '@hanzochat/data-provider';
+import type { MCPOptions } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { RequestBody } from '~/types';
 import { extractOpenIDTokenInfo, processOpenIDPlaceholders, isOpenIDTokenValid } from './oidc';
 
@@ -36,7 +36,7 @@ type SafeUser = Pick<IUser, AllowedUserField>;
  * HTTP headers are restricted to ASCII characters (0-255) per the Fetch API standard.
  * Non-ASCII characters with Unicode values > 255 are Base64 encoded with 'b64:' prefix.
  *
- * NOTE: This is a LibreChat-specific encoding scheme to work around Fetch API limitations.
+ * NOTE: This is a Chat-specific encoding scheme to work around Fetch API limitations.
  * MCP servers receiving headers with the 'b64:' prefix should:
  * 1. Detect the 'b64:' prefix in header values
  * 2. Remove the prefix and Base64-decode the remaining string
@@ -128,7 +128,7 @@ function processUserPlaceholders(
   }
 
   for (const field of ALLOWED_USER_FIELDS) {
-    const placeholder = `{{LIBRECHAT_USER_${field.toUpperCase()}}}`;
+    const placeholder = `{{CHAT_USER_${field.toUpperCase()}}}`;
 
     if (typeof value !== 'string' || !value.includes(placeholder)) {
       continue;
@@ -166,7 +166,7 @@ function processUserPlaceholders(
 
 /**
  * Replaces request body field placeholders within a string.
- * Recognized placeholders: `{{LIBRECHAT_BODY_<FIELD>}}` where `<FIELD>` ∈ ALLOWED_BODY_FIELDS.
+ * Recognized placeholders: `{{CHAT_BODY_<FIELD>}}` where `<FIELD>` ∈ ALLOWED_BODY_FIELDS.
  * If a body field is absent or null/undefined, it is replaced with an empty string.
  *
  * @param value - The string value to process
@@ -180,7 +180,7 @@ function processBodyPlaceholders(value: string, body: RequestBody): string {
   }
 
   for (const field of ALLOWED_BODY_FIELDS) {
-    const placeholder = `{{LIBRECHAT_BODY_${field.toUpperCase()}}}`;
+    const placeholder = `{{CHAT_BODY_${field.toUpperCase()}}}`;
     if (!value.includes(placeholder)) {
       continue;
     }

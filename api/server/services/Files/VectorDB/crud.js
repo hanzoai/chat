@@ -1,8 +1,8 @@
 const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
-const { logger } = require('@librechat/data-schemas');
-const { FileSources } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { FileSources } = require('@hanzochat/data-provider');
 const { logAxiosError, generateShortLivedToken } = require('@hanzochat/api');
 
 /**

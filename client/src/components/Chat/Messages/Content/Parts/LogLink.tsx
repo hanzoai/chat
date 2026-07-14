@@ -1,6 +1,6 @@
 import React from 'react';
-import { FileSources } from 'librechat-data-provider';
-import { useToastContext } from '@librechat/client';
+import { FileSources } from '@hanzochat/data-provider';
+import { useToastContext } from '@hanzochat/client';
 import { useCodeOutputDownload, useFileDownload } from '~/data-provider';
 
 interface LogLinkProps {
@@ -22,7 +22,7 @@ interface AttachmentLinkOptions {
 
 /**
  * Determines if a file is stored locally (not an external API URL).
- * Files with these sources are stored on the LibreChat server and should
+ * Files with these sources are stored on the Chat server and should
  * use the /v1/chat/files/download endpoint instead of direct URL access.
  */
 const isLocallyStoredSource = (source?: string): boolean => {

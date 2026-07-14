@@ -5,14 +5,14 @@ const request = require('supertest');
 const JSZip = require('jszip');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { tenantStorage } = require('@librechat/data-schemas');
+const { tenantStorage } = require('@hanzochat/data-schemas');
 const {
   SystemRoles,
   ResourceType,
   AccessRoleIds,
   PrincipalType,
   PermissionBits,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 
 const TEST_TENANT = 'tenant-skills-strict';
 
@@ -51,7 +51,7 @@ jest.mock('~/server/utils/getFileStrategy', () => ({
 
 jest.mock('~/models', () => {
   const mongoose = require('mongoose');
-  const { createMethods } = require('@librechat/data-schemas');
+  const { createMethods } = require('@hanzochat/data-schemas');
   const methods = createMethods(mongoose, {
     removeAllPermissions: async ({ resourceType, resourceId }) => {
       const AclEntry = mongoose.models.AclEntry;
@@ -68,7 +68,7 @@ jest.mock('~/models', () => {
 
 jest.mock('~/server/middleware', () => {
   const actual = jest.requireActual('~/server/middleware');
-  const { tenantStorage } = require('@librechat/data-schemas');
+  const { tenantStorage } = require('@hanzochat/data-schemas');
 
   return {
     requireJwtAuth: (req, _res, next) => {

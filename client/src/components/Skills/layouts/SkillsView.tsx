@@ -1,6 +1,6 @@
 import { Navigate, useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom';
-import { Spinner } from '@librechat/client';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import { Spinner } from '@hanzochat/client';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import { useGetSkillByIdQuery } from '~/data-provider';
 import { useHasAccess, useAuthContext, useLocalize } from '~/hooks';
 import SkillFileViewer from '~/components/Skills/display/SkillFileViewer';

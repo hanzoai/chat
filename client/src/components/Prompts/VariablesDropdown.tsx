@@ -2,9 +2,9 @@ import { useState, useId } from 'react';
 import { PlusCircle } from 'lucide-react';
 import * as Menu from '@ariakit/react/menu';
 import { useFormContext } from 'react-hook-form';
-import { DropdownPopup } from '@librechat/client';
-import { specialVariables } from 'librechat-data-provider';
-import type { TSpecialVarLabel } from 'librechat-data-provider';
+import { DropdownPopup } from '@hanzochat/client';
+import { specialVariables } from '@hanzochat/data-provider';
+import type { TSpecialVarLabel } from '@hanzochat/data-provider';
 import { useLiveAnnouncer } from '~/Providers';
 import { useLocalize } from '~/hooks';
 

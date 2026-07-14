@@ -4,8 +4,8 @@ import {
   EModelEndpoint,
   getEndpointFileConfig,
   isBedrockDocumentType,
-} from 'librechat-data-provider';
-import type { FileConfig, EndpointFileConfig } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { FileConfig, EndpointFileConfig } from '@hanzochat/data-provider';
 
 /**
  * Mirrors the categorization logic from BaseClient.processAttachments.

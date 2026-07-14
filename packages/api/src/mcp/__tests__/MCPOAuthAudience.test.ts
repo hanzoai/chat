@@ -13,10 +13,10 @@
 import * as http from 'http';
 import * as net from 'net';
 import type { Socket } from 'net';
-import { TokenExchangeMethodEnum } from 'librechat-data-provider';
+import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
 import { MCPOAuthHandler } from '~/mcp/oauth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -66,7 +66,7 @@ function trackSockets(httpServer: http.Server): () => Promise<void> {
 
 /**
  * Tiny /token endpoint that records every request body and responds with a
- * valid OAuth token payload. Sufficient to assert what LibreChat actually
+ * valid OAuth token payload. Sufficient to assert what Chat actually
  * sends to the authorization server during a refresh exchange.
  */
 async function startRecordingTokenServer(): Promise<{

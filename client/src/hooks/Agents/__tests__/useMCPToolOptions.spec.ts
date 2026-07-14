@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { AgentToolType } from 'librechat-data-provider';
+import type { AgentToolType } from '@hanzochat/data-provider';
 import useMCPToolOptions from '../useMCPToolOptions';
 
 jest.mock('react-hook-form', () => ({

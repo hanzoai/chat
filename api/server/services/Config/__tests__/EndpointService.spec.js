@@ -36,7 +36,7 @@ jest.mock(
   { virtual: true },
 );
 
-jest.mock('librechat-data-provider', () => mockDataProvider, { virtual: true });
+jest.mock('@hanzochat/data-provider', () => mockDataProvider, { virtual: true });
 
 jest.mock('~/server/utils/handleText', () => ({
   generateConfig: (key) => (key ? { userProvide: key === 'user_provided' } : false),

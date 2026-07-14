@@ -1,10 +1,10 @@
-import { logger } from '@librechat/data-schemas';
-import { isEphemeralAgentId } from 'librechat-data-provider';
-import { HumanMessage } from '@librechat/agents/langchain/messages';
-import { formatSkillCatalog, SkillToolDefinition } from '@librechat/agents';
-import type { LCToolRegistry, LCTool, InjectedMessage } from '@librechat/agents';
-import type { BaseMessage } from '@librechat/agents/langchain/messages';
-import type { Agent } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { isEphemeralAgentId } from '@hanzochat/data-provider';
+import { HumanMessage } from '@hanzochat/agents/langchain/messages';
+import { formatSkillCatalog, SkillToolDefinition } from '@hanzochat/agents';
+import type { LCToolRegistry, LCTool, InjectedMessage } from '@hanzochat/agents';
+import type { BaseMessage } from '@hanzochat/agents/langchain/messages';
+import type { Agent } from '@hanzochat/data-provider';
 import type { Types } from 'mongoose';
 import type { InitializeAgentDbMethods } from './initialize';
 import { registerCodeExecutionTools } from './tools';
@@ -1235,7 +1235,7 @@ export interface UnionPrimeAllowedToolsResult {
  *
  * Tolerant of unknown tool names: validation against the runtime registry
  * happens at the caller (in `initialize.ts`) so we can support skills
- * authored against tools LibreChat hasn't implemented yet — the registry
+ * authored against tools Chat hasn't implemented yet — the registry
  * intersection silently drops them with a debug log, but the import path
  * never rejects them.
  *

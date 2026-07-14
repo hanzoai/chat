@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const { readFileAsString } = require('@hanzochat/api');
 
 jest.mock('nodemailer');
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 jest.mock('@hanzochat/api', () => ({
@@ -45,7 +45,7 @@ function loadSendEmail() {
   jest.mock('nodemailer', () => ({
     createTransport: jest.fn().mockReturnValue({ sendMail: mockSendMail }),
   }));
-  jest.mock('@librechat/data-schemas', () => ({
+  jest.mock('@hanzochat/data-schemas', () => ({
     logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
   }));
   jest.mock('@hanzochat/api', () => ({
@@ -95,7 +95,7 @@ describe('sendEmail SMTP auth assembly', () => {
     process.env.EMAIL_USERNAME = 'smtp_user';
     const sendEmail = loadSendEmail();
     const { createTransport } = require('nodemailer');
-    const { logger: freshLogger } = require('@librechat/data-schemas');
+    const { logger: freshLogger } = require('@hanzochat/data-schemas');
 
     await sendEmail(baseParams);
 
@@ -110,7 +110,7 @@ describe('sendEmail SMTP auth assembly', () => {
     process.env.EMAIL_PASSWORD = 'smtp_pass';
     const sendEmail = loadSendEmail();
     const { createTransport } = require('nodemailer');
-    const { logger: freshLogger } = require('@librechat/data-schemas');
+    const { logger: freshLogger } = require('@hanzochat/data-schemas');
 
     await sendEmail(baseParams);
 
@@ -125,7 +125,7 @@ describe('sendEmail SMTP auth assembly', () => {
     process.env.EMAIL_USERNAME = 'smtp_user';
     process.env.EMAIL_PASSWORD = 'smtp_pass';
     const sendEmail = loadSendEmail();
-    const { logger: freshLogger } = require('@librechat/data-schemas');
+    const { logger: freshLogger } = require('@hanzochat/data-schemas');
 
     await sendEmail(baseParams);
 
@@ -134,7 +134,7 @@ describe('sendEmail SMTP auth assembly', () => {
 
   it('does not log a warning when both credentials are absent', async () => {
     const sendEmail = loadSendEmail();
-    const { logger: freshLogger } = require('@librechat/data-schemas');
+    const { logger: freshLogger } = require('@hanzochat/data-schemas');
 
     await sendEmail(baseParams);
 

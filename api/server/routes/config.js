@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 const express = require('express');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { isEnabled, getBalanceConfig } = require('@hanzochat/api');
-const { Constants, CacheKeys, defaultSocialLogins } = require('librechat-data-provider');
+const { Constants, CacheKeys, defaultSocialLogins } = require('@hanzochat/data-provider');
 const { getLdapConfig } = require('~/server/services/Config/ldap');
 const { getAppConfig } = require('~/server/services/Config/app');
 const { getProjectByName } = require('~/models/Project');

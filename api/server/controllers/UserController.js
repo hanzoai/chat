@@ -1,5 +1,5 @@
-const { logger, webSearchKeys } = require('@librechat/data-schemas');
-const { Tools, CacheKeys, Constants, FileSources } = require('librechat-data-provider');
+const { logger, webSearchKeys } = require('@hanzochat/data-schemas');
+const { Tools, CacheKeys, Constants, FileSources } = require('@hanzochat/data-provider');
 const {
   MCPOAuthHandler,
   MCPTokenStorage,

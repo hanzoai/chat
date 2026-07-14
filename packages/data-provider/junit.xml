@@ -127,7 +127,7 @@
     at runTestInternal (/home/z/work/hanzo/chat-worktrees/kill-api-prefix/node_modules/jest-runner/build/index.js:275:16)
     at runTest (/home/z/work/hanzo/chat-worktrees/kill-api-prefix/node_modules/jest-runner/build/index.js:343:7)</failure>
     </testcase>
-    <testcase classname="buildLoginRedirectUrl returns plain /login for basename-prefixed /login (e.g. /librechat/login)" name="buildLoginRedirectUrl returns plain /login for basename-prefixed /login (e.g. /librechat/login)" time="0">
+    <testcase classname="buildLoginRedirectUrl returns plain /login for basename-prefixed /login (e.g. /chat/login)" name="buildLoginRedirectUrl returns plain /login for basename-prefixed /login (e.g. /chat/login)" time="0">
       <failure>TypeError: (0 , _apiEndpoints.buildLoginRedirectUrl) is not a function
     at Object.&lt;anonymous&gt; (/home/z/work/hanzo/chat-worktrees/kill-api-prefix/packages/data-provider/specs/api-endpoints.spec.ts:54:41)
     at Promise.finally.completed (/home/z/work/hanzo/chat-worktrees/kill-api-prefix/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)

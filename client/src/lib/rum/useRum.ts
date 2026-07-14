@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import type { TRumConfig, TUser } from 'librechat-data-provider';
+import type { TRumConfig, TUser } from '@hanzochat/data-provider';
 import { useGetStartupConfig } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { normalizeRumPath } from './routes';
 
-const PROXY_API_KEY = 'librechat-rum-proxy';
+const PROXY_API_KEY = 'chat-rum-proxy';
 
 let rumProxyToken: string | undefined;
 let rumProxyFetchPatched = false;

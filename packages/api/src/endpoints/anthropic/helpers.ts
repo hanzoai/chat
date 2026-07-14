@@ -1,12 +1,12 @@
-import { logger } from '@librechat/data-schemas';
-import { AnthropicClientOptions } from '@librechat/agents';
+import { logger } from '@hanzochat/data-schemas';
+import { AnthropicClientOptions } from '@hanzochat/agents';
 import {
   EModelEndpoint,
   AnthropicEffort,
   anthropicSettings,
   supportsContext1m,
   supportsAdaptiveThinking,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { matchModelName } from '~/utils/tokens';
 
 /**

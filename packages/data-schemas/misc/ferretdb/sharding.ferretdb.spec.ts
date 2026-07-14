@@ -35,7 +35,7 @@ import mcpServerSchema from '~/schema/mcpServer';
  * Sharding PoC — self-contained proof-of-concept that exercises:
  *   1. Multi-pool connection management via mongoose.createConnection()
  *   2. Persistent org→pool assignment table with capacity limits
- *   3. Lazy per-org model registration using all 29 LibreChat schemas
+ *   3. Lazy per-org model registration using all 29 Chat schemas
  *   4. Cross-pool data isolation
  *   5. Routing overhead measurement
  *   6. Capacity overflow handling

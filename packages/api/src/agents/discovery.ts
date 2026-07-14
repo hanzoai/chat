@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
-import { ResourceType, PermissionBits, EModelEndpoint } from 'librechat-data-provider';
-import type { Agent, GraphEdge, TModelsConfig, TEndpointOption } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { ResourceType, PermissionBits, EModelEndpoint } from '@hanzochat/data-provider';
+import type { Agent, GraphEdge, TModelsConfig, TEndpointOption } from '@hanzochat/data-provider';
 import type { Response as ServerResponse } from 'express';
 import type { ServerRequest } from '~/types';
 import type {
@@ -308,9 +308,9 @@ export async function discoverConnectedAgents(
       }
     }
     /**
-     * `createSequentialChainEdges` is typed against `@librechat/agents`'s
+     * `createSequentialChainEdges` is typed against `@hanzochat/agents`'s
      * `GraphEdge` (which uses `BaseMessage` from `@langchain/core`) whereas
-     * `collectEdges` uses the `librechat-data-provider` variant (structural
+     * `collectEdges` uses the `@hanzochat/data-provider` variant (structural
      * `BaseMessage`). The produced chain edges are structurally identical and
      * only carry `edgeType`, `from`, `to`, `prompt`, `excludeResults` —
      * interchangeable for edge collection purposes.
