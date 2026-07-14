@@ -51,10 +51,10 @@ describe('useRum', () => {
           provider: 'hyperdx',
           enabled: true,
           url: 'https://rum.example.com',
-          serviceName: 'librechat-web',
+          serviceName: 'chat-web',
           authMode: 'publicToken',
           publicToken: 'public-token',
-          tracePropagationTargets: ['https://librechat.example.com'],
+          tracePropagationTargets: ['https://chat.example.com'],
         },
       },
     });
@@ -67,8 +67,8 @@ describe('useRum', () => {
         apiKey: 'public-token',
         consoleCapture: false,
         disableReplay: true,
-        service: 'librechat-web',
-        tracePropagationTargets: ['https://librechat.example.com'],
+        service: 'chat-web',
+        tracePropagationTargets: ['https://chat.example.com'],
         url: 'https://rum.example.com',
       });
     });
@@ -78,7 +78,7 @@ describe('useRum', () => {
       role: 'USER',
       userId: 'user-123',
       orgId: 'org-123',
-      serviceName: 'librechat-web',
+      serviceName: 'chat-web',
     });
     expect(mockSetGlobalAttributes).not.toHaveBeenCalledWith(
       expect.objectContaining({ email: 'user@example.com' }),
@@ -92,7 +92,7 @@ describe('useRum', () => {
           provider: 'hyperdx',
           enabled: true,
           url: 'https://rum.example.com/ingest',
-          serviceName: 'librechat-web',
+          serviceName: 'chat-web',
           authMode: 'userJwt',
           publicToken: 'public-token',
         },
@@ -104,7 +104,7 @@ describe('useRum', () => {
     expect(mockInit).not.toHaveBeenCalled();
   });
 
-  it('initializes proxy RUM with the LibreChat bearer token for same-origin ingest', async () => {
+  it('initializes proxy RUM with the Chat bearer token for same-origin ingest', async () => {
     const fetchMock = jest.fn(() => Promise.resolve({}));
     window.fetch = fetchMock;
     mockUseGetStartupConfig.mockReturnValue({
@@ -113,7 +113,7 @@ describe('useRum', () => {
           provider: 'hyperdx',
           enabled: true,
           url: '/v1/chat/rum',
-          serviceName: 'librechat-web',
+          serviceName: 'chat-web',
           authMode: 'proxy',
         },
       },
@@ -124,10 +124,10 @@ describe('useRum', () => {
     await waitFor(() => {
       expect(mockInit).toHaveBeenCalledWith({
         advancedNetworkCapture: false,
-        apiKey: 'librechat-rum-proxy',
+        apiKey: 'chat-rum-proxy',
         consoleCapture: false,
         disableReplay: true,
-        service: 'librechat-web',
+        service: 'chat-web',
         tracePropagationTargets: undefined,
         url: '/v1/chat/rum',
       });
@@ -152,7 +152,7 @@ describe('useRum', () => {
           provider: 'hyperdx',
           enabled: true,
           url: '/v1/chat/rum',
-          serviceName: 'librechat-web',
+          serviceName: 'chat-web',
           authMode: 'proxy',
         },
       },

@@ -3,8 +3,8 @@ const {
   roleDefaults,
   permissionsSchema,
   removeNullishValues,
-} = require('librechat-data-provider');
-const { logger } = require('@librechat/data-schemas');
+} = require('@hanzochat/data-provider');
+const { logger } = require('@hanzochat/data-schemas');
 const getLogStores = require('~/cache/getLogStores');
 const { Role } = require('~/db/models');
 

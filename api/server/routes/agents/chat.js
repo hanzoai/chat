@@ -1,6 +1,6 @@
 const express = require('express');
 const { generateCheckAccess, skipAgentCheck } = require('@hanzochat/api');
-const { PermissionTypes, Permissions, PermissionBits } = require('librechat-data-provider');
+const { PermissionTypes, Permissions, PermissionBits } = require('@hanzochat/data-provider');
 const {
   moderateText,
   // validateModel,

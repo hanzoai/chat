@@ -1,4 +1,4 @@
-const { CacheKeys } = require('librechat-data-provider');
+const { CacheKeys } = require('@hanzochat/data-provider');
 
 jest.mock('~/cache/getLogStores');
 const getLogStores = require('~/cache/getLogStores');

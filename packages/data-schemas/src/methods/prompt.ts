@@ -1,4 +1,4 @@
-import { ResourceType, SystemCategories } from 'librechat-data-provider';
+import { ResourceType, SystemCategories } from '@hanzochat/data-provider';
 import type { DataHandle } from '~/common/dataHandle';
 import type { Model, Types } from 'mongoose';
 import type { IAclEntry, IPrompt, IPromptGroup, IPromptGroupDocument } from '~/types';

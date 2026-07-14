@@ -1,4 +1,4 @@
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -29,7 +29,7 @@ jest.mock('~/mcp/MCPManager', () => ({
   },
 }));
 
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { memoryDiagnostics } from '../memory';
 
 type MockFn = jest.Mock<void, unknown[]>;

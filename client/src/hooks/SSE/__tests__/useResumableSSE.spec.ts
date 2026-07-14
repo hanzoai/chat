@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
-import { Constants, LocalStorageKeys, QueryKeys } from 'librechat-data-provider';
-import type { TSubmission } from 'librechat-data-provider';
+import { Constants, LocalStorageKeys, QueryKeys } from '@hanzochat/data-provider';
+import type { TSubmission } from '@hanzochat/data-provider';
 
 type SSEEventListener = (e: Partial<MessageEvent> & { responseCode?: number }) => void;
 
@@ -100,8 +100,8 @@ jest.mock('~/hooks/SSE/useEventHandlers', () =>
   })),
 );
 
-jest.mock('librechat-data-provider', () => {
-  const actual = jest.requireActual('librechat-data-provider');
+jest.mock('@hanzochat/data-provider', () => {
+  const actual = jest.requireActual('@hanzochat/data-provider');
   return {
     ...actual,
     createPayload: jest.fn(() => ({

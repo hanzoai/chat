@@ -1,9 +1,9 @@
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { Button, TooltipAnchor } from '@librechat/client';
+import { Button, TooltipAnchor } from '@hanzochat/client';
 import { Pencil, Pin, User, Calendar, EarthIcon, Sparkles } from 'lucide-react';
-import { InvocationMode } from 'librechat-data-provider';
-import type { TSkill } from 'librechat-data-provider';
+import { InvocationMode } from '@hanzochat/data-provider';
+import type { TSkill } from '@hanzochat/data-provider';
 import type { TranslationKeys } from '~/hooks';
 import { useLocalize, useAuthContext } from '~/hooks';
 import DeleteSkill from '../dialogs/DeleteSkill';

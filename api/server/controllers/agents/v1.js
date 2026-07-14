@@ -1,7 +1,7 @@
 const { z } = require('zod');
 const fs = require('fs').promises;
 const { nanoid } = require('nanoid');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   agentCreateSchema,
   agentUpdateSchema,
@@ -23,7 +23,7 @@ const {
   PermissionBits,
   actionDelimiter,
   removeNullishValues,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   getListAgentsByAccess,
   countPromotedAgents,

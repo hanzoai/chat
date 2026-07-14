@@ -1,4 +1,4 @@
-import { ResourceType, PermissionTypes, Permissions } from 'librechat-data-provider';
+import { ResourceType, PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import { useHasAccess } from '~/hooks';
 
 const resourceToPermissionMap: Partial<Record<ResourceType, PermissionTypes>> = {

@@ -1,4 +1,4 @@
-import { OGDialogTemplate, Input, Button, OGDialog } from '@librechat/client';
+import { OGDialogTemplate, Input, Button, OGDialog } from '@hanzochat/client';
 import type { UseFormRegister, UseFormHandleSubmit } from 'react-hook-form';
 import type { ApiKeyFormData } from '~/common';
 import type { RefObject } from 'react';
@@ -54,10 +54,10 @@ export default function ApiKeyDialog({
         main={
           <>
             <div className="mb-4 text-center font-medium">
-              {localize('com_ui_librechat_code_api_title')}
+              {localize('com_ui_chat_code_api_title')}
             </div>
             <div className="mb-4 text-center text-sm">
-              {localize('com_ui_librechat_code_api_subtitle')}
+              {localize('com_ui_chat_code_api_subtitle')}
             </div>
             {/* Language Icons Stack */}
             <div className="mb-6">
@@ -78,7 +78,7 @@ export default function ApiKeyDialog({
                 rel="noopener noreferrer"
                 className="block text-center text-[15px] font-medium text-blue-500 underline decoration-1 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
               >
-                {localize('com_ui_librechat_code_api_key')}
+                {localize('com_ui_chat_code_api_key')}
               </a>
             </div>
             <form onSubmit={handleSubmit(onSubmit)}>

@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { PrincipalType, PermissionTypes, Permissions } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { PrincipalType, PermissionTypes, Permissions } = require('@hanzochat/data-provider');
 const { getRoleByName } = require('~/models/Role');
 
 /**

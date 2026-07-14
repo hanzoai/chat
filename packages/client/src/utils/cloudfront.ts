@@ -1,5 +1,5 @@
-import { apiBaseUrl } from 'librechat-data-provider';
-import type { TStartupConfig } from 'librechat-data-provider';
+import { apiBaseUrl } from '@hanzochat/data-provider';
+import type { TStartupConfig } from '@hanzochat/data-provider';
 
 type CloudFrontCookieRefreshConfig = NonNullable<
   NonNullable<TStartupConfig['cloudFront']>['cookieRefresh']

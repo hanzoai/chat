@@ -1,8 +1,8 @@
 import React from 'react';
 import { RecoilRoot } from 'recoil';
-import { Tools } from 'librechat-data-provider';
+import { Tools } from '@hanzochat/data-provider';
 import { render, screen } from '@testing-library/react';
-import type { TAttachment, SearchResultData, ValidSource } from 'librechat-data-provider';
+import type { TAttachment, SearchResultData, ValidSource } from '@hanzochat/data-provider';
 import { SearchContext } from '~/Providers';
 import WebSearch from '../WebSearch';
 

@@ -11,7 +11,7 @@ function mockOptionalModule(moduleName, factory) {
 }
 
 function mockDependencies() {
-  mockOptionalModule('librechat-data-provider', () => ({
+  mockOptionalModule('@hanzochat/data-provider', () => ({
     EModelEndpoint: {
       agents: 'agents',
       anthropic: 'anthropic',

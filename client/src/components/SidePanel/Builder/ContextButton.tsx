@@ -5,8 +5,8 @@ import {
   DialogTemplate,
   useToastContext,
   TrashIcon,
-} from '@librechat/client';
-import type { Assistant, AssistantCreateParams, AssistantsEndpoint } from 'librechat-data-provider';
+} from '@hanzochat/client';
+import type { Assistant, AssistantCreateParams, AssistantsEndpoint } from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { useDeleteAssistantMutation } from '~/data-provider';
 import { useLocalize, useSetIndexOptions } from '~/hooks';

@@ -1,12 +1,12 @@
 const { Router } = require('express');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   CacheKeys,
   Constants,
   PermissionBits,
   PermissionTypes,
   Permissions,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   getBasePath,
   createSafeUser,
@@ -51,7 +51,7 @@ const OAUTH_CSRF_COOKIE_PATH = '/v1/chat/mcp';
 
 /**
  * Get all MCP tools available to the user
- * Returns only MCP tools, completely decoupled from regular LibreChat tools
+ * Returns only MCP tools, completely decoupled from regular Chat tools
  */
 router.get('/tools', requireJwtAuth, async (req, res) => {
   return getMCPTools(req, res);

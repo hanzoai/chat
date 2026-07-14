@@ -1,5 +1,5 @@
 {
-  "name": "@librechat/client",
+  "name": "@hanzochat/client",
   "version": "0.4.52",
   "description": "React components for Hanzo Chat",
   "repository": {

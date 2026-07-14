@@ -54,7 +54,7 @@ jest.mock('@hanzochat/api', () => {
   };
 });
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -408,7 +408,7 @@ describe('MCP Routes', () => {
       require('~/config').getMCPManager.mockReturnValue(mockMcpManager);
 
       const { getCachedTools, setCachedTools } = require('~/server/services/Config');
-      const { Constants } = require('librechat-data-provider');
+      const { Constants } = require('@hanzochat/data-provider');
       getCachedTools.mockResolvedValue({
         [`existing-tool${Constants.mcp_delimiter}test-server`]: { type: 'function' },
         [`other-tool${Constants.mcp_delimiter}other-server`]: { type: 'function' },

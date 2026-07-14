@@ -1,7 +1,7 @@
 import type { Model, RootFilterQuery, Types } from 'mongoose';
 import type { DataHandle } from '~/common/dataHandle';
 import type { MCPServerDocument } from '../types';
-import type { MCPOptions } from 'librechat-data-provider';
+import type { MCPOptions } from '@hanzochat/data-provider';
 import logger from '~/config/winston';
 import { nanoid } from 'nanoid';
 

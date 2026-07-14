@@ -1,4 +1,4 @@
-import { AuthType, ErrorTypes } from 'librechat-data-provider';
+import { AuthType, ErrorTypes } from '@hanzochat/data-provider';
 import type { BaseInitializeParams } from '~/types';
 
 const mockValidateEndpointURL = jest.fn();

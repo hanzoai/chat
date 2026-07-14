@@ -14,10 +14,10 @@ jest.mock('@hanzochat/api', () => ({
     httpsAgent: { __kind: 'https' },
   })),
 }));
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   EImageOutputType: { PNG: 'png' },
 }));
 jest.mock('./resize', () => ({

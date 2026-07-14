@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, memo } from 'react';
 import { AutoSizer, List } from 'react-virtualized';
-import { Spinner, useCombobox } from '@librechat/client';
+import { Spinner, useCombobox } from '@hanzochat/client';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
 import type { MentionOption } from '~/common';
 import { useListCloudAgentsQuery } from '~/data-provider';

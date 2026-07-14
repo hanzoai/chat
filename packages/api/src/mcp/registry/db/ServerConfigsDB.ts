@@ -4,9 +4,9 @@ import {
   AccessRoleIds,
   PrincipalType,
   PermissionBits,
-} from 'librechat-data-provider';
-import { logger, encryptV2, decryptV2, createMethods } from '@librechat/data-schemas';
-import type { AllMethods, MCPServerDocument } from '@librechat/data-schemas';
+} from '@hanzochat/data-provider';
+import { logger, encryptV2, decryptV2, createMethods } from '@hanzochat/data-schemas';
+import type { AllMethods, MCPServerDocument } from '@hanzochat/data-schemas';
 import type { IServerConfigsRepositoryInterface } from '~/mcp/registry/ServerConfigsRepositoryInterface';
 import type { ParsedServerConfig, AddServerResult } from '~/mcp/types';
 import { AccessControlService } from '~/acl/accessControlService';
@@ -19,8 +19,8 @@ import { AccessControlService } from '~/acl/accessControlService';
  * Safe placeholders like {{MCP_API_KEY}} are allowed as they resolve from the user's own plugin auth.
  */
 const DANGEROUS_CREDENTIAL_PATTERNS = [
-  /\{\{LIBRECHAT_OPENID_[^}]+\}\}/g,
-  /\{\{LIBRECHAT_USER_[^}]+\}\}/g,
+  /\{\{CHAT_OPENID_[^}]+\}\}/g,
+  /\{\{CHAT_USER_[^}]+\}\}/g,
 ];
 
 /**

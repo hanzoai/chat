@@ -55,7 +55,7 @@ jest.mock('../Parts/OpenAIImageGen/ProgressText', () => ({
   ),
 }));
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   PixelCard: (props: Record<string, unknown>) => (
     <div data-testid="pixel-card" data-progress={props.progress} />
   ),

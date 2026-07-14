@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   countTokens,
   isEnabled,
@@ -6,7 +6,7 @@ const {
   GenerationJobManager,
   sanitizeMessageForTransmit,
 } = require('@hanzochat/api');
-const { isAssistantsEndpoint, ErrorTypes } = require('librechat-data-provider');
+const { isAssistantsEndpoint, ErrorTypes } = require('@hanzochat/data-provider');
 const { spendTokens, spendStructuredTokens } = require('~/models/spendTokens');
 const { truncateText, smartTruncateText } = require('~/app/clients/prompts');
 const clearPendingReq = require('~/cache/clearPendingReq');

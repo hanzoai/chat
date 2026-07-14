@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { Types } from 'mongoose';
 
-import type { ISkill, ISkillFile, CreateSkillResult } from '@librechat/data-schemas';
+import type { ISkill, ISkillFile, CreateSkillResult } from '@hanzochat/data-schemas';
 import type { Response } from 'express';
 import type { ImportSkillDeps } from '../import';
 

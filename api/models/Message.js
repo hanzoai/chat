@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { createTempChatExpirationDate } = require('@hanzochat/api');
 const { Message } = require('~/db/models');
 

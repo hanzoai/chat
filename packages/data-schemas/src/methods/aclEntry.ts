@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import type { DataHandle } from '~/common/dataHandle';
-import { PrincipalType, PrincipalModel } from 'librechat-data-provider';
+import { PrincipalType, PrincipalModel } from '@hanzochat/data-provider';
 import type { Model, DeleteResult, ClientSession } from 'mongoose';
 import type { IAclEntry } from '~/types';
 

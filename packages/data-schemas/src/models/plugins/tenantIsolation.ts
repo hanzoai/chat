@@ -24,7 +24,7 @@ if (
   );
 }
 
-const TENANT_ISOLATION_APPLIED = Symbol.for('librechat:tenantIsolation');
+const TENANT_ISOLATION_APPLIED = Symbol.for('chat:tenantIsolation');
 
 const VALUE_OPERATORS = ['$set', '$setOnInsert'] as const;
 const STRIP_OPERATORS = ['$unset', '$rename'] as const;

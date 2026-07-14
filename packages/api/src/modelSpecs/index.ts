@@ -8,7 +8,7 @@ import {
   type TPreset,
   type TSpecsConfig,
   type TUser,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 
 export const PRIVATE_MODEL_SPEC_PRESET_FIELDS = [
   'promptPrefix',

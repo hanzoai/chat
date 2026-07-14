@@ -2,7 +2,7 @@
 
 A mobile-first [Tauri v2](https://tauri.app) app (Rust shell) with a
 React 19 + Vite + TypeScript webview, styled with [`@hanzo/gui`](https://www.npmjs.com/package/@hanzo/gui)
-(a Tamagui fork). It talks to the Hanzo chat backend (this repo's LibreChat
+(a Tamagui fork). It talks to the Hanzo chat backend (this repo's Chat
 fork) and shows local AI-provider usage via [`@hanzo/usage`](../../usage).
 
 Self-contained: **not** part of the chat pnpm workspace. Install and build from

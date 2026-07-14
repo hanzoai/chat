@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { QueryKeys, dataService } from 'librechat-data-provider';
+import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import type { QueryObserverResult, UseQueryOptions } from '@tanstack/react-query';
-import type { TSkillTreeResponse } from 'librechat-data-provider';
+import type { TSkillTreeResponse } from '@hanzochat/data-provider';
 
 export const useGetSkillTreeQuery = (
   skillId: string | null | undefined,

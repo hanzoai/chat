@@ -1,10 +1,10 @@
-jest.mock('librechat-data-provider', () => ({
-  ...jest.requireActual('librechat-data-provider'),
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
   extractVariableName: jest.fn(),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     debug: jest.fn(),
     warn: jest.fn(),
@@ -13,8 +13,8 @@ jest.mock('@librechat/data-schemas', () => ({
 
 import { handleRateLimits } from './limits';
 import { checkWebSearchConfig } from './checks';
-import { logger } from '@librechat/data-schemas';
-import { extractVariableName as extract } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { extractVariableName as extract } from '@hanzochat/data-provider';
 
 const extractVariableName = extract as jest.MockedFunction<typeof extract>;
 
@@ -147,7 +147,7 @@ describe('checkWebSearchConfig', () => {
 
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'More info: https://hanzo.ai/docs/chat/configuration/librechat_yaml/web_search',
+          'More info: https://hanzo.ai/docs/chat/configuration/chat_yaml/web_search',
         ),
       );
     });

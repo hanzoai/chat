@@ -1,5 +1,5 @@
-const { CacheKeys } = require('librechat-data-provider');
-const { logger, DEFAULT_SESSION_EXPIRY } = require('@librechat/data-schemas');
+const { CacheKeys } = require('@hanzochat/data-provider');
+const { logger, DEFAULT_SESSION_EXPIRY } = require('@hanzochat/data-schemas');
 const {
   isEnabled,
   getAdminPanelUrl,

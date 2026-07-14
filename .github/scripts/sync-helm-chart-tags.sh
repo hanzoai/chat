@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CHART_PATH="${CHART_PATH:-helm/librechat/Chart.yaml}"
+CHART_PATH="${CHART_PATH:-helm/chat/Chart.yaml}"
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
 BASE_REF="${BASE_REF:-refs/remotes/origin/${DEFAULT_BRANCH}}"
 BACKFILL_FROM_VERSION="${BACKFILL_FROM_VERSION:-1.9.0}"

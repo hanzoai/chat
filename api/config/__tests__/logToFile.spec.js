@@ -3,7 +3,7 @@ const fs = require('fs');
 const ORIGINAL_ENV = process.env;
 
 const mockDataSchemas = () => {
-  jest.doMock('@librechat/data-schemas', () => ({
+  jest.doMock('@hanzochat/data-schemas', () => ({
     getTenantId: jest.fn(),
     getUserId: jest.fn(),
     getRequestId: jest.fn(),

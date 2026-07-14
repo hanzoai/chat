@@ -7,7 +7,7 @@ const {
   mergeFileConfig,
   getEndpointFileConfig,
   fileConfig: defaultFileConfig,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { getAppConfig } = require('~/server/services/Config');
 
 const storage = multer.diskStorage({
@@ -39,7 +39,7 @@ const importFileFilter = (req, file, cb) => {
 
 /**
  *
- * @param {import('librechat-data-provider').FileConfig | undefined} customFileConfig
+ * @param {import('@hanzochat/data-provider').FileConfig | undefined} customFileConfig
  */
 const createFileFilter = (customFileConfig) => {
   /**

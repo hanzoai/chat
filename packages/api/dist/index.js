@@ -1,6 +1,6 @@
 'use strict';
 
-var dataSchemas = require('@librechat/data-schemas');
+var dataSchemas = require('@hanzochat/data-schemas');
 var librechatDataProvider = require('librechat-data-provider');
 var axios$1 = require('axios');
 var path = require('path');
@@ -8,7 +8,7 @@ var crypto$1 = require('node:crypto');
 var fs = require('fs');
 var promises = require('fs/promises');
 var fetch$1 = require('node-fetch');
-var agents = require('@librechat/agents');
+var agents = require('@hanzochat/agents');
 var mathjs = require('mathjs');
 var tiktoken = require('tiktoken');
 var yaml = require('js-yaml');
@@ -25597,7 +25597,7 @@ class MCPConnection extends events.EventEmitter {
             this.oauthTokens = params.oauthTokens;
         }
         this.client = new index_js.Client({
-            name: '@librechat/api-client',
+            name: '@hanzochat/api-client',
             version: '1.2.3',
         }, {
             capabilities: {},
@@ -41870,7 +41870,7 @@ function createOpenAIContentAggregator() {
     };
 }
 /**
- * Graph event types from @librechat/agents
+ * Graph event types from @hanzochat/agents
  */
 const GraphEvents = {
     CHAT_MODEL_END: 'on_chat_model_end',
@@ -44763,7 +44763,7 @@ Generated image IDs will be returned in the response, so you can refer to them i
         responseFormat: 'content_and_artifact',
     },
 };
-/** Tool definitions from @librechat/agents */
+/** Tool definitions from @hanzochat/agents */
 const agentToolDefinitions = {
     [agents.CalculatorToolDefinition.name]: {
         name: agents.CalculatorToolDefinition.name,

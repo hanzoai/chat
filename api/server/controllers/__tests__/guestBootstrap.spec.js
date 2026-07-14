@@ -7,14 +7,14 @@
 jest.mock('@hanzochat/api', () => ({
   isEnabled: (value) => value === 'true' || value === true,
 }));
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   EModelEndpoint: { custom: 'custom' },
   CacheKeys: { CONFIG_STORE: 'CONFIG_STORE', MODELS_CONFIG: 'MODELS_CONFIG' },
   Tools: {},
   Constants: {},
   FileSources: { local: 'local', s3: 's3' },
 }));
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), debug: jest.fn(), info: jest.fn() },
   webSearchKeys: [],
 }));

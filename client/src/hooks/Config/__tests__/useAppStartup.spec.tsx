@@ -1,8 +1,8 @@
 import React from 'react';
 import { RecoilRoot } from 'recoil';
 import { renderHook } from '@testing-library/react';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
-import type { TUser } from 'librechat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 
 const mockUseHasAccess = jest.fn();
 const mockUseMCPServersQuery = jest.fn();
@@ -10,13 +10,13 @@ const mockUseMCPToolsQuery = jest.fn();
 const mockInstallCloudFrontImageRetry = jest.fn(() => jest.fn());
 const mockGetTokenHeader = jest.fn();
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   installCloudFrontImageRetry: (startupConfig: unknown, options: unknown) =>
     mockInstallCloudFrontImageRetry(startupConfig, options),
 }));
 
-jest.mock('librechat-data-provider', () => {
-  const actual = jest.requireActual('librechat-data-provider');
+jest.mock('@hanzochat/data-provider', () => {
+  const actual = jest.requireActual('@hanzochat/data-provider');
   return {
     ...actual,
     getTokenHeader: () => mockGetTokenHeader(),

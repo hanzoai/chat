@@ -1,5 +1,5 @@
-import { tenantStorage } from '@librechat/data-schemas';
-import type { AppConfig } from '@librechat/data-schemas';
+import { tenantStorage } from '@hanzochat/data-schemas';
+import type { AppConfig } from '@hanzochat/data-schemas';
 
 interface UserForConfigResolution {
   tenantId?: string;

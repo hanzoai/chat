@@ -4,8 +4,8 @@ const JSZip = require('jszip');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
-jest.mock('librechat-data-provider', () => {
-  const actual = jest.requireActual('librechat-data-provider');
+jest.mock('@hanzochat/data-provider', () => {
+  const actual = jest.requireActual('@hanzochat/data-provider');
   return {
     ...actual,
     mergeFileConfig: jest.fn((dynamic) => {
@@ -30,7 +30,7 @@ const {
   AccessRoleIds,
   PrincipalType,
   PermissionBits,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 
 let mockFileConfig;
 
@@ -70,7 +70,7 @@ jest.mock('~/server/utils/getFileStrategy', () => ({
 
 jest.mock('~/models', () => {
   const mongoose = require('mongoose');
-  const { createMethods } = require('@librechat/data-schemas');
+  const { createMethods } = require('@hanzochat/data-schemas');
   const methods = createMethods(mongoose, {
     removeAllPermissions: async ({ resourceType, resourceId }) => {
       const AclEntry = mongoose.models.AclEntry;
@@ -339,7 +339,7 @@ describe('Skill routes', () => {
           contentType: 'application/zip',
         });
 
-      const { mergeFileConfig } = require('librechat-data-provider');
+      const { mergeFileConfig } = require('@hanzochat/data-provider');
       expect(mergeFileConfig).toHaveBeenCalledWith(mockFileConfig);
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/file too large/i);

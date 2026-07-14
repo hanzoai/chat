@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Permissions, PermissionTypes } from 'librechat-data-provider';
-import { OGDialog, OGDialogTemplate, useToastContext } from '@librechat/client';
+import { Permissions, PermissionTypes } from '@hanzochat/data-provider';
+import { OGDialog, OGDialogTemplate, useToastContext } from '@hanzochat/client';
 import type { PermissionConfig } from '~/components/ui';
 import { useUpdatePromptPermissionsMutation } from '~/data-provider';
 import { AdminSettingsDialog } from '~/components/ui';

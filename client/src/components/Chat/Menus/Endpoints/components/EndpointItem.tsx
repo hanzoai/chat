@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { VisuallyHidden } from '@ariakit/react';
-import { Spinner, TooltipAnchor } from '@librechat/client';
+import { Spinner, TooltipAnchor } from '@hanzochat/client';
 import { CheckCircle2, MousePointerClick, SettingsIcon } from 'lucide-react';
-import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
-import type { TModelSpec } from 'librechat-data-provider';
+import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
+import type { TModelSpec } from '@hanzochat/data-provider';
 import type { Endpoint } from '~/common';
 import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
 import { useModelSelectorContext } from '../ModelSelectorContext';

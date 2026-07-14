@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
 const DEFAULT_PROXY_PATH = '/v1/chat/rum';
 const DEFAULT_BODY_LIMIT = '3mb';

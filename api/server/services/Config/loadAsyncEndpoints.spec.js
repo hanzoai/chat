@@ -27,11 +27,11 @@ function mockDependencies() {
     loadServiceKey: mockLoadServiceKey,
   }));
 
-  mockOptionalModule('@librechat/data-schemas', () => ({
+  mockOptionalModule('@hanzochat/data-schemas', () => ({
     logger: mockLogger,
   }));
 
-  mockOptionalModule('librechat-data-provider', () => ({
+  mockOptionalModule('@hanzochat/data-provider', () => ({
     EModelEndpoint: {
       agents: 'agents',
       anthropic: 'anthropic',

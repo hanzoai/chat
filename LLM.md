@@ -4,7 +4,7 @@ AI chat interface with multi-model support,
 MCP integration, agents, and RAG. Live at **hanzo.chat**.
 
 **Repo**: `github.com/hanzoai/chat`
-**Upstream**: LibreChat (MIT) — internal package names kept (`@librechat/*`)
+**Upstream**: Chat (MIT) — internal package names kept (`@hanzochat/*`)
 **Package**: `@hanzochat/chat`
 **Runtime**: Node.js 20 (Alpine)
 
@@ -52,7 +52,7 @@ client/              # React frontend (Vite)
   src/routes/        # Client-side routing
   src/store/         # State management
 packages/
-  data-provider/     # Shared data layer (librechat-data-provider)
+  data-provider/     # Shared data layer (@hanzochat/data-provider)
   data-schemas/      # Validation schemas
   api/               # API client package (@hanzochat/api)
   client/            # Shared client components
@@ -62,7 +62,7 @@ packages/
 
 ## Configuration
 
-- `librechat.yaml` (or ConfigMap `chat-config` -> `/app/librechat.yaml`)
+- `chat.yaml` (or ConfigMap `chat-config` -> `/app/chat.yaml`)
 - `hanzo-chat.example.yaml` - Hanzo-specific example config
 - `.env` for secrets
 
@@ -142,7 +142,7 @@ Security model (fail-closed, server-enforced):
 ## Cloud Agents (canonical /v1/agents)
 
 Chat can RUN a user's canonical Hanzo Cloud agents (cloud `/v1/agents`, the ONE
-production agent registry) from the thread — alongside the LibreChat-legacy local
+production agent registry) from the thread — alongside the Chat-legacy local
 agent builder, which is untouched.
 
 - Two surfaces, ONE run path: the `/agent <name> [prompt]` slash command and the
@@ -197,7 +197,7 @@ agent builder, which is untouched.
   `client/src/components/Chat/Input/AgentsCommand.tsx`, and the @mention wiring in
   `client/src/hooks/Input/useMentions.ts` + `Mention.tsx`.
 - Env: `HANZO_CLOUD_URL` (optional; falls back to the `OPENAI_BASE_URL` host).
-- Convergence path (later): chat's LibreChat-legacy `/v1/chat/agents` CRUD should
+- Convergence path (later): chat's Chat-legacy `/v1/chat/agents` CRUD should
   converge onto cloud `/v1/agents`; this step only ADDS cloud-agent RUN.
 
 ## Unified cloud architecture (2026-07) — investigate-before-ripping map
@@ -216,7 +216,7 @@ Verified by full call-graph + route-table trace; do NOT rip blind.
   config → LangChain OpenAI client → **`POST https://api.hanzo.ai/v1/chat/completions`**
   (SSE stream, resumable via `GenerationJobManager`). Per-user `hk-` key +
   per-org Commerce debit; fail-closed 402. THIS is the one inference path.
-- **Code interpreter** → `LIBRECHAT_CODE_BASEURL` = cloud `/v1/exec`.
+- **Code interpreter** → `CHAT_CODE_BASEURL` = cloud `/v1/exec`.
 - **Web search** → `webSearch` block (searxng+firecrawl contracts) = cloud
   `/v1/websearch`.
 - **Cloud agents** → `POST /v1/chat/agents/cloud/:name/run` server-proxies to cloud
@@ -224,7 +224,7 @@ Verified by full call-graph + route-table trace; do NOT rip blind.
 - **Model list**: curated **zen-only** (`fetch:false`) in the loaded config —
   NO raw upstream names (brand policy). Authoritative prod list lives in the
   `chat-config` ConfigMap (`universe infra/k8s/chat/configmap.yaml`); repo
-  `librechat.yaml` mirrors it (one way).
+  `chat.yaml` mirrors it (one way).
 
 ### DEAD residue — do NOT treat as a live backend
 
@@ -237,7 +237,7 @@ Verified by full call-graph + route-table trace; do NOT rip blind.
 
 ### The ONE real parallel store (FLAG — needs a Go-backend home)
 
-LibreChat's Express backend owns, in **MongoDB** (`HanzoChat` DB), all of:
+Chat's Express backend owns, in **MongoDB** (`HanzoChat` DB), all of:
 `convos`, `messages`, `presets`, `prompts`/`promptGroups`, `users`, `balances`/
 `transactions`, `files`, `sessions` (refresh-token hashes), plus agents/assistants/
 memory/RBAC. Schemas: `packages/data-schemas/src/schema/*`. This is the shadow
@@ -246,9 +246,9 @@ store that is NOT on the Go backend.
 - The Go backend (`hanzoai/ai`, mounted at bare `/v1/*` in cloud) DOES have a
   persistence home, but under **casibase names** (`/v1/get-chats`, `/v1/get-chat`,
   `/v1/add-chat`, `/v1/get-messages`, `/v1/add-message`, `/v1/get-usages`) — a
-  different schema/shape than LibreChat's Mongo.
+  different schema/shape than Chat's Mongo.
 - The canonical OpenAPI repo has `chat/openapi.yaml` describing the INTENDED
-  LibreChat-shaped REST surface (`/v1/chat/convos`, `/v1/chat/messages`,
+  Chat-shaped REST surface (`/v1/chat/convos`, `/v1/chat/messages`,
   `/v1/chat/presets`, `/v1/chat/balance`, `/v1/chat/auth/*`) — but the Go binary
   **does not implement it yet**, and `ai/openapi.yaml` under-documents the real
   casibase routes.
@@ -260,7 +260,7 @@ store that is NOT on the Go backend.
 
 ### IAM-native auth (HIP-0111) — federated to hanzo.id, LIVE
 
-- **Prod (backend-proxied)**: LibreChat passport `openid-client` strategy,
+- **Prod (backend-proxied)**: Chat passport `openid-client` strategy,
   OIDC **discovery** from `${OPENID_ISSUER}` = `https://hanzo.id`
   (`/.well-known/openid-configuration`; discovery fetched via in-cluster
   `iam.hanzo.svc` to dodge the CF hairpin), client_id **`hanzo-chat`**, callback
@@ -284,7 +284,7 @@ store that is NOT on the Go backend.
   `HanzoHeader` for cross-app chrome. Monochrome rebrand already done (grey ramp,
   H mark, favicon = hanzo.app set).
 - **`@hanzo/gui`** = a **Tamagui** fork (Next.js 15 / React 19, RN-web) — console's
-  stack. Forcing it into the Vite/React18 LibreChat client = a ground-up rewrite
+  stack. Forcing it into the Vite/React18 Chat client = a ground-up rewrite
   of a live product; NOT done. Unify by widening `@hanzo/ui` adoption + matching
   console's monochrome tokens, NOT by swapping component frameworks.
 
@@ -292,24 +292,24 @@ store that is NOT on the Go backend.
 
 `loadCustomConfig.js` defaults to **`chat.yaml`** (`CONFIG_PATH || <root>/chat.yaml`).
 Prod sets `CONFIG_PATH=/app/chat.yaml` (ConfigMap mount). Repo ships
-`librechat.yaml` (reference); a deploy that doesn't set `CONFIG_PATH` to it (or
+`chat.yaml` (reference); a deploy that doesn't set `CONFIG_PATH` to it (or
 provide `chat.yaml`) falls back to the built-in `openAI` endpoint. `OPENAI_BASE_URL`
 in `compose.prod.yml` is inert here (built-in openAI reads `OPENAI_REVERSE_PROXY`).
 
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
-- `@hanzochat/api`, `@librechat/client`, `@librechat/data-schemas`, `librechat-data-provider`, `@librechat/agents`
-- Functions: `extractLibreChatParams`, `importLibreChatConvo`
-- Type names: `LibreChatKeys`, `LibreChatParams`
-- Config filename: `librechat.yaml` (upstream convention)
-- Env var: `LIBRECHAT_LOG_DIR`
+- `@hanzochat/api`, `@hanzochat/client`, `@hanzochat/data-schemas`, `@hanzochat/data-provider`, `@hanzochat/agents`
+- Functions: `extractChatParams`, `importChatConvo`
+- Type names: `ChatKeys`, `ChatParams`
+- Config filename: `chat.yaml` (upstream convention)
+- Env var: `CHAT_LOG_DIR`
 
 ## Branding Cleanup Log
 
-All user-visible `LibreChat` / `librechat.ai` references replaced with Hanzo equivalents:
-- All `librechat.ai` URLs -> `hanzo.ai/docs/chat/...`
-- `code.librechat.ai` -> `hanzo.ai/docs/chat/code-interpreter/...`
+All user-visible `Chat` / `chat.ai` references replaced with Hanzo equivalents:
+- All `chat.ai` URLs -> `hanzo.ai/docs/chat/...`
+- `code.chat.ai` -> `hanzo.ai/docs/chat/code-interpreter/...`
 - package.json repo URLs -> `github.com/hanzoai/chat`
 - package.json homepages -> `hanzo.ai/chat`
 - package.json descriptions -> "Hanzo Chat"
@@ -317,6 +317,6 @@ All user-visible `LibreChat` / `librechat.ai` references replaced with Hanzo equ
 - Docker Compose MongoDB DB name -> `HanzoChat`
 - GitHub workflow repo refs -> `hanzoai/chat`
 - MCP User-Agent -> `HanzoChat-MCP-Client`
-- JSDoc comments: LibreChat -> Hanzo Chat
-- Log messages: LibreChat -> Hanzo Chat
+- JSDoc comments: Chat -> Hanzo Chat
+- Log messages: Chat -> Hanzo Chat
 - Helm chart URLs -> hanzo.ai/docs/chat/...

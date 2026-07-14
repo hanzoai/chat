@@ -11,11 +11,11 @@ const mockCheckBan = jest.fn();
 const mockGenerateToken = jest.fn();
 const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() };
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   CacheKeys: { ADMIN_OAUTH_EXCHANGE: 'admin-oauth-exchange' },
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: mockLogger,
   DEFAULT_SESSION_EXPIRY: 60000,
 }));

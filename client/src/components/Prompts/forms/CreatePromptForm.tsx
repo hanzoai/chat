@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button, TextareaAutosize, Input } from '@librechat/client';
+import { Button, TextareaAutosize, Input } from '@hanzochat/client';
 import { useForm, Controller, FormProvider } from 'react-hook-form';
-import { LocalStorageKeys, PermissionTypes, Permissions } from 'librechat-data-provider';
+import { LocalStorageKeys, PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import OpenSidebar from '~/components/Chat/Menus/OpenSidebar';
 import CategorySelector from '../fields/CategorySelector';
 import VariablesDropdown from '../editor/VariablesDropdown';

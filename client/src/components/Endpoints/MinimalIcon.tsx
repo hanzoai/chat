@@ -1,5 +1,5 @@
 import HanzoLogoIcon from '~/components/svg/HanzoLogoIcon';
-import { EModelEndpoint, alternateName } from 'librechat-data-provider';
+import { EModelEndpoint, alternateName } from '@hanzochat/data-provider';
 import {
   Sparkles,
   BedrockIcon,
@@ -8,7 +8,7 @@ import {
   OpenAIMinimalIcon,
   GoogleMinimalIcon,
   CustomMinimalIcon,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
 import { IconProps } from '~/common';
 import { cn } from '~/utils';

@@ -1,4 +1,4 @@
-import { logger, SYSTEM_TENANT_ID } from '@librechat/data-schemas';
+import { logger, SYSTEM_TENANT_ID } from '@hanzochat/data-schemas';
 import type { Request, Response, NextFunction } from 'express';
 import { buildTenantContext, runWithTenantContext } from './tenant';
 

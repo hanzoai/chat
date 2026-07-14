@@ -1,4 +1,4 @@
-const { Tools } = require('librechat-data-provider');
+const { Tools } = require('@hanzochat/data-provider');
 const {
   processFileCitations,
   applyCitationLimits,

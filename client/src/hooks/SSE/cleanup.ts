@@ -1,4 +1,4 @@
-import { Constants } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 
 export function shouldResetSubagentAtomsOnConversationChange(
   previous: string | null | undefined,

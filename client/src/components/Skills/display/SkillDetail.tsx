@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Eye, Code, User, Calendar, EarthIcon, ScrollText } from 'lucide-react';
-import { TooltipAnchor } from '@librechat/client';
-import type { TSkill } from 'librechat-data-provider';
+import { TooltipAnchor } from '@hanzochat/client';
+import type { TSkill } from '@hanzochat/data-provider';
 import { useLocalize, useAuthContext, useSkillPermissions, useSkillActiveState } from '~/hooks';
 import { ShareSkill, SkillToggle } from '../buttons';
 import SkillMarkdownRenderer from './SkillMarkdownRenderer';

@@ -1,6 +1,6 @@
 'use strict';
 
-var librechatDataProvider = require('librechat-data-provider');
+var dataProvider = require('@hanzochat/data-provider');
 var winston = require('winston');
 require('winston-daily-rotate-file');
 var klona = require('klona');
@@ -26,11 +26,11 @@ var nanoid = require('nanoid');
  */
 function agentsConfigSetup(config, defaultConfig) {
     var _a;
-    const agentsConfig = (_a = config === null || config === void 0 ? void 0 : config.endpoints) === null || _a === void 0 ? void 0 : _a[librechatDataProvider.EModelEndpoint.agents];
+    const agentsConfig = (_a = config === null || config === void 0 ? void 0 : config.endpoints) === null || _a === void 0 ? void 0 : _a[dataProvider.EModelEndpoint.agents];
     if (!agentsConfig) {
-        return defaultConfig || librechatDataProvider.agentsEndpointSchema.parse({});
+        return defaultConfig || dataProvider.agentsEndpointSchema.parse({});
     }
-    const parsedConfig = librechatDataProvider.agentsEndpointSchema.parse(agentsConfig);
+    const parsedConfig = dataProvider.agentsEndpointSchema.parse(agentsConfig);
     return parsedConfig;
 }
 
@@ -47,7 +47,7 @@ function loadMemoryConfig(config) {
     if (!hasValidAgent(config.agent)) {
         return { ...config, disabled: true };
     }
-    const charLimit = (_a = librechatDataProvider.memorySchema.shape.charLimit.safeParse(config.charLimit).data) !== null && _a !== void 0 ? _a : 10000;
+    const charLimit = (_a = dataProvider.memorySchema.shape.charLimit.safeParse(config.charLimit).data) !== null && _a !== void 0 ? _a : 10000;
     return { ...config, charLimit };
 }
 function isMemoryEnabled(config) {
@@ -73,7 +73,7 @@ async function loadDefaultInterface({ config, configDefaults, }) {
     const memoryEnabled = isMemoryEnabled(memoryConfig);
     /** Only disable memories if memory config is present but disabled/invalid */
     const shouldDisableMemories = memoryConfig && !memoryEnabled;
-    const loadedInterface = librechatDataProvider.removeNullishValues({
+    const loadedInterface = dataProvider.removeNullishValues({
         // UI elements - use schema defaults
         endpointsMenu: (_g = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.endpointsMenu) !== null && _g !== void 0 ? _g : (hasModelSpecs ? false : defaults.endpointsMenu),
         modelSelect: (_h = interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.modelSelect) !== null && _h !== void 0 ? _h : (hasModelSpecs ? includesAddedEndpoints : defaults.modelSelect),
@@ -642,7 +642,7 @@ function loadTurnstileConfig(config, configDefaults) {
     var _a, _b;
     const { turnstile: customTurnstile } = config !== null && config !== void 0 ? config : {};
     const { turnstile: defaults } = configDefaults;
-    const loadedTurnstile = librechatDataProvider.removeNullishValues({
+    const loadedTurnstile = dataProvider.removeNullishValues({
         siteKey: (_a = customTurnstile === null || customTurnstile === void 0 ? void 0 : customTurnstile.siteKey) !== null && _a !== void 0 ? _a : defaults === null || defaults === void 0 ? void 0 : defaults.siteKey,
         options: (_b = customTurnstile === null || customTurnstile === void 0 ? void 0 : customTurnstile.options) !== null && _b !== void 0 ? _b : defaults === null || defaults === void 0 ? void 0 : defaults.options,
     });
@@ -718,7 +718,7 @@ function loadWebSearchConfig(config) {
     const jinaApiKey = (_g = config === null || config === void 0 ? void 0 : config.jinaApiKey) !== null && _g !== void 0 ? _g : '${JINA_API_KEY}';
     const jinaApiUrl = (_h = config === null || config === void 0 ? void 0 : config.jinaApiUrl) !== null && _h !== void 0 ? _h : '${JINA_API_URL}';
     const cohereApiKey = (_j = config === null || config === void 0 ? void 0 : config.cohereApiKey) !== null && _j !== void 0 ? _j : '${COHERE_API_KEY}';
-    const safeSearch = (_k = config === null || config === void 0 ? void 0 : config.safeSearch) !== null && _k !== void 0 ? _k : librechatDataProvider.SafeSearchTypes.MODERATE;
+    const safeSearch = (_k = config === null || config === void 0 ? void 0 : config.safeSearch) !== null && _k !== void 0 ? _k : dataProvider.SafeSearchTypes.MODERATE;
     return {
         ...config,
         safeSearch,
@@ -748,7 +748,7 @@ function processModelSpecs(endpoints, _modelSpecs, interfaceConfig) {
     }
     const list = _modelSpecs.list;
     const modelSpecs = [];
-    const customEndpoints = (_a = endpoints === null || endpoints === void 0 ? void 0 : endpoints[librechatDataProvider.EModelEndpoint.custom]) !== null && _a !== void 0 ? _a : [];
+    const customEndpoints = (_a = endpoints === null || endpoints === void 0 ? void 0 : endpoints[dataProvider.EModelEndpoint.custom]) !== null && _a !== void 0 ? _a : [];
     if ((interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.modelSelect) !== true && ((_c = (_b = _modelSpecs.addedEndpoints) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) > 0) {
         logger$1.warn(`To utilize \`addedEndpoints\`, which allows provider/model selections alongside model specs, set \`modelSelect: true\` in the interface configuration.
 
@@ -768,16 +768,16 @@ function processModelSpecs(endpoints, _modelSpecs, interfaceConfig) {
             logger$1.warn('A model spec is missing the `endpoint` field within its `preset`. Skipping model spec...');
             continue;
         }
-        if (librechatDataProvider.EModelEndpoint[currentEndpoint] && currentEndpoint !== librechatDataProvider.EModelEndpoint.custom) {
+        if (dataProvider.EModelEndpoint[currentEndpoint] && currentEndpoint !== dataProvider.EModelEndpoint.custom) {
             modelSpecs.push(spec);
             continue;
         }
-        else if (currentEndpoint === librechatDataProvider.EModelEndpoint.custom) {
+        else if (currentEndpoint === dataProvider.EModelEndpoint.custom) {
             logger$1.warn(`Model Spec with endpoint "${currentEndpoint}" is not supported. You must specify the name of the custom endpoint (case-sensitive, as defined in your config). Skipping model spec...`);
             continue;
         }
-        const normalizedName = librechatDataProvider.normalizeEndpointName(currentEndpoint);
-        const endpoint = customEndpoints.find((customEndpoint) => normalizedName === librechatDataProvider.normalizeEndpointName(customEndpoint.name));
+        const normalizedName = dataProvider.normalizeEndpointName(currentEndpoint);
+        const endpoint = customEndpoints.find((customEndpoint) => normalizedName === dataProvider.normalizeEndpointName(customEndpoint.name));
         if (!endpoint) {
             logger$1.warn(`Model spec with endpoint "${currentEndpoint}" was skipped: Endpoint not found in configuration. The \`endpoint\` value must exactly match either a system-defined endpoint or a custom endpoint defined by the user.
 
@@ -804,8 +804,8 @@ For more information, see the documentation at https://www.librechat.ai/docs/con
  */
 function azureAssistantsDefaults() {
     return {
-        capabilities: [librechatDataProvider.Capabilities.tools, librechatDataProvider.Capabilities.actions, librechatDataProvider.Capabilities.code_interpreter],
-        version: librechatDataProvider.defaultAssistantsVersion.azureAssistants,
+        capabilities: [dataProvider.Capabilities.tools, dataProvider.Capabilities.actions, dataProvider.Capabilities.code_interpreter],
+        version: dataProvider.defaultAssistantsVersion.azureAssistants,
     };
 }
 /**
@@ -819,7 +819,7 @@ function azureAssistantsDefaults() {
 function assistantsConfigSetup(config, assistantsEndpoint, prevConfig = {}) {
     var _a, _b, _c, _d, _e;
     const assistantsConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[assistantsEndpoint];
-    const parsedConfig = librechatDataProvider.assistantEndpointSchema.parse(assistantsConfig);
+    const parsedConfig = dataProvider.assistantEndpointSchema.parse(assistantsConfig);
     if (((_b = assistantsConfig === null || assistantsConfig === void 0 ? void 0 : assistantsConfig.supportedIds) === null || _b === void 0 ? void 0 : _b.length) && ((_c = assistantsConfig.excludedIds) === null || _c === void 0 ? void 0 : _c.length)) {
         logger$1.warn(`Configuration conflict: The '${assistantsEndpoint}' endpoint has both 'supportedIds' and 'excludedIds' defined. The 'excludedIds' will be ignored.`);
     }
@@ -853,12 +853,12 @@ function assistantsConfigSetup(config, assistantsEndpoint, prevConfig = {}) {
  */
 function azureConfigSetup(config) {
     var _a, _b, _c;
-    const azureConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[librechatDataProvider.EModelEndpoint.azureOpenAI];
+    const azureConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[dataProvider.EModelEndpoint.azureOpenAI];
     if (!azureConfig) {
         throw new Error('Azure OpenAI configuration is missing.');
     }
     const { groups, ...azureConfiguration } = azureConfig;
-    const { isValid, modelNames, modelGroupMap, groupMap, errors } = librechatDataProvider.validateAzureGroups(groups);
+    const { isValid, modelNames, modelGroupMap, groupMap, errors } = dataProvider.validateAzureGroups(groups);
     if (!isValid) {
         const errorString = errors.join('\n');
         const errorMessage = 'Invalid Azure OpenAI configuration:\n' + errorString;
@@ -868,7 +868,7 @@ function azureConfigSetup(config) {
     const assistantModels = [];
     const assistantGroups = new Set();
     for (const modelName of modelNames) {
-        librechatDataProvider.mapModelToAzureConfig({ modelName, modelGroupMap, groupMap });
+        dataProvider.mapModelToAzureConfig({ modelName, modelGroupMap, groupMap });
         const groupName = (_b = modelGroupMap === null || modelGroupMap === void 0 ? void 0 : modelGroupMap[modelName]) === null || _b === void 0 ? void 0 : _b.group;
         const modelGroup = groupMap === null || groupMap === void 0 ? void 0 : groupMap[groupName];
         const supportsAssistants = (modelGroup === null || modelGroup === void 0 ? void 0 : modelGroup.assistants) || ((_c = modelGroup === null || modelGroup === void 0 ? void 0 : modelGroup[modelName]) === null || _c === void 0 ? void 0 : _c.assistants);
@@ -884,9 +884,9 @@ function azureConfigSetup(config) {
     }
     if (azureConfiguration.assistants &&
         process.env.ENDPOINTS &&
-        !process.env.ENDPOINTS.includes(librechatDataProvider.EModelEndpoint.azureAssistants)) {
+        !process.env.ENDPOINTS.includes(dataProvider.EModelEndpoint.azureAssistants)) {
         logger$1.warn(`Azure Assistants are configured, but the endpoint will not be accessible as it's not included in the ENDPOINTS environment variable.
-      Please add the value "${librechatDataProvider.EModelEndpoint.azureAssistants}" to the ENDPOINTS list if expected.`);
+      Please add the value "${dataProvider.EModelEndpoint.azureAssistants}" to the ENDPOINTS list if expected.`);
     }
     return {
         errors,
@@ -972,25 +972,25 @@ function validateVertexConfig(vertexConfig) {
     const errors = [];
     // Extract and validate environment variables
     // projectId is optional - will be auto-detected from service key if not provided
-    const projectId = vertexConfig.projectId ? librechatDataProvider.extractEnvVariable(vertexConfig.projectId) : undefined;
-    const region = librechatDataProvider.extractEnvVariable(vertexConfig.region || 'us-east5');
+    const projectId = vertexConfig.projectId ? dataProvider.extractEnvVariable(vertexConfig.projectId) : undefined;
+    const region = dataProvider.extractEnvVariable(vertexConfig.region || 'us-east5');
     const serviceKeyFile = vertexConfig.serviceKeyFile
-        ? librechatDataProvider.extractEnvVariable(vertexConfig.serviceKeyFile)
+        ? dataProvider.extractEnvVariable(vertexConfig.serviceKeyFile)
         : undefined;
     const defaultDeploymentName = vertexConfig.deploymentName
-        ? librechatDataProvider.extractEnvVariable(vertexConfig.deploymentName)
+        ? dataProvider.extractEnvVariable(vertexConfig.deploymentName)
         : undefined;
     // Check for unresolved environment variables
-    if (projectId && librechatDataProvider.envVarRegex.test(projectId)) {
+    if (projectId && dataProvider.envVarRegex.test(projectId)) {
         errors.push(`Vertex AI projectId environment variable "${vertexConfig.projectId}" was not found.`);
     }
-    if (librechatDataProvider.envVarRegex.test(region)) {
+    if (dataProvider.envVarRegex.test(region)) {
         errors.push(`Vertex AI region environment variable "${vertexConfig.region}" was not found.`);
     }
-    if (serviceKeyFile && librechatDataProvider.envVarRegex.test(serviceKeyFile)) {
+    if (serviceKeyFile && dataProvider.envVarRegex.test(serviceKeyFile)) {
         errors.push(`Vertex AI serviceKeyFile environment variable "${vertexConfig.serviceKeyFile}" was not found.`);
     }
-    if (defaultDeploymentName && librechatDataProvider.envVarRegex.test(defaultDeploymentName)) {
+    if (defaultDeploymentName && dataProvider.envVarRegex.test(defaultDeploymentName)) {
         errors.push(`Vertex AI deploymentName environment variable "${vertexConfig.deploymentName}" was not found.`);
     }
     // Process models and create deployment mapping
@@ -1018,7 +1018,7 @@ function validateVertexConfig(vertexConfig) {
  */
 function vertexConfigSetup(config) {
     var _a, _b;
-    const anthropicConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[librechatDataProvider.EModelEndpoint.anthropic];
+    const anthropicConfig = (_a = config.endpoints) === null || _a === void 0 ? void 0 : _a[dataProvider.EModelEndpoint.anthropic];
     if (!(anthropicConfig === null || anthropicConfig === void 0 ? void 0 : anthropicConfig.vertex)) {
         return null;
     }
@@ -1056,24 +1056,24 @@ const loadEndpoints = (config, agentsDefaults) => {
     var _a;
     const loadedEndpoints = {};
     const endpoints = config === null || config === void 0 ? void 0 : config.endpoints;
-    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[librechatDataProvider.EModelEndpoint.azureOpenAI]) {
-        loadedEndpoints[librechatDataProvider.EModelEndpoint.azureOpenAI] = azureConfigSetup(config);
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[dataProvider.EModelEndpoint.azureOpenAI]) {
+        loadedEndpoints[dataProvider.EModelEndpoint.azureOpenAI] = azureConfigSetup(config);
     }
-    if ((_a = endpoints === null || endpoints === void 0 ? void 0 : endpoints[librechatDataProvider.EModelEndpoint.azureOpenAI]) === null || _a === void 0 ? void 0 : _a.assistants) {
-        loadedEndpoints[librechatDataProvider.EModelEndpoint.azureAssistants] = azureAssistantsDefaults();
+    if ((_a = endpoints === null || endpoints === void 0 ? void 0 : endpoints[dataProvider.EModelEndpoint.azureOpenAI]) === null || _a === void 0 ? void 0 : _a.assistants) {
+        loadedEndpoints[dataProvider.EModelEndpoint.azureAssistants] = azureAssistantsDefaults();
     }
-    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[librechatDataProvider.EModelEndpoint.azureAssistants]) {
-        loadedEndpoints[librechatDataProvider.EModelEndpoint.azureAssistants] = assistantsConfigSetup(config, librechatDataProvider.EModelEndpoint.azureAssistants, loadedEndpoints[librechatDataProvider.EModelEndpoint.azureAssistants]);
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[dataProvider.EModelEndpoint.azureAssistants]) {
+        loadedEndpoints[dataProvider.EModelEndpoint.azureAssistants] = assistantsConfigSetup(config, dataProvider.EModelEndpoint.azureAssistants, loadedEndpoints[dataProvider.EModelEndpoint.azureAssistants]);
     }
-    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[librechatDataProvider.EModelEndpoint.assistants]) {
-        loadedEndpoints[librechatDataProvider.EModelEndpoint.assistants] = assistantsConfigSetup(config, librechatDataProvider.EModelEndpoint.assistants, loadedEndpoints[librechatDataProvider.EModelEndpoint.assistants]);
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[dataProvider.EModelEndpoint.assistants]) {
+        loadedEndpoints[dataProvider.EModelEndpoint.assistants] = assistantsConfigSetup(config, dataProvider.EModelEndpoint.assistants, loadedEndpoints[dataProvider.EModelEndpoint.assistants]);
     }
-    loadedEndpoints[librechatDataProvider.EModelEndpoint.agents] = agentsConfigSetup(config, agentsDefaults);
+    loadedEndpoints[dataProvider.EModelEndpoint.agents] = agentsConfigSetup(config, agentsDefaults);
     // Handle Anthropic endpoint with Vertex AI configuration
-    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[librechatDataProvider.EModelEndpoint.anthropic]) {
-        const anthropicConfig = endpoints[librechatDataProvider.EModelEndpoint.anthropic];
+    if (endpoints === null || endpoints === void 0 ? void 0 : endpoints[dataProvider.EModelEndpoint.anthropic]) {
+        const anthropicConfig = endpoints[dataProvider.EModelEndpoint.anthropic];
         const vertexConfig = vertexConfigSetup(config);
-        loadedEndpoints[librechatDataProvider.EModelEndpoint.anthropic] = {
+        loadedEndpoints[dataProvider.EModelEndpoint.anthropic] = {
             ...anthropicConfig,
             // If Vertex AI is enabled, use the visible model names from vertex config
             // Otherwise, use the models array from anthropic config
@@ -1083,10 +1083,10 @@ const loadEndpoints = (config, agentsDefaults) => {
         };
     }
     const endpointKeys = [
-        librechatDataProvider.EModelEndpoint.openAI,
-        librechatDataProvider.EModelEndpoint.google,
-        librechatDataProvider.EModelEndpoint.custom,
-        librechatDataProvider.EModelEndpoint.bedrock,
+        dataProvider.EModelEndpoint.openAI,
+        dataProvider.EModelEndpoint.google,
+        dataProvider.EModelEndpoint.custom,
+        dataProvider.EModelEndpoint.bedrock,
     ];
     endpointKeys.forEach((key) => {
         const currentKey = key;
@@ -1111,7 +1111,7 @@ function loadOCRConfig(config) {
         apiKey,
         baseURL,
         mistralModel,
-        strategy: (_d = config === null || config === void 0 ? void 0 : config.strategy) !== null && _d !== void 0 ? _d : librechatDataProvider.OCRStrategy.MISTRAL_OCR,
+        strategy: (_d = config === null || config === void 0 ? void 0 : config.strategy) !== null && _d !== void 0 ? _d : dataProvider.OCRStrategy.MISTRAL_OCR,
     };
 }
 
@@ -1125,7 +1125,7 @@ const AppService = async (params) => {
     if (!config) {
         throw new Error('Config is required');
     }
-    const configDefaults = librechatDataProvider.getConfigDefaults();
+    const configDefaults = dataProvider.getConfigDefaults();
     const ocr = loadOCRConfig(config.ocr);
     const webSearch = loadWebSearchConfig(config.webSearch);
     const memory = loadMemoryConfig(config.memory);
@@ -1175,7 +1175,7 @@ const AppService = async (params) => {
         const appConfig = {
             ...defaultConfig,
             endpoints: {
-                [librechatDataProvider.EModelEndpoint.agents]: agentsDefaults,
+                [dataProvider.EModelEndpoint.agents]: agentsDefaults,
             },
         };
         return appConfig;
@@ -2511,7 +2511,7 @@ const file = new mongoose.Schema({
     },
     source: {
         type: String,
-        default: librechatDataProvider.FileSources.local,
+        default: dataProvider.FileSources.local,
     },
     model: {
         type: String,
@@ -2529,7 +2529,7 @@ const file = new mongoose.Schema({
     timestamps: true,
 });
 file.index({ createdAt: 1, updatedAt: 1 });
-file.index({ filename: 1, conversationId: 1, context: 1 }, { unique: true, partialFilterExpression: { context: librechatDataProvider.FileContext.execute_code } });
+file.index({ filename: 1, conversationId: 1, context: 1 }, { unique: true, partialFilterExpression: { context: dataProvider.FileContext.execute_code } });
 
 const keySchema = new mongoose.Schema({
     userId: {
@@ -2845,8 +2845,8 @@ const promptGroupSchema = new mongoose.Schema({
             message: (props) => { var _a; return `${(_a = props === null || props === void 0 ? void 0 : props.value) !== null && _a !== void 0 ? _a : 'Value'} is not a valid command. Only lowercase alphanumeric characters and hyphens are allowed.`; },
         },
         maxlength: [
-            librechatDataProvider.Constants.COMMANDS_MAX_LENGTH,
-            `Command cannot be longer than ${librechatDataProvider.Constants.COMMANDS_MAX_LENGTH} characters`,
+            dataProvider.Constants.COMMANDS_MAX_LENGTH,
+            `Command cannot be longer than ${dataProvider.Constants.COMMANDS_MAX_LENGTH} characters`,
         ],
     }, // Casting here bypasses the type error for the command field.
 }, {
@@ -2858,65 +2858,65 @@ promptGroupSchema.index({ createdAt: 1, updatedAt: 1 });
  * Uses a sub-schema for permissions. Notice we disable `_id` for this subdocument.
  */
 const rolePermissionsSchema = new mongoose.Schema({
-    [librechatDataProvider.PermissionTypes.BOOKMARKS]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.BOOKMARKS]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.PROMPTS]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
-        [librechatDataProvider.Permissions.CREATE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
+    [dataProvider.PermissionTypes.PROMPTS]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
+        [dataProvider.Permissions.CREATE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.MEMORIES]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
-        [librechatDataProvider.Permissions.CREATE]: { type: Boolean },
-        [librechatDataProvider.Permissions.UPDATE]: { type: Boolean },
-        [librechatDataProvider.Permissions.READ]: { type: Boolean },
-        [librechatDataProvider.Permissions.OPT_OUT]: { type: Boolean },
+    [dataProvider.PermissionTypes.MEMORIES]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
+        [dataProvider.Permissions.CREATE]: { type: Boolean },
+        [dataProvider.Permissions.UPDATE]: { type: Boolean },
+        [dataProvider.Permissions.READ]: { type: Boolean },
+        [dataProvider.Permissions.OPT_OUT]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.AGENTS]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
-        [librechatDataProvider.Permissions.CREATE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
+    [dataProvider.PermissionTypes.AGENTS]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
+        [dataProvider.Permissions.CREATE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.MULTI_CONVO]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.MULTI_CONVO]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.TEMPORARY_CHAT]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.TEMPORARY_CHAT]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.RUN_CODE]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.RUN_CODE]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.WEB_SEARCH]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.WEB_SEARCH]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.PEOPLE_PICKER]: {
-        [librechatDataProvider.Permissions.VIEW_USERS]: { type: Boolean },
-        [librechatDataProvider.Permissions.VIEW_GROUPS]: { type: Boolean },
-        [librechatDataProvider.Permissions.VIEW_ROLES]: { type: Boolean },
+    [dataProvider.PermissionTypes.PEOPLE_PICKER]: {
+        [dataProvider.Permissions.VIEW_USERS]: { type: Boolean },
+        [dataProvider.Permissions.VIEW_GROUPS]: { type: Boolean },
+        [dataProvider.Permissions.VIEW_ROLES]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.MARKETPLACE]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.MARKETPLACE]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.FILE_SEARCH]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.FILE_SEARCH]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.FILE_CITATIONS]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
+    [dataProvider.PermissionTypes.FILE_CITATIONS]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.MCP_SERVERS]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
-        [librechatDataProvider.Permissions.CREATE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
+    [dataProvider.PermissionTypes.MCP_SERVERS]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
+        [dataProvider.Permissions.CREATE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
     },
-    [librechatDataProvider.PermissionTypes.REMOTE_AGENTS]: {
-        [librechatDataProvider.Permissions.USE]: { type: Boolean },
-        [librechatDataProvider.Permissions.CREATE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE]: { type: Boolean },
-        [librechatDataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
+    [dataProvider.PermissionTypes.REMOTE_AGENTS]: {
+        [dataProvider.Permissions.USE]: { type: Boolean },
+        [dataProvider.Permissions.CREATE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE]: { type: Boolean },
+        [dataProvider.Permissions.SHARE_PUBLIC]: { type: Boolean },
     },
 }, { _id: false });
 const roleSchema = new mongoose.Schema({
@@ -3129,7 +3129,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: librechatDataProvider.SystemRoles.USER,
+        default: dataProvider.SystemRoles.USER,
     },
     googleId: {
         type: String,
@@ -3668,7 +3668,7 @@ const createMeiliMongooseModel = ({ index, attributesToIndex, syncOptions, }) =>
                 object.conversationId = object.conversationId.replace(/\|/g, '--');
             }
             if (object.content && Array.isArray(object.content)) {
-                object.text = librechatDataProvider.parseTextParts(object.content);
+                object.text = dataProvider.parseTextParts(object.content);
                 delete object.content;
             }
             return object;
@@ -4178,27 +4178,27 @@ function createAccessRoleModel(mongoose) {
 const aclEntrySchema = new mongoose.Schema({
     principalType: {
         type: String,
-        enum: Object.values(librechatDataProvider.PrincipalType),
+        enum: Object.values(dataProvider.PrincipalType),
         required: true,
     },
     principalId: {
         type: mongoose.Schema.Types.Mixed, // Can be ObjectId for users/groups or String for roles
         refPath: 'principalModel',
         required: function () {
-            return this.principalType !== librechatDataProvider.PrincipalType.PUBLIC;
+            return this.principalType !== dataProvider.PrincipalType.PUBLIC;
         },
         index: true,
     },
     principalModel: {
         type: String,
-        enum: Object.values(librechatDataProvider.PrincipalModel),
+        enum: Object.values(dataProvider.PrincipalModel),
         required: function () {
-            return this.principalType !== librechatDataProvider.PrincipalType.PUBLIC;
+            return this.principalType !== dataProvider.PrincipalType.PUBLIC;
         },
     },
     resourceType: {
         type: String,
-        enum: Object.values(librechatDataProvider.ResourceType),
+        enum: Object.values(dataProvider.ResourceType),
         required: true,
     },
     resourceId: {
@@ -4330,17 +4330,17 @@ for (const [manage, reads] of Object.entries(CapabilityImplications)) {
  * capability is assigned here.
  */
 ({
-    [librechatDataProvider.ResourceType.AGENT]: SystemCapabilities.MANAGE_AGENTS,
-    [librechatDataProvider.ResourceType.PROMPTGROUP]: SystemCapabilities.MANAGE_PROMPTS,
-    [librechatDataProvider.ResourceType.MCPSERVER]: SystemCapabilities.MANAGE_MCP_SERVERS,
-    [librechatDataProvider.ResourceType.REMOTE_AGENT]: SystemCapabilities.MANAGE_AGENTS,
-    [librechatDataProvider.ResourceType.SKILL]: SystemCapabilities.MANAGE_SKILLS,
+    [dataProvider.ResourceType.AGENT]: SystemCapabilities.MANAGE_AGENTS,
+    [dataProvider.ResourceType.PROMPTGROUP]: SystemCapabilities.MANAGE_PROMPTS,
+    [dataProvider.ResourceType.MCPSERVER]: SystemCapabilities.MANAGE_MCP_SERVERS,
+    [dataProvider.ResourceType.REMOTE_AGENT]: SystemCapabilities.MANAGE_AGENTS,
+    [dataProvider.ResourceType.SKILL]: SystemCapabilities.MANAGE_SKILLS,
 });
 
 const systemGrantSchema = new mongoose.Schema({
     principalType: {
         type: String,
-        enum: Object.values(librechatDataProvider.PrincipalType),
+        enum: Object.values(dataProvider.PrincipalType),
         required: true,
     },
     principalId: {
@@ -6916,11 +6916,11 @@ function createRoleMethods(handle) {
     async function initializeRoles() {
         var _a;
         const Role = handle.models.Role;
-        for (const roleName of [librechatDataProvider.SystemRoles.ADMIN, librechatDataProvider.SystemRoles.USER, librechatDataProvider.SystemRoles.GUEST]) {
+        for (const roleName of [dataProvider.SystemRoles.ADMIN, dataProvider.SystemRoles.USER, dataProvider.SystemRoles.GUEST]) {
             const role = await Role.findOne({ name: roleName }).lean();
-            const defaultPerms = librechatDataProvider.roleDefaults[roleName].permissions;
+            const defaultPerms = dataProvider.roleDefaults[roleName].permissions;
             if (!role) {
-                await Role.create(librechatDataProvider.roleDefaults[roleName]);
+                await Role.create(dataProvider.roleDefaults[roleName]);
                 continue;
             }
             const permissions = { ...((_a = role.permissions) !== null && _a !== void 0 ? _a : {}) };
@@ -7249,7 +7249,7 @@ function createKeyMethods(handle) {
         const keyValue = (await Key.findOne({ userId, name }).lean());
         if (!keyValue) {
             throw new Error(JSON.stringify({
-                type: librechatDataProvider.ErrorTypes.NO_USER_KEY,
+                type: dataProvider.ErrorTypes.NO_USER_KEY,
             }));
         }
         return await decrypt(keyValue.value);
@@ -7274,7 +7274,7 @@ function createKeyMethods(handle) {
         catch (e) {
             logger$1.error('[getUserKeyValues]', e);
             throw new Error(JSON.stringify({
-                type: librechatDataProvider.ErrorTypes.INVALID_USER_KEY,
+                type: dataProvider.ErrorTypes.INVALID_USER_KEY,
             }));
         }
     }
@@ -7403,10 +7403,10 @@ function createFileMethods(handle) {
         }
         try {
             const orConditions = [];
-            if (toolResourceSet.has(librechatDataProvider.EToolResources.context)) {
-                orConditions.push({ text: { $exists: true, $ne: null }, context: librechatDataProvider.FileContext.agents });
+            if (toolResourceSet.has(dataProvider.EToolResources.context)) {
+                orConditions.push({ text: { $exists: true, $ne: null }, context: dataProvider.FileContext.agents });
             }
-            if (toolResourceSet.has(librechatDataProvider.EToolResources.file_search)) {
+            if (toolResourceSet.has(dataProvider.EToolResources.file_search)) {
                 orConditions.push({ embedded: true });
             }
             // If no conditions to match, return empty
@@ -7415,7 +7415,7 @@ function createFileMethods(handle) {
             }
             const filter = {
                 file_id: { $in: fileIds },
-                context: { $ne: librechatDataProvider.FileContext.execute_code },
+                context: { $ne: dataProvider.FileContext.execute_code },
                 $or: orConditions,
             };
             const selectFields = { text: 0 };
@@ -7455,7 +7455,7 @@ function createFileMethods(handle) {
         try {
             const filter = {
                 conversationId,
-                context: librechatDataProvider.FileContext.execute_code,
+                context: dataProvider.FileContext.execute_code,
                 messageId: { $exists: true, $in: messageIds },
                 'metadata.fileIdentifier': { $exists: true },
             };
@@ -7483,7 +7483,7 @@ function createFileMethods(handle) {
         try {
             const filter = {
                 file_id: { $in: fileIds },
-                context: { $ne: librechatDataProvider.FileContext.execute_code },
+                context: { $ne: dataProvider.FileContext.execute_code },
                 'metadata.fileIdentifier': { $exists: true },
             };
             const selectFields = { text: 0 };
@@ -7506,7 +7506,7 @@ function createFileMethods(handle) {
         const result = await File.findOneAndUpdate({
             filename: data.filename,
             conversationId: data.conversationId,
-            context: librechatDataProvider.FileContext.execute_code,
+            context: dataProvider.FileContext.execute_code,
         }, { $setOnInsert: { file_id: data.file_id, user: data.user } }, { upsert: true, new: true }).lean();
         if (!result) {
             throw new Error(`[claimCodeFile] Failed to claim file "${data.filename}" for conversation ${data.conversationId}`);
@@ -8585,87 +8585,87 @@ function createAccessRoleMethods(handle) {
         const AccessRole = handle.models.AccessRole;
         const defaultRoles = [
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.AGENT_VIEWER,
+                accessRoleId: dataProvider.AccessRoleIds.AGENT_VIEWER,
                 name: 'com_ui_role_viewer',
                 description: 'com_ui_role_viewer_desc',
-                resourceType: librechatDataProvider.ResourceType.AGENT,
+                resourceType: dataProvider.ResourceType.AGENT,
                 permBits: exports.RoleBits.VIEWER,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.AGENT_EDITOR,
+                accessRoleId: dataProvider.AccessRoleIds.AGENT_EDITOR,
                 name: 'com_ui_role_editor',
                 description: 'com_ui_role_editor_desc',
-                resourceType: librechatDataProvider.ResourceType.AGENT,
+                resourceType: dataProvider.ResourceType.AGENT,
                 permBits: exports.RoleBits.EDITOR,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.AGENT_OWNER,
+                accessRoleId: dataProvider.AccessRoleIds.AGENT_OWNER,
                 name: 'com_ui_role_owner',
                 description: 'com_ui_role_owner_desc',
-                resourceType: librechatDataProvider.ResourceType.AGENT,
+                resourceType: dataProvider.ResourceType.AGENT,
                 permBits: exports.RoleBits.OWNER,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.PROMPTGROUP_VIEWER,
+                accessRoleId: dataProvider.AccessRoleIds.PROMPTGROUP_VIEWER,
                 name: 'com_ui_role_viewer',
                 description: 'com_ui_role_viewer_desc',
-                resourceType: librechatDataProvider.ResourceType.PROMPTGROUP,
+                resourceType: dataProvider.ResourceType.PROMPTGROUP,
                 permBits: exports.RoleBits.VIEWER,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.PROMPTGROUP_EDITOR,
+                accessRoleId: dataProvider.AccessRoleIds.PROMPTGROUP_EDITOR,
                 name: 'com_ui_role_editor',
                 description: 'com_ui_role_editor_desc',
-                resourceType: librechatDataProvider.ResourceType.PROMPTGROUP,
+                resourceType: dataProvider.ResourceType.PROMPTGROUP,
                 permBits: exports.RoleBits.EDITOR,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.PROMPTGROUP_OWNER,
+                accessRoleId: dataProvider.AccessRoleIds.PROMPTGROUP_OWNER,
                 name: 'com_ui_role_owner',
                 description: 'com_ui_role_owner_desc',
-                resourceType: librechatDataProvider.ResourceType.PROMPTGROUP,
+                resourceType: dataProvider.ResourceType.PROMPTGROUP,
                 permBits: exports.RoleBits.OWNER,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.MCPSERVER_VIEWER,
+                accessRoleId: dataProvider.AccessRoleIds.MCPSERVER_VIEWER,
                 name: 'com_ui_mcp_server_role_viewer',
                 description: 'com_ui_mcp_server_role_viewer_desc',
-                resourceType: librechatDataProvider.ResourceType.MCPSERVER,
+                resourceType: dataProvider.ResourceType.MCPSERVER,
                 permBits: exports.RoleBits.VIEWER,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.MCPSERVER_EDITOR,
+                accessRoleId: dataProvider.AccessRoleIds.MCPSERVER_EDITOR,
                 name: 'com_ui_mcp_server_role_editor',
                 description: 'com_ui_mcp_server_role_editor_desc',
-                resourceType: librechatDataProvider.ResourceType.MCPSERVER,
+                resourceType: dataProvider.ResourceType.MCPSERVER,
                 permBits: exports.RoleBits.EDITOR,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.MCPSERVER_OWNER,
+                accessRoleId: dataProvider.AccessRoleIds.MCPSERVER_OWNER,
                 name: 'com_ui_mcp_server_role_owner',
                 description: 'com_ui_mcp_server_role_owner_desc',
-                resourceType: librechatDataProvider.ResourceType.MCPSERVER,
+                resourceType: dataProvider.ResourceType.MCPSERVER,
                 permBits: exports.RoleBits.OWNER,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.REMOTE_AGENT_VIEWER,
+                accessRoleId: dataProvider.AccessRoleIds.REMOTE_AGENT_VIEWER,
                 name: 'com_ui_remote_agent_role_viewer',
                 description: 'com_ui_remote_agent_role_viewer_desc',
-                resourceType: librechatDataProvider.ResourceType.REMOTE_AGENT,
+                resourceType: dataProvider.ResourceType.REMOTE_AGENT,
                 permBits: exports.RoleBits.VIEWER,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.REMOTE_AGENT_EDITOR,
+                accessRoleId: dataProvider.AccessRoleIds.REMOTE_AGENT_EDITOR,
                 name: 'com_ui_remote_agent_role_editor',
                 description: 'com_ui_remote_agent_role_editor_desc',
-                resourceType: librechatDataProvider.ResourceType.REMOTE_AGENT,
+                resourceType: dataProvider.ResourceType.REMOTE_AGENT,
                 permBits: exports.RoleBits.EDITOR,
             },
             {
-                accessRoleId: librechatDataProvider.AccessRoleIds.REMOTE_AGENT_OWNER,
+                accessRoleId: dataProvider.AccessRoleIds.REMOTE_AGENT_OWNER,
                 name: 'com_ui_remote_agent_role_owner',
                 description: 'com_ui_remote_agent_role_owner_desc',
-                resourceType: librechatDataProvider.ResourceType.REMOTE_AGENT,
+                resourceType: dataProvider.ResourceType.REMOTE_AGENT,
                 permBits: exports.RoleBits.OWNER,
             },
         ];
@@ -8880,7 +8880,7 @@ function createUserGroupMethods(handle) {
         /** `userId` must be an `ObjectId` for USER principal since ACL entries store `ObjectId`s */
         const userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
         const principals = [
-            { principalType: librechatDataProvider.PrincipalType.USER, principalId: userObjectId },
+            { principalType: dataProvider.PrincipalType.USER, principalId: userObjectId },
         ];
         // If role is not provided, query user to get it
         let userRole = role;
@@ -8895,15 +8895,15 @@ function createUserGroupMethods(handle) {
         }
         // Add role as a principal if user has one
         if (userRole && userRole.trim()) {
-            principals.push({ principalType: librechatDataProvider.PrincipalType.ROLE, principalId: userRole });
+            principals.push({ principalType: dataProvider.PrincipalType.ROLE, principalId: userRole });
         }
         const userGroups = await getUserGroups(userId, session);
         if (userGroups && userGroups.length > 0) {
             userGroups.forEach((group) => {
-                principals.push({ principalType: librechatDataProvider.PrincipalType.GROUP, principalId: group._id });
+                principals.push({ principalType: dataProvider.PrincipalType.GROUP, principalId: group._id });
             });
         }
-        principals.push({ principalType: librechatDataProvider.PrincipalType.PUBLIC });
+        principals.push({ principalType: dataProvider.PrincipalType.PUBLIC });
         return principals;
     }
     /**
@@ -8988,7 +8988,7 @@ function createUserGroupMethods(handle) {
         const exactRegex = new RegExp(`^${searchPattern}$`, 'i');
         const startsWithPattern = searchPattern.toLowerCase();
         /** Get searchable text based on type */
-        const searchableFields = item.type === librechatDataProvider.PrincipalType.USER
+        const searchableFields = item.type === dataProvider.PrincipalType.USER
             ? [item.name, item.email, item.username].filter(Boolean)
             : [item.name, item.email, item.description].filter(Boolean);
         let maxScore = 0;
@@ -9028,7 +9028,7 @@ function createUserGroupMethods(handle) {
                 return (b._searchScore || 0) - (a._searchScore || 0);
             }
             if (a.type !== b.type) {
-                return a.type === librechatDataProvider.PrincipalType.USER ? -1 : 1;
+                return a.type === dataProvider.PrincipalType.USER ? -1 : 1;
             }
             const aName = a.name || a.email || '';
             const bName = b.name || b.email || '';
@@ -9043,7 +9043,7 @@ function createUserGroupMethods(handle) {
     function transformUserToTPrincipalSearchResult(user) {
         return {
             id: user.id,
-            type: librechatDataProvider.PrincipalType.USER,
+            type: dataProvider.PrincipalType.USER,
             name: user.name || user.email,
             email: user.email,
             username: user.username,
@@ -9062,7 +9062,7 @@ function createUserGroupMethods(handle) {
         var _a, _b;
         return {
             id: (_a = group._id) === null || _a === void 0 ? void 0 : _a.toString(),
-            type: librechatDataProvider.PrincipalType.GROUP,
+            type: dataProvider.PrincipalType.GROUP,
             name: group.name,
             email: group.email,
             avatar: group.avatar,
@@ -9087,7 +9087,7 @@ function createUserGroupMethods(handle) {
         }
         const trimmedPattern = searchPattern.trim();
         const promises = [];
-        if (!typeFilter || typeFilter.includes(librechatDataProvider.PrincipalType.USER)) {
+        if (!typeFilter || typeFilter.includes(dataProvider.PrincipalType.USER)) {
             /** Note: searchUsers is imported from ~/models and needs to be passed in or implemented */
             const userFields = 'name email username avatar provider idOnTheSource';
             /** For now, we'll use a direct query instead of searchUsers */
@@ -9117,13 +9117,13 @@ function createUserGroupMethods(handle) {
         else {
             promises.push(Promise.resolve([]));
         }
-        if (!typeFilter || typeFilter.includes(librechatDataProvider.PrincipalType.GROUP)) {
+        if (!typeFilter || typeFilter.includes(dataProvider.PrincipalType.GROUP)) {
             promises.push(findGroupsByNamePattern(trimmedPattern, null, limitPerType, session).then((groups) => groups.map(transformGroupToTPrincipalSearchResult)));
         }
         else {
             promises.push(Promise.resolve([]));
         }
-        if (!typeFilter || typeFilter.includes(librechatDataProvider.PrincipalType.ROLE)) {
+        if (!typeFilter || typeFilter.includes(dataProvider.PrincipalType.ROLE)) {
             const Role = handle.models.Role;
             if (Role) {
                 const regex = new RegExp(trimmedPattern, 'i');
@@ -9134,7 +9134,7 @@ function createUserGroupMethods(handle) {
                 promises.push(roleQuery.lean().then((roles) => roles.map((role) => ({
                     /** Role name as ID */
                     id: role.name,
-                    type: librechatDataProvider.PrincipalType.ROLE,
+                    type: dataProvider.PrincipalType.ROLE,
                     name: role.name,
                     source: 'local',
                     idOnTheSource: role.name,
@@ -9203,7 +9203,7 @@ function createAclEntryMethods(handle) {
         const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
-            ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
+            ...(p.principalType !== dataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
         }));
         return await AclEntry.find({
             $or: principalsQuery,
@@ -9223,7 +9223,7 @@ function createAclEntryMethods(handle) {
         const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
-            ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
+            ...(p.principalType !== dataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
         }));
         const entry = await AclEntry.findOne({
             $or: principalsQuery,
@@ -9274,7 +9274,7 @@ function createAclEntryMethods(handle) {
         const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
-            ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
+            ...(p.principalType !== dataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
         }));
         // Batch query for all resources at once
         const aclEntries = await AclEntry.find({
@@ -9310,19 +9310,19 @@ function createAclEntryMethods(handle) {
             resourceType,
             resourceId,
         };
-        if (principalType !== librechatDataProvider.PrincipalType.PUBLIC) {
+        if (principalType !== dataProvider.PrincipalType.PUBLIC) {
             query.principalId =
-                typeof principalId === 'string' && principalType !== librechatDataProvider.PrincipalType.ROLE
+                typeof principalId === 'string' && principalType !== dataProvider.PrincipalType.ROLE
                     ? new mongoose.Types.ObjectId(principalId)
                     : principalId;
-            if (principalType === librechatDataProvider.PrincipalType.USER) {
-                query.principalModel = librechatDataProvider.PrincipalModel.USER;
+            if (principalType === dataProvider.PrincipalType.USER) {
+                query.principalModel = dataProvider.PrincipalModel.USER;
             }
-            else if (principalType === librechatDataProvider.PrincipalType.GROUP) {
-                query.principalModel = librechatDataProvider.PrincipalModel.GROUP;
+            else if (principalType === dataProvider.PrincipalType.GROUP) {
+                query.principalModel = dataProvider.PrincipalModel.GROUP;
             }
-            else if (principalType === librechatDataProvider.PrincipalType.ROLE) {
-                query.principalModel = librechatDataProvider.PrincipalModel.ROLE;
+            else if (principalType === dataProvider.PrincipalType.ROLE) {
+                query.principalModel = dataProvider.PrincipalModel.ROLE;
             }
         }
         const update = {
@@ -9356,9 +9356,9 @@ function createAclEntryMethods(handle) {
             resourceType,
             resourceId,
         };
-        if (principalType !== librechatDataProvider.PrincipalType.PUBLIC) {
+        if (principalType !== dataProvider.PrincipalType.PUBLIC) {
             query.principalId =
-                typeof principalId === 'string' && principalType !== librechatDataProvider.PrincipalType.ROLE
+                typeof principalId === 'string' && principalType !== dataProvider.PrincipalType.ROLE
                     ? new mongoose.Types.ObjectId(principalId)
                     : principalId;
         }
@@ -9383,9 +9383,9 @@ function createAclEntryMethods(handle) {
             resourceType,
             resourceId,
         };
-        if (principalType !== librechatDataProvider.PrincipalType.PUBLIC) {
+        if (principalType !== dataProvider.PrincipalType.PUBLIC) {
             query.principalId =
-                typeof principalId === 'string' && principalType !== librechatDataProvider.PrincipalType.ROLE
+                typeof principalId === 'string' && principalType !== dataProvider.PrincipalType.ROLE
                     ? new mongoose.Types.ObjectId(principalId)
                     : principalId;
         }
@@ -9416,7 +9416,7 @@ function createAclEntryMethods(handle) {
         const AclEntry = handle.models.AclEntry;
         const principalsQuery = principalsList.map((p) => ({
             principalType: p.principalType,
-            ...(p.principalType !== librechatDataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
+            ...(p.principalType !== dataProvider.PrincipalType.PUBLIC && { principalId: p.principalId }),
         }));
         const entries = await AclEntry.find({
             $or: principalsQuery,
@@ -9457,7 +9457,7 @@ function memoizedAnonymizeId(prefix) {
 }
 const anonymizeConvoId = memoizedAnonymizeId('convo');
 const anonymizeAssistantId = memoizedAnonymizeId('a');
-const anonymizeMessageId = (id) => id === librechatDataProvider.Constants.NO_PARENT ? id : memoizedAnonymizeId('msg')(id);
+const anonymizeMessageId = (id) => id === dataProvider.Constants.NO_PARENT ? id : memoizedAnonymizeId('msg')(id);
 function anonymizeConvo(conversation) {
     if (!conversation) {
         return null;
@@ -9513,7 +9513,7 @@ function getMessagesUpToTarget(messages, targetMessageId) {
     // Create a map of parentMessageId to children messages
     const parentToChildrenMap = new Map();
     for (const message of messages) {
-        const parentId = message.parentMessageId || librechatDataProvider.Constants.NO_PARENT;
+        const parentId = message.parentMessageId || dataProvider.Constants.NO_PARENT;
         if (!parentToChildrenMap.has(parentId)) {
             parentToChildrenMap.set(parentId, []);
         }
@@ -9526,12 +9526,12 @@ function getMessagesUpToTarget(messages, targetMessageId) {
         return messages;
     }
     const visited = new Set();
-    const rootMessages = parentToChildrenMap.get(librechatDataProvider.Constants.NO_PARENT) || [];
+    const rootMessages = parentToChildrenMap.get(dataProvider.Constants.NO_PARENT) || [];
     let currentLevel = rootMessages.length > 0 ? [...rootMessages] : [targetMessage];
     const results = new Set(currentLevel);
     // Check if the target message is at the root level
     if (currentLevel.some((msg) => msg.messageId === targetMessageId) &&
-        targetMessage.parentMessageId === librechatDataProvider.Constants.NO_PARENT) {
+        targetMessage.parentMessageId === dataProvider.Constants.NO_PARENT) {
         return Array.from(results);
     }
     // Iterate level by level until the target is found

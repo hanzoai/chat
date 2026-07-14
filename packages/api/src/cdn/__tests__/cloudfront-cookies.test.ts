@@ -11,7 +11,7 @@ jest.mock('@aws-sdk/cloudfront-signer', () => ({
   getSignedCookies: (params: CloudfrontSignInput) => mockGetSignedCookies(params),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
@@ -24,7 +24,7 @@ import {
   parseCloudFrontCookieScope,
 } from '../cloudfront-cookies';
 
-const { logger: mockLogger } = jest.requireMock('@librechat/data-schemas') as {
+const { logger: mockLogger } = jest.requireMock('@hanzochat/data-schemas') as {
   logger: { warn: jest.Mock; error: jest.Mock; info: jest.Mock; debug: jest.Mock };
 };
 
@@ -192,7 +192,7 @@ describe('setCloudFrontCookies', () => {
     });
 
     expect(result).toBe(true);
-    const [, value, options] = cookieArgs.find(([name]) => name === 'LibreChat-CloudFront-Scope')!;
+    const [, value, options] = cookieArgs.find(([name]) => name === 'Chat-CloudFront-Scope')!;
     expect(options).toMatchObject({ httpOnly: false, path: '/' });
     expect(parseCloudFrontCookieScope(value)).toEqual({
       userId: 'user123',
@@ -344,7 +344,7 @@ describe('setCloudFrontCookies', () => {
     setCloudFrontCookies(mockRes as Response, { userId: 'user123', tenantId: 'tenantA' });
 
     const [name, value, options] = cookieArgs[cookieArgs.length - 1];
-    expect(name).toBe('LibreChat-CloudFront-Scope');
+    expect(name).toBe('Chat-CloudFront-Scope');
     expect(options).toMatchObject({ domain: '.example.com', path: '/' });
     expect(parseCloudFrontCookieScope(value)).toEqual(
       expect.objectContaining({ userId: 'user123', tenantId: 'tenantA' }),
@@ -762,7 +762,7 @@ describe('maybeRefreshCloudFrontAuthCookies', () => {
     const result = maybeRefreshCloudFrontAuthCookies(
       {
         cookies: {
-          'LibreChat-CloudFront-Scope': encodeScope({
+          'Chat-CloudFront-Scope': encodeScope({
             userId: 'user123',
             expiresAt: 1_700_000_250,
           }),
@@ -779,7 +779,7 @@ describe('maybeRefreshCloudFrontAuthCookies', () => {
     const userMismatch = maybeRefreshCloudFrontAuthCookies(
       {
         cookies: {
-          'LibreChat-CloudFront-Scope': encodeScope({
+          'Chat-CloudFront-Scope': encodeScope({
             userId: 'old-user',
             tenantId: 'tenantA',
             expiresAt: 1_700_001_000,
@@ -793,7 +793,7 @@ describe('maybeRefreshCloudFrontAuthCookies', () => {
     const tenantMismatch = maybeRefreshCloudFrontAuthCookies(
       {
         cookies: {
-          'LibreChat-CloudFront-Scope': encodeScope({
+          'Chat-CloudFront-Scope': encodeScope({
             userId: 'user123',
             tenantId: 'old-tenant',
             expiresAt: 1_700_001_000,
@@ -812,7 +812,7 @@ describe('maybeRefreshCloudFrontAuthCookies', () => {
     const result = maybeRefreshCloudFrontAuthCookies(
       {
         cookies: {
-          'LibreChat-CloudFront-Scope': encodeScope({
+          'Chat-CloudFront-Scope': encodeScope({
             userId: 'user123',
             expiresAt: 1_700_001_000,
           }),
@@ -867,7 +867,7 @@ describe('maybeRefreshCloudFrontAuthCookies', () => {
     const result = forceRefreshCloudFrontAuthCookies(
       {
         cookies: {
-          'LibreChat-CloudFront-Scope': encodeScope({
+          'Chat-CloudFront-Scope': encodeScope({
             userId: 'user123',
             expiresAt: 1_700_001_000,
           }),
@@ -965,7 +965,7 @@ describe('clearCloudFrontCookies', () => {
     expect(clearedCookies).toContainEqual(['CloudFront-Policy', rootPathOptions]);
     expect(clearedCookies).toContainEqual(['CloudFront-Signature', rootPathOptions]);
     expect(clearedCookies).toContainEqual(['CloudFront-Key-Pair-Id', rootPathOptions]);
-    expect(clearedCookies).toContainEqual(['LibreChat-CloudFront-Scope', scopePathOptions]);
+    expect(clearedCookies).toContainEqual(['Chat-CloudFront-Scope', scopePathOptions]);
     expect(clearedCookies).toContainEqual([
       'CloudFront-Policy',
       expect.objectContaining({ path: '/r' }),
@@ -1013,7 +1013,7 @@ describe('clearCloudFrontCookies', () => {
       expect.objectContaining({ path: '/t/tenantA/avatars' }),
     ]);
     expect(clearedCookies).toContainEqual([
-      'LibreChat-CloudFront-Scope',
+      'Chat-CloudFront-Scope',
       {
         domain: '.example.com',
         path: '/',
@@ -1054,7 +1054,7 @@ describe('clearCloudFrontCookies', () => {
       expect.objectContaining({ path: '/a' }),
     ]);
     expect(clearedCookies).toContainEqual([
-      'LibreChat-CloudFront-Scope',
+      'Chat-CloudFront-Scope',
       expect.objectContaining({ path: '/' }),
     ]);
   });

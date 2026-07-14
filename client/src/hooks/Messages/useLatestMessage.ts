@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 import { selectorFamily, useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Constants, QueryKeys } from 'librechat-data-provider';
-import type { TMessage } from 'librechat-data-provider';
+import { Constants, QueryKeys } from '@hanzochat/data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import { getMessageBranchSiblingParentIds, selectActiveBranchTail } from '~/utils';
 import store from '~/store';
 

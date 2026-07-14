@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   - nginx installed: sudo apt install nginx
-#   - LibreChat built:  npm run build
+#   - Chat built:  npm run build
 #   - Backend running:  npm run backend (serves built SPA + API on port 3080)
 #
 # Usage:
@@ -23,23 +23,23 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-NGINX_CONF="/tmp/librechat-subdir-test-nginx.conf"
-NGINX_PID="/tmp/librechat-subdir-test-nginx.pid"
+NGINX_CONF="/tmp/chat-subdir-test-nginx.conf"
+NGINX_PID="/tmp/chat-subdir-test-nginx.pid"
 
 ENV_FILE="${REPO_ROOT}/.env"
 
 write_nginx_conf() {
   cat > "$NGINX_CONF" << 'NGINX'
 worker_processes 1;
-pid /tmp/librechat-subdir-test-nginx.pid;
-error_log /tmp/librechat-subdir-test-nginx-error.log warn;
+pid /tmp/chat-subdir-test-nginx.pid;
+error_log /tmp/chat-subdir-test-nginx-error.log warn;
 
 events {
     worker_connections 64;
 }
 
 http {
-    access_log /tmp/librechat-subdir-test-nginx-access.log;
+    access_log /tmp/chat-subdir-test-nginx-access.log;
 
     map $http_upgrade $connection_upgrade {
         default upgrade;
@@ -111,8 +111,8 @@ start() {
     echo "  Expect:   Redirects should go to /chat/login, NOT /chat/chat/login"
     echo ""
     echo "=== Logs ==="
-    echo "  Access: /tmp/librechat-subdir-test-nginx-access.log"
-    echo "  Error:  /tmp/librechat-subdir-test-nginx-error.log"
+    echo "  Access: /tmp/chat-subdir-test-nginx-access.log"
+    echo "  Error:  /tmp/chat-subdir-test-nginx-error.log"
     echo ""
     echo "Run '$0 stop' to clean up."
 }
@@ -127,7 +127,7 @@ stop() {
         echo "nginx not running."
     fi
 
-    rm -f "$NGINX_CONF" /tmp/librechat-subdir-test-nginx-*.log
+    rm -f "$NGINX_CONF" /tmp/chat-subdir-test-nginx-*.log
 
     if [ -f "${ENV_FILE}.bak-subdir-test" ]; then
         echo "Restore .env backup: cp ${ENV_FILE}.bak-subdir-test ${ENV_FILE}"

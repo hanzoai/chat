@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import * as Ariakit from '@ariakit/react';
-import { DropdownPopup } from '@librechat/client';
+import { DropdownPopup } from '@hanzochat/client';
 import { useFormContext, Controller } from 'react-hook-form';
-import type { MenuItemProps } from '@librechat/client';
+import type { MenuItemProps } from '@hanzochat/client';
 import type { ReactNode } from 'react';
 import { useCategories, useLocalize } from '~/hooks';
 import { cn } from '~/utils';

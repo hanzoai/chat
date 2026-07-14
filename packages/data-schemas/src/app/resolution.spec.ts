@@ -1,4 +1,4 @@
-import { INTERFACE_PERMISSION_FIELDS, PermissionTypes } from 'librechat-data-provider';
+import { INTERFACE_PERMISSION_FIELDS, PermissionTypes } from '@hanzochat/data-provider';
 import { mergeConfigOverrides } from './resolution';
 import type { AppConfig, IConfig } from '~/types';
 

@@ -1,6 +1,6 @@
-import { createMethods } from '@librechat/data-schemas';
-import { ResourceType, PermissionBits, hasPermissions } from 'librechat-data-provider';
-import type { AllMethods, IUser } from '@librechat/data-schemas';
+import { createMethods } from '@hanzochat/data-schemas';
+import { ResourceType, PermissionBits, hasPermissions } from '@hanzochat/data-provider';
+import type { AllMethods, IUser } from '@hanzochat/data-schemas';
 import type { Types } from 'mongoose';
 
 export interface ApiKeyServiceDependencies {

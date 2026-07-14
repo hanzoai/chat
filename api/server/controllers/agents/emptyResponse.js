@@ -1,4 +1,4 @@
-const { ContentTypes } = require('librechat-data-provider');
+const { ContentTypes } = require('@hanzochat/data-provider');
 
 /**
  * Content-part types whose payload is a plain string and which render nothing

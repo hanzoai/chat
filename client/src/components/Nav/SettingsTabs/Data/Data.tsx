@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { useOnClickOutside } from '@librechat/client';
-import { Permissions, PermissionTypes } from 'librechat-data-provider';
+import { useOnClickOutside } from '@hanzochat/client';
+import { Permissions, PermissionTypes } from '@hanzochat/data-provider';
 import ImportConversations from './ImportConversations';
 import { AgentApiKeys } from './AgentApiKeys';
 import { DeleteCache } from './DeleteCache';

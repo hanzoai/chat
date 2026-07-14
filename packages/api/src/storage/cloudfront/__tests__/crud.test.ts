@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-import type { TFile } from 'librechat-data-provider';
+import type { TFile } from '@hanzochat/data-provider';
 import type { CloudFrontFullConfig } from '~/cdn/cloudfront';
 import type { ServerRequest } from '~/types';
 
@@ -40,7 +40,7 @@ jest.mock('@aws-sdk/client-cloudfront', () => ({
   CreateInvalidationCommand: jest.fn().mockImplementation((input) => ({ input })),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({ logger: mockLogger }));
+jest.mock('@hanzochat/data-schemas', () => ({ logger: mockLogger }));
 
 jest.mock('~/storage/s3/s3Config', () => ({
   s3Config: { S3_URL_EXPIRY_SECONDS: 900, AWS_REGION: 'us-east-1' },

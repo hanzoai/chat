@@ -1,4 +1,4 @@
-import { roleDefaults, SystemRoles } from 'librechat-data-provider';
+import { roleDefaults, SystemRoles } from '@hanzochat/data-provider';
 import type { DataHandle } from '~/common/dataHandle';
 
 // Factory function that takes mongoose instance and returns the methods

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { isEnabled } = require('@hanzochat/api');
-const { getTransactionSupport, logger } = require('@librechat/data-schemas');
-const { ResourceType, PrincipalType, PrincipalModel } = require('librechat-data-provider');
+const { getTransactionSupport, logger } = require('@hanzochat/data-schemas');
+const { ResourceType, PrincipalType, PrincipalModel } = require('@hanzochat/data-provider');
 const {
   entraIdPrincipalFeatureEnabled,
   getUserOwnedEntraGroups,
@@ -42,7 +42,7 @@ const validateResourceType = (resourceType) => {
 };
 
 /**
- * @import { TPrincipal } from 'librechat-data-provider'
+ * @import { TPrincipal } from '@hanzochat/data-provider'
  */
 /**
  * Grant a permission to a principal for a resource using a role

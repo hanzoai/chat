@@ -1,11 +1,11 @@
-import { useGetModelsQuery } from 'librechat-data-provider/react-query';
-import { excludedKeys, getDefaultParamsEndpoint } from 'librechat-data-provider';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
+import { excludedKeys, getDefaultParamsEndpoint } from '@hanzochat/data-provider';
 import type {
   TEndpointsConfig,
   TModelsConfig,
   TConversation,
   TPreset,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { getDefaultEndpoint, buildDefaultConvo } from '~/utils';
 import { useGetEndpointsQuery } from '~/data-provider';
 

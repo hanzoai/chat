@@ -14,15 +14,15 @@ import {
   EModelEndpoint,
   defaultAgentCapabilities,
   isDocumentSupportedProvider,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import {
   FileUpload,
   TooltipAnchor,
   DropdownPopup,
   AttachmentIcon,
   SharePointIcon,
-} from '@librechat/client';
-import type { EndpointFileConfig } from 'librechat-data-provider';
+} from '@hanzochat/client';
+import type { EndpointFileConfig } from '@hanzochat/data-provider';
 import {
   useAgentToolPermissions,
   useAgentCapabilities,

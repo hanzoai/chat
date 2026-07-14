@@ -1,8 +1,8 @@
 const { nanoid } = require('nanoid');
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@librechat/data-schemas');
-const { Callback, ToolEndHandler, formatAgentMessages } = require('@librechat/agents');
-const { EModelEndpoint, ResourceType, PermissionBits } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { Callback, ToolEndHandler, formatAgentMessages } = require('@hanzochat/agents');
+const { EModelEndpoint, ResourceType, PermissionBits } = require('@hanzochat/data-provider');
 const {
   createRun,
   buildToolSet,
@@ -406,9 +406,9 @@ const createResponse = async (req, res) => {
       const collectedUsage = [];
 
       // Artifact promises for processing tool outputs
-      /** @type {Promise<import('librechat-data-provider').TAttachment | null>[]} */
+      /** @type {Promise<import('@hanzochat/data-provider').TAttachment | null>[]} */
       const artifactPromises = [];
-      // Use Responses API-specific callback that emits librechat:attachment events
+      // Use Responses API-specific callback that emits chat:attachment events
       const toolEndCallback = createResponsesToolEndCallback({
         req,
         res,
@@ -560,7 +560,7 @@ const createResponse = async (req, res) => {
       // Collect usage for balance tracking
       const collectedUsage = [];
 
-      /** @type {Promise<import('librechat-data-provider').TAttachment | null>[]} */
+      /** @type {Promise<import('@hanzochat/data-provider').TAttachment | null>[]} */
       const artifactPromises = [];
       const toolEndCallback = createToolEndCallback({ req, res, artifactPromises, streamId: null });
 
@@ -754,7 +754,7 @@ const listModels = async (req, res) => {
       id: agent.id,
       object: 'model',
       created: Math.floor(new Date(agent.createdAt).getTime() / 1000),
-      owned_by: agent.author ?? 'librechat',
+      owned_by: agent.author ?? 'chat',
       // Additional metadata
       name: agent.name,
       description: agent.description,
@@ -780,7 +780,7 @@ const listModels = async (req, res) => {
  * Get Response - GET /v1/responses/:id
  *
  * Retrieves a stored response by its ID.
- * The response ID maps to a conversationId in LibreChat's storage.
+ * The response ID maps to a conversationId in Chat's storage.
  *
  * @param {import('express').Request} req
  * @param {import('express').Response} res

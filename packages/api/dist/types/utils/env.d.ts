@@ -1,5 +1,5 @@
 import type { MCPOptions } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { RequestBody } from '~/types';
 /**
  * List of allowed user fields that can be used in MCP environment variables.

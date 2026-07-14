@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@librechat/data-schemas');
-const { EModelEndpoint, Constants, openAISettings } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { EModelEndpoint, Constants, openAISettings } = require('@hanzochat/data-provider');
 const { bulkIncrementTagCounts } = require('~/models/ConversationTag');
 const { bulkSaveConvos } = require('~/models/Conversation');
 const { bulkSaveMessages } = require('~/models/Message');

@@ -11,7 +11,7 @@ export interface HanzoLogoIconProps extends React.SVGProps<SVGSVGElement> {
  * Official Hanzo ▼/H mark — monochrome, `currentColor` fill.
  *
  * Canonical brand source: `@hanzo/logo` (hanzo.app / hanzo.ai favicon set).
- * Drop-in replacement for the upstream LibreChat lucide `Feather` brand fallback.
+ * Drop-in replacement for the upstream Chat lucide `Feather` brand fallback.
  */
 export default function HanzoLogoIcon({
   className = '',
