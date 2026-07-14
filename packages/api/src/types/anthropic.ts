@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Dispatcher } from 'undici';
 import { AuthKeys, anthropicSchema, TVertexAISchema } from '@hanzochat/data-provider';
-import type { AnthropicClientOptions } from '@librechat/agents';
+import type { AnthropicClientOptions } from '@hanzochat/agents';
 import type { LLMConfigResult } from './openai';
 import type { GoogleServiceKey } from '../utils/key';
 

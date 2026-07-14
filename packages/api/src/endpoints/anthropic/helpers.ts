@@ -1,5 +1,5 @@
 import { logger } from '@hanzochat/data-schemas';
-import { AnthropicClientOptions } from '@librechat/agents';
+import { AnthropicClientOptions } from '@hanzochat/agents';
 import {
   EModelEndpoint,
   AnthropicEffort,

@@ -1,9 +1,9 @@
-import { Constants } from '@librechat/agents';
+import { Constants } from '@hanzochat/agents';
 import type {
   ToolExecuteBatchRequest,
   ToolExecuteResult,
   ToolCallRequest,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import { createToolExecuteHandler, ToolExecuteOptions } from './handlers';
 
 function createMockTool(name: string, capturedConfigs: Record<string, unknown>[]) {

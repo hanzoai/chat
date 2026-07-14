@@ -1,4 +1,4 @@
-const { Providers } = require('@librechat/agents');
+const { Providers } = require('@hanzochat/agents');
 const { EModelEndpoint } = require('@hanzochat/data-provider');
 const { getCustomEndpointConfig } = require('@hanzochat/api');
 const initAnthropic = require('~/server/services/Endpoints/anthropic/initialize');

@@ -1,4 +1,4 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import { mbToBytes } from '@hanzochat/data-provider';
 import { validatePdf, validateVideo, validateAudio } from './validation';
 

@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { sleep } = require('@librechat/agents');
+const { sleep } = require('@hanzochat/agents');
 const { logger } = require('@hanzochat/data-schemas');
 const { FilePurpose } = require('@hanzochat/data-provider');
 

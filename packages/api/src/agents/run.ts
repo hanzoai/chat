@@ -1,4 +1,4 @@
-import { Run, Providers, Constants } from '@librechat/agents';
+import { Run, Providers, Constants } from '@hanzochat/agents';
 import { providerEndpointMap, KnownEndpoints } from '@hanzochat/data-provider';
 import type { BaseMessage } from '@langchain/core/messages';
 import type {
@@ -11,7 +11,7 @@ import type {
   RunConfig,
   IState,
   LCTool,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import type { IUser } from '@hanzochat/data-schemas';
 import type { Agent } from '@hanzochat/data-provider';
 import type * as t from '~/types';

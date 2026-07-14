@@ -1,4 +1,4 @@
-import type { Providers, ClientOptions } from '@librechat/agents';
+import type { Providers, ClientOptions } from '@hanzochat/agents';
 import type { AgentModelParameters } from '@hanzochat/data-provider';
 import type { OpenAIConfiguration } from './openai';
 

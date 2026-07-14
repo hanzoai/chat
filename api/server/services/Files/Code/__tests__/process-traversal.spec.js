@@ -4,7 +4,7 @@ jest.mock('@hanzochat/data-schemas', () => ({
   logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock('@librechat/agents', () => ({
+jest.mock('@hanzochat/agents', () => ({
   getCodeBaseURL: jest.fn(() => 'http://localhost:8000'),
 }));
 

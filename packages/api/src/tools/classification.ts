@@ -13,7 +13,7 @@ import {
   ToolSearchToolDefinition,
   createProgrammaticToolCallingTool,
   ProgrammaticToolCallingDefinition,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import type { AgentToolOptions } from '@hanzochat/data-provider';
 import type {
   LCToolRegistry,
@@ -21,7 +21,7 @@ import type {
   AllowedCaller,
   GenericTool,
   LCTool,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 
 export type { LCTool, LCToolRegistry, AllowedCaller, JsonSchemaType };
 

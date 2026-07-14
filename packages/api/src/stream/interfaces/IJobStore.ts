@@ -1,5 +1,5 @@
 import type { Agents } from '@hanzochat/data-provider';
-import type { StandardGraph } from '@librechat/agents';
+import type { StandardGraph } from '@hanzochat/agents';
 
 /**
  * Job status enum

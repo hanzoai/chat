@@ -57,8 +57,8 @@ jest.mock('@hanzochat/data-schemas', () => ({
 }));
 
 // Mock Run.create to capture the graphConfig it receives
-jest.mock('@librechat/agents', () => {
-  const actual = jest.requireActual('@librechat/agents');
+jest.mock('@hanzochat/agents', () => {
+  const actual = jest.requireActual('@hanzochat/agents');
   return {
     ...actual,
     Run: {
@@ -69,7 +69,7 @@ jest.mock('@librechat/agents', () => {
   };
 });
 
-import { Run } from '@librechat/agents';
+import { Run } from '@hanzochat/agents';
 
 /** Minimal RunAgent factory */
 function makeAgent(

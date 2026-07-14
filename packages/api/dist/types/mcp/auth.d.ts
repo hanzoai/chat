@@ -1,5 +1,5 @@
-import type { PluginAuthMethods } from '@librechat/data-schemas';
-import type { GenericTool } from '@librechat/agents';
+import type { PluginAuthMethods } from '@hanzochat/data-schemas';
+import type { GenericTool } from '@hanzochat/agents';
 export declare function getUserMCPAuthMap({ userId, tools, servers, toolInstances, findPluginAuthsByKeys, }: {
     userId: string;
     tools?: (string | undefined)[];

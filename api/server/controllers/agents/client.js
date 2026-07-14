@@ -32,7 +32,7 @@ const {
   formatMessage,
   formatAgentMessages,
   createMetadataAggregator,
-} = require('@librechat/agents');
+} = require('@hanzochat/agents');
 const {
   Constants,
   Permissions,
@@ -894,7 +894,7 @@ class AgentClient extends BaseClient {
 
       /**
        * Capture before running the graph. `run.processStream` (via
-       * `@librechat/agents`) treats the passed `config` as owned and, during its
+       * `@hanzochat/agents`) treats the passed `config` as owned and, during its
        * post-stream cleanup, sets `config.configurable = undefined` to break the
        * reference chain that keeps heavy graph state (base64 images/PDFs) alive.
        * Reading `config.configurable.hide_sequential_outputs` AFTER `runAgents`
@@ -989,7 +989,7 @@ class AgentClient extends BaseClient {
     const appConfig = req.config;
     let endpoint = agent.endpoint;
 
-    /** @type {import('@librechat/agents').ClientOptions} */
+    /** @type {import('@hanzochat/agents').ClientOptions} */
     let clientOptions = {
       model: agent.model || agent.model_parameters.model,
     };
@@ -1064,7 +1064,7 @@ class AgentClient extends BaseClient {
       provider = Providers.AZURE;
     }
 
-    /** @type {import('@librechat/agents').ClientOptions} */
+    /** @type {import('@hanzochat/agents').ClientOptions} */
     clientOptions = { ...options.llmConfig };
     if (options.configOptions) {
       clientOptions.configuration = options.configOptions;

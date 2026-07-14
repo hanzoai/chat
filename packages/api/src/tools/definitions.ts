@@ -7,7 +7,7 @@
 
 import { Constants, actionDelimiter } from '@hanzochat/data-provider';
 import type { AgentToolOptions } from '@hanzochat/data-provider';
-import type { LCToolRegistry, JsonSchemaType, LCTool, GenericTool } from '@librechat/agents';
+import type { LCToolRegistry, JsonSchemaType, LCTool, GenericTool } from '@hanzochat/agents';
 import type { ToolDefinition } from './classification';
 import { resolveJsonSchemaRefs, normalizeJsonSchema } from '~/mcp/zod';
 import { buildToolClassification } from './classification';
