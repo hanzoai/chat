@@ -27,7 +27,7 @@ export enum EModelEndpoint {
   bedrock = 'bedrock',
 }
 
-/** Mirrors `@librechat/agents` providers */
+/** Mirrors `@hanzochat/agents` providers */
 export enum Providers {
   OPENAI = 'openAI',
   ANTHROPIC = 'anthropic',

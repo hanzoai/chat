@@ -1,7 +1,7 @@
-import { Run, Providers } from '@librechat/agents';
+import { Run, Providers } from '@hanzochat/agents';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { LCToolRegistry, GenericTool, RunConfig, IState, LCTool } from '@librechat/agents';
-import type { IUser } from '@librechat/data-schemas';
+import type { LCToolRegistry, GenericTool, RunConfig, IState, LCTool } from '@hanzochat/agents';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { Agent } from 'librechat-data-provider';
 import type * as t from '~/types';
 /**

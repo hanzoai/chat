@@ -8,7 +8,7 @@ const {
   createToolSearch,
   Constants: AgentConstants,
   createProgrammaticToolCallingTool,
-} = require('@librechat/agents');
+} = require('@hanzochat/agents');
 const {
   sendEvent,
   getToolkitKey,

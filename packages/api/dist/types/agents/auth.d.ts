@@ -1,4 +1,4 @@
-import type { PluginAuthMethods } from '@librechat/data-schemas';
+import type { PluginAuthMethods } from '@hanzochat/data-schemas';
 export interface GetPluginAuthMapParams {
     userId: string;
     pluginKeys: string[];

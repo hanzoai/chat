@@ -1,4 +1,4 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import { isOpenAILikeProvider, isDocumentSupportedProvider } from '@hanzochat/data-provider';
 import type { IMongoFile } from '@hanzochat/data-schemas';
 import type {

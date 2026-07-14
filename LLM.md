@@ -4,7 +4,7 @@ AI chat interface with multi-model support,
 MCP integration, agents, and RAG. Live at **hanzo.chat**.
 
 **Repo**: `github.com/hanzoai/chat`
-**Upstream**: LibreChat (MIT) — internal package names kept (`@librechat/*`)
+**Upstream**: LibreChat (MIT) — internal package names kept (`@hanzochat/*`)
 **Package**: `@hanzochat/chat`
 **Runtime**: Node.js 20 (Alpine)
 
@@ -299,7 +299,7 @@ in `compose.prod.yml` is inert here (built-in openAI reads `OPENAI_REVERSE_PROXY
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
-- `@hanzochat/api`, `@hanzochat/client`, `@hanzochat/data-schemas`, `@hanzochat/data-provider`, `@librechat/agents`
+- `@hanzochat/api`, `@hanzochat/client`, `@hanzochat/data-schemas`, `@hanzochat/data-provider`, `@hanzochat/agents`
 - Functions: `extractLibreChatParams`, `importLibreChatConvo`
 - Type names: `LibreChatKeys`, `LibreChatParams`
 - Config filename: `librechat.yaml` (upstream convention)

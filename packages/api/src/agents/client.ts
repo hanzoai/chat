@@ -1,7 +1,7 @@
 import { logger } from '@hanzochat/data-schemas';
 import { isAgentsEndpoint } from '@hanzochat/data-provider';
-import { labelContentByAgent, getTokenCountForMessage } from '@librechat/agents';
-import type { MessageContentComplex } from '@librechat/agents';
+import { labelContentByAgent, getTokenCountForMessage } from '@hanzochat/agents';
+import type { MessageContentComplex } from '@hanzochat/agents';
 import type { Agent, TMessage } from '@hanzochat/data-provider';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { ServerRequest } from '~/types';

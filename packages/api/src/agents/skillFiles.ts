@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
-import { Constants } from '@librechat/agents';
+import { Constants } from '@hanzochat/agents';
 import { logger } from '@hanzochat/data-schemas';
-import type { ToolSessionMap, CodeSessionContext } from '@librechat/agents';
+import type { ToolSessionMap, CodeSessionContext } from '@hanzochat/agents';
 import type { CodeEnvRef } from '@hanzochat/data-provider';
 import type { Types } from 'mongoose';
 import type { ServerRequest } from '~/types';

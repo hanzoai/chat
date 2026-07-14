@@ -1,5 +1,5 @@
 import { logger } from '@hanzochat/data-schemas';
-import type { Logger } from '@librechat/agents';
+import type { Logger } from '@hanzochat/agents';
 import { getBasePath } from './path';
 
 describe('getBasePath', () => {

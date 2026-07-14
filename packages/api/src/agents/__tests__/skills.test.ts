@@ -1,12 +1,12 @@
 /**
- * Mock the pieces of `@librechat/agents` the installed SDK version may not
+ * Mock the pieces of `@hanzochat/agents` the installed SDK version may not
  * export yet. Includes both the `Constants.SKILL_TOOL` stub and the skill
  * catalog/tool-definition helpers needed to exercise `injectSkillCatalog`.
  */
-jest.mock('@librechat/agents', () => ({
-  ...jest.requireActual('@librechat/agents'),
+jest.mock('@hanzochat/agents', () => ({
+  ...jest.requireActual('@hanzochat/agents'),
   Constants: {
-    ...(jest.requireActual('@librechat/agents') as { Constants: Record<string, unknown> })
+    ...(jest.requireActual('@hanzochat/agents') as { Constants: Record<string, unknown> })
       .Constants,
     SKILL_TOOL: 'skill',
   },
@@ -33,7 +33,7 @@ jest.mock('@librechat/agents', () => ({
 }));
 
 import { Types } from 'mongoose';
-import { HumanMessage, AIMessage } from '@librechat/agents/langchain/messages';
+import { HumanMessage, AIMessage } from '@hanzochat/agents/langchain/messages';
 import {
   scopeSkillIds,
   resolveSkillActive,

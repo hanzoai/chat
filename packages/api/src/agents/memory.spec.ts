@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Run, Providers } from '@librechat/agents';
+import { Run, Providers } from '@hanzochat/agents';
 import type { IUser } from '@hanzochat/data-schemas';
 import type { Response } from 'express';
 import { processMemory } from './memory';
@@ -37,8 +37,8 @@ jest.mock('~/utils', () => ({
 
 const { createSafeUser } = jest.requireMock('~/utils');
 
-jest.mock('@librechat/agents', () => {
-  const actual = jest.requireActual('@librechat/agents');
+jest.mock('@hanzochat/agents', () => {
+  const actual = jest.requireActual('@hanzochat/agents');
   return {
     Run: {
       create: jest.fn(() => ({

@@ -308,7 +308,7 @@ export async function discoverConnectedAgents(
       }
     }
     /**
-     * `createSequentialChainEdges` is typed against `@librechat/agents`'s
+     * `createSequentialChainEdges` is typed against `@hanzochat/agents`'s
      * `GraphEdge` (which uses `BaseMessage` from `@langchain/core`) whereas
      * `collectEdges` uses the `@hanzochat/data-provider` variant (structural
      * `BaseMessage`). The produced chain edges are structurally identical and

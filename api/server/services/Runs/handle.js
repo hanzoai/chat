@@ -1,4 +1,4 @@
-const { sleep } = require('@librechat/agents');
+const { sleep } = require('@hanzochat/agents');
 const { logger } = require('@hanzochat/data-schemas');
 const { RunStatus, defaultOrderQuery, CacheKeys } = require('@hanzochat/data-provider');
 const getLogStores = require('~/cache/getLogStores');

@@ -1,4 +1,4 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import { mbToBytes, isOpenAILikeProvider } from '@hanzochat/data-provider';
 
 export interface PDFValidationResult {

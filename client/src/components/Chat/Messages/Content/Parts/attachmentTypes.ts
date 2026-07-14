@@ -6,7 +6,7 @@ import { detectArtifactTypeFromFile } from '~/utils/artifacts';
 /**
  * Empty-folder placeholders the bash executor drops in the stateless
  * sandbox so a `mkdir` survives across runs. The user has no reason to
- * see these — they're an implementation detail of `@librechat/agents`
+ * see these — they're an implementation detail of `@hanzochat/agents`
  * — so we filter them out before any UI rendering.
  *
  * Anchored to the *post-sanitization* form `_.dirkeep-<6 hex>` /

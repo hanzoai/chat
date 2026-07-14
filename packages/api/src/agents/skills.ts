@@ -1,9 +1,9 @@
 import { logger } from '@hanzochat/data-schemas';
 import { isEphemeralAgentId } from '@hanzochat/data-provider';
-import { HumanMessage } from '@librechat/agents/langchain/messages';
-import { formatSkillCatalog, SkillToolDefinition } from '@librechat/agents';
-import type { LCToolRegistry, LCTool, InjectedMessage } from '@librechat/agents';
-import type { BaseMessage } from '@librechat/agents/langchain/messages';
+import { HumanMessage } from '@hanzochat/agents/langchain/messages';
+import { formatSkillCatalog, SkillToolDefinition } from '@hanzochat/agents';
+import type { LCToolRegistry, LCTool, InjectedMessage } from '@hanzochat/agents';
+import type { BaseMessage } from '@hanzochat/agents/langchain/messages';
 import type { Agent } from '@hanzochat/data-provider';
 import type { Types } from 'mongoose';
 import type { InitializeAgentDbMethods } from './initialize';

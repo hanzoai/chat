@@ -1,5 +1,5 @@
 import { TokenExchangeMethodEnum } from 'librechat-data-provider';
-import type { TokenMethods } from '@librechat/data-schemas';
+import type { TokenMethods } from '@hanzochat/data-schemas';
 export declare function createHandleOAuthToken({ findToken, updateToken, createToken, }: {
     findToken: TokenMethods['findToken'];
     updateToken: TokenMethods['updateToken'];
