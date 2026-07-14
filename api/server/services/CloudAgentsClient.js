@@ -94,21 +94,23 @@ class CloudAgentsClient {
   /**
    * List the caller's cloud agents.
    * @param {string} bearer - the caller's hanzo.id id_token
+   * @param {string} [activeOrg] - the member's selected working org (X-Org-Id)
    * @returns {Promise<{agents: Array}>}
    */
-  async list(bearer) {
-    return this._request('GET', '/v1/agents', bearer);
+  async list(bearer, activeOrg) {
+    return this._request('GET', '/v1/agents', bearer, undefined, activeOrg);
   }
 
   /**
    * Get one cloud agent (detail + recent runs).
    * @param {string} bearer
    * @param {string} name
+   * @param {string} [activeOrg] - the member's selected working org (X-Org-Id)
    * @returns {Promise<Object>} cloud's AgentDetail
    */
-  async get(bearer, name) {
+  async get(bearer, name, activeOrg) {
     const n = CloudAgentsClient.requireValidName(name);
-    return this._request('GET', `/v1/agents/${encodeURIComponent(n)}`, bearer);
+    return this._request('GET', `/v1/agents/${encodeURIComponent(n)}`, bearer, undefined, activeOrg);
   }
 
   /**
@@ -118,9 +120,10 @@ class CloudAgentsClient {
    * @param {string} bearer
    * @param {string} name
    * @param {string} input
+   * @param {string} [activeOrg] - the member's selected working org (X-Org-Id)
    * @returns {Promise<Object>} cloud's RunResult
    */
-  async run(bearer, name, input) {
+  async run(bearer, name, input, activeOrg) {
     const n = CloudAgentsClient.requireValidName(name);
     const body = (input ?? '').toString();
     // Byte length, not UTF-16 units — matches cloud's byte-based maxInput exactly
@@ -130,9 +133,13 @@ class CloudAgentsClient {
       err.status = 400;
       throw err;
     }
-    return this._request('POST', `/v1/agents/${encodeURIComponent(n)}/run`, bearer, {
-      input: body,
-    });
+    return this._request(
+      'POST',
+      `/v1/agents/${encodeURIComponent(n)}/run`,
+      bearer,
+      { input: body },
+      activeOrg,
+    );
   }
 
   /**
@@ -140,9 +147,11 @@ class CloudAgentsClient {
    * @param {string} path   - one of the fixed templates above
    * @param {string} bearer - the caller's hanzo.id bearer (required)
    * @param {Object} [body]
+   * @param {string} [activeOrg] - the member's selected working org; forwarded as
+   *   `X-Org-Id` for cloud to validate against the bearer's membership (HIP-0026)
    * @returns {Promise<Object>}
    */
-  async _request(method, path, bearer, body) {
+  async _request(method, path, bearer, body, activeOrg) {
     if (!bearer) {
       // Fail secure: never fall back to an ambient/service credential — that
       // would run as the wrong principal. Absent a user bearer, deny.
@@ -164,6 +173,9 @@ class CloudAgentsClient {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${bearer}`,
     };
+    if (activeOrg) {
+      headers['X-Org-Id'] = activeOrg;
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
