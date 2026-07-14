@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
-import { Constants } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { agentSchema, createMethods } from '@librechat/data-schemas';
-import type { AgentModelParameters } from 'librechat-data-provider';
+import { agentSchema, createMethods } from '@hanzochat/data-schemas';
+import type { AgentModelParameters } from '@hanzochat/data-provider';
 import type { LoadAgentParams, LoadAgentDeps } from '../load';
 import { loadAgent } from '../load';
 

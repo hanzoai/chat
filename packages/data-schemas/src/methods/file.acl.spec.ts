@@ -6,7 +6,7 @@ import {
   AccessRoleIds,
   PrincipalType,
   PermissionBits,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { AccessRole as TAccessRole, AclEntry as TAclEntry } from '..';
 import type { Types } from 'mongoose';
 import { createAclEntryMethods } from './aclEntry';

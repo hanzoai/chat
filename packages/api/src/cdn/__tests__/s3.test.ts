@@ -6,7 +6,7 @@ jest.mock('@aws-sdk/client-s3', () => ({
   S3Client: jest.fn(),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: mockLogger,
 }));
 

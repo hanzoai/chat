@@ -1,4 +1,4 @@
-import type { TStartupConfig } from 'librechat-data-provider';
+import type { TStartupConfig } from '@hanzochat/data-provider';
 import { getHanzoIamSdk, isStaticIamMode } from '~/utils/iam';
 
 /**

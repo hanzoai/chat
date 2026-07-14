@@ -1,7 +1,7 @@
 import React from 'react';
-import { Spinner } from '@librechat/client';
+import { Spinner } from '@hanzochat/client';
 import { PlugZap, SlidersHorizontal, X } from 'lucide-react';
-import type { MCPServerStatus } from 'librechat-data-provider';
+import type { MCPServerStatus } from '@hanzochat/data-provider';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 

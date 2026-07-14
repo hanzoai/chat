@@ -1,6 +1,6 @@
 import { Providers } from '@librechat/agents';
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { AppConfig } from '@librechat/data-schemas';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
 import { getProviderConfig, providerConfigMap } from './providers';
 
 const buildAppConfig = (

@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import type { OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
-import type { TokenMethods } from '@librechat/data-schemas';
+import type { TokenMethods } from '@hanzochat/data-schemas';
 import { MCPTokenStorage } from './tokens';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -14,7 +14,7 @@ jest.mock('@librechat/data-schemas', () => ({
   decryptV2: jest.fn(async (value: string) => value.replace(/^encrypted:/, '')),
 }));
 
-// Avoid pulling in librechat-data-provider via ~/mcp/utils; storeTokens does not use it.
+// Avoid pulling in @hanzochat/data-provider via ~/mcp/utils; storeTokens does not use it.
 jest.mock('~/mcp/utils', () => ({
   isInvalidClientMessage: jest.fn(() => false),
 }));

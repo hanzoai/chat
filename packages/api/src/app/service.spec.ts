@@ -1,4 +1,4 @@
-import type { AppConfig } from '@librechat/data-schemas';
+import type { AppConfig } from '@hanzochat/data-schemas';
 import { createAppConfigService, _resetOverrideStrictCache } from './service';
 
 /** Extends AppConfig with mock fields used by merge behavior tests. */
@@ -277,7 +277,7 @@ describe('createAppConfigService', () => {
       });
 
       it('warns once when non-empty principals proceed without tenantId', async () => {
-        const { logger } = jest.requireActual('@librechat/data-schemas');
+        const { logger } = jest.requireActual('@hanzochat/data-schemas');
         const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
         const deps = createDeps();
         const { getAppConfig } = createAppConfigService(deps);
@@ -293,7 +293,7 @@ describe('createAppConfigService', () => {
       });
 
       it('falls through to getApplicableConfigs when ALS has tenant context despite no tenantId param', async () => {
-        const { tenantStorage } = jest.requireActual('@librechat/data-schemas');
+        const { tenantStorage } = jest.requireActual('@hanzochat/data-schemas');
         const deps = createDeps({
           getApplicableConfigs: jest
             .fn()
@@ -329,7 +329,7 @@ describe('createAppConfigService', () => {
       });
 
       it('scopes the override cache key to the ALS tenant when no tenantId param is given', async () => {
-        const { tenantStorage } = jest.requireActual('@librechat/data-schemas');
+        const { tenantStorage } = jest.requireActual('@hanzochat/data-schemas');
         const deps = createDeps({
           getApplicableConfigs: jest
             .fn()
@@ -349,7 +349,7 @@ describe('createAppConfigService', () => {
       });
 
       it('does not serve one tenant a cached config built for another tenant', async () => {
-        const { tenantStorage, getTenantId } = jest.requireActual('@librechat/data-schemas');
+        const { tenantStorage, getTenantId } = jest.requireActual('@hanzochat/data-schemas');
         // Each tenant's DB overrides carry a marker derived from the active ALS tenant.
         const deps = createDeps({
           getApplicableConfigs: jest

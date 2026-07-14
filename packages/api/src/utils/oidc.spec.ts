@@ -1,5 +1,5 @@
 import { extractOpenIDTokenInfo, isOpenIDTokenValid, processOpenIDPlaceholders } from './oidc';
-import type { TUser } from 'librechat-data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 
 describe('OpenID Token Utilities', () => {
   describe('extractOpenIDTokenInfo', () => {

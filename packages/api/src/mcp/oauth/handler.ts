@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { FetchLike } from '@modelcontextprotocol/sdk/shared/transport';
 import { OAuthMetadataSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 import {
@@ -9,7 +9,7 @@ import {
   discoverAuthorizationServerMetadata,
   discoverOAuthProtectedResourceMetadata,
 } from '@modelcontextprotocol/sdk/client/auth.js';
-import { TokenExchangeMethodEnum, type MCPOptions } from 'librechat-data-provider';
+import { TokenExchangeMethodEnum, type MCPOptions } from '@hanzochat/data-provider';
 import type { FlowStateManager } from '~/flow/manager';
 import type {
   OAuthClientInformation,

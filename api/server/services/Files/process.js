@@ -16,9 +16,9 @@ const {
   removeNullishValues,
   isAssistantsEndpoint,
   getEndpointFileConfig,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { EnvVar } = require('@librechat/agents');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { sanitizeFilename, parseText, processAudioFile } = require('@hanzochat/api');
 const {
   convertImage,

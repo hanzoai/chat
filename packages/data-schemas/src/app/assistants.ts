@@ -4,8 +4,8 @@ import {
   EModelEndpoint,
   assistantEndpointSchema,
   defaultAssistantsVersion,
-} from 'librechat-data-provider';
-import type { TCustomConfig, TAssistantEndpoint } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TCustomConfig, TAssistantEndpoint } from '@hanzochat/data-provider';
 
 /**
  * Sets up the minimum, default Assistants configuration if Azure OpenAI Assistants option is enabled.

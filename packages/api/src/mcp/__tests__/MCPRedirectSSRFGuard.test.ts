@@ -16,7 +16,7 @@ import type { Socket } from 'net';
 import { MCPConnection } from '~/mcp/connection';
 import { isSSRFTarget } from '~/auth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 

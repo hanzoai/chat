@@ -10,14 +10,14 @@ const {
   resolveRequestTenantId,
   restoreTenantContextFromReq,
 } = require('@hanzochat/api');
-const { isValidObjectIdString, logger } = require('@librechat/data-schemas');
+const { isValidObjectIdString, logger } = require('@hanzochat/data-schemas');
 const {
   PermissionBits,
   PermissionTypes,
   Permissions,
   FileContext,
   mergeFileConfig,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   createSkill,
   getSkillById,

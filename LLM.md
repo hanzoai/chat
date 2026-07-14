@@ -52,7 +52,7 @@ client/              # React frontend (Vite)
   src/routes/        # Client-side routing
   src/store/         # State management
 packages/
-  data-provider/     # Shared data layer (librechat-data-provider)
+  data-provider/     # Shared data layer (@hanzochat/data-provider)
   data-schemas/      # Validation schemas
   api/               # API client package (@hanzochat/api)
   client/            # Shared client components
@@ -299,7 +299,7 @@ in `compose.prod.yml` is inert here (built-in openAI reads `OPENAI_REVERSE_PROXY
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
-- `@hanzochat/api`, `@librechat/client`, `@librechat/data-schemas`, `librechat-data-provider`, `@librechat/agents`
+- `@hanzochat/api`, `@hanzochat/client`, `@hanzochat/data-schemas`, `@hanzochat/data-provider`, `@librechat/agents`
 - Functions: `extractLibreChatParams`, `importLibreChatConvo`
 - Type names: `LibreChatKeys`, `LibreChatParams`
 - Config filename: `librechat.yaml` (upstream convention)

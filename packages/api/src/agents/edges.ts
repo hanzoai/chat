@@ -1,4 +1,4 @@
-import type { GraphEdge } from 'librechat-data-provider';
+import type { GraphEdge } from '@hanzochat/data-provider';
 
 /**
  * Creates a stable key for edge deduplication.

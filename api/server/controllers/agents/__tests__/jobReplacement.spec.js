@@ -28,7 +28,7 @@ const mockGenerationJobManager = {
 const mockSaveMessage = jest.fn();
 const mockDecrementPendingRequest = jest.fn();
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: mockLogger,
 }));
 

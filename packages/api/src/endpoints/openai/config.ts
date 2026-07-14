@@ -1,6 +1,6 @@
 import { ProxyAgent } from 'undici';
 import { Providers } from '@librechat/agents';
-import { KnownEndpoints, EModelEndpoint } from 'librechat-data-provider';
+import { KnownEndpoints, EModelEndpoint } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 import { getLLMConfig as getAnthropicLLMConfig } from '~/endpoints/anthropic/llm';
 import { getOpenAILLMConfig, extractDefaultParams } from './llm';

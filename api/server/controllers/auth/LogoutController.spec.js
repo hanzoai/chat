@@ -11,7 +11,7 @@ jest.mock('@hanzochat/api', () => ({
   isEnabled: (...args) => mockIsEnabled(...args),
   clearCloudFrontCookies: (...args) => mockClearCloudFrontCookies(...args),
 }));
-jest.mock('@librechat/data-schemas', () => ({ logger: mockLogger }));
+jest.mock('@hanzochat/data-schemas', () => ({ logger: mockLogger }));
 jest.mock('~/server/services/AuthService', () => ({
   logoutUser: (...args) => mockLogoutUser(...args),
 }));

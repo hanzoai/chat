@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import copy from 'copy-to-clipboard';
-import type { TAttachment } from 'librechat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import ProgressText from '~/components/Chat/Messages/Content/ProgressText';
 import CopyButton from '~/components/Messages/Content/CopyButton';
 import LangIcon from '~/components/Messages/Content/LangIcon';

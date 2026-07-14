@@ -10,12 +10,12 @@ jest.mock('@hanzochat/api', () => ({
   isActiveExpirationDate: jest.fn((expiredAt) => expiredAt > new Date()),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { error: jest.fn() },
   createTempChatExpirationDate: jest.fn(() => new Date('2030-01-01T00:00:00.000Z')),
 }));
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   RetentionMode: {
     ALL: 'all',
     TEMPORARY: 'temporary',
@@ -44,8 +44,8 @@ jest.mock('~/models', () => ({
 
 jest.mock('~/server/middleware/requireJwtAuth', () => (req, res, next) => next());
 
-const { RetentionMode } = require('librechat-data-provider');
-const { createTempChatExpirationDate, logger } = require('@librechat/data-schemas');
+const { RetentionMode } = require('@hanzochat/data-provider');
+const { createTempChatExpirationDate, logger } = require('@hanzochat/data-schemas');
 const { createSharedLink, updateSharedLink } = require('~/models');
 const shareRouter = require('../share');
 

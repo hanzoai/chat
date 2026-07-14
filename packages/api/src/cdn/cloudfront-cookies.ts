@@ -1,5 +1,5 @@
 import { getSignedCookies } from '@aws-sdk/cloudfront-signer';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
 import type { NextFunction, Response } from 'express';
 

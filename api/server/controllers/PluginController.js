@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { CacheKeys } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys } = require('@hanzochat/data-provider');
 const { getToolkitKey, checkPluginAuth, filterUniquePlugins } = require('@hanzochat/api');
 const { getCachedTools, setCachedTools } = require('~/server/services/Config');
 const { availableTools, toolkits } = require('~/app/clients/tools');

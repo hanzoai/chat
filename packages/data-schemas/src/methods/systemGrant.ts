@@ -1,4 +1,4 @@
-import { PrincipalType, SystemRoles } from 'librechat-data-provider';
+import { PrincipalType, SystemRoles } from '@hanzochat/data-provider';
 import type { DataHandle } from '~/common/dataHandle';
 import type { Types, Model, ClientSession, FilterQuery } from 'mongoose';
 import type { SystemCapability } from '~/types/admin';

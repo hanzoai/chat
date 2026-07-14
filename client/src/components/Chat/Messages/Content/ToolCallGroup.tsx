@@ -1,13 +1,13 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useRecoilValue } from 'recoil';
 import { ChevronDown, Users } from 'lucide-react';
-import { Tools, Constants, ContentTypes, ToolCallTypes } from 'librechat-data-provider';
+import { Tools, Constants, ContentTypes, ToolCallTypes } from '@hanzochat/data-provider';
 import type {
   TAttachment,
   TMessageContentParts,
   Agents,
   FunctionToolCall,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { PartWithIndex } from './ParallelContent';
 import { useLocalize, useExpandCollapse, scheduleMessageContentLayoutReconcile } from '~/hooks';
 import { cn, getToolDisplayLabel } from '~/utils';

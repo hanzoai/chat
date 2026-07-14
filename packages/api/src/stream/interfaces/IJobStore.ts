@@ -1,4 +1,4 @@
-import type { Agents } from 'librechat-data-provider';
+import type { Agents } from '@hanzochat/data-provider';
 import type { StandardGraph } from '@librechat/agents';
 
 /**

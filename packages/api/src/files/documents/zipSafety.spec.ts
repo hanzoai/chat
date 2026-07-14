@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { megabyte } from 'librechat-data-provider';
+import { megabyte } from '@hanzochat/data-provider';
 import { assertSafeZipSize, ZipBombError } from './zipSafety';
 
 /**

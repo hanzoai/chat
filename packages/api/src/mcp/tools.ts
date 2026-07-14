@@ -1,5 +1,5 @@
-import { logger } from '@librechat/data-schemas';
-import { Constants } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { Constants } from '@hanzochat/data-provider';
 import type { JsonSchemaType } from '@librechat/agents';
 import type { LCAvailableTools, LCFunctionTool } from './types';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import type { SearchResultData } from 'librechat-data-provider';
+import type { SearchResultData } from '@hanzochat/data-provider';
 import { Citation, CompositeCitation } from '~/components/Web/Citation';
 import { CitationContext } from '~/components/Web/Context';
 import { SearchContext } from '~/Providers';
@@ -37,7 +37,7 @@ jest.mock('~/components/Chat/Messages/Content/FilePreviewDialog', () => ({
     ) : null,
 }));
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   Button: ({ children, onClick, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button onClick={onClick} {...props}>
       {children}

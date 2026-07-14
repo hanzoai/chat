@@ -18,7 +18,7 @@
 import type { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { MCPOAuthHandler } from '~/mcp/oauth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 

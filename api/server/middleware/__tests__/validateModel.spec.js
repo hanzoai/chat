@@ -1,4 +1,4 @@
-const { ViolationTypes } = require('librechat-data-provider');
+const { ViolationTypes } = require('@hanzochat/data-provider');
 
 jest.mock('@hanzochat/api', () => ({
   handleError: jest.fn(),

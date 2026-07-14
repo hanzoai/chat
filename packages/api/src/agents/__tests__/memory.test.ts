@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { Providers } from '@librechat/agents';
-import { Tools } from 'librechat-data-provider';
-import type { MemoryArtifact } from 'librechat-data-provider';
+import { Tools } from '@hanzochat/data-provider';
+import type { MemoryArtifact } from '@hanzochat/data-provider';
 import { createMemoryTool, processMemory } from '../memory';
 
 // Mock the logger

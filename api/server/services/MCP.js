@@ -1,5 +1,5 @@
 const { tool } = require('@langchain/core/tools');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   Providers,
   StepTypes,
@@ -21,7 +21,7 @@ const {
   Constants,
   ContentTypes,
   isAssistantsEndpoint,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   getOAuthReconnectionManager,
   getMCPServersRegistry,

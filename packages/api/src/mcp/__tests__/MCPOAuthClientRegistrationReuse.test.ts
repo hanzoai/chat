@@ -29,7 +29,7 @@ import { InMemoryTokenStore, createOAuthMCPServer } from './helpers/oauthTestSer
 import { MCPConnectionFactory } from '~/mcp/MCPConnectionFactory';
 import { MCPOAuthHandler, MCPTokenStorage } from '~/mcp/oauth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

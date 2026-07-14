@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useToastContext } from '@librechat/client';
+import { useToastContext } from '@hanzochat/client';
 import { useGetSkillFavoritesQuery, useUpdateSkillFavoritesMutation } from '~/data-provider';
 import { getFavoritesErrorMessage, logger } from '~/utils';
 import { useLocalize } from '~/hooks';

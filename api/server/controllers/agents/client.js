@@ -1,5 +1,5 @@
 require('events').EventEmitter.defaultMaxListeners = 100;
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { getBufferString, HumanMessage } = require('@langchain/core/messages');
 const {
   createRun,
@@ -43,7 +43,7 @@ const {
   isAgentsEndpoint,
   isEphemeralAgentId,
   removeNullishValues,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { spendTokens, spendStructuredTokens } = require('~/models/spendTokens');
 const { encodeAndFormat } = require('~/server/services/Files/images/encode');
 const { createContextHandlers } = require('~/app/clients/prompts');

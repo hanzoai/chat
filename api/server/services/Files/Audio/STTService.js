@@ -2,10 +2,10 @@ const axios = require('axios');
 const fs = require('fs').promises;
 const FormData = require('form-data');
 const { Readable } = require('stream');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { genAzureEndpoint, logAxiosError } = require('@hanzochat/api');
-const { extractEnvVariable, STTProviders } = require('librechat-data-provider');
+const { extractEnvVariable, STTProviders } = require('@hanzochat/data-provider');
 const { getAppConfig } = require('~/server/services/Config');
 
 /**

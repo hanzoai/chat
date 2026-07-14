@@ -1,8 +1,8 @@
 const express = require('express');
 const passport = require('passport');
 const { randomState } = require('openid-client');
-const { logger } = require('@librechat/data-schemas');
-const { CacheKeys } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys } = require('@hanzochat/data-provider');
 const {
   requireAdmin,
   getAdminPanelUrl,

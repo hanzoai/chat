@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { PrincipalType } from 'librechat-data-provider';
+import { PrincipalType } from '@hanzochat/data-provider';
 import { isValidCapability } from '~/admin/capabilities';
 import type { ISystemGrant } from '~/types';
 

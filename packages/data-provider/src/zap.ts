@@ -9,7 +9,7 @@
  * Falls back to REST API when ZAP is unavailable.
  *
  * Usage:
- *   import { zap } from 'librechat-data-provider';
+ *   import { zap } from '@hanzochat/data-provider';
  *
  *   await zap.connect('wss://api.hanzo.ai/zap');
  *   const stream = zap.streamChat(messages, model);

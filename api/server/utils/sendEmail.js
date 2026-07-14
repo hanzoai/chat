@@ -3,7 +3,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { logAxiosError, isEnabled, readFileAsString } = require('@hanzochat/api');
 
 /**

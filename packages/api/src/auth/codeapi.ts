@@ -1,4 +1,4 @@
-import { getTenantId } from '@librechat/data-schemas';
+import { getTenantId } from '@hanzochat/data-schemas';
 import { createHash, createPrivateKey, randomUUID, sign as cryptoSign } from 'crypto';
 import type { KeyObject, JsonWebKey } from 'crypto';
 import type { ServerRequest } from '~/types';

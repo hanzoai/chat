@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const {
   ResourceType,
@@ -8,7 +8,7 @@ const {
   PrincipalType,
   PrincipalModel,
   PermissionBits,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 
 // Mock the config/connect module to prevent connection attempts during tests
 jest.mock('../connect', () => jest.fn().mockResolvedValue(true));

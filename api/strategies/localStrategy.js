@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { errorsToString } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { errorsToString } = require('@hanzochat/data-provider');
 const { isEnabled, checkEmailConfig } = require('@hanzochat/api');
 const { Strategy: PassportLocalStrategy } = require('passport-local');
 const { findUser, comparePassword, updateUser } = require('~/models');

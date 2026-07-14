@@ -1,7 +1,7 @@
 const { nanoid } = require('nanoid');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { Constants, EnvVar, GraphEvents, ToolEndHandler } = require('@librechat/agents');
-const { Tools, StepTypes, FileContext, ErrorTypes } = require('librechat-data-provider');
+const { Tools, StepTypes, FileContext, ErrorTypes } = require('@hanzochat/data-provider');
 const {
   sendEvent,
   GenerationJobManager,

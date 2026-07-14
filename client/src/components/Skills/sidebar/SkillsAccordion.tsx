@@ -1,4 +1,4 @@
-import { SystemRoles } from 'librechat-data-provider';
+import { SystemRoles } from '@hanzochat/data-provider';
 import { AdminSettings } from '~/components/Skills/buttons';
 import SkillsSidePanel from './SkillsSidePanel';
 import { useAuthContext } from '~/hooks';

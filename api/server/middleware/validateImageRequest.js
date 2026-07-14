@@ -1,6 +1,6 @@
 const cookies = require('cookie');
 const jwt = require('jsonwebtoken');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { isEnabled, getBasePath } = require('@hanzochat/api');
 
 const OBJECT_ID_LENGTH = 24;

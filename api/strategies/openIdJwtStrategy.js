@@ -1,8 +1,8 @@
 const cookies = require('cookie');
 const jwksRsa = require('jwks-rsa');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { SystemRoles } = require('librechat-data-provider');
+const { SystemRoles } = require('@hanzochat/data-provider');
 const { isEnabled, findOpenIDUser, math } = require('@hanzochat/api');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { updateUser, findUser } = require('~/models');

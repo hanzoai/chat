@@ -13,10 +13,10 @@
 import * as http from 'http';
 import * as net from 'net';
 import type { Socket } from 'net';
-import { TokenExchangeMethodEnum } from 'librechat-data-provider';
+import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
 import { MCPOAuthHandler } from '~/mcp/oauth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

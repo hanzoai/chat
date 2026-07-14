@@ -1,6 +1,6 @@
 /** Note: No hard-coded values should be used in this file. */
 const { maxTokensMap } = require('@hanzochat/api');
-const { EModelEndpoint } = require('librechat-data-provider');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 const {
   defaultRate,
   tokenValues,

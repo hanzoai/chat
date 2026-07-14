@@ -196,7 +196,7 @@ Changes from v0.7.7 to v0.7.8-rc1.
 
 ### ⚙️ Other Changes
 
-- 📦 refactor: Move DB Models to `@librechat/data-schemas` by **@rubentalstra** in [#6210](https://github.com/danny-avila/LibreChat/pull/6210)
+- 📦 refactor: Move DB Models to `@hanzochat/data-schemas` by **@rubentalstra** in [#6210](https://github.com/danny-avila/LibreChat/pull/6210)
 - 📦 chore: Patch `axios` to address CVE-2025-27152 by **@danny-avila** in [#6222](https://github.com/danny-avila/LibreChat/pull/6222)
 - ⚠️ refactor: Use Error Content Part Instead Of Throwing Error for Agents by **@danny-avila** in [#6262](https://github.com/danny-avila/LibreChat/pull/6262)
 - 🏃‍♂️ refactor: Improve Agent Run Context & Misc. Changes by **@danny-avila** in [#6448](https://github.com/danny-avila/LibreChat/pull/6448)

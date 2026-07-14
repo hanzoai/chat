@@ -1,4 +1,4 @@
-import type { AgentToolOptions } from 'librechat-data-provider';
+import type { AgentToolOptions } from '@hanzochat/data-provider';
 import type { GenericTool } from '@librechat/agents';
 import type { LCToolRegistry } from './classification';
 import {

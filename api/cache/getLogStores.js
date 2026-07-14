@@ -1,5 +1,5 @@
 const { Keyv } = require('keyv');
-const { Time, CacheKeys, ViolationTypes } = require('librechat-data-provider');
+const { Time, CacheKeys, ViolationTypes } = require('@hanzochat/data-provider');
 const {
   logFile,
   keyvMongo,

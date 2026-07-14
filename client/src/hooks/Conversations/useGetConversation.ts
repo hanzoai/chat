@@ -1,5 +1,5 @@
 import { useRecoilCallback } from 'recoil';
-import type { TConversation } from 'librechat-data-provider';
+import type { TConversation } from '@hanzochat/data-provider';
 import store from '~/store';
 
 export default function useGetConversation(index: string | number = 0) {

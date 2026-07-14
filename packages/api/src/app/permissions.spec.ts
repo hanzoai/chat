@@ -1,7 +1,7 @@
-import { loadDefaultInterface } from '@librechat/data-schemas';
-import { SystemRoles, Permissions, PermissionTypes, roleDefaults } from 'librechat-data-provider';
-import type { TConfigDefaults, TCustomConfig } from 'librechat-data-provider';
-import type { AppConfig } from '@librechat/data-schemas';
+import { loadDefaultInterface } from '@hanzochat/data-schemas';
+import { SystemRoles, Permissions, PermissionTypes, roleDefaults } from '@hanzochat/data-provider';
+import type { TConfigDefaults, TCustomConfig } from '@hanzochat/data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
 import { updateInterfacePermissions } from './permissions';
 
 const mockUpdateAccessPermissions = jest.fn();

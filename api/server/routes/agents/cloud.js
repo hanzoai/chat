@@ -1,5 +1,5 @@
 const express = require('express');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { resolveTenantBearer } = require('@hanzochat/api');
 const { requireJwtAuth, cloudAgentLimiter } = require('~/server/middleware');
 const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/CloudAgentsClient');

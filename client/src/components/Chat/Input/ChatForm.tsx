@@ -1,8 +1,8 @@
 import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
-import { TextareaAutosize } from '@librechat/client';
+import { TextareaAutosize } from '@hanzochat/client';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from 'librechat-data-provider';
+import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from '@hanzochat/data-provider';
 import {
   useChatContext,
   useChatFormContext,

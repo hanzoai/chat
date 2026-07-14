@@ -3,15 +3,15 @@
  * calls and return values. Must be declared before require('./buildEndpointOption')
  * so the destructured reference in the middleware captures the wrapper.
  */
-jest.mock('librechat-data-provider', () => {
-  const actual = jest.requireActual('librechat-data-provider');
+jest.mock('@hanzochat/data-provider', () => {
+  const actual = jest.requireActual('@hanzochat/data-provider');
   return {
     ...actual,
     parseCompactConvo: jest.fn((...args) => actual.parseCompactConvo(...args)),
   };
 });
 
-const { EModelEndpoint, parseCompactConvo } = require('librechat-data-provider');
+const { EModelEndpoint, parseCompactConvo } = require('@hanzochat/data-provider');
 
 const mockBuildOptions = jest.fn((_endpoint, parsedBody) => ({
   ...parsedBody,

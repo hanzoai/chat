@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { ContentTypes, EModelEndpoint } from 'librechat-data-provider';
+import { ContentTypes, EModelEndpoint } from '@hanzochat/data-provider';
 import { ArrowDown, ChevronRight, Maximize2, Minimize2, Users } from 'lucide-react';
-import { OGDialog, OGDialogContent, OGDialogTitle, OGDialogDescription } from '@librechat/client';
+import { OGDialog, OGDialogContent, OGDialogTitle, OGDialogDescription } from '@hanzochat/client';
 
-import type { TAttachment, TMessage, TMessageContentParts } from 'librechat-data-provider';
+import type { TAttachment, TMessage, TMessageContentParts } from '@hanzochat/data-provider';
 import type { PartWithIndex } from '~/components/Chat/Messages/Content/ParallelContent';
 import type { SubagentTickerLine } from '~/utils/subagentContent';
 

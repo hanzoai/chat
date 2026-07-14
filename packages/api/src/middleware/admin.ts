@@ -1,5 +1,5 @@
-import { logger } from '@librechat/data-schemas';
-import { SystemRoles } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { SystemRoles } from '@hanzochat/data-provider';
 import type { NextFunction, Response } from 'express';
 import type { ServerRequest } from '~/types/http';
 

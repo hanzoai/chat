@@ -8,13 +8,13 @@ import {
   dataService,
   getEndpointField,
   getDefaultParamsEndpoint,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   TEndpointsConfig,
   TStartupConfig,
   TModelsConfig,
   TConversation,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import {
   clearModelForNonEphemeralAgent,
   getDefaultEndpoint,

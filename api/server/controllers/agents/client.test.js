@@ -1,5 +1,5 @@
 const { Providers } = require('@librechat/agents');
-const { Constants, EModelEndpoint } = require('librechat-data-provider');
+const { Constants, EModelEndpoint } = require('@hanzochat/data-provider');
 const AgentClient = require('./client');
 
 jest.mock('@librechat/agents', () => ({
@@ -1544,7 +1544,7 @@ describe('AgentClient - titleConvo', () => {
 
     it('should handle mixed content types correctly', async () => {
       const { HumanMessage } = require('@langchain/core/messages');
-      const { ContentTypes } = require('librechat-data-provider');
+      const { ContentTypes } = require('@hanzochat/data-provider');
 
       const messages = [
         new HumanMessage({
@@ -2274,7 +2274,7 @@ describe('AgentClient - chatCompletion post-reply banner regression', () => {
    * This test reproduces that mutation and asserts no ERROR part is produced.
    */
   const { createRun } = require('@hanzochat/api');
-  const { ContentTypes } = require('librechat-data-provider');
+  const { ContentTypes } = require('@hanzochat/data-provider');
   let processStreamMock;
 
   const makeClient = (agentOverrides = {}) => {

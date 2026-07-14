@@ -1,12 +1,12 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import {
   SystemRoles,
   Permissions,
   roleDefaults,
   PermissionTypes,
   getConfigDefaults,
-} from 'librechat-data-provider';
-import type { IRole, AppConfig } from '@librechat/data-schemas';
+} from '@hanzochat/data-provider';
+import type { IRole, AppConfig } from '@hanzochat/data-schemas';
 import { isMemoryEnabled } from '~/memory/config';
 
 /**

@@ -1,5 +1,5 @@
 import { useRecoilState } from 'recoil';
-import { Button, Checkbox } from '@librechat/client';
+import { Button, Checkbox } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 

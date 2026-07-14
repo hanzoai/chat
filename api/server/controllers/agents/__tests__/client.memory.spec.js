@@ -1,4 +1,4 @@
-const { EModelEndpoint, AgentCapabilities } = require('librechat-data-provider');
+const { EModelEndpoint, AgentCapabilities } = require('@hanzochat/data-provider');
 
 /**
  * Pins the capability-flag derivation that `AgentClient::useMemory` uses when

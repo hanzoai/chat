@@ -1,9 +1,9 @@
 import { memo, useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { ScrollText } from 'lucide-react';
 import { AutoSizer, List } from 'react-virtualized';
-import { Spinner, useCombobox } from '@librechat/client';
+import { Spinner, useCombobox } from '@hanzochat/client';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import type { TSkillSummary } from 'librechat-data-provider';
+import type { TSkillSummary } from '@hanzochat/data-provider';
 import type { MentionOption } from '~/common';
 import useInitPopoverInput from '~/hooks/Input/useInitPopoverInput';
 import { useLocalize, useSkillActiveState } from '~/hooks';

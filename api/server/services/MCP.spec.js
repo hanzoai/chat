@@ -1,6 +1,6 @@
 // Mock all dependencies - define mocks before imports
 // Mock all dependencies
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
@@ -35,9 +35,9 @@ jest.mock('@hanzochat/api', () => {
   };
 });
 
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { MCPOAuthHandler } = require('@hanzochat/api');
-const { CacheKeys, Constants } = require('librechat-data-provider');
+const { CacheKeys, Constants } = require('@hanzochat/data-provider');
 const D = Constants.mcp_delimiter;
 const {
   createMCPTool,

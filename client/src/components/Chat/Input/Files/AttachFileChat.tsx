@@ -8,8 +8,8 @@ import {
   getEndpointField,
   isAssistantsEndpoint,
   getEndpointFileConfig,
-} from 'librechat-data-provider';
-import type { TConversation } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TConversation } from '@hanzochat/data-provider';
 import { useGetFileConfig, useGetEndpointsQuery, useGetAgentByIdQuery } from '~/data-provider';
 import { useAgentsMapContext } from '~/Providers';
 import AttachFileMenu from './AttachFileMenu';

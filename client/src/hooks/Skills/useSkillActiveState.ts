@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys } from 'librechat-data-provider';
-import { useToastContext } from '@librechat/client';
-import type { TSkillStatesResponse } from 'librechat-data-provider';
+import { QueryKeys } from '@hanzochat/data-provider';
+import { useToastContext } from '@hanzochat/client';
+import type { TSkillStatesResponse } from '@hanzochat/data-provider';
 import {
   useGetSkillStatesQuery,
   useUpdateSkillStatesMutation,

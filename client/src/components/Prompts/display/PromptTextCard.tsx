@@ -6,7 +6,7 @@ import supersub from 'remark-supersub';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import { Copy, Check } from 'lucide-react';
-import { Button, TooltipAnchor, useToastContext } from '@librechat/client';
+import { Button, TooltipAnchor, useToastContext } from '@hanzochat/client';
 import { codeNoExecution } from '~/components/Chat/Messages/Content/MarkdownComponents';
 import { PromptVariableGfm } from '../editor/Markdown';
 import { useLocalize } from '~/hooks';

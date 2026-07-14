@@ -1,5 +1,5 @@
 const { EventSource } = require('eventsource');
-const { Time } = require('librechat-data-provider');
+const { Time } = require('@hanzochat/data-provider');
 const {
   MCPManager,
   FlowStateManager,

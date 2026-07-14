@@ -1,8 +1,8 @@
 const { nanoid } = require('nanoid');
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { Callback, ToolEndHandler, formatAgentMessages } = require('@librechat/agents');
-const { EModelEndpoint, ResourceType, PermissionBits } = require('librechat-data-provider');
+const { EModelEndpoint, ResourceType, PermissionBits } = require('@hanzochat/data-provider');
 const {
   createRun,
   buildToolSet,
@@ -406,7 +406,7 @@ const createResponse = async (req, res) => {
       const collectedUsage = [];
 
       // Artifact promises for processing tool outputs
-      /** @type {Promise<import('librechat-data-provider').TAttachment | null>[]} */
+      /** @type {Promise<import('@hanzochat/data-provider').TAttachment | null>[]} */
       const artifactPromises = [];
       // Use Responses API-specific callback that emits librechat:attachment events
       const toolEndCallback = createResponsesToolEndCallback({
@@ -560,7 +560,7 @@ const createResponse = async (req, res) => {
       // Collect usage for balance tracking
       const collectedUsage = [];
 
-      /** @type {Promise<import('librechat-data-provider').TAttachment | null>[]} */
+      /** @type {Promise<import('@hanzochat/data-provider').TAttachment | null>[]} */
       const artifactPromises = [];
       const toolEndCallback = createToolEndCallback({ req, res, artifactPromises, streamId: null });
 

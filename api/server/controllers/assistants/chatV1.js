@@ -1,6 +1,6 @@
 const { v4 } = require('uuid');
 const { sleep } = require('@librechat/agents');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { sendEvent, getBalanceConfig, getModelMaxTokens, countTokens } = require('@hanzochat/api');
 const {
   Time,
@@ -14,7 +14,7 @@ const {
   ImageVisionTool,
   checkOpenAIStorage,
   AssistantStreamEvents,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   initThread,
   recordUsage,
@@ -76,7 +76,7 @@ const chatV1 = async (req, res) => {
   let parentMessageId = _parentId;
   /** @type {TMessage[]} */
   let previousMessages = [];
-  /** @type {import('librechat-data-provider').TConversation | null} */
+  /** @type {import('@hanzochat/data-provider').TConversation | null} */
   let conversation = null;
   /** @type {string[]} */
   let file_ids = [];

@@ -14,7 +14,7 @@ jest.mock('~/models/spendTokens', () => ({
   spendStructuredTokens: (...args) => mockSpendStructuredTokens(...args),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
@@ -33,7 +33,7 @@ jest.mock('@hanzochat/api', () => ({
   sanitizeMessageForTransmit: jest.fn((msg) => msg),
 }));
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   isAssistantsEndpoint: jest.fn().mockReturnValue(false),
   ErrorTypes: { INVALID_REQUEST: 'INVALID_REQUEST', NO_SYSTEM_MESSAGES: 'NO_SYSTEM_MESSAGES' },
 }));

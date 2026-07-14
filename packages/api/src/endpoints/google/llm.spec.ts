@@ -1,5 +1,5 @@
 import { Providers } from '@librechat/agents';
-import { AuthKeys } from 'librechat-data-provider';
+import { AuthKeys } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 import { getGoogleConfig, getSafetySettings, knownGoogleParams } from './llm';
 

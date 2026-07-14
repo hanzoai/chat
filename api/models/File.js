@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { EToolResources, FileContext } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { EToolResources, FileContext } = require('@hanzochat/data-provider');
 const { File } = require('~/db/models');
 
 /**

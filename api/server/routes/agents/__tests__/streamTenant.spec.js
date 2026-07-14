@@ -9,8 +9,8 @@ const mockGenerationJobManager = {
   getActiveJobIdsForUser: jest.fn().mockResolvedValue([]),
 };
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     debug: jest.fn(),
     warn: jest.fn(),

@@ -1,5 +1,5 @@
-import { EToolResources } from 'librechat-data-provider';
-import type { AgentToolResources } from 'librechat-data-provider';
+import { EToolResources } from '@hanzochat/data-provider';
+import type { AgentToolResources } from '@hanzochat/data-provider';
 
 /**
  * Every `EToolResources` member that can carry `file_ids` on an agent document.

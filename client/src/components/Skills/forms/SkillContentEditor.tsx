@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import { EditIcon, Check } from 'lucide-react';
 import { Controller, useFormContext } from 'react-hook-form';
-import { TextareaAutosize, Button, TooltipAnchor } from '@librechat/client';
+import { TextareaAutosize, Button, TooltipAnchor } from '@hanzochat/client';
 import type { RegisterOptions } from 'react-hook-form';
 import type { PluggableList } from 'unified';
 import { codeNoExecution } from '~/components/Chat/Messages/Content/MarkdownComponents';

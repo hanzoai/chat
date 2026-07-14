@@ -1,5 +1,5 @@
 import { Run, Providers, Constants } from '@librechat/agents';
-import { providerEndpointMap, KnownEndpoints } from 'librechat-data-provider';
+import { providerEndpointMap, KnownEndpoints } from '@hanzochat/data-provider';
 import type { BaseMessage } from '@langchain/core/messages';
 import type {
   MultiAgentGraphConfig,
@@ -12,8 +12,8 @@ import type {
   IState,
   LCTool,
 } from '@librechat/agents';
-import type { IUser } from '@librechat/data-schemas';
-import type { Agent } from 'librechat-data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
+import type { Agent } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 import { resolveHeaders, createSafeUser } from '~/utils/env';
 

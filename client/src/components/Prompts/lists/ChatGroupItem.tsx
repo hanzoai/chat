@@ -2,8 +2,8 @@ import { useState, memo, useRef, useCallback, useId, useMemo } from 'react';
 import * as Ariakit from '@ariakit/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Ellipsis, Eye, SquarePen, Trash, EarthIcon, User } from 'lucide-react';
-import { PermissionBits, ResourceType } from 'librechat-data-provider';
-import type { TPromptGroup } from 'librechat-data-provider';
+import { PermissionBits, ResourceType } from '@hanzochat/data-provider';
+import type { TPromptGroup } from '@hanzochat/data-provider';
 import {
   Label,
   Button,
@@ -13,7 +13,7 @@ import {
   DropdownPopup,
   OGDialogTemplate,
   useToastContext,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import { useLocalize, useAuthContext, useSubmitMessage, useResourcePermissions } from '~/hooks';
 import { useRecordPromptUsage, useDeletePromptGroup } from '~/data-provider';
 import { useLiveAnnouncer } from '~/Providers';

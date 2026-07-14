@@ -1,4 +1,4 @@
-const { SystemRoles } = require('librechat-data-provider');
+const { SystemRoles } = require('@hanzochat/data-provider');
 
 // --- Capture the verify callback passed to JwtStrategy ---
 let capturedVerifyCallback;
@@ -11,7 +11,7 @@ jest.mock('passport-jwt', () => ({
     fromAuthHeaderAsBearerToken: jest.fn(() => 'mock-extractor'),
   },
 }));
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), debug: jest.fn(), error: jest.fn() },
 }));
 jest.mock('~/models', () => ({

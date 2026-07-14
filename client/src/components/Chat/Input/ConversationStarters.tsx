@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { PenLine, Lightbulb, Code2, Sparkles } from 'lucide-react';
-import { EModelEndpoint, Constants } from 'librechat-data-provider';
+import { EModelEndpoint, Constants } from '@hanzochat/data-provider';
 import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
 import { getIconEndpoint, getEntity } from '~/utils';

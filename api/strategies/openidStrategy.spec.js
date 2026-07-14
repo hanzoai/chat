@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const jwtDecode = require('jsonwebtoken/decode');
 const undici = require('undici');
-const { ErrorTypes } = require('librechat-data-provider');
+const { ErrorTypes } = require('@hanzochat/data-provider');
 const { findUser, createUser, updateUser } = require('~/models');
 const { setupOpenId } = require('./openidStrategy');
 
@@ -34,7 +34,7 @@ jest.mock('~/models', () => ({
   createUser: jest.fn(),
   updateUser: jest.fn(),
 }));
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   ...jest.requireActual('@hanzochat/api'),
   logger: {
     info: jest.fn(),
@@ -548,7 +548,7 @@ describe('setupOpenId', () => {
       expect(undici.fetch).not.toHaveBeenCalled();
       expect(user).toBe(false);
       expect(details.message).toBe('You must have "group-required" role to log in.');
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
       const expectedTokenKind = cfg.kind === 'access' ? 'access token' : 'id token';
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining(`Key '${cfg.path}' not found in ${expectedTokenKind}!`),
@@ -562,7 +562,7 @@ describe('setupOpenId', () => {
       process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'groups';
       process.env.OPENID_REQUIRED_ROLE_TOKEN_KIND = 'id';
 
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
 
       jwtDecode.mockReturnValue({
         hasgroups: true,
@@ -642,7 +642,7 @@ describe('setupOpenId', () => {
         process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'groups';
         process.env.OPENID_REQUIRED_ROLE_TOKEN_KIND = 'id';
 
-        const { logger } = require('@librechat/data-schemas');
+        const { logger } = require('@hanzochat/data-schemas');
 
         jwtDecode.mockReturnValue({
           hasgroups: true,
@@ -706,7 +706,7 @@ describe('setupOpenId', () => {
         process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'groups';
         process.env.OPENID_REQUIRED_ROLE_TOKEN_KIND = 'id';
 
-        const { logger } = require('@librechat/data-schemas');
+        const { logger } = require('@hanzochat/data-schemas');
 
         jwtDecode.mockReturnValue(decodedTokenValue);
 
@@ -941,7 +941,7 @@ describe('setupOpenId', () => {
       permissions: ['not-admin'],
     });
 
-    const { logger } = require('@librechat/data-schemas');
+    const { logger } = require('@hanzochat/data-schemas');
 
     // Act
     const { user } = await validate(tokenset);
@@ -1048,7 +1048,7 @@ describe('setupOpenId', () => {
     });
 
     it('should log error and reject login when required role path does not exist in token', async () => {
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
       process.env.OPENID_REQUIRED_ROLE = 'app-user';
       process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'resource_access.nonexistent.roles';
 
@@ -1073,7 +1073,7 @@ describe('setupOpenId', () => {
     });
 
     it('should handle missing intermediate nested path gracefully', async () => {
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
       process.env.OPENID_REQUIRED_ROLE = 'user';
       process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'org.team.roles';
 
@@ -1299,7 +1299,7 @@ describe('setupOpenId', () => {
     });
 
     it('should handle empty object at nested path', async () => {
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
       process.env.OPENID_REQUIRED_ROLE = 'user';
       process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'access.roles';
 
@@ -1319,7 +1319,7 @@ describe('setupOpenId', () => {
     });
 
     it('should handle null value at intermediate path', async () => {
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
       process.env.OPENID_REQUIRED_ROLE = 'user';
       process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'data.roles';
 
@@ -1343,7 +1343,7 @@ describe('setupOpenId', () => {
       process.env.OPENID_ADMIN_ROLE_PARAMETER_PATH = 'roles';
       process.env.OPENID_ADMIN_ROLE_TOKEN_KIND = 'invalid';
 
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
 
       jwtDecode.mockReturnValue({
         roles: ['requiredRole', 'admin'],
@@ -1362,7 +1362,7 @@ describe('setupOpenId', () => {
     });
 
     it('should reject login when roles path returns invalid type (object)', async () => {
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
       process.env.OPENID_REQUIRED_ROLE = 'app-user';
       process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'roles';
 
@@ -1383,7 +1383,7 @@ describe('setupOpenId', () => {
     });
 
     it('should reject login when roles path returns invalid type (number)', async () => {
-      const { logger } = require('@librechat/data-schemas');
+      const { logger } = require('@hanzochat/data-schemas');
       process.env.OPENID_REQUIRED_ROLE = 'user';
       process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH = 'roleCount';
 

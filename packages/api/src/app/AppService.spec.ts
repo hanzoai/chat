@@ -7,11 +7,11 @@ import {
   defaultSocialLogins,
   validateAzureGroups,
   defaultAgentCapabilities,
-} from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -20,7 +20,7 @@ jest.mock('@librechat/data-schemas', () => ({
   },
 }));
 
-import { AppService } from '@librechat/data-schemas';
+import { AppService } from '@hanzochat/data-schemas';
 
 const azureGroups = [
   {

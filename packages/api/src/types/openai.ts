@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { openAISchema } from 'librechat-data-provider';
-import type { TConfig } from 'librechat-data-provider';
+import { openAISchema } from '@hanzochat/data-provider';
+import type { TConfig } from '@hanzochat/data-provider';
 import type { OpenAIClientOptions, Providers } from '@librechat/agents';
 import type { BindToolsInput } from '@langchain/core/language_models/chat_models';
 import type { AzureOptions } from './azure';

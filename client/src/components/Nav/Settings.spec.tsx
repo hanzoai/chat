@@ -21,7 +21,7 @@ jest.mock('~/hooks/usePersonalizationAccess', () => ({
   }),
 }));
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   GearIcon: () => <span aria-hidden="true" />,
   DataIcon: () => <span aria-hidden="true" />,
   UserIcon: () => <span aria-hidden="true" />,

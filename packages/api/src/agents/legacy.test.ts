@@ -1,6 +1,6 @@
-import { EToolResources } from 'librechat-data-provider';
+import { EToolResources } from '@hanzochat/data-provider';
 import { convertOcrToContextInPlace, mergeAgentOcrConversion } from './legacy';
-import type { AgentToolResources, TFile } from 'librechat-data-provider';
+import type { AgentToolResources, TFile } from '@hanzochat/data-provider';
 
 describe('OCR to Context Conversion for updateAgentHandler', () => {
   describe('convertOcrToContextInPlace', () => {

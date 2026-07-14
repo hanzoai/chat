@@ -1,9 +1,9 @@
-import { getTenantId, getRequestId, logger } from '@librechat/data-schemas';
+import { getTenantId, getRequestId, logger } from '@hanzochat/data-schemas';
 import { preAuthTenantMiddleware } from './preAuthTenant';
 import type { Request, Response, NextFunction } from 'express';
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     warn: jest.fn(),
     error: jest.fn(),

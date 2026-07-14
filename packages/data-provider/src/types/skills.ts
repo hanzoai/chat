@@ -21,7 +21,7 @@ export enum InvocationMode {
  * `packages/data-schemas/src/methods/skill.ts`; whenever those constants
  * change, the DB-side validators MUST be updated to match.
  *
- * Exported from `librechat-data-provider` so both frontend form validators
+ * Exported from `@hanzochat/data-provider` so both frontend form validators
  * and backend Mongoose pre-save hooks use the same literals.
  */
 export const SKILL_NAME_MAX_LENGTH = 64;

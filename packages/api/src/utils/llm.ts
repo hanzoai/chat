@@ -1,5 +1,5 @@
-import { librechat } from 'librechat-data-provider';
-import type { DynamicSettingProps } from 'librechat-data-provider';
+import { librechat } from '@hanzochat/data-provider';
+import type { DynamicSettingProps } from '@hanzochat/data-provider';
 
 type LibreChatKeys = keyof typeof librechat;
 

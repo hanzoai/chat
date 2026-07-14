@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { Agent, TModelSpec } from 'librechat-data-provider';
+import type { Agent, TModelSpec } from '@hanzochat/data-provider';
 import type { FavoriteModel } from '~/store/favorites';
 import FavoriteItem from '../FavoriteItem';
 
@@ -31,8 +31,8 @@ jest.mock('~/utils', () => ({
   renderAgentAvatar: () => <span data-testid="agent-avatar" />,
 }));
 
-jest.mock('@librechat/client', () => ({
-  ...jest.requireActual('@librechat/client'),
+jest.mock('@hanzochat/client', () => ({
+  ...jest.requireActual('@hanzochat/client'),
   DropdownPopup: () => <div data-testid="dropdown-popup" />,
 }));
 

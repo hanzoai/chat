@@ -173,7 +173,7 @@ export const GraphEvents = {
 } as const;
 
 /**
- * Step types from librechat-data-provider
+ * Step types from @hanzochat/data-provider
  */
 export const StepTypes = {
   MESSAGE_CREATION: 'message_creation',

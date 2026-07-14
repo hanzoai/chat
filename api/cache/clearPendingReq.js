@@ -1,5 +1,5 @@
 const { isEnabled } = require('@hanzochat/api');
-const { Time, CacheKeys } = require('librechat-data-provider');
+const { Time, CacheKeys } = require('@hanzochat/data-provider');
 const getLogStores = require('./getLogStores');
 
 const { USE_REDIS, LIMIT_CONCURRENT_MESSAGES } = process.env ?? {};

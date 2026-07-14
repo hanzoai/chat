@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@librechat/data-schemas');
-const { EModelEndpoint, Constants, openAISettings, CacheKeys } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { EModelEndpoint, Constants, openAISettings, CacheKeys } = require('@hanzochat/data-provider');
 const { createImportBatchBuilder } = require('./importBatchBuilder');
 const { cloneMessagesWithTimestamps } = require('./fork');
 const getLogStores = require('~/cache/getLogStores');

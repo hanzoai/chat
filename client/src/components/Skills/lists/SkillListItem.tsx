@@ -3,7 +3,7 @@ import { ScrollText, ChevronDown, ChevronRight, Folder, Pin } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 import { FixedSizeTree } from 'react-vtree';
 import type { FixedSizeNodeData, TreeWalkerValue, TreeWalker } from 'react-vtree';
-import type { TSkill, TSkillFile } from 'librechat-data-provider';
+import type { TSkill, TSkillFile } from '@hanzochat/data-provider';
 import { useListSkillFilesQuery } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';

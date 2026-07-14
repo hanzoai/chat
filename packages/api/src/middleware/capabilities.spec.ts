@@ -1,15 +1,15 @@
-import { PrincipalType } from 'librechat-data-provider';
+import { PrincipalType } from '@hanzochat/data-provider';
 import {
   configCapability,
   SystemCapabilities,
   readConfigCapability,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import type { Response } from 'express';
 import type { ServerRequest } from '~/types/http';
 import { generateCapabilityCheck } from './capabilities';
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     warn: jest.fn(),
     error: jest.fn(),

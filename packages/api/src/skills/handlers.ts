@@ -1,10 +1,10 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import {
   ResourceType,
   AccessRoleIds,
   PrincipalType,
   PermissionBits,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { Response } from 'express';
 import type { Types } from 'mongoose';
 import type {
@@ -17,7 +17,7 @@ import type {
   ListSkillsByAccessResult,
   UpdateSkillResult,
   ValidationIssue,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import type {
   TSkill,
   TSkillFile,
@@ -30,7 +30,7 @@ import type {
   TDeleteSkillFileResponse,
   TSkillConflictResponse,
   TSkillFileContentResponse,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { ServerRequest, StrategyFunctions } from '~/types';
 import { isBinaryBuffer } from './binary';
 
@@ -46,7 +46,7 @@ type DuplicateKeyError = Error & { code?: number | string };
  * stay pure — no direct imports of mongoose, no direct filesystem I/O.
  */
 export interface SkillsHandlersDeps {
-  /** Skill CRUD — from `@librechat/data-schemas` `createMethods` output. */
+  /** Skill CRUD — from `@hanzochat/data-schemas` `createMethods` output. */
   createSkill: (data: CreateSkillInput) => Promise<CreateSkillResult>;
   getSkillById: (id: string | Types.ObjectId) => Promise<(ISkill & { _id: Types.ObjectId }) | null>;
   listSkillsByAccess: (params: {
