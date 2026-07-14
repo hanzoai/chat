@@ -19,7 +19,7 @@ jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid-456'),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),

@@ -1,8 +1,8 @@
 const axios = require('axios');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { genAzureEndpoint, logAxiosError } = require('@hanzochat/api');
-const { extractEnvVariable, TTSProviders } = require('librechat-data-provider');
+const { extractEnvVariable, TTSProviders } = require('@hanzochat/data-provider');
 const { getRandomVoiceId, createChunkProcessor, splitTextIntoChunks } = require('./streamAudio');
 const { getAppConfig } = require('~/server/services/Config');
 

@@ -1,5 +1,5 @@
-import { Constants } from 'librechat-data-provider';
-import type { TFile, TMessage } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
+import type { TFile, TMessage } from '@hanzochat/data-provider';
 
 /** Fields to strip from files before client transmission */
 const FILE_STRIP_FIELDS = ['text', '_id', '__v'] as const;

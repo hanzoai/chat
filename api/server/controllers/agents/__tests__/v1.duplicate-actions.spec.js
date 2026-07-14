@@ -11,8 +11,8 @@ jest.mock('~/server/services/Config', () => ({
 }));
 
 const mongoose = require('mongoose');
-const { actionDelimiter } = require('librechat-data-provider');
-const { agentSchema, actionSchema } = require('@librechat/data-schemas');
+const { actionDelimiter } = require('@hanzochat/data-provider');
+const { agentSchema, actionSchema } = require('@hanzochat/data-schemas');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const { duplicateAgent } = require('../v1');
 

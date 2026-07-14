@@ -1,11 +1,11 @@
-import { logger } from '@librechat/data-schemas';
-import { SystemRoles } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { SystemRoles } from '@hanzochat/data-provider';
 import { requireAdmin } from './admin';
 import type { Response } from 'express';
 import type { ServerRequest } from '~/types/http';
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     warn: jest.fn(),
     debug: jest.fn(),

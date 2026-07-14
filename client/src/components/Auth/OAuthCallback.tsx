@@ -9,8 +9,8 @@
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setTokenHeader } from 'librechat-data-provider';
-import { Spinner } from '@librechat/client';
+import { setTokenHeader } from '@hanzochat/data-provider';
+import { Spinner } from '@hanzochat/client';
 import { getHanzoIamSdk } from '~/utils/iam';
 
 export default function OAuthCallback() {

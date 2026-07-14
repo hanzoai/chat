@@ -73,7 +73,7 @@ export interface ChatCompletionDependencies {
 }
 
 /**
- * Agent type from librechat-data-provider
+ * Agent type from @hanzochat/data-provider
  */
 interface Agent {
   id: string;

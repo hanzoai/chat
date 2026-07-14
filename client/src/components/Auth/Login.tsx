@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { ErrorTypes, registerPage } from 'librechat-data-provider';
-import { OpenIDIcon, useToastContext } from '@librechat/client';
+import { ErrorTypes, registerPage } from '@hanzochat/data-provider';
+import { OpenIDIcon, useToastContext } from '@hanzochat/client';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import type { TLoginLayoutContext } from '~/common';
 import { ErrorMessage } from '~/components/Auth/ErrorMessage';

@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState } from 'react';
 import * as Ariakit from '@ariakit/react';
 import { ShieldEllipsis } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
-import { Permissions, SystemRoles, roleDefaults, PermissionTypes } from 'librechat-data-provider';
+import { Permissions, SystemRoles, roleDefaults, PermissionTypes } from '@hanzochat/data-provider';
 import {
   OGDialog,
   OGDialogTitle,
@@ -11,7 +11,7 @@ import {
   Button,
   Switch,
   DropdownPopup,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import type { Control, UseFormSetValue, UseFormGetValues } from 'react-hook-form';
 import type { TranslationKeys } from '~/hooks/useLocalize';
 import { useLocalize, useAuthContext } from '~/hooks';

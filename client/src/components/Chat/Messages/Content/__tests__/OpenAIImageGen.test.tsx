@@ -23,7 +23,7 @@ jest.mock('~/components/Chat/Messages/Content/Image', () => ({
   ),
 }));
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   PixelCard: ({ progress }: { progress: number }) => (
     <div data-testid="pixel-card" data-progress={progress} />
   ),

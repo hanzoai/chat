@@ -34,7 +34,7 @@ type LookupCallback = (
   family?: number,
 ) => void;
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

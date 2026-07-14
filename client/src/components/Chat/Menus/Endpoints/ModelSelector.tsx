@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { TooltipAnchor } from '@librechat/client';
-import { getConfigDefaults } from 'librechat-data-provider';
+import { TooltipAnchor } from '@hanzochat/client';
+import { getConfigDefaults } from '@hanzochat/data-provider';
 import type { ModelSelectorProps } from '~/common';
 import {
   renderModelSpecs,

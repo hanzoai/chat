@@ -13,14 +13,14 @@ import {
   OGDialogFooter,
   OGDialogContent,
   OGDialogTemplate,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import {
   SystemRoles,
   Permissions,
   ResourceType,
   PermissionBits,
   PermissionTypes,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { useAuthContext, useHasAccess, useResourcePermissions, MCPServerDefinition } from '~/hooks';
 import { GenericGrantAccessDialog } from '~/components/Sharing';
 import { useMCPServerForm } from './hooks/useMCPServerForm';

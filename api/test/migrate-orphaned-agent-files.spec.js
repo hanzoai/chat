@@ -12,8 +12,8 @@
 // via the mongo URI env var, but the test already owns the mongoose instance.
 jest.mock('../../config/connect', () => jest.fn(async () => undefined));
 
-jest.mock('@librechat/data-schemas', () => {
-  const actual = jest.requireActual('@librechat/data-schemas');
+jest.mock('@hanzochat/data-schemas', () => {
+  const actual = jest.requireActual('@hanzochat/data-schemas');
   return {
     ...actual,
     logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() },
@@ -22,8 +22,8 @@ jest.mock('@librechat/data-schemas', () => {
 
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { agentSchema, fileSchema } = require('@librechat/data-schemas');
-const { FileSources } = require('librechat-data-provider');
+const { agentSchema, fileSchema } = require('@hanzochat/data-schemas');
+const { FileSources } = require('@hanzochat/data-provider');
 
 const { migrateOrphanedAgentFiles } = require('../../config/migrate-orphaned-agent-files');
 
@@ -163,7 +163,7 @@ describe('migrate-orphaned-agent-files (issue #12776)', () => {
     // Pins the runAsSystem wrap: without it the migration throws under
     // TENANT_ISOLATION_STRICT=true on the very first Agent.countDocuments(),
     // blocking the intended remediation path for corrupted agents.
-    const { SYSTEM_TENANT_ID, tenantStorage } = require('@librechat/data-schemas');
+    const { SYSTEM_TENANT_ID, tenantStorage } = require('@hanzochat/data-schemas');
     await seedFile('keeper');
     await seedAgent({ file_search: { file_ids: ['keeper', 'orphan'] } });
 

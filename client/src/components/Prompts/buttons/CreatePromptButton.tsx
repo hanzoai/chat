@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Button, TooltipAnchor } from '@librechat/client';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import { Button, TooltipAnchor } from '@hanzochat/client';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import { useHasAccess, useLocalize } from '~/hooks';
 
 export default function CreatePromptButton() {

@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
-import { Permissions, PermissionTypes } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
+import { Permissions, PermissionTypes } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import { extractOpenIDTokenInfo, isOpenIDTokenValid } from '~/utils/oidc';
 import type { MCPOAuthTokens } from './types';
 

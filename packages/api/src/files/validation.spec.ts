@@ -1,5 +1,5 @@
 import { Providers } from '@librechat/agents';
-import { mbToBytes } from 'librechat-data-provider';
+import { mbToBytes } from '@hanzochat/data-provider';
 import { validatePdf, validateVideo, validateAudio } from './validation';
 
 describe('PDF Validation with fileConfig.endpoints.*.fileSizeLimit', () => {

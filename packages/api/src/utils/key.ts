@@ -1,7 +1,7 @@
 import path from 'path';
 import axios from 'axios';
-import { ErrorTypes } from 'librechat-data-provider';
-import { logger } from '@librechat/data-schemas';
+import { ErrorTypes } from '@hanzochat/data-provider';
+import { logger } from '@hanzochat/data-schemas';
 import { readFileAsString } from './files';
 
 export interface GoogleServiceKey {

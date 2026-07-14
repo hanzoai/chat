@@ -5,7 +5,7 @@ jest.mock('@hanzochat/api', () => ({
   generateShortLivedToken: jest.fn(),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     warn: jest.fn(),
     error: jest.fn(),

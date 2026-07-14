@@ -1,7 +1,7 @@
-import { logger, webSearchKeys } from '@librechat/data-schemas';
-import { Constants, extractVariableName } from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
-import type { AppConfig } from '@librechat/data-schemas';
+import { logger, webSearchKeys } from '@hanzochat/data-schemas';
+import { Constants, extractVariableName } from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
 import { isEnabled, checkEmailConfig } from '~/utils';
 import { handleRateLimits } from './limits';
 

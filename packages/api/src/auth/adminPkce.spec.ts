@@ -1,7 +1,7 @@
 import { Keyv } from 'keyv';
 
 jest.mock(
-  '@librechat/data-schemas',
+  '@hanzochat/data-schemas',
   () => ({
     logger: {
       info: jest.fn(),

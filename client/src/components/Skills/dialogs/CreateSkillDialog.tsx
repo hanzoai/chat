@@ -6,12 +6,12 @@ import {
   OGDialogContent,
   TextareaAutosize,
   useToastContext,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import {
   SKILL_NAME_PATTERN,
   SKILL_NAME_MAX_LENGTH,
   SKILL_DESCRIPTION_MAX_LENGTH,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { useCreateSkillMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';

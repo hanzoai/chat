@@ -1,8 +1,8 @@
 import React, { useMemo, useCallback, useEffect } from 'react';
 import debounce from 'lodash/debounce';
 import { TerminalSquareIcon } from 'lucide-react';
-import { Tools, AuthType } from 'librechat-data-provider';
-import { Spinner, TooltipAnchor, useToastContext } from '@librechat/client';
+import { Tools, AuthType } from '@hanzochat/data-provider';
+import { Spinner, TooltipAnchor, useToastContext } from '@hanzochat/client';
 import type { CodeBarProps } from '~/common';
 import { useVerifyAgentToolAuth, useToolCallMutation } from '~/data-provider';
 import ApiKeyDialog from '~/components/SidePanel/Agents/Code/ApiKeyDialog';

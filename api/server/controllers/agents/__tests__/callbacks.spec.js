@@ -1,4 +1,4 @@
-const { Tools } = require('librechat-data-provider');
+const { Tools } = require('@hanzochat/data-provider');
 
 // Mock all dependencies before requiring the module
 jest.mock('nanoid', () => ({
@@ -9,7 +9,7 @@ jest.mock('@hanzochat/api', () => ({
   sendEvent: jest.fn(),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     error: jest.fn(),
   },
@@ -46,7 +46,7 @@ describe('createToolEndCallback', () => {
     jest.clearAllMocks();
 
     // Get the mocked logger
-    logger = require('@librechat/data-schemas').logger;
+    logger = require('@hanzochat/data-schemas').logger;
 
     // Now require the module after all mocks are set up
     const callbacks = require('../callbacks');

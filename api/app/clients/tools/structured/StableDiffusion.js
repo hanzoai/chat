@@ -5,8 +5,8 @@ const axios = require('axios');
 const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
 const { Tool } = require('@langchain/core/tools');
-const { logger } = require('@librechat/data-schemas');
-const { FileContext, ContentTypes } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { FileContext, ContentTypes } = require('@hanzochat/data-provider');
 const { getBasePath } = require('@hanzochat/api');
 const paths = require('~/config/paths');
 

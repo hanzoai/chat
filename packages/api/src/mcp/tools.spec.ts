@@ -1,4 +1,4 @@
-import { Constants } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { createMCPToolCacheService } from './tools';
 import type { LCAvailableTools } from './types';
 import type { MCPToolInput, MCPToolCacheDeps } from './tools';

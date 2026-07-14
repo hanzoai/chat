@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { ResourceType, PrincipalType, PermissionBits } from 'librechat-data-provider';
+import { ResourceType, PrincipalType, PermissionBits } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 import { createAclEntryMethods } from '~/methods/aclEntry';
 import aclEntrySchema from '~/schema/aclEntry';

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, dataService } from 'librechat-data-provider';
+import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import type {
   QueryObserverResult,
   UseQueryOptions,
@@ -12,7 +12,7 @@ import type {
   TSkillStatesResponse,
   TListSkillFilesResponse,
   TSkillFileContentResponse,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 
 /**
  * Paginated skill list (single page) — use this for small lists or when you want to

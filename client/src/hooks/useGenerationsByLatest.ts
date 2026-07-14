@@ -1,4 +1,4 @@
-import { EModelEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
 
 type TUseGenerations = {
   error?: boolean;

@@ -1,6 +1,6 @@
-import { FileSources } from 'librechat-data-provider';
+import { FileSources } from '@hanzochat/data-provider';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 
@@ -20,8 +20,8 @@ jest.mock('~/cdn/cloudfront', () => ({
   initializeCloudFront: jest.fn(),
 }));
 
-import type { AppConfig } from '@librechat/data-schemas';
-import type { CloudFrontConfig } from 'librechat-data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
+import type { CloudFrontConfig } from '@hanzochat/data-provider';
 import { initializeFileStorage } from '../cdn';
 import { initializeFirebase } from '~/cdn/firebase';
 import { initializeAzureBlobService } from '~/cdn/azure';

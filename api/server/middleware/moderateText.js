@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { isEnabled } = require('@hanzochat/api');
-const { logger } = require('@librechat/data-schemas');
-const { ErrorTypes } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { ErrorTypes } = require('@hanzochat/data-provider');
 const denyRequest = require('./denyRequest');
 
 async function moderateText(req, res, next) {

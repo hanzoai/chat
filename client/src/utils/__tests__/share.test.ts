@@ -1,8 +1,8 @@
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   apiBaseUrl: jest.fn(),
 }));
 
-import { apiBaseUrl } from 'librechat-data-provider';
+import { apiBaseUrl } from '@hanzochat/data-provider';
 import { buildShareLinkUrl } from '../share';
 
 describe('buildShareLinkUrl', () => {

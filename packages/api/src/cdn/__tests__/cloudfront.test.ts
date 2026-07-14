@@ -1,9 +1,9 @@
-import type { CloudFrontConfig } from 'librechat-data-provider';
+import type { CloudFrontConfig } from '@hanzochat/data-provider';
 
 const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() };
 const mockInitializeS3 = jest.fn();
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: mockLogger,
 }));
 
@@ -37,7 +37,7 @@ describe('CloudFront CDN module', () => {
   });
 
   async function load() {
-    jest.mock('@librechat/data-schemas', () => ({ logger: mockLogger }));
+    jest.mock('@hanzochat/data-schemas', () => ({ logger: mockLogger }));
     jest.mock('../s3', () => ({ initializeS3: mockInitializeS3 }));
     return import('../cloudfront');
   }

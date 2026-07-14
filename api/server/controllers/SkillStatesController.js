@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   MAX_SKILL_STATES,
   toSkillStatesRecord,
   validateSkillStatesPayload,
   pruneOrphanSkillStates,
 } = require('@hanzochat/api');
-const { ResourceType, PermissionBits } = require('librechat-data-provider');
+const { ResourceType, PermissionBits } = require('@hanzochat/data-provider');
 const { findAccessibleResources } = require('~/server/services/PermissionService');
 const { updateUser, getUserById } = require('~/models');
 

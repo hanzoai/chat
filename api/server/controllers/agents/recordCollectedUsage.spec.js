@@ -8,7 +8,7 @@
  * - Cache token handling (OpenAI and Anthropic formats)
  */
 
-const { EModelEndpoint } = require('librechat-data-provider');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 
 // Mock dependencies before requiring the module
 const mockSpendTokens = jest.fn().mockResolvedValue();

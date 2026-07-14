@@ -7,7 +7,7 @@
  * the literal string `{{MY_CUSTOM_KEY}}` would be sent to the MCP
  * server endpoint instead of the substituted value.
  */
-import type { IUser } from '@librechat/data-schemas';
+import type { IUser } from '@hanzochat/data-schemas';
 import type * as t from '~/mcp/types';
 import { processMCPEnv } from '~/utils/env';
 

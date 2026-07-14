@@ -14,7 +14,7 @@ import { useEffect } from 'react';
 import { renderHook } from '@testing-library/react';
 import { RecoilRoot, useSetRecoilState } from 'recoil';
 import type { ReactNode } from 'react';
-import type { TAttachment } from 'librechat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import store from '~/store';
 
 jest.mock('~/hooks/useLocalize', () => () => (key: string) => key);

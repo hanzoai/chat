@@ -73,7 +73,7 @@ jest.mock('~/hooks', () => ({
   TranslationKeys: {},
 }));
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   Spinner: () => <div data-testid="spinner" />,
   useMediaQuery: () => false,
 }));

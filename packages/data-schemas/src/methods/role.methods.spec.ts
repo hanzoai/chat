@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { SystemRoles, Permissions, roleDefaults, PermissionTypes } from 'librechat-data-provider';
+import { SystemRoles, Permissions, roleDefaults, PermissionTypes } from '@hanzochat/data-provider';
 import type { IRole, IUser, RolePermissions } from '..';
 import { createRoleMethods } from './role';
 import { createModels } from '../models';

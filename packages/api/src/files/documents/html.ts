@@ -1,5 +1,5 @@
 import yauzl from 'yauzl';
-import { excelMimeTypes, megabyte } from 'librechat-data-provider';
+import { excelMimeTypes, megabyte } from '@hanzochat/data-provider';
 import { tryLibreOfficePreview } from './libreoffice';
 import { assertSafeZipSize } from './zipSafety';
 

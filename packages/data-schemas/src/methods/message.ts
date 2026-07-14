@@ -1,6 +1,6 @@
 import type { DeleteResult, FilterQuery, Model } from 'mongoose';
 import type { DataHandle } from '~/common/dataHandle';
-import { RetentionMode } from 'librechat-data-provider';
+import { RetentionMode } from '@hanzochat/data-provider';
 import logger from '~/config/winston';
 import { createTempChatExpirationDate } from '~/utils/tempChatRetention';
 import { createFallbackRetentionDate } from '~/utils/retention';

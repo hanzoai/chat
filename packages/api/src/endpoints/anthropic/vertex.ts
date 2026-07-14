@@ -1,6 +1,6 @@
 import path from 'path';
 import { GoogleAuth } from 'google-auth-library';
-import { AuthKeys } from 'librechat-data-provider';
+import { AuthKeys } from '@hanzochat/data-provider';
 import { AnthropicVertex } from '@anthropic-ai/vertex-sdk';
 import type { ClientOptions } from '@anthropic-ai/sdk';
 import type { AnthropicCredentials, VertexAIClientOptions } from '~/types/anthropic';
@@ -20,7 +20,7 @@ export interface VertexCredentialOptions {
 
 /**
  * Interface for Vertex AI configuration from YAML config.
- * This matches the TVertexAISchema from librechat-data-provider.
+ * This matches the TVertexAISchema from @hanzochat/data-provider.
  */
 export interface VertexAIConfigInput {
   enabled?: boolean;

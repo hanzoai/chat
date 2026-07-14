@@ -1,8 +1,8 @@
 import React, { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import copy from 'copy-to-clipboard';
 import { InfoIcon } from 'lucide-react';
-import { Tools } from 'librechat-data-provider';
-import { Clipboard, CheckMark, TooltipAnchor } from '@librechat/client';
+import { Tools } from '@hanzochat/data-provider';
+import { Clipboard, CheckMark, TooltipAnchor } from '@hanzochat/client';
 import type { CodeBarProps } from '~/common';
 import ResultSwitcher from '~/components/Messages/Content/ResultSwitcher';
 import { useToolCallsMapContext, useMessageContext } from '~/Providers';

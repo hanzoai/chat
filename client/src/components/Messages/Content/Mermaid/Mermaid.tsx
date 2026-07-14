@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, memo } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { Spinner } from '@librechat/client';
+import { Spinner } from '@hanzochat/client';
 import useSvgProcessing from './useSvgProcessing';
 import useMermaidZoom from './useMermaidZoom';
 import MermaidDialog from './MermaidDialog';

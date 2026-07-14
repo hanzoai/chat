@@ -1,4 +1,4 @@
-import { ResourceType } from 'librechat-data-provider';
+import { ResourceType } from '@hanzochat/data-provider';
 import type {
   BaseSystemCapability,
   SystemCapability,

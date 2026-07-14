@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
-import type { IUser } from '@librechat/data-schemas';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { FilterQuery } from 'mongoose';
 import type { AdminExchangeResponse } from '~/auth/exchange';
 

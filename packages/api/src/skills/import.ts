@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import path from 'path';
 import JSZip from 'jszip';
-import { ResourceType, AccessRoleIds, PrincipalType } from 'librechat-data-provider';
-import { logger, stripYamlTrailingComment } from '@librechat/data-schemas';
+import { ResourceType, AccessRoleIds, PrincipalType } from '@hanzochat/data-provider';
+import { logger, stripYamlTrailingComment } from '@hanzochat/data-schemas';
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
 import type {
@@ -11,7 +11,7 @@ import type {
   CreateSkillInput,
   CreateSkillResult,
   UpsertSkillFileInput,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import { resolveRequestTenantId } from '~/middleware/tenant';
 
 /** Security limits for zip processing. */

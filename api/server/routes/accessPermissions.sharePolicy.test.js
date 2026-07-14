@@ -38,7 +38,7 @@ const {
   PermissionBits,
   PermissionTypes,
   Permissions,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 
 const { updateResourcePermissions } = require('~/server/controllers/PermissionsController');
 const { hasCapability } = require('~/server/middleware/roles/capabilities');

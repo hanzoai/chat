@@ -1,4 +1,4 @@
-import type { IMongoFile } from '@librechat/data-schemas';
+import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { ServerRequest } from '~/types';
 import type { TokenCountFn } from '~/utils/text';
 import { countTokens } from '~/utils/tokenizer';

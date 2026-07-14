@@ -1,7 +1,7 @@
 import React from 'react';
 import { RecoilRoot } from 'recoil';
-import { ContentTypes } from 'librechat-data-provider';
-import type { TAttachment, TMessageContentParts } from 'librechat-data-provider';
+import { ContentTypes } from '@hanzochat/data-provider';
+import type { TAttachment, TMessageContentParts } from '@hanzochat/data-provider';
 import { fireEvent, render, screen } from '@testing-library/react';
 import ContentParts from '../ContentParts';
 
@@ -52,7 +52,7 @@ jest.mock('lucide-react', () => ({
   Users: () => <span>{'users'}</span>,
 }));
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   Button: ({ children }: { children?: React.ReactNode }) => <button>{children}</button>,
 }));
 

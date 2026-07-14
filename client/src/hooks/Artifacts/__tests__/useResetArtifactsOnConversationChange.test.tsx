@@ -3,7 +3,7 @@ import { act, render } from '@testing-library/react';
 import { RecoilRoot, useRecoilCallback, useSetRecoilState } from 'recoil';
 import type { MutableSnapshot } from 'recoil';
 import type { Artifact } from '~/common';
-import type { TConversation } from 'librechat-data-provider';
+import type { TConversation } from '@hanzochat/data-provider';
 import useResetArtifactsOnConversationChange from '../useResetArtifactsOnConversationChange';
 import store from '~/store';
 

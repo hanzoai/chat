@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { Constants, ContentTypes } from 'librechat-data-provider';
-import type { TMessageContentParts } from 'librechat-data-provider';
+import { Constants, ContentTypes } from '@hanzochat/data-provider';
+import type { TMessageContentParts } from '@hanzochat/data-provider';
 import Part from '../Part';
 
 jest.mock('../Parts', () => ({

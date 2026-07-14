@@ -4,9 +4,9 @@ import {
   envVarRegex,
   FetchTokenConfig,
   extractEnvVariable,
-} from 'librechat-data-provider';
-import type { TEndpoint } from 'librechat-data-provider';
-import type { AppConfig } from '@librechat/data-schemas';
+} from '@hanzochat/data-provider';
+import type { TEndpoint } from '@hanzochat/data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
 import type { BaseInitializeParams, InitializeResultBase, EndpointTokenConfig } from '~/types';
 import { getOpenAIConfig } from '~/endpoints/openai/config';
 import { getCustomEndpointConfig } from '~/app/config';

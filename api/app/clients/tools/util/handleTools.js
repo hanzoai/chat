@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   EnvVar,
   Calculator,
@@ -22,7 +22,7 @@ const {
   Permissions,
   EToolResources,
   PermissionTypes,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   availableTools,
   manifestToolMap,

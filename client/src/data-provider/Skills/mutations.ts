@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, dataService } from 'librechat-data-provider';
+import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import type { InfiniteData, QueryKey, UseMutationResult } from '@tanstack/react-query';
 import type {
   TSkill,
@@ -20,7 +20,7 @@ import type {
   UploadSkillFileOptions,
   ImportSkillOptions,
   DeleteSkillFileOptions,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 
 function isInfiniteSkillData(
   data: TSkillListResponse | InfiniteData<TSkillListResponse>,
