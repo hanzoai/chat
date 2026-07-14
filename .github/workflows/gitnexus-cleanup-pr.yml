@@ -74,7 +74,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" PR_NUM="$PR_NUM" bash <<'REMOTE'
             set -e
-            TARGET="/opt/gitnexus/indexes/LibreChat-pr-$PR_NUM"
+            TARGET="/opt/gitnexus/indexes/Chat-pr-$PR_NUM"
             if [ -d "$TARGET" ]; then
               echo "Removing $TARGET"
               rm -rf "$TARGET"

@@ -548,7 +548,7 @@ export function createRemoteAgentAuth({
       }
 
       if (userResolution.status === 'missing') {
-        logger.warn('[remoteAgentAuth] OIDC token valid but no matching LibreChat user');
+        logger.warn('[remoteAgentAuth] OIDC token valid but no matching Chat user');
         if (apiKeyEnabled) {
           await runApiKeyAuth(req, res, next, apiKeyMiddleware, getAppConfig);
           return;

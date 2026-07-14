@@ -71,7 +71,7 @@ permissions:
 # cancel-in-progress so rapid pushes to the same ref coalesced but deploys
 # targeting different refs ran in parallel. That had a data race: the
 # prune-stale-indexes step computes its active_names up front, so if
-# deploy A is rsyncing /opt/gitnexus/indexes/LibreChat-pr-12580 while
+# deploy A is rsyncing /opt/gitnexus/indexes/Chat-pr-12580 while
 # deploy B (started slightly later with a different ref) prunes, B can
 # rm -rf a folder A is still uploading into.
 #
@@ -85,7 +85,7 @@ concurrency:
 
 env:
   GITNEXUS_VERSION: '1.5.3'
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/librechat-gitnexus
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/chat-gitnexus
 
 jobs:
   # Rebuilds the long-lived image only when Dockerfile/entrypoint/extensions
@@ -200,8 +200,8 @@ jobs:
 
             // --- main and dev branches ---
             for (const [branch, name] of [
-              ['main', 'LibreChat'],
-              ['dev', 'LibreChat-dev'],
+              ['main', 'Chat'],
+              ['dev', 'Chat-dev'],
             ]) {
               const artifactName = `gitnexus-index-${branch}`;
               const fresh = await latestArtifact(artifactName);
@@ -260,11 +260,11 @@ jobs:
 
             for (const { pr, artifactName, fresh } of keptPrs) {
               serve.push({
-                name: `LibreChat-pr-${pr.number}`,
+                name: `Chat-pr-${pr.number}`,
                 artifactName,
                 runId: fresh.workflow_run.id,
               });
-              core.info(`PR #${pr.number}: run ${fresh.workflow_run.id} -> LibreChat-pr-${pr.number}`);
+              core.info(`PR #${pr.number}: run ${fresh.workflow_run.id} -> Chat-pr-${pr.number}`);
             }
             if (evictedPrs.length) {
               core.info(
@@ -305,7 +305,7 @@ jobs:
                 --name "$artifact" \
                 --dir "$target"; then
               case "$name" in
-                LibreChat|LibreChat-dev)
+                Chat|Chat-dev)
                   echo "::error::Failed to download critical artifact $artifact"
                   exit 1
                   ;;
@@ -438,7 +438,7 @@ jobs:
               # is visible and the container isn't restarted with stale
               # or missing data. PR indexes are best-effort.
               case "$name" in
-                LibreChat|LibreChat-dev)
+                Chat|Chat-dev)
                   echo "::error::rsync failed for critical index $name — aborting deploy"
                   exit 1
                   ;;
@@ -566,10 +566,10 @@ jobs:
               const matrix = JSON.parse(process.env.MATRIX || '[]');
               const triggerRunId = Number(process.env.TRIGGER_RUN_ID);
               const match = matrix.find(
-                (m) => m.runId === triggerRunId && m.name.startsWith('LibreChat-pr-'),
+                (m) => m.runId === triggerRunId && m.name.startsWith('Chat-pr-'),
               );
               if (match) {
-                prNum = parseInt(match.name.replace('LibreChat-pr-', ''), 10);
+                prNum = parseInt(match.name.replace('Chat-pr-', ''), 10);
               }
             }
 
@@ -584,7 +584,7 @@ jobs:
               `### GitNexus: ${ok ? '🚀 deployed' : '❌ deploy failed'}`,
               '',
               ok
-                ? `The \`LibreChat-pr-${prNum}\` index is now live on the MCP server.`
+                ? `The \`Chat-pr-${prNum}\` index is now live on the MCP server.`
                 : `The deploy failed — the previous index (if any) continues to be served.`,
               `[Deploy run](${deployUrl})`,
             ].join('\n');

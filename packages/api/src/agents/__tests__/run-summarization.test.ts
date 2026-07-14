@@ -175,7 +175,7 @@ type TestCustomEndpoint = Partial<TEndpoint> & {
 };
 
 /**
- * Shape of summarization parameters used in tests. The LibreChat config
+ * Shape of summarization parameters used in tests. The Chat config
  * schema restricts yaml `parameters` to primitive values, but the SDK
  * passes any record through as-is — tests need the wider shape to exercise
  * cross-endpoint `configuration` merging.

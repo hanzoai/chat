@@ -66,7 +66,7 @@ describe('getOpenAIConfig - Backward Compatibility', () => {
         },
         reverseProxyUrl: 'https://gateway.ai.cloudflare.com/v1/account-id/gateway-id/openrouter',
         headers: {
-          'x-librechat-thread-id': '{{LIBRECHAT_BODY_CONVERSATIONID}}',
+          'x-chat-thread-id': '{{CHAT_BODY_CONVERSATIONID}}',
           'x-test-key': '{{TESTING_USER_VAR}}',
         },
         proxy: '',
@@ -87,7 +87,7 @@ describe('getOpenAIConfig - Backward Compatibility', () => {
           defaultHeaders: {
             'HTTP-Referer': 'https://hanzo.chat',
             'X-Title': 'Hanzo Chat',
-            'x-librechat-thread-id': '{{LIBRECHAT_BODY_CONVERSATIONID}}',
+            'x-chat-thread-id': '{{CHAT_BODY_CONVERSATIONID}}',
             'x-test-key': '{{TESTING_USER_VAR}}',
           },
         },
@@ -396,7 +396,7 @@ describe('getOpenAIConfig - Backward Compatibility', () => {
           'https://gateway.ai.cloudflare.com/v1/${CF_ACCOUNT_ID}/${CF_GATEWAY_ID}/workers-ai/v1',
         proxy: '',
         headers: {
-          'x-librechat-thread-id': '{{LIBRECHAT_BODY_CONVERSATIONID}}',
+          'x-chat-thread-id': '{{CHAT_BODY_CONVERSATIONID}}',
           'x-test-key': '{{TESTING_USER_VAR}}',
         },
         addParams: {
@@ -420,7 +420,7 @@ describe('getOpenAIConfig - Backward Compatibility', () => {
           baseURL:
             'https://gateway.ai.cloudflare.com/v1/${CF_ACCOUNT_ID}/${CF_GATEWAY_ID}/workers-ai/v1',
           defaultHeaders: {
-            'x-librechat-thread-id': '{{LIBRECHAT_BODY_CONVERSATIONID}}',
+            'x-chat-thread-id': '{{CHAT_BODY_CONVERSATIONID}}',
             'x-test-key': '{{TESTING_USER_VAR}}',
           },
         },

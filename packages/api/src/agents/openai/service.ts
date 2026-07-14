@@ -2,7 +2,7 @@
  * OpenAI-compatible chat completions service for agents.
  *
  * This service provides an OpenAI v1/chat/completions compatible API for
- * interacting with LibreChat agents. The agent_id is passed as the "model"
+ * interacting with Chat agents. The agent_id is passed as the "model"
  * parameter per OpenAI spec.
  *
  * Usage:
@@ -173,7 +173,7 @@ interface AppConfig {
 }
 
 /**
- * Convert OpenAI messages to LibreChat format
+ * Convert OpenAI messages to Chat format
  */
 export function convertMessages(messages: ChatMessage[]): unknown[] {
   return messages.map((msg) => {
@@ -540,7 +540,7 @@ export async function listAgentModels(
       id: agent.id,
       object: 'model',
       created: Math.floor(Date.now() / 1000),
-      owned_by: 'librechat',
+      owned_by: 'chat',
       permission: [],
       root: agent.id,
       parent: null,

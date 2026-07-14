@@ -170,9 +170,9 @@ const VALID_STREAMING_EVENT_TYPES = new Set([
   'response.reasoning_summary_text.done',
   'response.output_text.annotation.added',
   'error',
-  // LibreChat extension events (prefixed per Open Responses spec)
+  // Chat extension events (prefixed per Open Responses spec)
   // @see https://openresponses.org/specification#extending-streaming-events
-  'librechat:attachment',
+  'chat:attachment',
 ]);
 
 /**

@@ -149,7 +149,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
     },
     [EModelEndpoint.custom]: {
       // hanzo.chat's custom endpoint is Zen-only (Hanzo AI zen* models) — brand it
-      // with the ensō mark instead of the generic LibreChat "custom" glyph.
+      // with the ensō mark instead of the generic Chat "custom" glyph.
       icon: <ZenLogoIcon size={size * 0.72} className="text-white" />,
       name: 'Zen',
     },

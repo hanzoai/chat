@@ -16,7 +16,7 @@ export type Config = {
   principalModel: PrincipalModel;
   /** Priority level for determining merge order (higher = more specific) */
   priority: number;
-  /** Configuration overrides matching librechat.yaml structure */
+  /** Configuration overrides matching chat.yaml structure */
   overrides: Partial<TCustomConfig>;
   /** Whether this config override is currently active */
   isActive: boolean;

@@ -17,7 +17,7 @@ if (typeof globalThis.File === 'undefined') {
       globalThis.File = File;
     }
   } catch {
-    // Older Node versions without `node:buffer.File`. LibreChat doesn't
+    // Older Node versions without `node:buffer.File`. Chat doesn't
     // support those anyway; let the test fail loudly rather than mask a
     // real environment issue.
   }

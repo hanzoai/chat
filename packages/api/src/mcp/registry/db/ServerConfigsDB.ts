@@ -19,8 +19,8 @@ import { AccessControlService } from '~/acl/accessControlService';
  * Safe placeholders like {{MCP_API_KEY}} are allowed as they resolve from the user's own plugin auth.
  */
 const DANGEROUS_CREDENTIAL_PATTERNS = [
-  /\{\{LIBRECHAT_OPENID_[^}]+\}\}/g,
-  /\{\{LIBRECHAT_USER_[^}]+\}\}/g,
+  /\{\{CHAT_OPENID_[^}]+\}\}/g,
+  /\{\{CHAT_USER_[^}]+\}\}/g,
 ];
 
 /**

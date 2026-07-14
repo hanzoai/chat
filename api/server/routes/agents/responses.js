@@ -1,5 +1,5 @@
 /**
- * Open Responses API routes for LibreChat agents.
+ * Open Responses API routes for Chat agents.
  *
  * Implements the Open Responses specification for a forward-looking,
  * agentic API that uses items as the fundamental unit and semantic

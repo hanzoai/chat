@@ -3,7 +3,7 @@
  *
  * Documents the client_id mismatch bug in horizontally scaled deployments:
  *
- * When LibreChat runs with multiple replicas (e.g., 3 behind a load balancer),
+ * When Chat runs with multiple replicas (e.g., 3 behind a load balancer),
  * each replica independently calls registerClient() on the OAuth server's /register
  * endpoint, getting a different client_id. The check-then-act race between the
  * PENDING flow check and storing the flow state means that even with a shared

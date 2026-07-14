@@ -167,7 +167,7 @@ describe('telemetry SDK lifecycle', () => {
 
   it('starts the Node SDK once when enabled', () => {
     const first = initializeTelemetry({
-      OTEL_SERVICE_NAME: 'librechat-test',
+      OTEL_SERVICE_NAME: 'chat-test',
       OTEL_TRACING_ENABLED: 'true',
     });
     const second = initializeTelemetry({ OTEL_TRACING_ENABLED: 'true' });
@@ -178,7 +178,7 @@ describe('telemetry SDK lifecycle', () => {
     expect(mockNodeSDK).toHaveBeenCalledTimes(1);
     expect(mockStart).toHaveBeenCalledTimes(1);
     expect(mockResourceFromAttributes).toHaveBeenCalledWith({
-      'service.name': 'librechat-test',
+      'service.name': 'chat-test',
     });
     expect(mockHttpInstrumentation).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -438,7 +438,7 @@ describe('telemetry SDK lifecycle', () => {
     expect(controller.status).toBe('failed');
     expect(emitWarningSpy).toHaveBeenCalledWith(
       'OpenTelemetry initialization failed: async start failed',
-      { code: 'LIBRECHAT_OTEL' },
+      { code: 'CHAT_OTEL' },
     );
   });
 
@@ -453,7 +453,7 @@ describe('telemetry SDK lifecycle', () => {
     expect(controller.status).toBe('failed');
     expect(emitWarningSpy).toHaveBeenCalledWith(
       'OpenTelemetry initialization failed: start failed',
-      { code: 'LIBRECHAT_OTEL' },
+      { code: 'CHAT_OTEL' },
     );
   });
 
@@ -514,7 +514,7 @@ describe('telemetry SDK lifecycle', () => {
     await taskFn?.();
 
     expect(emitWarningSpy).toHaveBeenCalledWith('OpenTelemetry shutdown failed: flush failed', {
-      code: 'LIBRECHAT_OTEL',
+      code: 'CHAT_OTEL',
     });
   });
 });

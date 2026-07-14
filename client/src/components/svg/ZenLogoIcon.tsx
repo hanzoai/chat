@@ -12,7 +12,7 @@ export interface ZenLogoIconProps extends React.SVGProps<SVGSVGElement> {
  * Zen symbol. Geometry matches the canonical asset in github.com/zenlm/logo (the
  * `ENSO` path on a 0 0 100 100 viewBox, stroke-width 11). Monochrome,
  * `currentColor` stroke, round-capped. Used as the avatar for the Zen (Hanzo AI)
- * model family in place of the generic LibreChat "custom" glyph.
+ * model family in place of the generic Chat "custom" glyph.
  */
 export default function ZenLogoIcon({
   className = '',

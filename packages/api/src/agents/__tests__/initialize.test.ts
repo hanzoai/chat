@@ -21,13 +21,13 @@ jest.mock('winston', () => ({
   },
 }));
 
-const mockExtractLibreChatParams = jest.fn();
+const mockExtractChatParams = jest.fn();
 const mockGetModelMaxTokens = jest.fn();
 const mockOptionalChainWithEmptyCheck = jest.fn();
 const mockGetThreadData = jest.fn();
 
 jest.mock('~/utils', () => ({
-  extractLibreChatParams: (...args: unknown[]) => mockExtractLibreChatParams(...args),
+  extractChatParams: (...args: unknown[]) => mockExtractChatParams(...args),
   getModelMaxTokens: (...args: unknown[]) => mockGetModelMaxTokens(...args),
   optionalChainWithEmptyCheck: (...args: unknown[]) => mockOptionalChainWithEmptyCheck(...args),
   getThreadData: (...args: unknown[]) => mockGetThreadData(...args),
@@ -93,8 +93,8 @@ function createMocks(overrides?: {
     overrideProvider: Providers.OPENAI,
   });
 
-  // extractLibreChatParams returns maxContextTokens when provided in model_parameters
-  mockExtractLibreChatParams.mockReturnValue({
+  // extractChatParams returns maxContextTokens when provided in model_parameters
+  mockExtractChatParams.mockReturnValue({
     resendFiles: false,
     maxContextTokens,
     modelOptions: { model: 'test-model' },

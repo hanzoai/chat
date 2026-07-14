@@ -3,7 +3,7 @@ const net = require('net');
 const path = require('path');
 require('dotenv').config();
 
-const DEFAULT_MONGO_URI = 'mongodb://127.0.0.1:27017/LibreChat-e2e';
+const DEFAULT_MONGO_URI = 'mongodb://127.0.0.1:27017/Chat-e2e';
 const DEFAULT_RUNTIME_ENV_PATH = path.resolve(__dirname, '../specs/.test-results/runtime-env.json');
 let mongoServer;
 
@@ -33,18 +33,18 @@ function getMongoAuthority(uri) {
 function getMongoDbName(uri) {
   const schemeEnd = uri.indexOf('://');
   if (schemeEnd === -1) {
-    return 'LibreChat-e2e';
+    return 'Chat-e2e';
   }
 
   const withoutScheme = uri.slice(schemeEnd + 3);
   const pathStart = withoutScheme.indexOf('/');
   if (pathStart === -1) {
-    return 'LibreChat-e2e';
+    return 'Chat-e2e';
   }
 
   const pathname = withoutScheme.slice(pathStart + 1).split(/[?#]/, 1)[0];
   const dbName = pathname.split('/', 1)[0];
-  return dbName ? decodeMongoValue(dbName) : 'LibreChat-e2e';
+  return dbName ? decodeMongoValue(dbName) : 'Chat-e2e';
 }
 
 function normalizeMongoPort(port) {

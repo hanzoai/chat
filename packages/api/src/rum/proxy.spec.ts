@@ -30,7 +30,7 @@ describe('RUM proxy configuration', () => {
     process.env = originalEnv;
   });
 
-  it('uses the fixed LibreChat RUM proxy URL and default body limit', () => {
+  it('uses the fixed Chat RUM proxy URL and default body limit', () => {
     delete process.env.RUM_PROXY_BODY_LIMIT;
     delete process.env.RUM_PROXY_TIMEOUT_MS;
 
