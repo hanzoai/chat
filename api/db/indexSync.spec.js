@@ -32,7 +32,7 @@ const originalMessageModel = mongoose.models.Message;
 const originalConversationModel = mongoose.models.Conversation;
 
 // Mock external modules
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: mockLogger,
 }));
 

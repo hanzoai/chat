@@ -4,7 +4,7 @@ jest.mock('winston', () => {
   // construction (real winston only calls the transform per-log, with a real
   // `info`). Returning `fn` directly made any `redactFormat()` call run
   // `fn(undefined)` — which crashes at `info.level`. That is exactly what
-  // `@librechat/data-schemas`'s own `config/winston` does at import time, so
+  // `@hanzochat/data-schemas`'s own `config/winston` does at import time, so
   // every backend suite that pulls in `createModels`/`logger` failed to load.
   const mockFormatFunction = jest.fn((fn) => jest.fn(() => ({ transform: fn })));
 

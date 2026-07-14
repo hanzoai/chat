@@ -13,8 +13,8 @@ jest.mock('~/server/middleware/roles/capabilities', () => ({
   hasCapability: jest.fn(),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   getTenantId: jest.fn(() => undefined),
 }));
 
@@ -88,7 +88,7 @@ describe('GET /v1/chat/config RUM config', () => {
       provider: 'hyperdx',
       enabled: true,
       url: 'https://rum.example.com',
-      serviceName: 'librechat-web',
+      serviceName: 'chat-web',
       authMode: 'publicToken',
       publicToken: 'public-token',
       tracePropagationTargets: ['https://app.example.com', 'https://api.openai.com'],
@@ -125,7 +125,7 @@ describe('GET /v1/chat/config RUM config', () => {
       provider: 'hyperdx',
       enabled: true,
       url: '/v1/chat/rum',
-      serviceName: 'librechat-web',
+      serviceName: 'chat-web',
       authMode: 'proxy',
       consoleCapture: false,
       disableReplay: true,

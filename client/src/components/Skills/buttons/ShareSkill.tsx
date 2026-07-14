@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { Share2Icon } from 'lucide-react';
-import { Button, TooltipAnchor } from '@librechat/client';
-import { Permissions, ResourceType, PermissionTypes } from 'librechat-data-provider';
-import type { TSkill } from 'librechat-data-provider';
+import { Button, TooltipAnchor } from '@hanzochat/client';
+import { Permissions, ResourceType, PermissionTypes } from '@hanzochat/data-provider';
+import type { TSkill } from '@hanzochat/data-provider';
 import { useHasAccess, useLocalize, useSkillPermissions } from '~/hooks';
 import { GenericGrantAccessDialog } from '~/components/Sharing';
 

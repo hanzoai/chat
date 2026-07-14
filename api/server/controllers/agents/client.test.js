@@ -1,9 +1,9 @@
-const { Providers } = require('@librechat/agents');
-const { Constants, EModelEndpoint } = require('librechat-data-provider');
+const { Providers } = require('@hanzochat/agents');
+const { Constants, EModelEndpoint } = require('@hanzochat/data-provider');
 const AgentClient = require('./client');
 
-jest.mock('@librechat/agents', () => ({
-  ...jest.requireActual('@librechat/agents'),
+jest.mock('@hanzochat/agents', () => ({
+  ...jest.requireActual('@hanzochat/agents'),
   createMetadataAggregator: () => ({
     handleLLMEnd: jest.fn(),
     collected: [],
@@ -1544,7 +1544,7 @@ describe('AgentClient - titleConvo', () => {
 
     it('should handle mixed content types correctly', async () => {
       const { HumanMessage } = require('@langchain/core/messages');
-      const { ContentTypes } = require('librechat-data-provider');
+      const { ContentTypes } = require('@hanzochat/data-provider');
 
       const messages = [
         new HumanMessage({
@@ -2264,7 +2264,7 @@ describe('AgentClient - chatCompletion post-reply banner regression', () => {
    * Regression for the post-reply error banner:
    * "Cannot read properties of undefined (reading 'hide_sequential_outputs')".
    *
-   * `run.processStream` (from `@librechat/agents` >= 3.1.52) treats the passed
+   * `run.processStream` (from `@hanzochat/agents` >= 3.1.52) treats the passed
    * `config` as owned and, in its post-stream cleanup, sets
    * `config.configurable = undefined` to break the AsyncLocalStorage reference
    * chain that keeps heavy graph state (base64 images/PDFs) alive. The
@@ -2274,7 +2274,7 @@ describe('AgentClient - chatCompletion post-reply banner regression', () => {
    * This test reproduces that mutation and asserts no ERROR part is produced.
    */
   const { createRun } = require('@hanzochat/api');
-  const { ContentTypes } = require('librechat-data-provider');
+  const { ContentTypes } = require('@hanzochat/data-provider');
   let processStreamMock;
 
   const makeClient = (agentOverrides = {}) => {
@@ -2313,7 +2313,7 @@ describe('AgentClient - chatCompletion post-reply banner regression', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Faithfully mimic `@librechat/agents` Run.processStream cleanup: it nulls
+    // Faithfully mimic `@hanzochat/agents` Run.processStream cleanup: it nulls
     // the caller's `config.configurable` after the stream finishes.
     processStreamMock = jest.fn(async (_inputs, config) => {
       config.configurable = undefined;

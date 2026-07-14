@@ -132,7 +132,7 @@ describe('telemetryMiddleware', () => {
     });
     expect(span.setAttributes).toHaveBeenCalledWith({
       'enduser.id': 'user-1',
-      'librechat.tenant.id': 'tenant-1',
+      'chat.tenant.id': 'tenant-1',
     });
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -175,7 +175,7 @@ describe('telemetryMiddleware', () => {
 
     expect(span.setAttributes).toHaveBeenCalledWith({
       'enduser.id': 'late-user',
-      'librechat.tenant.id': 'late-tenant',
+      'chat.tenant.id': 'late-tenant',
     });
   });
 
@@ -195,7 +195,7 @@ describe('telemetryMiddleware', () => {
 
     expect(span.setAttributes).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        'librechat.tenant.id': 'spoofed-tenant',
+        'chat.tenant.id': 'spoofed-tenant',
       }),
     );
     expect(JSON.stringify(span.setAttributes.mock.calls)).not.toContain('spoofed-tenant');
@@ -297,7 +297,7 @@ describe('telemetryMiddleware', () => {
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
         'http.response.status_code': 499,
-        'librechat.request.aborted': true,
+        'chat.request.aborted': true,
       }),
     );
     expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR });
@@ -321,7 +321,7 @@ describe('telemetryErrorMiddleware', () => {
     expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR });
     expect(span.setAttributes).toHaveBeenCalledWith({
       'enduser.id': 'user-1',
-      'librechat.tenant.id': 'tenant-1',
+      'chat.tenant.id': 'tenant-1',
     });
     expect(span.setAttributes).toHaveBeenCalledWith({
       'error.type': 'TypeError',

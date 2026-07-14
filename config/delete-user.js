@@ -27,7 +27,7 @@ const {
   Transaction,
   Conversation,
   ConversationTag,
-} = require('@librechat/data-schemas').createModels(mongoose);
+} = require('@hanzochat/data-schemas').createModels(mongoose);
 require('module-alias')({ base: path.resolve(__dirname, '..', 'api') });
 const { askQuestion, silentExit } = require('./helpers');
 const connect = require('./connect');

@@ -9,7 +9,7 @@ const mockClient = {
   isModelAllowed: jest.fn(),
 };
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('~/server/services/CommerceClient', () => ({
@@ -19,7 +19,7 @@ jest.mock('~/cache', () => ({ logViolation: jest.fn().mockResolvedValue(undefine
 jest.mock('./tx', () => ({ getMultiplier: () => 1 }));
 jest.mock('./Transaction', () => ({ createAutoRefillTransaction: jest.fn() }));
 jest.mock('~/db/models', () => ({ Balance: { findOne: jest.fn() } }));
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   ViolationTypes: { TOKEN_BALANCE: 'token_balance' },
 }));
 

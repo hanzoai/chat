@@ -1,4 +1,4 @@
-import { Constants } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { sanitizeFileForTransmit, sanitizeMessageForTransmit, getThreadData } from './message';
 
 /** Cast to string for type compatibility with ThreadMessage */

@@ -12,8 +12,8 @@ const axios = require('axios');
 const OpenAI = require('openai');
 const undici = require('undici');
 const fetch = require('node-fetch');
-const { ContentTypes } = require('librechat-data-provider');
-const { ToolMessage } = require('@librechat/agents/langchain/messages');
+const { ContentTypes } = require('@hanzochat/data-provider');
+const { ToolMessage } = require('@hanzochat/agents/langchain/messages');
 const StableDiffusionAPI = require('../StableDiffusion');
 const FluxAPI = require('../FluxAPI');
 const DALLE3 = require('../DALLE3');
@@ -25,7 +25,7 @@ jest.mock('undici', () => ({
   ProxyAgent: jest.fn(),
   fetch: jest.fn(),
 }));
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), debug: jest.fn(), error: jest.fn() },
 }));
 jest.mock('path', () => ({

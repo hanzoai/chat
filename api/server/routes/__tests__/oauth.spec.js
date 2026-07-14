@@ -31,11 +31,11 @@ jest.mock('openid-client', () => ({
   randomState: jest.fn(() => 'test-state'),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   ErrorTypes: { AUTH_FAILED: 'AUTH_FAILED' },
   ViolationTypes: { LOGINS: 'logins' },
 }));

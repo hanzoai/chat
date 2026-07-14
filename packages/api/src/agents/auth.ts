@@ -1,5 +1,5 @@
-import { logger, decrypt } from '@librechat/data-schemas';
-import type { IPluginAuth, PluginAuthMethods } from '@librechat/data-schemas';
+import { logger, decrypt } from '@hanzochat/data-schemas';
+import type { IPluginAuth, PluginAuthMethods } from '@hanzochat/data-schemas';
 
 export interface GetPluginAuthMapParams {
   userId: string;

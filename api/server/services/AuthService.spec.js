@@ -1,9 +1,9 @@
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), debug: jest.fn(), error: jest.fn() },
   DEFAULT_SESSION_EXPIRY: 900000,
   DEFAULT_REFRESH_TOKEN_EXPIRY: 604800000,
 }));
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   ErrorTypes: {},
   SystemRoles: { USER: 'USER', ADMIN: 'ADMIN' },
   errorsToString: jest.fn(),
@@ -37,7 +37,7 @@ jest.mock('~/server/utils', () => ({ sendEmail: jest.fn() }));
 
 const { shouldUseSecureCookie } = require('@hanzochat/api');
 const { setOpenIDAuthTokens, persistOpenIDTokensToSession } = require('./AuthService');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 
 /** Helper to build a mock Express response */
 function mockResponse() {

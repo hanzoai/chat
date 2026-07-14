@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { nanoid } = require('nanoid');
 const { tool } = require('@langchain/core/tools');
-const { GraphEvents, sleep } = require('@librechat/agents');
-const { logger, encryptV2, decryptV2 } = require('@librechat/data-schemas');
+const { GraphEvents, sleep } = require('@hanzochat/agents');
+const { logger, encryptV2, decryptV2 } = require('@hanzochat/data-schemas');
 const {
   sendEvent,
   logAxiosError,
@@ -19,7 +19,7 @@ const {
   actionDelimiter,
   isImageVisionTool,
   actionDomainSeparator,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { findToken, updateToken, createToken } = require('~/models');
 const { getActions, deleteActions } = require('~/models/Action');
 const { deleteAssistant } = require('~/models/Assistant');
@@ -153,7 +153,7 @@ async function createActionTool({
   /** @type {(toolInput: Object | string, config: GraphRunnableConfig) => Promise<unknown>} */
   const _call = async (toolInput, config) => {
     try {
-      /** @type {import('librechat-data-provider').ActionMetadataRuntime} */
+      /** @type {import('@hanzochat/data-provider').ActionMetadataRuntime} */
       const metadata = action.metadata;
       const executor = requestBuilder.createExecutor();
       const preparedExecutor = executor.setParams(toolInput ?? {});

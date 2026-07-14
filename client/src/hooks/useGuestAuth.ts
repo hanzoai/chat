@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { dataService } from 'librechat-data-provider';
-import type { TUser } from 'librechat-data-provider';
+import { dataService } from '@hanzochat/data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 
 const GUEST_ROLE = 'GUEST';
 

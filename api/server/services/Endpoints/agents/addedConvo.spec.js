@@ -4,7 +4,7 @@ const mockLoadAddedAgent = jest.fn();
 const mockGetAgent = jest.fn();
 const mockGetMCPServerTools = jest.fn();
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),

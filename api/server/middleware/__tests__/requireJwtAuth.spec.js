@@ -36,7 +36,7 @@ jest.mock('passport', () => ({
   }),
 }));
 
-jest.mock('@librechat/data-schemas', () => {
+jest.mock('@hanzochat/data-schemas', () => {
   const { AsyncLocalStorage } = require('async_hooks');
   const tenantStorage = new AsyncLocalStorage();
   return {
@@ -52,7 +52,7 @@ jest.mock('@librechat/data-schemas', () => {
 // (read request context, call tenantStorage.run) using the same data-schemas
 // primitives. The real implementation is covered by packages/api tenant.spec.ts.
 jest.mock('@hanzochat/api', () => {
-  const { tenantStorage } = require('@librechat/data-schemas');
+  const { tenantStorage } = require('@hanzochat/data-schemas');
   const normalizeContextValue = (value) => {
     const trimmed = value?.trim?.();
     return trimmed || undefined;
@@ -84,7 +84,7 @@ jest.mock('@hanzochat/api', () => {
 // ── Helpers ─────────────────────────────────────────────────────────────
 
 const requireJwtAuth = require('../requireJwtAuth');
-const { getTenantId, getUserId } = require('@librechat/data-schemas');
+const { getTenantId, getUserId } = require('@hanzochat/data-schemas');
 const { isEnabled, maybeRefreshCloudFrontAuthCookiesMiddleware } = require('@hanzochat/api');
 const passport = require('passport');
 
@@ -231,7 +231,7 @@ describe('requireJwtAuth tenant context chaining', () => {
     );
   });
 
-  it('uses OpenID JWT before LibreChat JWT when the OpenID cookie is present', async () => {
+  it('uses OpenID JWT before Chat JWT when the OpenID cookie is present', async () => {
     isEnabled.mockReturnValue(true);
     mockRegisteredStrategies.add('openidJwt');
     const req = mockReq(undefined, {

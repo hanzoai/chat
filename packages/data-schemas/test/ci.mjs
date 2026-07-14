@@ -1,5 +1,5 @@
 /**
- * CI test runner for @librechat/data-schemas.
+ * CI test runner for @hanzochat/data-schemas.
  *
  * The spec files listed in ISOLATED instantiate the native `better-sqlite3-*`
  * driver. Jest gives every spec file its own JS module realm, but the native

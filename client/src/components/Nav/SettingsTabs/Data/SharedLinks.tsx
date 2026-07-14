@@ -25,8 +25,8 @@ import {
   OGDialogContent,
   useToastContext,
   OGDialogTemplate,
-} from '@librechat/client';
-import type { SharedLinkItem, SharedLinksListParams } from 'librechat-data-provider';
+} from '@hanzochat/client';
+import type { SharedLinkItem, SharedLinksListParams } from '@hanzochat/data-provider';
 import type { TranslationKeys } from '~/hooks';
 import { useDeleteSharedLinkMutation, useSharedLinksQuery } from '~/data-provider';
 import { NotificationSeverity } from '~/common';

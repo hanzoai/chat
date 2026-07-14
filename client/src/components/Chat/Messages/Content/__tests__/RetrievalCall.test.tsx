@@ -1,7 +1,7 @@
 import React from 'react';
 import { RecoilRoot } from 'recoil';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { TAttachment } from 'librechat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import RetrievalCall from '../RetrievalCall';
 
 jest.mock('~/hooks', () => ({

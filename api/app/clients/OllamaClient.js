@@ -1,9 +1,9 @@
 const { z } = require('zod');
 const axios = require('axios');
 const { Ollama } = require('ollama');
-const { sleep } = require('@librechat/agents');
-const { logger } = require('@librechat/data-schemas');
-const { Constants } = require('librechat-data-provider');
+const { sleep } = require('@hanzochat/agents');
+const { logger } = require('@hanzochat/data-schemas');
+const { Constants } = require('@hanzochat/data-provider');
 const { resolveHeaders, deriveBaseURL } = require('@hanzochat/api');
 
 const ollamaPayloadSchema = z.object({

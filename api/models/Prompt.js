@@ -1,7 +1,7 @@
 const { ObjectId } = require('mongodb');
 const { escapeRegExp } = require('@hanzochat/api');
-const { logger } = require('@librechat/data-schemas');
-const { SystemRoles, ResourceType, SystemCategories } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { SystemRoles, ResourceType, SystemCategories } = require('@hanzochat/data-provider');
 const {
   getSoleOwnedResourceIds,
   removeAllPermissions,

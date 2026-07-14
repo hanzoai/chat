@@ -1,8 +1,8 @@
 import React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Constants } from 'librechat-data-provider';
-import type { TStartupConfig } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
+import type { TStartupConfig } from '@hanzochat/data-provider';
 import About from './About';
 
 const mockCopy = jest.fn<boolean, unknown[]>();

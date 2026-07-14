@@ -1,4 +1,4 @@
-const { SystemRoles } = require('librechat-data-provider');
+const { SystemRoles } = require('@hanzochat/data-provider');
 
 // --- Capture the verify callback from JwtStrategy ---
 let capturedVerifyCallback;
@@ -17,7 +17,7 @@ jest.mock('jwks-rsa', () => ({
 jest.mock('https-proxy-agent', () => ({
   HttpsProxyAgent: jest.fn(),
 }));
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), debug: jest.fn(), error: jest.fn() },
 }));
 jest.mock('@hanzochat/api', () => ({

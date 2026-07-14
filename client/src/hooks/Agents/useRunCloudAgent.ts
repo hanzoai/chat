@@ -1,7 +1,7 @@
 import { v4 } from 'uuid';
 import { useCallback } from 'react';
-import { Constants } from 'librechat-data-provider';
-import type { TMessage } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import { useRunCloudAgentMutation } from '~/data-provider';
 import { useChatContext } from '~/Providers';
 import { useLocalize } from '~/hooks';

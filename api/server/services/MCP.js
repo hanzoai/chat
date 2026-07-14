@@ -1,11 +1,11 @@
 const { tool } = require('@langchain/core/tools');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   Providers,
   StepTypes,
   GraphEvents,
   Constants: AgentConstants,
-} = require('@librechat/agents');
+} = require('@hanzochat/agents');
 const {
   sendEvent,
   MCPOAuthHandler,
@@ -21,7 +21,7 @@ const {
   Constants,
   ContentTypes,
   isAssistantsEndpoint,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   getOAuthReconnectionManager,
   getMCPServersRegistry,
@@ -88,7 +88,7 @@ function createRunStepDeltaEmitter({ res, stepId, toolCall, streamId = null }) {
  */
 function createRunStepEmitter({ res, runId, stepId, toolCall, index, streamId = null }) {
   return async function () {
-    /** @type {import('@librechat/agents').RunStep} */
+    /** @type {import('@hanzochat/agents').RunStep} */
     const data = {
       runId: runId ?? Constants.USE_PRELIM_RESPONSE_MESSAGE_ID,
       id: stepId,
@@ -590,7 +590,7 @@ async function getMCPSetupData(userId) {
   try {
     // Use getLoaded() instead of getAll() to avoid forcing connection creation
     // getAll() creates connections for all servers, which is problematic for servers
-    // that require user context (e.g., those with {{LIBRECHAT_USER_ID}} placeholders)
+    // that require user context (e.g., those with {{CHAT_USER_ID}} placeholders)
     appConnections = (await mcpManager.appConnections?.getLoaded()) || new Map();
   } catch (error) {
     logger.error(`[MCP][User: ${userId}] Error getting app connections:`, error);

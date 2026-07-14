@@ -1,4 +1,4 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import {
   Constants,
   ErrorTypes,
@@ -8,7 +8,7 @@ import {
   isAgentsEndpoint,
   replaceSpecialVars,
   providerEndpointMap,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   AgentToolResources,
   AgentToolOptions,
@@ -16,14 +16,14 @@ import type {
   TFile,
   Agent,
   TUser,
-} from 'librechat-data-provider';
-import type { GenericTool, LCToolRegistry, ToolMap, LCTool } from '@librechat/agents';
+} from '@hanzochat/data-provider';
+import type { GenericTool, LCToolRegistry, ToolMap, LCTool } from '@hanzochat/agents';
 import type { Response as ServerResponse } from 'express';
-import type { IMongoFile } from '@librechat/data-schemas';
+import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { InitializeResultBase, ServerRequest, EndpointDbMethods } from '~/types';
 import {
   optionalChainWithEmptyCheck,
-  extractLibreChatParams,
+  extractChatParams,
   getModelMaxTokens,
   getThreadData,
 } from '~/utils';
@@ -181,7 +181,7 @@ export async function initializeAgent(
     ),
   );
 
-  const { resendFiles, maxContextTokens, modelOptions } = extractLibreChatParams(
+  const { resendFiles, maxContextTokens, modelOptions } = extractChatParams(
     _modelOptions as Record<string, unknown>,
   );
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { EModelEndpoint, mergeFileConfig } from 'librechat-data-provider';
-import type { TEndpointsConfig } from 'librechat-data-provider';
+import { EModelEndpoint, mergeFileConfig } from '@hanzochat/data-provider';
+import type { TEndpointsConfig } from '@hanzochat/data-provider';
 import type { AgentForm } from '~/common';
 import FileContext from '../FileContext';
 
@@ -55,7 +55,7 @@ jest.mock('@ariakit/react', () => ({
   ),
 }));
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   HoverCard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DropdownPopup: () => null,
   AttachmentIcon: () => <span />,

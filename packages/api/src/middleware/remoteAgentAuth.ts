@@ -2,12 +2,12 @@ import jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { ProxyAgent, fetch as undiciFetch } from 'undici';
-import { getTenantId, logger } from '@librechat/data-schemas';
-import { SystemRoles, isRemoteOidcUrlAllowed } from 'librechat-data-provider';
+import { getTenantId, logger } from '@hanzochat/data-schemas';
+import { SystemRoles, isRemoteOidcUrlAllowed } from '@hanzochat/data-provider';
 import type { RequestHandler, Request, Response, NextFunction } from 'express';
-import type { AppConfig, IUser, UserMethods } from '@librechat/data-schemas';
+import type { AppConfig, IUser, UserMethods } from '@hanzochat/data-schemas';
 import type { Algorithm, JwtPayload, VerifyOptions } from 'jsonwebtoken';
-import type { TAgentsEndpoint } from 'librechat-data-provider';
+import type { TAgentsEndpoint } from '@hanzochat/data-provider';
 import type { RequestInit } from 'undici';
 import type { GetAppConfigOptions } from '../app/service';
 import { findOpenIDUser, getOpenIdEmail, normalizeOpenIdIssuer } from '../auth/openid';
@@ -548,7 +548,7 @@ export function createRemoteAgentAuth({
       }
 
       if (userResolution.status === 'missing') {
-        logger.warn('[remoteAgentAuth] OIDC token valid but no matching LibreChat user');
+        logger.warn('[remoteAgentAuth] OIDC token valid but no matching Chat user');
         if (apiKeyEnabled) {
           await runApiKeyAuth(req, res, next, apiKeyMiddleware, getAppConfig);
           return;

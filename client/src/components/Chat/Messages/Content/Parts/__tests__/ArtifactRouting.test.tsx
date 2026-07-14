@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { RecoilRoot, useRecoilValue } from 'recoil';
 import type { MutableSnapshot } from 'recoil';
-import type { TAttachment } from 'librechat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import Attachment, { AttachmentGroup } from '../Attachment';
 import store from '~/store';
 

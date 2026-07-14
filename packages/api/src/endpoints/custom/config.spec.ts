@@ -1,5 +1,5 @@
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { TCustomEndpoints, TEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { TCustomEndpoints, TEndpoint } from '@hanzochat/data-provider';
 import { loadCustomEndpointsConfig } from './config';
 
 /** Minimal valid custom endpoint (passes loadCustomEndpointsConfig's filter). */

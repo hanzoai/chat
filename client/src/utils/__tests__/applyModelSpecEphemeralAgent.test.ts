@@ -1,5 +1,5 @@
-import { Constants, LocalStorageKeys } from 'librechat-data-provider';
-import type { TModelSpec, TEphemeralAgent } from 'librechat-data-provider';
+import { Constants, LocalStorageKeys } from '@hanzochat/data-provider';
+import type { TModelSpec, TEphemeralAgent } from '@hanzochat/data-provider';
 import { applyModelSpecEphemeralAgent } from '../endpoints';
 import { setTimestamp } from '../timestamps';
 

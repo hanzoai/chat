@@ -5,8 +5,8 @@ import {
   configCapability,
   SystemCapabilities,
   readConfigCapability,
-} from '@librechat/data-schemas';
-import type { SystemCapability, ConfigSection } from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
+import type { SystemCapability, ConfigSection } from '@hanzochat/data-schemas';
 import type { NextFunction, Response } from 'express';
 import type { Types, ClientSession } from 'mongoose';
 import type { ResolvedPrincipal } from '~/types/principal';

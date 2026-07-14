@@ -1,4 +1,4 @@
-import { AgentCapabilities, ArtifactModes } from 'librechat-data-provider';
+import { AgentCapabilities, ArtifactModes } from '@hanzochat/data-provider';
 import type {
   AgentModelParameters,
   AgentToolOptions,
@@ -6,7 +6,7 @@ import type {
   AgentProvider,
   GraphEdge,
   Agent,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { OptionWithIcon, ExtendedFile } from './types';
 
 export type AgentQueryResult = { found: true; agent: Agent } | { found: false };

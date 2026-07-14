@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, dataService } from 'librechat-data-provider';
+import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
-import type * as t from 'librechat-data-provider';
+import type * as t from '@hanzochat/data-provider';
 
 export const useCreateSkillNodeMutation = (
   skillId: string,

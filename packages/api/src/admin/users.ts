@@ -1,13 +1,13 @@
 import { Types } from 'mongoose';
-import { PrincipalType, SystemRoles } from 'librechat-data-provider';
-import { logger, isValidObjectIdString } from '@librechat/data-schemas';
+import { PrincipalType, SystemRoles } from '@hanzochat/data-provider';
+import { logger, isValidObjectIdString } from '@hanzochat/data-schemas';
 import type {
   IUser,
   IConfig,
   AdminUserListItem,
   AdminUserSearchResult,
   UserDeleteResult,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import type { FilterQuery } from 'mongoose';
 import type { Response } from 'express';
 import type { ServerRequest } from '~/types/http';

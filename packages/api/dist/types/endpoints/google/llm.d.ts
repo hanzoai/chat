@@ -1,5 +1,5 @@
-import { Providers } from '@librechat/agents';
-import type { VertexAIClientOptions } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
+import type { VertexAIClientOptions } from '@hanzochat/agents';
 import type { GoogleAIToolType } from '@langchain/google-common';
 import type * as t from '~/types';
 /** Known Google/Vertex AI parameters that map directly to the client config */

@@ -17,9 +17,9 @@
 import { renderHook, act } from '@testing-library/react';
 import { RecoilRoot, useRecoilValue } from 'recoil';
 import { QueryClient } from '@tanstack/react-query';
-import { Tools } from 'librechat-data-provider';
+import { Tools } from '@hanzochat/data-provider';
 import type { ReactNode } from 'react';
-import type { TAttachment, EventSubmission } from 'librechat-data-provider';
+import type { TAttachment, EventSubmission } from '@hanzochat/data-provider';
 import useAttachmentHandler from '../useAttachmentHandler';
 import store from '~/store';
 

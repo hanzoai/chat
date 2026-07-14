@@ -5,7 +5,7 @@
  * `emitError` — never a silent `emitDone` with an empty message.
  */
 
-const { ContentTypes } = require('librechat-data-provider');
+const { ContentTypes } = require('@hanzochat/data-provider');
 
 const mockGenerationJobManager = {
   createJob: jest.fn(),
@@ -19,7 +19,7 @@ const mockGenerationJobManager = {
   getResumeState: jest.fn().mockResolvedValue(null),
 };
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn(), info: jest.fn() },
 }));
 

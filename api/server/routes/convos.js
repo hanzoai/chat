@@ -1,9 +1,9 @@
 const multer = require('multer');
 const express = require('express');
-const { sleep } = require('@librechat/agents');
+const { sleep } = require('@hanzochat/agents');
 const { isEnabled } = require('@hanzochat/api');
-const { logger } = require('@librechat/data-schemas');
-const { CacheKeys, EModelEndpoint } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { CacheKeys, EModelEndpoint } = require('@hanzochat/data-provider');
 const {
   createImportLimiters,
   validateConvoAccess,

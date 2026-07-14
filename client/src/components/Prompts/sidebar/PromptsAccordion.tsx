@@ -1,4 +1,4 @@
-import { SystemRoles } from 'librechat-data-provider';
+import { SystemRoles } from '@hanzochat/data-provider';
 import { useAuthContext } from '~/hooks';
 import { AdminSettings } from '~/components/Prompts';
 import AutoSendPrompt from '../buttons/AutoSendPrompt';

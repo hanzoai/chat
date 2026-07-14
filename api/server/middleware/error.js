@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-const { logger } = require('@librechat/data-schemas');
-const { parseConvo } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { parseConvo } = require('@hanzochat/data-provider');
 const { sendEvent, handleError, sanitizeMessageForTransmit } = require('@hanzochat/api');
 const { saveMessage, getMessages } = require('~/models/Message');
 const { getConvo } = require('~/models/Conversation');

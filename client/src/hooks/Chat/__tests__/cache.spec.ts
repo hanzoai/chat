@@ -1,5 +1,5 @@
-import { Constants } from 'librechat-data-provider';
-import type { TMessage } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import { getMessageCacheIds, getMessagesConversationId } from '../cache';
 
 const message = (conversationId?: string | null): TMessage =>

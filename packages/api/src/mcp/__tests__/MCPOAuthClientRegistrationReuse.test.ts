@@ -3,7 +3,7 @@
  *
  * Documents the client_id mismatch bug in horizontally scaled deployments:
  *
- * When LibreChat runs with multiple replicas (e.g., 3 behind a load balancer),
+ * When Chat runs with multiple replicas (e.g., 3 behind a load balancer),
  * each replica independently calls registerClient() on the OAuth server's /register
  * endpoint, getting a different client_id. The check-then-act race between the
  * PENDING flow check and storing the flow state means that even with a shared
@@ -29,7 +29,7 @@ import { InMemoryTokenStore, createOAuthMCPServer } from './helpers/oauthTestSer
 import { MCPConnectionFactory } from '~/mcp/MCPConnectionFactory';
 import { MCPOAuthHandler, MCPTokenStorage } from '~/mcp/oauth';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

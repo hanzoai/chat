@@ -1,4 +1,4 @@
-// Thin typed client for the Hanzo chat backend (LibreChat fork).
+// Thin typed client for the Hanzo chat backend (Chat fork).
 //
 // Two real endpoints, both Bearer-authenticated (see api/server/routes in the
 // chat repo):

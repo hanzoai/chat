@@ -1,6 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const { limiterCache } = require('@hanzochat/api');
-const { ViolationTypes } = require('librechat-data-provider');
+const { ViolationTypes } = require('@hanzochat/data-provider');
 const { removePorts } = require('~/server/utils');
 const { logViolation } = require('~/cache');
 

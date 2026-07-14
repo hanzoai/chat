@@ -1,5 +1,5 @@
-import { Constants } from '@librechat/agents';
-import type { FileRefs, CodeEnvFile, ToolSessionMap, CodeSessionContext } from '@librechat/agents';
+import { Constants } from '@hanzochat/agents';
+import type { FileRefs, CodeEnvFile, ToolSessionMap, CodeSessionContext } from '@hanzochat/agents';
 
 /**
  * Minimal shape for an agent that may contribute primed code files to the

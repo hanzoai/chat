@@ -4,8 +4,8 @@ jest.mock('@hanzochat/api', () => ({
   ...jest.requireActual('@hanzochat/api'),
   loadYaml: jest.fn(),
 }));
-jest.mock('librechat-data-provider', () => {
-  const actual = jest.requireActual('librechat-data-provider');
+jest.mock('@hanzochat/data-provider', () => {
+  const actual = jest.requireActual('@hanzochat/data-provider');
   return {
     ...actual,
     paramSettings: { foo: {}, bar: {}, custom: {} },
@@ -33,7 +33,7 @@ jest.mock('librechat-data-provider', () => {
   };
 });
 
-jest.mock('@librechat/data-schemas', () => {
+jest.mock('@hanzochat/data-schemas', () => {
   return {
     logger: {
       info: jest.fn(),
@@ -46,7 +46,7 @@ jest.mock('@librechat/data-schemas', () => {
 
 const axios = require('axios');
 const { loadYaml } = require('@hanzochat/api');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const loadCustomConfig = require('./loadCustomConfig');
 
 describe('loadCustomConfig', () => {

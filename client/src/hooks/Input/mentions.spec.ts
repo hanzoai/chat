@@ -1,4 +1,4 @@
-import { EModelEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
 import { filterMentionEndpoints } from './mentions';
 
 describe('filterMentionEndpoints', () => {

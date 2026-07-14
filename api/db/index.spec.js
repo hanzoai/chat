@@ -4,7 +4,7 @@ describe('api/db/index.js', () => {
 
     const callOrder = [];
 
-    jest.mock('@librechat/data-schemas', () => ({
+    jest.mock('@hanzochat/data-schemas', () => ({
       createModels: jest.fn((m) => {
         callOrder.push('createModels');
         m.models.Message = { name: 'Message' };

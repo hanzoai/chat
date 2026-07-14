@@ -6,9 +6,9 @@
  * Hermetic: mocks data-schemas (no winston) and ~/models/Agent (no MongoDB).
  */
 
-jest.mock('@librechat/data-schemas', () => ({ logger: { error: jest.fn() } }));
+jest.mock('@hanzochat/data-schemas', () => ({ logger: { error: jest.fn() } }));
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   Constants: { EPHEMERAL_AGENT_ID: 'ephemeral' },
   isAgentsEndpoint: (endpoint) => endpoint === 'agents',
   removeNullishValues: (obj) =>

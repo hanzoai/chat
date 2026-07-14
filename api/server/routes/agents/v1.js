@@ -1,6 +1,6 @@
 const express = require('express');
 const { generateCheckAccess } = require('@hanzochat/api');
-const { PermissionTypes, Permissions, PermissionBits } = require('librechat-data-provider');
+const { PermissionTypes, Permissions, PermissionBits } = require('@hanzochat/data-provider');
 const { requireJwtAuth, configMiddleware, canAccessAgentResource } = require('~/server/middleware');
 const v1 = require('~/server/controllers/agents/v1');
 const { getRoleByName } = require('~/models/Role');

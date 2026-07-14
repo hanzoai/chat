@@ -10,7 +10,7 @@ const express = require('express');
 const passport = require('passport');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const mongoSanitize = require('express-mongo-sanitize');
 const {
   isEnabled,
@@ -422,7 +422,7 @@ process.on('uncaughtException', (err) => {
     return;
   }
 
-  if (err.stack && err.stack.includes('@librechat/agents')) {
+  if (err.stack && err.stack.includes('@hanzochat/agents')) {
     logger.error(
       '\n\nAn error occurred in the agents system. The error has been logged and the app will continue running.',
       {

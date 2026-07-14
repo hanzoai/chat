@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const express = require('express');
-const { EnvVar } = require('@librechat/agents');
-const { logger } = require('@librechat/data-schemas');
+const { EnvVar } = require('@hanzochat/agents');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   Time,
   isUUID,
@@ -13,7 +13,7 @@ const {
   PermissionBits,
   checkOpenAIStorage,
   isAssistantsEndpoint,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   filterFile,
   processFileUpload,

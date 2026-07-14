@@ -1,5 +1,5 @@
-import { Constants } from '@librechat/agents';
-import type { CodeEnvFile, CodeSessionContext, ToolSessionMap } from '@librechat/agents';
+import { Constants } from '@hanzochat/agents';
+import type { CodeEnvFile, CodeSessionContext, ToolSessionMap } from '@hanzochat/agents';
 import {
   buildInitialToolSessions,
   seedCodeFilesIntoSessions,

@@ -10,7 +10,7 @@
  * boundary (404 vs 403).
  */
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() },
   SystemCapabilities: {},
 }));

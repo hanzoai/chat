@@ -1,4 +1,4 @@
-const { AgentCapabilities, defaultAgentCapabilities } = require('librechat-data-provider');
+const { AgentCapabilities, defaultAgentCapabilities } = require('@hanzochat/data-provider');
 
 /**
  * Tests for ToolService capability checking logic.

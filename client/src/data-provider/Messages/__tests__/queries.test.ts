@@ -2,9 +2,9 @@ import { createElement } from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { QueryKeys, dataService } from 'librechat-data-provider';
+import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import type { ReactNode } from 'react';
-import type { TMessage } from 'librechat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import { logger } from '~/utils';
 import {
   getStableMessages,
@@ -12,8 +12,8 @@ import {
   useGetMessagesByConvoId,
 } from '../queries';
 
-jest.mock('librechat-data-provider', () => {
-  const actual = jest.requireActual('librechat-data-provider');
+jest.mock('@hanzochat/data-provider', () => {
+  const actual = jest.requireActual('@hanzochat/data-provider');
   return {
     ...actual,
     dataService: {
