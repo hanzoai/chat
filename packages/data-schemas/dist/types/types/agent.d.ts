@@ -1,5 +1,5 @@
 import { Document, Types } from 'mongoose';
-import type { GraphEdge, AgentToolOptions } from 'librechat-data-provider';
+import type { GraphEdge, AgentToolOptions } from '@hanzochat/data-provider';
 export interface ISupportContact {
     name?: string;
     email?: string;

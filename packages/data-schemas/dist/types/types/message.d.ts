@@ -1,5 +1,5 @@
 import type { Document } from 'mongoose';
-import type { TFeedbackRating, TFeedbackTag } from 'librechat-data-provider';
+import type { TFeedbackRating, TFeedbackTag } from '@hanzochat/data-provider';
 export interface IMessage extends Document {
     messageId: string;
     conversationId: string;
