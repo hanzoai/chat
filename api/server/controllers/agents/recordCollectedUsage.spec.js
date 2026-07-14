@@ -31,8 +31,8 @@ jest.mock('~/config', () => ({
   })),
 }));
 
-jest.mock('@librechat/agents', () => ({
-  ...jest.requireActual('@librechat/agents'),
+jest.mock('@hanzochat/agents', () => ({
+  ...jest.requireActual('@hanzochat/agents'),
   createMetadataAggregator: () => ({
     handleLLMEnd: jest.fn(),
     collected: [],

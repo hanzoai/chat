@@ -173,9 +173,9 @@ jobs:
             local package_json=$1
             local output_file=$2
             
-            # Get all workspace dependencies (starting with @librechat/)
+            # Get all workspace dependencies (starting with @hanzochat/)
             if [[ -f "$package_json" ]]; then
-              local workspace_deps=$(jq -r '.dependencies // {} | to_entries[] | select(.key | startswith("@librechat/")) | .key' "$package_json" 2>/dev/null || echo "")
+              local workspace_deps=$(jq -r '.dependencies // {} | to_entries[] | select(.key | startswith("@hanzochat/")) | .key' "$package_json" 2>/dev/null || echo "")
               
               # For each workspace dependency, get its dependencies
               for dep in $workspace_deps; do

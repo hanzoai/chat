@@ -50,7 +50,7 @@ jest.mock('@hanzochat/data-schemas', () => ({
 }));
 
 // Mock getCodeBaseURL
-jest.mock('@librechat/agents', () => ({
+jest.mock('@hanzochat/agents', () => ({
   getCodeBaseURL: jest.fn(() => 'https://code-api.example.com'),
 }));
 

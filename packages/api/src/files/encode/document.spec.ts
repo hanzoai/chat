@@ -1,4 +1,4 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import { mbToBytes } from '@hanzochat/data-provider';
 import type { AppConfig, IMongoFile } from '@hanzochat/data-schemas';
 import type { ServerRequest } from '~/types';

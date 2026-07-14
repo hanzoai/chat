@@ -1,4 +1,4 @@
-import type { ClientOptions, OpenAIClientOptions } from '@librechat/agents';
+import type { ClientOptions, OpenAIClientOptions } from '@hanzochat/agents';
 import type { TConfig } from '@hanzochat/data-provider';
 import type { EndpointTokenConfig, ServerRequest } from '~/types';
 

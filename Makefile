@@ -134,7 +134,7 @@ build-static-local:
 	@echo "$(GREEN)Building static SPA locally...$(NC)"
 	@cp .env.static .env
 	@pnpm run build:data-provider
-	@pnpm run --filter @librechat/client build
+	@pnpm run --filter @hanzochat/client build
 	@cd client && pnpm run build
 	@cp .env.backup .env 2>/dev/null || true
 	@echo "$(GREEN)Local build complete: client/dist/$(NC)"

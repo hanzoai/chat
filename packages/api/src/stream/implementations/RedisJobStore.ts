@@ -1,6 +1,6 @@
 import { logger } from '@hanzochat/data-schemas';
-import { createContentAggregator } from '@librechat/agents';
-import type { StandardGraph } from '@librechat/agents';
+import { createContentAggregator } from '@hanzochat/agents';
+import type { StandardGraph } from '@hanzochat/agents';
 import type { Agents } from '@hanzochat/data-provider';
 import type { Redis, Cluster } from 'ioredis';
 import type {

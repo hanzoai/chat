@@ -25,7 +25,7 @@ jest.mock('@hanzochat/data-schemas', () => {
   };
 });
 
-jest.mock('@librechat/agents', () => ({
+jest.mock('@hanzochat/agents', () => ({
   EnvVar: { CODE_API_KEY: 'CODE_API_KEY' },
 }));
 

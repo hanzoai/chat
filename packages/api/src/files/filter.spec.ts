@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import { EModelEndpoint } from '@hanzochat/data-provider';
 import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { ServerRequest } from '~/types';

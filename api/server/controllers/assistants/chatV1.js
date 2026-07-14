@@ -1,5 +1,5 @@
 const { v4 } = require('uuid');
-const { sleep } = require('@librechat/agents');
+const { sleep } = require('@hanzochat/agents');
 const { logger } = require('@hanzochat/data-schemas');
 const { sendEvent, getBalanceConfig, getModelMaxTokens, countTokens } = require('@hanzochat/api');
 const {

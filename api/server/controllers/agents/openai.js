@@ -1,6 +1,6 @@
 const { nanoid } = require('nanoid');
 const { logger } = require('@hanzochat/data-schemas');
-const { Callback, ToolEndHandler, formatAgentMessages } = require('@librechat/agents');
+const { Callback, ToolEndHandler, formatAgentMessages } = require('@hanzochat/agents');
 const { EModelEndpoint, ResourceType, PermissionBits } = require('@hanzochat/data-provider');
 const {
   writeSSE,

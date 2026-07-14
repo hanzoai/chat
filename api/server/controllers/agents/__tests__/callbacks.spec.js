@@ -15,8 +15,8 @@ jest.mock('@hanzochat/data-schemas', () => ({
   },
 }));
 
-jest.mock('@librechat/agents', () => ({
-  ...jest.requireActual('@librechat/agents'),
+jest.mock('@hanzochat/agents', () => ({
+  ...jest.requireActual('@hanzochat/agents'),
   getMessageId: jest.fn(),
   ToolEndHandler: jest.fn(),
   handleToolCalls: jest.fn(),
