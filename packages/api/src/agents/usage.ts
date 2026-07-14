@@ -1,5 +1,5 @@
-import { logger } from '@librechat/data-schemas';
-import type { TCustomConfig, TTransactionsConfig } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import type { TCustomConfig, TTransactionsConfig } from '@hanzochat/data-provider';
 import type { UsageMetadata } from '../stream/interfaces/IJobStore';
 import type { EndpointTokenConfig } from '../types/tokens';
 

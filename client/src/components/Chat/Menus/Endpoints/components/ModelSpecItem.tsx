@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { VisuallyHidden } from '@ariakit/react';
-import type { TModelSpec } from 'librechat-data-provider';
+import type { TModelSpec } from '@hanzochat/data-provider';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
 import { useModelSelectorContext } from '../ModelSelectorContext';
 import { useLocalize } from '~/hooks';

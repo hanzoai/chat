@@ -1,15 +1,15 @@
-import { logger } from '@librechat/data-schemas';
-import type { AppConfig } from '@librechat/data-schemas';
-import type { SummarizationConfig, TEndpoint } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import type { AppConfig } from '@hanzochat/data-schemas';
+import type { SummarizationConfig, TEndpoint } from '@hanzochat/data-provider';
 import {
   EModelEndpoint,
   FileSources,
   MAX_SUBAGENT_DEPTH,
   MAX_SUBAGENT_RUN_CONFIGS,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { createRun } from '~/agents/run';
 
-// Mock winston logger — `format` must be callable so @librechat/data-schemas
+// Mock winston logger — `format` must be callable so @hanzochat/data-schemas
 // dist module-load completes cleanly; see api/test/__mocks__/logger.js.
 jest.mock('winston', () => ({
   createLogger: jest.fn(() => ({
@@ -46,8 +46,8 @@ jest.mock('~/utils/env', () => ({
   createSafeUser: jest.fn(() => ({})),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     debug: jest.fn(),
     warn: jest.fn(),

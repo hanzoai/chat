@@ -10,7 +10,7 @@ import {
   EToolResources,
   Constants,
   actionDelimiter,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   UpdateWithAggregationPipeline,
   RootFilterQuery,

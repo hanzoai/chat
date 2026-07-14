@@ -1,5 +1,5 @@
-import { megabyte, fileConfig as defaultFileConfig } from 'librechat-data-provider';
-import type { EndpointFileConfig, FileConfig } from 'librechat-data-provider';
+import { megabyte, fileConfig as defaultFileConfig } from '@hanzochat/data-provider';
+import type { EndpointFileConfig, FileConfig } from '@hanzochat/data-provider';
 import type { ExtendedFile } from '~/common';
 import { validateFiles } from '../files';
 

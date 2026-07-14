@@ -1,4 +1,4 @@
-import { Tools, replaceSpecialVars } from 'librechat-data-provider';
+import { Tools, replaceSpecialVars } from '@hanzochat/data-provider';
 
 /** Builds the web search tool context with citation format instructions. */
 export function buildWebSearchContext(): string {

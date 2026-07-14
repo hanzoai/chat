@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { getAgentAvatarUrl, renderAgentAvatar, getContactDisplayName } from '../agents';
-import type t from 'librechat-data-provider';
+import type t from '@hanzochat/data-provider';
 
 describe('Agent Utilities', () => {
   describe('getAgentAvatarUrl', () => {

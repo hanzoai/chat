@@ -3,7 +3,7 @@
  * REAL createSystemGrantMethods (capability grants / checks / revokes, platform
  * and tenant-scoped). Exercises DocModel.exists() and the tenantIsolated variant.
  */
-import { PrincipalType } from 'librechat-data-provider';
+import { PrincipalType } from '@hanzochat/data-provider';
 import { SystemCapabilities } from '~/admin/capabilities';
 import { createSystemGrantMethods } from './systemGrant';
 import { createSqliteHandle, type SqliteHandle } from '~/stores/sqlite';

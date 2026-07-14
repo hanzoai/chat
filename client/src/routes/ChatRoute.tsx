@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { Spinner, useToastContext } from '@librechat/client';
-import { Constants, EModelEndpoint } from 'librechat-data-provider';
-import { useGetModelsQuery } from 'librechat-data-provider/react-query';
-import type { TPreset } from 'librechat-data-provider';
+import { Spinner, useToastContext } from '@hanzochat/client';
+import { Constants, EModelEndpoint } from '@hanzochat/data-provider';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
+import type { TPreset } from '@hanzochat/data-provider';
 import {
   useNewConvo,
   useAppStartup,

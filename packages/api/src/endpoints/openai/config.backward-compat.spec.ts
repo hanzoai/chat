@@ -3,7 +3,7 @@ import {
   EModelEndpoint,
   ReasoningEffort,
   ReasoningSummary,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { getOpenAIConfig } from './config';
 
 describe('getOpenAIConfig - Backward Compatibility', () => {

@@ -1,5 +1,5 @@
-import { StepTypes } from 'librechat-data-provider';
-import type { Agents } from 'librechat-data-provider';
+import { StepTypes } from '@hanzochat/data-provider';
+import type { Agents } from '@hanzochat/data-provider';
 import type { Redis, Cluster } from 'ioredis';
 import { StandardGraph } from '@librechat/agents';
 

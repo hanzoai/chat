@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import type { DataHandle } from '~/common/dataHandle';
-import { PrincipalType } from 'librechat-data-provider';
-import type { TUser, TPrincipalSearchResult } from 'librechat-data-provider';
+import { PrincipalType } from '@hanzochat/data-provider';
+import type { TUser, TPrincipalSearchResult } from '@hanzochat/data-provider';
 import type { Model, ClientSession } from 'mongoose';
 import type { IGroup, IRole, IUser } from '~/types';
 

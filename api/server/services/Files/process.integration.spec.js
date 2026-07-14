@@ -14,11 +14,11 @@
 
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { agentSchema, fileSchema, createMethods } = require('@librechat/data-schemas');
-const { FileSources } = require('librechat-data-provider');
+const { agentSchema, fileSchema, createMethods } = require('@hanzochat/data-schemas');
+const { FileSources } = require('@hanzochat/data-provider');
 
-jest.mock('@librechat/data-schemas', () => {
-  const actual = jest.requireActual('@librechat/data-schemas');
+jest.mock('@hanzochat/data-schemas', () => {
+  const actual = jest.requireActual('@hanzochat/data-schemas');
   return {
     ...actual,
     logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() },
@@ -68,7 +68,7 @@ jest.mock('~/cache', () => ({
 // mongoose-backed methods. All our in-memory models share this module.
 jest.mock('~/models', () => {
   const mongoose = require('mongoose');
-  const { createMethods } = require('@librechat/data-schemas');
+  const { createMethods } = require('@hanzochat/data-schemas');
   return createMethods(mongoose, {
     removeAllPermissions: jest.fn().mockResolvedValue(undefined),
   });

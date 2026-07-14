@@ -1,5 +1,5 @@
 import { Globe } from 'lucide-react';
-import { Spinner } from '@librechat/client';
+import { Spinner } from '@hanzochat/client';
 import { useWatch, useFormContext } from 'react-hook-form';
 import {
   SystemRoles,
@@ -7,7 +7,7 @@ import {
   ResourceType,
   PermissionBits,
   PermissionTypes,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { AgentForm, AgentPanelProps } from '~/common';
 import { useLocalize, useAuthContext, useHasAccess, useResourcePermissions } from '~/hooks';
 import { GenericGrantAccessDialog } from '~/components/Sharing';

@@ -1,12 +1,12 @@
-import { PrincipalType } from 'librechat-data-provider';
+import { PrincipalType } from '@hanzochat/data-provider';
 import {
   logger,
   getTenantId,
   mergeConfigOverrides,
   BASE_CONFIG_PRINCIPAL_ID,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import type { Types } from 'mongoose';
-import type { AppConfig, IConfig } from '@librechat/data-schemas';
+import type { AppConfig, IConfig } from '@hanzochat/data-schemas';
 
 const BASE_CONFIG_KEY = '_BASE_';
 
@@ -33,7 +33,7 @@ export interface AppConfigServiceDeps {
   setCachedTools: (tools: Record<string, unknown>) => Promise<void>;
   /** Get a cache store by key. */
   getCache: (key: string) => CacheStore;
-  /** The CacheKeys constants from librechat-data-provider. */
+  /** The CacheKeys constants from @hanzochat/data-provider. */
   cacheKeys: { APP_CONFIG: string };
   /** Fetch applicable DB config overrides for a set of principals. */
   getApplicableConfigs: (

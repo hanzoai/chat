@@ -6,7 +6,7 @@ import SkillsView from '../SkillsView';
 const mockUseHasAccess = jest.fn(() => true);
 
 jest.mock(
-  'librechat-data-provider',
+  '@hanzochat/data-provider',
   () => ({
     PermissionTypes: { SKILLS: 'skills' },
     Permissions: { USE: 'use', CREATE: 'create' },
@@ -15,7 +15,7 @@ jest.mock(
 );
 
 jest.mock(
-  '@librechat/client',
+  '@hanzochat/client',
   () => ({
     Spinner: () => <div data-testid="spinner" />,
   }),

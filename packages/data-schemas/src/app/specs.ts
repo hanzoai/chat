@@ -1,6 +1,6 @@
 import logger from '~/config/winston';
-import { EModelEndpoint, normalizeEndpointName } from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
+import { EModelEndpoint, normalizeEndpointName } from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
 
 /**
  * Sets up Model Specs from the config (`librechat.yaml`) file.

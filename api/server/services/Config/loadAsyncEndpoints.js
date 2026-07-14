@@ -1,5 +1,5 @@
 const path = require('path');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { loadServiceKey, isUserProvided } = require('@hanzochat/api');
 const { config } = require('./EndpointService');
 

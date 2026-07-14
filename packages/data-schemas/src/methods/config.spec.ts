@@ -1,6 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { PrincipalType, PrincipalModel } from 'librechat-data-provider';
+import { PrincipalType, PrincipalModel } from '@hanzochat/data-provider';
 import { createConfigMethods } from './config';
 import configSchema from '~/schema/config';
 import type { IConfig } from '~/types';

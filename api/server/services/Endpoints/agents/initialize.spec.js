@@ -6,7 +6,7 @@ const {
   PrincipalModel,
   MAX_SUBAGENT_DEPTH,
   MAX_SUBAGENT_GRAPH_NODES,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
 const mockInitializeAgent = jest.fn();
@@ -68,7 +68,7 @@ jest.mock('~/cache', () => ({
 }));
 
 const { initializeClient } = require('./initialize');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { User, AclEntry } = require('~/db/models');
 const { createAgent } = require('~/models');
 

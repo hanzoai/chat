@@ -1,4 +1,4 @@
-import { FileSources } from 'librechat-data-provider';
+import { FileSources } from '@hanzochat/data-provider';
 
 import type { SaveBufferParams } from './types';
 

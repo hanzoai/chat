@@ -1,7 +1,7 @@
 const path = require('path');
 const { v4 } = require('uuid');
 const axios = require('axios');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { getCodeBaseURL } = require('@librechat/agents');
 const { logAxiosError, getBasePath } = require('@hanzochat/api');
 const {
@@ -16,7 +16,7 @@ const {
   EModelEndpoint,
   mergeFileConfig,
   getEndpointFileConfig,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { filterFilesByAgentAccess } = require('~/server/services/Files/permissions');
 const { createFile, getFiles, updateFile, claimCodeFile } = require('~/models');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');

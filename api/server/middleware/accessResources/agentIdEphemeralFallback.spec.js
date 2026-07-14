@@ -10,9 +10,9 @@
  */
 
 // Mock externals so neither winston (data-schemas) nor MongoDB (~/models/Agent) load.
-jest.mock('@librechat/data-schemas', () => ({ logger: { error: jest.fn(), debug: jest.fn() } }));
+jest.mock('@hanzochat/data-schemas', () => ({ logger: { error: jest.fn(), debug: jest.fn() } }));
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   Constants: { EPHEMERAL_AGENT_ID: 'ephemeral' },
   ResourceType: { AGENT: 'agent' },
   // Real predicate semantics (mirrors packages/data-provider/src):

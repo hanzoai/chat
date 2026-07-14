@@ -3,7 +3,7 @@ const {
   EModelEndpoint,
   defaultOrderQuery,
   defaultAssistantsVersion,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   initializeClient: initAzureClient,
 } = require('~/server/services/Endpoints/azureAssistants');

@@ -15,7 +15,7 @@ jest.mock('nanoid', () => ({
   nanoid: jest.fn(() => 'mock-nanoid-123'),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),

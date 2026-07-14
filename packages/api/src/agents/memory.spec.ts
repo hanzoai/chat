@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { Run, Providers } from '@librechat/agents';
-import type { IUser } from '@librechat/data-schemas';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { Response } from 'express';
 import { processMemory } from './memory';
 

@@ -1,5 +1,5 @@
 const express = require('express');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   generateCheckAccess,
   markPublicPromptGroups,
@@ -17,7 +17,7 @@ const {
   PrincipalType,
   PermissionBits,
   PermissionTypes,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   getListPromptGroupsByAccess,
   makePromptProduction,

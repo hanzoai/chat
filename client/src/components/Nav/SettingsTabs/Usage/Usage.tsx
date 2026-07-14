@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRecoilState } from 'recoil';
-import { Switch } from '@librechat/client';
+import { Switch } from '@hanzochat/client';
 import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3, Sparkles } from 'lucide-react';
 import { useGetStartupConfig, useGetUserUsage, useGetRoutingDefaults } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState, useMemo, memo, lazy, Suspense, useRef } from 'react';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
-import { useMediaQuery } from '@librechat/client';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import { useMediaQuery } from '@hanzochat/client';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
-import type { ConversationListResponse } from 'librechat-data-provider';
+import type { ConversationListResponse } from '@hanzochat/data-provider';
 import type { List } from 'react-virtualized';
 import {
   useLocalize,

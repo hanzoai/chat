@@ -14,7 +14,7 @@ const mockLoggerInfo = jest.fn();
 const mockLoggerWarn = jest.fn();
 const mockLoggerError = jest.fn();
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: mockLoggerInfo, warn: mockLoggerWarn, error: mockLoggerError },
   webSearchKeys: [],
 }));
@@ -37,7 +37,7 @@ jest.mock('@hanzochat/api', () => {
   };
 });
 
-jest.mock('librechat-data-provider', () => ({
+jest.mock('@hanzochat/data-provider', () => ({
   Tools: {},
   CacheKeys: { FLOWS: 'flows' },
   Constants: { mcp_delimiter: '::', mcp_prefix: 'mcp_' },

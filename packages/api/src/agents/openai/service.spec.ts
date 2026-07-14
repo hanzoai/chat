@@ -1,7 +1,7 @@
 import { createAgentChatCompletion } from './service';
 import type { ChatCompletionDependencies } from './service';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),

@@ -6,13 +6,13 @@ import {
   PrincipalType,
   PermissionBits,
   PrincipalModel,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { ParsedServerConfig } from '~/mcp/types';
 
 type ServerConfigsDBType = import('../db/ServerConfigsDB').ServerConfigsDB;
-type CreateMethodsType = typeof import('@librechat/data-schemas').createMethods;
-type CreateModelsType = typeof import('@librechat/data-schemas').createModels;
-type RoleBitsType = typeof import('@librechat/data-schemas').RoleBits;
+type CreateMethodsType = typeof import('@hanzochat/data-schemas').createMethods;
+type CreateModelsType = typeof import('@hanzochat/data-schemas').createModels;
+type RoleBitsType = typeof import('@hanzochat/data-schemas').RoleBits;
 
 let mongoServer: MongoMemoryServer;
 let serverConfigsDB: ServerConfigsDBType;
@@ -45,7 +45,7 @@ beforeAll(async () => {
   jest.resetModules();
 
   // Dynamic imports after setting env vars
-  const dataSchemas = await import('@librechat/data-schemas');
+  const dataSchemas = await import('@hanzochat/data-schemas');
   createModels = dataSchemas.createModels;
   createMethods = dataSchemas.createMethods;
   RoleBits = dataSchemas.RoleBits;

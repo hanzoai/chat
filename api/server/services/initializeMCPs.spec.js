@@ -16,7 +16,7 @@ jest.mock('mongoose', () => ({
   connection: { readyState: 1 },
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
@@ -54,7 +54,7 @@ jest.mock('~/config', () => ({
   },
 }));
 
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const initializeMCPs = require('./initializeMCPs');
 
 describe('initializeMCPs', () => {

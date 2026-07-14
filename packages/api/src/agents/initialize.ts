@@ -8,7 +8,7 @@ import {
   isAgentsEndpoint,
   replaceSpecialVars,
   providerEndpointMap,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   AgentToolResources,
   AgentToolOptions,
@@ -16,10 +16,10 @@ import type {
   TFile,
   Agent,
   TUser,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { GenericTool, LCToolRegistry, ToolMap, LCTool } from '@librechat/agents';
 import type { Response as ServerResponse } from 'express';
-import type { IMongoFile } from '@librechat/data-schemas';
+import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { InitializeResultBase, ServerRequest, EndpointDbMethods } from '~/types';
 import {
   optionalChainWithEmptyCheck,

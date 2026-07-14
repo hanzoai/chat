@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
 import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront';
-import { logger } from '@librechat/data-schemas';
-import type { TFile } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import type { TFile } from '@hanzochat/data-provider';
 import type { Readable } from 'stream';
 import type { ServerRequest } from '~/types';
 import type {

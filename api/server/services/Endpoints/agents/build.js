@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { isAgentsEndpoint, removeNullishValues, Constants } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { isAgentsEndpoint, removeNullishValues, Constants } = require('@hanzochat/data-provider');
 const { loadAgent } = require('~/models/Agent');
 
 const buildOptions = (req, endpoint, parsedBody, endpointType) => {
@@ -18,7 +18,7 @@ const buildOptions = (req, endpoint, parsedBody, endpointType) => {
     return undefined;
   });
 
-  /** @type {import('librechat-data-provider').TConversation | undefined} */
+  /** @type {import('@hanzochat/data-provider').TConversation | undefined} */
   const addedConvo = req.body?.addedConvo;
 
   return removeNullishValues({

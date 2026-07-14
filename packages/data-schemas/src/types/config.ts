@@ -1,5 +1,5 @@
-import { PrincipalType, PrincipalModel } from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
+import { PrincipalType, PrincipalModel } from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
 import type { Document, Types } from 'mongoose';
 
 /**

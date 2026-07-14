@@ -1,5 +1,5 @@
-import { CODE_ENV_KINDS } from 'librechat-data-provider';
-import type { CodeEnvKind } from 'librechat-data-provider';
+import { CODE_ENV_KINDS } from '@hanzochat/data-provider';
+import type { CodeEnvKind } from '@hanzochat/data-provider';
 import type FormData from 'form-data';
 
 /**

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import type { TAttachment } from 'librechat-data-provider';
+import type { TAttachment } from '@hanzochat/data-provider';
 import Attachment, { AttachmentGroup } from '../Attachment';
 
 jest.mock('~/hooks', () => ({

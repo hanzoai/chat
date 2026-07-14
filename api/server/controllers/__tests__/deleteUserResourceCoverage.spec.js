@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { ResourceType } = require('librechat-data-provider');
+const { ResourceType } = require('@hanzochat/data-provider');
 
 /**
  * Maps each ResourceType to the cleanup function name that must appear in

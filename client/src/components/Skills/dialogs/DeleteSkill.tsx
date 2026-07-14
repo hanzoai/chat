@@ -7,7 +7,7 @@ import {
   OGDialogTrigger,
   OGDialogTemplate,
   useToastContext,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import { useDeleteSkillMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 

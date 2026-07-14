@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { Button, Sidebar, TooltipAnchor } from '@librechat/client';
+import { Button, Sidebar, TooltipAnchor } from '@hanzochat/client';
 import { usePromptGroupsContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
 import PanelNavigation from './PanelNavigation';

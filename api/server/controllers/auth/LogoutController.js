@@ -1,6 +1,6 @@
 const cookies = require('cookie');
 const { isEnabled } = require('@hanzochat/api');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { logoutUser } = require('~/server/services/AuthService');
 const { getOpenIdConfig } = require('~/strategies');
 

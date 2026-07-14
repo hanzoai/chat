@@ -1,6 +1,6 @@
 import { Providers } from '@librechat/agents';
-import { isDocumentSupportedProvider } from 'librechat-data-provider';
-import type { IMongoFile } from '@librechat/data-schemas';
+import { isDocumentSupportedProvider } from '@hanzochat/data-provider';
+import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { ServerRequest, StrategyFunctions, AudioResult } from '~/types';
 import { getFileStream, getConfiguredFileSizeLimit } from './utils';
 import { validateAudio } from '~/files/validation';

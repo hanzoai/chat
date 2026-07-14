@@ -2,14 +2,14 @@ const mongoose = require('mongoose');
 
 const mockLogger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: mockLogger,
 }));
 
-const { ResourceType, PrincipalType } = jest.requireActual('librechat-data-provider');
+const { ResourceType, PrincipalType } = jest.requireActual('@hanzochat/data-provider');
 
-jest.mock('librechat-data-provider', () => ({
-  ...jest.requireActual('librechat-data-provider'),
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
 }));
 
 jest.mock('@hanzochat/api', () => ({

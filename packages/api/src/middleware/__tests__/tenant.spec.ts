@@ -5,7 +5,7 @@ import {
   getRequestId,
   SYSTEM_TENANT_ID,
   logger,
-} from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
 import type { Response, NextFunction } from 'express';
 import type { ServerRequest } from '~/types/http';
 // Import directly from source file — _resetTenantMiddlewareStrictCache is intentionally

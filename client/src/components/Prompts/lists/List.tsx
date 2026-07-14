@@ -1,6 +1,6 @@
 import { FileText } from 'lucide-react';
-import { Skeleton } from '@librechat/client';
-import type { TPromptGroup } from 'librechat-data-provider';
+import { Skeleton } from '@hanzochat/client';
+import type { TPromptGroup } from '@hanzochat/data-provider';
 import ChatGroupItem from './ChatGroupItem';
 import { useLocalize } from '~/hooks';
 

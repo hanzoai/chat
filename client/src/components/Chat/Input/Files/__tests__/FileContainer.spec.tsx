@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import type { TFile } from 'librechat-data-provider';
+import type { TFile } from '@hanzochat/data-provider';
 import FileContainer from '../FileContainer';
 
 jest.mock('~/utils', () => ({

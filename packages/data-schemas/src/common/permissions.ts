@@ -1,4 +1,4 @@
-import { PermissionBits } from 'librechat-data-provider';
+import { PermissionBits } from '@hanzochat/data-provider';
 
 /**
  * Upper bound for any stored `permBits` value. Computed as the bitwise OR of

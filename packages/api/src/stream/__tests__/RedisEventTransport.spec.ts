@@ -1,5 +1,5 @@
 import type { Redis } from 'ioredis';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { RedisEventTransport } from '~/stream/implementations/RedisEventTransport';
 import { createMockPublisher } from './helpers/publisher';
 

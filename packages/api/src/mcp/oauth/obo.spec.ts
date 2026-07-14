@@ -1,9 +1,9 @@
-import type { IUser } from '@librechat/data-schemas';
-import { Permissions, PermissionTypes } from 'librechat-data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
+import { Permissions, PermissionTypes } from '@hanzochat/data-provider';
 import type { OboTokenResolver } from './obo';
 import { isOboConfigStillTrusted, resolveOboToken } from './obo';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     warn: jest.fn(),
     error: jest.fn(),

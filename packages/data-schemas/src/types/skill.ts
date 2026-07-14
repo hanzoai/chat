@@ -1,4 +1,4 @@
-import type { CodeEnvRef } from 'librechat-data-provider';
+import type { CodeEnvRef } from '@hanzochat/data-provider';
 import type { Document, Types } from 'mongoose';
 
 /**

@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 
 /**
  * The canonical cloud agent registry is Hanzo Cloud `/v1/agents`

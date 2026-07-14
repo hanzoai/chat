@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Constants } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import type { Logger } from 'winston';
 import type { MCPManager } from '~/mcp/MCPManager';

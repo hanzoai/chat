@@ -2,14 +2,14 @@ const express = require('express');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
-const { createMethods } = require('@librechat/data-schemas');
+const { createMethods } = require('@hanzochat/data-schemas');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const {
   SystemRoles,
   AccessRoleIds,
   ResourceType,
   PrincipalType,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { createAgent } = require('~/models');
 
 jest.mock('~/server/services/Files/process', () => ({
@@ -54,7 +54,7 @@ describe('POST /images - Agent Upload Permission Check (Integration)', () => {
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
 
-    const { createModels } = require('@librechat/data-schemas');
+    const { createModels } = require('@hanzochat/data-schemas');
     const models = createModels(mongoose);
     modelsToCleanup = Object.keys(models);
     Object.assign(mongoose.models, models);

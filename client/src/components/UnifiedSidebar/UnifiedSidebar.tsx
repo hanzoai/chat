@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect, useRef, memo, startTransition } from 
 import type { ReactNode } from 'react';
 import { useRecoilState } from 'recoil';
 import { useForm } from 'react-hook-form';
-import { useMediaQuery } from '@librechat/client';
+import { useMediaQuery } from '@hanzochat/client';
 import type { ChatFormValues } from '~/common';
 import { ChatContext, ChatFormProvider, ActivePanelProvider } from '~/Providers';
 import useUnifiedSidebarLinks from '~/hooks/Nav/useUnifiedSidebarLinks';

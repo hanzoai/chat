@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { Constants } from 'librechat-data-provider';
-import type { Agent, TEphemeralAgent } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
+import type { Agent, TEphemeralAgent } from '@hanzochat/data-provider';
 import type { LCTool } from '@librechat/agents';
 import type { Logger } from 'winston';
 import type { MCPManager } from '~/mcp/MCPManager';

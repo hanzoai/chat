@@ -4,7 +4,7 @@ import type { ServerRequest } from '~/types';
 import { getCodeApiAuthHeaders, mintCodeApiToken } from './codeapi';
 
 jest.mock(
-  '@librechat/data-schemas',
+  '@hanzochat/data-schemas',
   () => ({
     getTenantId: jest.fn(),
   }),
@@ -15,7 +15,7 @@ jest.mock('~/utils', () => ({
   isEnabled: (value?: string) => value === 'true' || value === '1',
 }));
 
-const mockGetTenantId = jest.requireMock('@librechat/data-schemas').getTenantId as jest.Mock;
+const mockGetTenantId = jest.requireMock('@hanzochat/data-schemas').getTenantId as jest.Mock;
 
 const ENV_KEYS = [
   'CODEAPI_AUTH_PROVIDER',

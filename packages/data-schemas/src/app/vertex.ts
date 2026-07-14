@@ -4,14 +4,14 @@ import {
   extractEnvVariable,
   envVarRegex,
   TVertexModelMap,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   TCustomConfig,
   TVertexAISchema,
   TVertexAIConfig,
   TAnthropicEndpoint,
   TVertexModelConfig,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 
 /**
  * Default Vertex AI models available through Google Cloud

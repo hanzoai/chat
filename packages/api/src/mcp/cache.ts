@@ -1,4 +1,4 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { MCPServersRegistry } from './registry/MCPServersRegistry';
 import { MCPManager } from './MCPManager';
 

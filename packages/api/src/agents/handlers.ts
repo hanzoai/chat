@@ -1,4 +1,4 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { GraphEvents, Constants } from '@librechat/agents';
 import type {
   LCTool,

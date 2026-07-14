@@ -1,5 +1,5 @@
 import { Keyv } from 'keyv';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { IServerConfigsRepositoryInterface } from './ServerConfigsRepositoryInterface';
 import type * as t from '~/mcp/types';
 import { MCPInspectionFailedError, isMCPDomainNotAllowedError } from '~/mcp/errors';

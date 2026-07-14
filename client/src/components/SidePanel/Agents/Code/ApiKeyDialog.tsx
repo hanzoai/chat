@@ -1,4 +1,4 @@
-import { OGDialogTemplate, Input, Button, OGDialog } from '@librechat/client';
+import { OGDialogTemplate, Input, Button, OGDialog } from '@hanzochat/client';
 import type { UseFormRegister, UseFormHandleSubmit } from 'react-hook-form';
 import type { ApiKeyFormData } from '~/common';
 import type { RefObject } from 'react';

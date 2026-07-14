@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'crypto';
 import { Router } from 'express';
 import { Registry, collectDefaultMetrics, Counter, Gauge, Histogram } from 'prom-client';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { Mongoose } from 'mongoose';
 

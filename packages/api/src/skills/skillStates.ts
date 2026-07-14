@@ -1,4 +1,4 @@
-import { isValidObjectIdString } from '@librechat/data-schemas';
+import { isValidObjectIdString } from '@hanzochat/data-schemas';
 import type { Types } from 'mongoose';
 
 /** Hard cap on explicit override entries stored on a user document. */

@@ -2,9 +2,9 @@ const axios = require('axios');
 const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 const { Tool } = require('@langchain/core/tools');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { FileContext, ContentTypes } = require('librechat-data-provider');
+const { FileContext, ContentTypes } = require('@hanzochat/data-provider');
 
 const fluxApiJsonSchema = {
   type: 'object',

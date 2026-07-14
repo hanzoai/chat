@@ -1,5 +1,5 @@
 const { isEnabled } = require('@hanzochat/api');
-const { ViolationTypes } = require('librechat-data-provider');
+const { ViolationTypes } = require('@hanzochat/data-provider');
 const getLogStores = require('./getLogStores');
 const banViolation = require('./banViolation');
 

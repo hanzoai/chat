@@ -1,4 +1,4 @@
-import { Permissions, PermissionBits, PermissionTypes } from 'librechat-data-provider';
+import { Permissions, PermissionBits, PermissionTypes } from '@hanzochat/data-provider';
 import { useHasAccess } from '~/hooks/Roles';
 
 /**

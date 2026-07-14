@@ -1,6 +1,6 @@
 const { nanoid } = require('nanoid');
 const { EnvVar } = require('@librechat/agents');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { checkAccess, loadWebSearchAuth } = require('@hanzochat/api');
 const {
   Tools,
@@ -8,7 +8,7 @@ const {
   Permissions,
   ToolCallTypes,
   PermissionTypes,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { processFileURL, uploadImageBuffer } = require('~/server/services/Files/process');
 const { processCodeOutput } = require('~/server/services/Files/Code/process');
 const { createToolCall, getToolCallsByConvo } = require('~/models/ToolCall');

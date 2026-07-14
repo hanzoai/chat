@@ -1,4 +1,4 @@
-import { mergeFileConfig } from 'librechat-data-provider';
+import { mergeFileConfig } from '@hanzochat/data-provider';
 import { useCallback } from 'react';
 import { useGetFileConfig } from '~/data-provider';
 import {

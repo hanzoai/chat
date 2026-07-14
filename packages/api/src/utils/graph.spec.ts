@@ -1,4 +1,4 @@
-import type { TUser } from 'librechat-data-provider';
+import type { TUser } from '@hanzochat/data-provider';
 import type { GraphTokenResolver, GraphTokenOptions } from './graph';
 import {
   containsGraphTokenPlaceholder,
@@ -10,7 +10,7 @@ import {
 } from './graph';
 
 // Mock the logger
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     warn: jest.fn(),
     error: jest.fn(),

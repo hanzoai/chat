@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import { useListSkillsQuery } from '~/data-provider';
 import { useDebounce, useHasAccess, useLocalize } from '~/hooks';
 import { CreateSkillMenu } from '../buttons';
@@ -93,7 +93,7 @@ export default function SkillsSidePanel({ className }: SkillsSidePanelProps) {
       {/* Skill list */}
       <div className="flex-1 overflow-y-auto px-4">
         <SkillListPanel
-          skills={skills as unknown as import('librechat-data-provider').TSkill[]}
+          skills={skills as unknown as import('@hanzochat/data-provider').TSkill[]}
           isLoading={listQuery.isLoading}
           activeSkillId={activeSkillId}
         />

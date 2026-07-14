@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { AgentToolOptions, AllowedCaller, AgentToolType } from 'librechat-data-provider';
+import type { AgentToolOptions, AllowedCaller, AgentToolType } from '@hanzochat/data-provider';
 import type { AgentForm } from '~/common';
 
 interface UseMCPToolOptionsReturn {

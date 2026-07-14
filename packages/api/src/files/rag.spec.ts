@@ -1,4 +1,4 @@
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
 	logger: {
 		debug: jest.fn(),
 		warn: jest.fn(),
@@ -20,7 +20,7 @@ jest.mock('axios', () => ({
 
 import axios from 'axios';
 import { deleteRagFile } from './rag';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { generateShortLivedToken } from '~/crypto/jwt';
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;

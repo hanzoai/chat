@@ -1,5 +1,5 @@
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { TModelSpec } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { TModelSpec } from '@hanzochat/data-provider';
 import { getModelSpecIconURL } from '../endpoints';
 
 describe('getModelSpecIconURL', () => {

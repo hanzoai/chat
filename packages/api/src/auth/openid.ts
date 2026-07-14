@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
-import { ErrorTypes } from 'librechat-data-provider';
-import type { IUser, UserMethods } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
+import { ErrorTypes } from '@hanzochat/data-provider';
+import type { IUser, UserMethods } from '@hanzochat/data-schemas';
 
 /**
  * Finds or migrates a user for OpenID authentication

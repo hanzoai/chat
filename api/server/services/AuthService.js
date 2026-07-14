@@ -5,8 +5,8 @@ const {
   logger,
   DEFAULT_SESSION_EXPIRY,
   DEFAULT_REFRESH_TOKEN_EXPIRY,
-} = require('@librechat/data-schemas');
-const { ErrorTypes, SystemRoles, errorsToString } = require('librechat-data-provider');
+} = require('@hanzochat/data-schemas');
+const { ErrorTypes, SystemRoles, errorsToString } = require('@hanzochat/data-provider');
 const {
   math,
   isEnabled,

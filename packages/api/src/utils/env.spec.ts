@@ -1,12 +1,12 @@
-import { TokenExchangeMethodEnum } from 'librechat-data-provider';
+import { TokenExchangeMethodEnum } from '@hanzochat/data-provider';
 import {
   resolveHeaders,
   resolveNestedObject,
   processMCPEnv,
   encodeHeaderValue,
 } from './env';
-import type { MCPOptions } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+import type { MCPOptions } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import { Types } from 'mongoose';
 
 function isStdioOptions(options: MCPOptions): options is Extract<MCPOptions, { type?: 'stdio' }> {

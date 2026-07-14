@@ -1,12 +1,12 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import {
   PrincipalType,
   PrincipalModel,
   INTERFACE_PERMISSION_FIELDS,
   PERMISSION_SUB_KEYS,
-} from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
-import type { AppConfig, ConfigSection, IConfig } from '@librechat/data-schemas';
+} from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
+import type { AppConfig, ConfigSection, IConfig } from '@hanzochat/data-schemas';
 import type { Types, ClientSession } from 'mongoose';
 import type { Response } from 'express';
 import type { CapabilityUser } from '~/middleware/capabilities';

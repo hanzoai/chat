@@ -1,10 +1,10 @@
-import { ErrorTypes } from 'librechat-data-provider';
-import { logger } from '@librechat/data-schemas';
-import type { IUser, UserMethods } from '@librechat/data-schemas';
+import { ErrorTypes } from '@hanzochat/data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import type { IUser, UserMethods } from '@hanzochat/data-schemas';
 import { findOpenIDUser } from './openid';
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     warn: jest.fn(),
     info: jest.fn(),

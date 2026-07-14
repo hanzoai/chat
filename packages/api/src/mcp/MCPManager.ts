@@ -1,8 +1,8 @@
 import pick from 'lodash/pick';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { CallToolResultSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import type { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol.js';
-import type { TokenMethods, IUser } from '@librechat/data-schemas';
+import type { TokenMethods, IUser } from '@hanzochat/data-schemas';
 import type { GraphTokenResolver } from '~/utils/graph';
 import type { FlowStateManager } from '~/flow/manager';
 import type { MCPOAuthTokens } from './oauth';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { FileSources } from 'librechat-data-provider';
+import { FileSources } from '@hanzochat/data-provider';
 import LogLink from '../LogLink';
 
 const mockShowToast = jest.fn();
@@ -8,7 +8,7 @@ const mockDownloadFromApi = jest.fn();
 const mockDownloadFromUrl = jest.fn();
 const mockTriggerDownload = jest.fn();
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   useToastContext: () => ({ showToast: mockShowToast }),
 }));
 

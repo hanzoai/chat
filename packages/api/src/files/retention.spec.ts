@@ -1,4 +1,4 @@
-import { RetentionMode } from 'librechat-data-provider';
+import { RetentionMode } from '@hanzochat/data-provider';
 import {
   createMinimalRetentionRequest,
   getConversationExpirationDate,

@@ -1,7 +1,7 @@
 import { Dispatcher, ProxyAgent } from 'undici';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { AnthropicClientOptions } from '@librechat/agents';
-import { anthropicSettings, removeNullishValues, AuthKeys } from 'librechat-data-provider';
+import { anthropicSettings, removeNullishValues, AuthKeys } from '@hanzochat/data-provider';
 import type {
   AnthropicLLMConfigResult,
   AnthropicConfigOptions,

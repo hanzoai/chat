@@ -9,7 +9,7 @@ import {
   OGDialogClose,
   OGDialogTitle,
   OGDialogContent,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import useMermaidZoom from './useMermaidZoom';
 import ZoomControls from './ZoomControls';
 import { useLocalize } from '~/hooks';

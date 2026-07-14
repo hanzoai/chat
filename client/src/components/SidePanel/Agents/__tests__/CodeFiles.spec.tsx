@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { EModelEndpoint, mergeFileConfig } from 'librechat-data-provider';
-import type { TEndpointsConfig } from 'librechat-data-provider';
+import { EModelEndpoint, mergeFileConfig } from '@hanzochat/data-provider';
+import type { TEndpointsConfig } from '@hanzochat/data-provider';
 import type { AgentForm } from '~/common';
 import Files from '../Code/Files';
 
@@ -37,7 +37,7 @@ jest.mock('~/hooks/Files/useFileHandling', () => ({
 
 jest.mock('~/components/Chat/Input/Files/FileRow', () => () => null);
 
-jest.mock('@librechat/client', () => ({
+jest.mock('@hanzochat/client', () => ({
   AttachmentIcon: () => <span />,
 }));
 

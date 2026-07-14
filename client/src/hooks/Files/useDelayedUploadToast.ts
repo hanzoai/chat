@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useToastContext } from '@librechat/client';
+import { useToastContext } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 
 export const useDelayedUploadToast = () => {

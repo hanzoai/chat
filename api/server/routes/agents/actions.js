@@ -1,6 +1,6 @@
 const express = require('express');
 const { nanoid } = require('nanoid');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { generateCheckAccess, isActionDomainAllowed } = require('@hanzochat/api');
 const {
   Permissions,
@@ -11,7 +11,7 @@ const {
   removeNullishValues,
   validateActionDomain,
   validateAndParseOpenAPISpec,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const { encryptMetadata, domainParser } = require('~/server/services/ActionService');
 const { findAccessibleResources } = require('~/server/services/PermissionService');
 const { getAgent, updateAgent, getListAgentsByAccess } = require('~/models/Agent');

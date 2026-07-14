@@ -1,4 +1,4 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
 /** 250 MiB — default max file size for conversation imports */
 export const DEFAULT_IMPORT_MAX_FILE_SIZE = 262144000;

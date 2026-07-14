@@ -5,8 +5,8 @@
  * @module packages/api/src/tools/definitions
  */
 
-import { Constants, actionDelimiter } from 'librechat-data-provider';
-import type { AgentToolOptions } from 'librechat-data-provider';
+import { Constants, actionDelimiter } from '@hanzochat/data-provider';
+import type { AgentToolOptions } from '@hanzochat/data-provider';
 import type { LCToolRegistry, JsonSchemaType, LCTool, GenericTool } from '@librechat/agents';
 import type { ToolDefinition } from './classification';
 import { resolveJsonSchemaRefs, normalizeJsonSchema } from '~/mcp/zod';

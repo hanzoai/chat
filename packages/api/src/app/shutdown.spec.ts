@@ -6,7 +6,7 @@ import {
   __resetShutdownStateForTests,
 } from './shutdown';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 

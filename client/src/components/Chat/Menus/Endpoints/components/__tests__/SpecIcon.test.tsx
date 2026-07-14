@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { TModelSpec, TEndpointsConfig } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { TModelSpec, TEndpointsConfig } from '@hanzochat/data-provider';
 import SpecIcon from '../SpecIcon';
 
 jest.mock('~/hooks/Endpoint/Icons', () => {

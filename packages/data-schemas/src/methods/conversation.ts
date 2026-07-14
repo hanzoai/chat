@@ -1,6 +1,6 @@
 import type { FilterQuery, Model, SortOrder } from 'mongoose';
 import type { DataHandle } from '~/common/dataHandle';
-import { RetentionMode } from 'librechat-data-provider';
+import { RetentionMode } from '@hanzochat/data-provider';
 import { createTempChatExpirationDate } from '~/utils/tempChatRetention';
 import { buildRetentionVisibilityFilter, createFallbackRetentionDate } from '~/utils/retention';
 import { tenantSafeBulkWrite } from '~/utils/tenantBulkWrite';
