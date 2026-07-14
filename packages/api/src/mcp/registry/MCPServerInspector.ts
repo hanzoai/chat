@@ -114,10 +114,10 @@ export class MCPServerInspector {
   }
 
   /**
-   * Converts server tools to LibreChat-compatible tool functions format.
+   * Converts server tools to Chat-compatible tool functions format.
    * @param serverName - The name of the server
    * @param connection - The MCP connection
-   * @returns Tool functions formatted for LibreChat
+   * @returns Tool functions formatted for Chat
    */
   public static async getToolFunctions(
     serverName: string,

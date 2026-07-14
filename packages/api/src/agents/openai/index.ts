@@ -1,8 +1,8 @@
 /**
- * OpenAI-compatible API for LibreChat agents.
+ * OpenAI-compatible API for Chat agents.
  *
  * This module provides an OpenAI v1/chat/completions compatible interface
- * for interacting with LibreChat agents remotely via API.
+ * for interacting with Chat agents remotely via API.
  *
  * @example
  * ```typescript

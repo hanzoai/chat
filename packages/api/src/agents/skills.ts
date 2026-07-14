@@ -1235,7 +1235,7 @@ export interface UnionPrimeAllowedToolsResult {
  *
  * Tolerant of unknown tool names: validation against the runtime registry
  * happens at the caller (in `initialize.ts`) so we can support skills
- * authored against tools LibreChat hasn't implemented yet — the registry
+ * authored against tools Chat hasn't implemented yet — the registry
  * intersection silently drops them with a debug log, but the import path
  * never rejects them.
  *

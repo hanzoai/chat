@@ -606,11 +606,11 @@ const ListModelsController = async (req, res) => {
       id: agent.id,
       object: 'model',
       created: Math.floor(new Date(agent.createdAt || Date.now()).getTime() / 1000),
-      owned_by: 'librechat',
+      owned_by: 'chat',
       permission: [],
       root: agent.id,
       parent: null,
-      // LibreChat extensions
+      // Chat extensions
       name: agent.name,
       description: agent.description,
       provider: agent.provider,
@@ -678,11 +678,11 @@ const GetModelController = async (req, res) => {
       id: agent.id,
       object: 'model',
       created: Math.floor(new Date(agent.createdAt || Date.now()).getTime() / 1000),
-      owned_by: 'librechat',
+      owned_by: 'chat',
       permission: [],
       root: agent.id,
       parent: null,
-      // LibreChat extensions
+      // Chat extensions
       name: agent.name,
       description: agent.description,
       provider: agent.provider,

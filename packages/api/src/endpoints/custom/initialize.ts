@@ -53,7 +53,7 @@ function buildCustomOptions(
 
 /**
  * Initializes a custom endpoint client configuration.
- * This function handles custom endpoints defined in librechat.yaml, including
+ * This function handles custom endpoints defined in chat.yaml, including
  * user-provided API keys and URLs.
  *
  * @param params - Configuration parameters
@@ -102,7 +102,7 @@ export async function initializeCustom({
   const baseURL = userProvidesURL ? userValues?.baseURL : CUSTOM_BASE_URL;
 
   // Canonical Hanzo Cloud auth+billing: an endpoint that declares
-  // `apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"` bills the signed-in user's OWN org by
+  // `apiKey: "{{CHAT_OPENID_TOKEN}}"` bills the signed-in user's OWN org by
   // forwarding THEIR IAM bearer to cloud (api.hanzo.ai) as the request
   // credential. cloud validates the JWT, pins the tenant org from the verified
   // `owner` claim, and meters the org's shared plan then PAYG — no shared key, no

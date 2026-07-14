@@ -1,4 +1,4 @@
-const DEFAULT_SERVICE_NAME = 'librechat';
+const DEFAULT_SERVICE_NAME = 'chat';
 export const DEFAULT_HEALTH_PATH = '/health';
 
 export type TelemetryStatus = 'disabled' | 'failed' | 'started' | 'starting' | 'stopped';

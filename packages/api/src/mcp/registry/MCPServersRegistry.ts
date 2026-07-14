@@ -10,7 +10,7 @@ import { cacheConfig } from '~/cache/cacheConfig';
 
 /**
  * Central registry for managing MCP server configurations.
- * Authoritative source of truth for all MCP servers provided by LibreChat.
+ * Authoritative source of truth for all MCP servers provided by Chat.
  *
  * Uses a two-repository architecture:
  * - Cache Repository: Stores YAML-defined configs loaded at startup (in-memory or Redis-backed)

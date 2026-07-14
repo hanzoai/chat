@@ -10,10 +10,10 @@ interface VisibleToolsResult {
 
 /**
  * Custom hook to calculate visible tool IDs based on selected tools.
- * Separates regular LibreChat tools from MCP servers.
+ * Separates regular Chat tools from MCP servers.
  *
  * @param selectedToolIds - Array of selected tool IDs
- * @param regularTools - Array of regular LibreChat tools
+ * @param regularTools - Array of regular Chat tools
  * @param mcpServersMap - Map of all MCP servers
  * @returns Object containing separate arrays of visible tool IDs for regular and MCP tools
  */
@@ -38,7 +38,7 @@ export function useVisibleTools(
       else if (mcpServersMap.has(toolId)) {
         mcpServers.add(toolId);
       }
-      // Regular LibreChat tools
+      // Regular Chat tools
       else if (regularTools?.some((t) => t.pluginKey === toolId)) {
         regularToolIds.push(toolId);
       }

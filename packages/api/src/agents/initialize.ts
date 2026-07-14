@@ -23,7 +23,7 @@ import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { InitializeResultBase, ServerRequest, EndpointDbMethods } from '~/types';
 import {
   optionalChainWithEmptyCheck,
-  extractLibreChatParams,
+  extractChatParams,
   getModelMaxTokens,
   getThreadData,
 } from '~/utils';
@@ -181,7 +181,7 @@ export async function initializeAgent(
     ),
   );
 
-  const { resendFiles, maxContextTokens, modelOptions } = extractLibreChatParams(
+  const { resendFiles, maxContextTokens, modelOptions } = extractChatParams(
     _modelOptions as Record<string, unknown>,
   );
 

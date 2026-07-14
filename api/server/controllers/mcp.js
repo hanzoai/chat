@@ -1,6 +1,6 @@
 /**
  * MCP Tools Controller
- * Handles MCP-specific tool endpoints, decoupled from regular LibreChat tools
+ * Handles MCP-specific tool endpoints, decoupled from regular Chat tools
  *
  * @import { MCPServerRegistry } from '@hanzochat/api'
  * @import { MCPServerDocument } from '@hanzochat/data-provider'

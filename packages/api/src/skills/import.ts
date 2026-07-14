@@ -58,7 +58,7 @@ function parseBooleanScalar(value: string): boolean | undefined {
 }
 
 /**
- * YAML frontmatter parser — extracts the first-class fields LibreChat
+ * YAML frontmatter parser — extracts the first-class fields Chat
  * persists as columns (`name`, `description`, `alwaysApply`) out of a
  * SKILL.md file. Intentionally narrow: the full frontmatter validator in
  * `packages/data-schemas/src/methods/skill.ts` covers the wire contract;

@@ -408,7 +408,7 @@ const createResponse = async (req, res) => {
       // Artifact promises for processing tool outputs
       /** @type {Promise<import('@hanzochat/data-provider').TAttachment | null>[]} */
       const artifactPromises = [];
-      // Use Responses API-specific callback that emits librechat:attachment events
+      // Use Responses API-specific callback that emits chat:attachment events
       const toolEndCallback = createResponsesToolEndCallback({
         req,
         res,
@@ -754,7 +754,7 @@ const listModels = async (req, res) => {
       id: agent.id,
       object: 'model',
       created: Math.floor(new Date(agent.createdAt).getTime() / 1000),
-      owned_by: agent.author ?? 'librechat',
+      owned_by: agent.author ?? 'chat',
       // Additional metadata
       name: agent.name,
       description: agent.description,
@@ -780,7 +780,7 @@ const listModels = async (req, res) => {
  * Get Response - GET /v1/responses/:id
  *
  * Retrieves a stored response by its ID.
- * The response ID maps to a conversationId in LibreChat's storage.
+ * The response ID maps to a conversationId in Chat's storage.
  *
  * @param {import('express').Request} req
  * @param {import('express').Response} res

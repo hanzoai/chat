@@ -451,7 +451,7 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
 }
 
 /**
- * Helper to write attachment events in Open Responses format (librechat:attachment)
+ * Helper to write attachment events in Open Responses format (chat:attachment)
  * @param {ServerResponse} res - The server response object
  * @param {Object} tracker - The response tracker with sequence number
  * @param {Object} attachment - The attachment data
@@ -467,7 +467,7 @@ function writeResponsesAttachment(res, tracker, attachment, metadata) {
 
 /**
  * Creates a tool end callback specifically for the Responses API.
- * Emits attachments as `librechat:attachment` events per the Open Responses extension spec.
+ * Emits attachments as `chat:attachment` events per the Open Responses extension spec.
  *
  * @param {Object} params
  * @param {ServerRequest} params.req

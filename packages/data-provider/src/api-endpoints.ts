@@ -1,5 +1,5 @@
 /**
- * Hanzo Chat API Endpoints (LibreChat-native backend under /v1/chat/*).
+ * Hanzo Chat API Endpoints (Chat-native backend under /v1/chat/*).
  *
  * Single source of truth for all REST URLs. The SPA is served by, and talks to,
  * its own origin (e.g. https://hanzo.chat): BASE_URL is derived from the <base>

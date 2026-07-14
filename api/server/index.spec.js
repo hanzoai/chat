@@ -69,7 +69,7 @@ describe('Server Configuration', () => {
 
     fs.writeFileSync(
       path.join('/tmp/dist', 'index.html'),
-      '<!DOCTYPE html><html><head><title>LibreChat</title></head><body><div id="root"></div></body></html>',
+      '<!DOCTYPE html><html><head><title>Chat</title></head><body><div id="root"></div></body></html>',
     );
 
     mongoServer = await MongoMemoryServer.create();

@@ -39,7 +39,7 @@ export const SKILL_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
 /**
  * Source of a skill — where its canonical definition came from.
- * `inline` means the skill was authored directly in LibreChat.
+ * `inline` means the skill was authored directly in Chat.
  * `github` / `notion` are reserved for future sync integrations.
  */
 export type SkillSource = 'inline' | 'github' | 'notion';

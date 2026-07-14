@@ -406,7 +406,7 @@ async function processRequiredActions(client, requiredActions) {
  *   hasDeferredTools?: boolean;
  * }>} The agent tools and registry.
  */
-/** Native LibreChat tools that are not in the manifest */
+/** Native Chat tools that are not in the manifest */
 const nativeTools = new Set([Tools.execute_code, Tools.file_search, Tools.web_search]);
 
 /** Checks if a tool name is a known built-in tool */
@@ -580,7 +580,7 @@ async function loadToolDefinitionsWrapper({ req, res, agent, streamId = null, to
       if (!isDomainAllowed) {
         logger.warn(
           `[Actions] Domain "${action.metadata.domain}" not in allowedDomains. ` +
-            `Add it to librechat.yaml actions.allowedDomains to enable this action.`,
+            `Add it to chat.yaml actions.allowedDomains to enable this action.`,
         );
         continue;
       }
@@ -1293,7 +1293,7 @@ async function loadActionToolsForExecution({
     if (!isDomainAllowed) {
       logger.warn(
         `[Actions] Domain "${action.metadata.domain}" not in allowedDomains. ` +
-          `Add it to librechat.yaml actions.allowedDomains to enable this action.`,
+          `Add it to chat.yaml actions.allowedDomains to enable this action.`,
       );
       continue;
     }
