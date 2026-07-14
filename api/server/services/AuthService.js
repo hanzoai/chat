@@ -369,7 +369,7 @@ const setAuthTokens = async (userId, res, _session = null) => {
       secure: shouldUseSecureCookie(),
       sameSite: 'lax',
     });
-    res.cookie('token_provider', 'librechat', {
+    res.cookie('token_provider', 'chat', {
       expires: new Date(refreshTokenExpires),
       httpOnly: true,
       secure: shouldUseSecureCookie(),

@@ -21,7 +21,7 @@ export interface TelemetryController {
   shutdown: () => Promise<void>;
 }
 
-const WARNING_CODE = 'LIBRECHAT_OTEL';
+const WARNING_CODE = 'CHAT_OTEL';
 const REDACTED_QUERY_VALUE = '[REDACTED]';
 const SIGNAL_SHUTDOWN_TIMEOUT_MS = 5_000;
 

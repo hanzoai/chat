@@ -103,13 +103,13 @@ describe('Code API JWT minting', () => {
   beforeEach(() => {
     const keyPair = generateKeyPairSync('ed25519');
     publicKey = keyPair.publicKey;
-    process.env.CODEAPI_AUTH_PROVIDER = 'librechat-jwt';
+    process.env.CODEAPI_AUTH_PROVIDER = 'chat-jwt';
     process.env.CODEAPI_JWT_PRIVATE_JWK_JSON = JSON.stringify(
       keyPair.privateKey.export({ format: 'jwk' }),
     );
     process.env.CODEAPI_JWT_ALGORITHM = 'EdDSA';
     process.env.CODEAPI_JWT_KID = 'test-kid';
-    process.env.CODEAPI_JWT_ISSUER = 'librechat';
+    process.env.CODEAPI_JWT_ISSUER = 'chat';
     process.env.CODEAPI_JWT_AUDIENCE = 'codeapi';
     process.env.CODEAPI_JWT_TTL_SECONDS = '300';
     process.env.CODEAPI_JWT_MINT_CACHE_SECONDS = '30';
@@ -132,7 +132,7 @@ describe('Code API JWT minting', () => {
     }
   });
 
-  it('mints a Code API-scoped token from canonical LibreChat JWT context', async () => {
+  it('mints a Code API-scoped token from canonical Chat JWT context', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(1_778_250_000_000);
 
     const token = await mintCodeApiToken(baseRequest());
@@ -147,7 +147,7 @@ describe('Code API JWT minting', () => {
       cryptoVerify(null, Buffer.from(decoded.signingInput), publicKey, decoded.signature),
     ).toBe(true);
     expect(decoded.claims).toMatchObject({
-      iss: 'librechat',
+      iss: 'chat',
       aud: 'codeapi',
       sub: 'user_123',
       iat: 1_778_250_000,
@@ -155,14 +155,14 @@ describe('Code API JWT minting', () => {
       exp: 1_778_250_300,
       tenant_id: 'tenant_abc',
       role: 'USER',
-      principal_source: 'librechat_jwt',
+      principal_source: 'chat_jwt',
     });
     expect(decoded.claims.auth_context_hash).toBe(
       expectedContextHash({
         userId: 'user_123',
         tenantId: 'tenant_abc',
         role: 'USER',
-        principalSource: 'librechat_jwt',
+        principalSource: 'chat_jwt',
       }),
     );
     expect(decoded.claims).not.toHaveProperty('refresh_token');
@@ -189,13 +189,13 @@ describe('Code API JWT minting', () => {
     expect(JSON.stringify(claims)).not.toContain('do-not-forward');
   });
 
-  it('marks OpenID users authenticated by LibreChat JWT as LibreChat JWT callers', async () => {
+  it('marks OpenID users authenticated by Chat JWT as Chat JWT callers', async () => {
     process.env.OPENID_REUSE_TOKENS = 'true';
 
     const token = await mintCodeApiToken(baseRequest({ provider: 'openid' }));
     const { claims } = decodeToken(token);
 
-    expect(claims.principal_source).toBe('librechat_jwt');
+    expect(claims.principal_source).toBe('chat_jwt');
   });
 
   it('includes optional plan context when present without trusting caller input', async () => {
@@ -222,7 +222,7 @@ describe('Code API JWT minting', () => {
         userId: 'user_123',
         tenantId: 'legacy',
         role: 'USER',
-        principalSource: 'librechat_jwt',
+        principalSource: 'chat_jwt',
       }),
     );
   });

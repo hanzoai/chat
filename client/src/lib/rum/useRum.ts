@@ -5,7 +5,7 @@ import { useGetStartupConfig } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { normalizeRumPath } from './routes';
 
-const PROXY_API_KEY = 'librechat-rum-proxy';
+const PROXY_API_KEY = 'chat-rum-proxy';
 
 let rumProxyToken: string | undefined;
 let rumProxyFetchPatched = false;

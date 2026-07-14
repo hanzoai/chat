@@ -282,7 +282,7 @@ export interface FunctionTool {
 
 /** Hosted tool (provider-specific) */
 export interface HostedTool {
-  type: string; // e.g., 'librechat:web_search'
+  type: string; // e.g., 'chat:web_search'
   [key: string]: unknown;
 }
 
@@ -694,9 +694,9 @@ export interface ErrorEvent extends BaseEvent {
  * @see https://openresponses.org/specification#extending-streaming-events
  * ============================================================================= */
 
-/** Attachment content types for LibreChat extensions */
-export interface LibreChatAttachmentContent {
-  /** File ID in LibreChat storage */
+/** Attachment content types for Chat extensions */
+export interface ChatAttachmentContent {
+  /** File ID in Chat storage */
   file_id?: string;
   /** Original filename */
   filename?: string;
@@ -717,20 +717,20 @@ export interface LibreChatAttachmentContent {
 }
 
 /**
- * LibreChat attachment event - custom streaming event for file/image attachments
- * Follows Open Responses extension pattern with librechat: prefix
+ * Chat attachment event - custom streaming event for file/image attachments
+ * Follows Open Responses extension pattern with chat: prefix
  */
-export interface LibreChatAttachmentEvent extends BaseEvent {
-  type: 'librechat:attachment';
+export interface ChatAttachmentEvent extends BaseEvent {
+  type: 'chat:attachment';
   /** The attachment data */
-  attachment: LibreChatAttachmentContent;
+  attachment: ChatAttachmentContent;
   /** Associated message ID */
   message_id?: string;
   /** Associated conversation ID */
   conversation_id?: string;
 }
 
-/** Union of all streaming events (including LibreChat extensions) */
+/** Union of all streaming events (including Chat extensions) */
 export type ResponseEvent =
   | ResponseCreatedEvent
   | ResponseInProgressEvent
@@ -750,8 +750,8 @@ export type ResponseEvent =
   | ReasoningDeltaEvent
   | ReasoningDoneEvent
   | ErrorEvent
-  // LibreChat extensions (prefixed per Open Responses spec)
-  | LibreChatAttachmentEvent;
+  // Chat extensions (prefixed per Open Responses spec)
+  | ChatAttachmentEvent;
 
 /* =============================================================================
  * INTERNAL TYPES

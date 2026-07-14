@@ -170,7 +170,7 @@ REDIS_URI=redis://127.0.0.1:6379
 REDIS_KEY_PREFIX_VAR=K_REVISION
 
 # Or set static prefix
-REDIS_KEY_PREFIX=librechat
+REDIS_KEY_PREFIX=chat
 
 # Connection limits
 REDIS_MAX_LISTENERS=40

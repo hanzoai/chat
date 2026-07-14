@@ -66,7 +66,7 @@ function trackSockets(httpServer: http.Server): () => Promise<void> {
 
 /**
  * Tiny /token endpoint that records every request body and responds with a
- * valid OAuth token payload. Sufficient to assert what LibreChat actually
+ * valid OAuth token payload. Sufficient to assert what Chat actually
  * sends to the authorization server during a refresh exchange.
  */
 async function startRecordingTokenServer(): Promise<{

@@ -1,8 +1,8 @@
 /**
  * E2E Backend Integration Tests for Summarization
  *
- * Exercises the FULL LibreChat -> agents pipeline:
- *   LibreChat's createRun (@hanzochat/api)
+ * Exercises the FULL Chat -> agents pipeline:
+ *   Chat's createRun (@hanzochat/api)
  *     -> agents package Run.create (@hanzochat/agents)
  *     -> graph execution -> summarization node -> events
  *
@@ -256,7 +256,7 @@ function getLastContent(runMessages: Array<{ content: string | unknown }>): stri
 
 const hasAnthropic =
   process.env.ANTHROPIC_API_KEY != null && process.env.ANTHROPIC_API_KEY !== 'test';
-(hasAnthropic ? describe : describe.skip)('Anthropic Summarization E2E (LibreChat)', () => {
+(hasAnthropic ? describe : describe.skip)('Anthropic Summarization E2E (Chat)', () => {
   jest.setTimeout(180_000);
 
   const instructions =
@@ -444,7 +444,7 @@ const hasAnthropic =
 // ---------------------------------------------------------------------------
 
 const hasOpenAI = process.env.OPENAI_API_KEY != null && process.env.OPENAI_API_KEY !== 'test';
-(hasOpenAI ? describe : describe.skip)('OpenAI Summarization E2E (LibreChat)', () => {
+(hasOpenAI ? describe : describe.skip)('OpenAI Summarization E2E (Chat)', () => {
   jest.setTimeout(180_000);
 
   const instructions =
@@ -544,7 +544,7 @@ const hasOpenAI = process.env.OPENAI_API_KEY != null && process.env.OPENAI_API_K
 
 const hasBothProviders = hasAnthropic && hasOpenAI;
 (hasBothProviders ? describe : describe.skip)(
-  'Cross-provider Summarization E2E (LibreChat)',
+  'Cross-provider Summarization E2E (Chat)',
   () => {
     jest.setTimeout(180_000);
 

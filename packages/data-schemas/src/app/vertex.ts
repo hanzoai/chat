@@ -152,7 +152,7 @@ export function validateVertexConfig(
 }
 
 /**
- * Sets up the Vertex AI configuration from the config (`librechat.yaml`) file.
+ * Sets up the Vertex AI configuration from the config (`chat.yaml`) file.
  * Similar to azureConfigSetup, this processes and validates the Vertex AI configuration.
  * @param config - The loaded custom configuration.
  * @returns The validated Vertex AI configuration or null if not configured.

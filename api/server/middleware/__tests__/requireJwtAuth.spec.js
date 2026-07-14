@@ -231,7 +231,7 @@ describe('requireJwtAuth tenant context chaining', () => {
     );
   });
 
-  it('uses OpenID JWT before LibreChat JWT when the OpenID cookie is present', async () => {
+  it('uses OpenID JWT before Chat JWT when the OpenID cookie is present', async () => {
     isEnabled.mockReturnValue(true);
     mockRegisteredStrategies.add('openidJwt');
     const req = mockReq(undefined, {

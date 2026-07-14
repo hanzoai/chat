@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * HTTP request layer for the Hanzo Chat (LibreChat-native) backend.
+ * HTTP request layer for the Hanzo Chat (Chat-native) backend.
  *
  * - Talks to the same-origin `/v1/chat/*` REST surface.
  * - Auth is JWT Bearer (set via setTokenHeader) plus the httpOnly `refreshToken`

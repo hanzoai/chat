@@ -681,7 +681,7 @@ describe('createRemoteAgentAuth', () => {
 
       expect(deps.apiKeyMiddleware).toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('no matching LibreChat user'),
+        expect.stringContaining('no matching Chat user'),
       );
     });
 
