@@ -49,6 +49,10 @@ export interface IUser extends Document {
   organizationTitle?: string;
   /** User's tag within their organization (e.g. 'founder', 'member') */
   organizationTag?: string;
+  /** Org's default project from the Hanzo IAM 'project' claim; the gateway mints X-Project-Id from it */
+  project?: string;
+  /** Org/role memberships from the Hanzo IAM 'groups' claim */
+  groups?: string[];
 }
 
 export interface BalanceConfig {
