@@ -206,6 +206,16 @@ export type TUser = {
   personalization?: {
     memories?: boolean;
   };
+  /** Home org from the Hanzo IAM `owner` claim. */
+  organization?: string;
+  /** User's title/role within their org. */
+  organizationTitle?: string;
+  /** User's tag within their org (e.g. 'founder', 'member'). */
+  organizationTag?: string;
+  /** Org's default project from the IAM `project` claim; the gateway mints X-Project-Id from it. */
+  project?: string;
+  /** Org memberships from the IAM `groups` claim — the set the user may switch among. */
+  groups?: string[];
   createdAt: string;
   updatedAt: string;
 };
