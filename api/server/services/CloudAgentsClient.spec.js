@@ -64,7 +64,7 @@ describe('CloudAgentsClient', () => {
   });
 
   describe('bearer forwarding + tenant model', () => {
-    it('forwards the user bearer and NEVER sends an org header', async () => {
+    it('forwards the user bearer and sends no org header when no active org is selected', async () => {
       const fetch = mockFetch({ body: { agents: [] } });
       global.fetch = fetch;
       const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai' });
@@ -73,9 +73,26 @@ describe('CloudAgentsClient', () => {
       const { url, opts } = fetch.calls[0];
       expect(url).toBe('https://api.hanzo.ai/v1/agents');
       expect(opts.headers.Authorization).toBe(`Bearer ${BEARER}`);
-      // Tenant isolation is cloud's job; chat must not assert an org.
+      // No selection ⇒ no hint; cloud pins the tenant from the credential's home org.
       expect(opts.headers['X-Org-Id']).toBeUndefined();
       expect(opts.headers['X-Hanzo-Org']).toBeUndefined();
+    });
+
+    it('forwards X-Org-Id when the member has selected an active org', async () => {
+      const fetch = mockFetch({ body: { agents: [] } });
+      global.fetch = fetch;
+      const client = new CloudAgentsClient({ endpoint: 'https://api.hanzo.ai' });
+      // list / get / run each thread the selected org through as `X-Org-Id`; the
+      // gateway validates it against the bearer's membership (HIP-0026).
+      await client.list(BEARER, 'acme');
+      await client.get(BEARER, 'researcher', 'acme');
+      await client.run(BEARER, 'researcher', 'hi', 'acme');
+
+      for (const { opts } of fetch.calls) {
+        expect(opts.headers.Authorization).toBe(`Bearer ${BEARER}`);
+        expect(opts.headers['X-Org-Id']).toBe('acme');
+      }
+      expect(fetch.calls).toHaveLength(3);
     });
 
     it('fails secure (401) with no fallback credential when bearer is missing', async () => {

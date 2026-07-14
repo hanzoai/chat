@@ -18,6 +18,7 @@ import {
   resolveHanzoCloudKey,
   type HanzoBillingUser,
 } from './hanzoCloudKey';
+import { resolveActiveOrg } from './activeOrg';
 import { wrapHanzoGatewayFetch, type GatewayFetch } from './hanzoGatewayFetch';
 
 const { PROXY } = process.env;
@@ -178,6 +179,18 @@ export async function initializeCustom({
   }
 
   const customOptions = buildCustomOptions(endpointConfig, appConfig, endpointTokenConfig);
+
+  // The active org a multi-org member has switched to rides as `X-Org-Id` to the
+  // Hanzo Cloud gateway, which validates it against the request credential's
+  // membership (HIP-0026) and scopes the completion — and its billing — to that
+  // org. Unset ⇒ no header ⇒ the credential's home org, unchanged.
+  const activeOrg = resolveActiveOrg(req as unknown as Parameters<typeof resolveActiveOrg>[0]);
+  if (activeOrg) {
+    customOptions.headers = {
+      ...((customOptions.headers as Record<string, string> | undefined) ?? {}),
+      'X-Org-Id': activeOrg,
+    };
+  }
 
   const clientOptions: Record<string, unknown> = {
     reverseProxyUrl: baseURL ?? null,

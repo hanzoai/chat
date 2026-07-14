@@ -2,6 +2,7 @@ const cookies = require('cookie');
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const { logger } = require('@librechat/data-schemas');
+const { resolveActiveOrg } = require('@hanzochat/api');
 const { requireJwtAuth, cloudAgentLimiter } = require('~/server/middleware');
 const { getCloudAgentsClient, AGENT_NAME_RE } = require('~/server/services/CloudAgentsClient');
 
@@ -155,7 +156,7 @@ router.get('/', async (req, res) => {
     return res.status(401).json({ error: 'cloud agents require hanzo.id sign-in' });
   }
   try {
-    const data = await client.list(bearer);
+    const data = await client.list(bearer, resolveActiveOrg(req));
     return res.json({ ...data, enabled: true });
   } catch (err) {
     return sendCloudError(res, err, 'list');
@@ -173,7 +174,7 @@ router.get('/:name', async (req, res) => {
     return res.status(401).json({ error: 'cloud agents require hanzo.id sign-in' });
   }
   try {
-    const data = await client.get(bearer, req.params.name);
+    const data = await client.get(bearer, req.params.name, resolveActiveOrg(req));
     return res.json(data);
   } catch (err) {
     return sendCloudError(res, err, 'get');
@@ -191,7 +192,7 @@ router.post('/:name/run', async (req, res) => {
     return res.status(401).json({ error: 'cloud agents require hanzo.id sign-in' });
   }
   try {
-    const run = await client.run(bearer, req.params.name, req.body?.input ?? '');
+    const run = await client.run(bearer, req.params.name, req.body?.input ?? '', resolveActiveOrg(req));
     return res.json(run);
   } catch (err) {
     return sendCloudError(res, err, 'run');
