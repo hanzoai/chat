@@ -1,5 +1,5 @@
 import type { AgentToolOptions } from '@hanzochat/data-provider';
-import type { GenericTool } from '@librechat/agents';
+import type { GenericTool } from '@hanzochat/agents';
 import type { LCToolRegistry } from './classification';
 import {
   buildToolRegistryFromAgentOptions,

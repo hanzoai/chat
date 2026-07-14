@@ -3,7 +3,7 @@
  *
  * Exercises the FULL LibreChat -> agents pipeline:
  *   LibreChat's createRun (@hanzochat/api)
- *     -> agents package Run.create (@librechat/agents)
+ *     -> agents package Run.create (@hanzochat/agents)
  *     -> graph execution -> summarization node -> events
  *
  * Uses real AI providers, real formatAgentMessages, real token accounting.
@@ -24,7 +24,7 @@ import {
   formatAgentMessages,
   ChatModelStreamHandler,
   createContentAggregator,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import type {
   SummarizeCompleteEvent,
   MessageContentComplex,
@@ -32,7 +32,7 @@ import type {
   SummarizeStartEvent,
   TokenCounter,
   EventHandler,
-} from '@librechat/agents';
+} from '@hanzochat/agents';
 import { hydrateMissingIndexTokenCounts } from '~/utils';
 import { ioredisClient, keyvRedisClient } from '~/cache';
 import { createRun } from '~/agents';

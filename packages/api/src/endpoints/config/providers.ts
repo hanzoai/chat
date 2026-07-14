@@ -1,4 +1,4 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import { EModelEndpoint } from '@hanzochat/data-provider';
 import type { TEndpoint } from '@hanzochat/data-provider';
 import type { AppConfig } from '@hanzochat/data-schemas';

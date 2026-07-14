@@ -1,9 +1,9 @@
 /**
- * Strips repetitive boilerplate from `@librechat/agents` code-execution
+ * Strips repetitive boilerplate from `@hanzochat/agents` code-execution
  * tool output before LibreChat re-injects it into the assistant's
  * conversation history.
  *
- * Older bash executor output from `@librechat/agents` appended two
+ * Older bash executor output from `@hanzochat/agents` appended two
  * kinds of noise to successful runs:
  *
  * 1. **Trailing "Note:" paragraphs** — long behavioral hints repeating

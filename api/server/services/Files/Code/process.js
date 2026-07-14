@@ -2,7 +2,7 @@ const path = require('path');
 const { v4 } = require('uuid');
 const axios = require('axios');
 const { logger } = require('@hanzochat/data-schemas');
-const { getCodeBaseURL } = require('@librechat/agents');
+const { getCodeBaseURL } = require('@hanzochat/agents');
 const { logAxiosError, getBasePath } = require('@hanzochat/api');
 const {
   Tools,

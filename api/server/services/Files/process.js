@@ -17,7 +17,7 @@ const {
   isAssistantsEndpoint,
   getEndpointFileConfig,
 } = require('@hanzochat/data-provider');
-const { EnvVar } = require('@librechat/agents');
+const { EnvVar } = require('@hanzochat/agents');
 const { logger } = require('@hanzochat/data-schemas');
 const { sanitizeFilename, parseText, processAudioFile } = require('@hanzochat/api');
 const {

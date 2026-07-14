@@ -158,7 +158,7 @@ export interface OpenAIStreamHandlerConfig {
 }
 
 /**
- * Graph event types from @librechat/agents
+ * Graph event types from @hanzochat/agents
  */
 export const GraphEvents = {
   CHAT_MODEL_END: 'on_chat_model_end',

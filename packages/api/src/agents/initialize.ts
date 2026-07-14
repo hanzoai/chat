@@ -1,4 +1,4 @@
-import { Providers } from '@librechat/agents';
+import { Providers } from '@hanzochat/agents';
 import {
   Constants,
   ErrorTypes,
@@ -17,7 +17,7 @@ import type {
   Agent,
   TUser,
 } from '@hanzochat/data-provider';
-import type { GenericTool, LCToolRegistry, ToolMap, LCTool } from '@librechat/agents';
+import type { GenericTool, LCToolRegistry, ToolMap, LCTool } from '@hanzochat/agents';
 import type { Response as ServerResponse } from 'express';
 import type { IMongoFile } from '@hanzochat/data-schemas';
 import type { InitializeResultBase, ServerRequest, EndpointDbMethods } from '~/types';

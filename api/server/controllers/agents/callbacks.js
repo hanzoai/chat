@@ -1,6 +1,6 @@
 const { nanoid } = require('nanoid');
 const { logger } = require('@hanzochat/data-schemas');
-const { Constants, EnvVar, GraphEvents, ToolEndHandler } = require('@librechat/agents');
+const { Constants, EnvVar, GraphEvents, ToolEndHandler } = require('@hanzochat/agents');
 const { Tools, StepTypes, FileContext, ErrorTypes } = require('@hanzochat/data-provider');
 const {
   sendEvent,
