@@ -1,8 +1,8 @@
 import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { ContentTypes } from 'librechat-data-provider';
-import { HoverCard, HoverCardTrigger, HoverCardPortal, HoverCardContent } from '@librechat/client';
-import type { TMessage, TMessageContentParts } from 'librechat-data-provider';
+import { ContentTypes } from '@hanzochat/data-provider';
+import { HoverCard, HoverCardTrigger, HoverCardPortal, HoverCardContent } from '@hanzochat/client';
+import type { TMessage, TMessageContentParts } from '@hanzochat/data-provider';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import { useMessagesConversation, useMessagesSubmission } from '~/Providers';
 import { useLocalize } from '~/hooks';

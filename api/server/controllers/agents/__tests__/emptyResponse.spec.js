@@ -1,4 +1,4 @@
-const { ContentTypes } = require('librechat-data-provider');
+const { ContentTypes } = require('@hanzochat/data-provider');
 const { isEmptyAgentResponse } = require('../emptyResponse');
 
 describe('isEmptyAgentResponse', () => {

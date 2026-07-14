@@ -1,5 +1,5 @@
-import { EModelEndpoint, getEndpointField } from 'librechat-data-provider';
-import type { TEndpointsConfig, TConfig } from 'librechat-data-provider';
+import { EModelEndpoint, getEndpointField } from '@hanzochat/data-provider';
+import type { TEndpointsConfig, TConfig } from '@hanzochat/data-provider';
 import {
   getAvailableEndpoints,
   getEndpointsFilter,

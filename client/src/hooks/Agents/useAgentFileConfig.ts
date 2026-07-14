@@ -4,8 +4,8 @@ import {
   mergeFileConfig,
   resolveEndpointType,
   getEndpointFileConfig,
-} from 'librechat-data-provider';
-import type { EndpointFileConfig } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { EndpointFileConfig } from '@hanzochat/data-provider';
 import type { AgentForm } from '~/common';
 import { useGetFileConfig, useGetEndpointsQuery } from '~/data-provider';
 

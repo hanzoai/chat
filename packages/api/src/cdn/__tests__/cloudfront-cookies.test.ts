@@ -11,7 +11,7 @@ jest.mock('@aws-sdk/cloudfront-signer', () => ({
   getSignedCookies: (params: CloudfrontSignInput) => mockGetSignedCookies(params),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
@@ -24,7 +24,7 @@ import {
   parseCloudFrontCookieScope,
 } from '../cloudfront-cookies';
 
-const { logger: mockLogger } = jest.requireMock('@librechat/data-schemas') as {
+const { logger: mockLogger } = jest.requireMock('@hanzochat/data-schemas') as {
   logger: { warn: jest.Mock; error: jest.Mock; info: jest.Mock; debug: jest.Mock };
 };
 

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
 /**
  * The ONE way chat forwards a signed-in user's Hanzo IAM bearer to cloud

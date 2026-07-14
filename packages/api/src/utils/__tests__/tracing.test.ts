@@ -107,7 +107,7 @@ describe('runOutsideTracing', () => {
 
     const warnSpy = jest.fn();
     jest.resetModules();
-    jest.doMock('@librechat/data-schemas', () => ({
+    jest.doMock('@hanzochat/data-schemas', () => ({
       logger: { warn: warnSpy },
     }));
     const { runOutsideTracing } = await import('../tracing');
@@ -122,7 +122,7 @@ describe('runOutsideTracing', () => {
 
     const warnSpy = jest.fn();
     jest.resetModules();
-    jest.doMock('@librechat/data-schemas', () => ({
+    jest.doMock('@hanzochat/data-schemas', () => ({
       logger: { warn: warnSpy },
     }));
     const { runOutsideTracing } = await import('../tracing');

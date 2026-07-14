@@ -1,6 +1,6 @@
-import { extractEnvVariable } from 'librechat-data-provider';
-import type { MCPOptions } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+import { extractEnvVariable } from '@hanzochat/data-provider';
+import type { MCPOptions } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { RequestBody } from '~/types';
 import { extractOpenIDTokenInfo, processOpenIDPlaceholders, isOpenIDTokenValid } from './oidc';
 

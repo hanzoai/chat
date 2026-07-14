@@ -1,4 +1,4 @@
-import type { TAgentsEndpoint } from 'librechat-data-provider';
+import type { TAgentsEndpoint } from '@hanzochat/data-provider';
 import { resolveRecursionLimit } from './config';
 
 describe('resolveRecursionLimit', () => {

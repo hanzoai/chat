@@ -1,4 +1,4 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 import { AnthropicClientOptions } from '@librechat/agents';
 import {
   EModelEndpoint,
@@ -6,7 +6,7 @@ import {
   anthropicSettings,
   supportsContext1m,
   supportsAdaptiveThinking,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import { matchModelName } from '~/utils/tokens';
 
 /**

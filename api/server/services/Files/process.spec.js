@@ -1,6 +1,6 @@
 jest.mock('uuid', () => ({ v4: jest.fn(() => 'mock-uuid') }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() },
   runAsSystem: jest.fn((fn) => fn()),
   createTempChatExpirationDate: jest.fn(() => new Date('2030-01-01T00:00:00.000Z')),
@@ -16,8 +16,8 @@ jest.mock('@librechat/agents', () => ({
   },
 }));
 
-jest.mock('librechat-data-provider', () => {
-  const actual = jest.requireActual('librechat-data-provider');
+jest.mock('@hanzochat/data-provider', () => {
+  const actual = jest.requireActual('@hanzochat/data-provider');
   return {
     ...actual,
     Providers: actual.Providers,
@@ -121,8 +121,8 @@ const {
   FileContext,
   RetentionMode,
   AgentCapabilities,
-} = require('librechat-data-provider');
-const { mergeFileConfig } = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
+const { mergeFileConfig } = require('@hanzochat/data-provider');
 const { checkCapability } = require('~/server/services/Config');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { uploadVectors } = require('./VectorDB/crud');

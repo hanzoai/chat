@@ -13,8 +13,8 @@ jest.mock('@hanzochat/api', () => ({
   countTokens: jest.fn().mockResolvedValue(10),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -23,8 +23,8 @@ jest.mock('@librechat/data-schemas', () => ({
   },
 }));
 
-jest.mock('librechat-data-provider', () => ({
-  ...jest.requireActual('librechat-data-provider'),
+jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
 }));
 
 jest.mock('~/models', () => ({
@@ -61,7 +61,7 @@ jest.mock('~/db/models', () => ({
 
 /* ─── Model-level tests: real MongoDB, proves cross-user deletion is prevented ─── */
 
-const { messageSchema } = require('@librechat/data-schemas');
+const { messageSchema } = require('@hanzochat/data-schemas');
 
 describe('deleteMessages – model-level IDOR prevention', () => {
   let mongoServer;

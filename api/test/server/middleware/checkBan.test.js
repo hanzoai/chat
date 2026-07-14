@@ -20,7 +20,7 @@ jest.mock('~/cache', () => ({
   getLogStores: jest.fn(() => mockBanLogs),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -52,7 +52,7 @@ jest.mock('~/server/middleware/denyRequest', () => jest.fn().mockResolvedValue(u
 jest.mock('ua-parser-js', () => jest.fn(() => ({ browser: { name: 'Chrome' } })));
 
 const checkBan = require('~/server/middleware/checkBan');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { findUser } = require('~/models');
 
 const createReq = (overrides = {}) => ({

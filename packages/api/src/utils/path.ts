@@ -1,4 +1,4 @@
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
 /**
  * Gets the base path from the DOMAIN_CLIENT environment variable.

@@ -20,13 +20,13 @@ import { Types } from 'mongoose';
 import { randomUUID } from 'crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import type { MCPOptions } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+import type { MCPOptions } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { Socket } from 'net';
 import { MCPConnection } from '~/mcp/connection';
 import { processMCPEnv } from '~/utils/env';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

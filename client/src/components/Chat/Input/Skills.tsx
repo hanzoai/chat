@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { ScrollText } from 'lucide-react';
-import { CheckboxButton } from '@librechat/client';
-import { Permissions, PermissionTypes, defaultAgentCapabilities } from 'librechat-data-provider';
+import { CheckboxButton } from '@hanzochat/client';
+import { Permissions, PermissionTypes, defaultAgentCapabilities } from '@hanzochat/data-provider';
 import { useLocalize, useHasAccess, useAgentCapabilities } from '~/hooks';
 import { useBadgeRowContext } from '~/Providers';
 

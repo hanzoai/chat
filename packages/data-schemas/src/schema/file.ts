@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { FileContext, FileSources } from 'librechat-data-provider';
+import { FileContext, FileSources } from '@hanzochat/data-provider';
 import type { IMongoFile } from '~/types';
 
 const file: Schema<IMongoFile> = new Schema(

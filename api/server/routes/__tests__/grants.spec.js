@@ -2,8 +2,8 @@ const express = require('express');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { createModels, createMethods } = require('@librechat/data-schemas');
-const { PrincipalType, SystemRoles } = require('librechat-data-provider');
+const { createModels, createMethods } = require('@hanzochat/data-schemas');
+const { PrincipalType, SystemRoles } = require('@hanzochat/data-provider');
 
 /**
  * Integration test for the admin grants routes.

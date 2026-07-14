@@ -1,19 +1,19 @@
 import { useRecoilValue } from 'recoil';
 import { useCallback, useRef, useEffect } from 'react';
-import { useGetModelsQuery } from 'librechat-data-provider/react-query';
+import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import {
   getEndpointField,
   LocalStorageKeys,
   isAssistantsEndpoint,
   getDefaultParamsEndpoint,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   TEndpointsConfig,
   EModelEndpoint,
   TModelsConfig,
   TConversation,
   TPreset,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type { AssistantListItem } from '~/common';
 import type { SetterOrUpdater } from 'recoil';
 import useAssistantListMap from '~/hooks/Assistants/useAssistantListMap';

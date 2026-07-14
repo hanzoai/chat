@@ -27,7 +27,7 @@ import {
 } from '~/oauth/csrf';
 import { MockKeyv } from './helpers/oauthTestServer';
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),

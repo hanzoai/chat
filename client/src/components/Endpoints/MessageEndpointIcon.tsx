@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import HanzoLogoIcon from '~/components/svg/HanzoLogoIcon';
 import ZenLogoIcon from '~/components/svg/ZenLogoIcon';
-import { EModelEndpoint, isAssistantsEndpoint, alternateName } from 'librechat-data-provider';
+import { EModelEndpoint, isAssistantsEndpoint, alternateName } from '@hanzochat/data-provider';
 import {
   Plugin,
   GPTIcon,
@@ -12,7 +12,7 @@ import {
   AssistantIcon,
   AnthropicIcon,
   AzureMinimalIcon,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
 import { IconProps } from '~/common';
 import { cn } from '~/utils';

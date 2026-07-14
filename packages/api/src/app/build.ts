@@ -1,5 +1,5 @@
 import { execFileSync } from 'child_process';
-import { logger } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
 
 export interface BuildInfo {
   commit: string | null;

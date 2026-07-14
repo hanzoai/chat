@@ -1,4 +1,4 @@
-import type { TMessage } from 'librechat-data-provider';
+import type { TMessage } from '@hanzochat/data-provider';
 import type { LocalizeFunction } from '~/common';
 import { getMessageAriaLabel, getHeaderPrefixForScreenReader } from '../messages';
 

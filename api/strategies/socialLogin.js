@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { ErrorTypes } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { ErrorTypes } = require('@hanzochat/data-provider');
 const { isEnabled, isEmailDomainAllowed } = require('@hanzochat/api');
 const { createSocialUser, handleExistingUser } = require('./process');
 const { getAppConfig } = require('~/server/services/Config');

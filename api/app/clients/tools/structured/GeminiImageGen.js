@@ -5,13 +5,13 @@ const { v4 } = require('uuid');
 const { ProxyAgent } = require('undici');
 const { GoogleGenAI } = require('@google/genai');
 const { tool } = require('@langchain/core/tools');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const {
   FileContext,
   ContentTypes,
   FileSources,
   EImageOutputType,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   geminiToolkit,
   loadServiceKey,

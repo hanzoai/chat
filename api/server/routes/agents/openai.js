@@ -17,7 +17,7 @@
  *   }
  */
 const express = require('express');
-const { PermissionTypes, Permissions } = require('librechat-data-provider');
+const { PermissionTypes, Permissions } = require('@hanzochat/data-provider');
 const {
   generateCheckAccess,
   createRequireApiKeyAuth,

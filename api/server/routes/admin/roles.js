@@ -1,6 +1,6 @@
 const express = require('express');
 const { createAdminRolesHandlers } = require('@hanzochat/api');
-const { SystemCapabilities } = require('@librechat/data-schemas');
+const { SystemCapabilities } = require('@hanzochat/data-schemas');
 const { requireCapability } = require('~/server/middleware/roles/capabilities');
 const { requireJwtAuth } = require('~/server/middleware');
 const db = require('~/models');

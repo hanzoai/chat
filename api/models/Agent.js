@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const crypto = require('node:crypto');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { getCustomEndpointConfig } = require('@hanzochat/api');
 const {
   Tools,
@@ -10,8 +10,8 @@ const {
   isAgentsEndpoint,
   isEphemeralAgentId,
   encodeEphemeralAgentId,
-} = require('librechat-data-provider');
-const { mcp_all, mcp_delimiter } = require('librechat-data-provider').Constants;
+} = require('@hanzochat/data-provider');
+const { mcp_all, mcp_delimiter } = require('@hanzochat/data-provider').Constants;
 const {
   removeAgentFromAllProjects,
   removeAgentIdsFromProject,

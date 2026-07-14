@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { Constants } from 'librechat-data-provider';
-import type { TStartupConfig, TSubmission } from 'librechat-data-provider';
+import { Constants } from '@hanzochat/data-provider';
+import type { TStartupConfig, TSubmission } from '@hanzochat/data-provider';
 import { useUpdateEphemeralAgent, useApplyNewAgentTemplate } from '~/store/agents';
 import { getModelSpec, applyModelSpecEphemeralAgent } from '~/utils';
 

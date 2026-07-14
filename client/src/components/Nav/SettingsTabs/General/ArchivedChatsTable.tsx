@@ -23,8 +23,8 @@ import {
   OGDialogHeader,
   useToastContext,
   OGDialogContent,
-} from '@librechat/client';
-import type { ConversationListParams, TConversation } from 'librechat-data-provider';
+} from '@hanzochat/client';
+import type { ConversationListParams, TConversation } from '@hanzochat/data-provider';
 import {
   useConversationsInfiniteQuery,
   useDeleteConversationMutation,

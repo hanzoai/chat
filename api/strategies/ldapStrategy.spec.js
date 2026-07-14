@@ -1,5 +1,5 @@
 // --- Mocks ---
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -35,7 +35,7 @@ jest.mock('passport-ldapauth', () => {
   });
 });
 
-const { ErrorTypes } = require('librechat-data-provider');
+const { ErrorTypes } = require('@hanzochat/data-provider');
 const { isEmailDomainAllowed } = require('@hanzochat/api');
 const { findUser, createUser, updateUser, countUsers } = require('~/models');
 

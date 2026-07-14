@@ -1,7 +1,7 @@
-import { logger, ResourceCapabilityMap } from '@librechat/data-schemas';
-import { Permissions, PermissionTypes, ResourceType } from 'librechat-data-provider';
+import { logger, ResourceCapabilityMap } from '@hanzochat/data-schemas';
+import { Permissions, PermissionTypes, ResourceType } from '@hanzochat/data-provider';
 import type { NextFunction, Response } from 'express';
-import type { IRole } from '@librechat/data-schemas';
+import type { IRole } from '@hanzochat/data-schemas';
 import type { CapabilityUser, HasCapabilityFn } from './capabilities';
 import type { RequestBody, ServerRequest } from '~/types/http';
 

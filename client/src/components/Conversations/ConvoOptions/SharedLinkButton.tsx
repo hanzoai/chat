@@ -12,8 +12,8 @@ import {
   OGDialogHeader,
   useToastContext,
   OGDialogContent,
-} from '@librechat/client';
-import type { TSharedLinkGetResponse } from 'librechat-data-provider';
+} from '@hanzochat/client';
+import type { TSharedLinkGetResponse } from '@hanzochat/data-provider';
 import {
   useCreateSharedLinkMutation,
   useUpdateSharedLinkMutation,

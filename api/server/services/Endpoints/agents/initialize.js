@@ -1,4 +1,4 @@
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { createContentAggregator } = require('@librechat/agents');
 const {
   initializeAgent,
@@ -14,7 +14,7 @@ const {
   isAgentsEndpoint,
   getResponseSender,
   isEphemeralAgentId,
-} = require('librechat-data-provider');
+} = require('@hanzochat/data-provider');
 const {
   createToolEndCallback,
   getDefaultHandlers,

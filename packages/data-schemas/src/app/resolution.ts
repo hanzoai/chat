@@ -1,5 +1,5 @@
-import { INTERFACE_PERMISSION_FIELDS, PERMISSION_SUB_KEYS } from 'librechat-data-provider';
-import type { TCustomConfig } from 'librechat-data-provider';
+import { INTERFACE_PERMISSION_FIELDS, PERMISSION_SUB_KEYS } from '@hanzochat/data-provider';
+import type { TCustomConfig } from '@hanzochat/data-provider';
 import type { AppConfig, IConfig } from '~/types';
 
 type AnyObject = { [key: string]: unknown };

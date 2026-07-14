@@ -1,6 +1,6 @@
 import { Providers } from '@librechat/agents';
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { Agent } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { Agent } from '@hanzochat/data-provider';
 import type { ServerRequest, InitializeResultBase } from '~/types';
 import type { InitializeAgentDbMethods } from '../initialize';
 

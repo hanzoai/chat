@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRevokeAllUserKeysMutation } from 'librechat-data-provider/react-query';
+import { useRevokeAllUserKeysMutation } from '@hanzochat/data-provider/react-query';
 import {
   OGDialogTemplate,
   Button,
@@ -7,7 +7,7 @@ import {
   OGDialog,
   OGDialogTrigger,
   Spinner,
-} from '@librechat/client';
+} from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 
 export const RevokeKeys = ({

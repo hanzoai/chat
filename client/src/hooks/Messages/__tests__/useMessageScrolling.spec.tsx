@@ -1,7 +1,7 @@
 import React from 'react';
 import { RecoilRoot } from 'recoil';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import type { TConversation, TMessage } from 'librechat-data-provider';
+import type { TConversation, TMessage } from '@hanzochat/data-provider';
 import {
   MessagesViewContext,
   type MessagesViewContextValue,

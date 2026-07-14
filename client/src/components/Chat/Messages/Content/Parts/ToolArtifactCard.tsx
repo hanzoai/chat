@@ -7,7 +7,7 @@ import {
   useResetRecoilState,
   useSetRecoilState,
 } from 'recoil';
-import type { TAttachment, TFile, TAttachmentMetadata } from 'librechat-data-provider';
+import type { TAttachment, TFile, TAttachmentMetadata } from '@hanzochat/data-provider';
 import type { Artifact } from '~/common';
 import FilePreview from '~/components/Chat/Input/Files/FilePreview';
 import { isCodeOnlyArtifact } from '~/utils/artifacts';

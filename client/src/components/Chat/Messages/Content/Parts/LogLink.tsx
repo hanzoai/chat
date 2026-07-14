@@ -1,6 +1,6 @@
 import React from 'react';
-import { FileSources } from 'librechat-data-provider';
-import { useToastContext } from '@librechat/client';
+import { FileSources } from '@hanzochat/data-provider';
+import { useToastContext } from '@hanzochat/client';
 import { useCodeOutputDownload, useFileDownload } from '~/data-provider';
 
 interface LogLinkProps {

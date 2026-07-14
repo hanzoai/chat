@@ -1,4 +1,4 @@
-import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
 
 export function filterMentionEndpoints({
   endpoints,

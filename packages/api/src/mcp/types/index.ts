@@ -7,7 +7,7 @@ import {
   StdioOptionsSchema,
   WebSocketOptionsSchema,
   StreamableHTTPOptionsSchema,
-} from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
 import type {
   EmbeddedResource,
   ListToolsResult,
@@ -16,8 +16,8 @@ import type {
   TextContent,
   Tool,
 } from '@modelcontextprotocol/sdk/types.js';
-import type { SearchResultData, UIResource, TPlugin } from 'librechat-data-provider';
-import type { TokenMethods, IUser } from '@librechat/data-schemas';
+import type { SearchResultData, UIResource, TPlugin } from '@hanzochat/data-provider';
+import type { TokenMethods, IUser } from '@hanzochat/data-schemas';
 import type { LCTool } from '@librechat/agents';
 import type { FlowStateManager } from '~/flow/manager';
 import type { RequestBody } from '~/types/http';

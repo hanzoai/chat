@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
-const { createModels, createMethods } = require('@librechat/data-schemas');
+const { createModels, createMethods } = require('@hanzochat/data-schemas');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { SystemRoles, PrincipalType } = require('librechat-data-provider');
-const { SystemCapabilities } = require('@librechat/data-schemas');
+const { SystemRoles, PrincipalType } = require('@hanzochat/data-provider');
+const { SystemCapabilities } = require('@hanzochat/data-schemas');
 
-jest.mock('@librechat/data-schemas', () => ({
-  ...jest.requireActual('@librechat/data-schemas'),
+jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   getTransactionSupport: jest.fn().mockResolvedValue(false),
-  createModels: jest.requireActual('@librechat/data-schemas').createModels,
-  createMethods: jest.requireActual('@librechat/data-schemas').createMethods,
+  createModels: jest.requireActual('@hanzochat/data-schemas').createModels,
+  createMethods: jest.requireActual('@hanzochat/data-schemas').createMethods,
 }));
 
 jest.mock('~/server/services/GraphApiService', () => ({

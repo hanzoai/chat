@@ -1,7 +1,7 @@
 const { nanoid } = require('nanoid');
-const { logger } = require('@librechat/data-schemas');
+const { logger } = require('@hanzochat/data-schemas');
 const { Callback, ToolEndHandler, formatAgentMessages } = require('@librechat/agents');
-const { EModelEndpoint, ResourceType, PermissionBits } = require('librechat-data-provider');
+const { EModelEndpoint, ResourceType, PermissionBits } = require('@hanzochat/data-provider');
 const {
   writeSSE,
   createRun,
@@ -249,7 +249,7 @@ const OpenAIChatCompletionController = async (req, res) => {
       : null;
 
     const collectedUsage = [];
-    /** @type {Promise<import('librechat-data-provider').TAttachment | null>[]} */
+    /** @type {Promise<import('@hanzochat/data-provider').TAttachment | null>[]} */
     const artifactPromises = [];
 
     const toolEndCallback = createToolEndCallback({ req, res, artifactPromises, streamId: null });

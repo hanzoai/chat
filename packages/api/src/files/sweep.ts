@@ -3,8 +3,8 @@ import {
   EModelEndpoint,
   checkOpenAIStorage,
   defaultAssistantsVersion,
-} from 'librechat-data-provider';
-import type { AppConfig } from '@librechat/data-schemas';
+} from '@hanzochat/data-provider';
+import type { AppConfig } from '@hanzochat/data-schemas';
 
 const DEFAULT_FILE_RETENTION_SWEEP_INTERVAL_MS = 60 * 60 * 1000;
 

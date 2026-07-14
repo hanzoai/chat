@@ -1,4 +1,4 @@
-import { CacheKeys } from 'librechat-data-provider';
+import { CacheKeys } from '@hanzochat/data-provider';
 
 const mockKeyvRedisInstance = {
   namespace: '',
@@ -24,7 +24,7 @@ jest.mock('../../redisUtils', () => ({
   scanKeys: jest.fn(),
 }));
 
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: {
     error: jest.fn(),
     warn: jest.fn(),

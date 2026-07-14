@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AgentCapabilities } from 'librechat-data-provider';
+import { AgentCapabilities } from '@hanzochat/data-provider';
 
 interface AgentCapabilitiesResult {
   toolsEnabled: boolean;

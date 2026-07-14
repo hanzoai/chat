@@ -1,5 +1,5 @@
 import { atomFamily } from 'recoil';
-import type { SubagentUpdatePhase } from 'librechat-data-provider';
+import type { SubagentUpdatePhase } from '@hanzochat/data-provider';
 import type {
   SubagentAggregatorState,
   SubagentContentPart,

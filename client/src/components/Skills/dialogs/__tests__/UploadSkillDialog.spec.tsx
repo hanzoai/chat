@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import type { FileConfigInput } from 'librechat-data-provider';
+import type { FileConfigInput } from '@hanzochat/data-provider';
 import UploadSkillDialog from '../UploadSkillDialog';
 
 const mockMutate = jest.fn();
@@ -19,7 +19,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 jest.mock(
-  '@librechat/client',
+  '@hanzochat/client',
   () => {
     const React = jest.requireActual<typeof import('react')>('react');
     return {

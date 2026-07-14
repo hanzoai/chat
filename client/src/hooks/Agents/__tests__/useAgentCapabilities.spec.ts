@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { AgentCapabilities } from 'librechat-data-provider';
+import { AgentCapabilities } from '@hanzochat/data-provider';
 import useAgentCapabilities from '../useAgentCapabilities';
 
 describe('useAgentCapabilities', () => {

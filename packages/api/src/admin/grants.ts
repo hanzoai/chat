@@ -1,11 +1,11 @@
-import { PrincipalType } from 'librechat-data-provider';
+import { PrincipalType } from '@hanzochat/data-provider';
 import {
   logger,
   isValidCapability,
   SystemCapabilities,
   expandImplications,
-} from '@librechat/data-schemas';
-import type { ISystemGrant, SystemCapability } from '@librechat/data-schemas';
+} from '@hanzochat/data-schemas';
+import type { ISystemGrant, SystemCapability } from '@hanzochat/data-schemas';
 import type { Response } from 'express';
 import type { Types } from 'mongoose';
 import type { ResolvedPrincipal } from '~/types/principal';

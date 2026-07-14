@@ -1,5 +1,5 @@
-const { logger } = require('@librechat/data-schemas');
-const { Constants, ViolationTypes } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { Constants, ViolationTypes } = require('@hanzochat/data-provider');
 const {
   sendEvent,
   getViolationInfo,

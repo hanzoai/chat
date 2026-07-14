@@ -1,6 +1,6 @@
 const express = require('express');
 const { createAdminConfigHandlers } = require('@hanzochat/api');
-const { SystemCapabilities } = require('@librechat/data-schemas');
+const { SystemCapabilities } = require('@hanzochat/data-schemas');
 const {
   hasConfigCapability,
   requireCapability,

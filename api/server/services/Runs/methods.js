@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { logAxiosError } = require('@hanzochat/api');
-const { EModelEndpoint } = require('librechat-data-provider');
+const { EModelEndpoint } = require('@hanzochat/data-provider');
 
 /**
  * @typedef {Object} RetrieveOptions

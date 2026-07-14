@@ -1,8 +1,8 @@
-import { logger } from '@librechat/data-schemas';
-import { isAgentsEndpoint } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import { isAgentsEndpoint } from '@hanzochat/data-provider';
 import { labelContentByAgent, getTokenCountForMessage } from '@librechat/agents';
 import type { MessageContentComplex } from '@librechat/agents';
-import type { Agent, TMessage } from 'librechat-data-provider';
+import type { Agent, TMessage } from '@hanzochat/data-provider';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { ServerRequest } from '~/types';
 import Tokenizer from '~/utils/tokenizer';

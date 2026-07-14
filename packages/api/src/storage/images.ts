@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import { logger } from '@librechat/data-schemas';
-import type { IUser } from '@librechat/data-schemas';
-import type { TFile } from 'librechat-data-provider';
+import { logger } from '@hanzochat/data-schemas';
+import type { IUser } from '@hanzochat/data-schemas';
+import type { TFile } from '@hanzochat/data-provider';
 import type { FormatEnum } from 'sharp';
 import type {
   SaveBufferFn,

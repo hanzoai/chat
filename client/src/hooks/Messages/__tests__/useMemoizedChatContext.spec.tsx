@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import type { TConversation, TMessage } from 'librechat-data-provider';
+import type { TConversation, TMessage } from '@hanzochat/data-provider';
 import { useChatContext } from '~/Providers';
 import useMemoizedChatContext from '../useMemoizedChatContext';
 

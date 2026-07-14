@@ -1,8 +1,8 @@
 const path = require('path');
 const fs = require('fs').promises;
 const express = require('express');
-const { logger } = require('@librechat/data-schemas');
-const { isAssistantsEndpoint } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { isAssistantsEndpoint } = require('@hanzochat/data-provider');
 const {
   processAgentFileUpload,
   processImageFile,

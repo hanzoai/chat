@@ -1,5 +1,5 @@
-import type { IUser, AppConfig } from '@librechat/data-schemas';
-import type { TEndpointOption } from 'librechat-data-provider';
+import type { IUser, AppConfig } from '@hanzochat/data-schemas';
+import type { TEndpointOption } from '@hanzochat/data-provider';
 import type { Request } from 'express';
 
 /**

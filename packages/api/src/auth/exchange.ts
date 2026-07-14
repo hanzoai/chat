@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Keyv } from 'keyv';
-import { logger } from '@librechat/data-schemas';
-import type { IUser } from '@librechat/data-schemas';
+import { logger } from '@hanzochat/data-schemas';
+import type { IUser } from '@hanzochat/data-schemas';
 
 /** Default admin panel URL for local development */
 const DEFAULT_ADMIN_PANEL_URL = 'http://localhost:3000';

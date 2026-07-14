@@ -1,5 +1,5 @@
 import React from 'react';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import UninitializedMCPTool from './UninitializedMCPTool';
 import UnconfiguredMCPTool from './UnconfiguredMCPTool';
 import { useHasAccess, useLocalize } from '~/hooks';

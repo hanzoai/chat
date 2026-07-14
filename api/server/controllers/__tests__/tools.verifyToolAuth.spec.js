@@ -1,4 +1,4 @@
-jest.mock('@librechat/data-schemas', () => ({
+jest.mock('@hanzochat/data-schemas', () => ({
   logger: { debug: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
@@ -31,7 +31,7 @@ jest.mock('~/app/clients/tools/util', () => ({
   loadTools: jest.fn(),
 }));
 
-const { Tools, AuthType } = require('librechat-data-provider');
+const { Tools, AuthType } = require('@hanzochat/data-provider');
 const { verifyToolAuth } = require('../tools');
 
 /**

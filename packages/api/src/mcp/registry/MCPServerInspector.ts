@@ -1,5 +1,5 @@
-import { Constants } from 'librechat-data-provider';
-import type { JsonSchemaType } from '@librechat/data-schemas';
+import { Constants } from '@hanzochat/data-provider';
+import type { JsonSchemaType } from '@hanzochat/data-schemas';
 import type { MCPConnection } from '~/mcp/connection';
 import type * as t from '~/mcp/types';
 import { isMCPDomainAllowed, extractMCPServerDomain } from '~/auth/domain';

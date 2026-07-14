@@ -1,7 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const { logger } = require('@librechat/data-schemas');
-const { ContentTypes } = require('librechat-data-provider');
+const { logger } = require('@hanzochat/data-schemas');
+const { ContentTypes } = require('@hanzochat/data-provider');
 const { unescapeLaTeX, countTokens } = require('@hanzochat/api');
 const {
   saveConvo,
@@ -156,7 +156,7 @@ router.post('/branch', async (req, res) => {
         .json({ error: 'Message does not have parallel content with attributions' });
     }
 
-    /** @type {Array<import('librechat-data-provider').TMessageContentParts>} */
+    /** @type {Array<import('@hanzochat/data-provider').TMessageContentParts>} */
     const filteredContent = [];
     for (const part of sourceMessage.content) {
       if (part?.agentId === agentId) {
@@ -170,7 +170,7 @@ router.post('/branch', async (req, res) => {
     }
 
     const newMessageId = uuidv4();
-    /** @type {import('librechat-data-provider').TMessage} */
+    /** @type {import('@hanzochat/data-provider').TMessage} */
     const newMessage = {
       messageId: newMessageId,
       conversationId: sourceMessage.conversationId,

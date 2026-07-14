@@ -3,7 +3,7 @@ process.env.TENANT_ISOLATION_STRICT = 'true';
 const express = require('express');
 const request = require('supertest');
 const fs = require('fs/promises');
-const { getTenantId, tenantStorage: mockTenantStorage } = require('@librechat/data-schemas');
+const { getTenantId, tenantStorage: mockTenantStorage } = require('@hanzochat/data-schemas');
 
 const TEST_TENANT = 'tenant-files-strict';
 

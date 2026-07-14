@@ -2,9 +2,9 @@ import {
   MCPOptions,
   StdioOptionsSchema,
   StreamableHTTPOptionsSchema,
-} from 'librechat-data-provider';
-import type { TUser } from 'librechat-data-provider';
-import type { IUser } from '@librechat/data-schemas';
+} from '@hanzochat/data-provider';
+import type { TUser } from '@hanzochat/data-provider';
+import type { IUser } from '@hanzochat/data-schemas';
 import type { GraphTokenResolver } from '~/utils/graph';
 import { preProcessGraphTokens } from '~/utils/graph';
 import { processMCPEnv } from '~/utils/env';

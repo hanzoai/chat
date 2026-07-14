@@ -6,8 +6,8 @@ import {
   SKILL_DISPLAY_TITLE_MAX_LENGTH,
   SKILL_BODY_MAX_LENGTH,
   SKILL_NAME_PATTERN as SKILL_NAME_PATTERN_SHARED,
-} from 'librechat-data-provider';
-import type { CodeEnvRef } from 'librechat-data-provider';
+} from '@hanzochat/data-provider';
+import type { CodeEnvRef } from '@hanzochat/data-provider';
 import type { Model, Types, FilterQuery } from 'mongoose';
 import type { DataHandle } from '~/common/dataHandle';
 import type {

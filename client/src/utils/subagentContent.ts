@@ -1,5 +1,5 @@
-import { ContentTypes, ToolCallTypes } from 'librechat-data-provider';
-import type { SubagentUpdateEvent } from 'librechat-data-provider';
+import { ContentTypes, ToolCallTypes } from '@hanzochat/data-provider';
+import type { SubagentUpdateEvent } from '@hanzochat/data-provider';
 
 /**
  * Client-side helpers for rendering the live `SubagentCall` UI while

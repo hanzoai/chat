@@ -1,7 +1,7 @@
 const path = require('path');
 const mongoose = require('mongoose');
 const { getBalanceConfig } = require('@hanzochat/api');
-const { User, Balance } = require('@librechat/data-schemas').createModels(mongoose);
+const { User, Balance } = require('@hanzochat/data-schemas').createModels(mongoose);
 require('module-alias')({ base: path.resolve(__dirname, '..', 'api') });
 const { askQuestion, silentExit } = require('./helpers');
 const connect = require('./connect');
