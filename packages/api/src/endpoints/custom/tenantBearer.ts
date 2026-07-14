@@ -126,6 +126,26 @@ export function resolveTenantBearer(req: TenantBearerRequest): string | null {
 }
 
 /**
+ * The active org a member has switched to, or null for their home org.
+ *
+ * A multi-org member selects a working org in the account menu; the switch is
+ * pinned in the `hanzo_active_org` cookie (set server-side by
+ * `/v1/chat/user/active-org`, which admits ONLY an org in the caller's own
+ * membership set). Chat forwards it as `X-Org-Id` on the on-behalf-of calls to
+ * cloud so the completion (and its billing) lands on the chosen org.
+ *
+ * This value is a HINT, not an authority: the gateway (HIP-0026) re-derives the
+ * tenant from the verified JWT and admits a sent `X-Org-Id` only when it is in
+ * that member's set, pinning to `owner` otherwise. So a forged cookie can never
+ * reach an org the caller isn't a member of — cloud is the enforcer, this is the
+ * selection. Returns null (home org, no header) when unset.
+ */
+export function resolveActiveOrg(req: TenantBearerRequest): string | null {
+  const org = parseCookies(req.headers?.cookie).hanzo_active_org;
+  return org ? org : null;
+}
+
+/**
  * The endpoint-config sentinel that opts a custom endpoint into IAM-bearer
  * forwarding. An endpoint whose `apiKey` is this value bills the signed-in user's
  * own org via their forwarded IAM token (the canonical Hanzo Cloud path) instead

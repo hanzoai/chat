@@ -167,6 +167,16 @@ const userSchema = new Schema<IUser>(
     organizationTag: {
       type: String,
     },
+    /** Org's default project from the Hanzo IAM 'project' claim; the gateway mints X-Project-Id from it */
+    project: {
+      type: String,
+      index: true,
+    },
+    /** Org/role memberships from the Hanzo IAM 'groups' claim */
+    groups: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 );
