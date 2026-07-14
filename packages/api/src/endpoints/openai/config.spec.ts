@@ -1384,8 +1384,8 @@ describe('getOpenAIConfig', () => {
           apiKey: 'user_provided',
           baseURL: baseURL,
           headers: {
-            'X-Custom-Provider': 'LibreChat',
-            'User-Agent': 'LibreChat/1.0',
+            'X-Custom-Provider': 'Chat',
+            'User-Agent': 'Chat/1.0',
           },
           addParams: {
             custom_parameter: 'custom_value',

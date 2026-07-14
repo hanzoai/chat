@@ -2,7 +2,7 @@ import type { CodeEnvRef } from '@hanzochat/data-provider';
 import type { Document, Types } from 'mongoose';
 
 /**
- * Skill — the single source of truth for a LibreChat skill.
+ * Skill — the single source of truth for a Chat skill.
  * Each document is the full SKILL.md body plus structured frontmatter and metadata.
  * The `version` field is an integer monotonic counter used for optimistic concurrency.
  */
@@ -15,7 +15,7 @@ export interface ISkill {
    */
   name: string;
   /**
-   * Human-readable label shown only in the LibreChat UI (skill list, detail
+   * Human-readable label shown only in the Chat UI (skill list, detail
    * header, sharing dialogs). NOT sent to Claude and NOT part of the trigger
    * path — `name` + `description` drive triggering. Purely cosmetic: lets an
    * author keep a stable kebab-case `name` while showing something prettier
@@ -70,7 +70,7 @@ export interface ISkill {
   version: number;
   /**
    * Provenance of this skill's canonical definition.
-   * - `inline` — authored inside LibreChat (the only value phase 1 produces).
+   * - `inline` — authored inside Chat (the only value phase 1 produces).
    * - `github` / `notion` — reserved for phase 2+ external sync. Kept in the
    *   enum so a future sync worker can populate it without a migration.
    */

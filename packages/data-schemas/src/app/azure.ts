@@ -7,7 +7,7 @@ import {
 import type { TCustomConfig, TAzureConfig } from '@hanzochat/data-provider';
 
 /**
- * Sets up the Azure OpenAI configuration from the config (`librechat.yaml`) file.
+ * Sets up the Azure OpenAI configuration from the config (`chat.yaml`) file.
  * @param config - The loaded custom configuration.
  * @returns The Azure OpenAI configuration.
  */

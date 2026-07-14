@@ -22,7 +22,7 @@ function isValidObjectId(id) {
 }
 
 /**
- * Validates a LibreChat refresh token
+ * Validates a Chat refresh token
  * @param {string} refreshToken - The refresh token to validate
  * @returns {{valid: boolean, userId?: string, error?: string}} - Validation result
  */
@@ -56,7 +56,7 @@ function createValidateImageRequest(secureImageLinks) {
   }
   /**
    * Middleware to validate image request.
-   * Supports both LibreChat refresh tokens and OpenID JWT tokens.
+   * Supports both Chat refresh tokens and OpenID JWT tokens.
    * Must be set by `secureImageLinks` via custom config file.
    */
   return async function validateImageRequest(req, res, next) {

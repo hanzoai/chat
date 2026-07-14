@@ -24,33 +24,33 @@ describe('getBasePath', () => {
   });
 
   it('should return base path for subdirectory deployment', () => {
-    process.env.DOMAIN_CLIENT = 'http://localhost:3080/librechat';
-    expect(getBasePath()).toBe('/librechat');
+    process.env.DOMAIN_CLIENT = 'http://localhost:3080/chat';
+    expect(getBasePath()).toBe('/chat');
   });
 
   it('should return base path without trailing slash', () => {
-    process.env.DOMAIN_CLIENT = 'http://localhost:3080/librechat/';
-    expect(getBasePath()).toBe('/librechat');
+    process.env.DOMAIN_CLIENT = 'http://localhost:3080/chat/';
+    expect(getBasePath()).toBe('/chat');
   });
 
   it('should handle nested subdirectories', () => {
-    process.env.DOMAIN_CLIENT = 'http://localhost:3080/apps/librechat';
-    expect(getBasePath()).toBe('/apps/librechat');
+    process.env.DOMAIN_CLIENT = 'http://localhost:3080/apps/chat';
+    expect(getBasePath()).toBe('/apps/chat');
   });
 
   it('should handle HTTPS URLs', () => {
-    process.env.DOMAIN_CLIENT = 'https://example.com/librechat';
-    expect(getBasePath()).toBe('/librechat');
+    process.env.DOMAIN_CLIENT = 'https://example.com/chat';
+    expect(getBasePath()).toBe('/chat');
   });
 
   it('should handle URLs with query parameters', () => {
-    process.env.DOMAIN_CLIENT = 'http://localhost:3080/librechat?param=value';
-    expect(getBasePath()).toBe('/librechat');
+    process.env.DOMAIN_CLIENT = 'http://localhost:3080/chat?param=value';
+    expect(getBasePath()).toBe('/chat');
   });
 
   it('should handle URLs with fragments', () => {
-    process.env.DOMAIN_CLIENT = 'http://localhost:3080/librechat#section';
-    expect(getBasePath()).toBe('/librechat');
+    process.env.DOMAIN_CLIENT = 'http://localhost:3080/chat#section';
+    expect(getBasePath()).toBe('/chat');
   });
 
   it('should return empty string for invalid URL', () => {
@@ -86,12 +86,12 @@ describe('getBasePath', () => {
   });
 
   it('should handle URLs with ports', () => {
-    process.env.DOMAIN_CLIENT = 'http://localhost:8080/librechat';
-    expect(getBasePath()).toBe('/librechat');
+    process.env.DOMAIN_CLIENT = 'http://localhost:8080/chat';
+    expect(getBasePath()).toBe('/chat');
   });
 
   it('should handle URLs with subdomains', () => {
-    process.env.DOMAIN_CLIENT = 'https://app.example.com/librechat';
-    expect(getBasePath()).toBe('/librechat');
+    process.env.DOMAIN_CLIENT = 'https://app.example.com/chat';
+    expect(getBasePath()).toBe('/chat');
   });
 });

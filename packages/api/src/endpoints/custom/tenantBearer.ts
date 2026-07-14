@@ -129,7 +129,7 @@ export function resolveTenantBearer(req: TenantBearerRequest): string | null {
  * The endpoint-config sentinel that opts a custom endpoint into IAM-bearer
  * forwarding. An endpoint whose `apiKey` is this value bills the signed-in user's
  * own org via their forwarded IAM token (the canonical Hanzo Cloud path) instead
- * of any static key. This reuses LibreChat's existing OIDC-token placeholder name
- * so librechat.yaml stays self-documenting.
+ * of any static key. This reuses Chat's existing OIDC-token placeholder name
+ * so chat.yaml stays self-documenting.
  */
-export const OPENID_BEARER_SENTINEL = '{{LIBRECHAT_OPENID_TOKEN}}';
+export const OPENID_BEARER_SENTINEL = '{{CHAT_OPENID_TOKEN}}';

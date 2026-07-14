@@ -26,7 +26,7 @@ const useAuthCodeTool = (options?: { isEntityTool: boolean }) => {
       updateUserPlugins.mutate({
         pluginKey: Tools.execute_code,
         action: 'install',
-        auth: { LIBRECHAT_CODE_API_KEY: apiKey },
+        auth: { CHAT_CODE_API_KEY: apiKey },
         isEntityTool,
       });
     },
@@ -37,7 +37,7 @@ const useAuthCodeTool = (options?: { isEntityTool: boolean }) => {
     updateUserPlugins.mutate({
       pluginKey: Tools.execute_code,
       action: 'uninstall',
-      auth: { LIBRECHAT_CODE_API_KEY: null },
+      auth: { CHAT_CODE_API_KEY: null },
       isEntityTool,
     });
   }, [updateUserPlugins, isEntityTool]);

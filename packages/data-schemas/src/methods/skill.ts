@@ -77,7 +77,7 @@ const RELATIVE_PATH_CHARS = /^[a-zA-Z0-9._\-/]+$/;
 const RESERVED_NAME_PREFIXES = ['anthropic-', 'claude-'];
 
 /**
- * Slash-command names that collide with LibreChat / Claude Code CLI commands.
+ * Slash-command names that collide with Chat / Claude Code CLI commands.
  * A skill with one of these names would shadow a real command in any
  * slash-command UI. Matched exactly (not as prefix).
  */
@@ -230,7 +230,7 @@ export function validateAlwaysApply(alwaysApply: unknown): ValidationIssue[] {
 /**
  * Known fields allowed inside a skill's YAML frontmatter. Anything else is
  * rejected in strict mode. The list is derived from Anthropic's Agent Skills
- * spec plus the fields LibreChat needs to pass through (`name`/`description`
+ * spec plus the fields Chat needs to pass through (`name`/`description`
  * are duplicated from the top-level columns because real `SKILL.md` files
  * include them in their frontmatter block).
  */
@@ -1366,7 +1366,7 @@ export function createSkillMethods(handle: DataHandle, deps: SkillDeps) {
    * NOTE on consistency: this runs as a **separate** MongoDB operation from
    * the `upsertSkillFile` / `deleteSkillFile` that triggers it. MongoDB only
    * provides multi-document ACID via transactions (which require a replica
-   * set), and LibreChat does not currently require that deployment shape. In
+   * set), and Chat does not currently require that deployment shape. In
    * the rare case where a SkillFile write succeeds but the subsequent
    * `findByIdAndUpdate` here fails (connection drop, primary failover mid-
    * request), the `fileCount` on the parent Skill will drift from the true

@@ -93,9 +93,9 @@ export type {
   ReasoningDoneEvent,
   ErrorEvent,
   ResponseEvent,
-  // LibreChat extensions
-  LibreChatAttachmentContent,
-  LibreChatAttachmentEvent,
+  // Chat extensions
+  ChatAttachmentContent,
+  ChatAttachmentEvent,
   // Internal
   ResponseContext,
   RequestValidationResult,
@@ -148,7 +148,7 @@ export {
   emitReasoningItemDone,
   // Error events
   emitError,
-  // LibreChat extension events
+  // Chat extension events
   emitAttachment,
   writeAttachmentEvent,
   type AttachmentData,

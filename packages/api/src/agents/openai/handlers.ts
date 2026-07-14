@@ -1,7 +1,7 @@
 /**
  * OpenAI-compatible event handlers for agent streaming.
  *
- * These handlers convert LibreChat's internal graph events into OpenAI-compatible
+ * These handlers convert Chat's internal graph events into OpenAI-compatible
  * streaming format (SSE with chat.completion.chunk objects).
  */
 import type { Response as ServerResponse } from 'express';
@@ -332,7 +332,7 @@ export class OpenAIRunStepHandler implements EventHandler {
   constructor(private config: OpenAIStreamHandlerConfig) {}
 
   handle(_event: string, data: { stepDetails?: { type?: string } }): void {
-    // Run step events are primarily for LibreChat UI, we use deltas for streaming
+    // Run step events are primarily for Chat UI, we use deltas for streaming
     // This handler is a no-op for OpenAI format
     if (data?.stepDetails?.type === StepTypes.TOOL_CALLS) {
       // Tool calls will be streamed via delta events

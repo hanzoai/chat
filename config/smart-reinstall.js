@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Smart Reinstall for LibreChat
+ * Smart Reinstall for Chat
  *
  * Combines cached dependency installation with Turborepo-powered builds.
  *
@@ -29,7 +29,7 @@ const { execSync } = require('child_process');
 require('./helpers');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
-const DEPS_HASH_MARKER = path.join(ROOT_DIR, 'node_modules', '.librechat-deps-hash');
+const DEPS_HASH_MARKER = path.join(ROOT_DIR, 'node_modules', '.chat-deps-hash');
 
 const flags = {
   force: process.argv.includes('--force'),
@@ -130,7 +130,7 @@ function cleanTurboCache() {
 (async () => {
   const startTime = Date.now();
 
-  console.green('\n Smart Reinstall — LibreChat');
+  console.green('\n Smart Reinstall — Chat');
   console.green('─'.repeat(45));
 
   if (flags.cleanCache) {

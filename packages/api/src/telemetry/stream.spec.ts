@@ -73,15 +73,15 @@ describe('createSseStreamTelemetry', () => {
     res.emit('finish');
 
     expect(startSpan).toHaveBeenCalledWith(
-      'librechat.sse.stream',
+      'chat.sse.stream',
       {
         kind: SpanKind.INTERNAL,
         attributes: expect.objectContaining({
           'http.request.method': 'GET',
           'http.route': '/v1/chat/agents/chat/stream/:streamId',
-          'librechat.stream.id': 'stream-1',
-          'librechat.stream.resume': false,
-          'librechat.stream.route': '/v1/chat/agents/chat/stream/:streamId',
+          'chat.stream.id': 'stream-1',
+          'chat.stream.resume': false,
+          'chat.stream.route': '/v1/chat/agents/chat/stream/:streamId',
         }),
       },
       context.active(),
@@ -93,14 +93,14 @@ describe('createSseStreamTelemetry', () => {
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
         'http.response.body.size': Buffer.byteLength(payload),
-        'librechat.stream.bytes.sent': Buffer.byteLength(payload),
-        'librechat.stream.chunks.count': 1,
-        'librechat.stream.completed': true,
-        'librechat.stream.end_reason': 'done',
-        'librechat.stream.error_event_emitted': false,
-        'librechat.stream.final_event_emitted': true,
-        'librechat.stream.final_event_written': true,
-        'librechat.stream.time_to_first_chunk_ms': expect.any(Number),
+        'chat.stream.bytes.sent': Buffer.byteLength(payload),
+        'chat.stream.chunks.count': 1,
+        'chat.stream.completed': true,
+        'chat.stream.end_reason': 'done',
+        'chat.stream.error_event_emitted': false,
+        'chat.stream.final_event_emitted': true,
+        'chat.stream.final_event_written': true,
+        'chat.stream.time_to_first_chunk_ms': expect.any(Number),
       }),
     );
     expect(span.setStatus).not.toHaveBeenCalled();
@@ -124,8 +124,8 @@ describe('createSseStreamTelemetry', () => {
     expect(span.addEvent).toHaveBeenCalledWith('client_aborted');
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
-        'librechat.stream.completed': false,
-        'librechat.stream.end_reason': 'client_aborted',
+        'chat.stream.completed': false,
+        'chat.stream.end_reason': 'client_aborted',
       }),
     );
     expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR });
@@ -154,9 +154,9 @@ describe('createSseStreamTelemetry', () => {
     expect(span.addEvent).toHaveBeenCalledWith('error_event_emitted');
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
-        'librechat.stream.completed': false,
-        'librechat.stream.end_reason': 'subscribe_failed',
-        'librechat.stream.error_event_emitted': true,
+        'chat.stream.completed': false,
+        'chat.stream.end_reason': 'subscribe_failed',
+        'chat.stream.error_event_emitted': true,
       }),
     );
     expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR });
@@ -203,8 +203,8 @@ describe('createSseStreamTelemetry', () => {
 
     expect(span.setAttributes).toHaveBeenCalledWith(
       expect.objectContaining({
-        'librechat.stream.bytes.sent': Buffer.byteLength(firstPayload),
-        'librechat.stream.chunks.count': 1,
+        'chat.stream.bytes.sent': Buffer.byteLength(firstPayload),
+        'chat.stream.chunks.count': 1,
       }),
     );
     expect(span.end).toHaveBeenCalledTimes(1);

@@ -9,7 +9,7 @@ export type BaseSystemCapability = (typeof SystemCapabilities)[keyof typeof Syst
 /** Principal types that can receive config overrides. */
 export type ConfigAssignTarget = 'user' | 'group' | 'role';
 
-/** Top-level keys of the configSchema from librechat.yaml. */
+/** Top-level keys of the configSchema from chat.yaml. */
 export type ConfigSection = string & keyof TCustomConfig;
 
 /** Section-level config capabilities derived from configSchema keys. */

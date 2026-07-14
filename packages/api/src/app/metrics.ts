@@ -286,7 +286,7 @@ export function recordMongooseQuery(
 export function instrumentMongooseQueryMetrics(mongoose: Mongoose): void {
   if (!isMetricsConfigured()) return;
 
-  const instrumented = Symbol.for('librechat.mongooseQueryMetrics.instrumented');
+  const instrumented = Symbol.for('chat.mongooseQueryMetrics.instrumented');
   const queryPrototype = mongoose.Query?.prototype as
     | (typeof mongoose.Query.prototype & { [instrumented]?: boolean })
     | undefined;

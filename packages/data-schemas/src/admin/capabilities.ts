@@ -13,7 +13,7 @@ import type {
 /**
  * The canonical set of base system capabilities.
  *
- * These are used by the admin panel and LibreChat API to gate access to
+ * These are used by the admin panel and Chat API to gate access to
  * admin features. Config-section-derived capabilities (e.g.
  * `manage:configs:endpoints`) are built on top of these where the
  * configSchema is available.
