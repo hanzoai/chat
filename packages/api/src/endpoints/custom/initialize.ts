@@ -13,7 +13,7 @@ import { getCustomEndpointConfig } from '~/app/config';
 import { fetchModels } from '~/endpoints/models';
 import { isUserProvided, checkUserKeyExpiry } from '~/utils';
 import { standardCache } from '~/cache';
-import { resolveTenantBearer, OPENID_BEARER_SENTINEL } from './tenantBearer';
+import { resolveTenantBearer, resolveActiveOrg, OPENID_BEARER_SENTINEL } from './tenantBearer';
 import { wrapHanzoGatewayFetch, type GatewayFetch } from './hanzoGatewayFetch';
 
 const { PROXY } = process.env;
@@ -109,12 +109,22 @@ export async function initializeCustom({
   // per-user minted key (see AUTH_BILLING_CONTRACT.md in hanzoai/cloud). If no
   // forwardable bearer exists (signed out / expired) we FAIL CLOSED: the user
   // must sign in with Hanzo. There is no fallback credential to spend on.
+  // The active org a multi-org member has switched to, forwarded as `X-Org-Id`
+  // ONLY on the bearer path — it is meaningful solely alongside the IAM token
+  // whose membership the gateway checks it against.
+  let tenantHeaders: Record<string, string> | undefined;
   if (apiKey === OPENID_BEARER_SENTINEL) {
     const bearer = resolveTenantBearer(req as unknown as Parameters<typeof resolveTenantBearer>[0]);
     if (!bearer) {
       throw new Error('Sign in with Hanzo to chat — your Hanzo account funds this request.');
     }
     apiKey = bearer;
+    const activeOrg = resolveActiveOrg(
+      req as unknown as Parameters<typeof resolveActiveOrg>[0],
+    );
+    if (activeOrg) {
+      tenantHeaders = { 'X-Org-Id': activeOrg };
+    }
   }
 
   if (userProvidesKey && !apiKey) {
@@ -169,6 +179,12 @@ export async function initializeCustom({
   }
 
   const customOptions = buildCustomOptions(endpointConfig, appConfig, endpointTokenConfig);
+  if (tenantHeaders) {
+    customOptions.headers = {
+      ...((customOptions.headers as Record<string, string> | undefined) ?? {}),
+      ...tenantHeaders,
+    };
+  }
 
   const clientOptions: Record<string, unknown> = {
     reverseProxyUrl: baseURL ?? null,
