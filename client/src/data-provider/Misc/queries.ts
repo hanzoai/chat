@@ -44,6 +44,23 @@ export const useGetUserUsage = (
   });
 };
 
+// Canonical cloud AI usage (GET /v1/get-cloud-usages, proxied). Keyed by range so a
+// range switch refetches. Returns the raw payload (a @hanzo/usage `CloudUsageOverview`
+// or `{ enabled: false }`); the consumer normalizes it with `@hanzo/usage`.
+export const useGetCloudUsage = (
+  range: string,
+  config?: UseQueryOptions<unknown>,
+): QueryObserverResult<unknown> => {
+  const queriesEnabled = useRecoilValue<boolean>(store.queriesEnabled);
+  return useQuery<unknown>([QueryKeys.cloudUsage, range], () => dataService.getCloudUsage(range), {
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchOnMount: true,
+    ...config,
+    enabled: (config?.enabled ?? true) === true && queriesEnabled,
+  });
+};
+
 export const useGetRoutingDefaults = (
   config?: UseQueryOptions<t.TRoutingDefaultsResponse>,
 ): QueryObserverResult<t.TRoutingDefaultsResponse> => {

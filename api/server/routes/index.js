@@ -10,6 +10,7 @@ const presets = require('./presets');
 const prompts = require('./prompts');
 const balance = require('./balance');
 const usage = require('./usage');
+const cloudUsage = require('./cloudUsage');
 const routingDefaults = require('./routingDefaults');
 const actions = require('./actions');
 const apiKeys = require('./apiKeys');
@@ -52,6 +53,7 @@ module.exports = {
   presets,
   balance,
   usage,
+  cloudUsage,
   routingDefaults,
   messages,
   memories,
