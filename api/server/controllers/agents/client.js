@@ -74,6 +74,7 @@ class AgentClient extends BaseClient {
       agentConfigs,
       contentParts,
       collectedUsage,
+      runMetadata,
       artifactPromises,
       maxContextTokens,
       ...clientOptions
@@ -85,6 +86,13 @@ class AgentClient extends BaseClient {
     this.contentParts = contentParts;
     /** @type {Array<UsageMetadata>} */
     this.collectedUsage = collectedUsage;
+    /**
+     * Content-free run metadata populated by the model-end handler. Holds ONLY the
+     * upstream gateway response id (`requestId`) — surfaced on the saved response
+     * message as `feedbackRequestId` (the routing-ledger join key for reward signals).
+     * @type {{ requestId?: string } | undefined}
+     */
+    this.runMetadata = runMetadata;
     /** @type {ArtifactPromises} */
     this.artifactPromises = artifactPromises;
     /** @type {AgentClientOptions} */
@@ -934,6 +942,18 @@ class AgentClient extends BaseClient {
         });
       }
     } finally {
+      /**
+       * Surface the captured upstream gateway response id on the response message as
+       * `feedbackRequestId`. `BaseClient.sendMessage` spreads `this.metadata` onto the
+       * response message, so the id rides the SSE final event + DB save to the client,
+       * where it becomes the CONTENT-FREE reward-signal join key (routing-ledger).
+       */
+      if (this.runMetadata?.requestId) {
+        this.metadata = {
+          ...(this.metadata ?? {}),
+          feedbackRequestId: this.runMetadata.requestId,
+        };
+      }
       try {
         const attachments = await this.awaitMemoryWithTimeout(memoryPromise);
         if (attachments && attachments.length > 0) {

@@ -2667,6 +2667,10 @@ const messageSchema = new mongoose.Schema({
     iconURL: {
         type: String,
     },
+    /** Upstream gateway response id — the content-free reward-signal join key (routing ledger). */
+    feedbackRequestId: {
+        type: String,
+    },
     metadata: { type: mongoose.Schema.Types.Mixed },
     attachments: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
     /*
