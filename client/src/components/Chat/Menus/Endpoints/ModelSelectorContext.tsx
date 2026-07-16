@@ -1,8 +1,15 @@
 import debounce from 'lodash/debounce';
+import { useQueryClient } from '@tanstack/react-query';
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
+import {
+  QueryKeys,
+  EModelEndpoint,
+  isAgentsEndpoint,
+  isAssistantsEndpoint,
+} from '@hanzochat/data-provider';
 import type * as t from '@hanzochat/data-provider';
 import type { Endpoint, SelectedValues } from '~/common';
+import { sendRewardSignal } from '~/utils/rewardSignal';
 import {
   useAgentDefaultPermissionLevel,
   useSelectorEffects,
@@ -55,6 +62,7 @@ interface ModelSelectorProviderProps {
 }
 
 export function ModelSelectorProvider({ children, startupConfig }: ModelSelectorProviderProps) {
+  const queryClient = useQueryClient();
   const agentsMap = useAgentsMapContext();
   const assistantsMap = useAssistantsMapContext();
   const { data: endpointsConfig } = useGetEndpointsQuery();
@@ -207,6 +215,25 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   };
 
   const handleSelectModel = (endpoint: Endpoint, model: string) => {
+    /**
+     * Model-switch reward signal: when the user switches model/endpoint right after a
+     * response, credit the LAST assistant message's upstream id (the routing-ledger join
+     * key). No-op when nothing actually changed or no last-response id exists.
+     */
+    const conversationId = conversation?.conversationId;
+    const isActualChange =
+      endpoint.value !== conversation?.endpoint || model !== conversation?.model;
+    if (isActualChange && conversationId) {
+      const messages = queryClient.getQueryData<t.TMessage[]>([QueryKeys.messages, conversationId]);
+      const lastAssistant = messages
+        ?.slice()
+        .reverse()
+        .find((m) => m && m.isCreatedByUser === false && m.feedbackRequestId);
+      if (lastAssistant?.feedbackRequestId) {
+        sendRewardSignal(lastAssistant.feedbackRequestId, 'switch');
+      }
+    }
+
     if (isAgentsEndpoint(endpoint.value)) {
       onSelectEndpoint?.(endpoint.value, {
         agent_id: model,
