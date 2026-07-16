@@ -36,6 +36,7 @@
     "@dicebear/collection": "^9.2.2",
     "@dicebear/core": "^9.2.2",
     "@hanzo/iam": "^0.13.1",
+    "@hanzo/usage": "^0.1.6",
     "@headlessui/react": "^2.1.2",
     "@hanzochat/client": "workspace:*",
     "@marsidev/react-turnstile": "^1.1.0",

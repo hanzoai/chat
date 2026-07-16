@@ -78,6 +78,12 @@ export const balance = () => `${BASE_URL}/v1/chat/balance`;
 
 export const usage = () => `${BASE_URL}/v1/chat/usage`;
 
+// Canonical cloud AI usage (GET /v1/get-cloud-usages, proxied on-behalf-of). A
+// SEPARATE concern from `usage` above (the Mongo token-credit tab): this is the
+// shared @hanzo/usage `CloudUsageOverview` every Hanzo surface renders.
+export const cloudUsage = (params?: { range?: string }) =>
+  `${BASE_URL}/v1/chat/cloud-usage${params?.range ? `?range=${encodeURIComponent(params.range)}` : ''}`;
+
 export const routingDefaults = () => `${BASE_URL}/v1/chat/routing-defaults`;
 
 export const userPlugins = () => `${BASE_URL}/v1/chat/user/plugins`;

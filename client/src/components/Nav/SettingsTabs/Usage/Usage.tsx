@@ -5,6 +5,7 @@ import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3, Sparkles } from
 import { useGetStartupConfig, useGetUserUsage, useGetRoutingDefaults } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
 import { resolveSmartRouting } from '~/utils';
+import CloudUsage from './CloudUsage';
 import store from '~/store';
 
 const CONSOLE_URL = 'https://console.hanzo.ai/ai-accounts';
@@ -144,6 +145,10 @@ function Usage() {
     <div className="flex flex-col gap-5 p-4 text-sm text-text-primary">
       {/* Smart routing toggle */}
       <SmartRoutingToggle />
+
+      {/* Canonical cloud usage (api.hanzo.ai) — renders nothing when unavailable.
+          A separate concern from the LibreChat token-credit view below. */}
+      <CloudUsage />
 
       {/* Spend header card */}
       <div className="rounded-xl border border-border-medium bg-surface-secondary p-4">
