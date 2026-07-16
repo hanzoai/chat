@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Button, TooltipAnchor } from '@hanzochat/client';
 import { X, ArrowDownToLine, PanelLeftOpen, PanelLeftClose, RotateCcw } from 'lucide-react';
+import type { ConversationImage } from '~/utils';
+import FixImageButton from './FixImageButton';
 import { useLocalize } from '~/hooks';
 
 const getQualityStyles = (quality: string): string => {
@@ -21,6 +23,7 @@ export default function DialogImage({
   downloadImage,
   args,
   triggerRef,
+  fixImage,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,6 +36,8 @@ export default function DialogImage({
     [key: string]: unknown;
   };
   triggerRef?: React.RefObject<HTMLButtonElement>;
+  /** When set, show a "Fix" action that attaches this image to the composer. */
+  fixImage?: ConversationImage;
 }) {
   const localize = useLocalize();
   const [isPromptOpen, setIsPromptOpen] = useState(false);
@@ -294,6 +299,13 @@ export default function DialogImage({
                     <RotateCcw className="size-5" aria-hidden="true" />
                   </Button>
                 }
+              />
+            )}
+            {fixImage != null && (
+              <FixImageButton
+                image={fixImage}
+                variant="toolbar"
+                onDone={() => onOpenChange(false)}
               />
             )}
             <TooltipAnchor
