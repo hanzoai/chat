@@ -1,6 +1,6 @@
 {
   "name": "@hanzochat/chat",
-  "version": "0.9.20",
+  "version": "0.9.21",
   "description": "Chat - Unified interface to Agents, LLMs, MCPs and any AI model or OpenAPI documented API with full RAG stack",
   "packageManager": "pnpm@10.27.0",
   "workspaces": [
@@ -196,7 +196,8 @@
     "overrides": {
       "@ariakit/react": "0.4.29",
       "zod-to-json-schema": "3.24.6",
-      "@modelcontextprotocol/sdk": "1.22.0"
+      "@modelcontextprotocol/sdk": "1.22.0",
+      "zod@3.24.4": "3.25.76"
     }
   }
 }
