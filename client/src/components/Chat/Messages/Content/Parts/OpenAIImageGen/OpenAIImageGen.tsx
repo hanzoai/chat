@@ -195,6 +195,8 @@ export default function OpenAIImageGen({
             height={Number(dimensions.height?.split('px')[0])}
             placeholderDimensions={{ width: dimensions.width, height: dimensions.height }}
             args={parsedArgs}
+            enableFix
+            fileId={(attachment as TFile | undefined)?.file_id}
           />
         </div>
       </div>

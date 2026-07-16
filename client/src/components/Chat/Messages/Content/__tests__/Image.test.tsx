@@ -26,6 +26,12 @@ jest.mock('../DialogImage', () => ({
     isOpen ? <div data-testid="dialog-image" data-src={src} /> : null,
 }));
 
+/** Fix affordance pulls the localization/store graph; stub it out of this leaf-render test. */
+jest.mock('../FixImageButton', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
 describe('Image', () => {
   const defaultProps = {
     imagePath: '/images/test.png',
