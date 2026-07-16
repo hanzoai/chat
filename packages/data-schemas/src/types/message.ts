@@ -40,6 +40,8 @@ export interface IMessage extends Document {
   thread_id?: string;
   iconURL?: string;
   addedConvo?: boolean;
+  /** Upstream gateway response id — the content-free reward-signal join key (routing ledger). */
+  feedbackRequestId?: string;
   metadata?: Record<string, unknown>;
   attachments?: unknown[];
   expiredAt?: Date;
