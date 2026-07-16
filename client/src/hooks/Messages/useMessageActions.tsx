@@ -15,6 +15,7 @@ import { useChatContext, useAssistantsMapContext, useAgentsMapContext } from '~/
 import useCopyToClipboard from './useCopyToClipboard';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { useGetAddedConvo } from '~/hooks/Chat';
+import { sendRewardSignal } from '~/utils/rewardSignal';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
@@ -39,7 +40,7 @@ export default function useMessageActions(props: TMessageActions) {
   const agentsMap = useAgentsMapContext();
   const assistantMap = useAssistantsMapContext();
 
-  const { text, content, messageId = null, isCreatedByUser } = message ?? {};
+  const { text, content, messageId = null, isCreatedByUser, feedbackRequestId } = message ?? {};
   const edit = useMemo(() => messageId === currentEditId, [messageId, currentEditId]);
 
   const [feedback, setFeedback] = useState<TFeedback | undefined>(() => {
@@ -95,10 +96,19 @@ export default function useMessageActions(props: TMessageActions) {
       return;
     }
 
+    sendRewardSignal(feedbackRequestId, 'regenerate');
     regenerate(message, { addedConvo: getAddedConvo() });
-  }, [isSubmitting, isCreatedByUser, message, regenerate, getAddedConvo]);
+  }, [isSubmitting, isCreatedByUser, message, regenerate, getAddedConvo, feedbackRequestId]);
 
-  const copyToClipboard = useCopyToClipboard({ text, content, searchResults });
+  const copyMessage = useCopyToClipboard({ text, content, searchResults });
+  const copyToClipboard = useCallback(
+    (setIsCopied: Parameters<typeof copyMessage>[0]) => {
+      // Copy is a weak positive signal; the contract has no weights, so send "up".
+      sendRewardSignal(feedbackRequestId, 'up');
+      return copyMessage(setIsCopied);
+    },
+    [copyMessage, feedbackRequestId],
+  );
 
   const messageLabel = useMemo(() => {
     if (message?.isCreatedByUser === true) {
@@ -123,6 +133,13 @@ export default function useMessageActions(props: TMessageActions) {
         feedback: newFeedback ? toMinimalFeedback(newFeedback) : undefined,
       };
 
+      // Content-free reward signal: thumbs up/down → "up"/"down" (join key = feedbackRequestId).
+      if (newFeedback?.rating === 'thumbsUp') {
+        sendRewardSignal(feedbackRequestId, 'up');
+      } else if (newFeedback?.rating === 'thumbsDown') {
+        sendRewardSignal(feedbackRequestId, 'down');
+      }
+
       feedbackMutation.mutate(payload, {
         onSuccess: (data) => {
           if (!data.feedback) {
@@ -141,7 +158,7 @@ export default function useMessageActions(props: TMessageActions) {
         },
       });
     },
-    [feedbackMutation],
+    [feedbackMutation, feedbackRequestId],
   );
 
   return {

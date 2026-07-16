@@ -91,6 +91,13 @@ const initializeClient = async ({ req, res, signal, endpointOption }) => {
 
   /** @type {Array<UsageMetadata>} */
   const collectedUsage = [];
+  /**
+   * Content-free run metadata shared with the model-end handler and the client.
+   * Holds ONLY the upstream gateway response id (`requestId`) — the routing-ledger
+   * join key threaded to the client for reward-signal feedback.
+   * @type {{ requestId?: string }}
+   */
+  const runMetadata = {};
   /** @type {ArtifactPromises} */
   const artifactPromises = [];
   const { contentParts, aggregateContent } = createContentAggregator();
@@ -139,6 +146,7 @@ const initializeClient = async ({ req, res, signal, endpointOption }) => {
     aggregateContent,
     toolEndCallback,
     collectedUsage,
+    runMetadata,
     streamId,
   });
 
@@ -394,6 +402,7 @@ const initializeClient = async ({ req, res, signal, endpointOption }) => {
     agentConfigs,
     eventHandlers,
     collectedUsage,
+    runMetadata,
     aggregateContent,
     artifactPromises,
     agent: primaryConfig,
