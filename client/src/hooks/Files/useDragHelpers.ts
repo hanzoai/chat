@@ -8,7 +8,6 @@ import {
   Tools,
   QueryKeys,
   Constants,
-  inferMimeType,
   EToolResources,
   EModelEndpoint,
   mergeFileConfig,
@@ -118,19 +117,18 @@ export default function useDragHelpers() {
         }
       }
 
-      /** Determine if dragged files are all images (enables the base image option) */
-      const allImages = item.files.every((f) =>
-        inferMimeType(f.name, f.type)?.startsWith('image/'),
-      );
-
-      const shouldShowModal =
-        allImages ||
+      /**
+       * The modal only earns its place when there's a tool-resource CHOICE to make
+       * (file search / code / OCR). With none available — the common case of dropping
+       * an image or file into a plain chat — attach straight into the current
+       * conversation instead of surfacing a single-option dead-end modal.
+       */
+      const hasToolOptions =
         (fileSearchEnabled && fileSearchAllowedByAgent) ||
         (codeEnabled && codeAllowedByAgent) ||
         contextEnabled;
 
-      if (!shouldShowModal) {
-        // Fallback: directly handle files without showing modal
+      if (!hasToolOptions) {
         handleFilesRef.current(item.files);
         return;
       }

@@ -14,6 +14,7 @@ export * from './agentCommand';
 export * from './buildApp';
 export * from './drafts';
 export * from './convos';
+export * from './conversationImages';
 export * from './routes';
 export * from './presets';
 export * from './prompts';
