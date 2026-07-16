@@ -611,6 +611,12 @@ export const tMessageSchema = z.object({
   /* frontend components */
   iconURL: z.string().nullable().optional(),
   feedback: feedbackSchema.optional(),
+  /**
+   * Upstream gateway response id (e.g. `chatcmpl-…`/`msg_…`) for the assistant message.
+   * The CONTENT-FREE reward-signal join key (routing ledger). Absent for direct/non-gateway
+   * responses — signals simply no-op when it is missing.
+   */
+  feedbackRequestId: z.string().nullable().optional(),
   /** metadata */
   metadata: z.record(z.unknown()).optional(),
 });

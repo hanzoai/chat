@@ -16,12 +16,15 @@ const { saveBase64Image } = require('~/server/services/Files/process');
 class ModelEndHandler {
   /**
    * @param {Array<UsageMetadata>} collectedUsage
+   * @param {{ requestId?: string }} [runMetadata] - Content-free run metadata. Captures the
+   *   upstream gateway response id (the routing-ledger join key) for reward-signal feedback.
    */
-  constructor(collectedUsage) {
+  constructor(collectedUsage, runMetadata) {
     if (!Array.isArray(collectedUsage)) {
       throw new Error('collectedUsage must be an array');
     }
     this.collectedUsage = collectedUsage;
+    this.runMetadata = runMetadata;
   }
 
   finalize(errorMessage) {
@@ -48,6 +51,17 @@ class ModelEndHandler {
     let errorMessage;
     try {
       const agentContext = graph.getAgentContext(metadata);
+      /**
+       * Capture the upstream gateway response id (e.g. `chatcmpl-…`/`msg_…`) — the
+       * routing-ledger join key for CONTENT-FREE reward signals. The final model turn
+       * (last CHAT_MODEL_END) wins, matching the visible assistant answer the user rates.
+       */
+      if (this.runMetadata) {
+        const upstreamId = data?.output?.response_metadata?.id ?? data?.output?.id;
+        if (typeof upstreamId === 'string' && upstreamId) {
+          this.runMetadata.requestId = upstreamId;
+        }
+      }
       if (data?.output?.additional_kwargs?.stop_reason === 'refusal') {
         const info = { ...data.output.additional_kwargs };
         errorMessage = JSON.stringify({
@@ -121,6 +135,7 @@ async function emitEvent(res, streamId, eventData) {
  * @param {ContentAggregator} options.aggregateContent - Content aggregator function.
  * @param {ToolEndCallback} options.toolEndCallback - Callback to use when tool ends.
  * @param {Array<UsageMetadata>} options.collectedUsage - The list of collected usage metadata.
+ * @param {{ requestId?: string }} [options.runMetadata] - Content-free run metadata (upstream response id).
  * @param {string | null} [options.streamId] - The stream ID for resumable mode, or null for standard mode.
  * @param {ToolExecuteOptions} [options.toolExecuteOptions] - Options for event-driven tool execution.
  * @returns {Record<string, t.EventHandler>} The default handlers.
@@ -131,6 +146,7 @@ function getDefaultHandlers({
   aggregateContent,
   toolEndCallback,
   collectedUsage,
+  runMetadata,
   streamId = null,
   toolExecuteOptions = null,
 }) {
@@ -140,7 +156,7 @@ function getDefaultHandlers({
     );
   }
   const handlers = {
-    [GraphEvents.CHAT_MODEL_END]: new ModelEndHandler(collectedUsage),
+    [GraphEvents.CHAT_MODEL_END]: new ModelEndHandler(collectedUsage, runMetadata),
     [GraphEvents.TOOL_END]: new ToolEndHandler(toolEndCallback, logger),
     [GraphEvents.ON_RUN_STEP]: {
       /**
