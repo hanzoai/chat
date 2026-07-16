@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { useRecoilState } from 'recoil';
 import * as Ariakit from '@ariakit/react';
 import {
+  Images,
   FileSearch,
   ImageUpIcon,
   FileType2Icon,
@@ -9,6 +10,7 @@ import {
   TerminalSquareIcon,
 } from 'lucide-react';
 import {
+  Constants,
   Providers,
   EToolResources,
   EModelEndpoint,
@@ -32,6 +34,7 @@ import {
 } from '~/hooks';
 import useSharePointFileHandling from '~/hooks/Files/useSharePointFileHandling';
 import { SharePointPickerDialog } from '~/components/SharePoint';
+import PreviousImagesDialog from './PreviousImagesDialog';
 import { useGetStartupConfig } from '~/data-provider';
 import { ephemeralAgentByConvoId } from '~/store';
 import { MenuItemProps } from '~/common';
@@ -76,6 +79,7 @@ const AttachFileMenu = ({
   const sharePointEnabled = startupConfig?.sharePointFilePickerEnabled;
 
   const [isSharePointDialogOpen, setIsSharePointDialogOpen] = useState(false);
+  const [isPreviousImagesOpen, setIsPreviousImagesOpen] = useState(false);
 
   /** TODO: Ephemeral Agent Capabilities
    * Allow defining agent capabilities on a per-endpoint basis
@@ -196,6 +200,14 @@ const AttachFileMenu = ({
 
     const localItems = createMenuItems(handleUploadClick);
 
+    /** Re-attach an image already in this conversation (no re-upload). */
+    localItems.push({
+      label: localize('com_ui_attach_previous_image'),
+      onClick: () => setIsPreviousImagesOpen(true),
+      icon: <Images className="icon-md" />,
+      show: conversationId !== Constants.NEW_CONVO,
+    });
+
     if (sharePointEnabled) {
       const sharePointItems = createMenuItems(() => {
         setIsSharePointDialogOpen(true);
@@ -217,6 +229,7 @@ const AttachFileMenu = ({
     provider,
     endpointType,
     capabilities,
+    conversationId,
     useResponsesApi,
     setToolResource,
     setEphemeralAgent,
@@ -224,6 +237,7 @@ const AttachFileMenu = ({
     codeAllowedByAgent,
     fileSearchAllowedByAgent,
     setIsSharePointDialogOpen,
+    setIsPreviousImagesOpen,
   ]);
 
   const menuTrigger = (
@@ -285,6 +299,13 @@ const AttachFileMenu = ({
         downloadProgress={downloadProgress}
         maxSelectionCount={endpointFileConfig?.fileLimit}
       />
+      {isPreviousImagesOpen && (
+        <PreviousImagesDialog
+          isOpen={isPreviousImagesOpen}
+          onOpenChange={setIsPreviousImagesOpen}
+          conversationId={conversationId}
+        />
+      )}
     </>
   );
 };

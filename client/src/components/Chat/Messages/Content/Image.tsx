@@ -1,8 +1,9 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Skeleton } from '@hanzochat/client';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
-import { apiBaseUrl } from '@hanzochat/data-provider';
-import { cn, scaleImage } from '~/utils';
+import type { ConversationImage } from '~/utils';
+import { cn, scaleImage, resolveImageUrl } from '~/utils';
+import FixImageButton from './FixImageButton';
 import DialogImage from './DialogImage';
 
 const Image = ({
@@ -13,6 +14,9 @@ const Image = ({
   placeholderDimensions,
   className,
   args,
+  enableFix,
+  fileId,
+  fileType,
 }: {
   imagePath: string;
   altText: string;
@@ -30,6 +34,12 @@ const Image = ({
     style?: string;
     [key: string]: unknown;
   };
+  /** Render the "Fix" affordance (AI-generated images only). */
+  enableFix?: boolean;
+  /** Server file id, so the image can be re-attached by reference (no re-upload). */
+  fileId?: string;
+  /** MIME type of the image, when known. */
+  fileType?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -38,23 +48,20 @@ const Image = ({
 
   const handleImageLoad = () => setIsLoaded(true);
 
-  // Fix image path to include base path for subdirectory deployments
-  const absoluteImageUrl = useMemo(() => {
-    if (!imagePath) return imagePath;
+  // Resolve image path to an absolute URL (base path for subdirectory deployments)
+  const absoluteImageUrl = useMemo(() => resolveImageUrl(imagePath), [imagePath]);
 
-    // If it's already an absolute URL or doesn't start with /images/, return as is
-    if (
-      imagePath.startsWith('http') ||
-      imagePath.startsWith('data:') ||
-      !imagePath.startsWith('/images/')
-    ) {
-      return imagePath;
-    }
-
-    // Get the base URL and prepend it to the image path
-    const baseURL = apiBaseUrl();
-    return `${baseURL}${imagePath}`;
-  }, [imagePath]);
+  const fixImageRef = useMemo<ConversationImage>(
+    () => ({
+      file_id: fileId,
+      filepath: imagePath,
+      filename: altText,
+      type: fileType,
+      height,
+      width,
+    }),
+    [fileId, imagePath, altText, fileType, height, width],
+  );
 
   const { width: scaledWidth, height: scaledHeight } = useMemo(
     () =>
@@ -96,7 +103,7 @@ const Image = ({
   };
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} className="group/image relative">
       <button
         ref={triggerRef}
         type="button"
@@ -133,6 +140,7 @@ const Image = ({
           }
         />
       </button>
+      {enableFix === true && isLoaded && <FixImageButton image={fixImageRef} variant="overlay" />}
       {isLoaded && (
         <DialogImage
           isOpen={isOpen}
@@ -141,6 +149,7 @@ const Image = ({
           downloadImage={downloadImage}
           args={args}
           triggerRef={triggerRef}
+          fixImage={enableFix === true ? fixImageRef : undefined}
         />
       )}
     </div>
