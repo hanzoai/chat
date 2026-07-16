@@ -139,7 +139,7 @@ importers:
         version: 1.46.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))
       '@hanzochat/agents':
         specifier: ^3.2.63
-        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.67)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.24.4)
+        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.67)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.24.4)
       '@hanzochat/api':
         specifier: workspace:*
         version: link:../packages/api
@@ -381,6 +381,9 @@ importers:
       '@hanzo/ui':
         specifier: npm:@hanzo/ui-shadcn@^5.7.4
         version: '@hanzo/ui-shadcn@5.7.4(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)'
+      '@hanzo/usage':
+        specifier: ^0.1.6
+        version: 0.1.6(react@18.3.1)
       '@hanzochat/client':
         specifier: workspace:*
         version: link:../packages/client
@@ -765,7 +768,7 @@ importers:
         version: 1.42.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))
       '@hanzochat/agents':
         specifier: ^3.2.63
-        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.67)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.24.4)
+        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.67)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.24.4)
       '@hanzochat/data-schemas':
         specifier: workspace:*
         version: link:../data-schemas
@@ -3867,6 +3870,20 @@ packages:
       styled-components:
         optional: true
       wagmi:
+        optional: true
+
+  '@hanzo/usage@0.1.6':
+    resolution: {integrity: sha512-0gr4ZJ5qTH1hRt706uMciAevFPXG/08Xd5zbyZBlAi1o4k4EdKHTqLm/pRnbhv6jZbWTIOUtRQSysGyeJfOQMQ==}
+    peerDependencies:
+      '@hanzo/gui': '>=7.2.2'
+      '@hanzogui/lucide-icons-2': '>=7.2.2'
+      react: '>=18'
+    peerDependenciesMeta:
+      '@hanzo/gui':
+        optional: true
+      '@hanzogui/lucide-icons-2':
+        optional: true
+      react:
         optional: true
 
   '@hanzochat/agents@3.2.63':
@@ -17750,7 +17767,11 @@ snapshots:
       - '@types/react-dom'
       - tailwindcss
 
-  '@hanzochat/agents@3.2.63(@aws-sdk/credential-provider-node@3.972.67)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.24.4)':
+  '@hanzo/usage@0.1.6(react@18.3.1)':
+    optionalDependencies:
+      react: 18.3.1
+
+  '@hanzochat/agents@3.2.63(@aws-sdk/credential-provider-node@3.972.67)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.24.4)':
     dependencies:
       '@anthropic-ai/sdk': 0.103.0(zod@3.24.4)
       '@aws-sdk/client-bedrock-runtime': 3.1086.0
@@ -17768,7 +17789,7 @@ snapshots:
       '@langchain/textsplitters': 1.0.1(@langchain/core@1.2.2(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(openai@6.46.0(@aws-sdk/credential-provider-node@3.972.67)(@smithy/signature-v4@5.6.4)(ws@8.20.0)(zod@3.24.4))(ws@8.20.0))
       '@langchain/xai': 1.4.5(@aws-sdk/credential-provider-node@3.972.67)(@langchain/core@1.2.2(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(openai@6.46.0(@aws-sdk/credential-provider-node@3.972.67)(@smithy/signature-v4@5.6.4)(ws@8.20.0)(zod@3.24.4))(ws@8.20.0))(@smithy/signature-v4@5.6.4)(ws@8.20.0)
       '@langfuse/langchain': 5.9.1(@langchain/core@1.2.2(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(openai@6.46.0(@aws-sdk/credential-provider-node@3.972.67)(@smithy/signature-v4@5.6.4)(ws@8.20.0)(zod@3.24.4))(ws@8.20.0))(@opentelemetry/api@1.9.0)
-      '@langfuse/otel': 5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))
+      '@langfuse/otel': 5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))
       '@langfuse/tracing': 5.9.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/context-async-hooks': 2.9.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-node': 0.220.0(@opentelemetry/api@1.9.0)
@@ -18513,12 +18534,12 @@ snapshots:
       '@langfuse/tracing': 5.9.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/api': 1.9.0
 
-  '@langfuse/otel@5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))':
+  '@langfuse/otel@5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))':
     dependencies:
       '@langfuse/core': 5.9.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-http': 0.220.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/exporter-trace-otlp-http': 0.212.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 2.9.0(@opentelemetry/api@1.9.0)
 
   '@langfuse/tracing@5.9.1(@opentelemetry/api@1.9.0)':

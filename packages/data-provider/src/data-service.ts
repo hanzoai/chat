@@ -128,6 +128,14 @@ export function getUserUsage(): Promise<t.TUsageResponse> {
   return request.get(endpoints.usage());
 }
 
+// Canonical cloud AI usage — the raw payload (a @hanzo/usage `CloudUsageOverview`,
+// or `{ enabled: false }` when the caller has no hanzo.id bearer / the feature is
+// off). The caller normalizes it with `@hanzo/usage` `normalizeCloudUsage`, so the
+// shape is owned there — not re-declared here.
+export function getCloudUsage(range?: string): Promise<unknown> {
+  return request.get(endpoints.cloudUsage({ range }));
+}
+
 export function getRoutingDefaults(): Promise<t.TRoutingDefaultsResponse> {
   return request.get(endpoints.routingDefaults());
 }
