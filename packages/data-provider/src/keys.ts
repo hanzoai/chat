@@ -12,6 +12,7 @@ export enum QueryKeys {
   models = 'models',
   balance = 'balance',
   usage = 'usage',
+  cloudUsage = 'cloudUsage',
   routingDefaults = 'routingDefaults',
   endpoints = 'endpoints',
   presets = 'presets',
