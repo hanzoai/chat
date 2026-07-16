@@ -29,6 +29,7 @@
   },
   "homepage": "https://hanzo.ai/chat",
   "dependencies": {
+    "@hanzo/ai": "^0.2.1",
     "@hanzo/ui": "npm:@hanzo/ui-shadcn@^5.7.4",
     "@hanzo/capture": "^0.1.0",
     "@ariakit/react": "^0.4.15",
