@@ -23,7 +23,9 @@
       "~/*": ["./client/src/*"],
       "test/*": ["./client/test/*"],
       "*": ["./client/*", "../node_modules/*"],
-      "@hanzochat/data-provider/*": ["./packages/data-provider/*"]
+      "@hanzochat/data-provider/*": ["./packages/data-provider/*"],
+      "@hanzo/capture": ["./node_modules/@hanzo/capture/dist/index.d.ts"],
+      "@hanzo/capture/react": ["./node_modules/@hanzo/capture/dist/react.d.ts"]
     }
   },
   "types": ["node", "jest", "@testing-library/jest-dom"],
