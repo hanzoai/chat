@@ -376,6 +376,9 @@ importers:
       '@dicebear/core':
         specifier: ^9.2.2
         version: 9.4.2
+      '@hanzo/capture':
+        specifier: ^0.1.0
+        version: 0.1.1(react@18.3.1)
       '@hanzo/iam':
         specifier: ^0.13.1
         version: 0.13.1(react@18.3.1)
@@ -3783,6 +3786,14 @@ packages:
     resolution: {integrity: sha512-rc1hOQtjIWGxcxpb9aHAfLpIctjEnsDehj0DAiVfBlmT84uvR0uUtN2hEi/ecvWVjXUGf5qPF4qEgiLOx1YIMQ==}
     engines: {node: '>=6'}
     hasBin: true
+
+  '@hanzo/capture@0.1.1':
+    resolution: {integrity: sha512-Sn5AVtEAzQ8+2cKw9ryMLeOTVzQygijzsYSTZIlF2KUZUPC82BAT5E4U/A04/PqfvupaH9oZpXI+I08ovAYOXA==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@hanzo/iam@0.13.1':
     resolution: {integrity: sha512-MAqXY7jL5pcPkaUE0Qb/ePL2WKvk3p6EQDLHGZENj+/gbNKs7e/9qG+nmRlPMFVcwXPk+suzkBAEyIMT2EiJ8w==}
@@ -17672,6 +17683,10 @@ snapshots:
       long: 5.3.2
       protobufjs: 7.5.4
       yargs: 17.7.2
+
+  '@hanzo/capture@0.1.1(react@18.3.1)':
+    optionalDependencies:
+      react: 18.3.1
 
   '@hanzo/iam@0.13.1(react@18.3.1)':
     dependencies:

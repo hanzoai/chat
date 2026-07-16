@@ -25,6 +25,8 @@ import type {
   EndpointSchemaKey,
 } from '@hanzochat/data-provider';
 import type { SetterOrUpdater } from 'recoil';
+import { useAnalytics } from '@hanzo/capture/react';
+import { EVENTS } from '@hanzo/capture';
 import type { TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';
 import useGetSender from '~/hooks/Conversations/useGetSender';
@@ -65,6 +67,7 @@ export default function useChatFunctions({
 }) {
   const navigate = useNavigate();
   const getSender = useGetSender();
+  const analytics = useAnalytics();
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
   const setFilesToDelete = useSetFilesToDelete();
@@ -124,6 +127,16 @@ export default function useChatFunctions({
 
     const ephemeralAgent = getEphemeralAgent(conversationId ?? Constants.NEW_CONVO);
     const isEditOrContinue = isEdited || isContinued;
+
+    // Product analytics: model/endpoint identifiers only — never message content.
+    if (!isRegenerate && !isContinued) {
+      const model = conversation?.model;
+      const isNewConvo = conversationId == null || conversationId === Constants.NEW_CONVO;
+      if (isNewConvo) {
+        analytics.capture(EVENTS.CHAT_STARTED, { endpoint, model });
+      }
+      analytics.capture(EVENTS.CHAT_MESSAGE_SENT, { endpoint, model });
+    }
 
     let currentMessages: TMessage[] | null = overrideMessages ?? getMessages() ?? [];
 
