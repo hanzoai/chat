@@ -94,6 +94,15 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     [conversation?.conversationId],
   );
 
+  /** New-conversation empty state: enlarge + center the composer (hanzo.ai hero). */
+  const isLanding = useMemo(
+    () =>
+      (conversationId == null || conversationId === Constants.NEW_CONVO) &&
+      !isSubmitting &&
+      conversation?.messages?.length === 0,
+    [conversationId, isSubmitting, conversation?.messages?.length],
+  );
+
   const isRTL = useMemo(
     () => (chatDirection != null ? chatDirection?.toLowerCase() === 'rtl' : false),
     [chatDirection],
@@ -239,12 +248,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
         maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
-        centerFormOnLanding &&
-          (conversationId == null || conversationId === Constants.NEW_CONVO) &&
-          !isSubmitting &&
-          conversation?.messages?.length === 0
-          ? 'transition-all duration-200 sm:mb-28'
-          : 'sm:mb-10',
+        centerFormOnLanding && isLanding ? 'transition-all duration-200 sm:mb-28' : 'sm:mb-10',
       )}
     >
       <div className="relative flex h-full flex-1 items-stretch md:flex-col">
@@ -326,11 +330,12 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                     onBlur={setIsTextAreaFocused.bind(null, false)}
                     aria-label={localize('com_ui_message_input')}
                     onClick={handleFocusOrClick}
-                    style={{ height: 44, overflowY: 'auto' }}
+                    style={{ height: isLanding ? 56 : 44, overflowY: 'auto' }}
                     className={cn(
                       baseClasses,
                       removeFocusRings,
                       'scrollbar-hover transition-[max-height] duration-200 disabled:cursor-not-allowed',
+                      isLanding && 'text-base md:text-lg',
                     )}
                   />
                 </div>
