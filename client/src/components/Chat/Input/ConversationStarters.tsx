@@ -1,23 +1,23 @@
 import { useMemo, useCallback } from 'react';
-import { PenLine, Lightbulb, Code2, Sparkles } from 'lucide-react';
 import { EModelEndpoint, Constants } from 'librechat-data-provider';
 import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
 import { getIconEndpoint, getEntity } from '~/utils';
 import { useSubmitMessage } from '~/hooks';
 
-type Starter = { text: string; Icon?: typeof PenLine };
+/** `label` is the chip caption; `text` is what gets armed into the composer. */
+type Starter = { label: string; text: string };
 
 /**
- * Curated fallback starters for plain-model chats (no agent/assistant-specific
- * starters). Keeps the empty state from being bare and matches the ChatGPT/Claude
- * suggestion-chip pattern. Category-style so submitting reads naturally.
+ * Curated fallback chips for plain-model chats (no agent/assistant-specific
+ * starters). Short, honest verbs that seed the composer (hanzo.ai hero style) —
+ * a trailing space leaves the cursor ready for the user to finish the thought.
  */
 const DEFAULT_STARTERS: Starter[] = [
-  { text: 'Help me write or refine something', Icon: PenLine },
-  { text: 'Explain a concept clearly', Icon: Lightbulb },
-  { text: 'Review, debug, or improve some code', Icon: Code2 },
-  { text: 'Brainstorm ideas and a plan', Icon: Sparkles },
+  { label: 'Summarize', text: 'Summarize ' },
+  { label: 'Write code', text: 'Write code to ' },
+  { label: 'Explain', text: 'Explain ' },
+  { label: 'Brainstorm', text: 'Brainstorm ideas for ' },
 ];
 
 const ConversationStarters = () => {
@@ -51,7 +51,8 @@ const ConversationStarters = () => {
   });
 
   const starters: Starter[] = useMemo(() => {
-    const toStarters = (list: string[]): Starter[] => list.map((text) => ({ text }));
+    // Author-provided starters are full prompts; caption == prompt text.
+    const toStarters = (list: string[]): Starter[] => list.map((text) => ({ label: text, text }));
 
     if (entity?.conversation_starters?.length) {
       return toStarters(entity.conversation_starters);
@@ -71,30 +72,24 @@ const ConversationStarters = () => {
     return DEFAULT_STARTERS;
   }, [documentsMap, isAgent, entity]);
 
-  const { submitMessage } = useSubmitMessage();
-  const sendConversationStarter = useCallback(
-    (text: string) => submitMessage({ text }),
-    [submitMessage],
-  );
+  // Reuse the ONE composer-arming path (respects the autoSendPrompts preference).
+  const { submitPrompt } = useSubmitMessage();
+  const armComposer = useCallback((text: string) => submitPrompt(text), [submitPrompt]);
 
   if (!starters.length) {
     return null;
   }
 
   return (
-    <div className="mx-auto mt-6 grid w-full max-w-2xl grid-cols-1 gap-2.5 px-4 sm:grid-cols-2">
-      {starters.slice(0, Constants.MAX_CONVO_STARTERS).map(({ text, Icon = Sparkles }, index) => (
+    <div className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2 px-4">
+      {starters.slice(0, Constants.MAX_CONVO_STARTERS).map(({ label, text }, index) => (
         <button
           key={index}
-          onClick={() => sendConversationStarter(text)}
-          className="group flex items-center gap-3 rounded-2xl border border-border-light bg-surface-primary-alt px-4 py-3.5 text-start transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border-medium hover:bg-surface-tertiary hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transform-none motion-reduce:transition-none"
+          onClick={() => armComposer(text)}
+          title={label}
+          className="max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-tertiary text-text-secondary transition-colors duration-200 group-hover:text-text-primary">
-            <Icon className="size-4" aria-hidden="true" />
-          </span>
-          <span className="line-clamp-2 text-balance text-sm text-text-secondary transition-colors duration-200 group-hover:text-text-primary">
-            {text}
-          </span>
+          {label}
         </button>
       ))}
     </div>

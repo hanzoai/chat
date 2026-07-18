@@ -17,7 +17,7 @@ function getTextSizeClass(text: string | undefined | null) {
   }
 
   if (text.length < 40) {
-    return 'text-2xl sm:text-4xl';
+    return 'text-3xl sm:text-4xl md:text-5xl';
   }
 
   if (text.length < 70) {
@@ -132,10 +132,12 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
     return margin;
   }, [lineCount, description, textHasMultipleLines, contentHeight]);
 
+  // Default empty state mirrors the hanzo.ai hero ("What can I help with?").
+  // An admin-configured customWelcome still wins (honored via getGreeting).
   const greetingText =
     typeof startupConfig?.interface?.customWelcome === 'string'
       ? getGreeting()
-      : getGreeting() + (user?.name ? ', ' + user.name : '');
+      : localize('com_ui_landing_title');
 
   return (
     <div
