@@ -216,6 +216,49 @@ endpoints:
       titleConvo: true
       titleModel: "zen5-flash"
       modelDisplayLabel: "OpenAI GPT-OSS"
+    # Anthropic + OpenAI proprietary — now served via the DO GenAI funded
+    # catalog on the SAME api.hanzo.ai/v1 gateway + per-user token (identical
+    # Commerce metering). Independent third-party brands listed by real name;
+    # no house-family mapping is revealed. Curated frontier-first.
+    - name: "Anthropic"
+      customOrder: 8
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "claude-opus-4.8"
+          - "claude-opus-4.7"
+          - "claude-opus-4.5"
+          - "claude-5-sonnet"
+          - "claude-4.6-sonnet"
+          - "claude-4.5-sonnet"
+          - "claude-fable-5"
+          - "claude-haiku-4.5"
+        fetch: false
+      titleConvo: true
+      titleModel: "enso-flash"
+      modelDisplayLabel: "Anthropic"
+    - name: "OpenAI"
+      customOrder: 9
+      apiKey: "{{CHAT_OPENID_TOKEN}}"
+      baseURL: "https://api.hanzo.ai/v1"
+      models:
+        default:
+          - "gpt-5.4"
+          - "gpt-5.3-codex"
+          - "gpt-5.2-pro"
+          - "gpt-5.2"
+          - "gpt-5.1-codex-max"
+          - "gpt-5"
+          - "gpt-5-mini"
+          - "gpt-5-nano"
+          - "gpt-4.1"
+          - "gpt-4o"
+          - "gpt-4o-mini"
+        fetch: false
+      titleConvo: true
+      titleModel: "enso-flash"
+      modelDisplayLabel: "OpenAI"
 balance:
   enabled: false
   startBalance: 0
