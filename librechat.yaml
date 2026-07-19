@@ -94,12 +94,21 @@ endpoints:
       # (cloud >= 1.785.11). fetch:false keeps the menu curated to the
       # tiers we expose.
       models:
-        # LIVE catalog only — zen4 generation was SUNSET 2026-05-30 (gateway
-        # config.yaml); offering it routed to a dead fallback. Current families
-        # the gateway serves: zen5-* (flagship) + zen3-* (omni/vision). zen5-mini
-        # leads as the default (smart current-gen small model); larger zen5 tiers
-        # meter against balance. Order = the default-selected model for new users.
+        # Order = the default-selected model for new conversations. enso LEADS
+        # (verified streaming, api.hanzo.ai/v1) because the zen* family is
+        # currently failing at the gateway with "Unable to resolve organization:
+        # context deadline exceeded" (zen5-mini / zen3-nano) or a 0-byte hang
+        # (zen5 / zen5-pro / zen5-flash) — that org-resolution timeout is the
+        # hanzo.chat "it just hangs" report. enso routes via a different (clean)
+        # path, so it is the safe default until the zen routing is fixed. Both are
+        # Hanzo house-brand families; enso/enso-* are the flagship reasoning tier,
+        # zen5-*/zen3-* stay listed (they light back up once the gateway
+        # org-resolution path recovers).
         default:
+          - "enso"
+          - "enso-flash"
+          - "enso-pro"
+          - "enso-ultra"
           - "zen5-mini"
           - "zen5-flash"
           - "zen5"
@@ -113,17 +122,17 @@ endpoints:
           - "zen3-nano"
         fetch: false
       titleConvo: true
-      # Title/summary model = zen5-flash: a FAST, NON-reasoning, in-catalog model
-      # (live upstream deepseek-4-flash) that returns a clean single-line title in
-      # ~1-2s. Replaces zen3-nano, which maps to the reasoning model qwen3-8b and
-      # took 16-31s — routinely near the 45s #titleConvo timeout, so new chats often
-      # never got a title. zen5-flash was picked by direct api.hanzo.ai/v1 probes:
-      # zen5-flash ~1.5s clean, zen3-nano 16-31s, zen5-mini 10-20s, zen5/zen3-vl >40s.
-      # The #titleConvo path is also envelope-safe now (wrapHanzoGatewayFetch parity
+      # Title/summary model = enso-flash: verified streaming on api.hanzo.ai/v1
+      # (~clean, fast). Was zen5-flash, but zen5-flash currently 0-byte HANGS at
+      # the gateway (same zen* org-resolution outage as above) — every new chat
+      # would stall on the #titleConvo call until the 45s timeout. enso-flash is
+      # the flagship-family fast tier and routes clean, so titles/summaries come
+      # back promptly. Revert to a zen* fast tier only once the gateway zen path
+      # recovers. The #titleConvo path is also envelope-safe now (wrapHanzoGatewayFetch parity
       # with agent runs), so a 200 error-envelope degrades to a clean skip, not a crash.
-      titleModel: "zen5-flash"
+      titleModel: "enso-flash"
       summarize: true
-      summaryModel: "zen5-flash"
+      summaryModel: "enso-flash"
       # House family DISPLAY name = "Zen" (owned_by:"hanzo" catalog). The
       # endpoint VALUE stays "Hanzo" so existing conversations and the pinned
       # guest endpoint (GUEST_ENDPOINT=Hanzo) keep working; only the picker
@@ -149,7 +158,7 @@ endpoints:
           - "qwen3-32b"
         fetch: false
       titleConvo: true
-      titleModel: "zen5-flash"
+      titleModel: "enso-flash"
       modelDisplayLabel: "Qwen"
     - name: "Meta Llama"
       customOrder: 3
@@ -162,7 +171,7 @@ endpoints:
           - "llama-3.1-8b"
         fetch: false
       titleConvo: true
-      titleModel: "zen5-flash"
+      titleModel: "enso-flash"
       modelDisplayLabel: "Meta Llama"
     - name: "DeepSeek"
       customOrder: 4
@@ -176,7 +185,7 @@ endpoints:
           - "deepseek-3.2"
         fetch: false
       titleConvo: true
-      titleModel: "zen5-flash"
+      titleModel: "enso-flash"
       modelDisplayLabel: "DeepSeek"
     - name: "Mistral"
       customOrder: 5
@@ -190,7 +199,7 @@ endpoints:
           - "mistral-nemo"
         fetch: false
       titleConvo: true
-      titleModel: "zen5-flash"
+      titleModel: "enso-flash"
       modelDisplayLabel: "Mistral"
     - name: "Google Gemma"
       customOrder: 6
@@ -202,7 +211,7 @@ endpoints:
           - "gemma-3-31b"
         fetch: false
       titleConvo: true
-      titleModel: "zen5-flash"
+      titleModel: "enso-flash"
       modelDisplayLabel: "Google Gemma"
     - name: "OpenAI GPT-OSS"
       customOrder: 7
@@ -214,7 +223,7 @@ endpoints:
           - "gpt-oss-20b"
         fetch: false
       titleConvo: true
-      titleModel: "zen5-flash"
+      titleModel: "enso-flash"
       modelDisplayLabel: "OpenAI GPT-OSS"
 balance:
   enabled: false
