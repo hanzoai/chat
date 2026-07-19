@@ -100,17 +100,10 @@ endpoints:
         # leads as the default (smart current-gen small model); larger zen5 tiers
         # meter against balance. Order = the default-selected model for new users.
         default:
-          - "zen5-mini"
           - "zen5-flash"
           - "zen5"
           - "zen5-pro"
-          - "zen5-max"
-          - "zen5-ultra"
           - "zen5-coder"
-          - "zen5-nano"
-          - "zen3-omni"
-          - "zen3-vl"
-          - "zen3-nano"
         fetch: false
       titleConvo: true
       # Title/summary model = zen5-flash: a FAST, NON-reasoning, in-catalog model
