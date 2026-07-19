@@ -380,49 +380,66 @@ export default function useResumableSSE(
         }
 
         /**
-         * Server-sent error event (event: error with data) - no responseCode.
-         * These are known errors (ErrorTypes, ViolationTypes) that should be displayed to user.
-         * Only check e.data if there's no HTTP responseCode, since HTTP errors may also have body data.
+         * The body the server sent with the failure. sse.js populates `e.data`
+         * both with a server-sent `error` event payload (no HTTP status) AND
+         * with the HTTP response body on any failing status. Parse it once.
          */
-        if (!responseCode && e.data) {
-          console.log('[ResumableSSE] Server-sent error event received:', e.data);
+        let errorBody: Record<string, unknown> | undefined;
+        if (e.data) {
+          try {
+            errorBody = JSON.parse(e.data) as Record<string, unknown>;
+          } catch {
+            errorBody = undefined;
+          }
+        }
+
+        /**
+         * Surface a server-DESCRIBED error immediately instead of reconnecting:
+         *   - a server-sent `error` event (no responseCode), or
+         *   - an HTTP error whose body is our structured JSON error — e.g. the
+         *     gateway surfacing a model/completion failure as a 4xx/5xx (a plain
+         *     completions 5xx with an error body).
+         * sse.js ALWAYS sets `responseCode` on an HTTP failure, so without the
+         * second clause a 5xx-with-body fell through to the reconnect path below
+         * and spun the composer for ~30s (5 backoff retries) before finally
+         * showing a generic message — discarding the real cause. A bodyless
+         * failure, or a non-JSON body on an HTTP error (a transient ingress /
+         * network drop), still falls through to reconnect.
+         */
+        if (e.data && (responseCode == null || errorBody !== undefined)) {
+          console.log('[ResumableSSE] Server-described error received:', {
+            responseCode,
+            data: e.data,
+          });
           sse.close();
           removeActiveJob(currentStreamId);
 
+          const errorString =
+            (errorBody?.error as string | undefined) ??
+            (errorBody?.message as string | undefined) ??
+            (errorBody != null ? JSON.stringify(errorBody) : e.data);
+
+          // Best-effort classification (log only) — is it a known error code?
+          let isKnownError = false;
           try {
-            const errorData = JSON.parse(e.data);
-            const errorString = errorData.error ?? errorData.message ?? JSON.stringify(errorData);
-
-            // Check if it's a known error type (ViolationTypes or ErrorTypes)
-            let isKnownError = false;
-            try {
-              const parsed =
-                typeof errorString === 'string' ? JSON.parse(errorString) : errorString;
-              const errorType = parsed?.type ?? parsed?.code;
-              if (errorType) {
-                const violationValues = Object.values(ViolationTypes) as string[];
-                const errorTypeValues = Object.values(ErrorTypes) as string[];
-                isKnownError =
-                  violationValues.includes(errorType) || errorTypeValues.includes(errorType);
-              }
-            } catch {
-              // Not JSON or parsing failed - treat as generic error
+            const parsed = typeof errorString === 'string' ? JSON.parse(errorString) : errorString;
+            const errorType = parsed?.type ?? parsed?.code;
+            if (errorType) {
+              const violationValues = Object.values(ViolationTypes) as string[];
+              const errorTypeValues = Object.values(ErrorTypes) as string[];
+              isKnownError =
+                violationValues.includes(errorType) || errorTypeValues.includes(errorType);
             }
-
-            console.log('[ResumableSSE] Error type check:', { isKnownError, errorString });
-
-            // Display the error to user via errorHandler
-            errorHandler({
-              data: { text: errorString } as unknown as Parameters<typeof errorHandler>[0]['data'],
-              submission: currentSubmission as EventSubmission,
-            });
-          } catch (parseError) {
-            console.error('[ResumableSSE] Failed to parse server error:', parseError);
-            errorHandler({
-              data: { text: e.data } as unknown as Parameters<typeof errorHandler>[0]['data'],
-              submission: currentSubmission as EventSubmission,
-            });
+          } catch {
+            // Not JSON — treat as an already-human-readable message.
           }
+          console.log('[ResumableSSE] Error type check:', { isKnownError, errorString });
+
+          // Display the error to the user via errorHandler (clears the spinner).
+          errorHandler({
+            data: { text: errorString } as unknown as Parameters<typeof errorHandler>[0]['data'],
+            submission: currentSubmission as EventSubmission,
+          });
 
           setIsSubmitting(false);
           setShowStopButton(false);

@@ -500,6 +500,61 @@ describe('useResumableSSE - 404 error path', () => {
     unmount();
   });
 
+  it('surfaces the server error immediately on an HTTP 5xx that carries a JSON body (no reconnect spin)', async () => {
+    const submission = buildSubmission();
+    const chatHelpers = buildChatHelpers();
+
+    const { unmount } = renderHook(() => useResumableSSE(submission, chatHelpers));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const sse = getLastSSE();
+
+    // sse.js always sets responseCode on an HTTP failure; the completions body
+    // is a structured JSON error → surface it now rather than reconnect x5.
+    await act(async () => {
+      sse._emit('error', {
+        responseCode: 500,
+        data: JSON.stringify({ message: 'model overloaded' }),
+      });
+    });
+
+    expect(mockErrorHandler).toHaveBeenCalledTimes(1);
+    expect(mockErrorHandler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ text: 'model overloaded' }),
+      }),
+    );
+    expect(mockSetIsSubmitting).toHaveBeenCalledWith(false);
+    expect(sse.close).toHaveBeenCalled();
+    unmount();
+  });
+
+  it('reconnects (does not surface) on an HTTP 5xx whose body is not JSON (transient ingress drop)', async () => {
+    const submission = buildSubmission();
+    const chatHelpers = buildChatHelpers();
+
+    const { unmount } = renderHook(() => useResumableSSE(submission, chatHelpers));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const sse = getLastSSE();
+
+    await act(async () => {
+      sse._emit('error', {
+        responseCode: 503,
+        data: '<html><body>502 Bad Gateway</body></html>',
+      });
+    });
+
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+    unmount();
+  });
+
   it('removes the optimistic sidebar row when a new conversation errors before created', async () => {
     mockFindAll.mockReturnValue([{ queryKey: [QueryKeys.allConversations] }]);
     const submission = buildSubmission({

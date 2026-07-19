@@ -10,7 +10,6 @@ import { ChatContext, AddedChatContext, useFileMapContext, ChatFormProvider } fr
 import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } from '~/hooks';
 import ConversationStarters from './Input/ConversationStarters';
 import { useGetMessagesByConvoId } from '~/data-provider';
-import BuildPreviewPane from '~/components/BuildApp/BuildPreviewPane';
 import MessagesView from './Messages/MessagesView';
 import Presentation from './Presentation';
 import ChatForm from './Input/ChatForm';
@@ -35,7 +34,6 @@ function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
   const rootSubmission = useRecoilValue(store.submissionByIndex(index));
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
-  const buildMode = useRecoilValue(store.buildMode);
 
   const fileMap = useFileMapContext();
 
@@ -89,12 +87,7 @@ function ChatView({ index = 0 }: { index?: number }) {
   }
 
   const chatColumn = (
-    <div
-      className={cn(
-        'relative flex h-full flex-col',
-        buildMode ? 'min-w-0 flex-1' : 'w-full',
-      )}
-    >
+    <div className="relative flex h-full w-full flex-col">
       {!isLoading && <Header />}
       <>
         <div
@@ -125,17 +118,7 @@ function ChatView({ index = 0 }: { index?: number }) {
     <ChatFormProvider {...methods}>
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
-          <Presentation>
-            {/* Inline "build an app" mode: chat thread + side preview pane (scaffold). */}
-            {buildMode ? (
-              <div className="flex h-full w-full flex-row">
-                {chatColumn}
-                <BuildPreviewPane />
-              </div>
-            ) : (
-              chatColumn
-            )}
-          </Presentation>
+          <Presentation>{chatColumn}</Presentation>
         </AddedChatContext.Provider>
       </ChatContext.Provider>
     </ChatFormProvider>
