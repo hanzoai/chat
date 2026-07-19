@@ -1,9 +1,16 @@
 import { useMemo, useCallback } from 'react';
+import { useWatch } from 'react-hook-form';
+import { AppWindow } from 'lucide-react';
 import { EModelEndpoint, Constants } from '@hanzochat/data-provider';
-import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
+import {
+  useChatContext,
+  useChatFormContext,
+  useAgentsMapContext,
+  useAssistantsMapContext,
+} from '~/Providers';
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
-import { getIconEndpoint, getEntity } from '~/utils';
-import { useSubmitMessage } from '~/hooks';
+import { getIconEndpoint, getEntity, openAppBuilder } from '~/utils';
+import { useSubmitMessage, useLocalize } from '~/hooks';
 
 /** `label` is the chip caption; `text` is what gets armed into the composer. */
 type Starter = { label: string; text: string };
@@ -21,10 +28,13 @@ const DEFAULT_STARTERS: Starter[] = [
 ];
 
 const ConversationStarters = () => {
+  const localize = useLocalize();
   const { conversation } = useChatContext();
   const agentsMap = useAgentsMapContext();
   const assistantMap = useAssistantsMapContext();
   const { data: endpointsConfig } = useGetEndpointsQuery();
+  const methods = useChatFormContext();
+  const composerText = useWatch({ control: methods.control, name: 'text' });
 
   const endpointType = useMemo(() => {
     let ep = conversation?.endpoint ?? '';
@@ -50,31 +60,38 @@ const ConversationStarters = () => {
     assistant_id: conversation?.assistant_id,
   });
 
-  const starters: Starter[] = useMemo(() => {
+  /**
+   * `isDefault` is true only for a plain-model chat that falls back to the
+   * curated defaults — the case where we also offer the "Build an app" handoff
+   * to hanzo.app. Author-provided (agent/assistant) starters are left untouched.
+   */
+  const { starters, isDefault } = useMemo(() => {
     // Author-provided starters are full prompts; caption == prompt text.
     const toStarters = (list: string[]): Starter[] => list.map((text) => ({ label: text, text }));
 
     if (entity?.conversation_starters?.length) {
-      return toStarters(entity.conversation_starters);
+      return { starters: toStarters(entity.conversation_starters), isDefault: false };
     }
 
     // Agents may intentionally omit starters — honor that (no defaults).
     if (isAgent) {
-      return [];
+      return { starters: [] as Starter[], isDefault: false };
     }
 
     const docStarters = documentsMap.get(entity?.id ?? '')?.conversation_starters;
     if (docStarters?.length) {
-      return toStarters(docStarters);
+      return { starters: toStarters(docStarters), isDefault: false };
     }
 
     // Plain-model chat: fall back to curated defaults so the empty state isn't bare.
-    return DEFAULT_STARTERS;
+    return { starters: DEFAULT_STARTERS, isDefault: true };
   }, [documentsMap, isAgent, entity]);
 
   // Reuse the ONE composer-arming path (respects the autoSendPrompts preference).
   const { submitPrompt } = useSubmitMessage();
   const armComposer = useCallback((text: string) => submitPrompt(text), [submitPrompt]);
+  // "Build an app" hands the composer intent to the hanzo.app builder (new tab).
+  const openBuilder = useCallback(() => openAppBuilder(composerText), [composerText]);
 
   if (!starters.length) {
     return null;
@@ -92,6 +109,16 @@ const ConversationStarters = () => {
           {label}
         </button>
       ))}
+      {isDefault && (
+        <button
+          onClick={openBuilder}
+          title={localize('com_ui_build_app')}
+          className="inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-dashed border-border-medium bg-transparent px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-heavy hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none"
+        >
+          <AppWindow className="icon-sm" aria-hidden="true" />
+          {localize('com_ui_build_app')}
+        </button>
+      )}
     </div>
   );
 };
