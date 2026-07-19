@@ -9,7 +9,7 @@ import CloudUsage from './CloudUsage';
 import store from '~/store';
 
 const CONSOLE_URL = 'https://console.hanzo.ai/ai-accounts';
-const ROUTING_DOCS_URL = 'https://docs.hanzo.ai/docs/usage/routing';
+const ROUTING_DOCS_URL = 'https://docs.hanzo.ai/chat';
 
 /** Smart-routing toggle: default new Hanzo chats to the gateway `auto` model. */
 function SmartRoutingToggle() {

@@ -1,26 +1,27 @@
 import { memo, useCallback } from 'react';
 import { AppWindow } from 'lucide-react';
-import { useRecoilState } from 'recoil';
+import { useWatch } from 'react-hook-form';
+import { useChatFormContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
-import { cn } from '~/utils';
-import store from '~/store';
+import { openAppBuilder, cn } from '~/utils';
 
 /**
- * Composer affordance that enters the inline "build an app" mode (split chat +
- * side preview). From the preview pane the user hands off to the full hanzo.app
- * builder ("Open in App"). Styled to match the composer's rounded badge chrome
- * so it reads as one system across chat -> app -> console.
+ * Composer affordance that hands off to the hanzo.app builder — chat's sibling
+ * product for building apps/websites. It opens hanzo.app in a new tab, seeded
+ * with whatever is in the composer, so the intent carries over. Chat stays the
+ * chat product; building lives at hanzo.app (the ONE build-app destination,
+ * shared with the `/build` command, the starter chip, and the message action).
  */
 function BuildAppButton() {
   const localize = useLocalize();
-  const [isBuildMode, setBuildMode] = useRecoilState(store.buildMode);
-  const toggle = useCallback(() => setBuildMode((prev) => !prev), [setBuildMode]);
+  const methods = useChatFormContext();
+  const text = useWatch({ control: methods.control, name: 'text' });
+  const openBuilder = useCallback(() => openAppBuilder(text), [text]);
 
   return (
     <button
       type="button"
-      onClick={toggle}
-      aria-pressed={isBuildMode}
+      onClick={openBuilder}
       title={localize('com_ui_build_app')}
       className={cn(
         'group inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap',
@@ -28,7 +29,6 @@ function BuildAppButton() {
         'bg-transparent text-text-primary shadow-sm transition-all',
         'hover:bg-surface-hover hover:shadow-md active:shadow-inner',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        isBuildMode && 'border-border-heavy bg-surface-hover',
       )}
     >
       <AppWindow className="icon-md" aria-hidden="true" />

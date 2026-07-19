@@ -73,7 +73,7 @@ export default function ApiKeyDialog({
                 ))}
               </div>
               <a
-                href="https://hanzo.ai/docs/chat/code-interpreter/pricing"
+                href="https://docs.hanzo.ai/chat"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-center text-[15px] font-medium text-blue-500 underline decoration-1 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"

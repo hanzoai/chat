@@ -114,19 +114,23 @@ const features = [
   },
 ];
 
+// Current house families served today. Names only — the repo carries no
+// authoritative param/context numbers, so we advertise none rather than invent
+// them (honesty: only claim what's live).
 const zenModels = [
-  { name: 'zen4', description: 'General-purpose frontier model', context: '128K', params: '70B' },
-  { name: 'zen4-coder', description: 'Optimized for code generation', context: '128K', params: '70B' },
-  { name: 'zen4-ultra', description: 'Maximum capability reasoning', context: '128K', params: '480B' },
-  { name: 'zen3-omni', description: 'Multimodal vision and text', context: '128K', params: '32B' },
+  { name: 'enso', description: 'Flagship reasoning model' },
+  { name: 'enso-flash', description: 'Fast, low-latency responses' },
+  { name: 'zen5', description: 'General-purpose frontier model' },
+  { name: 'zen5-coder', description: 'Optimized for code generation' },
+  { name: 'zen3-omni', description: 'Multimodal vision and text' },
 ];
 
-// Independent third-party providers offered via the gateway. NO upstream
-// base-model names that would leak the Zen family's provenance (brand policy:
-// no raw Qwen/DeepSeek/Kimi/Llama/HuggingFace names).
+// Independent third-party models the gateway actually streams today (verified
+// live via api.hanzo.ai). This is the third-party wall — distinct from the Zen
+// house family above; we only list providers that are genuinely served.
 const thirdPartyModels = [
-  'GPT-5', 'Claude Opus 4', 'Gemini 2.5', 'Grok',
-  'Mistral Large', 'Command R+',
+  'Claude Opus 4.8', 'Claude 5 Sonnet', 'GPT-5.2',
+  'DeepSeek V4', 'Qwen3.5', 'Llama 4',
 ];
 
 /* ------------------------------------------------------------------ */
@@ -176,7 +180,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <a
-              href="https://hanzo.ai/docs/chat"
+              href="https://docs.hanzo.ai/chat"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden text-sm transition-colors sm:inline"
@@ -251,7 +255,7 @@ export default function LandingPage() {
 
             <p className="mb-8 max-w-2xl text-lg" style={{ color: colors.mutedFg }}>
               AI-powered chat with 14 Zen models, 100+ third-party models, MCP tools,
-              and custom agents. Pay only for what you use.
+              and custom agents. One plan, shared across every Hanzo app.
             </p>
 
             {/* Buttons (rounded-full like fd) */}
@@ -268,7 +272,7 @@ export default function LandingPage() {
                 <IconArrowRight />
               </a>
               <a
-                href="https://hanzo.ai/docs/chat"
+                href="https://docs.hanzo.ai/chat"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
@@ -312,7 +316,7 @@ export default function LandingPage() {
                 <pre className="overflow-x-auto p-4 text-sm" style={{ fontFamily: "'Roboto Mono', 'Geist Mono', monospace" }}>
                   <code>{`You: Refactor the auth module to use JWT tokens
 
-zen4-coder: I'll help you refactor the auth module.
+zen5-coder: I'll help you refactor the auth module.
 
   Plan:
   1. Replace session-based auth with JWT
@@ -394,17 +398,9 @@ zen4-coder: I'll help you refactor the auth module.
                     {m.name}
                   </span>
                 </div>
-                <p className="mb-3 text-xs" style={{ color: colors.mutedFg }}>
+                <p className="text-xs" style={{ color: colors.mutedFg }}>
                   {m.description}
                 </p>
-                <div className="flex gap-2 text-xs" style={{ color: 'hsl(0, 0%, 45%)' }}>
-                  <span className="rounded px-2 py-0.5" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                    {m.params}
-                  </span>
-                  <span className="rounded px-2 py-0.5" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                    {m.context} ctx
-                  </span>
-                </div>
               </div>
             ))}
           </div>
@@ -461,52 +457,65 @@ zen4-coder: I'll help you refactor the auth module.
           }}
         >
           <h2 className="mb-4 text-3xl font-medium tracking-tight lg:text-4xl">
-            Simple, transparent pricing
+            One plan, every Hanzo app
           </h2>
           <p className="mb-10 text-lg" style={{ color: colors.mutedFg }}>
-            Pay only for what you use. No subscriptions. No hidden fees.
+            Shared AI usage across chat, the app builder, and the API — plus
+            pay-as-you-go beyond your plan.
           </p>
           <div className="mx-auto grid max-w-3xl gap-6 sm:grid-cols-3">
-            <div
-              className="rounded-xl p-6"
-              style={{ border: `1px solid ${colors.border}` }}
-            >
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(0, 0%, 45%)' }}>
-                Starting at
-              </p>
-              <p className="text-3xl font-bold">$0.30</p>
-              <p className="mt-1 text-sm" style={{ color: colors.mutedFg }}>
-                per million tokens
-              </p>
-            </div>
-            <div
-              className="rounded-xl p-6"
-              style={{
-                border: `1px solid rgba(255, 255, 255, 0.3)`,
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-              }}
-            >
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                Free credit
-              </p>
-              <p className="text-3xl font-bold">$5</p>
-              <p className="mt-1 text-sm" style={{ color: colors.mutedFg }}>
-                no credit card required
-              </p>
-            </div>
-            <div
-              className="rounded-xl p-6"
-              style={{ border: `1px solid ${colors.border}` }}
-            >
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(0, 0%, 45%)' }}>
-                Billing
-              </p>
-              <p className="text-3xl font-bold">Usage</p>
-              <p className="mt-1 text-sm" style={{ color: colors.mutedFg }}>
-                pay as you go
-              </p>
-            </div>
+            {[
+              { name: 'Plus', price: '$20', blurb: 'For everyday chat', featured: false },
+              { name: 'Pro', price: '$100', blurb: 'For heavy daily use', featured: true },
+              { name: 'Max', price: '$200', blurb: 'For power users & teams', featured: false },
+            ].map(({ name, price, blurb, featured }) => (
+              <a
+                key={name}
+                href="https://hanzo.ai/pricing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-xl p-6 text-left transition-colors"
+                style={{
+                  border: featured
+                    ? '1px solid rgba(255, 255, 255, 0.3)'
+                    : `1px solid ${colors.border}`,
+                  backgroundColor: featured ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.borderColor = 'hsla(0, 0%, 40%, 0.5)')}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.borderColor = featured
+                    ? 'rgba(255, 255, 255, 0.3)'
+                    : colors.border)
+                }
+              >
+                <p
+                  className="mb-2 text-xs font-medium uppercase tracking-wider"
+                  style={{ color: 'hsl(0, 0%, 45%)' }}
+                >
+                  {name}
+                </p>
+                <p className="text-3xl font-bold">
+                  {price}
+                  <span className="text-base font-normal" style={{ color: colors.mutedFg }}>
+                    /mo
+                  </span>
+                </p>
+                <p className="mt-1 text-sm" style={{ color: colors.mutedFg }}>
+                  {blurb}
+                </p>
+                <span
+                  className="mt-4 inline-flex items-center text-sm font-medium"
+                  style={{ color: colors.fg }}
+                >
+                  See plan details
+                  <IconArrowRight className="ml-1.5 size-4" />
+                </span>
+              </a>
+            ))}
           </div>
+          <p className="mt-8 text-sm" style={{ color: 'hsl(0, 0%, 45%)' }}>
+            Start free — $5 credit, no card required. Usage is shared across every Hanzo app.
+          </p>
         </div>
       </div>
 
@@ -538,7 +547,7 @@ zen4-coder: I'll help you refactor the auth module.
               <IconArrowRight />
             </a>
             <a
-              href="https://hanzo.ai/docs/chat"
+              href="https://docs.hanzo.ai/chat"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
@@ -569,7 +578,7 @@ zen4-coder: I'll help you refactor the auth module.
           <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: 'hsl(0, 0%, 40%)' }}>
             {[
               { label: 'hanzo.ai', href: 'https://hanzo.ai' },
-              { label: 'Documentation', href: 'https://hanzo.ai/docs/chat' },
+              { label: 'Documentation', href: 'https://docs.hanzo.ai/chat' },
               { label: 'Console', href: 'https://console.hanzo.ai' },
               { label: 'Privacy', href: 'https://hanzo.ai/privacy' },
               { label: 'Terms', href: 'https://hanzo.ai/terms' },
