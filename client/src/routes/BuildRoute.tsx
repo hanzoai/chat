@@ -1,22 +1,24 @@
 import { useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { useSetRecoilState } from 'recoil';
-import store from '~/store';
+import { buildAppUrl } from '~/utils';
 
 /**
- * Deep-link entry to inline build mode: `hanzo.chat/build[?prompt=...]`. Flips the
- * build-mode flag and lands on a fresh chat; the composer auto-fills from
- * `?prompt=` / `?q=` (via useQueryParams). ChatView renders the split chat +
- * preview shell whenever buildMode is on.
+ * Deep-link handoff: `hanzo.chat/build[?prompt=...]` sends the visitor to the
+ * hanzo.app builder — chat's sibling product for building apps. The build
+ * experience lives entirely at hanzo.app (one destination, same as the composer
+ * button, the `/build` command, and the starter chip); chat stays the chat
+ * product. `?prompt=` / `?q=` seed the builder. We render a chat redirect as a
+ * fallback in case the external navigation is blocked.
  */
 export default function BuildRoute() {
-  const setBuildMode = useSetRecoilState(store.buildMode);
   const [searchParams] = useSearchParams();
+  const prompt = searchParams.get('prompt') ?? searchParams.get('q') ?? '';
 
   useEffect(() => {
-    setBuildMode(true);
-  }, [setBuildMode]);
+    if (typeof window !== 'undefined') {
+      window.location.replace(buildAppUrl(prompt));
+    }
+  }, [prompt]);
 
-  const qs = searchParams.toString();
-  return <Navigate to={`/c/new${qs ? `?${qs}` : ''}`} replace />;
+  return <Navigate to="/c/new" replace />;
 }
