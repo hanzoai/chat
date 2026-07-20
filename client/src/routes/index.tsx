@@ -2,11 +2,8 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import {
   Login,
   VerifyEmail,
-  Registration,
-  ResetPassword,
   ApiErrorWatcher,
   TwoFactorScreen,
-  RequestPasswordReset,
 } from '~/components/Auth';
 import OAuthCallback from '~/components/Auth/OAuthCallback';
 import { MarketplaceProvider } from '~/components/Agents/MarketplaceContext';
@@ -15,7 +12,6 @@ import { OAuthSuccess, OAuthError } from '~/components/OAuth';
 import { AuthContextProvider } from '~/hooks/AuthContext';
 import RouteErrorBoundary from './RouteErrorBoundary';
 import BuildRoute from './BuildRoute';
-import StartupLayout from './Layouts/Startup';
 import LoginLayout from './Layouts/Login';
 import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
@@ -65,25 +61,6 @@ export const router = createBrowserRouter(
         {
           path: 'error',
           element: <OAuthError />,
-        },
-      ],
-    },
-    {
-      path: '/',
-      element: <StartupLayout />,
-      errorElement: <RouteErrorBoundary />,
-      children: [
-        {
-          path: 'register',
-          element: <Registration />,
-        },
-        {
-          path: 'forgot-password',
-          element: <RequestPasswordReset />,
-        },
-        {
-          path: 'reset-password',
-          element: <ResetPassword />,
         },
       ],
     },
