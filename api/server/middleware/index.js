@@ -3,10 +3,8 @@ const validateRegistration = require('./validateRegistration');
 const buildEndpointOption = require('./buildEndpointOption');
 const validateMessageReq = require('./validateMessageReq');
 const checkDomainAllowed = require('./checkDomainAllowed');
-const requireLocalAuth = require('./requireLocalAuth');
 const canDeleteAccount = require('./canDeleteAccount');
 const accessResources = require('./accessResources');
-const requireLdapAuth = require('./requireLdapAuth');
 const abortMiddleware = require('./abortMiddleware');
 const checkInviteUser = require('./checkInviteUser');
 const requireJwtAuth = require('./requireJwtAuth');
@@ -41,8 +39,6 @@ module.exports = {
   requireGuestOrJwtAuth,
   enforceGuestScope,
   checkInviteUser,
-  requireLdapAuth,
-  requireLocalAuth,
   canDeleteAccount,
   configMiddleware,
   checkDomainAllowed,
