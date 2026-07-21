@@ -764,6 +764,7 @@ export function createAgentMethods(handle: DataHandle, deps: AgentDeps) {
       updatedAt: 1,
       category: 1,
       support_contact: 1,
+      repository: 1,
       is_promoted: 1,
     };
 
