@@ -15,6 +15,14 @@ export const HANZO_GIT_HOST = 'git.hanzo.ai';
 /** Canonical base URL for a repository on Hanzo's Git. */
 export const HANZO_GIT_URL = `https://${HANZO_GIT_HOST}/`;
 
+/**
+ * Anchored pattern for a repository URL served by Hanzo's Git, for a
+ * server-side store query (e.g. Mongo `$regex`). Mirrors {@link isHanzoGitUrl}:
+ * http(s) scheme and exact host. Apply it case-insensitively (Mongo `i` option /
+ * `RegExp` `i` flag) so the server matches the same URLs the client accepts.
+ */
+export const HANZO_GIT_URL_PATTERN = `^https?://${HANZO_GIT_HOST.replace(/\./g, '\\.')}/`;
+
 /** True when `url` is an http(s) repository served by Hanzo's Git. */
 export function isHanzoGitUrl(url?: string | null): boolean {
   if (!url) {

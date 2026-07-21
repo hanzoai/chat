@@ -21,8 +21,8 @@ const {
   PrincipalType,
   EToolResources,
   PermissionBits,
-  HANZO_GIT_URL,
   HANZO_GIT_HOST,
+  HANZO_GIT_URL_PATTERN,
   actionDelimiter,
   removeNullishValues,
 } = require('@hanzochat/data-provider');
@@ -510,7 +510,9 @@ const getListAgentsHandler = async (req, res) => {
     // The marketplace query pins `source=git.hanzo.ai`; the builder's plain list
     // (no `source`) is unaffected, so only the showcase is narrowed.
     if (source === HANZO_GIT_HOST) {
-      filter.repository = { $regex: `^${escapeRegex(HANZO_GIT_URL)}` };
+      // Same acceptance as the client's isHanzoGitUrl (http(s), exact host,
+      // case-insensitive), so "built on Hanzo Git" means one thing on both sides.
+      filter.repository = { $regex: HANZO_GIT_URL_PATTERN, $options: 'i' };
     }
 
     // Handle search filter (escape regex and cap length)
