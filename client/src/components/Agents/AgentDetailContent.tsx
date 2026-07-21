@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link, Pin, PinOff } from 'lucide-react';
+import { Link, Pin, PinOff, GitBranch } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { OGDialogContent, Button, useToastContext } from '@hanzochat/client';
 import {
   QueryKeys,
   Constants,
+  isHanzoGitUrl,
   EModelEndpoint,
   PermissionBits,
   LocalStorageKeys,
@@ -153,6 +154,21 @@ const AgentDetailContent: React.FC<AgentDetailContentProps> = ({ agent }) => {
       {agent?.support_contact && formatContact() && (
         <div className="mt-1 text-center text-sm text-text-secondary">
           {localize('com_agents_contact')}: {formatContact()}
+        </div>
+      )}
+
+      {/* Source repository — only ever a git.hanzo.ai link (guarded) */}
+      {agent?.repository && isHanzoGitUrl(agent.repository) && (
+        <div className="mt-1 text-center text-sm text-text-secondary">
+          <a
+            href={agent.repository}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
+            {localize('com_agents_view_source')}
+          </a>
         </div>
       )}
 

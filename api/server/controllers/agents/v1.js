@@ -21,6 +21,8 @@ const {
   PrincipalType,
   EToolResources,
   PermissionBits,
+  HANZO_GIT_URL,
+  HANZO_GIT_HOST,
   actionDelimiter,
   removeNullishValues,
 } = require('@hanzochat/data-provider');
@@ -479,7 +481,7 @@ const deleteAgentHandler = async (req, res) => {
 const getListAgentsHandler = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { category, search, limit, cursor, promoted } = req.query;
+    const { category, search, limit, cursor, promoted, source } = req.query;
     let requiredPermission = req.query.requiredPermission;
     if (typeof requiredPermission === 'string') {
       requiredPermission = parseInt(requiredPermission, 10);
@@ -502,6 +504,13 @@ const getListAgentsHandler = async (req, res) => {
       filter.is_promoted = true;
     } else if (promoted === '0') {
       filter.is_promoted = { $ne: true };
+    }
+
+    // Community showcase: restrict to apps built on Hanzo's Git (git.hanzo.ai).
+    // The marketplace query pins `source=git.hanzo.ai`; the builder's plain list
+    // (no `source`) is unaffected, so only the showcase is narrowed.
+    if (source === HANZO_GIT_HOST) {
+      filter.repository = { $regex: `^${escapeRegex(HANZO_GIT_URL)}` };
     }
 
     // Handle search filter (escape regex and cap length)
