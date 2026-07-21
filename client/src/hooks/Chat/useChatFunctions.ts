@@ -25,8 +25,8 @@ import type {
   EndpointSchemaKey,
 } from '@hanzochat/data-provider';
 import type { SetterOrUpdater } from 'recoil';
-import { useAnalytics } from '@hanzo/capture/react';
-import { EVENTS } from '@hanzo/capture';
+import { useAnalytics } from '@hanzo/event/react';
+import { EVENTS } from '@hanzo/event';
 import type { TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';
 import useGetSender from '~/hooks/Conversations/useGetSender';

@@ -31,7 +31,7 @@
   "dependencies": {
     "@hanzo/ai": "^0.2.1",
     "@hanzo/ui": "npm:@hanzo/ui-shadcn@^5.7.4",
-    "@hanzo/capture": "^0.1.0",
+    "@hanzo/event": "^0.2.0",
     "@ariakit/react": "^0.4.15",
     "@ariakit/react-core": "^0.4.17",
     "@codesandbox/sandpack-react": "^2.19.10",
