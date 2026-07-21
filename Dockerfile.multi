@@ -2,7 +2,7 @@
 # v0.8.3-rc1
 
 # Set configurable max-old-space-size with default
-ARG NODE_MAX_OLD_SPACE_SIZE=6144
+ARG NODE_MAX_OLD_SPACE_SIZE=8192
 
 # Base for all builds
 FROM ghcr.io/hanzoai/nodejs:v24.18.0 AS base-min

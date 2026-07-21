@@ -57,10 +57,6 @@ jest.mock('@hanzochat/api', () => {
   };
 });
 
-jest.mock('~/server/controllers/auth/LoginController', () => ({
-  loginController: jest.fn((req, res) => res.status(200).end()),
-}));
-
 jest.mock('~/server/middleware/roles/capabilities', () => ({
   hasCapability: jest.fn(() => Promise.resolve(true)),
   requireCapability: jest.fn(() => (req, res, next) => next()),

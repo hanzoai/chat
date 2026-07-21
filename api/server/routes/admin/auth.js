@@ -9,7 +9,6 @@ const {
   exchangeAdminCode,
   createSetBalanceConfig,
 } = require('@hanzochat/api');
-const { loginController } = require('~/server/controllers/auth/LoginController');
 const { createOAuthHandler } = require('~/server/controllers/auth/oauth');
 const { getAppConfig } = require('~/server/services/Config');
 const getLogStores = require('~/cache/getLogStores');
@@ -23,17 +22,6 @@ const setBalanceConfig = createSetBalanceConfig({
 });
 
 const router = express.Router();
-
-router.post(
-  '/login/local',
-  middleware.logHeaders,
-  middleware.loginLimiter,
-  middleware.checkBan,
-  middleware.requireLocalAuth,
-  requireAdmin,
-  setBalanceConfig,
-  loginController,
-);
 
 router.get('/verify', middleware.requireJwtAuth, requireAdmin, (req, res) => {
   const { password: _p, totpSecret: _t, __v, ...user } = req.user;

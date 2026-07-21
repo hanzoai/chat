@@ -1,9 +1,10 @@
 /**
- * Shared Hanzo IAM (`IAM`) singleton for Hanzo IAM OIDC flows.
+ * Shared browser IAM SDK singleton for Hanzo IAM PKCE login.
  *
- * Reads VITE_HANZO_IAM_URL, VITE_HANZO_IAM_APP, and VITE_HANZO_API_URL
- * from the Vite environment. Returns null when IAM is not configured
- * (i.e. the app is running in backend-proxied mode).
+ * @hanzo/iam is the single login path. The SDK drives the redirect-PKCE
+ * authorize + callback exchange; IAM owns every credential step. Config is
+ * read from the Vite environment with production defaults so login works
+ * out of the box.
  */
 // @hanzo/iam (0.13.x) exports the browser SPA client as the `IAM` class; the
 // constructor config (serverUrl, clientId, redirectUri, scope, proxyBaseUrl) is
@@ -11,35 +12,25 @@
 import { IAM } from '@hanzo/iam';
 
 let instance: IAM | null = null;
-let checked = false;
 
-export function getHanzoIamSdk(): IAM | null {
-  if (checked) {
+const SERVER_URL = import.meta.env.VITE_HANZO_IAM_URL || 'https://hanzo.id';
+const CLIENT_ID = import.meta.env.VITE_HANZO_IAM_APP || 'hanzo-chat';
+const ORGANIZATION = import.meta.env.VITE_HANZO_IAM_ORG || 'hanzo';
+
+/** The single IAM SDK instance driving PKCE login and callback exchange. */
+export function getHanzoIamSdk(): IAM {
+  if (instance) {
     return instance;
-  }
-  checked = true;
-
-  const serverUrl = import.meta.env.VITE_HANZO_IAM_URL;
-  const clientId = import.meta.env.VITE_HANZO_IAM_APP;
-
-  if (!serverUrl || !clientId) {
-    return null;
   }
 
   instance = new IAM({
-    serverUrl,
-    clientId,
+    serverUrl: SERVER_URL,
+    clientId: CLIENT_ID,
+    organization: ORGANIZATION,
     redirectUri: `${window.location.origin}/auth/callback`,
     scope: 'openid profile email',
     proxyBaseUrl: import.meta.env.VITE_HANZO_API_URL || undefined,
   });
 
   return instance;
-}
-
-/**
- * Whether the app is running in static/IAM mode (VITE_HANZO_API_URL is set).
- */
-export function isStaticIamMode(): boolean {
-  return !!import.meta.env.VITE_HANZO_API_URL;
 }
