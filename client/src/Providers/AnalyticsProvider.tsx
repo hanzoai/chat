@@ -5,7 +5,7 @@ import {
   AnalyticsProvider as CaptureProvider,
   useAnalytics,
   usePageview,
-} from '@hanzo/capture/react';
+} from '@hanzo/event/react';
 import { useAuthContext } from '~/hooks/AuthContext';
 
 const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
@@ -33,7 +33,7 @@ function AnalyticsBridge() {
 }
 
 /**
- * First-party product analytics for Hanzo Chat (@hanzo/capture → cloud
+ * First-party product analytics for Hanzo Chat (@hanzo/event → cloud
  * /v1/analytics). Mounted inside AuthContextProvider so it can read the live JWT
  * and the resolved user; anonymous events still flow when no token is present.
  */
