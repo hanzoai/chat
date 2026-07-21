@@ -107,6 +107,13 @@ const agentSchema = new Schema<IAgent>(
       type: Schema.Types.Mixed,
       default: undefined,
     },
+    /** git.hanzo.ai repository this app was built into (hanzo.app clone); the
+     * community showcase filters and links on it. */
+    repository: {
+      type: String,
+      index: true,
+      default: undefined,
+    },
     is_promoted: {
       type: Boolean,
       default: false,
