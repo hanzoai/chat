@@ -19,8 +19,10 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY --from=ghcr.io/astral-sh/uv:0.9.5-python3.12-alpine /usr/local/bin/uv /usr/local/bin/uvx /bin/
 RUN uv --version
 
-# Set configurable max-old-space-size with default
-ARG NODE_MAX_OLD_SPACE_SIZE=6144
+# Set configurable max-old-space-size with default. The @hanzochat/api rollup
+# bundle needs headroom (default ~4G heap OOM-crashes it, exit 134); the api
+# build script pins its own 8192 too, this covers the client vite stage.
+ARG NODE_MAX_OLD_SPACE_SIZE=8192
 
 RUN mkdir -p /app && chown node:node /app
 WORKDIR /app
