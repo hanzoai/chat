@@ -273,6 +273,8 @@ export type Agent = {
   version?: number;
   category?: string;
   support_contact?: SupportContact;
+  /** git.hanzo.ai repository this app was built into (hanzo.app clone). */
+  repository?: string | null;
   /** Per-tool configuration options (deferred loading, allowed callers, etc.) */
   tool_options?: AgentToolOptions;
 };

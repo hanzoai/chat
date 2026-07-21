@@ -43,6 +43,8 @@ import * as dataService from './data-service';
 /* ZAP real-time transport */
 export { ZapClient, getZapClient, connectZap } from './zap';
 export type { ZapConfig, ChatStreamChunk } from './zap';
+/* Hanzo Git (git.hanzo.ai) */
+export * from './git';
 /* general helpers */
 export * from './utils';
 export * from './actions';
