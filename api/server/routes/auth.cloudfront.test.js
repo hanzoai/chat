@@ -32,10 +32,6 @@ jest.mock('~/server/controllers/auth/LogoutController', () => ({
   logoutController: jest.fn((req, res) => res.status(200).end()),
 }));
 
-jest.mock('~/server/controllers/auth/LoginController', () => ({
-  loginController: jest.fn((req, res) => res.status(200).end()),
-}));
-
 jest.mock('~/models', () => ({
   findBalanceByUser: jest.fn(),
   upsertBalanceFields: jest.fn(),

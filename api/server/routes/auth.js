@@ -1,9 +1,5 @@
 const express = require('express');
-const { createSetBalanceConfig } = require('@hanzochat/api');
 const {
-  resetPasswordRequestController,
-  resetPasswordController,
-  registrationController,
   graphTokenController,
   refreshController,
 } = require('~/server/controllers/AuthController');
@@ -16,53 +12,16 @@ const {
 } = require('~/server/controllers/TwoFactorController');
 const { verify2FAWithTempToken } = require('~/server/controllers/auth/TwoFactorAuthController');
 const { logoutController } = require('~/server/controllers/auth/LogoutController');
-const { loginController } = require('~/server/controllers/auth/LoginController');
-const { getAppConfig } = require('~/server/services/Config');
 const middleware = require('~/server/middleware');
-const { Balance } = require('~/db/models');
-
-const setBalanceConfig = createSetBalanceConfig({
-  getAppConfig,
-  Balance,
-});
 
 const router = express.Router();
 
-const ldapAuth = !!process.env.LDAP_URL && !!process.env.LDAP_USER_SEARCH_BASE;
-//Local
+// Hanzo IAM (OpenID Connect) owns every credential step. The local
+// email/password and third-party social login routes are intentionally
+// absent; the only session-lifecycle routes kept here are logout, token
+// refresh, 2FA and the graph token — all guarded by IAM-issued JWTs.
 router.post('/logout', middleware.requireJwtAuth, logoutController);
-router.post(
-  '/login',
-  middleware.logHeaders,
-  middleware.loginLimiter,
-  middleware.checkBan,
-  ldapAuth ? middleware.requireLdapAuth : middleware.requireLocalAuth,
-  setBalanceConfig,
-  loginController,
-);
 router.post('/refresh', refreshController);
-router.post(
-  '/register',
-  middleware.registerLimiter,
-  middleware.checkBan,
-  middleware.checkInviteUser,
-  middleware.validateRegistration,
-  registrationController,
-);
-router.post(
-  '/requestPasswordReset',
-  middleware.resetPasswordLimiter,
-  middleware.checkBan,
-  middleware.validatePasswordReset,
-  resetPasswordRequestController,
-);
-router.post(
-  '/resetPassword',
-  middleware.checkBan,
-  middleware.validatePasswordReset,
-  resetPasswordController,
-);
-
 router.get('/2fa/enable', middleware.requireJwtAuth, enable2FA);
 router.post('/2fa/verify', middleware.requireJwtAuth, verify2FA);
 router.post('/2fa/verify-temp', middleware.checkBan, verify2FAWithTempToken);

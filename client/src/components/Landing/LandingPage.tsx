@@ -140,21 +140,13 @@ const thirdPartyModels = [
 export default function LandingPage() {
   const { data: config } = useGetStartupConfig();
   const serverDomain = config?.serverDomain || '';
-  const iamSdk = getHanzoIamSdk();
+  // Login is the @hanzo/iam redirect-PKCE flow.
+  const loginHref = '#';
 
-  // When IAM SDK is available, login is an async redirect (PKCE).
-  // Otherwise fall back to the backend OAuth endpoint.
-  const loginHref = iamSdk ? '#' : `${serverDomain}/oauth/openid`;
-
-  const handleLoginClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (iamSdk) {
-        e.preventDefault();
-        iamSdk.signinRedirect();
-      }
-    },
-    [iamSdk],
-  );
+  const handleLoginClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    getHanzoIamSdk().signinRedirect();
+  }, []);
 
   return (
     <div
