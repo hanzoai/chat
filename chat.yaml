@@ -96,10 +96,13 @@ endpoints:
       models:
         # LIVE catalog only — zen4 generation was SUNSET 2026-05-30 (gateway
         # config.yaml); offering it routed to a dead fallback. Current families
-        # the gateway serves: zen5-* (flagship) + zen3-* (omni/vision). zen5-mini
-        # leads as the default (smart current-gen small model); larger zen5 tiers
-        # meter against balance. Order = the default-selected model for new users.
+        # the gateway serves: zen5-* (flagship) + zen3-* (omni/vision) + enso (the
+        # orchestrated router). enso (Enso Pro) leads as the default — it routes
+        # each request to the best-fit model, so an easy turn bills cheap and only a
+        # hard one escalates; larger zen5 tiers meter against balance. Order = the
+        # default-selected model for new users.
         default:
+          - "enso"
           - "zen5-flash"
           - "zen5"
           - "zen5-pro"
