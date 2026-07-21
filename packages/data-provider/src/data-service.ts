@@ -9,6 +9,7 @@ import * as q from './types/queries';
 import * as f from './types/files';
 import * as mcp from './types/mcpServers';
 import * as config from './config';
+import { HANZO_GIT_HOST } from './git';
 import request from './request';
 import * as s from './schemas';
 import * as r from './roles';
@@ -554,7 +555,11 @@ export const getAgentCategories = (): Promise<t.TMarketplaceCategory[]> => {
 };
 
 /**
- * Unified marketplace agents endpoint with query string controls
+ * Unified marketplace agents endpoint with query string controls.
+ *
+ * The community showcase lists ONLY apps built on Hanzo's Git, so every
+ * marketplace query pins `source` to git.hanzo.ai; the server restricts the
+ * result to agents whose `repository` lives there.
  */
 export const getMarketplaceAgents = (params: {
   requiredPermission: number;
@@ -567,7 +572,7 @@ export const getMarketplaceAgents = (params: {
   return request.get(
     endpoints.agents({
       // path: 'marketplace',
-      options: params,
+      options: { ...params, source: HANZO_GIT_HOST },
     }),
   );
 };
