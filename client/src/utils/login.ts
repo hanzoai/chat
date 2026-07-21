@@ -1,25 +1,13 @@
-import type { TStartupConfig } from '@hanzochat/data-provider';
-import { getHanzoIamSdk, isStaticIamMode } from '~/utils/iam';
+import { getHanzoIamSdk } from '~/utils/iam';
 
 /**
- * The ONE way to start the Hanzo IAM (hanzo.id) login from an anonymous/guest
- * surface. Prefers the static-IAM SPA redirect when that mode is active, else the
- * backend OpenID redirect, else the local `/login` route. Shared by the
- * guest-limit gate and the account menu's guest "Log in" item so the upgrade path
- * is uniform (chat -> hanzo.id) across every surface.
+ * The ONE way to start the Hanzo IAM (hanzo.id) login from any anonymous/guest
+ * surface. @hanzo/iam is the single login path: every surface (guest-limit gate,
+ * account menu "Log in") drives the same redirect-PKCE flow to hanzo.id.
  */
-export function startHanzoLogin(startupConfig?: Partial<TStartupConfig> | null): void {
+export function startHanzoLogin(): void {
   if (typeof window === 'undefined') {
     return;
   }
-  const iamSdk = getHanzoIamSdk();
-  if (isStaticIamMode() && iamSdk) {
-    iamSdk.signinRedirect();
-    return;
-  }
-  if (startupConfig?.openidLoginEnabled && startupConfig?.serverDomain) {
-    window.location.href = `${startupConfig.serverDomain}/oauth/openid`;
-    return;
-  }
-  window.location.href = '/login';
+  getHanzoIamSdk().signinRedirect();
 }
