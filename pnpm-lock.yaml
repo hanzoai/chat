@@ -385,6 +385,9 @@ importers:
       '@hanzo/iam':
         specifier: ^0.13.1
         version: 0.13.1(react@18.3.1)
+      '@hanzo/logo':
+        specifier: ^1.0.13
+        version: 1.0.13(react@18.3.1)
       '@hanzo/ui':
         specifier: npm:@hanzo/ui-shadcn@^5.7.4
         version: '@hanzo/ui-shadcn@5.7.4(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)'
@@ -3807,6 +3810,14 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
+    peerDependenciesMeta:
+      react:
+        optional: true
+
+  '@hanzo/logo@1.0.13':
+    resolution: {integrity: sha512-94VA6S7oVY5UZ816295Ez12p8a76ZGEct14JQwE6r5UCutD3K9TBgx5V01gjwxwVL9tWnXn/yut4PHRAY/9RNQ==}
+    peerDependencies:
+      react: '>=16.8.0'
     peerDependenciesMeta:
       react:
         optional: true
@@ -17702,6 +17713,10 @@ snapshots:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
       passport-oauth2: 1.8.0
+    optionalDependencies:
+      react: 18.3.1
+
+  '@hanzo/logo@1.0.13(react@18.3.1)':
     optionalDependencies:
       react: 18.3.1
 
