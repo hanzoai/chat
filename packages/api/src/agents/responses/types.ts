@@ -689,7 +689,7 @@ export interface ErrorEvent extends BaseEvent {
 }
 
 /* =============================================================================
- * LIBRECHAT EXTENSION TYPES
+ * HANZO CHAT EXTENSION TYPES
  * Per Open Responses spec, custom types MUST be prefixed with implementor slug
  * @see https://openresponses.org/specification#extending-streaming-events
  * ============================================================================= */

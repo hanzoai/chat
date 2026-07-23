@@ -11,7 +11,7 @@ const { resolveTenantBearer } = require('@hanzochat/api');
  * validates it and scopes to the caller's OWN org (same trust model as CloudAgentsClient
  * / RoutingDefaults). The token never reaches the browser.
  *
- * This is a SEPARATE concern from the Mongo `/v1/chat/usage` tab (LibreChat's own token-
+ * This is a SEPARATE concern from the Mongo `/v1/chat/usage` tab (the legacy token-
  * credit accounting): the client renders this beside it with the shared @hanzo/usage
  * shape — nothing is re-derived here.
  *
