@@ -82,4 +82,4 @@ packages/      data-provider · data-schemas · api · client · agents · mcp
 
 ## License
 
-MIT. Forked from LibreChat (MIT). See [LICENSE](./LICENSE).
+MIT. MIT licensed. See [LICENSE](./LICENSE) for the full attribution.

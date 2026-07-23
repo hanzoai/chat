@@ -67,7 +67,7 @@ interface PoolStats {
   available: number;
 }
 
-// ─── ALL 29 LIBRECHAT SCHEMAS ───────────────────────────────────────────────
+// ─── ALL 29 HANZO CHAT SCHEMAS ───────────────────────────────────────────────
 
 const MODEL_SCHEMAS: Record<string, Schema> = {
   User: userSchema,

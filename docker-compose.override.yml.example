@@ -23,7 +23,7 @@
 
 # services:
 
-# # USE LIBRECHAT CONFIG FILE
+# # USE HANZO CHAT CONFIG FILE
 #   api:
 #     volumes:
 #     - type: bind
