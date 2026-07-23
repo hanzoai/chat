@@ -82,4 +82,4 @@ packages/      data-provider · data-schemas · api · client · agents · mcp
 
 ## 许可证
 
-MIT 许可证。基于 LibreChat（MIT）分支开发。见 [LICENSE](./LICENSE)。
+MIT 许可证。MIT 许可证。见 [LICENSE](./LICENSE) 获取完整署名。
