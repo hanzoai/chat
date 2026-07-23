@@ -578,9 +578,9 @@ function getMCPProxyConfig(options: t.MCPOptions): MCPProxyConfig | undefined {
     return { type: 'explicit', proxyUrl: configuredProxy };
   }
 
-  const libreChatProxy = process.env.PROXY?.trim() ?? '';
-  if (libreChatProxy) {
-    return { type: 'explicit', proxyUrl: libreChatProxy };
+  const chatProxy = process.env.PROXY?.trim() ?? '';
+  if (chatProxy) {
+    return { type: 'explicit', proxyUrl: chatProxy };
   }
 
   const httpProxy = getTrimmedEnv('http_proxy', 'HTTP_PROXY');
