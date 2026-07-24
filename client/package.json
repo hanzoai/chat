@@ -37,7 +37,7 @@
     "@hanzo/ai": "^0.2.1",
     "@hanzo/brand": "^1.4.1",
     "@hanzo/event": "^0.2.0",
-    "@hanzo/iam": "^0.13.1",
+    "@hanzo/iam": "^0.13.8",
     "@hanzo/logo": "^1.0.13",
     "@hanzo/ui": "npm:@hanzo/ui-shadcn@^5.7.4",
     "@hanzo/usage": "^0.1.6",
