@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { HanzoHeader, HanzoPreFooterCTA, HanzoFooter } from '@hanzogui/shell';
 import { useGetStartupConfig } from '~/data-provider';
 import { getHanzoIamSdk } from '~/utils/iam';
 
@@ -62,24 +63,6 @@ const IconBolt = ({ className = 'size-8', style }: { className?: string; style?:
 const IconArrowRight = ({ className = 'ml-2 size-4' }: { className?: string }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-  </svg>
-);
-
-/* Hanzo geometric H logo */
-const HanzoLogo = ({ className = 'size-5', style }: { className?: string; style?: React.CSSProperties }) => (
-  <svg viewBox="0 0 67 67" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
-    <path d="M22.21 67V44.6369H0V67H22.21Z" fill="currentColor" />
-    <path d="M66.7038 22.3184H22.2534L0.0878906 44.6367H44.4634L66.7038 22.3184Z" fill="currentColor" />
-    <path d="M22.21 0H0V22.3184H22.21V0Z" fill="currentColor" />
-    <path d="M66.7198 0H44.5098V22.3184H66.7198V0Z" fill="currentColor" />
-    <path d="M66.7198 67V44.6369H44.5098V67H66.7198Z" fill="currentColor" />
-  </svg>
-);
-
-/* GitHub icon */
-const IconGitHub = ({ className = 'size-5' }: { className?: string }) => (
-  <svg className={className} role="img" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
   </svg>
 );
 
@@ -157,55 +140,8 @@ export default function LandingPage() {
         fontFamily: "'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
-      {/* ---- Navbar (matches fd HomeLayout nav) ---- */}
-      <nav
-        className="sticky top-0 z-50 backdrop-blur-md"
-        style={{
-          backgroundColor: 'rgba(5, 5, 5, 0.8)',
-          borderBottom: `1px solid ${colors.border}`,
-        }}
-      >
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-2.5">
-            <HanzoLogo className="size-5 text-white" />
-            <span className="text-sm font-bold tracking-tight">Hanzo Chat</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <a
-              href="https://docs.hanzo.ai/chat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden text-sm transition-colors sm:inline"
-              style={{ color: colors.mutedFg }}
-              onMouseOver={(e) => (e.currentTarget.style.color = colors.fg)}
-              onMouseOut={(e) => (e.currentTarget.style.color = colors.mutedFg)}
-            >
-              Docs
-            </a>
-            <a
-              href="https://github.com/hanzoai/chat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden transition-colors sm:inline"
-              style={{ color: colors.mutedFg }}
-              onMouseOver={(e) => (e.currentTarget.style.color = colors.fg)}
-              onMouseOut={(e) => (e.currentTarget.style.color = colors.mutedFg)}
-            >
-              <IconGitHub className="size-[18px]" />
-            </a>
-            <a
-              href={loginHref}
-              onClick={handleLoginClick}
-              className="rounded-full px-5 py-2 text-sm font-medium tracking-tight transition-colors"
-              style={{ backgroundColor: colors.brand, color: '#000' }}
-              onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
-              onMouseOut={(e) => (e.currentTarget.style.filter = 'none')}
-            >
-              Log in
-            </a>
-          </div>
-        </div>
-      </nav>
+      {/* ---- Unified Hanzo marketing header (shared @hanzogui/shell) ---- */}
+      <HanzoHeader surface="hanzo.chat" />
 
       {/* ---- Hero (bordered card like dev.hanzo.ai) ---- */}
       <div className="mx-auto w-full max-w-[1400px] px-4 pt-4">
@@ -557,39 +493,9 @@ zen5-coder: I'll help you refactor the auth module.
         </div>
       </div>
 
-      {/* ---- Footer ---- */}
-      <footer
-        className="mt-0 py-8"
-        style={{ borderTop: `1px solid ${colors.border}` }}
-      >
-        <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-6 px-6 sm:flex-row md:px-12">
-          <div className="flex items-center gap-2 text-sm" style={{ color: 'hsl(0, 0%, 40%)' }}>
-            <HanzoLogo className="size-4" style={{ color: 'hsl(0, 0%, 40%)' }} />
-            Powered by Hanzo AI
-          </div>
-          <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: 'hsl(0, 0%, 40%)' }}>
-            {[
-              { label: 'hanzo.ai', href: 'https://hanzo.ai' },
-              { label: 'Documentation', href: 'https://docs.hanzo.ai/chat' },
-              { label: 'Console', href: 'https://console.hanzo.ai' },
-              { label: 'Privacy', href: 'https://hanzo.ai/privacy' },
-              { label: 'Terms', href: 'https://hanzo.ai/terms' },
-            ].map(({ label, href }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors"
-                onMouseOver={(e) => (e.currentTarget.style.color = colors.fg)}
-                onMouseOut={(e) => (e.currentTarget.style.color = 'hsl(0, 0%, 40%)')}
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </footer>
+      {/* ---- Unified Hanzo pre-footer CTA + ecosystem footer (shared shell) ---- */}
+      <HanzoPreFooterCTA surface="hanzo.chat" />
+      <HanzoFooter currentProductId="chat" />
     </div>
   );
 }
