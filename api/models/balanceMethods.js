@@ -94,6 +94,16 @@ const checkBalanceRecord = async function ({
   const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
   const tokenCost = amount * multiplier;
 
+  // Guests (anonymous preview) are NOT balance-gated here — they have no org and no
+  // DB balance record, so both the Commerce and legacy local gates would false-block
+  // them. Guest spend is bounded two other ways: (1) the per-IP guest message
+  // limiter (GUEST_MESSAGE_MAX) and (2) the shared, small-capped guest key
+  // (GUEST_API_KEY) whose OWN org's balance the cloud gateway debits and 402s when
+  // empty. Never an authed user's org balance.
+  if (req?.user?.guest === true) {
+    return { canSpend: true, balance: 0, tokenCost };
+  }
+
   const commerceClient = getCommerceClient();
   // Tenant billing key = the org (the token `owner`). cloud is the authoritative
   // meter+gate and bills per-org (see AUTH_BILLING_CONTRACT.md); this optional
