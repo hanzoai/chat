@@ -7,6 +7,7 @@ const { ErrorTypes } = require('@hanzochat/data-provider');
 const { createSetBalanceConfig } = require('@hanzochat/api');
 const { checkDomainAllowed, loginLimiter, logHeaders } = require('~/server/middleware');
 const { createOAuthHandler } = require('~/server/controllers/auth/oauth');
+const { iamSessionController } = require('~/server/controllers/auth/iamSession');
 const { getAppConfig } = require('~/server/services/Config');
 const { Balance } = require('~/db/models');
 
@@ -37,7 +38,21 @@ router.get('/error', (req, res) => {
 });
 
 /**
- * Hanzo IAM (OpenID Connect) Routes
+ * Hanzo IAM session-bridge — the ONE way the @hanzo/iam SPA establishes a Chat
+ * session. The SPA runs Authorization-Code + PKCE in the browser and POSTs its
+ * token here; the controller JWKS-validates it, reconciles the user, mints the
+ * Chat session (refresh cookie + Mongo Session + Chat JWT), and persists the
+ * id_token server-side for on-behalf-of cloud calls.
+ */
+router.post('/iam/session', iamSessionController);
+
+/**
+ * Server-initiated OpenID Connect routes (dormant fallback).
+ *
+ * The @hanzo/iam SPA does NOT use these — user login flows entirely through the
+ * SPA + `/iam/session` bridge above. These remain only as an untouched safety
+ * net for any deployment still pinned to the server-side redirect flow; they are
+ * scheduled for removal once the SPA bridge is verified live end-to-end.
  */
 router.get('/openid', loginLimiter, (req, res, next) => {
   return passport.authenticate('openid', {
