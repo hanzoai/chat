@@ -13,11 +13,11 @@ const jwtLogin = () =>
     async (payload, done) => {
       try {
         /**
-         * Guest chat is removed (every request requires a signed-in IAM identity).
-         * A legacy guest token left in a browser after deploy still carries
-         * `guest: true` and a synthetic `guest_<uuid>` id that is NOT a Mongo
-         * ObjectId — reject it cleanly here (401) rather than letting `getUserById`
-         * throw a Mongoose CastError (→ 500). Fail closed.
+         * Guest tokens carry `guest: true` and a synthetic `guest_<uuid>` id that
+         * is NOT a Mongo ObjectId. Reject them cleanly here so the strict `jwt`
+         * strategy fails with a 401 instead of letting `getUserById` throw a
+         * Mongoose CastError (→ 500). Guests reach their scoped routes through
+         * `requireGuestOrJwtAuth`, never through this strategy. Fail closed.
          */
         if (payload?.guest === true) {
           return done(null, false);

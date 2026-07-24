@@ -114,16 +114,33 @@ export async function initializeCustom({
   // whose membership the gateway checks it against.
   let tenantHeaders: Record<string, string> | undefined;
   if (apiKey === OPENID_BEARER_SENTINEL) {
-    const bearer = resolveTenantBearer(req as unknown as Parameters<typeof resolveTenantBearer>[0]);
-    if (!bearer) {
-      throw new Error('Sign in with Hanzo to chat — your Hanzo account funds this request.');
-    }
-    apiKey = bearer;
-    const activeOrg = resolveActiveOrg(
-      req as unknown as Parameters<typeof resolveActiveOrg>[0],
-    );
-    if (activeOrg) {
-      tenantHeaders = { 'X-Org-Id': activeOrg };
+    const isGuest = (req.user as { guest?: boolean } | undefined)?.guest === true;
+    if (isGuest) {
+      // Anonymous guest preview: there is NO IAM identity to forward and NO org to
+      // bill. Use the shared, capped guest gateway key — the guest key's OWN org is
+      // metered + capped at api.hanzo.ai (402 when exhausted, surfaced by
+      // wrapHanzoGatewayFetch below), never a real user's org. Per-user hk- billing
+      // is skipped by construction: a guest carries no bearer and no active org, so
+      // NO `X-Org-Id` is sent. The guest key never leaves the server. `GUEST_API_KEY`
+      // (the KMS `chat-guest-key`) is preferred; `HANZO_API_KEY` is the dev fallback.
+      // Fail closed if neither is configured.
+      const guestKey = process.env.GUEST_API_KEY || process.env.HANZO_API_KEY || '';
+      if (!guestKey) {
+        throw new Error('Guest chat is temporarily unavailable.');
+      }
+      apiKey = guestKey;
+    } else {
+      const bearer = resolveTenantBearer(
+        req as unknown as Parameters<typeof resolveTenantBearer>[0],
+      );
+      if (!bearer) {
+        throw new Error('Sign in with Hanzo to chat — your Hanzo account funds this request.');
+      }
+      apiKey = bearer;
+      const activeOrg = resolveActiveOrg(req as unknown as Parameters<typeof resolveActiveOrg>[0]);
+      if (activeOrg) {
+        tenantHeaders = { 'X-Org-Id': activeOrg };
+      }
     }
   }
 

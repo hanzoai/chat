@@ -95,7 +95,7 @@ CREDS_KEY= CREDS_IV=        # Credential encryption
 Off by default (`ALLOW_GUEST_CHAT=false`). When enabled, the landing IS the chat
 composer (ChatGPT-style): an unauthenticated visitor renders the real chat view —
 composer, starter cards, model picker — WITHOUT logging in, scoped to the free
-Zen model (`GUEST_MODEL`, default `zen3-nano`) via the `Hanzo` custom endpoint
+Zen model (`GUEST_MODEL`, default `zen5-flash`) via the `Hanzo` custom endpoint
 (`api.hanzo.ai`). Prod uses `GUEST_MESSAGE_MAX=2`. Exhausting the quota returns
 `402 {type:'GUEST_LIMIT'}` and the client opens the existing OpenID/hanzo.id login.
 
@@ -117,27 +117,36 @@ Security model (fail-closed, server-enforced):
   per-token random id) signed with `JWT_SECRET`. Rate-limited per IP
   (`guestTokenLimiter`, `GUEST_TOKEN_MAX`/`GUEST_TOKEN_WINDOW`) so tokens can't be
   spam-minted.
-- `requireGuestOrJwtAuth` (chat-completion route ONLY) accepts guest tokens;
-  the standard `jwt` strategy rejects them everywhere else (no DB user), so
-  every other route stays closed. `enforceGuestScope` pins endpoint+model and
-  strips agents/tools/files/spec/preset. Guests always use the shared, capped
-  `HANZO_API_KEY` (per-user `hk-` billing is skipped for `guest` principals).
+- `requireGuestOrJwtAuth` (chat-completion + guest-safe bootstrap routes: models,
+  endpoints, user, convos, favorites, agents `/chat/active`) accepts guest tokens;
+  the standard `jwt` strategy rejects them everywhere else (no DB user), so every
+  other route stays closed. `enforceGuestScope` pins endpoint+model and strips
+  agents/tools/files/spec/preset. Guests use the shared, capped guest gateway key
+  `GUEST_API_KEY` (the KMS `chat-guest-key`; `HANZO_API_KEY` is the dev fallback),
+  resolved in `packages/api/src/endpoints/custom/initialize.ts` — the guest key's
+  OWN org is metered+capped at the gateway, and per-user `hk-` billing is skipped
+  for `guest` principals (they carry no forwardable bearer and no `X-Org-Id`).
 - `guestMessageLimiter` enforces the quota against the REAL client IP
   (`utils/guestClientIp` → Cloudflare `CF-Connecting-IP`, falls back to `req.ip`),
   NOT the token — clearing cookies / incognito / minting a fresh token does NOT
-  reset it. Backed by the shared Redis `limiterCache` so it holds across replicas.
-  `USE_REDIS=true` is MANDATORY (a memory store would let a visitor round-robin
-  pods to multiply their quota).
+  reset it. The store is `limiterCache`, which returns `undefined` when `USE_REDIS`
+  is off → `express-rate-limit` uses its in-process MemoryStore. That store is
+  authoritative at the live deploy's `replicas: 1` + `Recreate` (never two live
+  pods to round-robin); Redis is NOT required (it was killed platform-wide). The
+  only reset is a pod restart — operational, not attacker-triggerable. If guest
+  chat ever scales past one replica, set `USE_REDIS=true` so the count holds
+  across pods.
 - Key files: `api/server/services/guestConfig.js`,
   `api/server/controllers/auth/GuestController.js`,
   `api/server/middleware/{requireGuestOrJwtAuth,enforceGuestScope}.js`,
   `api/server/middleware/limiters/{guestLimiters,guestMessageLimiter}.js`,
   `api/server/utils/guestClientIp.js`,
   router wiring in `api/server/routes/agents/index.js`.
-- Env: `ALLOW_GUEST_CHAT`, `GUEST_MESSAGE_MAX`, `GUEST_ENDPOINT`, `GUEST_MODEL`,
-  `GUEST_TOKEN_EXPIRY`, `GUEST_TOKEN_MAX`, `GUEST_TOKEN_WINDOW`. Requires
-  `HANZO_API_KEY` (the free publishable gateway key) and `USE_REDIS` for the
-  shared per-IP quota across replicas.
+- Env: `ALLOW_GUEST_CHAT`, `GUEST_MODEL` (prod `zen5-flash`), `GUEST_ENDPOINT`
+  (`Hanzo`), `GUEST_MESSAGE_MAX` (prod `2`), `GUEST_TOKEN_EXPIRY`, `GUEST_TOKEN_MAX`,
+  `GUEST_TOKEN_WINDOW`. Requires the shared, capped guest key `GUEST_API_KEY`
+  (KMS `chat-guest-key`; falls back to `HANZO_API_KEY`). No Redis dependency at
+  `replicas: 1` — the in-process MemoryStore is the quota's single source of truth.
 
 ## Cloud Agents (canonical /v1/agents)
 
