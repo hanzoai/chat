@@ -96,6 +96,24 @@ module.exports = {
           850: '#171717',
           900: '#0d0d0d',
         },
+        // Shared @hanzo/brand monochrome scale (from variables.css). Additive —
+        // chat's own `gray`/`mono` ramp is untouched; new shared chrome can use
+        // `hanzo-*` so the palette resolves to the ONE brand source of truth.
+        hanzo: {
+          black: 'var(--hanzo-black)',
+          white: 'var(--hanzo-white)',
+          50: 'var(--hanzo-mono-50)',
+          100: 'var(--hanzo-mono-100)',
+          200: 'var(--hanzo-mono-200)',
+          300: 'var(--hanzo-mono-300)',
+          400: 'var(--hanzo-mono-400)',
+          500: 'var(--hanzo-mono-500)',
+          600: 'var(--hanzo-mono-600)',
+          700: 'var(--hanzo-mono-700)',
+          800: 'var(--hanzo-mono-800)',
+          900: 'var(--hanzo-mono-900)',
+          950: 'var(--hanzo-mono-950)',
+        },
         green: mono,
         red: mono,
         blue: mono,
