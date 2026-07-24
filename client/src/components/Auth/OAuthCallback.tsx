@@ -1,15 +1,22 @@
 /**
- * OAuth Callback Handler for Hanzo IAM (hanzo.id)
+ * OAuth Callback Handler for Hanzo IAM (hanzo.id) — the @hanzo/iam session-bridge.
  *
  * Flow:
- * 1. User clicks "Sign in" -> redirects to hanzo.id OIDC (via IAM)
- * 2. After auth, hanzo.id redirects back with ?code=xxx&state=yyy
- * 3. IAM.handleCallback() exchanges the code for tokens (PKCE)
- * 4. We set the access token header and redirect to /c/new
+ * 1. User clicks "Log in with Hanzo" -> @hanzo/iam redirects to hanzo.id (PKCE).
+ * 2. hanzo.id redirects back here with ?code=xxx&state=yyy.
+ * 3. IAM.handleCallback() exchanges the code for the IAM tokens (PKCE).
+ * 4. We POST { accessToken, idToken } to the backend session-bridge
+ *    (/oauth/iam/session), which JWKS-validates the token, reconciles the user,
+ *    and issues the Chat session (refresh cookie + Mongo Session + Chat JWT) plus
+ *    persists the id_token server-side for on-behalf-of cloud calls.
+ * 5. We set the returned Chat JWT as the app bearer and redirect to /c/new.
+ *
+ * The IAM token is never used as the app bearer — the JWKS-issued Chat JWT is;
+ * the id_token stays server-side for OBO.
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setTokenHeader } from '@hanzochat/data-provider';
+import { request, iamSession } from '@hanzochat/data-provider';
 import { Spinner } from '@hanzochat/client';
 import { getHanzoIamSdk } from '~/utils/iam';
 
@@ -34,13 +41,26 @@ export default function OAuthCallback() {
       try {
         const tokens = await iamSdk.handleCallback();
 
-        if (tokens.accessToken) {
-          setTokenHeader(tokens.accessToken);
+        /** Trade the IAM token for a Chat session via the backend bridge. */
+        const { token } = await request.post(iamSession(), {
+          accessToken: tokens.accessToken,
+          idToken: tokens.idToken,
+        });
+
+        if (!token) {
+          throw new Error('session bridge returned no token');
         }
+
+        /**
+         * Set the Chat JWT as the app bearer and notify AuthContext (which then
+         * fetches the user). The refresh cookie the bridge set drives reload
+         * persistence via the silent-refresh path.
+         */
+        request.dispatchTokenUpdatedEvent(token);
 
         navigate('/c/new', { replace: true });
       } catch (err) {
-        console.error('OAuth code exchange failed:', err);
+        console.error('IAM session bridge failed:', err);
         navigate('/login?error=auth_failed', { replace: true });
       }
     };
