@@ -11,6 +11,7 @@ import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
+import MeetHanzoLauncher from '~/components/Nav/MeetHanzoLauncher';
 import { useHasAccess } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -80,14 +81,18 @@ export default function Header() {
           )}
         </div>
 
-        {!isSmallScreen && (
-          <div className="flex items-center gap-2">
-            <ExportAndShareMenu
-              isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
-            />
-            <TemporaryChat />
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {!isSmallScreen && (
+            <>
+              <ExportAndShareMenu
+                isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
+              />
+              <TemporaryChat />
+            </>
+          )}
+          {/* Cross-app "Meet Hanzo" launcher — unified ecosystem nav, far right. */}
+          <MeetHanzoLauncher />
+        </div>
       </div>
       {/* Empty div for spacing */}
       <div />
