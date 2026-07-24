@@ -379,6 +379,9 @@ importers:
       '@hanzo/ai':
         specifier: ^0.2.1
         version: 0.2.1
+      '@hanzo/brand':
+        specifier: ^1.4.1
+        version: 1.4.1(react@18.3.1)
       '@hanzo/event':
         specifier: ^0.2.0
         version: 0.2.0(react@18.3.1)
@@ -400,6 +403,9 @@ importers:
       '@hanzochat/data-provider':
         specifier: workspace:*
         version: link:../packages/data-provider
+      '@hanzogui/shell':
+        specifier: ^7.4.1
+        version: 7.4.1(@hanzo/iam@0.13.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3797,6 +3803,15 @@ packages:
     resolution: {integrity: sha512-m0k6V6Im8m5RXWHUy/E7DvpZ9tFBYUw21NTYFxNxUiPI1l+yEvHEVytqEbEtHZOCa9Ytb8nfuNzJIsfCeF/zZw==}
     engines: {node: '>=18'}
 
+  '@hanzo/brand@1.4.1':
+    resolution: {integrity: sha512-tApXct8gE/HOYa61h6TWQfDp07l1pmB+vqmxlJtU+MhocbwEkW4VPJrQdPuwF/5GPZYQauNT2uaRpnZdCK8ikw==}
+    hasBin: true
+    peerDependencies:
+      react: '>=18'
+    peerDependenciesMeta:
+      react:
+        optional: true
+
   '@hanzo/event@0.2.0':
     resolution: {integrity: sha512-jx+xlT5no88PYg/k465/pQ7a+oQcfImB5X0dJ4/ZSSF5bwqPCItvN/9Znt4SQpq18EQeMuR5GiLmxo1wSP5uqw==}
     peerDependencies:
@@ -3924,6 +3939,13 @@ packages:
     peerDependenciesMeta:
       '@anthropic-ai/sandbox-runtime':
         optional: true
+
+  '@hanzogui/shell@7.4.1':
+    resolution: {integrity: sha512-o13an7Udx1RG0TVG00V8sk6K6bxWBUoLQ+KJKcUOjBniTflTQ/Ce5LYDpCOy8hAlBfoQ2mN3NuIym8GlKdze4w==}
+    peerDependencies:
+      '@hanzo/iam': ^0.13.1
+      react: '*'
+      react-dom: '*'
 
   '@headlessui/react@2.2.9':
     resolution: {integrity: sha512-Mb+Un58gwBn0/yWZfyrCh0TJyurtT+dETj7YHleylHk5od3dv2XqETPGWMyQ5/7sYN7oWdyM1u9MvC0OC8UmzQ==}
@@ -17704,6 +17726,12 @@ snapshots:
 
   '@hanzo/ai@0.2.1': {}
 
+  '@hanzo/brand@1.4.1(react@18.3.1)':
+    dependencies:
+      '@hanzo/logo': 1.0.13(react@18.3.1)
+    optionalDependencies:
+      react: 18.3.1
+
   '@hanzo/event@0.2.0(react@18.3.1)':
     optionalDependencies:
       react: 18.3.1
@@ -17856,6 +17884,12 @@ snapshots:
       - vue
       - ws
       - zod
+
+  '@hanzogui/shell@7.4.1(@hanzo/iam@0.13.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@hanzo/iam': 0.13.1(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@headlessui/react@2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
