@@ -8,6 +8,9 @@ const {
   messageIpLimiter,
   configMiddleware,
   messageUserLimiter,
+  enforceGuestScope,
+  guestMessageLimiter,
+  requireGuestOrJwtAuth,
 } = require('~/server/middleware');
 const { saveMessage } = require('~/models');
 const openai = require('./openai');
@@ -35,11 +38,17 @@ router.use('/v1/responses', responses);
 router.use('/v1', openai);
 
 /**
- * Chat completion router. Every request is gated by the strict `requireJwtAuth`
- * (there is no guest chat — a signed-in IAM identity is required so the request
- * bills to the user's own org via their forwarded bearer). Split from the parent
- * router only so the completion middleware chain (ban/uaParser/config/limiters)
- * applies to completions but not to management/CRUD routes.
+ * Guest-capable chat completion router.
+ *
+ * Auth here accepts either a real JWT or a guest token (`requireGuestOrJwtAuth`);
+ * when guest chat is off, or the token isn't a valid guest token, it falls through
+ * to the strict `requireJwtAuth`. `enforceGuestScope` then pins guests to the free
+ * Zen endpoint/model and strips every other capability (agents/tools/files/spec/
+ * preset), and `guestMessageLimiter` enforces the per-IP guest quota (real users
+ * are skipped). A signed-in user still bills to their own org via their forwarded
+ * bearer; a guest uses the shared, capped guest key (see custom/initialize.ts).
+ * Every OTHER agents route (management, CRUD, files) stays gated by the strict
+ * `requireJwtAuth` below, which rejects guest tokens.
  */
 const RESERVED_CHAT_SUBPATHS = new Set(['stream', 'active', 'status', 'abort']);
 
@@ -56,10 +65,12 @@ chatRouter.use((req, res, next) => {
   }
   return next();
 });
-chatRouter.use(requireJwtAuth);
+chatRouter.use(requireGuestOrJwtAuth);
 chatRouter.use(checkBan);
 chatRouter.use(uaParser);
 chatRouter.use(configMiddleware);
+chatRouter.use(enforceGuestScope);
+chatRouter.use(guestMessageLimiter);
 
 if (isEnabled(LIMIT_MESSAGE_IP)) {
   chatRouter.use(messageIpLimiter);
@@ -72,6 +83,33 @@ if (isEnabled(LIMIT_MESSAGE_USER)) {
 chatRouter.use('/', chat);
 
 router.use('/chat', chatRouter);
+
+/**
+ * Guest-safe active-jobs poll. Guests never own a generation job, so this returns
+ * an empty set without a DB/user lookup. Registered BEFORE the strict JWT guard
+ * below (and reachable because 'active' is a RESERVED_CHAT_SUBPATH deferred out of
+ * chatRouter) so the composer's bootstrap poll doesn't 401-loop for guests; every
+ * other agents route stays JWT-only and rejects guest tokens. Non-guests fall
+ * through to the authoritative `/chat/active` handler further down.
+ */
+router.get('/chat/active', requireGuestOrJwtAuth, async (req, res, next) => {
+  if (req.user?.guest === true) {
+    return res.json({ activeJobIds: [] });
+  }
+  return next();
+});
+
+/**
+ * Guest-safe SSE read-back: a guest MUST be able to read its OWN generation
+ * stream. All chat streaming is unified under this route; reached via the
+ * reserved-subpath deferral ('stream'), it is registered with
+ * `requireGuestOrJwtAuth` ABOVE the strict JWT guard so a guest token is accepted
+ * (the strict `jwt` strategy would 401 it → the streamed reply never reaches the
+ * guest browser → empty bubble). `streamHandler` (hoisted, defined below) pins
+ * every caller to their OWN job (`job.metadata.userId === req.user.id` → foreign
+ * 403, missing 404), so a guest can never read another principal's stream.
+ */
+router.get('/chat/stream/:streamId', requireGuestOrJwtAuth, streamHandler);
 
 router.use(requireJwtAuth);
 router.use(checkBan);
@@ -99,7 +137,7 @@ router.use('/', v1);
  * @description Sends sync event with resume state, replays missed chunks, then streams live
  * @query resume=true - Indicates this is a reconnection (sends sync event)
  */
-router.get('/chat/stream/:streamId', async (req, res) => {
+async function streamHandler(req, res) {
   const { streamId } = req.params;
   const isResume = req.query.resume === 'true';
 
@@ -179,7 +217,7 @@ router.get('/chat/stream/:streamId', async (req, res) => {
     logger.debug(`[AgentStream] Client disconnected from ${streamId}`);
     result.unsubscribe();
   });
-});
+}
 
 /**
  * @route GET /chat/active
