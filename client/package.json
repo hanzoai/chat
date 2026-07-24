@@ -42,7 +42,7 @@
     "@hanzo/ui": "npm:@hanzo/ui-shadcn@^5.7.4",
     "@hanzo/usage": "^0.1.6",
     "@hanzochat/client": "workspace:*",
-    "@hanzogui/shell": "^7.4.1",
+    "@hanzogui/shell": "^7.4.2",
     "@hanzochat/data-provider": "workspace:*",
     "@headlessui/react": "^2.1.2",
     "@marsidev/react-turnstile": "^1.1.0",
