@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { SearchMode } from '@hanzo/ai';
 import { useLocalize } from '~/hooks';
 import useAnswer from '~/hooks/useAnswer';
@@ -33,20 +34,25 @@ import ModeChips from './ModeChips';
  */
 const CHAT_PARAMS = ['prompt', 'q', 'submit', 'project'];
 
-/** The mode this visit starts in: chat when the URL carries a chat intent. */
-function initialMode(): SearchMode | 'chat' {
-  if (typeof window === 'undefined') {
-    return 'search';
-  }
-  const params = new URLSearchParams(window.location.search);
-  return CHAT_PARAMS.some((k) => params.has(k)) ? 'chat' : 'search';
-}
-
 export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const localize = useLocalize();
   const answer = useAnswer();
 
-  const [mode, setMode] = useState<SearchMode | 'chat'>(initialMode);
+  // Read through react-router, the same source useQueryParams reads, so a
+  // client-side navigation to a chat link switches modes too — a one-time read of
+  // window.location would only ever catch a full page load.
+  const [searchParams] = useSearchParams();
+  const chatIntent = CHAT_PARAMS.some((k) => searchParams.has(k));
+
+  const [mode, setMode] = useState<SearchMode | 'chat'>(() => (chatIntent ? 'chat' : 'search'));
+
+  // Only ever forces INTO chat: useQueryParams consumes and clears the params
+  // once ChatForm has them, and that must not bounce the user back out.
+  useEffect(() => {
+    if (chatIntent) {
+      setMode('chat');
+    }
+  }, [chatIntent]);
   // Empty until the real catalog resolves; the composer selects the first model
   // the caller is actually entitled to.
   const [model, setModel] = useState('');
@@ -65,14 +71,14 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
   // nothing on screen and no way to reach it.
   const changeMode = useCallback(
     (m: SearchMode | 'chat') => {
-      setMode((prev) => {
-        if (prev !== m && prev !== 'chat') {
-          stop();
-        }
-        return m;
-      });
+      // Side effect stays OUT of the updater — an updater must be pure, and
+      // React invokes it twice under StrictMode.
+      if (m !== mode && mode !== 'chat') {
+        stop();
+      }
+      setMode(m);
     },
-    [stop],
+    [mode, stop],
   );
 
   const ask = useCallback(
