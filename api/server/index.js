@@ -199,6 +199,7 @@ const startServer = async () => {
 
   app.use('/v1/chat/tags', routes.tags);
   app.use('/v1/chat/mcp', routes.mcp);
+  app.use('/v1/chat/ask', routes.ask);
 
   app.use(ErrorController);
 
