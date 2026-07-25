@@ -92,7 +92,7 @@ function ChatView({ index = 0 }: { index?: number }) {
       {isLandingPage ? (
         <>
           <div className="flex min-h-0 flex-1 flex-col">
-            <AnswerEngine />
+            <AnswerEngine index={index} />
           </div>
           <Footer />
         </>
