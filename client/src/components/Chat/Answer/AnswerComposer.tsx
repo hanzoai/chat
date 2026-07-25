@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUp, Check, ChevronDown, Square } from 'lucide-react';
 import type { SearchMode } from '@hanzo/ai';
 import type { TranslationKeys } from '~/hooks';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
-import { useLocalize } from '~/hooks';
+import { useLocalize, useAuthContext } from '~/hooks';
 import { cn } from '~/utils';
 
 /**
@@ -23,6 +23,11 @@ export const MODES = [
   { id: 'research', key: 'com_answer_mode_research' },
   { id: 'deep', key: 'com_answer_mode_deep' },
 ] as const satisfies readonly { id: SearchMode | 'chat'; key: TranslationKeys }[];
+
+/** Modes a guest may run. Research and deep cost several times a search and run
+ *  far longer, and a guest spends a shared balance — the server refuses them, so
+ *  they are not offered. */
+const GUEST_MODES = new Set(['chat', 'search', 'news']);
 
 /** `@source` hints cloud honors. Chips, not free text — no unmatched hint. */
 const SOURCES = ['news', 'academic', 'github', 'reddit', 'x'];
@@ -54,13 +59,23 @@ export default function AnswerComposer({
   onStop,
 }: AnswerComposerProps) {
   const localize = useLocalize();
+  const { isGuest } = useAuthContext();
   const [text, setText] = useState('');
   const [modelOpen, setModelOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const areaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: modelsConfig } = useGetModelsQuery();
-  const models = modelsConfig?.[CATALOG_ENDPOINT] ?? [];
+  const models = useMemo(() => modelsConfig?.[CATALOG_ENDPOINT] ?? [], [modelsConfig]);
+
+  // The catalog is the authority on what this caller may run — a guest is scoped
+  // to one model server-side. Selecting the first real model (rather than a
+  // hardcoded default) keeps the picker honest for both guests and members.
+  useEffect(() => {
+    if (models.length && !models.includes(model)) {
+      setModel(models[0]);
+    }
+  }, [models, model, setModel]);
 
   const submit = () => {
     const value = text.trim();
@@ -103,7 +118,7 @@ export default function AnswerComposer({
         />
 
         <div className="flex items-center gap-1.5 overflow-x-auto px-2 pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {MODES.map((m) => (
+          {MODES.filter((m) => !isGuest || GUEST_MODES.has(m.id)).map((m) => (
             <button
               key={m.id}
               type="button"
