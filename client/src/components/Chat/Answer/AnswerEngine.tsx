@@ -1,25 +1,30 @@
 import { useCallback, useState } from 'react';
 import type { SearchMode } from '@hanzo/ai';
-import { useSubmitMessage, useLocalize } from '~/hooks';
+import { useLocalize } from '~/hooks';
 import useAnswer from '~/hooks/useAnswer';
+import ChatForm from '~/components/Chat/Input/ChatForm';
+import ConversationStarters from '~/components/Chat/Input/ConversationStarters';
 import AnswerComposer from './AnswerComposer';
 import AnswerView from './AnswerView';
+import ModeChips from './ModeChips';
 
 /**
  * The answer engine — hanzo.chat's default surface.
  *
- * ONE input, mode-switched. `Chat` hands the text to the normal conversation flow
- * (`useSubmitMessage`, the same call the standard composer makes), so chat is
- * unchanged and a real thread takes over the view the moment it exists. Every
- * other mode runs the grounded answer engine through `/v1/chat/ask` and streams
- * sources, a cited answer, and follow-ups in place.
+ * One mode switch over TWO composers, each the real thing for its job:
+ *
+ *   chat  -> the actual ChatForm. Not a re-implementation: attachments, the
+ *            `/build` and `/agent` command interception, `?prompt=`/`?q=`/
+ *            `?submit=` query-param prefill and the `?project=` opener all live
+ *            in that component, and routing chat through anything else silently
+ *            drops them.
+ *   web   -> AnswerComposer, which streams a grounded, cited answer in place.
  *
  * Rendered only on the landing (no messages yet), so nothing here can touch an
- * existing conversation.
+ * existing conversation — the moment a thread exists this branch is gone.
  */
-export default function AnswerEngine() {
+export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const localize = useLocalize();
-  const { submitMessage } = useSubmitMessage();
   const answer = useAnswer();
 
   const [mode, setMode] = useState<SearchMode | 'chat'>('search');
@@ -32,22 +37,18 @@ export default function AnswerEngine() {
     setSources((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   }, []);
 
-  const handleSubmit = useCallback(
-    (text: string) => {
-      if (mode === 'chat') {
-        submitMessage({ text });
-        return;
-      }
-      answer.run(text, { mode, model: model || undefined, sources });
-    },
-    [mode, model, sources, submitMessage, answer],
-  );
-
+  const isChat = mode === 'chat';
   const hasResult = answer.query !== '';
+  const { run } = answer;
+
+  const ask = useCallback(
+    (text: string, m: SearchMode) => run(text, { mode: m, model: model || undefined, sources }),
+    [run, model, sources],
+  );
 
   return (
     <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-3 sm:px-4">
-      {hasResult ? (
+      {hasResult && !isChat ? (
         <div className="min-h-0 flex-1 overflow-y-auto pt-4">
           <AnswerView
             query={answer.query}
@@ -56,9 +57,7 @@ export default function AnswerEngine() {
             followUps={answer.followUps}
             status={answer.status}
             isLoading={answer.isLoading}
-            onFollowUp={(q) =>
-              answer.run(q, { mode: mode as SearchMode, model: model || undefined, sources })
-            }
+            onFollowUp={(q) => ask(q, mode as SearchMode)}
           />
           {answer.error && <ErrorNotice message={answer.error} needsSignIn={answer.needsSignIn} />}
         </div>
@@ -71,25 +70,36 @@ export default function AnswerEngine() {
       )}
 
       <div className="shrink-0 pb-3 pt-2">
-        <AnswerComposer
-          mode={mode}
-          setMode={setMode}
-          model={model}
-          setModel={setModel}
-          sources={sources}
-          toggleSource={toggleSource}
-          isLoading={answer.isLoading}
-          onSubmit={handleSubmit}
-          onStop={answer.stop}
-        />
-        {hasResult && (
-          <button
-            type="button"
-            onClick={answer.reset}
-            className="mt-2 w-full text-center text-xs text-text-secondary transition-colors hover:text-text-primary"
-          >
-            {localize('com_answer_new_search')}
-          </button>
+        <div className="mb-2 px-1">
+          <ModeChips mode={mode} setMode={setMode} />
+        </div>
+
+        {isChat ? (
+          <>
+            <ChatForm index={index} />
+            <ConversationStarters />
+          </>
+        ) : (
+          <>
+            <AnswerComposer
+              model={model}
+              setModel={setModel}
+              sources={sources}
+              toggleSource={toggleSource}
+              isLoading={answer.isLoading}
+              onSubmit={(text) => ask(text, mode as SearchMode)}
+              onStop={answer.stop}
+            />
+            {hasResult && (
+              <button
+                type="button"
+                onClick={answer.reset}
+                className="mt-2 w-full text-center text-xs text-text-secondary transition-colors hover:text-text-primary"
+              >
+                {localize('com_answer_new_search')}
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

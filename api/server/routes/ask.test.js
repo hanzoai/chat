@@ -49,6 +49,16 @@ function sseBody(frames) {
   });
 }
 
+/** A fresh 200 SSE response per call — a ReadableStream can only be read once. */
+function mockOk(frames = [{ type: 'done', answer: 'a', sources: [] }]) {
+  global.fetch.mockImplementation(async () => ({
+    ok: true,
+    status: 200,
+    headers: new Map(),
+    body: sseBody(frames),
+  }));
+}
+
 function app() {
   const a = express();
   a.use(express.json());
@@ -89,12 +99,7 @@ describe('POST /v1/chat/ask', () => {
 
   it("attaches the user's IAM bearer and always names a web mode", async () => {
     mockResolveActiveOrg.mockReturnValue('acme');
-    global.fetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Map(),
-      body: sseBody([{ type: 'done', answer: 'a', sources: [] }]),
-    });
+    mockOk();
 
     await request(app()).post('/v1/chat/ask').send({ q: 'who won' });
 
@@ -112,12 +117,7 @@ describe('POST /v1/chat/ask', () => {
   it('uses the shared guest key for a guest, and sends no org', async () => {
     mockUser = { id: 'guest_1', guest: true };
     process.env.GUEST_API_KEY = 'hk-guest';
-    global.fetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Map(),
-      body: sseBody([{ type: 'done', answer: 'a', sources: [] }]),
-    });
+    mockOk();
 
     await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
 
@@ -131,12 +131,7 @@ describe('POST /v1/chat/ask', () => {
   it('pins a guest to the guest model, ignoring a premium model they asked for', async () => {
     mockUser = { id: 'guest_1', guest: true };
     process.env.GUEST_API_KEY = 'hk-guest';
-    global.fetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Map(),
-      body: sseBody([{ type: 'done', answer: 'a', sources: [] }]),
-    });
+    mockOk();
 
     await request(app()).post('/v1/chat/ask').send({ q: 'hi', model: 'zen5-pro' });
 
@@ -156,12 +151,7 @@ describe('POST /v1/chat/ask', () => {
   });
 
   it("honors a signed-in caller's model choice", async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Map(),
-      body: sseBody([{ type: 'done', answer: 'a', sources: [] }]),
-    });
+    mockOk();
 
     await request(app()).post('/v1/chat/ask').send({ q: 'hi', model: 'zen5-pro' });
 
@@ -170,12 +160,7 @@ describe('POST /v1/chat/ask', () => {
   });
 
   it('drops source hints cloud does not honor', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Map(),
-      body: sseBody([{ type: 'done', answer: 'a', sources: [] }]),
-    });
+    mockOk();
 
     await request(app())
       .post('/v1/chat/ask')
@@ -193,12 +178,7 @@ describe('POST /v1/chat/ask', () => {
       { type: 'follow_ups', questions: ['why?'] },
       { type: 'done', answer: 'Tokyo', sources: [] },
     ];
-    global.fetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Map(),
-      body: sseBody(frames),
-    });
+    mockOk(frames);
 
     const res = await request(app()).post('/v1/chat/ask').send({ q: 'capital of japan' });
 
@@ -209,18 +189,44 @@ describe('POST /v1/chat/ask', () => {
     expect(res.text.trim().endsWith('data: [DONE]')).toBe(true);
   });
 
-  it('passes an upstream refusal through with its status', async () => {
+  it('passes an upstream refusal status through WITHOUT its body', async () => {
+    // An intermediary answering with text/html must never become a same-origin
+    // markup sink; this route answers SSE or one JSON shape, nothing else.
     global.fetch.mockResolvedValue({
       ok: false,
-      status: 402,
-      headers: new Map([['content-type', 'application/json']]),
-      text: async () => '{"error":{"code":"insufficient_balance"}}',
+      status: 502,
+      headers: new Map([['content-type', 'text/html']]),
+      text: async () => '<script>alert(document.domain)</script>',
       body: null,
     });
 
     const res = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
-    expect(res.status).toBe(402);
-    expect(res.text).toContain('insufficient_balance');
+    expect(res.status).toBe(502);
+    expect(res.headers['content-type']).toMatch(/application\/json/);
+    expect(res.text).not.toContain('<script>');
+    expect(JSON.parse(res.text).error).toBe('The answer engine is unavailable right now.');
+  });
+
+  it('clamps maxSources so it cannot multiply spend on the shared key', async () => {
+    mockOk();
+
+    await request(app()).post('/v1/chat/ask').send({ q: 'hi', maxSources: 100000 });
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).maxSources).toBe(16);
+
+    global.fetch.mockClear();
+    await request(app()).post('/v1/chat/ask').send({ q: 'hi', maxSources: -5 });
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).maxSources).toBe(1);
+  });
+
+  it('forwards only a well-formed language tag', async () => {
+    mockOk();
+
+    await request(app()).post('/v1/chat/ask').send({ q: 'hi', language: 'x'.repeat(5000) });
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).language).toBeUndefined();
+
+    global.fetch.mockClear();
+    await request(app()).post('/v1/chat/ask').send({ q: 'hi', language: 'en-GB' });
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).language).toBe('en-GB');
   });
 
   it('reports a transport failure as a 502 rather than a hung stream', async () => {

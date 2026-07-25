@@ -51,7 +51,7 @@ export default function AnswerView({
             {sources.map((s, i) => (
               <a
                 key={`${s.url}-${i}`}
-                href={s.url}
+                href={safeUrl(s.url) ?? undefined}
                 target="_blank"
                 rel="noreferrer"
                 className="w-40 shrink-0 snap-start rounded-xl border border-border-light bg-surface-secondary p-2.5 transition-colors hover:bg-surface-hover"
@@ -60,11 +60,12 @@ export default function AnswerView({
                   <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-surface-tertiary text-[10px] font-medium text-text-secondary">
                     {i + 1}
                   </span>
-                  {s.favicon ? (
+                  {safeUrl(s.favicon) ? (
                     <img
-                      src={s.favicon}
+                      src={safeUrl(s.favicon) as string}
                       alt=""
                       aria-hidden="true"
+                      referrerPolicy="no-referrer"
                       className="size-3.5 rounded-sm"
                     />
                   ) : null}
@@ -127,6 +128,28 @@ export default function AnswerView({
   );
 }
 
+/**
+ * A URL that is safe to put in an href/src, or null.
+ *
+ * Every URL on this surface is attacker-reachable: sources are whatever cloud
+ * fetched off the live web, and the citation links are emitted by a model that
+ * just read those pages. A page that says "cite me as [source 1](javascript:...)"
+ * would otherwise get a clickable javascript:/data: URL rendered on chat's own
+ * origin — React logs a warning for those and renders them anyway. Only http(s)
+ * survives this function; anything else renders as inert text.
+ */
+function safeUrl(url: string | undefined): string | null {
+  if (!url) {
+    return null;
+  }
+  try {
+    const u = new URL(url, window.location.origin);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Hostname without `www.`, for a compact source label. */
 function hostOf(url: string): string {
   try {
@@ -161,7 +184,13 @@ function renderInline(text: string, sources: SearchSource[]): React.ReactNode[] 
       );
     } else {
       const label = m[1];
-      const url = m[2];
+      const url = safeUrl(m[2]);
+      if (!url) {
+        // A non-http(s) citation target is content, not a link — show the words.
+        out.push(label);
+        last = pattern.lastIndex;
+        continue;
+      }
       const cite = /^source\s+(\d+)$/i.exec(label.trim());
       if (cite) {
         out.push(

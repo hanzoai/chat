@@ -1,33 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUp, Check, ChevronDown, Square } from 'lucide-react';
-import type { SearchMode } from '@hanzo/ai';
-import type { TranslationKeys } from '~/hooks';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
-import { useLocalize, useAuthContext } from '~/hooks';
-import { cn } from '~/utils';
+import { useLocalize } from '~/hooks';
 
 /**
- * The answer-engine input: one field, mode-switched. `chat` hands the text to the
- * normal conversation flow; every other mode grounds it on the live web through
- * `/v1/chat/ask`. One input, one submit — the mode decides where it goes.
+ * The grounded-search input. Rendered for the web modes only — chat mode uses the
+ * real chat composer, so nothing here reimplements attachments, slash commands or
+ * query-param prefill.
  *
- * Monochrome and mobile-first: the control row scrolls horizontally at 390px
- * rather than wrapping into a second bar, so the composer keeps one line.
+ * Monochrome and mobile-first: the control row stays on one line at 390px.
  */
-
-/** Answer modes, in the order they read as escalating effort. */
-export const MODES = [
-  { id: 'chat', key: 'com_answer_mode_chat' },
-  { id: 'search', key: 'com_answer_mode_search' },
-  { id: 'news', key: 'com_answer_mode_news' },
-  { id: 'research', key: 'com_answer_mode_research' },
-  { id: 'deep', key: 'com_answer_mode_deep' },
-] as const satisfies readonly { id: SearchMode | 'chat'; key: TranslationKeys }[];
-
-/** Modes a guest may run. Research and deep cost several times a search and run
- *  far longer, and a guest spends a shared balance — the server refuses them, so
- *  they are not offered. */
-const GUEST_MODES = new Set(['chat', 'search', 'news']);
 
 /** `@source` hints cloud honors. Chips, not free text — no unmatched hint. */
 const SOURCES = ['news', 'academic', 'github', 'reddit', 'x'];
@@ -36,8 +18,6 @@ const SOURCES = ['news', 'academic', 'github', 'reddit', 'x'];
 const CATALOG_ENDPOINT = 'Hanzo';
 
 export interface AnswerComposerProps {
-  mode: SearchMode | 'chat';
-  setMode: (m: SearchMode | 'chat') => void;
   model: string;
   setModel: (m: string) => void;
   sources: string[];
@@ -48,8 +28,6 @@ export interface AnswerComposerProps {
 }
 
 export default function AnswerComposer({
-  mode,
-  setMode,
   model,
   setModel,
   sources,
@@ -59,7 +37,6 @@ export default function AnswerComposer({
   onStop,
 }: AnswerComposerProps) {
   const localize = useLocalize();
-  const { isGuest } = useAuthContext();
   const [text, setText] = useState('');
   const [modelOpen, setModelOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -100,9 +77,7 @@ export default function AnswerComposer({
           ref={areaRef}
           rows={1}
           value={text}
-          placeholder={localize(
-            mode === 'chat' ? 'com_answer_chat_placeholder' : 'com_answer_ask_placeholder',
-          )}
+          placeholder={localize('com_answer_ask_placeholder')}
           onChange={(e) => {
             setText(e.target.value);
             e.target.style.height = 'auto';
@@ -117,26 +92,9 @@ export default function AnswerComposer({
           className="max-h-[200px] w-full resize-none bg-transparent px-4 pt-3.5 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
         />
 
-        <div className="flex items-center gap-1.5 overflow-x-auto px-2 pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {MODES.filter((m) => !isGuest || GUEST_MODES.has(m.id)).map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              aria-pressed={mode === m.id}
-              onClick={() => setMode(m.id)}
-              className={cn(
-                'shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors',
-                mode === m.id
-                  ? 'bg-text-primary font-medium text-surface-primary'
-                  : 'text-text-secondary hover:bg-surface-hover',
-              )}
-            >
-              {localize(m.key)}
-            </button>
-          ))}
-
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 pl-1.5">
-            {mode !== 'chat' && (
+        <div className="flex items-center gap-1.5 px-2 pb-2 pt-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+            {
               <div className="relative">
                 <button
                   type="button"
@@ -163,7 +121,7 @@ export default function AnswerComposer({
                   </Menu>
                 )}
               </div>
-            )}
+            }
 
             <div className="relative">
               <button
@@ -203,7 +161,7 @@ export default function AnswerComposer({
 
             <button
               type="button"
-              aria-label={isLoading ? 'Stop' : 'Send'}
+              aria-label={localize(isLoading ? 'com_answer_stop' : 'com_answer_send')}
               onClick={isLoading ? onStop : submit}
               disabled={!isLoading && !text.trim()}
               className="flex size-8 shrink-0 items-center justify-center rounded-full bg-text-primary text-surface-primary transition-opacity disabled:opacity-30"
@@ -218,7 +176,7 @@ export default function AnswerComposer({
         </div>
       </div>
 
-      {mode !== 'chat' && sources.length > 0 && (
+      {sources.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5 px-1">
           {sources.map((s) => (
             <button
@@ -238,11 +196,12 @@ export default function AnswerComposer({
 
 /** A small anchored popover. Click-away closes it; no portal, no dependency. */
 function Menu({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const localize = useLocalize();
   return (
     <>
       <button
         type="button"
-        aria-label="Close menu"
+        aria-label={localize('com_answer_close_menu')}
         className="fixed inset-0 z-10 cursor-default"
         onClick={onClose}
       />
