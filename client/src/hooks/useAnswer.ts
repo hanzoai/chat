@@ -101,6 +101,11 @@ export default function useAnswer(): UseAnswerResult {
 
           if (!res.ok || !res.body) {
             const body = await res.json().catch(() => ({}) as Record<string, unknown>);
+            // A superseded run can land here: its abort surfaces as a rejected
+            // json() that the catch above swallows. Only the current run writes.
+            if (abortRef.current !== controller) {
+              return;
+            }
             const message =
               typeof body?.error === 'string' ? body.error : localize('com_answer_unavailable');
             setState((s) => ({

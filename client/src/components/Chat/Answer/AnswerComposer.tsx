@@ -94,34 +94,32 @@ export default function AnswerComposer({
 
         <div className="flex items-center gap-1.5 px-2 pb-2 pt-1">
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            {
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSourcesOpen((v) => !v);
-                    setModelOpen(false);
-                  }}
-                  className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover"
-                >
-                  {sources.length ? `@${sources.length}` : '@'}
-                  <ChevronDown className="size-3.5" aria-hidden="true" />
-                </button>
-                {sourcesOpen && (
-                  <Menu onClose={() => setSourcesOpen(false)}>
-                    {SOURCES.map((s) => (
-                      <MenuItem
-                        key={s}
-                        selected={sources.includes(s)}
-                        onClick={() => toggleSource(s)}
-                      >
-                        @{s}
-                      </MenuItem>
-                    ))}
-                  </Menu>
-                )}
-              </div>
-            }
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setSourcesOpen((v) => !v);
+                  setModelOpen(false);
+                }}
+                className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover"
+              >
+                {sources.length ? `@${sources.length}` : '@'}
+                <ChevronDown className="size-3.5" aria-hidden="true" />
+              </button>
+              {sourcesOpen && (
+                <Menu onClose={() => setSourcesOpen(false)}>
+                  {SOURCES.map((s) => (
+                    <MenuItem
+                      key={s}
+                      selected={sources.includes(s)}
+                      onClick={() => toggleSource(s)}
+                    >
+                      @{s}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              )}
+            </div>
 
             <div className="relative">
               <button

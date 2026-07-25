@@ -12,7 +12,7 @@ import { cn } from '~/utils';
  */
 
 /** Modes, in the order they read as escalating effort. */
-export const MODES = [
+const MODES = [
   { id: 'chat', key: 'com_answer_mode_chat' },
   { id: 'search', key: 'com_answer_mode_search' },
   { id: 'news', key: 'com_answer_mode_news' },
