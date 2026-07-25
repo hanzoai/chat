@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { apiBaseUrl } from '@hanzochat/data-provider';
 import type { SearchSource, SearchMode } from '@hanzo/ai';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useLocalize from '~/hooks/useLocalize';
@@ -77,7 +78,7 @@ export default function useAnswer(): UseAnswerResult {
 
       void (async () => {
         try {
-          const res = await fetch('/v1/chat/ask', {
+          const res = await fetch(`${apiBaseUrl()}/v1/chat/ask`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
