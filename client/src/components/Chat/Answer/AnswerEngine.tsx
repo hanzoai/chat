@@ -23,7 +23,9 @@ export default function AnswerEngine() {
   const answer = useAnswer();
 
   const [mode, setMode] = useState<SearchMode | 'chat'>('search');
-  const [model, setModel] = useState('enso');
+  // Empty until the real catalog resolves; the composer selects the first model
+  // the caller is actually entitled to.
+  const [model, setModel] = useState('');
   const [sources, setSources] = useState<string[]>([]);
 
   const toggleSource = useCallback((s: string) => {
@@ -36,7 +38,7 @@ export default function AnswerEngine() {
         submitMessage({ text });
         return;
       }
-      answer.run(text, { mode, model, sources });
+      answer.run(text, { mode, model: model || undefined, sources });
     },
     [mode, model, sources, submitMessage, answer],
   );
@@ -54,7 +56,9 @@ export default function AnswerEngine() {
             followUps={answer.followUps}
             status={answer.status}
             isLoading={answer.isLoading}
-            onFollowUp={(q) => answer.run(q, { mode: mode as SearchMode, model, sources })}
+            onFollowUp={(q) =>
+              answer.run(q, { mode: mode as SearchMode, model: model || undefined, sources })
+            }
           />
           {answer.error && <ErrorNotice message={answer.error} needsSignIn={answer.needsSignIn} />}
         </div>

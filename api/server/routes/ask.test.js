@@ -18,6 +18,11 @@ jest.mock('~/server/middleware', () => ({
     req.user = mockUser;
     return next();
   },
+  guestMessageLimiter: (req, res, next) => next(),
+}));
+
+jest.mock('~/server/services/guestConfig', () => ({
+  getGuestConfig: () => ({ model: 'zen5-flash', endpoint: 'Hanzo', messageMax: 10 }),
 }));
 
 jest.mock('@hanzochat/data-schemas', () => ({
@@ -121,6 +126,47 @@ describe('POST /v1/chat/ask', () => {
     expect(init.headers['X-Org-Id']).toBeUndefined();
     // A guest's key must never be resolved through the tenant-bearer path.
     expect(mockResolveTenantBearer).not.toHaveBeenCalled();
+  });
+
+  it('pins a guest to the guest model, ignoring a premium model they asked for', async () => {
+    mockUser = { id: 'guest_1', guest: true };
+    process.env.GUEST_API_KEY = 'hk-guest';
+    global.fetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Map(),
+      body: sseBody([{ type: 'done', answer: 'a', sources: [] }]),
+    });
+
+    await request(app()).post('/v1/chat/ask').send({ q: 'hi', model: 'zen5-pro' });
+
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    // The shared key must never fund a model the guest scope does not allow.
+    expect(body.model).toBe('zen5-flash');
+  });
+
+  it('refuses the expensive modes for a guest', async () => {
+    mockUser = { id: 'guest_1', guest: true };
+    process.env.GUEST_API_KEY = 'hk-guest';
+    for (const mode of ['research', 'deep']) {
+      const res = await request(app()).post('/v1/chat/ask').send({ q: 'hi', mode });
+      expect(res.status).toBe(403);
+    }
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("honors a signed-in caller's model choice", async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Map(),
+      body: sseBody([{ type: 'done', answer: 'a', sources: [] }]),
+    });
+
+    await request(app()).post('/v1/chat/ask').send({ q: 'hi', model: 'zen5-pro' });
+
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.model).toBe('zen5-pro');
   });
 
   it('drops source hints cloud does not honor', async () => {
