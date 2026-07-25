@@ -22,13 +22,6 @@ const toggleSwitchConfigs = [
     key: 'maximizeChatSpace',
   },
   {
-    stateAtom: store.centerFormOnLanding,
-    localizationKey: 'com_nav_center_chat_input' as const,
-    switchId: 'centerFormOnLanding',
-    hoverCardText: undefined,
-    key: 'centerFormOnLanding',
-  },
-  {
     stateAtom: showThinkingAtom,
     localizationKey: 'com_nav_show_thinking' as const,
     switchId: 'showThinking',
