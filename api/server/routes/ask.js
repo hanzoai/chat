@@ -1,7 +1,8 @@
 const express = require('express');
 const { logger } = require('@hanzochat/data-schemas');
 const { resolveTenantBearer, resolveActiveOrg } = require('@hanzochat/api');
-const { requireGuestOrJwtAuth } = require('~/server/middleware');
+const { requireGuestOrJwtAuth, guestMessageLimiter } = require('~/server/middleware');
+const { getGuestConfig } = require('~/server/services/guestConfig');
 
 /**
  * Answer engine — the grounded-search surface of hanzo.chat. Mounted at
@@ -22,7 +23,11 @@ const { requireGuestOrJwtAuth } = require('~/server/middleware');
  *                   plus the selected org as `X-Org-Id`. Cloud validates the JWT
  *                   and meters the answer to that user's org.
  *   - guest      -> the shared, capped guest key (`GUEST_API_KEY`, KMS
- *                   `chat-guest-key`; `HANZO_API_KEY` is the dev fallback).
+ *                   `chat-guest-key`; `HANZO_API_KEY` is the dev fallback). A
+ *                   guest spends a SHARED balance, so the same per-IP quota and
+ *                   model pin the guest completion path uses apply here too —
+ *                   without them an anonymous loop could bill the shared account
+ *                   for premium models.
  *   - neither    -> an honest 401. Never a fabricated or wrong-principal call.
  *
  * The upstream envelope is data-only SSE whose frames are the `@hanzo/ai`
@@ -39,6 +44,11 @@ const SOURCE_HINTS = new Set(['news', 'academic', 'github', 'reddit', 'x']);
 
 /** Cloud truncates at 2000; reject earlier so an oversized body never leaves chat. */
 const MAX_QUERY = 2000;
+
+/** Is this request an anonymous guest (shared key, shared balance)? */
+function isGuestMode(req) {
+  return req.user?.guest === true;
+}
 
 /** Upstream cloud base. In-cluster by default — no public hop for a server call. */
 function cloudBaseUrl() {
@@ -66,7 +76,7 @@ function resolveCredential(req) {
  * Body: `{ q, mode?, model?, sources?, language?, maxSources?, followUps? }`.
  * Responds `text/event-stream`, relaying cloud's frames unchanged.
  */
-router.post('/', requireGuestOrJwtAuth, async (req, res) => {
+router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) => {
   const q = (req.body?.q ?? '').toString().trim();
   if (!q) {
     return res.status(400).json({ error: 'a question is required' });
@@ -90,6 +100,12 @@ router.post('/', requireGuestOrJwtAuth, async (req, res) => {
     });
   }
 
+  // Deep/research modes cost several times a search and run far longer; a shared
+  // guest key does not fund them.
+  if (isGuestMode(req) && mode !== 'search' && mode !== 'news') {
+    return res.status(403).json({ error: 'sign in to run research and deep modes' });
+  }
+
   const sources = Array.isArray(req.body?.sources)
     ? req.body.sources
         .map((s) => (s ?? '').toString().trim().toLowerCase())
@@ -102,7 +118,13 @@ router.post('/', requireGuestOrJwtAuth, async (req, res) => {
     stream: true,
     followUps: req.body?.followUps !== false,
   };
-  if (req.body?.model) {
+  // A guest is pinned to the guest model, exactly as the completion path pins it
+  // (enforceGuestScope). The client only offers that one model, but the pin lives
+  // here because the client is not the authority on what a shared key may spend.
+  const isGuest = req.user?.guest === true;
+  if (isGuest) {
+    upstream.model = getGuestConfig().model;
+  } else if (req.body?.model) {
     upstream.model = req.body.model.toString();
   }
   if (sources?.length) {
