@@ -62,6 +62,22 @@ const UPSTREAM_TIMEOUT_MS = 120000;
 /** Cloud truncates at 2000; reject earlier so an oversized body never leaves chat. */
 const MAX_QUERY = 2000;
 
+/** The client renders a sign-in action for exactly this code. Every refusal that
+ *  signing in would actually resolve carries it — and nothing else does, so the
+ *  CTA never appears where it cannot help. */
+const SIGNIN_REQUIRED = 'ASK_SIGNIN_REQUIRED';
+
+/**
+ * The status this route answers with for an upstream refusal. Only codes the
+ * client can act on are passed through; anything else becomes 502. An upstream
+ * (or an intermediary) answering 204/304 would otherwise make Express drop the
+ * JSON body entirely and the client would render a generic failure instead of
+ * the real reason.
+ */
+function relayStatus(status) {
+  return [401, 402, 403, 429].includes(status) ? status : 502;
+}
+
 /** The one honest sentence for an upstream refusal, chosen by status. Never the
  *  upstream's own body — see the call site. */
 function upstreamMessage(status) {
@@ -126,16 +142,15 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   if (!credential) {
     // Honest, actionable: the surface renders for everyone, but an answer is a
     // real metered cloud call and needs a real principal behind it.
-    return res.status(401).json({
-      error: 'Sign in with Hanzo to search — your Hanzo account funds this request.',
-      code: 'ASK_SIGNIN_REQUIRED',
-    });
+    return res.status(401).json({ error: upstreamMessage(401), code: SIGNIN_REQUIRED });
   }
 
   // The paid modes are not funded by the shared guest key.
   const guest = isGuest(req);
   if (guest && !GUEST_MODES.has(mode)) {
-    return res.status(403).json({ error: 'sign in to run research and deep modes' });
+    return res
+      .status(403)
+      .json({ error: 'Sign in to run research and deep modes.', code: SIGNIN_REQUIRED });
   }
 
   const sources = Array.isArray(req.body?.sources)
@@ -173,10 +188,14 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   }
 
   const controller = new AbortController();
+  let clientGone = false;
   // Two independent ways this call must end: the browser going away, and the
   // upstream simply never finishing. Cloud bounds its own loop, but that is not a
   // property this process can enforce, so chat keeps its own deadline.
-  res.on('close', () => controller.abort());
+  res.on('close', () => {
+    clientGone = true;
+    controller.abort();
+  });
   const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(UPSTREAM_TIMEOUT_MS)]);
 
   let cloudRes;
@@ -193,7 +212,7 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
       signal,
     });
   } catch (err) {
-    if (controller.signal.aborted) {
+    if (clientGone) {
       return;
     }
     logger.error('[ask] upstream request failed', err);
@@ -211,7 +230,12 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
       status: cloudRes.status,
       detail: detail.slice(0, 500),
     });
-    return res.status(cloudRes.status).json({ error: upstreamMessage(cloudRes.status) });
+    const status = relayStatus(cloudRes.status);
+    const body = { error: upstreamMessage(status) };
+    if (status === 401 || status === 403) {
+      body.code = SIGNIN_REQUIRED;
+    }
+    return res.status(status).json(body);
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
@@ -227,7 +251,10 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   // an unbounded write queue is the whole process's memory.
   await new Promise((resolve) => {
     pipeline(Readable.fromWeb(cloudRes.body), res, (err) => {
-      if (err && !controller.signal.aborted) {
+      // On a pipeline error Node destroys res, which emits 'close' and aborts the
+      // controller — so the signal alone cannot tell "we cancelled" from "the
+      // stream broke". The flag is set only by the client actually going away.
+      if (err && !clientGone) {
         logger.warn('[ask] stream interrupted', { message: err.message });
       }
       resolve();
