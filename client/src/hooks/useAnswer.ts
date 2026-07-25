@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiBaseUrl } from '@hanzochat/data-provider';
 import type { SearchSource, SearchMode } from '@hanzo/ai';
 import { useAuthContext } from '~/hooks/AuthContext';
@@ -49,6 +49,11 @@ export default function useAnswer(): UseAnswerResult {
   const [state, setState] = useState(EMPTY);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  // An answer is a live, billed upstream call. Leaving the surface (switching to
+  // chat mode starts a conversation, which unmounts this whole branch) must end
+  // it — otherwise the relay and the cloud call keep running against a dead tree.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -102,7 +107,10 @@ export default function useAnswer(): UseAnswerResult {
               ...s,
               status: '',
               error: message,
-              needsSignIn: res.status === 401,
+              // The relay says so explicitly; a bare 401 can also mean cloud
+              // rejected a signed-in caller's token, which signing in again
+              // would not fix.
+              needsSignIn: body?.code === 'ASK_SIGNIN_REQUIRED',
             }));
             setIsLoading(false);
             return;
@@ -123,10 +131,12 @@ export default function useAnswer(): UseAnswerResult {
             buffer = frames.pop() ?? '';
             for (const frame of frames) {
               for (const line of frame.split('\n')) {
-                if (!line.startsWith('data: ')) {
+                if (!line.startsWith('data:')) {
                   continue;
                 }
-                const payload = line.slice(6);
+                // SSE strips ONE optional leading space; `data:{...}` is as valid
+                // as `data: {...}`, and an intermediary may re-serialize either way.
+                const payload = line.slice(5).replace(/^ /, '');
                 if (payload === '[DONE]') {
                   continue;
                 }
@@ -164,7 +174,7 @@ export default function useAnswer(): UseAnswerResult {
             }
           }
         } catch (err) {
-          if ((err as Error)?.name !== 'AbortError') {
+          if ((err as Error)?.name !== 'AbortError' && abortRef.current === controller) {
             setState((s) => ({
               ...s,
               status: '',
@@ -172,8 +182,14 @@ export default function useAnswer(): UseAnswerResult {
             }));
           }
         } finally {
-          setIsLoading(false);
-          abortRef.current = null;
+          // Only the CURRENT run may clear the shared state. A superseded run
+          // settles after its replacement is already installed; without this it
+          // would flip isLoading off and null the live controller, leaving a
+          // stream that Stop can no longer reach.
+          if (abortRef.current === controller) {
+            setIsLoading(false);
+            abortRef.current = null;
+          }
         }
       })();
     },
