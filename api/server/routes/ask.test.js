@@ -229,6 +229,58 @@ describe('POST /v1/chat/ask', () => {
     expect(JSON.parse(global.fetch.mock.calls[0][1].body).language).toBe('en-GB');
   });
 
+  it('marks every refusal that signing in would fix, and only those', async () => {
+    // The client renders its sign-in CTA on this code alone, so a refusal that
+    // signing in CANNOT fix must not carry it.
+    mockResolveTenantBearer.mockReturnValue(null);
+    const noBearer = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
+    expect(noBearer.body.code).toBe('ASK_SIGNIN_REQUIRED');
+
+    mockUser = { id: 'guest_1', guest: true };
+    process.env.GUEST_API_KEY = 'hk-guest';
+    const paidMode = await request(app()).post('/v1/chat/ask').send({ q: 'hi', mode: 'deep' });
+    expect(paidMode.status).toBe(403);
+    expect(paidMode.body.code).toBe('ASK_SIGNIN_REQUIRED');
+
+    global.fetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: new Map(),
+      text: async () => '{"error":"sign in to ask"}',
+      body: null,
+    });
+    const upstream401 = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
+    expect(upstream401.status).toBe(401);
+    expect(upstream401.body.code).toBe('ASK_SIGNIN_REQUIRED');
+
+    global.fetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      headers: new Map(),
+      text: async () => 'boom',
+      body: null,
+    });
+    const upstream500 = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
+    expect(upstream500.body.code).toBeUndefined();
+  });
+
+  it('never relays a status that would strip the JSON body', async () => {
+    // Express sends no body for 204/304, so the client would render a generic
+    // failure instead of the real reason.
+    for (const status of [204, 304]) {
+      global.fetch.mockResolvedValue({
+        ok: false,
+        status,
+        headers: new Map(),
+        text: async () => '',
+        body: null,
+      });
+      const res = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
+      expect(res.status).toBe(502);
+      expect(JSON.parse(res.text).error).toBeTruthy();
+    }
+  });
+
   it('reports a transport failure as a 502 rather than a hung stream', async () => {
     global.fetch.mockRejectedValue(new Error('econnrefused'));
     const res = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });

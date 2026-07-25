@@ -48,32 +48,37 @@ export default function AnswerView({
       {sources.length > 0 && (
         <section className="mb-6" aria-label={localize('com_answer_sources')}>
           <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {sources.map((s, i) => (
-              <a
-                key={`${s.url}-${i}`}
-                href={safeUrl(s.url) ?? undefined}
-                target="_blank"
-                rel="noreferrer"
-                className="w-40 shrink-0 snap-start rounded-xl border border-border-light bg-surface-secondary p-2.5 transition-colors hover:bg-surface-hover"
-              >
-                <div className="mb-1.5 flex items-center gap-1.5">
-                  <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-surface-tertiary text-[10px] font-medium text-text-secondary">
-                    {i + 1}
-                  </span>
-                  {safeUrl(s.favicon) ? (
-                    <img
-                      src={safeUrl(s.favicon) as string}
-                      alt=""
-                      aria-hidden="true"
-                      referrerPolicy="no-referrer"
-                      className="size-3.5 rounded-sm"
-                    />
-                  ) : null}
-                  <span className="truncate text-[11px] text-text-secondary">{hostOf(s.url)}</span>
-                </div>
-                <div className="line-clamp-3 text-xs leading-4 text-text-primary">{s.title}</div>
-              </a>
-            ))}
+            {sources.map((s, i) => {
+              const favicon = safeUrl(s.favicon);
+              return (
+                <a
+                  key={`${s.url}-${i}`}
+                  href={safeUrl(s.url) ?? undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-40 shrink-0 snap-start rounded-xl border border-border-light bg-surface-secondary p-2.5 transition-colors hover:bg-surface-hover"
+                >
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-surface-tertiary text-[10px] font-medium text-text-secondary">
+                      {i + 1}
+                    </span>
+                    {favicon ? (
+                      <img
+                        src={favicon}
+                        alt=""
+                        aria-hidden="true"
+                        referrerPolicy="no-referrer"
+                        className="size-3.5 rounded-sm"
+                      />
+                    ) : null}
+                    <span className="truncate text-[11px] text-text-secondary">
+                      {hostOf(s.url)}
+                    </span>
+                  </div>
+                  <div className="line-clamp-3 text-xs leading-4 text-text-primary">{s.title}</div>
+                </a>
+              );
+            })}
           </div>
         </section>
       )}

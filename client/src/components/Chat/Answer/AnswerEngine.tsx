@@ -23,11 +23,30 @@ import ModeChips from './ModeChips';
  * Rendered only on the landing (no messages yet), so nothing here can touch an
  * existing conversation — the moment a thread exists this branch is gone.
  */
+/**
+ * Query params that mean "this visit is a CHAT", not a search.
+ *
+ * `?prompt=`/`?q=`/`?submit=` are read by useQueryParams and `?project=` seeds
+ * the composer's default value — all of them inside ChatForm, which only mounts
+ * in chat mode. Defaulting to search would leave those links prefilling a field
+ * nobody rendered, so the link itself picks the mode.
+ */
+const CHAT_PARAMS = ['prompt', 'q', 'submit', 'project'];
+
+/** The mode this visit starts in: chat when the URL carries a chat intent. */
+function initialMode(): SearchMode | 'chat' {
+  if (typeof window === 'undefined') {
+    return 'search';
+  }
+  const params = new URLSearchParams(window.location.search);
+  return CHAT_PARAMS.some((k) => params.has(k)) ? 'chat' : 'search';
+}
+
 export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const localize = useLocalize();
   const answer = useAnswer();
 
-  const [mode, setMode] = useState<SearchMode | 'chat'>('search');
+  const [mode, setMode] = useState<SearchMode | 'chat'>(initialMode);
   // Empty until the real catalog resolves; the composer selects the first model
   // the caller is actually entitled to.
   const [model, setModel] = useState('');
@@ -39,7 +58,22 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
 
   const isChat = mode === 'chat';
   const hasResult = answer.query !== '';
-  const { run } = answer;
+  const { run, stop } = answer;
+
+  // Leaving a web mode hides both the answer and its Stop button, so the switch
+  // is the last chance to end the run — otherwise a billed stream finishes with
+  // nothing on screen and no way to reach it.
+  const changeMode = useCallback(
+    (m: SearchMode | 'chat') => {
+      setMode((prev) => {
+        if (prev !== m && prev !== 'chat') {
+          stop();
+        }
+        return m;
+      });
+    },
+    [stop],
+  );
 
   const ask = useCallback(
     (text: string, m: SearchMode) => run(text, { mode: m, model: model || undefined, sources }),
@@ -71,7 +105,7 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
 
       <div className="shrink-0 pb-3 pt-2">
         <div className="mb-2 px-1">
-          <ModeChips mode={mode} setMode={setMode} />
+          <ModeChips mode={mode} setMode={changeMode} />
         </div>
 
         {isChat ? (
