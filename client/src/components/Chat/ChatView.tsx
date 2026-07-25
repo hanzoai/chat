@@ -8,15 +8,13 @@ import type { TMessage } from '@hanzochat/data-provider';
 import type { ChatFormValues } from '~/common';
 import { ChatContext, AddedChatContext, useFileMapContext, ChatFormProvider } from '~/Providers';
 import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } from '~/hooks';
-import ConversationStarters from './Input/ConversationStarters';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
 import Presentation from './Presentation';
 import ChatForm from './Input/ChatForm';
-import Landing from './Landing';
+import AnswerEngine from './Answer/AnswerEngine';
 import Header from './Header';
 import Footer from './Footer';
-import { cn } from '~/utils';
 import { resolveProjectSlug, projectOpener } from '~/utils/project';
 import store from '~/store';
 
@@ -33,7 +31,6 @@ function LoadingSpinner() {
 function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
   const rootSubmission = useRecoilValue(store.submissionByIndex(index));
-  const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
 
   const fileMap = useFileMapContext();
 
@@ -82,35 +79,32 @@ function ChatView({ index = 0 }: { index?: number }) {
     content = <LoadingSpinner />;
   } else if (!isLandingPage) {
     content = <MessagesView messagesTree={messagesTree} />;
-  } else {
-    content = <Landing centerFormOnLanding={centerFormOnLanding} />;
   }
 
+  // The landing IS the answer engine: one mode-switched input that either grounds
+  // a question on the live web or opens a normal conversation. It owns its own
+  // composer, so the chat composer is not rendered underneath it — a second input
+  // on the same screen would be two ways to do one thing. The moment a
+  // conversation exists this branch is gone and the thread renders as always.
   const chatColumn = (
     <div className="relative flex h-full w-full flex-col">
       {!isLoading && <Header />}
-      <>
-        <div
-          className={cn(
-            'flex flex-col',
-            isLandingPage
-              ? 'flex-1 items-center justify-end sm:justify-center'
-              : 'h-full overflow-y-auto',
-          )}
-        >
+      {isLandingPage ? (
+        <>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <AnswerEngine />
+          </div>
+          <Footer />
+        </>
+      ) : (
+        <div className="flex h-full flex-col overflow-y-auto">
           {content}
-          <div
-            className={cn(
-              'w-full',
-              isLandingPage && 'max-w-3xl transition-all duration-200 xl:max-w-4xl',
-            )}
-          >
+          <div className="w-full">
             <ChatForm index={index} />
-            {isLandingPage ? <ConversationStarters /> : <Footer />}
+            <Footer />
           </div>
         </div>
-        {isLandingPage && <Footer />}
-      </>
+      )}
     </div>
   );
 
