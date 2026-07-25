@@ -1,4 +1,5 @@
 const express = require('express');
+const { Readable, pipeline } = require('stream');
 const { logger } = require('@hanzochat/data-schemas');
 const { resolveTenantBearer, resolveActiveOrg } = require('@hanzochat/api');
 const { requireGuestOrJwtAuth, guestMessageLimiter } = require('~/server/middleware');
@@ -39,14 +40,45 @@ const router = express.Router();
 /** Answer modes cloud grounds on the live web. Anything else is rejected here. */
 const WEB_MODES = new Set(['search', 'news', 'research', 'deep']);
 
+/**
+ * Modes a guest may run. Research and deep gather a far wider source set and run
+ * several times longer, and a guest spends a SHARED balance — so they are the
+ * paid modes. Declared here, beside WEB_MODES, because this is the authority; the
+ * client's chip filter is a display of the same names.
+ */
+const GUEST_MODES = new Set(['search', 'news']);
+
+/** Upper bound on grounding sources. Cloud clamps per mode; chat clamps too, so
+ *  an unbounded number never becomes a spend multiplier on the shared key. */
+const MAX_SOURCES = 16;
+
 /** `@source` hints cloud honors; everything else is dropped upstream anyway. */
 const SOURCE_HINTS = new Set(['news', 'academic', 'github', 'reddit', 'x']);
+
+/** Ceiling on a single relayed answer. Cloud bounds its own loop at 90s; this is
+ *  chat's own deadline so a stalled upstream cannot pin a socket open forever. */
+const UPSTREAM_TIMEOUT_MS = 120000;
 
 /** Cloud truncates at 2000; reject earlier so an oversized body never leaves chat. */
 const MAX_QUERY = 2000;
 
+/** The one honest sentence for an upstream refusal, chosen by status. Never the
+ *  upstream's own body — see the call site. */
+function upstreamMessage(status) {
+  if (status === 401 || status === 403) {
+    return 'Sign in with Hanzo to search — your Hanzo account funds this request.';
+  }
+  if (status === 402) {
+    return 'This search is not covered by your current balance.';
+  }
+  if (status === 429) {
+    return 'Too many searches right now — try again in a moment.';
+  }
+  return 'The answer engine is unavailable right now.';
+}
+
 /** Is this request an anonymous guest (shared key, shared balance)? */
-function isGuestMode(req) {
+function isGuest(req) {
   return req.user?.guest === true;
 }
 
@@ -62,7 +94,7 @@ function cloudBaseUrl() {
  * @returns {{ bearer: string, org: string|null }|null}
  */
 function resolveCredential(req) {
-  if (req.user?.guest === true) {
+  if (isGuest(req)) {
     const guestKey = process.env.GUEST_API_KEY || process.env.HANZO_API_KEY || '';
     return guestKey ? { bearer: guestKey, org: null } : null;
   }
@@ -100,9 +132,9 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
     });
   }
 
-  // Deep/research modes cost several times a search and run far longer; a shared
-  // guest key does not fund them.
-  if (isGuestMode(req) && mode !== 'search' && mode !== 'news') {
+  // The paid modes are not funded by the shared guest key.
+  const guest = isGuest(req);
+  if (guest && !GUEST_MODES.has(mode)) {
     return res.status(403).json({ error: 'sign in to run research and deep modes' });
   }
 
@@ -121,8 +153,7 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   // A guest is pinned to the guest model, exactly as the completion path pins it
   // (enforceGuestScope). The client only offers that one model, but the pin lives
   // here because the client is not the authority on what a shared key may spend.
-  const isGuest = req.user?.guest === true;
-  if (isGuest) {
+  if (guest) {
     upstream.model = getGuestConfig().model;
   } else if (req.body?.model) {
     upstream.model = req.body.model.toString();
@@ -130,17 +161,23 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   if (sources?.length) {
     upstream.sources = sources;
   }
-  if (req.body?.language) {
-    upstream.language = req.body.language.toString();
+  // Both are cost inputs on a key this process is responsible for. Cloud clamps
+  // them too, but chat does not forward an unbounded number or an arbitrary
+  // string just because cloud would cope.
+  const language = (req.body?.language ?? '').toString().trim();
+  if (/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$/.test(language)) {
+    upstream.language = language;
   }
   if (Number.isInteger(req.body?.maxSources)) {
-    upstream.maxSources = req.body.maxSources;
+    upstream.maxSources = Math.min(Math.max(req.body.maxSources, 1), MAX_SOURCES);
   }
 
   const controller = new AbortController();
-  // The browser going away must release the upstream socket; cloud's own loop is
-  // bounded (90s) but chat should not hold a dead relay open.
+  // Two independent ways this call must end: the browser going away, and the
+  // upstream simply never finishing. Cloud bounds its own loop, but that is not a
+  // property this process can enforce, so chat keeps its own deadline.
   res.on('close', () => controller.abort());
+  const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(UPSTREAM_TIMEOUT_MS)]);
 
   let cloudRes;
   try {
@@ -153,7 +190,7 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
         ...(credential.org ? { 'X-Org-Id': credential.org } : {}),
       },
       body: JSON.stringify(upstream),
-      signal: controller.signal,
+      signal,
     });
   } catch (err) {
     if (controller.signal.aborted) {
@@ -163,14 +200,18 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
     return res.status(502).json({ error: 'the answer engine is unavailable' });
   }
 
-  // A non-stream reply is always an error envelope (402 spend cap, 401, 5xx).
-  // Pass the status through so the client can render the honest reason.
+  // A non-stream reply is always an error envelope (402 spend cap, 401, 5xx). The
+  // STATUS is passed through so the client can render the honest reason, but the
+  // body is not: an intermediary answering 502 with text/html would otherwise make
+  // this route a same-origin sink for upstream-controlled markup. This endpoint
+  // answers with SSE or with this one JSON shape, nothing else.
   if (!cloudRes.ok || !cloudRes.body) {
     const detail = await cloudRes.text().catch(() => '');
-    logger.warn('[ask] upstream rejected', { status: cloudRes.status });
-    res.status(cloudRes.status);
-    res.set('Content-Type', cloudRes.headers.get('content-type') || 'application/json');
-    return res.send(detail || JSON.stringify({ error: 'the answer engine is unavailable' }));
+    logger.warn('[ask] upstream rejected', {
+      status: cloudRes.status,
+      detail: detail.slice(0, 500),
+    });
+    return res.status(cloudRes.status).json({ error: upstreamMessage(cloudRes.status) });
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
@@ -181,24 +222,17 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
-  try {
-    for await (const chunk of cloudRes.body) {
-      if (res.writableEnded) {
-        break;
+  // pipeline gives backpressure (a slow reader cannot make this process buffer the
+  // whole answer), error propagation, and the end() in one call — at replicas: 1
+  // an unbounded write queue is the whole process's memory.
+  await new Promise((resolve) => {
+    pipeline(Readable.fromWeb(cloudRes.body), res, (err) => {
+      if (err && !controller.signal.aborted) {
+        logger.warn('[ask] stream interrupted', { message: err.message });
       }
-      res.write(chunk);
-      if (typeof res.flush === 'function') {
-        res.flush();
-      }
-    }
-  } catch (err) {
-    if (!controller.signal.aborted) {
-      logger.warn('[ask] stream interrupted', { message: err.message });
-    }
-  }
-  if (!res.writableEnded) {
-    res.end();
-  }
+      resolve();
+    });
+  });
 });
 
 module.exports = router;
