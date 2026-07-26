@@ -386,8 +386,8 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3(react@18.3.1)
       '@hanzo/iam':
-        specifier: ^0.16.0
-        version: 0.16.0(react@18.3.1)
+        specifier: ^0.18.0
+        version: 0.18.0(react@18.3.1)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@18.3.1)
@@ -405,7 +405,7 @@ importers:
         version: link:../packages/data-provider
       '@hanzogui/shell':
         specifier: ^7.4.2
-        version: 7.4.2(@hanzo/iam@0.16.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 7.4.2(@hanzo/iam@0.18.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3812,6 +3812,9 @@ packages:
       react:
         optional: true
 
+  '@hanzo/design@0.2.0':
+    resolution: {integrity: sha512-TgMhU4EGAx+3TIPeTrx7Wf9rrAWJuzYFrRVYqtIY5/pPt1yM17Ayk8rcbv7m9/HPkWNBO0CouyuGAzkEP9AFlQ==}
+
   '@hanzo/event@0.3.3':
     resolution: {integrity: sha512-faooSLA2UR4N8B0hOcSuQk3yi48Dahp5IMTrQn/WdKQc4JkKGx0lmdASp7os80ita48VQUNheqF6lpdXIj6ZYQ==}
     peerDependencies:
@@ -3820,8 +3823,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/iam@0.16.0':
-    resolution: {integrity: sha512-OApTFl/UHDXXcnApj5hMVRbg0OcTkYGZyl/s1UtHrnLQOqWM+km83Z55u7RD0gH17l5dSwK2xjd+6denqKnc1A==}
+  '@hanzo/iam@0.18.0':
+    resolution: {integrity: sha512-XrWjgnc/JY028bpbEWMKFHbbWrHFmzRFHs5NOZ0byXcGeYjPR6FZeZRKiSQlUSrVd5QrNesRKY9tyrGnaFw2Rw==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
@@ -17732,12 +17735,16 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
+  '@hanzo/design@0.2.0': {}
+
   '@hanzo/event@0.3.3(react@18.3.1)':
     optionalDependencies:
       react: 18.3.1
 
-  '@hanzo/iam@0.16.0(react@18.3.1)':
+  '@hanzo/iam@0.18.0(react@18.3.1)':
     dependencies:
+      '@hanzo/design': 0.2.0
+      '@hanzo/logo': 1.0.13(react@18.3.1)
       jose: 6.2.2
       libphonenumber-js: 1.13.7
       passport-oauth2: 1.8.0
@@ -17885,9 +17892,9 @@ snapshots:
       - ws
       - zod
 
-  '@hanzogui/shell@7.4.2(@hanzo/iam@0.16.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hanzogui/shell@7.4.2(@hanzo/iam@0.18.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@hanzo/iam': 0.16.0(react@18.3.1)
+      '@hanzo/iam': 0.18.0(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
