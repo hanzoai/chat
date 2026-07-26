@@ -133,14 +133,22 @@ export function checkVariables() {
  * Logs information or warning based on the API's availability and response.
  */
 export async function checkHealth() {
-  try {
-    const response = await fetch(`${process.env.RAG_API_URL}/health`);
-    if (response?.ok && response?.status === 200) {
-      logger.info(`RAG API is running and reachable at ${process.env.RAG_API_URL}.`);
-    }
-  } catch {
+  // RAG is served by the unified backend (/v1/rag/*), reached per-request with the
+  // caller's own IAM bearer — see api/server/services/RagClient. There is no
+  // standalone RAG service to probe, and an unauthenticated boot-time ping would
+  // prove nothing about a user's retrieval anyway, so report the configured target
+  // instead of pinging it. (This used to probe the retired rag-api and, once its
+  // env was removed, warned about file uploads being broken at "undefined" — a
+  // warning that was both wrong and alarming.)
+  const origin = (process.env.HANZO_CLOUD_URL || process.env.OPENAI_BASE_URL || '')
+    .trim()
+    .replace(/\/v1\/?$/, '')
+    .replace(/\/+$/, '');
+  if (origin) {
+    logger.info(`RAG is served by the unified backend at ${origin}/v1/rag/*.`);
+  } else {
     logger.warn(
-      `RAG API is either not running or not reachable at ${process.env.RAG_API_URL}, you may experience errors with file uploads.`,
+      'No cloud origin configured (HANZO_CLOUD_URL / OPENAI_BASE_URL) — file retrieval is disabled.',
     );
   }
 }
