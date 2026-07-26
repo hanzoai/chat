@@ -130,7 +130,9 @@ const errorMessages = {
     if (reason === 'commerce_insufficient') {
       return (
         <>
-          {'You have no Hanzo Cloud balance. Claim your $5 starter credit (or add funds) to start chatting.'}
+          {
+            'You have no Hanzo Cloud balance. Claim your $5 starter credit (or add funds) to start chatting.'
+          }
           <br />
           <br />
           <a
@@ -186,17 +188,33 @@ const errorMessages = {
   },
 };
 
+/**
+ * A refused request carries no answer, only the reason. Passport answers an
+ * unauthenticated request with the bare body `Unauthorized`, which must never
+ * reach the reader as "the specific error message we encountered" — say plainly
+ * that they are not signed in instead.
+ */
+const isUnauthorized = (value: unknown): boolean =>
+  typeof value === 'string' && value.trim().replace(/^"|"$/g, '').toLowerCase() === 'unauthorized';
+
 const Error = ({ text }: { text: string }) => {
   const localize = useLocalize();
   const jsonString = extractJson(text);
   const errorMessage = text.length > 512 && !jsonString ? text.slice(0, 512) + '...' : text;
   const defaultResponse = `Something went wrong. Here's the specific error message we encountered: ${errorMessage}`;
 
+  if (isUnauthorized(text)) {
+    return localize('com_error_unauthorized');
+  }
+
   if (!isJson(jsonString)) {
     return defaultResponse;
   }
 
   const json = JSON.parse(jsonString);
+  if (isUnauthorized(json) || isUnauthorized(json?.message) || isUnauthorized(json?.error)) {
+    return localize('com_error_unauthorized');
+  }
   const errorKey = json.code || json.type;
   const keyExists = errorKey && errorMessages[errorKey];
 
