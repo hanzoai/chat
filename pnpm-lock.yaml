@@ -377,14 +377,14 @@ importers:
         specifier: ^9.2.2
         version: 9.4.2
       '@hanzo/ai':
-        specifier: ^0.2.1
-        version: 0.2.1
+        specifier: ^0.2.3
+        version: 0.2.3
       '@hanzo/brand':
         specifier: ^1.4.1
         version: 1.4.1(react@18.3.1)
       '@hanzo/event':
-        specifier: ^0.2.0
-        version: 0.2.0(react@18.3.1)
+        specifier: ^0.3.3
+        version: 0.3.3(react@18.3.1)
       '@hanzo/iam':
         specifier: ^0.13.8
         version: 0.13.8(react@18.3.1)
@@ -3799,8 +3799,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hanzo/ai@0.2.1':
-    resolution: {integrity: sha512-m0k6V6Im8m5RXWHUy/E7DvpZ9tFBYUw21NTYFxNxUiPI1l+yEvHEVytqEbEtHZOCa9Ytb8nfuNzJIsfCeF/zZw==}
+  '@hanzo/ai@0.2.3':
+    resolution: {integrity: sha512-vL042sYaVzmWUTrjcCrx3Gay/a+oa9Mgv1cVetapeyikSS4wKOw9lMdSbxw2OD8puJK/Ozew7cglL43MYI9L3Q==}
     engines: {node: '>=18'}
 
   '@hanzo/brand@1.4.1':
@@ -3812,8 +3812,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/event@0.2.0':
-    resolution: {integrity: sha512-jx+xlT5no88PYg/k465/pQ7a+oQcfImB5X0dJ4/ZSSF5bwqPCItvN/9Znt4SQpq18EQeMuR5GiLmxo1wSP5uqw==}
+  '@hanzo/event@0.3.3':
+    resolution: {integrity: sha512-faooSLA2UR4N8B0hOcSuQk3yi48Dahp5IMTrQn/WdKQc4JkKGx0lmdASp7os80ita48VQUNheqF6lpdXIj6ZYQ==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
@@ -17724,7 +17724,7 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@hanzo/ai@0.2.1': {}
+  '@hanzo/ai@0.2.3': {}
 
   '@hanzo/brand@1.4.1(react@18.3.1)':
     dependencies:
@@ -17732,7 +17732,7 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  '@hanzo/event@0.2.0(react@18.3.1)':
+  '@hanzo/event@0.3.3(react@18.3.1)':
     optionalDependencies:
       react: 18.3.1
 

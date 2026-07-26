@@ -1,9 +1,9 @@
 /** Memories */
 import { z } from 'zod';
-import { Tools } from 'librechat-data-provider';
+import { Tools } from '@hanzochat/data-provider';
 import type { StreamEventData, ToolEndCallback, EventHandler, LLMConfig } from '@hanzochat/agents';
 import type { ObjectId, MemoryMethods, IUser } from '@hanzochat/data-schemas';
-import type { TAttachment, MemoryArtifact } from 'librechat-data-provider';
+import type { TAttachment, MemoryArtifact } from '@hanzochat/data-provider';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { Response as ServerResponse } from 'express';
 type RequiredMemoryMethods = Pick<MemoryMethods, 'setMemory' | 'deleteMemory' | 'getFormattedMemories'>;

@@ -17,7 +17,7 @@ var meilisearch = require('meilisearch');
 var nanoid = require('nanoid');
 
 /**
- * Sets up the Agents configuration from the config (`librechat.yaml`) file.
+ * Sets up the Agents configuration from the config (`chat.yaml`) file.
  * If no agents config is defined, uses the provided defaults or parses empty object.
  *
  * @param config - The loaded custom configuration.
@@ -511,7 +511,7 @@ const jsonTruncateFormat = winston.format((info) => {
 /**
  * Determine the log directory in a cross-compatible way.
  * Priority:
- * 1. LIBRECHAT_LOG_DIR environment variable
+ * 1. CHAT_LOG_DIR environment variable
  * 2. If running within Hanzo Chat monorepo (when cwd ends with /api), use api/logs
  * 3. If api/logs exists relative to cwd, use that (for running from project root)
  * 4. Otherwise, use logs directory relative to process.cwd()
@@ -519,8 +519,8 @@ const jsonTruncateFormat = winston.format((info) => {
  * This avoids using __dirname which is not available in ESM modules
  */
 const getLogDirectory = () => {
-    if (process.env.LIBRECHAT_LOG_DIR) {
-        return process.env.LIBRECHAT_LOG_DIR;
+    if (process.env.CHAT_LOG_DIR) {
+        return process.env.CHAT_LOG_DIR;
     }
     const cwd = process.cwd();
     // Check if we're running from within the api directory
@@ -531,8 +531,8 @@ const getLogDirectory = () => {
     // We'll just use the path and let the file system create it if needed
     const apiLogsPath = path.join(cwd, 'api', 'logs');
     // For Hanzo Chat project structure, use api/logs
-    // For external consumers, they should set LIBRECHAT_LOG_DIR
-    if (cwd.includes('LibreChat') || cwd.includes('hanzo/chat') || cwd.includes('hanzo-chat')) {
+    // For external consumers, they should set CHAT_LOG_DIR
+    if (cwd.includes('Chat') || cwd.includes('hanzo/chat') || cwd.includes('hanzo-chat')) {
         return apiLogsPath;
     }
     // Default to logs directory relative to current working directory
@@ -735,7 +735,7 @@ function loadWebSearchConfig(config) {
 }
 
 /**
- * Sets up Model Specs from the config (`librechat.yaml`) file.
+ * Sets up Model Specs from the config (`chat.yaml`) file.
  * @param [endpoints] - The loaded custom configuration for endpoints.
  * @param [modelSpecs] - The loaded custom configuration for model specs.
  * @param [interfaceConfig] - The loaded interface configuration.
@@ -781,7 +781,7 @@ function processModelSpecs(endpoints, _modelSpecs, interfaceConfig) {
         if (!endpoint) {
             logger$1.warn(`Model spec with endpoint "${currentEndpoint}" was skipped: Endpoint not found in configuration. The \`endpoint\` value must exactly match either a system-defined endpoint or a custom endpoint defined by the user.
 
-For more information, see the documentation at https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/model_specs#endpoint`);
+For more information, see the documentation at https://hanzo.ai/docs/chat/configuration/chat_yaml/object_structure/model_specs#endpoint`);
             continue;
         }
         modelSpecs.push({
@@ -809,7 +809,7 @@ function azureAssistantsDefaults() {
     };
 }
 /**
- * Sets up the Assistants configuration from the config (`librechat.yaml`) file.
+ * Sets up the Assistants configuration from the config (`chat.yaml`) file.
  * @param config - The loaded custom configuration.
  * @param assistantsEndpoint - The Assistants endpoint name.
  * - The previously loaded assistants configuration from Azure OpenAI Assistants option.
@@ -847,7 +847,7 @@ function assistantsConfigSetup(config, assistantsEndpoint, prevConfig = {}) {
 }
 
 /**
- * Sets up the Azure OpenAI configuration from the config (`librechat.yaml`) file.
+ * Sets up the Azure OpenAI configuration from the config (`chat.yaml`) file.
  * @param config - The loaded custom configuration.
  * @returns The Azure OpenAI configuration.
  */
@@ -1011,7 +1011,7 @@ function validateVertexConfig(vertexConfig) {
     };
 }
 /**
- * Sets up the Vertex AI configuration from the config (`librechat.yaml`) file.
+ * Sets up the Vertex AI configuration from the config (`chat.yaml`) file.
  * Similar to azureConfigSetup, this processes and validates the Vertex AI configuration.
  * @param config - The loaded custom configuration.
  * @returns The validated Vertex AI configuration or null if not configured.
@@ -1976,6 +1976,13 @@ const agentSchema = new mongoose.Schema({
     },
     support_contact: {
         type: mongoose.Schema.Types.Mixed,
+        default: undefined,
+    },
+    /** git.hanzo.ai repository this app was built into (hanzo.app clone); the
+     * community showcase filters and links on it. */
+    repository: {
+        type: String,
+        index: true,
         default: undefined,
     },
     is_promoted: {
@@ -3239,6 +3246,16 @@ const userSchema = new mongoose.Schema({
     organizationTag: {
         type: String,
     },
+    /** Org's default project from the Hanzo IAM 'project' claim; the gateway mints X-Project-Id from it */
+    project: {
+        type: String,
+        index: true,
+    },
+    /** Org/role memberships from the Hanzo IAM 'groups' claim */
+    groups: {
+        type: [String],
+        default: [],
+    },
 }, { timestamps: true });
 
 const MemoryEntrySchema = new mongoose.Schema({
@@ -4256,7 +4273,7 @@ function createGroupModel(mongoose) {
 /**
  * The canonical set of base system capabilities.
  *
- * These are used by the admin panel and LibreChat API to gate access to
+ * These are used by the admin panel and Chat API to gate access to
  * admin features. Config-section-derived capabilities (e.g.
  * `manage:configs:endpoints`) are built on top of these where the
  * configSchema is available.

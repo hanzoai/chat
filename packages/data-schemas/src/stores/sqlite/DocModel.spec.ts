@@ -155,6 +155,67 @@ describe('DocModel — QueryBuilder.distinct (ACL path)', () => {
     const values = (await AgentCategory.find({ isActive: true }).distinct('value').lean()) as string[];
     expect([...values].sort()).toEqual(['coding', 'general']);
   });
+
+  /**
+   * Mongo's `distinct` walks the path per document and SKIPS documents where the
+   * path is missing — a missing path contributes nothing, it does not contribute
+   * `undefined`. This is load-bearing on the live `getRandomPromptGroups` path:
+   * `PromptGroup.distinct('category', { category: { $ne: '' } })`. `$ne` matches
+   * a missing field (missing !== ''), so every uncategorized group reaches
+   * distinct; emitting `undefined` puts a junk "category" into the shuffled list
+   * that later feeds a `category: { $in: [...] }` lookup.
+   */
+  it('distinct skips documents missing the path instead of emitting undefined', async () => {
+    handle.close();
+    handle = createSqliteHandle(['PromptGroup']);
+    const PromptGroup = handle.models.PromptGroup;
+    await PromptGroup.create({ name: 'a', author: 'u1', category: 'writing' });
+    await PromptGroup.create({ name: 'b', author: 'u1', category: 'coding' });
+    await PromptGroup.create({ name: 'c', author: 'u1', category: '' });
+    // Uncategorized: no `category` key at all. `$ne: ''` still matches it.
+    await PromptGroup.create({ name: 'd', author: 'u1' });
+
+    const categories = (await PromptGroup.distinct('category', {
+      category: { $ne: '' },
+    })) as string[];
+
+    expect(categories).not.toContain(undefined);
+    expect([...categories].sort()).toEqual(['coding', 'writing']);
+  });
+
+  /** Mongo resolves dotted paths in `distinct`; `doc[field]` alone cannot. */
+  it('distinct resolves dotted paths', async () => {
+    await AclEntry.create({
+      principalType: 'user',
+      principalId: 'u1',
+      resourceType: 'agent',
+      resourceId: 'r1',
+      permBits: 1,
+      metadata: { origin: 'share' },
+    });
+    await AclEntry.create({
+      principalType: 'user',
+      principalId: 'u2',
+      resourceType: 'agent',
+      resourceId: 'r2',
+      permBits: 1,
+      metadata: { origin: 'share' },
+    });
+    await AclEntry.create({
+      principalType: 'user',
+      principalId: 'u3',
+      resourceType: 'agent',
+      resourceId: 'r3',
+      permBits: 1,
+      metadata: { origin: 'owner' },
+    });
+
+    const origins = (await AclEntry.find({ resourceType: 'agent' }).distinct(
+      'metadata.origin',
+    )) as string[];
+
+    expect([...origins].sort()).toEqual(['owner', 'share']);
+  });
 });
 
 describe('DocModel — Batch 2 primitives', () => {
@@ -226,5 +287,280 @@ describe('DocModel — Batch 2 primitives', () => {
     )) as { position: number };
     expect(onUpdate.position).toBe(1); // old value
     expect(((await Tag.findOne({ tag: 'a' }).lean()) as { position: number }).position).toBe(2);
+  });
+});
+
+describe('DocModel — aggregate fails loud on unsupported stages', () => {
+  let handle: SqliteHandle;
+  let Message: DocModel;
+
+  beforeEach(() => {
+    handle = createSqliteHandle(['Conversation', 'Message']);
+    Message = handle.models.Message;
+  });
+
+  afterEach(() => {
+    handle.close();
+  });
+
+  // The whole point. This chain used to end at $project with no else, so an
+  // unsupported stage was DROPPED and the pipeline returned a confident wrong
+  // answer. That cost real correctness: $addFields was unsupported, so all four
+  // permission-migration pipelines matched zero documents and reported
+  // "nothing to migrate" — anyone who ran them migrated nothing and was told it
+  // worked. Silence is the bug; throwing is the fix.
+  it('throws on an unsupported stage instead of skipping it', async () => {
+    await expect(Message.aggregate([{ $replaceRoot: {} }])).rejects.toThrow(
+      /unsupported stage \$replaceRoot/,
+    );
+  });
+
+  it('names the supported set in the error, so the fix is obvious', async () => {
+    await expect(Message.aggregate([{ $replaceRoot: {} }])).rejects.toThrow(
+      /\$match \$lookup \$unwind \$group \$sort \$limit \$skip \$project/,
+    );
+  });
+
+  // $skip was missing while $limit was present, so a paginated aggregate
+  // silently returned page 1 for every page.
+  it('$skip paginates instead of being silently dropped', async () => {
+    for (const n of ['a', 'b', 'c', 'd']) {
+      await Message.create({ messageId: n, user: 'u1', text: n });
+    }
+    const page2 = await Message.aggregate([
+      { $match: { user: 'u1' } },
+      { $sort: { messageId: 1 } },
+      { $skip: 2 },
+      { $limit: 2 },
+    ]);
+    expect(page2.map((d) => d.messageId)).toEqual(['c', 'd']);
+  });
+
+
+  // $facet was unsupported, so api/server/controllers/Usage.js reported
+  // all-zero spend to every customer on a billing-adjacent surface.
+  it('$facet runs each sub-pipeline over the same input and collapses to ONE doc', async () => {
+    await Message.create({ messageId: 'a', user: 'u1', text: 'x' });
+    await Message.create({ messageId: 'b', user: 'u1', text: 'y' });
+    await Message.create({ messageId: 'c', user: 'u2', text: 'z' });
+
+    const out = await Message.aggregate([
+      { $match: { user: { $in: ['u1', 'u2'] } } },
+      {
+        $facet: {
+          mine: [{ $match: { user: 'u1' } }],
+          theirs: [{ $match: { user: 'u2' } }],
+          firstOnly: [{ $sort: { messageId: 1 } }, { $limit: 1 }],
+        },
+      },
+    ]);
+
+    // Callers destructure `const [facet] = await aggregate(...)`, so the stage
+    // MUST yield exactly one document.
+    expect(out).toHaveLength(1);
+    const ids = (v: unknown) => (v as Array<{ messageId: string }>).map((d) => d.messageId);
+    expect(ids(out[0].mine)).toEqual(['a', 'b']);
+    expect(ids(out[0].theirs)).toEqual(['c']);
+    expect(ids(out[0].firstOnly)).toEqual(['a']);
+  });
+
+  it('$facet sub-pipelines are independent — one does not filter another', async () => {
+    await Message.create({ messageId: 'a', user: 'u1', text: 'x' });
+    await Message.create({ messageId: 'b', user: 'u2', text: 'y' });
+
+    const out = await Message.aggregate([
+      { $facet: { a: [{ $match: { user: 'u1' } }], b: [{ $match: { user: 'u2' } }] } },
+    ]);
+    expect(out[0].a).toHaveLength(1);
+    expect(out[0].b).toHaveLength(1); // would be 0 if `a` had narrowed the input
+  });
+
+  it('an unsupported stage INSIDE a $facet still throws', async () => {
+    await expect(
+      Message.aggregate([{ $facet: { x: [{ $replaceRoot: {} }] } }]),
+    ).rejects.toThrow(/unsupported stage \$replaceRoot/);
+  });
+
+  it('$addFields adds a field and keeps every existing one', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
+
+    const out = await Message.aggregate([{ $addFields: { copied: '$user' } }]);
+    expect(out).toHaveLength(1);
+    expect(out[0].copied).toBe('u1');
+    // $project keeps only what it names; $addFields keeps everything.
+    expect(out[0].messageId).toBe('m1');
+    expect(out[0].text).toBe('a');
+  });
+
+  it('$addFields expressions see the ORIGINAL doc, not each other', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
+
+    const out = await Message.aggregate([{ $addFields: { first: '$user', second: '$first' } }]);
+    // `second` reads $first from the input document, where it does not exist.
+    // If the stage applied fields progressively it would wrongly be 'u1'.
+    expect(out[0].first).toBe('u1');
+    expect(out[0].second).toBeUndefined();
+  });
+
+  // The exact shape of the four permission-migration pipelines, which is why
+  // this stage exists at all. Before it landed they threw; before THAT they
+  // silently matched zero documents and reported "nothing to migrate".
+  it('$addFields + $filter/$and/$eq computes the migration predicate', async () => {
+    await Message.create({
+      messageId: 'm1',
+      user: 'u1',
+      text: 'a',
+      aclEntries: [
+        { resourceType: 'agent', principalType: 'user' },
+        { resourceType: 'agent', principalType: 'group' },
+        { resourceType: 'prompt', principalType: 'user' },
+      ],
+    });
+
+    const out = await Message.aggregate([
+      {
+        $addFields: {
+          userAclEntries: {
+            $filter: {
+              input: '$aclEntries',
+              as: 'aclEntry',
+              cond: {
+                $and: [
+                  { $eq: ['$$aclEntry.resourceType', 'agent'] },
+                  { $eq: ['$$aclEntry.principalType', 'user'] },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+    // Only the entry matching BOTH conditions survives.
+    expect(out[0].userAclEntries).toHaveLength(1);
+    expect(out[0].userAclEntries[0]).toMatchObject({
+      resourceType: 'agent',
+      principalType: 'user',
+    });
+  });
+
+  it('a $match on the computed field works — the whole migration predicate', async () => {
+    await Message.create({ messageId: 'has', user: 'u1', aclEntries: [{ principalType: 'user' }] });
+    await Message.create({ messageId: 'none', user: 'u1', aclEntries: [] });
+
+    const out = await Message.aggregate([
+      {
+        $addFields: {
+          userAclEntries: {
+            $filter: {
+              input: '$aclEntries',
+              as: 'e',
+              cond: { $eq: ['$$e.principalType', 'user'] },
+            },
+          },
+        },
+      },
+      { $match: { userAclEntries: { $size: 0 } } },
+    ]);
+    // Exactly the "needs migrating" set: documents with no user ACL entry.
+    expect(out).toHaveLength(1);
+    expect(out[0].messageId).toBe('none');
+  });
+
+  it('an unbound $$variable throws instead of comparing against undefined', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+
+    await expect(
+      Message.aggregate([{ $addFields: { x: { $eq: ['$$nope.field', 'v'] } } }]),
+    ).rejects.toThrow(/undefined variable \$\$nope/);
+  });
+
+  it('an unsupported expression throws rather than yielding undefined', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+
+    await expect(
+      Message.aggregate([{ $addFields: { x: { $toUpper: '$user' } } }]),
+    ).rejects.toThrow(/unsupported expression \$toUpper/);
+  });
+
+
+  it('$lookup resolves a camelCase model from a lowercase collection name', async () => {
+    // 'accessroles' -> 'Accessrole' by the naive rule, which matched NO
+    // registered model, so every ACL join silently returned [].
+    const h = createSqliteHandle(['Message', 'AccessRole']);
+    try {
+      const M = h.models.Message;
+      const R = h.models.AccessRole;
+      await R.create({ accessRoleId: 'promptGroup_owner', resourceType: 'promptGroup' });
+      await M.create({ messageId: 'm1', user: 'u1', roleKind: 'promptGroup_owner' });
+
+      const out = await M.aggregate([
+        {
+          $lookup: {
+            from: 'accessroles',
+            localField: 'roleKind',
+            foreignField: 'accessRoleId',
+            as: 'role',
+          },
+        },
+      ]);
+      expect(out[0].role).toHaveLength(1); // 0 was the silent bug
+    } finally {
+      h.close();
+    }
+  });
+
+  it('$lookup THROWS when `from` resolves to no model at all', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+    await expect(
+      Message.aggregate([
+        { $lookup: { from: 'nosuchthings', localField: 'user', foreignField: 'x', as: 'y' } },
+      ]),
+    ).rejects.toThrow(/no model for from='nosuchthings'/);
+  });
+
+
+  // PermissionsController.js:231 projects
+  //   accessRoleId: { $arrayElemAt: ['$role.accessRoleId', 0] }
+  // and those fields were silently dropped, so the permissions response carried
+  // principals with no role at all.
+  it('$project evaluates $arrayElemAt instead of dropping the field', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', roles: ['owner', 'viewer'] });
+
+    const out = await Message.aggregate([
+      {
+        $project: {
+          messageId: 1,
+          firstRole: { $arrayElemAt: ['$roles', 0] },
+          lastRole: { $arrayElemAt: ['$roles', -1] },
+        },
+      },
+    ]);
+    expect(out[0].firstRole).toBe('owner');
+    expect(out[0].lastRole).toBe('viewer');
+    expect(out[0].messageId).toBe('m1'); // plain 0/1 inclusion still works
+  });
+
+  it('$project on a missing/!array path yields undefined, not a crash', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+    const out = await Message.aggregate([
+      { $project: { messageId: 1, nope: { $arrayElemAt: ['$notThere', 0] } } },
+    ]);
+    expect(out[0].nope).toBeUndefined();
+    expect(out[0].messageId).toBe('m1');
+  });
+
+  it('$project THROWS on an expression it does not implement', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+    await expect(
+      Message.aggregate([{ $project: { x: { $concat: ['a', 'b'] } } }]),
+    ).rejects.toThrow(/unsupported expression \$concat/);
+  });
+
+  it('still runs a fully-supported pipeline', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
+    await Message.create({ messageId: 'm2', user: 'u2', text: 'b' });
+    const out = await Message.aggregate([{ $match: { user: 'u1' } }, { $limit: 10 }]);
+    expect(out).toHaveLength(1);
+    expect(out[0].messageId).toBe('m1');
   });
 });

@@ -11,6 +11,8 @@ import {
   removeNullishValues,
 } from '@hanzochat/data-provider';
 import type { TMessage, TPayload, TSubmission, EventSubmission } from '@hanzochat/data-provider';
+import { useAnalytics } from '@hanzo/event/react';
+import { EVENTS } from '@hanzo/event';
 import type { EventHandlerParams } from './useEventHandlers';
 import type { TResData } from '~/common';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
@@ -46,6 +48,7 @@ export default function useSSE(
   runIndex = 0,
 ) {
   const setActiveRunId = useSetRecoilState(store.activeRunFamily(runIndex));
+  const analytics = useAnalytics();
 
   const { token, isAuthenticated } = useAuthContext();
   const [completed, setCompleted] = useState(new Set());
@@ -103,6 +106,17 @@ export default function useSSE(
     let textIndex = null;
     clearStepMaps();
 
+    /** The ONE place a chat generation's outcome is known: this effect owns the
+     *  whole stream lifecycle, so timing it here covers every endpoint exactly
+     *  once (no per-endpoint emit to keep in sync). Identifiers + duration only —
+     *  never prompt or response text. */
+    const startedAt = Date.now();
+    const genProps = () => ({
+      endpoint: submission?.conversation?.endpoint ?? undefined,
+      model: submission?.conversation?.model ?? undefined,
+      durationMs: Date.now() - startedAt,
+    });
+
     const sse = new SSE(payloadData.server, {
       payload: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -122,6 +136,7 @@ export default function useSSE(
 
       if (data.final != null) {
         clearDraft(submission.conversation?.conversationId);
+        analytics.capture(EVENTS.GENERATION_COMPLETED, genProps());
         try {
           finalHandler(data, submission as EventSubmission);
         } catch (error) {
@@ -234,6 +249,14 @@ export default function useSSE(
       }
 
       console.log('error in server stream.');
+      // A failed answer, not a crash: the funnel needs the drop counted, and
+      // `responseCode` is what separates "we were rate-limited/out of credit"
+      // from "the model failed". A 401 that recovered above never reaches here.
+      analytics.capture(EVENTS.GENERATION_FAILED, {
+        ...genProps(),
+        /* @ts-ignore sse.js attaches the HTTP status to the error event */
+        responseCode: (e as MessageEvent & { responseCode?: number }).responseCode,
+      });
       (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
 
       let data: TResData | undefined = undefined;
