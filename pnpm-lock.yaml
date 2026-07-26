@@ -348,7 +348,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@25.5.0)(ts-node@10.9.2(@types/node@25.5.0)(typescript@5.9.3))
+        version: 30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -380,8 +380,8 @@ importers:
         specifier: ^0.2.3
         version: 0.2.3
       '@hanzo/brand':
-        specifier: ^1.4.1
-        version: 1.4.1(react@18.3.1)
+        specifier: ^1.4.4
+        version: 1.4.4(react@18.3.1)
       '@hanzo/event':
         specifier: ^0.3.3
         version: 0.3.3(react@18.3.1)
@@ -3803,8 +3803,8 @@ packages:
     resolution: {integrity: sha512-vL042sYaVzmWUTrjcCrx3Gay/a+oa9Mgv1cVetapeyikSS4wKOw9lMdSbxw2OD8puJK/Ozew7cglL43MYI9L3Q==}
     engines: {node: '>=18'}
 
-  '@hanzo/brand@1.4.1':
-    resolution: {integrity: sha512-tApXct8gE/HOYa61h6TWQfDp07l1pmB+vqmxlJtU+MhocbwEkW4VPJrQdPuwF/5GPZYQauNT2uaRpnZdCK8ikw==}
+  '@hanzo/brand@1.4.4':
+    resolution: {integrity: sha512-yD5Hej+6zMezavpN6SVszl+Yn6IM9JvF8M/aKmsalPK5LFnyvdNxxjKHfAnG6P7EvJSpSDpY1npZ+X+fnidnrw==}
     hasBin: true
     peerDependencies:
       react: '>=18'
@@ -17726,7 +17726,7 @@ snapshots:
 
   '@hanzo/ai@0.2.3': {}
 
-  '@hanzo/brand@1.4.1(react@18.3.1)':
+  '@hanzo/brand@1.4.4(react@18.3.1)':
     dependencies:
       '@hanzo/logo': 1.0.13(react@18.3.1)
     optionalDependencies:
