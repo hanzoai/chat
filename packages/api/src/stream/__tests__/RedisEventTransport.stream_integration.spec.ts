@@ -1,9 +1,9 @@
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 
 /**
  * Integration tests for RedisEventTransport.
  *
- * Tests Redis Pub/Sub functionality:
+ * Tests KV Pub/Sub functionality:
  * - Cross-instance event delivery
  * - Subscriber management
  * - Error handling
@@ -12,7 +12,7 @@ import type { Redis, Cluster } from 'ioredis';
  */
 describe('RedisEventTransport Integration Tests', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let ioredisClient: Redis | Cluster | null = null;
+  let kvClient: KV | Cluster | null = null;
   const testPrefix = 'EventTransport-Integration-Test';
 
   beforeAll(async () => {
@@ -27,19 +27,19 @@ describe('RedisEventTransport Integration Tests', () => {
 
     jest.resetModules();
 
-    const { ioredisClient: client } = await import('../../cache/redisClients');
-    ioredisClient = client;
+    const { kvClient: client } = await import('../../cache/redisClients');
+    kvClient = client;
   });
 
   afterAll(async () => {
-    if (ioredisClient) {
+    if (kvClient) {
       try {
         // Use quit() to gracefully close - waits for pending commands
-        await ioredisClient.quit();
+        await kvClient.quit();
       } catch {
         // Fall back to disconnect if quit fails
         try {
-          ioredisClient.disconnect();
+          kvClient.disconnect();
         } catch {
           // Ignore
         }
@@ -50,16 +50,16 @@ describe('RedisEventTransport Integration Tests', () => {
 
   describe('Pub/Sub Event Delivery', () => {
     test('should deliver events to subscribers on same instance', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      // Create subscriber client (Redis pub/sub requires dedicated connection)
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      // Create subscriber client (KV pub/sub requires dedicated connection)
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `pubsub-same-${Date.now()}`;
       const receivedChunks: unknown[] = [];
@@ -93,19 +93,19 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should deliver events across transport instances (simulating different servers)', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
       // Create two separate transport instances (simulating two servers)
-      const subscriber1 = (ioredisClient as Redis).duplicate();
-      const subscriber2 = (ioredisClient as Redis).duplicate();
+      const subscriber1 = (kvClient as KV).duplicate();
+      const subscriber2 = (kvClient as KV).duplicate();
 
-      const transport1 = new RedisEventTransport(ioredisClient, subscriber1);
-      const transport2 = new RedisEventTransport(ioredisClient, subscriber2);
+      const transport1 = new RedisEventTransport(kvClient, subscriber1);
+      const transport2 = new RedisEventTransport(kvClient, subscriber2);
 
       const streamId = `pubsub-cross-${Date.now()}`;
 
@@ -137,15 +137,15 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should handle multiple subscribers to same stream', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `pubsub-multi-${Date.now()}`;
 
@@ -180,15 +180,15 @@ describe('RedisEventTransport Integration Tests', () => {
 
   describe('Sequential Event Ordering', () => {
     test('should maintain strict order when emitChunk is awaited', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `order-test-${Date.now()}`;
       const receivedEvents: number[] = [];
@@ -218,15 +218,15 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should maintain order for tool call delta chunks (simulates streaming args)', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `tool-delta-order-${Date.now()}`;
       const receivedArgs: string[] = [];
@@ -272,15 +272,15 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should maintain order across multiple concurrent streams (no cross-contamination)', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId1 = `concurrent-stream-1-${Date.now()}`;
       const streamId2 = `concurrent-stream-2-${Date.now()}`;
@@ -314,7 +314,7 @@ describe('RedisEventTransport Integration Tests', () => {
     });
   });
 
-  describe('Reorder Buffer (Redis Cluster Fix)', () => {
+  describe('Reorder Buffer (KV Cluster Fix)', () => {
     test('should reorder out-of-sequence messages', async () => {
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
@@ -328,8 +328,8 @@ describe('RedisEventTransport Integration Tests', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'reorder-test';
@@ -369,8 +369,8 @@ describe('RedisEventTransport Integration Tests', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'buffer-test';
@@ -417,8 +417,8 @@ describe('RedisEventTransport Integration Tests', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'timeout-test';
@@ -460,8 +460,8 @@ describe('RedisEventTransport Integration Tests', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'compat-test';
@@ -528,7 +528,7 @@ describe('RedisEventTransport Integration Tests', () => {
 
       const channel = `stream:{${streamId}}:events`;
 
-      // Simulate out-of-order delivery in Redis Cluster:
+      // Simulate out-of-order delivery in KV Cluster:
       // Done event (seq=3) arrives before chunk seq=2
       messageHandler(channel, JSON.stringify({ type: 'chunk', seq: 0, data: { msg: 'chunk-0' } }));
       messageHandler(channel, JSON.stringify({ type: 'done', seq: 3, data: { msg: 'complete' } }));
@@ -599,15 +599,15 @@ describe('RedisEventTransport Integration Tests', () => {
 
   describe('Subscriber Management', () => {
     test('should track first subscriber correctly', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `first-sub-${Date.now()}`;
 
@@ -640,15 +640,15 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should fire onAllSubscribersLeft when last subscriber leaves', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `all-left-${Date.now()}`;
       let allLeftCalled = false;
@@ -683,15 +683,15 @@ describe('RedisEventTransport Integration Tests', () => {
 
   describe('Error Handling', () => {
     test('should deliver error events to subscribers', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `error-${Date.now()}`;
       let receivedError: string | null = null;
@@ -718,15 +718,15 @@ describe('RedisEventTransport Integration Tests', () => {
 
   describe('Cross-Replica Abort', () => {
     test('should emit and receive abort signals on same instance', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `abort-same-${Date.now()}`;
       let abortReceived = false;
@@ -752,19 +752,19 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should deliver abort signals across transport instances', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
       // Two separate instances (simulating two servers)
-      const subscriber1 = (ioredisClient as Redis).duplicate();
-      const subscriber2 = (ioredisClient as Redis).duplicate();
+      const subscriber1 = (kvClient as KV).duplicate();
+      const subscriber2 = (kvClient as KV).duplicate();
 
-      const transport1 = new RedisEventTransport(ioredisClient, subscriber1);
-      const transport2 = new RedisEventTransport(ioredisClient, subscriber2);
+      const transport1 = new RedisEventTransport(kvClient, subscriber1);
+      const transport2 = new RedisEventTransport(kvClient, subscriber2);
 
       const streamId = `abort-cross-${Date.now()}`;
       let instance1AbortReceived = false;
@@ -793,15 +793,15 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should call multiple abort callbacks', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `abort-multi-${Date.now()}`;
       let callback1Called = false;
@@ -829,15 +829,15 @@ describe('RedisEventTransport Integration Tests', () => {
     });
 
     test('should cleanup abort callbacks on stream cleanup', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `abort-cleanup-${Date.now()}`;
       let abortReceived = false;
@@ -866,15 +866,15 @@ describe('RedisEventTransport Integration Tests', () => {
 
   describe('Cleanup', () => {
     test('should clean up stream resources', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `cleanup-${Date.now()}`;
 
@@ -899,7 +899,7 @@ describe('RedisEventTransport Integration Tests', () => {
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
       const mockPublisher = {
-        publish: jest.fn().mockRejectedValue(new Error('Redis connection lost')),
+        publish: jest.fn().mockRejectedValue(new Error('KV connection lost')),
       };
       const mockSubscriber = {
         on: jest.fn(),
@@ -908,8 +908,8 @@ describe('RedisEventTransport Integration Tests', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = `error-prop-chunk-${Date.now()}`;
@@ -925,7 +925,7 @@ describe('RedisEventTransport Integration Tests', () => {
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
       const mockPublisher = {
-        publish: jest.fn().mockRejectedValue(new Error('Redis connection lost')),
+        publish: jest.fn().mockRejectedValue(new Error('KV connection lost')),
       };
       const mockSubscriber = {
         on: jest.fn(),
@@ -934,14 +934,14 @@ describe('RedisEventTransport Integration Tests', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = `error-prop-done-${Date.now()}`;
 
       await expect(transport.emitDone(streamId, { finished: true })).rejects.toThrow(
-        'Redis connection lost',
+        'KV connection lost',
       );
 
       transport.destroy();
@@ -951,7 +951,7 @@ describe('RedisEventTransport Integration Tests', () => {
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
       const mockPublisher = {
-        publish: jest.fn().mockRejectedValue(new Error('Redis connection lost')),
+        publish: jest.fn().mockRejectedValue(new Error('KV connection lost')),
       };
       const mockSubscriber = {
         on: jest.fn(),
@@ -960,29 +960,29 @@ describe('RedisEventTransport Integration Tests', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = `error-prop-error-${Date.now()}`;
 
       await expect(transport.emitError(streamId, 'some error')).rejects.toThrow(
-        'Redis connection lost',
+        'KV connection lost',
       );
 
       transport.destroy();
     });
 
     test('should still deliver events successfully when publish succeeds', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const { RedisEventTransport } = await import('../implementations/RedisEventTransport');
 
-      const subscriber = (ioredisClient as Redis).duplicate();
-      const transport = new RedisEventTransport(ioredisClient, subscriber);
+      const subscriber = (kvClient as KV).duplicate();
+      const transport = new RedisEventTransport(kvClient, subscriber);
 
       const streamId = `error-prop-success-${Date.now()}`;
       const receivedChunks: unknown[] = [];

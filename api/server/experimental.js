@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 require('module-alias')({ base: path.resolve(__dirname, '..') });
 const cluster = require('cluster');
-const Redis = require('ioredis');
+const KV = require('@hanzo/kv');
 const cors = require('cors');
 const axios = require('axios');
 const express = require('express');
@@ -49,13 +49,13 @@ const wrapLogMessage = (msg) => {
 };
 
 /**
- * Flushes the Redis cache on startup
+ * Flushes the KV cache on startup
  * This ensures a clean state for testing multi-pod MCP connection issues
  */
 const flushRedisCache = async () => {
-  /** Skip cache flush if Redis is not enabled */
+  /** Skip cache flush if KV is not enabled */
   if (!isEnabled(process.env.USE_REDIS)) {
-    logger.info('Redis is not enabled, skipping cache flush');
+    logger.info('KV is not enabled, skipping cache flush');
     return;
   }
 
@@ -68,9 +68,9 @@ const flushRedisCache = async () => {
     redisConfig.password = process.env.REDIS_PASSWORD;
   }
 
-  /** Handle Redis Cluster configuration */
+  /** Handle KV Cluster configuration */
   if (isEnabled(process.env.USE_REDIS_CLUSTER) || process.env.REDIS_URI?.includes(',')) {
-    logger.info('Detected Redis Cluster configuration');
+    logger.info('Detected KV Cluster configuration');
     const uris = process.env.REDIS_URI?.split(',').map((uri) => {
       const url = new URL(uri.trim());
       return {
@@ -78,23 +78,23 @@ const flushRedisCache = async () => {
         port: parseInt(url.port || '6379', 10),
       };
     });
-    const redis = new Redis.Cluster(uris, {
+    const redis = new KV.Cluster(uris, {
       redisOptions: {
         password: process.env.REDIS_PASSWORD,
       },
     });
 
     try {
-      logger.info('Attempting to connect to Redis Cluster...');
+      logger.info('Attempting to connect to KV Cluster...');
       await redis.ping();
-      logger.info('Connected to Redis Cluster. Executing flushall...');
+      logger.info('Connected to KV Cluster. Executing flushall...');
       const result = await Promise.race([
         redis.flushall(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Flush timeout')), 10000)),
       ]);
-      logger.info('Redis Cluster cache flushed successfully', { result });
+      logger.info('KV Cluster cache flushed successfully', { result });
     } catch (err) {
-      logger.error('Error while flushing Redis Cluster cache:', err);
+      logger.error('Error while flushing KV Cluster cache:', err);
       throw err;
     } finally {
       redis.disconnect();
@@ -102,20 +102,20 @@ const flushRedisCache = async () => {
     return;
   }
 
-  /** Handle single Redis instance */
-  const redis = new Redis(redisConfig);
+  /** Handle single KV instance */
+  const redis = new KV(redisConfig);
 
   try {
-    logger.info('Attempting to connect to Redis...');
+    logger.info('Attempting to connect to KV...');
     await redis.ping();
-    logger.info('Connected to Redis. Executing flushall...');
+    logger.info('Connected to KV. Executing flushall...');
     const result = await Promise.race([
       redis.flushall(),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Flush timeout')), 5000)),
     ]);
-    logger.info('Redis cache flushed successfully', { result });
+    logger.info('KV cache flushed successfully', { result });
   } catch (err) {
-    logger.error('Error while flushing Redis cache:', err);
+    logger.error('Error while flushing KV cache:', err);
     throw err;
   } finally {
     redis.disconnect();
@@ -133,7 +133,7 @@ if (cluster.isMaster) {
   let activeWorkers = 0;
   const startTime = Date.now();
 
-  /** Flush Redis cache before starting workers */
+  /** Flush KV cache before starting workers */
   flushRedisCache()
     .then(() => {
       logger.info('Cache flushed, forking workers...');
@@ -142,7 +142,7 @@ if (cluster.isMaster) {
       }
     })
     .catch((err) => {
-      logger.error('Unable to flush Redis cache, not forking workers:', err);
+      logger.error('Unable to flush KV cache, not forking workers:', err);
       process.exit(1);
     });
 

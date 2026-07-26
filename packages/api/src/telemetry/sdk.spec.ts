@@ -25,7 +25,7 @@ const mockHttpInstrumentation = jest.fn((options?: HttpInstrumentationOptions) =
   name: 'http',
   options,
 }));
-const mockIORedisInstrumentation = jest.fn(() => ({ name: 'ioredis' }));
+const mockIORedisInstrumentation = jest.fn(() => ({ name: '@hanzo/kv' }));
 const mockMongoDBInstrumentation = jest.fn(() => ({ name: 'mongodb' }));
 const mockMongooseInstrumentation = jest.fn(() => ({ name: 'mongoose' }));
 const mockUndiciInstrumentation = jest.fn((options?: UndiciInstrumentationOptions) => ({

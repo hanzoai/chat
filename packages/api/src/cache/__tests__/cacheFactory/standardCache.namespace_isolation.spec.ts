@@ -16,7 +16,7 @@ const mockKeyvRedisClient = { scanIterator: jest.fn() };
 
 jest.mock('../../redisClients', () => ({
   keyvRedisClient: mockKeyvRedisClient,
-  ioredisClient: null,
+  kvClient: null,
 }));
 
 jest.mock('../../redisUtils', () => ({
