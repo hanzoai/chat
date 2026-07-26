@@ -1,4 +1,4 @@
-import type { MCPOptions } from 'librechat-data-provider';
+import type { MCPOptions } from '@hanzochat/data-provider';
 import type { IUser } from '@hanzochat/data-schemas';
 import type { RequestBody } from '~/types';
 /**
@@ -13,7 +13,7 @@ type SafeUser = Pick<IUser, AllowedUserField>;
  * HTTP headers are restricted to ASCII characters (0-255) per the Fetch API standard.
  * Non-ASCII characters with Unicode values > 255 are Base64 encoded with 'b64:' prefix.
  *
- * NOTE: This is a LibreChat-specific encoding scheme to work around Fetch API limitations.
+ * NOTE: This is a Chat-specific encoding scheme to work around Fetch API limitations.
  * MCP servers receiving headers with the 'b64:' prefix should:
  * 1. Detect the 'b64:' prefix in header values
  * 2. Remove the prefix and Base64-decode the remaining string

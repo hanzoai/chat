@@ -30,7 +30,7 @@ import { EVENTS } from '@hanzo/event';
 import type { TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';
 import useGetSender from '~/hooks/Conversations/useGetSender';
-import { logger, createDualMessageContent } from '~/utils';
+import { logger, createDualMessageContent, referrerProduct } from '~/utils';
 import store, { useGetEphemeralAgent } from '~/store';
 import useUserKey from '~/hooks/Input/useUserKey';
 import { useAuthContext } from '~/hooks';
@@ -133,7 +133,13 @@ export default function useChatFunctions({
       const model = conversation?.model;
       const isNewConvo = conversationId == null || conversationId === Constants.NEW_CONVO;
       if (isNewConvo) {
-        analytics.capture(EVENTS.CHAT_STARTED, { endpoint, model });
+        // referrerProduct joins the cross-origin handoff (hanzo.ai composer →
+        // here). Undefined for a direct visit; the property is simply absent.
+        analytics.capture(EVENTS.CHAT_STARTED, {
+          endpoint,
+          model,
+          referrerProduct: referrerProduct(),
+        });
       }
       analytics.capture(EVENTS.CHAT_MESSAGE_SENT, { endpoint, model });
     }
