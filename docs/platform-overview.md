@@ -36,7 +36,7 @@ open http://localhost:8000  # IAM Dashboard
 - **PostgreSQL** - Primary database
 - **MySQL** - IAM database
 - **MongoDB** - Chat storage
-- **ClickHouse** - Analytics
+- **Hanzo Datastore** - Analytics
 - **Redis** - Caching
 - **Meilisearch** - Full-text search
 - **MinIO** - S3-compatible storage
