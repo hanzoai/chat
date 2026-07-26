@@ -1,9 +1,8 @@
 const fs = require('fs');
-const axios = require('axios');
-const FormData = require('form-data');
+const { logAxiosError } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
+const ragClient = require('~/server/services/RagClient');
 const { FileSources } = require('@hanzochat/data-provider');
-const { logAxiosError, generateShortLivedToken } = require('@hanzochat/api');
 
 /**
  * Deletes a file from the vector database. This function takes a file object, constructs the full path, and
@@ -18,20 +17,13 @@ const { logAxiosError, generateShortLivedToken } = require('@hanzochat/api');
  *          file path is invalid or if there is an error in deletion.
  */
 const deleteVectors = async (req, file) => {
-  if (!file.embedded || !process.env.RAG_API_URL) {
+  if (!file.embedded || !ragClient.ragEnabled()) {
     return;
   }
   try {
-    const jwtToken = generateShortLivedToken(req.user.id);
-
-    return await axios.delete(`${process.env.RAG_API_URL}/documents`, {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-        'Content-Type': 'application/json',
-        accept: 'application/json',
-      },
-      data: [file.file_id],
-    });
+    // One RAG surface: the unified backend, reached with the caller's own IAM
+    // bearer (see services/RagClient).
+    return await ragClient.remove(req, { file_id: file.file_id });
   } catch (error) {
     logAxiosError({
       error,
@@ -64,51 +56,41 @@ const deleteVectors = async (req, file) => {
  *            - filepath: The path where the file is saved.
  *            - bytes: The size of the file in bytes.
  */
-async function uploadVectors({ req, file, file_id, entity_id, storageMetadata }) {
-  if (!process.env.RAG_API_URL) {
-    throw new Error('RAG_API_URL not defined');
+async function uploadVectors({ req, file, file_id, entity_id }) {
+  if (!ragClient.ragEnabled()) {
+    throw new Error('RAG is not configured (no cloud origin)');
   }
 
   try {
-    const jwtToken = generateShortLivedToken(req.user.id);
-    const formData = new FormData();
-    formData.append('file_id', file_id);
-    formData.append('file', fs.createReadStream(file.path));
-    if (entity_id != null && entity_id) {
-      formData.append('entity_id', entity_id);
-    }
-
-    // Include storage metadata for RAG API to store with embeddings
-    if (storageMetadata) {
-      formData.append('storage_metadata', JSON.stringify(storageMetadata));
-    }
-
-    const formHeaders = formData.getHeaders();
-
-    const response = await axios.post(`${process.env.RAG_API_URL}/embed`, formData, {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-        accept: 'application/json',
-        ...formHeaders,
-      },
+    // The unified backend parses and chunks the file itself, so it needs the text
+    // (or a location it can fetch). `entity_id` becomes the store — a shared
+    // resource keeps its own store — and ownership comes from the IAM bearer, so
+    // it is never sent as a field.
+    const responseData = await ragClient.embed(req, {
+      file_id,
+      filename: file.originalname,
+      content: fs.readFileSync(file.path, 'utf8'),
+      ...(entity_id ? { store: entity_id } : {}),
     });
 
-    const responseData = response.data;
+    if (responseData == null) {
+      throw new Error('File embedding failed: no forwardable IAM token on the request.');
+    }
     logger.debug('Response from embedding file', responseData);
 
-    if (responseData.known_type === false) {
-      throw new Error(`File embedding failed. The filetype ${file.mimetype} is not supported`);
-    }
-
-    if (!responseData.status) {
-      throw new Error('File embedding failed.');
+    // Native result: { file_id, filename, store, index_name, chunks }. Zero
+    // chunks means nothing was indexed — the file produced no retrievable text.
+    if (!responseData.chunks) {
+      throw new Error(
+        `File embedding produced no chunks (filetype ${file.mimetype} may be unsupported).`,
+      );
     }
 
     return {
       bytes: file.size,
       filename: file.originalname,
       filepath: FileSources.vectordb,
-      embedded: Boolean(responseData.known_type),
+      embedded: responseData.chunks > 0,
     };
   } catch (error) {
     logAxiosError({
