@@ -153,7 +153,7 @@ User → Service → Redirect to hanzo.id → OAuth → Service
 
 3. **Monitor Everything**
    - All services log to stdout
-   - ClickHouse stores metrics
+   - Hanzo Datastore stores metrics
    - MinIO stores artifacts
    - No org restrictions
 
