@@ -23,7 +23,13 @@ import { useRunCloudAgent } from '~/hooks/Agents';
 import { mainTextareaId, BadgeItem } from '~/common';
 import AttachFileChat from './Files/AttachFileChat';
 import FileFormChat from './Files/FileFormChat';
-import { cn, removeFocusRings, parseAgentCommand, parseBuildCommand, openAppBuilder } from '~/utils';
+import {
+  cn,
+  removeFocusRings,
+  parseAgentCommand,
+  parseBuildCommand,
+  openAppBuilder,
+} from '~/utils';
 import TextareaHeader from './TextareaHeader';
 import BuildAppButton from './BuildAppButton';
 import PromptsCommand from './PromptsCommand';
@@ -55,7 +61,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const chatDirection = useRecoilValue(store.chatDirection);
   const automaticPlayback = useRecoilValue(store.automaticPlayback);
   const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
-  const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
   const isTemporary = useRecoilValue(store.isTemporary);
 
   const [badges, setBadges] = useRecoilState(store.chatBadges);
@@ -246,9 +251,8 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     <form
       onSubmit={methods.handleSubmit(onSubmit)}
       className={cn(
-        'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
+        'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:mb-10 sm:px-2',
         maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
-        centerFormOnLanding && isLanding ? 'transition-all duration-200 sm:mb-28' : 'sm:mb-10',
       )}
     >
       <div className="relative flex h-full flex-1 items-stretch md:flex-col">

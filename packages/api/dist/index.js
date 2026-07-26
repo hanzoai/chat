@@ -1,7 +1,7 @@
 'use strict';
 
 var dataSchemas = require('@hanzochat/data-schemas');
-var librechatDataProvider = require('librechat-data-provider');
+var dataProvider = require('@hanzochat/data-provider');
 var axios$1 = require('axios');
 var path = require('path');
 var crypto$1 = require('node:crypto');
@@ -188,7 +188,7 @@ function isEnabled(value) {
  * @param value - The value to check.
  * @returns - Returns true if the value is 'user_provided', otherwise false.
  */
-const isUserProvided = (value) => value === librechatDataProvider.AuthType.USER_PROVIDED;
+const isUserProvided = (value) => value === dataProvider.AuthType.USER_PROVIDED;
 /**
  * @param values
  */
@@ -311,7 +311,7 @@ function filterMalformedContentParts(contentParts) {
             return false;
         }
         const { type } = part;
-        if (type === librechatDataProvider.ContentTypes.TOOL_CALL) {
+        if (type === dataProvider.ContentTypes.TOOL_CALL) {
             return 'tool_call' in part && part.tool_call != null && typeof part.tool_call === 'object';
         }
         return true;
@@ -350,7 +350,7 @@ const OPENID_TOKEN_FIELDS = [
  * This placeholder is resolved asynchronously via OBO (On-Behalf-Of) flow
  * and requires special handling outside the synchronous processMCPEnv pipeline.
  */
-const GRAPH_TOKEN_PLACEHOLDER = '{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}';
+const GRAPH_TOKEN_PLACEHOLDER = '{{CHAT_GRAPH_ACCESS_TOKEN}}';
 /**
  * Default Microsoft Graph API scopes for OBO token exchange.
  * Can be overridden via GRAPH_API_SCOPES environment variable.
@@ -430,7 +430,7 @@ function processOpenIDPlaceholders(value, tokenInfo) {
     }
     let processedValue = value;
     for (const field of OPENID_TOKEN_FIELDS) {
-        const placeholder = `{{LIBRECHAT_OPENID_${field}}}`;
+        const placeholder = `{{CHAT_OPENID_${field}}}`;
         if (!processedValue.includes(placeholder)) {
             continue;
         }
@@ -457,7 +457,7 @@ function processOpenIDPlaceholders(value, tokenInfo) {
         }
         processedValue = processedValue.replace(new RegExp(placeholder, 'g'), replacementValue);
     }
-    const genericPlaceholder = '{{LIBRECHAT_OPENID_TOKEN}}';
+    const genericPlaceholder = '{{CHAT_OPENID_TOKEN}}';
     if (processedValue.includes(genericPlaceholder)) {
         const replacementValue = tokenInfo.accessToken || '';
         processedValue = processedValue.replace(new RegExp(genericPlaceholder, 'g'), replacementValue);
@@ -507,7 +507,7 @@ const ALLOWED_USER_FIELDS = [
  * HTTP headers are restricted to ASCII characters (0-255) per the Fetch API standard.
  * Non-ASCII characters with Unicode values > 255 are Base64 encoded with 'b64:' prefix.
  *
- * NOTE: This is a LibreChat-specific encoding scheme to work around Fetch API limitations.
+ * NOTE: This is a Chat-specific encoding scheme to work around Fetch API limitations.
  * MCP servers receiving headers with the 'b64:' prefix should:
  * 1. Detect the 'b64:' prefix in header values
  * 2. Remove the prefix and Base64-decode the remaining string
@@ -583,7 +583,7 @@ function processUserPlaceholders(value, user, isHeader = false) {
         return value;
     }
     for (const field of ALLOWED_USER_FIELDS) {
-        const placeholder = `{{LIBRECHAT_USER_${field.toUpperCase()}}}`;
+        const placeholder = `{{CHAT_USER_${field.toUpperCase()}}}`;
         if (typeof value !== 'string' || !value.includes(placeholder)) {
             continue;
         }
@@ -612,7 +612,7 @@ function processUserPlaceholders(value, user, isHeader = false) {
 }
 /**
  * Replaces request body field placeholders within a string.
- * Recognized placeholders: `{{LIBRECHAT_BODY_<FIELD>}}` where `<FIELD>` ∈ ALLOWED_BODY_FIELDS.
+ * Recognized placeholders: `{{CHAT_BODY_<FIELD>}}` where `<FIELD>` ∈ ALLOWED_BODY_FIELDS.
  * If a body field is absent or null/undefined, it is replaced with an empty string.
  *
  * @param value - The string value to process
@@ -625,7 +625,7 @@ function processBodyPlaceholders(value, body) {
         return value;
     }
     for (const field of ALLOWED_BODY_FIELDS) {
-        const placeholder = `{{LIBRECHAT_BODY_${field.toUpperCase()}}}`;
+        const placeholder = `{{CHAT_BODY_${field.toUpperCase()}}}`;
         if (!value.includes(placeholder)) {
             continue;
         }
@@ -667,7 +667,7 @@ function processSingleValue({ originalValue, customUserVars, user, body = undefi
     if (body) {
         value = processBodyPlaceholders(value, body);
     }
-    value = librechatDataProvider.extractEnvVariable(value);
+    value = dataProvider.extractEnvVariable(value);
     return value;
 }
 /**
@@ -1266,8 +1266,8 @@ function preProcessGraphTokens(options, graphOptions) {
 
 /**
  * Gets the base path from the DOMAIN_CLIENT environment variable.
- * This is useful for constructing URLs when LibreChat is served from a subdirectory.
- * @returns {string} The base path (e.g., '/librechat' or '')
+ * This is useful for constructing URLs when Chat is served from a subdirectory.
+ * @returns {string} The base path (e.g., '/chat' or '')
  */
 function getBasePath() {
     if (!process.env.DOMAIN_CLIENT) {
@@ -1395,7 +1395,7 @@ function checkUserKeyExpiry(expiresAt, endpoint) {
     const expiresAtDate = new Date(expiresAt);
     if (expiresAtDate < new Date()) {
         const errorMessage = JSON.stringify({
-            type: librechatDataProvider.ErrorTypes.EXPIRED_USER_KEY,
+            type: dataProvider.ErrorTypes.EXPIRED_USER_KEY,
             expiredAt: expiresAtDate.toLocaleString(),
             endpoint,
         });
@@ -1429,19 +1429,19 @@ function unescapeLaTeX(text) {
 }
 
 /**
- * Separates LibreChat-specific parameters from model options
+ * Separates Chat-specific parameters from model options
  * @param options - The combined options object
  */
-function extractLibreChatParams(options) {
+function extractChatParams(options) {
     var _a;
     if (!options) {
         return {
             modelOptions: {},
-            resendFiles: librechatDataProvider.librechat.resendFiles.default,
+            resendFiles: dataProvider.chat.resendFiles.default,
         };
     }
     const modelOptions = Object.assign({}, options);
-    const resendFiles = (_a = (delete modelOptions.resendFiles, options.resendFiles)) !== null && _a !== void 0 ? _a : librechatDataProvider.librechat.resendFiles.default;
+    const resendFiles = (_a = (delete modelOptions.resendFiles, options.resendFiles)) !== null && _a !== void 0 ? _a : dataProvider.chat.resendFiles.default;
     const promptPrefix = (delete modelOptions.promptPrefix, options.promptPrefix);
     const maxContextTokens = (delete modelOptions.maxContextTokens, options.maxContextTokens);
     const fileTokenLimit = (delete modelOptions.fileTokenLimit, options.fileTokenLimit);
@@ -2172,13 +2172,13 @@ const aggregateModels = Object.assign(Object.assign(Object.assign(Object.assign(
     // GLM models (Zhipu AI)
     glm4: 128000, 'glm-4': 128000, 'glm-4-32b': 128000, 'glm-4.5': 131000, 'glm-4.5-air': 131000, 'glm-4.5v': 66000, 'glm-4.6': 200000 });
 const maxTokensMap = {
-    [librechatDataProvider.EModelEndpoint.azureOpenAI]: openAIModels,
-    [librechatDataProvider.EModelEndpoint.openAI]: aggregateModels,
-    [librechatDataProvider.EModelEndpoint.agents]: aggregateModels,
-    [librechatDataProvider.EModelEndpoint.custom]: aggregateModels,
-    [librechatDataProvider.EModelEndpoint.google]: googleModels,
-    [librechatDataProvider.EModelEndpoint.anthropic]: anthropicModels,
-    [librechatDataProvider.EModelEndpoint.bedrock]: bedrockModels,
+    [dataProvider.EModelEndpoint.azureOpenAI]: openAIModels,
+    [dataProvider.EModelEndpoint.openAI]: aggregateModels,
+    [dataProvider.EModelEndpoint.agents]: aggregateModels,
+    [dataProvider.EModelEndpoint.custom]: aggregateModels,
+    [dataProvider.EModelEndpoint.google]: googleModels,
+    [dataProvider.EModelEndpoint.anthropic]: anthropicModels,
+    [dataProvider.EModelEndpoint.bedrock]: bedrockModels,
 };
 const modelMaxOutputs = {
     o1: 32268, // -500 from max: 32,768
@@ -2220,10 +2220,10 @@ const deepseekMaxOutputs = {
     'deepseek.r1': 64000,
 };
 const maxOutputTokensMap = {
-    [librechatDataProvider.EModelEndpoint.anthropic]: anthropicMaxOutputs,
-    [librechatDataProvider.EModelEndpoint.azureOpenAI]: modelMaxOutputs,
-    [librechatDataProvider.EModelEndpoint.openAI]: Object.assign(Object.assign({}, modelMaxOutputs), deepseekMaxOutputs),
-    [librechatDataProvider.EModelEndpoint.custom]: Object.assign(Object.assign({}, modelMaxOutputs), deepseekMaxOutputs),
+    [dataProvider.EModelEndpoint.anthropic]: anthropicMaxOutputs,
+    [dataProvider.EModelEndpoint.azureOpenAI]: modelMaxOutputs,
+    [dataProvider.EModelEndpoint.openAI]: Object.assign(Object.assign({}, modelMaxOutputs), deepseekMaxOutputs),
+    [dataProvider.EModelEndpoint.custom]: Object.assign(Object.assign({}, modelMaxOutputs), deepseekMaxOutputs),
 };
 /**
  * Finds the first matching pattern in the tokens map.
@@ -2283,7 +2283,7 @@ function getModelTokenValue(modelName, tokensMap, key = 'context') {
  * @param [endpointTokenConfig] - Token Config for current endpoint to use for max tokens lookup
  * @returns The maximum tokens for the given model or undefined if no match is found.
  */
-function getModelMaxTokens(modelName, endpoint = librechatDataProvider.EModelEndpoint.openAI, endpointTokenConfig) {
+function getModelMaxTokens(modelName, endpoint = dataProvider.EModelEndpoint.openAI, endpointTokenConfig) {
     const tokensMap = endpointTokenConfig !== null && endpointTokenConfig !== void 0 ? endpointTokenConfig : maxTokensMap[endpoint];
     return getModelTokenValue(modelName, tokensMap);
 }
@@ -2295,7 +2295,7 @@ function getModelMaxTokens(modelName, endpoint = librechatDataProvider.EModelEnd
  * @param [endpointTokenConfig] - Token Config for current endpoint to use for max tokens lookup
  * @returns The maximum output tokens for the given model or undefined if no match is found.
  */
-function getModelMaxOutputTokens(modelName, endpoint = librechatDataProvider.EModelEndpoint.openAI, endpointTokenConfig) {
+function getModelMaxOutputTokens(modelName, endpoint = dataProvider.EModelEndpoint.openAI, endpointTokenConfig) {
     const tokensMap = endpointTokenConfig !== null && endpointTokenConfig !== void 0 ? endpointTokenConfig : maxOutputTokensMap[endpoint];
     return getModelTokenValue(modelName, tokensMap, 'output');
 }
@@ -2312,7 +2312,7 @@ function getModelMaxOutputTokens(modelName, endpoint = librechatDataProvider.EMo
  * matchModelName('gpt-4-32k-unknown'); // Returns 'gpt-4-32k'
  * matchModelName('unknown-model'); // Returns undefined
  */
-function matchModelName(modelName, endpoint = librechatDataProvider.EModelEndpoint.openAI) {
+function matchModelName(modelName, endpoint = dataProvider.EModelEndpoint.openAI) {
     if (typeof modelName !== 'string') {
         return undefined;
     }
@@ -2428,7 +2428,7 @@ function extractBaseURL(url) {
     if (!url || typeof url !== 'string') {
         return undefined;
     }
-    if (url.startsWith(librechatDataProvider.CohereConstants.API_URL)) {
+    if (url.startsWith(dataProvider.CohereConstants.API_URL)) {
         return null;
     }
     if (!url.includes('/v1')) {
@@ -2594,7 +2594,7 @@ function getThreadData(messages, parentMessageId) {
                 }
             }
         }
-        currentId = message.parentMessageId === librechatDataProvider.Constants.NO_PARENT ? null : message.parentMessageId;
+        currentId = message.parentMessageId === dataProvider.Constants.NO_PARENT ? null : message.parentMessageId;
     }
     result.fileIds = Array.from(fileIdSet);
     return result;
@@ -2614,7 +2614,7 @@ function getBalanceConfig(appConfig) {
     const hanzoSignupCredit = process.env.HANZO_SIGNUP_CREDIT;
     const hanzoExpiryDays = process.env.HANZO_SIGNUP_CREDIT_EXPIRY_DAYS;
     const hanzoMinBalance = process.env.HANZO_MIN_BALANCE;
-    const envConfig = librechatDataProvider.removeNullishValues({
+    const envConfig = dataProvider.removeNullishValues({
         enabled: isLegacyEnabled || isHanzoEnabled,
         startBalance: startBalance != null && startBalance ? parseInt(startBalance, 10) : undefined,
     });
@@ -2694,8 +2694,8 @@ const getCustomEndpointConfig = ({ endpoint, appConfig, }) => {
     if (!appConfig) {
         throw new Error(`Config not found for the ${endpoint} custom endpoint.`);
     }
-    const customEndpoints = (_b = (_a = appConfig.endpoints) === null || _a === void 0 ? void 0 : _a[librechatDataProvider.EModelEndpoint.custom]) !== null && _b !== void 0 ? _b : [];
-    return customEndpoints.find((endpointConfig) => librechatDataProvider.normalizeEndpointName(endpointConfig.name) === librechatDataProvider.normalizeEndpointName(endpoint));
+    const customEndpoints = (_b = (_a = appConfig.endpoints) === null || _a === void 0 ? void 0 : _a[dataProvider.EModelEndpoint.custom]) !== null && _b !== void 0 ? _b : [];
+    return customEndpoints.find((endpointConfig) => dataProvider.normalizeEndpointName(endpointConfig.name) === dataProvider.normalizeEndpointName(endpoint));
 };
 function hasCustomUserVars(appConfig) {
     const mcpServers = appConfig === null || appConfig === void 0 ? void 0 : appConfig.mcpConfig;
@@ -2715,7 +2715,7 @@ function loadMemoryConfig(config) {
     if (!hasValidAgent(config.agent)) {
         return Object.assign(Object.assign({}, config), { disabled: true });
     }
-    const charLimit = (_a = librechatDataProvider.memorySchema.shape.charLimit.safeParse(config.charLimit).data) !== null && _a !== void 0 ? _a : 10000;
+    const charLimit = (_a = dataProvider.memorySchema.shape.charLimit.safeParse(config.charLimit).data) !== null && _a !== void 0 ? _a : 10000;
     return Object.assign(Object.assign({}, config), { charLimit });
 }
 function isMemoryEnabled(config) {
@@ -2729,33 +2729,33 @@ function isMemoryEnabled(config) {
  */
 function hasExplicitConfig(interfaceConfig, permissionType) {
     switch (permissionType) {
-        case librechatDataProvider.PermissionTypes.PROMPTS:
+        case dataProvider.PermissionTypes.PROMPTS:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.prompts) !== undefined;
-        case librechatDataProvider.PermissionTypes.BOOKMARKS:
+        case dataProvider.PermissionTypes.BOOKMARKS:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.bookmarks) !== undefined;
-        case librechatDataProvider.PermissionTypes.MEMORIES:
+        case dataProvider.PermissionTypes.MEMORIES:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.memories) !== undefined;
-        case librechatDataProvider.PermissionTypes.MULTI_CONVO:
+        case dataProvider.PermissionTypes.MULTI_CONVO:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.multiConvo) !== undefined;
-        case librechatDataProvider.PermissionTypes.AGENTS:
+        case dataProvider.PermissionTypes.AGENTS:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.agents) !== undefined;
-        case librechatDataProvider.PermissionTypes.TEMPORARY_CHAT:
+        case dataProvider.PermissionTypes.TEMPORARY_CHAT:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.temporaryChat) !== undefined;
-        case librechatDataProvider.PermissionTypes.RUN_CODE:
+        case dataProvider.PermissionTypes.RUN_CODE:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.runCode) !== undefined;
-        case librechatDataProvider.PermissionTypes.WEB_SEARCH:
+        case dataProvider.PermissionTypes.WEB_SEARCH:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.webSearch) !== undefined;
-        case librechatDataProvider.PermissionTypes.PEOPLE_PICKER:
+        case dataProvider.PermissionTypes.PEOPLE_PICKER:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.peoplePicker) !== undefined;
-        case librechatDataProvider.PermissionTypes.MARKETPLACE:
+        case dataProvider.PermissionTypes.MARKETPLACE:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.marketplace) !== undefined;
-        case librechatDataProvider.PermissionTypes.FILE_SEARCH:
+        case dataProvider.PermissionTypes.FILE_SEARCH:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.fileSearch) !== undefined;
-        case librechatDataProvider.PermissionTypes.FILE_CITATIONS:
+        case dataProvider.PermissionTypes.FILE_CITATIONS:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.fileCitations) !== undefined;
-        case librechatDataProvider.PermissionTypes.MCP_SERVERS:
+        case dataProvider.PermissionTypes.MCP_SERVERS:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.mcpServers) !== undefined;
-        case librechatDataProvider.PermissionTypes.REMOTE_AGENTS:
+        case dataProvider.PermissionTypes.REMOTE_AGENTS:
             return (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.remoteAgents) !== undefined;
         default:
             return false;
@@ -2787,13 +2787,13 @@ function updateInterfacePermissions(_a) {
                 return roleDefault;
             return schemaDefault;
         };
-        const defaults = librechatDataProvider.getConfigDefaults().interface;
+        const defaults = dataProvider.getConfigDefaults().interface;
         // Permission precedence order:
-        // 1. Explicit user configuration (from librechat.yaml)
+        // 1. Explicit user configuration (from chat.yaml)
         // 2. Role-specific defaults (from roleDefaults)
         // 3. Interface schema defaults (from interfaceSchema.default())
-        for (const roleName of [librechatDataProvider.SystemRoles.USER, librechatDataProvider.SystemRoles.ADMIN]) {
-            const defaultPerms = (_d = librechatDataProvider.roleDefaults[roleName]) === null || _d === void 0 ? void 0 : _d.permissions;
+        for (const roleName of [dataProvider.SystemRoles.USER, dataProvider.SystemRoles.ADMIN]) {
+            const defaultPerms = (_d = dataProvider.roleDefaults[roleName]) === null || _d === void 0 ? void 0 : _d.permissions;
             const existingRole = yield getRoleByName(roleName);
             const existingPermissions = existingRole === null || existingRole === void 0 ? void 0 : existingRole.permissions;
             const permissionsToUpdate = {};
@@ -2804,10 +2804,10 @@ function updateInterfacePermissions(_a) {
                 var _a;
                 const permTypeExists = existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[permType];
                 const isExplicitlyConfigured = interfaceConfig && hasExplicitConfig(interfaceConfig, permType);
-                const isMemoryDisabled = permType === librechatDataProvider.PermissionTypes.MEMORIES && isMemoryExplicitlyDisabled;
-                const isMemoryReenabling = permType === librechatDataProvider.PermissionTypes.MEMORIES &&
+                const isMemoryDisabled = permType === dataProvider.PermissionTypes.MEMORIES && isMemoryExplicitlyDisabled;
+                const isMemoryReenabling = permType === dataProvider.PermissionTypes.MEMORIES &&
                     shouldEnableMemory &&
-                    ((_a = existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[librechatDataProvider.PermissionTypes.MEMORIES]) === null || _a === void 0 ? void 0 : _a[librechatDataProvider.Permissions.USE]) === false;
+                    ((_a = existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[dataProvider.PermissionTypes.MEMORIES]) === null || _a === void 0 ? void 0 : _a[dataProvider.Permissions.USE]) === false;
                 // Only update if: doesn't exist OR explicitly configured OR memory state change
                 if (!permTypeExists || isExplicitlyConfigured || isMemoryDisabled || isMemoryReenabling) {
                     permissionsToUpdate[permType] = permissions;
@@ -2842,97 +2842,97 @@ function updateInterfacePermissions(_a) {
             const promptsDefaultPublic = typeof defaults.prompts === 'object' ? (_l = defaults.prompts) === null || _l === void 0 ? void 0 : _l.public : undefined;
             const agentsDefaultPublic = typeof defaults.agents === 'object' ? (_m = defaults.agents) === null || _m === void 0 ? void 0 : _m.public : undefined;
             const allPermissions = {
-                [librechatDataProvider.PermissionTypes.PROMPTS]: Object.assign(Object.assign({ [librechatDataProvider.Permissions.USE]: getPermissionValue(getConfigUse(loadedInterface.prompts), (_o = defaultPerms[librechatDataProvider.PermissionTypes.PROMPTS]) === null || _o === void 0 ? void 0 : _o[librechatDataProvider.Permissions.USE], promptsDefaultUse) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.prompts) === 'object' && 'create' in interfaceConfig.prompts) ||
-                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[librechatDataProvider.PermissionTypes.PROMPTS])
+                [dataProvider.PermissionTypes.PROMPTS]: Object.assign(Object.assign({ [dataProvider.Permissions.USE]: getPermissionValue(getConfigUse(loadedInterface.prompts), (_o = defaultPerms[dataProvider.PermissionTypes.PROMPTS]) === null || _o === void 0 ? void 0 : _o[dataProvider.Permissions.USE], promptsDefaultUse) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.prompts) === 'object' && 'create' in interfaceConfig.prompts) ||
+                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[dataProvider.PermissionTypes.PROMPTS])
                     ? {
-                        [librechatDataProvider.Permissions.CREATE]: getPermissionValue(getConfigCreate(loadedInterface.prompts), (_p = defaultPerms[librechatDataProvider.PermissionTypes.PROMPTS]) === null || _p === void 0 ? void 0 : _p[librechatDataProvider.Permissions.CREATE], promptsDefaultCreate !== null && promptsDefaultCreate !== void 0 ? promptsDefaultCreate : true),
+                        [dataProvider.Permissions.CREATE]: getPermissionValue(getConfigCreate(loadedInterface.prompts), (_p = defaultPerms[dataProvider.PermissionTypes.PROMPTS]) === null || _p === void 0 ? void 0 : _p[dataProvider.Permissions.CREATE], promptsDefaultCreate !== null && promptsDefaultCreate !== void 0 ? promptsDefaultCreate : true),
                     }
                     : {})), ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.prompts) === 'object' &&
                     ('share' in interfaceConfig.prompts || 'public' in interfaceConfig.prompts)) ||
-                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[librechatDataProvider.PermissionTypes.PROMPTS])
+                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[dataProvider.PermissionTypes.PROMPTS])
                     ? {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.prompts), (_q = defaultPerms[librechatDataProvider.PermissionTypes.PROMPTS]) === null || _q === void 0 ? void 0 : _q[librechatDataProvider.Permissions.SHARE], promptsDefaultShare),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.prompts), (_r = defaultPerms[librechatDataProvider.PermissionTypes.PROMPTS]) === null || _r === void 0 ? void 0 : _r[librechatDataProvider.Permissions.SHARE_PUBLIC], promptsDefaultPublic),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.prompts), (_q = defaultPerms[dataProvider.PermissionTypes.PROMPTS]) === null || _q === void 0 ? void 0 : _q[dataProvider.Permissions.SHARE], promptsDefaultShare),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.prompts), (_r = defaultPerms[dataProvider.PermissionTypes.PROMPTS]) === null || _r === void 0 ? void 0 : _r[dataProvider.Permissions.SHARE_PUBLIC], promptsDefaultPublic),
                     }
                     : {})),
-                [librechatDataProvider.PermissionTypes.BOOKMARKS]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue(loadedInterface.bookmarks, (_s = defaultPerms[librechatDataProvider.PermissionTypes.BOOKMARKS]) === null || _s === void 0 ? void 0 : _s[librechatDataProvider.Permissions.USE], defaults.bookmarks),
+                [dataProvider.PermissionTypes.BOOKMARKS]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue(loadedInterface.bookmarks, (_s = defaultPerms[dataProvider.PermissionTypes.BOOKMARKS]) === null || _s === void 0 ? void 0 : _s[dataProvider.Permissions.USE], defaults.bookmarks),
                 },
-                [librechatDataProvider.PermissionTypes.MEMORIES]: Object.assign(Object.assign(Object.assign(Object.assign({ [librechatDataProvider.Permissions.USE]: (() => {
+                [dataProvider.PermissionTypes.MEMORIES]: Object.assign(Object.assign(Object.assign(Object.assign({ [dataProvider.Permissions.USE]: (() => {
                         var _a;
                         if (isMemoryExplicitlyDisabled)
                             return false;
                         if (shouldEnableMemory)
                             return true;
-                        return getPermissionValue(loadedInterface.memories, (_a = defaultPerms[librechatDataProvider.PermissionTypes.MEMORIES]) === null || _a === void 0 ? void 0 : _a[librechatDataProvider.Permissions.USE], defaults.memories);
-                    })() }, (((_t = defaultPerms[librechatDataProvider.PermissionTypes.MEMORIES]) === null || _t === void 0 ? void 0 : _t[librechatDataProvider.Permissions.CREATE]) !== undefined && {
-                    [librechatDataProvider.Permissions.CREATE]: isMemoryExplicitlyDisabled
+                        return getPermissionValue(loadedInterface.memories, (_a = defaultPerms[dataProvider.PermissionTypes.MEMORIES]) === null || _a === void 0 ? void 0 : _a[dataProvider.Permissions.USE], defaults.memories);
+                    })() }, (((_t = defaultPerms[dataProvider.PermissionTypes.MEMORIES]) === null || _t === void 0 ? void 0 : _t[dataProvider.Permissions.CREATE]) !== undefined && {
+                    [dataProvider.Permissions.CREATE]: isMemoryExplicitlyDisabled
                         ? false
-                        : defaultPerms[librechatDataProvider.PermissionTypes.MEMORIES][librechatDataProvider.Permissions.CREATE],
-                })), (((_u = defaultPerms[librechatDataProvider.PermissionTypes.MEMORIES]) === null || _u === void 0 ? void 0 : _u[librechatDataProvider.Permissions.READ]) !== undefined && {
-                    [librechatDataProvider.Permissions.READ]: isMemoryExplicitlyDisabled
+                        : defaultPerms[dataProvider.PermissionTypes.MEMORIES][dataProvider.Permissions.CREATE],
+                })), (((_u = defaultPerms[dataProvider.PermissionTypes.MEMORIES]) === null || _u === void 0 ? void 0 : _u[dataProvider.Permissions.READ]) !== undefined && {
+                    [dataProvider.Permissions.READ]: isMemoryExplicitlyDisabled
                         ? false
-                        : defaultPerms[librechatDataProvider.PermissionTypes.MEMORIES][librechatDataProvider.Permissions.READ],
-                })), (((_v = defaultPerms[librechatDataProvider.PermissionTypes.MEMORIES]) === null || _v === void 0 ? void 0 : _v[librechatDataProvider.Permissions.UPDATE]) !== undefined && {
-                    [librechatDataProvider.Permissions.UPDATE]: isMemoryExplicitlyDisabled
+                        : defaultPerms[dataProvider.PermissionTypes.MEMORIES][dataProvider.Permissions.READ],
+                })), (((_v = defaultPerms[dataProvider.PermissionTypes.MEMORIES]) === null || _v === void 0 ? void 0 : _v[dataProvider.Permissions.UPDATE]) !== undefined && {
+                    [dataProvider.Permissions.UPDATE]: isMemoryExplicitlyDisabled
                         ? false
-                        : defaultPerms[librechatDataProvider.PermissionTypes.MEMORIES][librechatDataProvider.Permissions.UPDATE],
-                })), { [librechatDataProvider.Permissions.OPT_OUT]: isMemoryExplicitlyDisabled
+                        : defaultPerms[dataProvider.PermissionTypes.MEMORIES][dataProvider.Permissions.UPDATE],
+                })), { [dataProvider.Permissions.OPT_OUT]: isMemoryExplicitlyDisabled
                         ? false
                         : isPersonalizationEnabled || undefined }),
-                [librechatDataProvider.PermissionTypes.MULTI_CONVO]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue(loadedInterface.multiConvo, (_w = defaultPerms[librechatDataProvider.PermissionTypes.MULTI_CONVO]) === null || _w === void 0 ? void 0 : _w[librechatDataProvider.Permissions.USE], defaults.multiConvo),
+                [dataProvider.PermissionTypes.MULTI_CONVO]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue(loadedInterface.multiConvo, (_w = defaultPerms[dataProvider.PermissionTypes.MULTI_CONVO]) === null || _w === void 0 ? void 0 : _w[dataProvider.Permissions.USE], defaults.multiConvo),
                 },
-                [librechatDataProvider.PermissionTypes.AGENTS]: Object.assign(Object.assign({ [librechatDataProvider.Permissions.USE]: getPermissionValue(getConfigUse(loadedInterface.agents), (_x = defaultPerms[librechatDataProvider.PermissionTypes.AGENTS]) === null || _x === void 0 ? void 0 : _x[librechatDataProvider.Permissions.USE], agentsDefaultUse) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.agents) === 'object' && 'create' in interfaceConfig.agents) ||
-                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[librechatDataProvider.PermissionTypes.AGENTS])
+                [dataProvider.PermissionTypes.AGENTS]: Object.assign(Object.assign({ [dataProvider.Permissions.USE]: getPermissionValue(getConfigUse(loadedInterface.agents), (_x = defaultPerms[dataProvider.PermissionTypes.AGENTS]) === null || _x === void 0 ? void 0 : _x[dataProvider.Permissions.USE], agentsDefaultUse) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.agents) === 'object' && 'create' in interfaceConfig.agents) ||
+                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[dataProvider.PermissionTypes.AGENTS])
                     ? {
-                        [librechatDataProvider.Permissions.CREATE]: getPermissionValue(getConfigCreate(loadedInterface.agents), (_y = defaultPerms[librechatDataProvider.PermissionTypes.AGENTS]) === null || _y === void 0 ? void 0 : _y[librechatDataProvider.Permissions.CREATE], agentsDefaultCreate !== null && agentsDefaultCreate !== void 0 ? agentsDefaultCreate : true),
+                        [dataProvider.Permissions.CREATE]: getPermissionValue(getConfigCreate(loadedInterface.agents), (_y = defaultPerms[dataProvider.PermissionTypes.AGENTS]) === null || _y === void 0 ? void 0 : _y[dataProvider.Permissions.CREATE], agentsDefaultCreate !== null && agentsDefaultCreate !== void 0 ? agentsDefaultCreate : true),
                     }
                     : {})), ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.agents) === 'object' &&
                     ('share' in interfaceConfig.agents || 'public' in interfaceConfig.agents)) ||
-                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[librechatDataProvider.PermissionTypes.AGENTS])
+                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[dataProvider.PermissionTypes.AGENTS])
                     ? {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.agents), (_z = defaultPerms[librechatDataProvider.PermissionTypes.AGENTS]) === null || _z === void 0 ? void 0 : _z[librechatDataProvider.Permissions.SHARE], agentsDefaultShare),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.agents), (_0 = defaultPerms[librechatDataProvider.PermissionTypes.AGENTS]) === null || _0 === void 0 ? void 0 : _0[librechatDataProvider.Permissions.SHARE_PUBLIC], agentsDefaultPublic),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.agents), (_z = defaultPerms[dataProvider.PermissionTypes.AGENTS]) === null || _z === void 0 ? void 0 : _z[dataProvider.Permissions.SHARE], agentsDefaultShare),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.agents), (_0 = defaultPerms[dataProvider.PermissionTypes.AGENTS]) === null || _0 === void 0 ? void 0 : _0[dataProvider.Permissions.SHARE_PUBLIC], agentsDefaultPublic),
                     }
                     : {})),
-                [librechatDataProvider.PermissionTypes.TEMPORARY_CHAT]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue(loadedInterface.temporaryChat, (_1 = defaultPerms[librechatDataProvider.PermissionTypes.TEMPORARY_CHAT]) === null || _1 === void 0 ? void 0 : _1[librechatDataProvider.Permissions.USE], defaults.temporaryChat),
+                [dataProvider.PermissionTypes.TEMPORARY_CHAT]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue(loadedInterface.temporaryChat, (_1 = defaultPerms[dataProvider.PermissionTypes.TEMPORARY_CHAT]) === null || _1 === void 0 ? void 0 : _1[dataProvider.Permissions.USE], defaults.temporaryChat),
                 },
-                [librechatDataProvider.PermissionTypes.RUN_CODE]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue(loadedInterface.runCode, (_2 = defaultPerms[librechatDataProvider.PermissionTypes.RUN_CODE]) === null || _2 === void 0 ? void 0 : _2[librechatDataProvider.Permissions.USE], defaults.runCode),
+                [dataProvider.PermissionTypes.RUN_CODE]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue(loadedInterface.runCode, (_2 = defaultPerms[dataProvider.PermissionTypes.RUN_CODE]) === null || _2 === void 0 ? void 0 : _2[dataProvider.Permissions.USE], defaults.runCode),
                 },
-                [librechatDataProvider.PermissionTypes.WEB_SEARCH]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue(loadedInterface.webSearch, (_3 = defaultPerms[librechatDataProvider.PermissionTypes.WEB_SEARCH]) === null || _3 === void 0 ? void 0 : _3[librechatDataProvider.Permissions.USE], defaults.webSearch),
+                [dataProvider.PermissionTypes.WEB_SEARCH]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue(loadedInterface.webSearch, (_3 = defaultPerms[dataProvider.PermissionTypes.WEB_SEARCH]) === null || _3 === void 0 ? void 0 : _3[dataProvider.Permissions.USE], defaults.webSearch),
                 },
-                [librechatDataProvider.PermissionTypes.PEOPLE_PICKER]: {
-                    [librechatDataProvider.Permissions.VIEW_USERS]: getPermissionValue((_4 = loadedInterface.peoplePicker) === null || _4 === void 0 ? void 0 : _4.users, (_5 = defaultPerms[librechatDataProvider.PermissionTypes.PEOPLE_PICKER]) === null || _5 === void 0 ? void 0 : _5[librechatDataProvider.Permissions.VIEW_USERS], (_6 = defaults.peoplePicker) === null || _6 === void 0 ? void 0 : _6.users),
-                    [librechatDataProvider.Permissions.VIEW_GROUPS]: getPermissionValue((_7 = loadedInterface.peoplePicker) === null || _7 === void 0 ? void 0 : _7.groups, (_8 = defaultPerms[librechatDataProvider.PermissionTypes.PEOPLE_PICKER]) === null || _8 === void 0 ? void 0 : _8[librechatDataProvider.Permissions.VIEW_GROUPS], (_9 = defaults.peoplePicker) === null || _9 === void 0 ? void 0 : _9.groups),
-                    [librechatDataProvider.Permissions.VIEW_ROLES]: getPermissionValue((_10 = loadedInterface.peoplePicker) === null || _10 === void 0 ? void 0 : _10.roles, (_11 = defaultPerms[librechatDataProvider.PermissionTypes.PEOPLE_PICKER]) === null || _11 === void 0 ? void 0 : _11[librechatDataProvider.Permissions.VIEW_ROLES], (_12 = defaults.peoplePicker) === null || _12 === void 0 ? void 0 : _12.roles),
+                [dataProvider.PermissionTypes.PEOPLE_PICKER]: {
+                    [dataProvider.Permissions.VIEW_USERS]: getPermissionValue((_4 = loadedInterface.peoplePicker) === null || _4 === void 0 ? void 0 : _4.users, (_5 = defaultPerms[dataProvider.PermissionTypes.PEOPLE_PICKER]) === null || _5 === void 0 ? void 0 : _5[dataProvider.Permissions.VIEW_USERS], (_6 = defaults.peoplePicker) === null || _6 === void 0 ? void 0 : _6.users),
+                    [dataProvider.Permissions.VIEW_GROUPS]: getPermissionValue((_7 = loadedInterface.peoplePicker) === null || _7 === void 0 ? void 0 : _7.groups, (_8 = defaultPerms[dataProvider.PermissionTypes.PEOPLE_PICKER]) === null || _8 === void 0 ? void 0 : _8[dataProvider.Permissions.VIEW_GROUPS], (_9 = defaults.peoplePicker) === null || _9 === void 0 ? void 0 : _9.groups),
+                    [dataProvider.Permissions.VIEW_ROLES]: getPermissionValue((_10 = loadedInterface.peoplePicker) === null || _10 === void 0 ? void 0 : _10.roles, (_11 = defaultPerms[dataProvider.PermissionTypes.PEOPLE_PICKER]) === null || _11 === void 0 ? void 0 : _11[dataProvider.Permissions.VIEW_ROLES], (_12 = defaults.peoplePicker) === null || _12 === void 0 ? void 0 : _12.roles),
                 },
-                [librechatDataProvider.PermissionTypes.MARKETPLACE]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue((_13 = loadedInterface.marketplace) === null || _13 === void 0 ? void 0 : _13.use, (_14 = defaultPerms[librechatDataProvider.PermissionTypes.MARKETPLACE]) === null || _14 === void 0 ? void 0 : _14[librechatDataProvider.Permissions.USE], (_15 = defaults.marketplace) === null || _15 === void 0 ? void 0 : _15.use),
+                [dataProvider.PermissionTypes.MARKETPLACE]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue((_13 = loadedInterface.marketplace) === null || _13 === void 0 ? void 0 : _13.use, (_14 = defaultPerms[dataProvider.PermissionTypes.MARKETPLACE]) === null || _14 === void 0 ? void 0 : _14[dataProvider.Permissions.USE], (_15 = defaults.marketplace) === null || _15 === void 0 ? void 0 : _15.use),
                 },
-                [librechatDataProvider.PermissionTypes.FILE_SEARCH]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue(loadedInterface.fileSearch, (_16 = defaultPerms[librechatDataProvider.PermissionTypes.FILE_SEARCH]) === null || _16 === void 0 ? void 0 : _16[librechatDataProvider.Permissions.USE], defaults.fileSearch),
+                [dataProvider.PermissionTypes.FILE_SEARCH]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue(loadedInterface.fileSearch, (_16 = defaultPerms[dataProvider.PermissionTypes.FILE_SEARCH]) === null || _16 === void 0 ? void 0 : _16[dataProvider.Permissions.USE], defaults.fileSearch),
                 },
-                [librechatDataProvider.PermissionTypes.FILE_CITATIONS]: {
-                    [librechatDataProvider.Permissions.USE]: getPermissionValue(loadedInterface.fileCitations, (_17 = defaultPerms[librechatDataProvider.PermissionTypes.FILE_CITATIONS]) === null || _17 === void 0 ? void 0 : _17[librechatDataProvider.Permissions.USE], defaults.fileCitations),
+                [dataProvider.PermissionTypes.FILE_CITATIONS]: {
+                    [dataProvider.Permissions.USE]: getPermissionValue(loadedInterface.fileCitations, (_17 = defaultPerms[dataProvider.PermissionTypes.FILE_CITATIONS]) === null || _17 === void 0 ? void 0 : _17[dataProvider.Permissions.USE], defaults.fileCitations),
                 },
-                [librechatDataProvider.PermissionTypes.MCP_SERVERS]: Object.assign({ [librechatDataProvider.Permissions.USE]: getPermissionValue((_18 = loadedInterface.mcpServers) === null || _18 === void 0 ? void 0 : _18.use, (_19 = defaultPerms[librechatDataProvider.PermissionTypes.MCP_SERVERS]) === null || _19 === void 0 ? void 0 : _19[librechatDataProvider.Permissions.USE], (_20 = defaults.mcpServers) === null || _20 === void 0 ? void 0 : _20.use), [librechatDataProvider.Permissions.CREATE]: getPermissionValue((_21 = loadedInterface.mcpServers) === null || _21 === void 0 ? void 0 : _21.create, (_22 = defaultPerms[librechatDataProvider.PermissionTypes.MCP_SERVERS]) === null || _22 === void 0 ? void 0 : _22[librechatDataProvider.Permissions.CREATE], (_23 = defaults.mcpServers) === null || _23 === void 0 ? void 0 : _23.create) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.mcpServers) === 'object' &&
+                [dataProvider.PermissionTypes.MCP_SERVERS]: Object.assign({ [dataProvider.Permissions.USE]: getPermissionValue((_18 = loadedInterface.mcpServers) === null || _18 === void 0 ? void 0 : _18.use, (_19 = defaultPerms[dataProvider.PermissionTypes.MCP_SERVERS]) === null || _19 === void 0 ? void 0 : _19[dataProvider.Permissions.USE], (_20 = defaults.mcpServers) === null || _20 === void 0 ? void 0 : _20.use), [dataProvider.Permissions.CREATE]: getPermissionValue((_21 = loadedInterface.mcpServers) === null || _21 === void 0 ? void 0 : _21.create, (_22 = defaultPerms[dataProvider.PermissionTypes.MCP_SERVERS]) === null || _22 === void 0 ? void 0 : _22[dataProvider.Permissions.CREATE], (_23 = defaults.mcpServers) === null || _23 === void 0 ? void 0 : _23.create) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.mcpServers) === 'object' &&
                     ('share' in interfaceConfig.mcpServers || 'public' in interfaceConfig.mcpServers)) ||
-                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[librechatDataProvider.PermissionTypes.MCP_SERVERS])
+                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[dataProvider.PermissionTypes.MCP_SERVERS])
                     ? {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue((_24 = loadedInterface.mcpServers) === null || _24 === void 0 ? void 0 : _24.share, (_25 = defaultPerms[librechatDataProvider.PermissionTypes.MCP_SERVERS]) === null || _25 === void 0 ? void 0 : _25[librechatDataProvider.Permissions.SHARE], (_26 = defaults.mcpServers) === null || _26 === void 0 ? void 0 : _26.share),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_27 = loadedInterface.mcpServers) === null || _27 === void 0 ? void 0 : _27.public, (_28 = defaultPerms[librechatDataProvider.PermissionTypes.MCP_SERVERS]) === null || _28 === void 0 ? void 0 : _28[librechatDataProvider.Permissions.SHARE_PUBLIC], (_29 = defaults.mcpServers) === null || _29 === void 0 ? void 0 : _29.public),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue((_24 = loadedInterface.mcpServers) === null || _24 === void 0 ? void 0 : _24.share, (_25 = defaultPerms[dataProvider.PermissionTypes.MCP_SERVERS]) === null || _25 === void 0 ? void 0 : _25[dataProvider.Permissions.SHARE], (_26 = defaults.mcpServers) === null || _26 === void 0 ? void 0 : _26.share),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_27 = loadedInterface.mcpServers) === null || _27 === void 0 ? void 0 : _27.public, (_28 = defaultPerms[dataProvider.PermissionTypes.MCP_SERVERS]) === null || _28 === void 0 ? void 0 : _28[dataProvider.Permissions.SHARE_PUBLIC], (_29 = defaults.mcpServers) === null || _29 === void 0 ? void 0 : _29.public),
                     }
                     : {})),
-                [librechatDataProvider.PermissionTypes.REMOTE_AGENTS]: Object.assign({ [librechatDataProvider.Permissions.USE]: getPermissionValue((_30 = loadedInterface.remoteAgents) === null || _30 === void 0 ? void 0 : _30.use, (_31 = defaultPerms[librechatDataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _31 === void 0 ? void 0 : _31[librechatDataProvider.Permissions.USE], (_32 = defaults.remoteAgents) === null || _32 === void 0 ? void 0 : _32.use), [librechatDataProvider.Permissions.CREATE]: getPermissionValue((_33 = loadedInterface.remoteAgents) === null || _33 === void 0 ? void 0 : _33.create, (_34 = defaultPerms[librechatDataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _34 === void 0 ? void 0 : _34[librechatDataProvider.Permissions.CREATE], (_35 = defaults.remoteAgents) === null || _35 === void 0 ? void 0 : _35.create) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.remoteAgents) === 'object' &&
+                [dataProvider.PermissionTypes.REMOTE_AGENTS]: Object.assign({ [dataProvider.Permissions.USE]: getPermissionValue((_30 = loadedInterface.remoteAgents) === null || _30 === void 0 ? void 0 : _30.use, (_31 = defaultPerms[dataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _31 === void 0 ? void 0 : _31[dataProvider.Permissions.USE], (_32 = defaults.remoteAgents) === null || _32 === void 0 ? void 0 : _32.use), [dataProvider.Permissions.CREATE]: getPermissionValue((_33 = loadedInterface.remoteAgents) === null || _33 === void 0 ? void 0 : _33.create, (_34 = defaultPerms[dataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _34 === void 0 ? void 0 : _34[dataProvider.Permissions.CREATE], (_35 = defaults.remoteAgents) === null || _35 === void 0 ? void 0 : _35.create) }, ((typeof (interfaceConfig === null || interfaceConfig === void 0 ? void 0 : interfaceConfig.remoteAgents) === 'object' &&
                     ('share' in interfaceConfig.remoteAgents || 'public' in interfaceConfig.remoteAgents)) ||
-                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[librechatDataProvider.PermissionTypes.REMOTE_AGENTS])
+                    !(existingPermissions === null || existingPermissions === void 0 ? void 0 : existingPermissions[dataProvider.PermissionTypes.REMOTE_AGENTS])
                     ? {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue((_36 = loadedInterface.remoteAgents) === null || _36 === void 0 ? void 0 : _36.share, (_37 = defaultPerms[librechatDataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _37 === void 0 ? void 0 : _37[librechatDataProvider.Permissions.SHARE], (_38 = defaults.remoteAgents) === null || _38 === void 0 ? void 0 : _38.share),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_39 = loadedInterface.remoteAgents) === null || _39 === void 0 ? void 0 : _39.public, (_40 = defaultPerms[librechatDataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _40 === void 0 ? void 0 : _40[librechatDataProvider.Permissions.SHARE_PUBLIC], (_41 = defaults.remoteAgents) === null || _41 === void 0 ? void 0 : _41.public),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue((_36 = loadedInterface.remoteAgents) === null || _36 === void 0 ? void 0 : _36.share, (_37 = defaultPerms[dataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _37 === void 0 ? void 0 : _37[dataProvider.Permissions.SHARE], (_38 = defaults.remoteAgents) === null || _38 === void 0 ? void 0 : _38.share),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_39 = loadedInterface.remoteAgents) === null || _39 === void 0 ? void 0 : _39.public, (_40 = defaultPerms[dataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _40 === void 0 ? void 0 : _40[dataProvider.Permissions.SHARE_PUBLIC], (_41 = defaults.remoteAgents) === null || _41 === void 0 ? void 0 : _41.public),
                     }
                     : {})),
             };
@@ -2942,31 +2942,31 @@ function updateInterfacePermissions(_a) {
             }
             const shareBackfill = [
                 [
-                    librechatDataProvider.PermissionTypes.PROMPTS,
+                    dataProvider.PermissionTypes.PROMPTS,
                     {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.prompts), (_42 = defaultPerms[librechatDataProvider.PermissionTypes.PROMPTS]) === null || _42 === void 0 ? void 0 : _42[librechatDataProvider.Permissions.SHARE], promptsDefaultShare),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.prompts), (_43 = defaultPerms[librechatDataProvider.PermissionTypes.PROMPTS]) === null || _43 === void 0 ? void 0 : _43[librechatDataProvider.Permissions.SHARE_PUBLIC], promptsDefaultPublic),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.prompts), (_42 = defaultPerms[dataProvider.PermissionTypes.PROMPTS]) === null || _42 === void 0 ? void 0 : _42[dataProvider.Permissions.SHARE], promptsDefaultShare),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.prompts), (_43 = defaultPerms[dataProvider.PermissionTypes.PROMPTS]) === null || _43 === void 0 ? void 0 : _43[dataProvider.Permissions.SHARE_PUBLIC], promptsDefaultPublic),
                     },
                 ],
                 [
-                    librechatDataProvider.PermissionTypes.AGENTS,
+                    dataProvider.PermissionTypes.AGENTS,
                     {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.agents), (_44 = defaultPerms[librechatDataProvider.PermissionTypes.AGENTS]) === null || _44 === void 0 ? void 0 : _44[librechatDataProvider.Permissions.SHARE], agentsDefaultShare),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.agents), (_45 = defaultPerms[librechatDataProvider.PermissionTypes.AGENTS]) === null || _45 === void 0 ? void 0 : _45[librechatDataProvider.Permissions.SHARE_PUBLIC], agentsDefaultPublic),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue(getConfigShare(loadedInterface.agents), (_44 = defaultPerms[dataProvider.PermissionTypes.AGENTS]) === null || _44 === void 0 ? void 0 : _44[dataProvider.Permissions.SHARE], agentsDefaultShare),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue(getConfigPublic(loadedInterface.agents), (_45 = defaultPerms[dataProvider.PermissionTypes.AGENTS]) === null || _45 === void 0 ? void 0 : _45[dataProvider.Permissions.SHARE_PUBLIC], agentsDefaultPublic),
                     },
                 ],
                 [
-                    librechatDataProvider.PermissionTypes.MCP_SERVERS,
+                    dataProvider.PermissionTypes.MCP_SERVERS,
                     {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue((_46 = loadedInterface.mcpServers) === null || _46 === void 0 ? void 0 : _46.share, (_47 = defaultPerms[librechatDataProvider.PermissionTypes.MCP_SERVERS]) === null || _47 === void 0 ? void 0 : _47[librechatDataProvider.Permissions.SHARE], (_48 = defaults.mcpServers) === null || _48 === void 0 ? void 0 : _48.share),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_49 = loadedInterface.mcpServers) === null || _49 === void 0 ? void 0 : _49.public, (_50 = defaultPerms[librechatDataProvider.PermissionTypes.MCP_SERVERS]) === null || _50 === void 0 ? void 0 : _50[librechatDataProvider.Permissions.SHARE_PUBLIC], (_51 = defaults.mcpServers) === null || _51 === void 0 ? void 0 : _51.public),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue((_46 = loadedInterface.mcpServers) === null || _46 === void 0 ? void 0 : _46.share, (_47 = defaultPerms[dataProvider.PermissionTypes.MCP_SERVERS]) === null || _47 === void 0 ? void 0 : _47[dataProvider.Permissions.SHARE], (_48 = defaults.mcpServers) === null || _48 === void 0 ? void 0 : _48.share),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_49 = loadedInterface.mcpServers) === null || _49 === void 0 ? void 0 : _49.public, (_50 = defaultPerms[dataProvider.PermissionTypes.MCP_SERVERS]) === null || _50 === void 0 ? void 0 : _50[dataProvider.Permissions.SHARE_PUBLIC], (_51 = defaults.mcpServers) === null || _51 === void 0 ? void 0 : _51.public),
                     },
                 ],
                 [
-                    librechatDataProvider.PermissionTypes.REMOTE_AGENTS,
+                    dataProvider.PermissionTypes.REMOTE_AGENTS,
                     {
-                        [librechatDataProvider.Permissions.SHARE]: getPermissionValue((_52 = loadedInterface.remoteAgents) === null || _52 === void 0 ? void 0 : _52.share, (_53 = defaultPerms[librechatDataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _53 === void 0 ? void 0 : _53[librechatDataProvider.Permissions.SHARE], (_54 = defaults.remoteAgents) === null || _54 === void 0 ? void 0 : _54.share),
-                        [librechatDataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_55 = loadedInterface.remoteAgents) === null || _55 === void 0 ? void 0 : _55.public, (_56 = defaultPerms[librechatDataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _56 === void 0 ? void 0 : _56[librechatDataProvider.Permissions.SHARE_PUBLIC], (_57 = defaults.remoteAgents) === null || _57 === void 0 ? void 0 : _57.public),
+                        [dataProvider.Permissions.SHARE]: getPermissionValue((_52 = loadedInterface.remoteAgents) === null || _52 === void 0 ? void 0 : _52.share, (_53 = defaultPerms[dataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _53 === void 0 ? void 0 : _53[dataProvider.Permissions.SHARE], (_54 = defaults.remoteAgents) === null || _54 === void 0 ? void 0 : _54.share),
+                        [dataProvider.Permissions.SHARE_PUBLIC]: getPermissionValue((_55 = loadedInterface.remoteAgents) === null || _55 === void 0 ? void 0 : _55.public, (_56 = defaultPerms[dataProvider.PermissionTypes.REMOTE_AGENTS]) === null || _56 === void 0 ? void 0 : _56[dataProvider.Permissions.SHARE_PUBLIC], (_57 = defaults.remoteAgents) === null || _57 === void 0 ? void 0 : _57.public),
                     },
                 ],
             ];
@@ -3120,15 +3120,15 @@ const initializeS3 = () => {
  */
 function initializeFileStorage(appConfig) {
     const { fileStrategy } = appConfig;
-    if (fileStrategy === librechatDataProvider.FileSources.firebase) {
+    if (fileStrategy === dataProvider.FileSources.firebase) {
         initializeFirebase();
     }
-    else if (fileStrategy === librechatDataProvider.FileSources.azure_blob) {
+    else if (fileStrategy === dataProvider.FileSources.azure_blob) {
         initializeAzureBlobService().catch((error) => {
             dataSchemas.logger.error('Error initializing Azure Blob Service:', error);
         });
     }
-    else if (fileStrategy === librechatDataProvider.FileSources.s3) {
+    else if (fileStrategy === dataProvider.FileSources.s3) {
         initializeS3();
     }
 }
@@ -3142,10 +3142,10 @@ const handleRateLimits = (rateLimits) => {
         return;
     }
     const rateLimitKeys = {
-        fileUploads: librechatDataProvider.RateLimitPrefix.FILE_UPLOAD,
-        conversationsImport: librechatDataProvider.RateLimitPrefix.IMPORT,
-        tts: librechatDataProvider.RateLimitPrefix.TTS,
-        stt: librechatDataProvider.RateLimitPrefix.STT,
+        fileUploads: dataProvider.RateLimitPrefix.FILE_UPLOAD,
+        conversationsImport: dataProvider.RateLimitPrefix.IMPORT,
+        tts: dataProvider.RateLimitPrefix.TTS,
+        stt: dataProvider.RateLimitPrefix.STT,
     };
     Object.entries(rateLimitKeys).forEach(([key, prefix]) => {
         const rateLimit = rateLimits[key];
@@ -3182,11 +3182,11 @@ const secretDefaults = {
 const deprecatedVariables = [
     {
         key: 'CHECK_BALANCE',
-        description: 'Please use the `balance` field in the `librechat.yaml` config file instead.\nMore info: https://librechat.ai/docs/configuration/librechat_yaml/object_structure/balance#overview',
+        description: 'Please use the `balance` field in the `chat.yaml` config file instead.\nMore info: https://hanzo.ai/docs/chat/configuration/chat_yaml/object_structure/balance#overview',
     },
     {
         key: 'START_BALANCE',
-        description: 'Please use the `balance` field in the `librechat.yaml` config file instead.\nMore info: https://librechat.ai/docs/configuration/librechat_yaml/object_structure/balance#overview',
+        description: 'Please use the `balance` field in the `chat.yaml` config file instead.\nMore info: https://hanzo.ai/docs/chat/configuration/chat_yaml/object_structure/balance#overview',
     },
     {
         key: 'GOOGLE_API_KEY',
@@ -3244,7 +3244,7 @@ function checkPasswordReset() {
       
       Please configure email service for secure password reset functionality.
       
-      https://www.librechat.ai/docs/configuration/authentication/email
+      https://hanzo.ai/docs/chat/configuration/authentication/email
 
       ❗❗❗`);
     }
@@ -3272,7 +3272,7 @@ function checkVariables() {
         dataSchemas.logger.info(`\u200B
 
     For your convenience, use this tool to generate your own secret values:
-    https://www.librechat.ai/toolkit/creds_generator
+    https://hanzo.chat/toolkit/creds_generator
 
     \u200B`);
     }
@@ -3384,13 +3384,13 @@ function performStartupChecks(appConfig) {
  * @param config - The loaded custom configuration.
  */
 function checkConfig(config) {
-    if (config.version !== librechatDataProvider.Constants.CONFIG_VERSION) {
+    if (config.version !== dataProvider.Constants.CONFIG_VERSION) {
         dataSchemas.logger.info(`\nOutdated Config version: ${config.version}
-Latest version: ${librechatDataProvider.Constants.CONFIG_VERSION}
+Latest version: ${dataProvider.Constants.CONFIG_VERSION}
 
       Check out the Config changelogs for the latest options and features added.
 
-      https://www.librechat.ai/changelog\n\n`);
+      https://hanzo.chat/changelog\n\n`);
     }
 }
 /**
@@ -3406,7 +3406,7 @@ function checkWebSearchConfig(webSearchConfig) {
     dataSchemas.webSearchKeys.forEach((key) => {
         const value = webSearchConfig[key];
         if (typeof value === 'string') {
-            const varName = librechatDataProvider.extractVariableName(value);
+            const varName = dataProvider.extractVariableName(value);
             if (varName) {
                 // This is a proper environment variable reference
                 const actualValue = process.env[varName];
@@ -3423,12 +3423,12 @@ function checkWebSearchConfig(webSearchConfig) {
           
           Current value: "${value.substring(0, 10)}..."
           
-          This is incorrect! You should use environment variable references in your librechat.yaml file, such as:
+          This is incorrect! You should use environment variable references in your chat.yaml file, such as:
           ${key}: "\${YOUR_ENV_VAR_NAME}"
           
           Then set the actual API key in your .env file or environment variables.
           
-          More info: https://www.librechat.ai/docs/configuration/librechat_yaml/web_search`);
+          More info: https://hanzo.ai/docs/chat/configuration/chat_yaml/web_search`);
             }
         }
     });
@@ -4178,7 +4178,7 @@ function findOpenIDUser(_a) {
             // If user found by email, check if they're allowed to use OpenID provider
             if (user && user.provider && user.provider !== 'openid') {
                 dataSchemas.logger.warn(`[${strategyName}] Attempted OpenID login by user ${user.email}, was registered with "${user.provider}" provider`);
-                return { user: null, error: librechatDataProvider.ErrorTypes.AUTH_FAILED, migration: false };
+                return { user: null, error: dataProvider.ErrorTypes.AUTH_FAILED, migration: false };
             }
             // If user found by email but doesn't have openidId, prepare for migration
             if (user && !user.openidId) {
@@ -4437,16 +4437,16 @@ function getRemoteAgentPermissions(deps, userId, role, resourceId) {
         const agentPerms = yield deps.getEffectivePermissions({
             userId,
             role,
-            resourceType: librechatDataProvider.ResourceType.AGENT,
+            resourceType: dataProvider.ResourceType.AGENT,
             resourceId,
         });
-        if (librechatDataProvider.hasPermissions(agentPerms, librechatDataProvider.PermissionBits.SHARE)) {
-            return librechatDataProvider.PermissionBits.VIEW | librechatDataProvider.PermissionBits.EDIT | librechatDataProvider.PermissionBits.DELETE | librechatDataProvider.PermissionBits.SHARE;
+        if (dataProvider.hasPermissions(agentPerms, dataProvider.PermissionBits.SHARE)) {
+            return dataProvider.PermissionBits.VIEW | dataProvider.PermissionBits.EDIT | dataProvider.PermissionBits.DELETE | dataProvider.PermissionBits.SHARE;
         }
         return deps.getEffectivePermissions({
             userId,
             role,
-            resourceType: librechatDataProvider.ResourceType.REMOTE_AGENT,
+            resourceType: dataProvider.ResourceType.REMOTE_AGENT,
             resourceId,
         });
     });
@@ -4459,7 +4459,7 @@ function checkRemoteAgentAccess(params) {
             return { hasAccess: false, permissions: 0, agent: null };
         }
         const permissions = yield getRemoteAgentPermissions({ getEffectivePermissions }, userId, role, agent._id);
-        const hasAccess = librechatDataProvider.hasPermissions(permissions, librechatDataProvider.PermissionBits.VIEW);
+        const hasAccess = dataProvider.hasPermissions(permissions, dataProvider.PermissionBits.VIEW);
         return { hasAccess, permissions, agent };
     });
 }
@@ -4550,7 +4550,7 @@ function createCheckRemoteAgentAccess(deps) {
             }
             const userId = ((_c = req.user) === null || _c === void 0 ? void 0 : _c.id) || '';
             const permissions = yield getRemoteAgentPermissions(deps, userId, (_d = req.user) === null || _d === void 0 ? void 0 : _d.role, agent._id);
-            if (!librechatDataProvider.hasPermissions(permissions, librechatDataProvider.PermissionBits.VIEW)) {
+            if (!dataProvider.hasPermissions(permissions, dataProvider.PermissionBits.VIEW)) {
                 return res.status(403).json({
                     error: {
                         message: `No remote access to agent: ${agentId}`,
@@ -4670,10 +4670,10 @@ function enrichRemoteAgentPrincipals(deps, resourceId, principals) {
         const agentOwnerEntries = yield AclEntry.aggregate([
             {
                 $match: {
-                    resourceType: librechatDataProvider.ResourceType.AGENT,
+                    resourceType: dataProvider.ResourceType.AGENT,
                     resourceId: resourceObjectId,
-                    principalType: librechatDataProvider.PrincipalType.USER,
-                    permBits: { $bitsAllSet: librechatDataProvider.PermissionBits.SHARE },
+                    principalType: dataProvider.PrincipalType.USER,
+                    permBits: { $bitsAllSet: dataProvider.PermissionBits.SHARE },
                 },
             },
             {
@@ -4697,17 +4697,17 @@ function enrichRemoteAgentPrincipals(deps, resourceId, principals) {
             if (!entry.userInfo) {
                 continue;
             }
-            const alreadyIncluded = enrichedPrincipals.some((p) => p.type === librechatDataProvider.PrincipalType.USER && p.id === entry.principalId.toString());
+            const alreadyIncluded = enrichedPrincipals.some((p) => p.type === dataProvider.PrincipalType.USER && p.id === entry.principalId.toString());
             if (!alreadyIncluded) {
                 enrichedPrincipals.unshift({
-                    type: librechatDataProvider.PrincipalType.USER,
+                    type: dataProvider.PrincipalType.USER,
                     id: entry.userInfo._id.toString(),
                     name: entry.userInfo.name || entry.userInfo.username,
                     email: entry.userInfo.email,
                     avatar: entry.userInfo.avatar,
                     source: 'local',
                     idOnTheSource: entry.userInfo.idOnTheSource || entry.userInfo._id.toString(),
-                    accessRoleId: librechatDataProvider.AccessRoleIds.REMOTE_AGENT_OWNER,
+                    accessRoleId: dataProvider.AccessRoleIds.REMOTE_AGENT_OWNER,
                     isImplicit: true,
                 });
                 entriesToBackfill.push(entry.principalId);
@@ -4725,7 +4725,7 @@ function backfillRemoteAgentPermissions(deps, resourceId, entriesToBackfill) {
     const resourceObjectId = typeof resourceId === 'string' && /^[a-f\d]{24}$/i.test(resourceId)
         ? AclEntry.base.Types.ObjectId.createFromHexString(resourceId)
         : resourceId;
-    AccessRole.findOne({ accessRoleId: librechatDataProvider.AccessRoleIds.REMOTE_AGENT_OWNER })
+    AccessRole.findOne({ accessRoleId: dataProvider.AccessRoleIds.REMOTE_AGENT_OWNER })
         .lean()
         .then((role) => {
         if (!role) {
@@ -4735,17 +4735,17 @@ function backfillRemoteAgentPermissions(deps, resourceId, entriesToBackfill) {
         const bulkOps = entriesToBackfill.map((principalId) => ({
             updateOne: {
                 filter: {
-                    principalType: librechatDataProvider.PrincipalType.USER,
+                    principalType: dataProvider.PrincipalType.USER,
                     principalId,
-                    resourceType: librechatDataProvider.ResourceType.REMOTE_AGENT,
+                    resourceType: dataProvider.ResourceType.REMOTE_AGENT,
                     resourceId: resourceObjectId,
                 },
                 update: {
                     $setOnInsert: {
-                        principalType: librechatDataProvider.PrincipalType.USER,
+                        principalType: dataProvider.PrincipalType.USER,
                         principalId,
                         principalModel: 'User',
-                        resourceType: librechatDataProvider.ResourceType.REMOTE_AGENT,
+                        resourceType: dataProvider.ResourceType.REMOTE_AGENT,
                         resourceId: resourceObjectId,
                         permBits: role.permBits,
                         roleId: role._id,
@@ -4841,10 +4841,10 @@ const FORCED_IN_MEMORY_CACHE_NAMESPACES = process.env.FORCED_IN_MEMORY_CACHE_NAM
     ? process.env.FORCED_IN_MEMORY_CACHE_NAMESPACES.split(',')
         .map((key) => key.trim())
         .filter(Boolean)
-    : [librechatDataProvider.CacheKeys.CONFIG_STORE, librechatDataProvider.CacheKeys.APP_CONFIG];
+    : [dataProvider.CacheKeys.CONFIG_STORE, dataProvider.CacheKeys.APP_CONFIG];
 // Validate against CacheKeys enum
 if (FORCED_IN_MEMORY_CACHE_NAMESPACES.length > 0) {
-    const validKeys = Object.values(librechatDataProvider.CacheKeys);
+    const validKeys = Object.values(dataProvider.CacheKeys);
     const invalidKeys = FORCED_IN_MEMORY_CACHE_NAMESPACES.filter((key) => !validKeys.includes(key));
     if (invalidKeys.length > 0) {
         throw new Error(`Invalid cache keys in FORCED_IN_MEMORY_CACHE_NAMESPACES: ${invalidKeys.join(', ')}. Valid keys: ${validKeys.join(', ')}`);
@@ -5469,7 +5469,7 @@ const standardCache = (namespace, ttl, fallbackStore) => {
             });
             // Override clear() to handle namespace-aware deletion
             // The default Keyv clear() doesn't respect namespace due to the workaround above
-            // Workaround for issue #10487 https://github.com/danny-avila/LibreChat/issues/10487
+            // Workaround for issue #10487 https://github.com/danny-avila/Chat/issues/10487
             cache.clear = () => __awaiter(void 0, void 0, void 0, function* () {
                 // Type-safe check for Redis client with scanIterator support
                 if (!exports.keyvRedisClient || !('scanIterator' in exports.keyvRedisClient)) {
@@ -5520,7 +5520,7 @@ const sessionCache = (namespace, ttl) => {
     namespace = namespace.endsWith(':') ? namespace : `${namespace}:`;
     if (!cacheConfig.USE_REDIS) {
         const MemoryStore = createMemoryStore(session);
-        return new MemoryStore({ ttl, checkPeriod: librechatDataProvider.Time.ONE_DAY });
+        return new MemoryStore({ ttl, checkPeriod: dataProvider.Time.ONE_DAY });
     }
     const store = new connectRedis.RedisStore({ client: exports.ioredisClient, ttl, prefix: namespace });
     if (exports.ioredisClient) {
@@ -23219,7 +23219,7 @@ class ServerConfigsCacheFactory {
     }
 }
 
-const mcpToolPattern$1 = new RegExp(`^.+${librechatDataProvider.Constants.mcp_delimiter}.+$`);
+const mcpToolPattern$1 = new RegExp(`^.+${dataProvider.Constants.mcp_delimiter}.+$`);
 /**
  * Normalizes a server name to match the pattern ^[a-zA-Z0-9_.-]+$
  * This is required for Azure OpenAI models with Tool Calling
@@ -23288,10 +23288,10 @@ function generateServerNameFromTitle(title) {
 
 class MCPOAuthHandler {
     static getForcedTokenEndpointAuthMethod(tokenExchangeMethod) {
-        if (tokenExchangeMethod === librechatDataProvider.TokenExchangeMethodEnum.DefaultPost) {
+        if (tokenExchangeMethod === dataProvider.TokenExchangeMethodEnum.DefaultPost) {
             return 'client_secret_post';
         }
-        if (tokenExchangeMethod === librechatDataProvider.TokenExchangeMethodEnum.BasicAuthHeader) {
+        if (tokenExchangeMethod === dataProvider.TokenExchangeMethodEnum.BasicAuthHeader) {
             return 'client_secret_basic';
         }
         return undefined;
@@ -25089,9 +25089,9 @@ function getMCPProxyConfig(options) {
     if (configuredProxy) {
         return { type: 'explicit', proxyUrl: configuredProxy };
     }
-    const libreChatProxy = (_b = (_a = process.env.PROXY) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : '';
-    if (libreChatProxy) {
-        return { type: 'explicit', proxyUrl: libreChatProxy };
+    const chatProxy = (_b = (_a = process.env.PROXY) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : '';
+    if (chatProxy) {
+        return { type: 'explicit', proxyUrl: chatProxy };
     }
     const httpProxy = getTrimmedEnv('http_proxy', 'HTTP_PROXY');
     const httpsProxy = getTrimmedEnv('https_proxy', 'HTTPS_PROXY');
@@ -27008,17 +27008,17 @@ class MCPServerInspector {
         });
     }
     /**
-     * Converts server tools to LibreChat-compatible tool functions format.
+     * Converts server tools to Chat-compatible tool functions format.
      * @param serverName - The name of the server
      * @param connection - The MCP connection
-     * @returns Tool functions formatted for LibreChat
+     * @returns Tool functions formatted for Chat
      */
     static getToolFunctions(serverName, connection) {
         return __awaiter(this, void 0, void 0, function* () {
             const { tools } = yield connection.client.listTools();
             const toolFunctions = {};
             tools.forEach((tool) => {
-                const name = `${tool.name}${librechatDataProvider.Constants.mcp_delimiter}${serverName}`;
+                const name = `${tool.name}${dataProvider.Constants.mcp_delimiter}${serverName}`;
                 toolFunctions[name] = {
                     type: 'function',
                     ['function']: {
@@ -27054,21 +27054,21 @@ class AccessControlService {
         return __awaiter(this, void 0, void 0, function* () {
             const { principalType, principalId, resourceType, resourceId, accessRoleId, grantedBy, session, } = args;
             try {
-                if (!Object.values(librechatDataProvider.PrincipalType).includes(principalType)) {
+                if (!Object.values(dataProvider.PrincipalType).includes(principalType)) {
                     throw new Error(`Invalid principal type: ${principalType}`);
                 }
-                if (principalType !== librechatDataProvider.PrincipalType.PUBLIC && !principalId) {
+                if (principalType !== dataProvider.PrincipalType.PUBLIC && !principalId) {
                     throw new Error('Principal ID is required for user, group, and role principals');
                 }
                 // Validate principalId based on type
-                if (principalId && principalType === librechatDataProvider.PrincipalType.ROLE) {
+                if (principalId && principalType === dataProvider.PrincipalType.ROLE) {
                     // Role IDs are strings (role names)
                     if (typeof principalId !== 'string' || principalId.trim().length === 0) {
                         throw new Error(`Invalid role ID: ${principalId}`);
                     }
                 }
                 else if (principalType &&
-                    principalType !== librechatDataProvider.PrincipalType.PUBLIC &&
+                    principalType !== dataProvider.PrincipalType.PUBLIC &&
                     (!principalId || !mongoose.Types.ObjectId.isValid(principalId))) {
                     // User and Group IDs must be valid ObjectIds
                     throw new Error(`Invalid principal ID: ${principalId}`);
@@ -27146,7 +27146,7 @@ class AccessControlService {
                 // Find all public ACL entries where the public principal has at least the required permission bits
                 const entries = yield this._aclModel
                     .find({
-                    principalType: librechatDataProvider.PrincipalType.PUBLIC,
+                    principalType: dataProvider.PrincipalType.PUBLIC,
                     resourceType,
                     permBits: { $bitsAllSet: requiredPermissions },
                 })
@@ -27271,7 +27271,7 @@ class AccessControlService {
      * @throws {Error} If resourceType is not valid
      */
     validateResourceType(resourceType) {
-        const validTypes = Object.values(librechatDataProvider.ResourceType);
+        const validTypes = Object.values(dataProvider.ResourceType);
         if (!validTypes.includes(resourceType)) {
             throw new Error(`Invalid resourceType: ${resourceType}. Valid types: ${validTypes.join(', ')}`);
         }
@@ -27286,8 +27286,8 @@ class AccessControlService {
  * Safe placeholders like {{MCP_API_KEY}} are allowed as they resolve from the user's own plugin auth.
  */
 const DANGEROUS_CREDENTIAL_PATTERNS = [
-    /\{\{LIBRECHAT_OPENID_[^}]+\}\}/g,
-    /\{\{LIBRECHAT_USER_[^}]+\}\}/g,
+    /\{\{CHAT_OPENID_[^}]+\}\}/g,
+    /\{\{CHAT_USER_[^}]+\}\}/g,
 ];
 /**
  * Sanitizes headers by removing dangerous credential placeholders.
@@ -27336,16 +27336,16 @@ class ServerConfigsDB {
             if (!userId) {
                 /** Publicly accessible agents */
                 accessibleAgentIds = yield this._aclService.findPubliclyAccessibleResources({
-                    resourceType: librechatDataProvider.ResourceType.AGENT,
-                    requiredPermissions: librechatDataProvider.PermissionBits.VIEW,
+                    resourceType: dataProvider.ResourceType.AGENT,
+                    requiredPermissions: dataProvider.PermissionBits.VIEW,
                 });
             }
             else {
                 /** User-accessible agents */
                 accessibleAgentIds = yield this._aclService.findAccessibleResources({
                     userId,
-                    requiredPermissions: librechatDataProvider.PermissionBits.VIEW,
-                    resourceType: librechatDataProvider.ResourceType.AGENT,
+                    requiredPermissions: dataProvider.PermissionBits.VIEW,
+                    resourceType: dataProvider.ResourceType.AGENT,
                 });
             }
             if (accessibleAgentIds.length === 0) {
@@ -27383,11 +27383,11 @@ class ServerConfigsDB {
                 author: userId,
             });
             yield this._aclService.grantPermission({
-                principalType: librechatDataProvider.PrincipalType.USER,
+                principalType: dataProvider.PrincipalType.USER,
                 principalId: userId,
-                resourceType: librechatDataProvider.ResourceType.MCPSERVER,
+                resourceType: dataProvider.ResourceType.MCPSERVER,
                 resourceId: createdServer._id,
-                accessRoleId: librechatDataProvider.AccessRoleIds.MCPSERVER_OWNER,
+                accessRoleId: dataProvider.AccessRoleIds.MCPSERVER_OWNER,
                 grantedBy: userId,
             });
             return {
@@ -27443,7 +27443,7 @@ class ServerConfigsDB {
             if (deletedServer && deletedServer._id) {
                 dataSchemas.logger.debug(`[ServerConfigsDB.remove] removing all permissions entries of ${serverName}.`);
                 yield this._aclService.removeAllPermissions({
-                    resourceType: librechatDataProvider.ResourceType.MCPSERVER,
+                    resourceType: dataProvider.ResourceType.MCPSERVER,
                     resourceId: deletedServer._id,
                 });
                 return;
@@ -27464,8 +27464,8 @@ class ServerConfigsDB {
                 return undefined;
             if (!userId) {
                 const directlyAccessibleMCPIds = (yield this._aclService.findPubliclyAccessibleResources({
-                    resourceType: librechatDataProvider.ResourceType.MCPSERVER,
-                    requiredPermissions: librechatDataProvider.PermissionBits.VIEW,
+                    resourceType: dataProvider.ResourceType.MCPSERVER,
+                    requiredPermissions: dataProvider.PermissionBits.VIEW,
                 })).map((id) => id.toString());
                 if (directlyAccessibleMCPIds.indexOf(server._id.toString()) > -1) {
                     return yield this.mapDBServerToParsedConfig(server);
@@ -27479,8 +27479,8 @@ class ServerConfigsDB {
             }
             const userHasDirectAccess = yield this._aclService.checkPermission({
                 userId,
-                resourceType: librechatDataProvider.ResourceType.MCPSERVER,
-                requiredPermission: librechatDataProvider.PermissionBits.VIEW,
+                resourceType: dataProvider.ResourceType.MCPSERVER,
+                requiredPermission: dataProvider.PermissionBits.VIEW,
                 resourceId: server._id,
             });
             if (userHasDirectAccess) {
@@ -27507,31 +27507,31 @@ class ServerConfigsDB {
             if (!userId) {
                 dataSchemas.logger.debug(`[ServerConfigsDB.getAll] fetching all publicly shared mcp servers`);
                 directlyAccessibleMCPIds = yield this._aclService.findPubliclyAccessibleResources({
-                    resourceType: librechatDataProvider.ResourceType.MCPSERVER,
-                    requiredPermissions: librechatDataProvider.PermissionBits.VIEW,
+                    resourceType: dataProvider.ResourceType.MCPSERVER,
+                    requiredPermissions: dataProvider.PermissionBits.VIEW,
                 });
             }
             else {
                 dataSchemas.logger.debug(`[ServerConfigsDB.getAll] fetching mcp servers directly shared with the user with ID: ${userId}`);
                 directlyAccessibleMCPIds = yield this._aclService.findAccessibleResources({
                     userId,
-                    requiredPermissions: librechatDataProvider.PermissionBits.VIEW,
-                    resourceType: librechatDataProvider.ResourceType.MCPSERVER,
+                    requiredPermissions: dataProvider.PermissionBits.VIEW,
+                    resourceType: dataProvider.ResourceType.MCPSERVER,
                 });
             }
             let agentMCPServerNames = [];
             let accessibleAgentIds = [];
             if (!userId) {
                 accessibleAgentIds = yield this._aclService.findPubliclyAccessibleResources({
-                    resourceType: librechatDataProvider.ResourceType.AGENT,
-                    requiredPermissions: librechatDataProvider.PermissionBits.VIEW,
+                    resourceType: dataProvider.ResourceType.AGENT,
+                    requiredPermissions: dataProvider.PermissionBits.VIEW,
                 });
             }
             else {
                 accessibleAgentIds = yield this._aclService.findAccessibleResources({
                     userId,
-                    requiredPermissions: librechatDataProvider.PermissionBits.VIEW,
-                    resourceType: librechatDataProvider.ResourceType.AGENT,
+                    requiredPermissions: dataProvider.PermissionBits.VIEW,
+                    resourceType: dataProvider.ResourceType.AGENT,
                 });
             }
             if (accessibleAgentIds.length > 0) {
@@ -27694,7 +27694,7 @@ class ServerConfigsDB {
 
 /**
  * Central registry for managing MCP server configurations.
- * Authoritative source of truth for all MCP servers provided by LibreChat.
+ * Authoritative source of truth for all MCP servers provided by Chat.
  *
  * Uses a two-repository architecture:
  * - Cache Repository: Stores YAML-defined configs loaded at startup (in-memory or Redis-backed)
@@ -30607,7 +30607,7 @@ MCPServersInitializer.hasInitializedThisProcess = false;
  * Only meant to be extended by MCPManager.
  * Much of the logic was move here from the old MCPManager to make it more manageable.
  * User connections will soon be ephemeral and not cached anymore:
- * https://github.com/danny-avila/LibreChat/discussions/8790
+ * https://github.com/danny-avila/Chat/discussions/8790
  */
 class UserConnectionManager {
     constructor() {
@@ -31082,7 +31082,7 @@ UI Resource Markers Available:
         artifacts = { content: imageUrls };
     }
     if (uiResources.length) {
-        artifacts = Object.assign(Object.assign({}, artifacts), { [librechatDataProvider.Tools.ui_resources]: { data: uiResources } });
+        artifacts = Object.assign(Object.assign({}, artifacts), { [dataProvider.Tools.ui_resources]: { data: uiResources } });
     }
     if (CONTENT_ARRAY_PROVIDERS.has(provider)) {
         return [formattedContent, artifacts];
@@ -31281,7 +31281,7 @@ Please follow these instructions when using tools from the respective MCP server
      * for user-specific connections upon successful call initiation.
      *
      * @param graphTokenResolver - Optional function to resolve Graph API tokens via OBO flow.
-     *   When provided and the server config contains `{{LIBRECHAT_GRAPH_ACCESS_TOKEN}}` placeholders,
+     *   When provided and the server config contains `{{CHAT_GRAPH_ACCESS_TOKEN}}` placeholders,
      *   they will be resolved to actual Graph API tokens before the tool call.
      */
     callTool(_a) {
@@ -31425,7 +31425,7 @@ function getUserMCPAuthMap(_a) {
                     if (!serverName) {
                         continue;
                     }
-                    uniqueMcpServers.add(`${librechatDataProvider.Constants.mcp_prefix}${serverName}`);
+                    uniqueMcpServers.add(`${dataProvider.Constants.mcp_prefix}${serverName}`);
                 }
             }
             else if (tools != null && tools.length) {
@@ -31433,13 +31433,13 @@ function getUserMCPAuthMap(_a) {
                     if (!toolName) {
                         continue;
                     }
-                    const delimiterIndex = toolName.indexOf(librechatDataProvider.Constants.mcp_delimiter);
+                    const delimiterIndex = toolName.indexOf(dataProvider.Constants.mcp_delimiter);
                     if (delimiterIndex === -1)
                         continue;
-                    const mcpServer = toolName.slice(delimiterIndex + librechatDataProvider.Constants.mcp_delimiter.length);
+                    const mcpServer = toolName.slice(delimiterIndex + dataProvider.Constants.mcp_delimiter.length);
                     if (!mcpServer)
                         continue;
-                    uniqueMcpServers.add(`${librechatDataProvider.Constants.mcp_prefix}${mcpServer}`);
+                    uniqueMcpServers.add(`${dataProvider.Constants.mcp_prefix}${mcpServer}`);
                 }
             }
             else if (toolInstances != null && toolInstances.length) {
@@ -31449,7 +31449,7 @@ function getUserMCPAuthMap(_a) {
                     }
                     const mcpTool = tool;
                     if (mcpTool.mcpRawServerName) {
-                        uniqueMcpServers.add(`${librechatDataProvider.Constants.mcp_prefix}${mcpTool.mcpRawServerName}`);
+                        uniqueMcpServers.add(`${dataProvider.Constants.mcp_prefix}${mcpTool.mcpRawServerName}`);
                     }
                 }
             }
@@ -32206,7 +32206,7 @@ function refreshAccessToken(_a, _b) {
                 grant_type: 'refresh_token',
                 refresh_token,
             });
-            if (token_exchange_method === librechatDataProvider.TokenExchangeMethodEnum.BasicAuthHeader) {
+            if (token_exchange_method === dataProvider.TokenExchangeMethodEnum.BasicAuthHeader) {
                 const basicAuth = Buffer.from(`${oauth_client_id}:${oauth_client_secret}`).toString('base64');
                 headers['Authorization'] = `Basic ${basicAuth}`;
             }
@@ -32265,7 +32265,7 @@ function getAccessToken(_a, _b) {
             grant_type: 'authorization_code',
             redirect_uri,
         });
-        if (token_exchange_method === librechatDataProvider.TokenExchangeMethodEnum.BasicAuthHeader) {
+        if (token_exchange_method === dataProvider.TokenExchangeMethodEnum.BasicAuthHeader) {
             const basicAuth = Buffer.from(`${oauth_client_id}:${oauth_client_secret}`).toString('base64');
             headers['Authorization'] = `Basic ${basicAuth}`;
         }
@@ -32915,10 +32915,10 @@ function skipAgentCheck(req) {
     if (req.method !== 'POST') {
         return false;
     }
-    if (!((_b = req.originalUrl) === null || _b === void 0 ? void 0 : _b.includes(librechatDataProvider.EndpointURLs[librechatDataProvider.EModelEndpoint.agents]))) {
+    if (!((_b = req.originalUrl) === null || _b === void 0 ? void 0 : _b.includes(dataProvider.EndpointURLs[dataProvider.EModelEndpoint.agents]))) {
         return false;
     }
-    return !librechatDataProvider.isAgentsEndpoint(req.body.endpoint);
+    return !dataProvider.isAgentsEndpoint(req.body.endpoint);
 }
 /**
  * Core function to check if a user has one or more required permissions
@@ -33004,7 +33004,7 @@ const requireAdmin = (req, res, next) => {
             error_code: 'AUTHENTICATION_REQUIRED',
         });
     }
-    if (!req.user.role || req.user.role !== librechatDataProvider.SystemRoles.ADMIN) {
+    if (!req.user.role || req.user.role !== dataProvider.SystemRoles.ADMIN) {
         dataSchemas.logger.debug(`[requireAdmin] Access denied for non-admin user: ${req.user.email}`);
         return res.status(403).json({
             error: 'Access denied: Admin privileges required',
@@ -33050,12 +33050,12 @@ const ErrorController = (err, req, res, next) => {
             return next();
         }
         const error = err;
-        if ((error.message === librechatDataProvider.ErrorTypes.AUTH_FAILED || error.code === librechatDataProvider.ErrorTypes.AUTH_FAILED) &&
+        if ((error.message === dataProvider.ErrorTypes.AUTH_FAILED || error.code === dataProvider.ErrorTypes.AUTH_FAILED) &&
             req.originalUrl &&
             req.originalUrl.includes('/oauth/') &&
             req.originalUrl.includes('/callback')) {
             const domain = process.env.DOMAIN_CLIENT || 'http://localhost:3080';
-            return res.redirect(`${domain}/login?redirect=false&error=${librechatDataProvider.ErrorTypes.AUTH_FAILED}`);
+            return res.redirect(`${domain}/login?redirect=false&error=${dataProvider.ErrorTypes.AUTH_FAILED}`);
         }
         if (isValidationError(error)) {
             return handleValidationError(error, res);
@@ -33237,7 +33237,7 @@ function getPendingReqCache() {
         return null;
     }
     if (!pendingReqCache) {
-        pendingReqCache = standardCache(librechatDataProvider.CacheKeys.PENDING_REQ);
+        pendingReqCache = standardCache(dataProvider.CacheKeys.PENDING_REQ);
     }
     return pendingReqCache;
 }
@@ -33246,7 +33246,7 @@ function getPendingReqCache() {
  * Note: ioredisClient already has keyPrefix applied, so we only add namespace:userId
  */
 function buildKey(userId) {
-    const namespace = librechatDataProvider.CacheKeys.PENDING_REQ;
+    const namespace = dataProvider.CacheKeys.PENDING_REQ;
     return `${namespace}:${userId}`;
 }
 /**
@@ -33309,7 +33309,7 @@ function checkAndIncrementPendingRequest(userId) {
             dataSchemas.logger.debug(`[concurrency] User ${userId} exceeded concurrent limit: ${pendingRequests}/${limit}`);
             return { allowed: false, pendingRequests, limit };
         }
-        yield cache.set(key, pendingRequests + 1, librechatDataProvider.Time.ONE_MINUTE);
+        yield cache.set(key, pendingRequests + 1, dataProvider.Time.ONE_MINUTE);
         dataSchemas.logger.debug(`[concurrency] User ${userId} incremented pending requests: ${pendingRequests + 1}/${limit}`);
         return { allowed: true, pendingRequests: pendingRequests + 1, limit };
     });
@@ -33362,7 +33362,7 @@ function decrementPendingRequest(userId) {
             const key = buildMemoryKey(userId);
             const currentReq = +((_a = (yield cache.get(key))) !== null && _a !== void 0 ? _a : 0);
             if (currentReq >= 1) {
-                yield cache.set(key, currentReq - 1, librechatDataProvider.Time.ONE_MINUTE);
+                yield cache.set(key, currentReq - 1, dataProvider.Time.ONE_MINUTE);
                 dataSchemas.logger.debug(`[concurrency] User ${userId} decremented pending requests: ${currentReq - 1}`);
             }
             else {
@@ -33380,7 +33380,7 @@ function decrementPendingRequest(userId) {
  */
 function getViolationInfo(pendingRequests, limit) {
     return {
-        type: librechatDataProvider.ViolationTypes.CONCURRENT,
+        type: dataProvider.ViolationTypes.CONCURRENT,
         limit,
         pendingRequests,
         score: CONCURRENT_VIOLATION_SCORE,
@@ -33423,7 +33423,7 @@ const refreshListAvatars = (_a) => __awaiter(void 0, [_a], void 0, function* ({ 
         const batch = agents.slice(i, i + AVATAR_REFRESH_BATCH_SIZE);
         yield Promise.all(batch.map((agent) => __awaiter(void 0, void 0, void 0, function* () {
             var _a, _b;
-            if (((_a = agent === null || agent === void 0 ? void 0 : agent.avatar) === null || _a === void 0 ? void 0 : _a.source) !== librechatDataProvider.FileSources.s3 || !((_b = agent === null || agent === void 0 ? void 0 : agent.avatar) === null || _b === void 0 ? void 0 : _b.filepath)) {
+            if (((_a = agent === null || agent === void 0 ? void 0 : agent.avatar) === null || _a === void 0 ? void 0 : _a.source) !== dataProvider.FileSources.s3 || !((_b = agent === null || agent === void 0 ? void 0 : agent.avatar) === null || _b === void 0 ? void 0 : _b.filepath)) {
                 stats.not_s3++;
                 return;
             }
@@ -33519,7 +33519,7 @@ const omitTitleOptions = new Set([
 ]);
 function payloadParser({ req, endpoint }) {
     var _b, _c;
-    if (librechatDataProvider.isAgentsEndpoint(endpoint)) {
+    if (dataProvider.isAgentsEndpoint(endpoint)) {
         return;
     }
     return (_c = (_b = req.body) === null || _b === void 0 ? void 0 : _b.endpointOption) === null || _c === void 0 ? void 0 : _c.model_parameters;
@@ -33648,8 +33648,8 @@ function extractMCPServers(agent) {
     /** Check tool instances (non-event-driven mode) */
     if ((_a = agent === null || agent === void 0 ? void 0 : agent.tools) === null || _a === void 0 ? void 0 : _a.length) {
         for (const tool of agent.tools) {
-            if (tool instanceof tools.DynamicStructuredTool && tool.name.includes(librechatDataProvider.Constants.mcp_delimiter)) {
-                const serverName = tool.name.split(librechatDataProvider.Constants.mcp_delimiter).pop();
+            if (tool instanceof tools.DynamicStructuredTool && tool.name.includes(dataProvider.Constants.mcp_delimiter)) {
+                const serverName = tool.name.split(dataProvider.Constants.mcp_delimiter).pop();
                 if (serverName) {
                     mcpServers.add(serverName);
                 }
@@ -33659,8 +33659,8 @@ function extractMCPServers(agent) {
     /** Check tool definitions (event-driven mode) */
     if ((_b = agent === null || agent === void 0 ? void 0 : agent.toolDefinitions) === null || _b === void 0 ? void 0 : _b.length) {
         for (const toolDef of agent.toolDefinitions) {
-            if ((_c = toolDef.name) === null || _c === void 0 ? void 0 : _c.includes(librechatDataProvider.Constants.mcp_delimiter)) {
-                const serverName = toolDef.name.split(librechatDataProvider.Constants.mcp_delimiter).pop();
+            if ((_c = toolDef.name) === null || _c === void 0 ? void 0 : _c.includes(dataProvider.Constants.mcp_delimiter)) {
+                const serverName = toolDef.name.split(dataProvider.Constants.mcp_delimiter).pop();
                 if (serverName) {
                     mcpServers.add(serverName);
                 }
@@ -33967,7 +33967,7 @@ function extractFileContext(_a) {
         if (!attachments || attachments.length === 0) {
             return undefined;
         }
-        const fileConfig = librechatDataProvider.mergeFileConfig((_b = req === null || req === void 0 ? void 0 : req.config) === null || _b === void 0 ? void 0 : _b.fileConfig);
+        const fileConfig = dataProvider.mergeFileConfig((_b = req === null || req === void 0 ? void 0 : req.config) === null || _b === void 0 ? void 0 : _b.fileConfig);
         const fileTokenLimit = (_d = (_c = req === null || req === void 0 ? void 0 : req.body) === null || _c === void 0 ? void 0 : _c.fileTokenLimit) !== null && _d !== void 0 ? _d : fileConfig.fileTokenLimit;
         if (!fileTokenLimit) {
             // If no token limit, return undefined (no processing)
@@ -33975,8 +33975,8 @@ function extractFileContext(_a) {
         }
         let resultText = '';
         for (const file of attachments) {
-            const source = (_e = file.source) !== null && _e !== void 0 ? _e : librechatDataProvider.FileSources.local;
-            if (source === librechatDataProvider.FileSources.text && file.text) {
+            const source = (_e = file.source) !== null && _e !== void 0 ? _e : dataProvider.FileSources.local;
+            if (source === dataProvider.FileSources.text && file.text) {
                 const { text: limitedText, wasTruncated } = yield processTextWithTokenLimit({
                     text: file.text,
                     tokenLimit: fileTokenLimit,
@@ -34143,8 +34143,8 @@ const getConfiguredFileSizeLimit = (req, params) => {
         return undefined;
     }
     const { provider, endpoint } = params;
-    const fileConfig = librechatDataProvider.mergeFileConfig(req.config.fileConfig);
-    const endpointConfig = librechatDataProvider.getEndpointFileConfig({
+    const fileConfig = dataProvider.mergeFileConfig(req.config.fileConfig);
+    const endpointConfig = dataProvider.getEndpointFileConfig({
         fileConfig,
         endpoint: endpoint !== null && endpoint !== void 0 ? endpoint : provider,
     });
@@ -34164,7 +34164,7 @@ function getFileStream(req, file, encodingMethods, getStrategyFunctions) {
         if (!(file === null || file === void 0 ? void 0 : file.filepath)) {
             return null;
         }
-        const source = (_a = file.source) !== null && _a !== void 0 ? _a : librechatDataProvider.FileSources.local;
+        const source = (_a = file.source) !== null && _a !== void 0 ? _a : dataProvider.FileSources.local;
         if (!encodingMethods[source]) {
             encodingMethods[source] = getStrategyFunctions(source);
         }
@@ -34191,7 +34191,7 @@ function validatePdf(pdfBuffer, fileSize, provider, configuredFileSizeLimit) {
         if (provider === agents.Providers.ANTHROPIC) {
             return validateAnthropicPdf(pdfBuffer, fileSize, configuredFileSizeLimit);
         }
-        if (librechatDataProvider.isOpenAILikeProvider(provider)) {
+        if (dataProvider.isOpenAILikeProvider(provider)) {
             return validateOpenAIPdf(fileSize, configuredFileSizeLimit);
         }
         if (provider === agents.Providers.GOOGLE || provider === agents.Providers.VERTEXAI) {
@@ -34210,7 +34210,7 @@ function validatePdf(pdfBuffer, fileSize, provider, configuredFileSizeLimit) {
 function validateAnthropicPdf(pdfBuffer, fileSize, configuredFileSizeLimit) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const providerLimit = librechatDataProvider.mbToBytes(32);
+            const providerLimit = dataProvider.mbToBytes(32);
             const effectiveLimit = configuredFileSizeLimit !== null && configuredFileSizeLimit !== void 0 ? configuredFileSizeLimit : providerLimit;
             if (fileSize > effectiveLimit) {
                 const limitMB = Math.round(effectiveLimit / (1024 * 1024));
@@ -34268,7 +34268,7 @@ function validateAnthropicPdf(pdfBuffer, fileSize, configuredFileSizeLimit) {
  */
 function validateOpenAIPdf(fileSize, configuredFileSizeLimit) {
     return __awaiter(this, void 0, void 0, function* () {
-        const providerLimit = librechatDataProvider.mbToBytes(10);
+        const providerLimit = dataProvider.mbToBytes(10);
         const effectiveLimit = configuredFileSizeLimit !== null && configuredFileSizeLimit !== void 0 ? configuredFileSizeLimit : providerLimit;
         if (fileSize > effectiveLimit) {
             const limitMB = Math.round(effectiveLimit / (1024 * 1024));
@@ -34288,7 +34288,7 @@ function validateOpenAIPdf(fileSize, configuredFileSizeLimit) {
  */
 function validateGooglePdf(fileSize, configuredFileSizeLimit) {
     return __awaiter(this, void 0, void 0, function* () {
-        const providerLimit = librechatDataProvider.mbToBytes(20);
+        const providerLimit = dataProvider.mbToBytes(20);
         const effectiveLimit = configuredFileSizeLimit !== null && configuredFileSizeLimit !== void 0 ? configuredFileSizeLimit : providerLimit;
         if (fileSize > effectiveLimit) {
             const limitMB = Math.round(effectiveLimit / (1024 * 1024));
@@ -34311,7 +34311,7 @@ function validateGooglePdf(fileSize, configuredFileSizeLimit) {
 function validateVideo(videoBuffer, fileSize, provider, configuredFileSizeLimit) {
     return __awaiter(this, void 0, void 0, function* () {
         if (provider === agents.Providers.GOOGLE || provider === agents.Providers.VERTEXAI) {
-            const providerLimit = librechatDataProvider.mbToBytes(20);
+            const providerLimit = dataProvider.mbToBytes(20);
             const effectiveLimit = configuredFileSizeLimit !== null && configuredFileSizeLimit !== void 0 ? configuredFileSizeLimit : providerLimit;
             if (fileSize > effectiveLimit) {
                 const limitMB = Math.round(effectiveLimit / (1024 * 1024));
@@ -34341,7 +34341,7 @@ function validateVideo(videoBuffer, fileSize, provider, configuredFileSizeLimit)
 function validateAudio(audioBuffer, fileSize, provider, configuredFileSizeLimit) {
     return __awaiter(this, void 0, void 0, function* () {
         if (provider === agents.Providers.GOOGLE || provider === agents.Providers.VERTEXAI) {
-            const providerLimit = librechatDataProvider.mbToBytes(20);
+            const providerLimit = dataProvider.mbToBytes(20);
             const effectiveLimit = configuredFileSizeLimit !== null && configuredFileSizeLimit !== void 0 ? configuredFileSizeLimit : providerLimit;
             if (fileSize > effectiveLimit) {
                 const limitMB = Math.round(effectiveLimit / (1024 * 1024));
@@ -34371,7 +34371,7 @@ function validateAudio(audioBuffer, fileSize, provider, configuredFileSizeLimit)
 function validateImage(imageBuffer, fileSize, provider, configuredFileSizeLimit) {
     return __awaiter(this, void 0, void 0, function* () {
         if (provider === agents.Providers.GOOGLE || provider === agents.Providers.VERTEXAI) {
-            const providerLimit = librechatDataProvider.mbToBytes(20);
+            const providerLimit = dataProvider.mbToBytes(20);
             const effectiveLimit = configuredFileSizeLimit !== null && configuredFileSizeLimit !== void 0 ? configuredFileSizeLimit : providerLimit;
             if (fileSize > effectiveLimit) {
                 const limitMB = Math.round(effectiveLimit / (1024 * 1024));
@@ -34382,7 +34382,7 @@ function validateImage(imageBuffer, fileSize, provider, configuredFileSizeLimit)
             }
         }
         if (provider === agents.Providers.ANTHROPIC) {
-            const providerLimit = librechatDataProvider.mbToBytes(5);
+            const providerLimit = dataProvider.mbToBytes(5);
             const effectiveLimit = configuredFileSizeLimit !== null && configuredFileSizeLimit !== void 0 ? configuredFileSizeLimit : providerLimit;
             if (fileSize > effectiveLimit) {
                 const limitMB = Math.round(effectiveLimit / (1024 * 1024));
@@ -34436,7 +34436,7 @@ function encodeAndFormatAudios(req, files, params, getStrategyFunctions) {
                     result.files.push(metadata);
                 continue;
             }
-            if (!file.type.startsWith('audio/') || !librechatDataProvider.isDocumentSupportedProvider(provider)) {
+            if (!file.type.startsWith('audio/') || !dataProvider.isDocumentSupportedProvider(provider)) {
                 result.files.push(metadata);
                 continue;
             }
@@ -34503,7 +34503,7 @@ function encodeAndFormatDocuments(req, files, params, getStrategyFunctions) {
             return result;
         }
         const results = yield Promise.allSettled(documentFiles.map((file) => {
-            if (file.type !== 'application/pdf' || !librechatDataProvider.isDocumentSupportedProvider(provider)) {
+            if (file.type !== 'application/pdf' || !dataProvider.isDocumentSupportedProvider(provider)) {
                 return Promise.resolve(null);
             }
             return getFileStream(req, file, encodingMethods, getStrategyFunctions);
@@ -34522,7 +34522,7 @@ function encodeAndFormatDocuments(req, files, params, getStrategyFunctions) {
                     result.files.push(metadata);
                 continue;
             }
-            if (file.type === 'application/pdf' && librechatDataProvider.isDocumentSupportedProvider(provider)) {
+            if (file.type === 'application/pdf' && dataProvider.isDocumentSupportedProvider(provider)) {
                 const pdfBuffer = Buffer.from(content, 'base64');
                 /** Extract configured file size limit from fileConfig for this endpoint */
                 const configuredFileSizeLimit = getConfiguredFileSizeLimit(req, {
@@ -34562,7 +34562,7 @@ function encodeAndFormatDocuments(req, files, params, getStrategyFunctions) {
                         data: content,
                     });
                 }
-                else if (librechatDataProvider.isOpenAILikeProvider(provider) && provider != agents.Providers.AZURE) {
+                else if (dataProvider.isOpenAILikeProvider(provider) && provider != agents.Providers.AZURE) {
                     result.documents.push({
                         type: 'file',
                         file: {
@@ -34611,7 +34611,7 @@ function encodeAndFormatVideos(req, files, params, getStrategyFunctions) {
                     result.files.push(metadata);
                 continue;
             }
-            if (!file.type.startsWith('video/') || !librechatDataProvider.isDocumentSupportedProvider(provider)) {
+            if (!file.type.startsWith('video/') || !dataProvider.isDocumentSupportedProvider(provider)) {
                 result.files.push(metadata);
                 continue;
             }
@@ -34656,7 +34656,7 @@ function isMimeTypeSupported(mimeType, supportedMimeTypes) {
     if (!supportedMimeTypes || supportedMimeTypes.length === 0) {
         return true;
     }
-    return librechatDataProvider.fileConfig.checkType(mimeType, supportedMimeTypes);
+    return dataProvider.fileConfig.checkType(mimeType, supportedMimeTypes);
 }
 /**
  * Filters out files based on endpoint configuration including:
@@ -34677,8 +34677,8 @@ function filterFilesByEndpointConfig(req, params) {
     if (!files || files.length === 0) {
         return [];
     }
-    const mergedFileConfig = librechatDataProvider.mergeFileConfig((_a = req.config) === null || _a === void 0 ? void 0 : _a.fileConfig);
-    const endpointFileConfig = librechatDataProvider.getEndpointFileConfig({
+    const mergedFileConfig = dataProvider.mergeFileConfig((_a = req.config) === null || _a === void 0 ? void 0 : _a.fileConfig);
+    const endpointFileConfig = dataProvider.getEndpointFileConfig({
         fileConfig: mergedFileConfig,
         endpoint,
         endpointType,
@@ -34844,16 +34844,16 @@ function deleteMistralFile(_a) {
  * Determines if a value needs to be loaded from environment
  */
 function needsEnvLoad(value) {
-    return librechatDataProvider.envVarRegex.test(value) || !value.trim();
+    return dataProvider.envVarRegex.test(value) || !value.trim();
 }
 /**
  * Gets the environment variable name for a config value
  */
 function getEnvVarName(configValue, defaultName) {
-    if (!librechatDataProvider.envVarRegex.test(configValue)) {
+    if (!dataProvider.envVarRegex.test(configValue)) {
         return defaultName;
     }
-    return librechatDataProvider.extractVariableName(configValue) || defaultName;
+    return dataProvider.extractVariableName(configValue) || defaultName;
 }
 /**
  * Resolves a configuration value from either hardcoded or environment
@@ -34910,8 +34910,8 @@ function getModelConfig(ocrConfig) {
     if (!modelConfig.trim()) {
         return DEFAULT_MISTRAL_MODEL;
     }
-    if (librechatDataProvider.envVarRegex.test(modelConfig)) {
-        return librechatDataProvider.extractEnvVariable(modelConfig) || DEFAULT_MISTRAL_MODEL;
+    if (dataProvider.envVarRegex.test(modelConfig)) {
+        return dataProvider.extractEnvVariable(modelConfig) || DEFAULT_MISTRAL_MODEL;
     }
     return modelConfig.trim();
 }
@@ -35011,7 +35011,7 @@ const uploadMistralOCR = (context) => __awaiter(void 0, void 0, void 0, function
         return {
             filename: context.file.originalname,
             bytes: text.length * 4,
-            filepath: librechatDataProvider.FileSources.mistral_ocr,
+            filepath: dataProvider.FileSources.mistral_ocr,
             text,
             images,
         };
@@ -35062,7 +35062,7 @@ const uploadAzureMistralOCR = (context) => __awaiter(void 0, void 0, void 0, fun
         return {
             filename: context.file.originalname,
             bytes: text.length * 4,
-            filepath: librechatDataProvider.FileSources.azure_mistral_ocr,
+            filepath: dataProvider.FileSources.azure_mistral_ocr,
             text,
             images,
         };
@@ -35239,7 +35239,7 @@ const uploadGoogleVertexMistralOCR = (context) => __awaiter(void 0, void 0, void
         return {
             filename: context.file.originalname,
             bytes: text.length * 4,
-            filepath: librechatDataProvider.FileSources.vertexai_mistral_ocr,
+            filepath: dataProvider.FileSources.vertexai_mistral_ocr,
             text,
             images,
         };
@@ -35260,7 +35260,7 @@ function loadOCRConfig(config) {
         apiKey,
         baseURL,
         mistralModel,
-        strategy: (_d = config === null || config === void 0 ? void 0 : config.strategy) !== null && _d !== void 0 ? _d : librechatDataProvider.OCRStrategy.MISTRAL_OCR,
+        strategy: (_d = config === null || config === void 0 ? void 0 : config.strategy) !== null && _d !== void 0 ? _d : dataProvider.OCRStrategy.MISTRAL_OCR,
     };
 }
 
@@ -35402,7 +35402,7 @@ function parseText(_a) {
             return {
                 text: responseData.text,
                 bytes: Buffer.byteLength(responseData.text, 'utf8'),
-                source: librechatDataProvider.FileSources.text,
+                source: dataProvider.FileSources.text,
             };
         }
         catch (error) {
@@ -35428,7 +35428,7 @@ function parseTextNative(file) {
         return {
             text,
             bytes,
-            source: librechatDataProvider.FileSources.text,
+            source: dataProvider.FileSources.text,
         };
     });
 }
@@ -36673,15 +36673,15 @@ Here are some examples of correct usage of artifacts:
  */
 function generateArtifactsPrompt(params) {
     const { endpoint, artifacts } = params;
-    if (artifacts === librechatDataProvider.ArtifactModes.CUSTOM) {
+    if (artifacts === dataProvider.ArtifactModes.CUSTOM) {
         return null;
     }
     let prompt = artifactsPrompt;
-    if (endpoint !== librechatDataProvider.EModelEndpoint.anthropic) {
+    if (endpoint !== dataProvider.EModelEndpoint.anthropic) {
         prompt = artifactsOpenAIPrompt;
     }
-    if (artifacts === librechatDataProvider.ArtifactModes.SHADCNUI) {
-        prompt += generateShadcnPrompt({ components, useXML: endpoint === librechatDataProvider.EModelEndpoint.anthropic });
+    if (artifacts === dataProvider.ArtifactModes.SHADCNUI) {
+        prompt += generateShadcnPrompt({ components, useXML: endpoint === dataProvider.EModelEndpoint.anthropic });
     }
     return prompt;
 }
@@ -36742,13 +36742,13 @@ function buildPromptGroupFilter(_a) {
         filter.name = new RegExp(escapeRegExp(name), 'i');
     }
     // Handle category filters with special system categories
-    if (category === librechatDataProvider.SystemCategories.MY_PROMPTS) {
+    if (category === dataProvider.SystemCategories.MY_PROMPTS) {
         searchShared = false;
     }
-    else if (category === librechatDataProvider.SystemCategories.NO_CATEGORY) {
+    else if (category === dataProvider.SystemCategories.NO_CATEGORY) {
         filter.category = '';
     }
-    else if (category === librechatDataProvider.SystemCategories.SHARED_PROMPTS) {
+    else if (category === dataProvider.SystemCategories.SHARED_PROMPTS) {
         searchSharedOnly = true;
     }
     else if (category) {
@@ -36778,7 +36778,7 @@ function filterAccessibleIdsBySharedLogic(_a) {
     });
 }
 
-const { GLOBAL_PROJECT_NAME: GLOBAL_PROJECT_NAME$1 } = librechatDataProvider.Constants;
+const { GLOBAL_PROJECT_NAME: GLOBAL_PROJECT_NAME$1 } = dataProvider.Constants;
 /**
  * Check if prompt groups need to be migrated to the new permission system
  * This performs a dry-run check similar to the migration script
@@ -36793,9 +36793,9 @@ function checkPromptPermissionsMigration(_a) {
                 yield ensureRequiredCollectionsExist(db);
             }
             // Verify required roles exist
-            const ownerRole = yield methods.findRoleByIdentifier(librechatDataProvider.AccessRoleIds.PROMPTGROUP_OWNER);
-            const viewerRole = yield methods.findRoleByIdentifier(librechatDataProvider.AccessRoleIds.PROMPTGROUP_VIEWER);
-            const editorRole = yield methods.findRoleByIdentifier(librechatDataProvider.AccessRoleIds.PROMPTGROUP_EDITOR);
+            const ownerRole = yield methods.findRoleByIdentifier(dataProvider.AccessRoleIds.PROMPTGROUP_OWNER);
+            const viewerRole = yield methods.findRoleByIdentifier(dataProvider.AccessRoleIds.PROMPTGROUP_VIEWER);
+            const editorRole = yield methods.findRoleByIdentifier(dataProvider.AccessRoleIds.PROMPTGROUP_EDITOR);
             if (!ownerRole || !viewerRole || !editorRole) {
                 dataSchemas.logger.warn('Required promptGroup roles not found. Permission system may not be fully initialized.');
                 return {
@@ -36825,8 +36825,8 @@ function checkPromptPermissionsMigration(_a) {
                                 as: 'aclEntry',
                                 cond: {
                                     $and: [
-                                        { $eq: ['$$aclEntry.resourceType', librechatDataProvider.ResourceType.PROMPTGROUP] },
-                                        { $eq: ['$$aclEntry.principalType', librechatDataProvider.PrincipalType.USER] },
+                                        { $eq: ['$$aclEntry.resourceType', dataProvider.ResourceType.PROMPTGROUP] },
+                                        { $eq: ['$$aclEntry.principalType', dataProvider.PrincipalType.USER] },
                                     ],
                                 },
                             },
@@ -36966,7 +36966,7 @@ const updatePromptGroupSchema = z.z
     /** Command shortcut for the prompt group */
     command: z.z
         .string()
-        .max(librechatDataProvider.Constants.COMMANDS_MAX_LENGTH)
+        .max(dataProvider.Constants.COMMANDS_MAX_LENGTH)
         .regex(/^[a-z0-9-]*$/, {
         message: 'Command must only contain lowercase alphanumeric characters and hyphens',
     })
@@ -36999,7 +36999,7 @@ function safeValidatePromptGroupUpdate(data) {
  */
 function checkPromptCacheSupport(modelName) {
     var _a;
-    const modelMatch = (_a = matchModelName(modelName, librechatDataProvider.EModelEndpoint.anthropic)) !== null && _a !== void 0 ? _a : '';
+    const modelMatch = (_a = matchModelName(modelName, dataProvider.EModelEndpoint.anthropic)) !== null && _a !== void 0 ? _a : '';
     if (modelMatch.includes('claude-3-5-sonnet-latest') ||
         modelMatch.includes('claude-3.5-sonnet-latest')) {
         return false;
@@ -37031,7 +37031,7 @@ function getClaudeHeaders(model, supportsCacheControl) {
             'anthropic-beta': 'token-efficient-tools-2025-02-19,output-128k-2025-02-19',
         };
     }
-    else if (librechatDataProvider.supportsContext1m(model)) {
+    else if (dataProvider.supportsContext1m(model)) {
         return {
             'anthropic-beta': 'context-1m-2025-08-07',
         };
@@ -37047,14 +37047,14 @@ function configureReasoning(anthropicInput, extendedOptions = {}) {
     const updatedOptions = Object.assign({}, anthropicInput);
     const currentMaxTokens = (_a = updatedOptions.max_tokens) !== null && _a !== void 0 ? _a : updatedOptions.maxTokens;
     const modelName = (_b = updatedOptions.model) !== null && _b !== void 0 ? _b : '';
-    if (extendedOptions.thinking && modelName && librechatDataProvider.supportsAdaptiveThinking(modelName)) {
+    if (extendedOptions.thinking && modelName && dataProvider.supportsAdaptiveThinking(modelName)) {
         updatedOptions.thinking = { type: 'adaptive' };
         const effort = extendedOptions.effort;
-        if (effort && effort !== librechatDataProvider.AnthropicEffort.unset) {
+        if (effort && effort !== dataProvider.AnthropicEffort.unset) {
             updatedOptions.invocationKwargs = Object.assign(Object.assign({}, updatedOptions.invocationKwargs), { output_config: { effort } });
         }
         if (currentMaxTokens == null) {
-            updatedOptions.max_tokens = librechatDataProvider.anthropicSettings.maxOutputTokens.reset(modelName);
+            updatedOptions.max_tokens = dataProvider.anthropicSettings.maxOutputTokens.reset(modelName);
         }
         return updatedOptions;
     }
@@ -37071,7 +37071,7 @@ function configureReasoning(anthropicInput, extendedOptions = {}) {
     if (updatedOptions.thinking != null &&
         updatedOptions.thinking.type === 'enabled' &&
         (currentMaxTokens == null || updatedOptions.thinking.budget_tokens > currentMaxTokens)) {
-        const maxTokens = librechatDataProvider.anthropicSettings.maxOutputTokens.reset(modelName);
+        const maxTokens = dataProvider.anthropicSettings.maxOutputTokens.reset(modelName);
         updatedOptions.max_tokens = currentMaxTokens !== null && currentMaxTokens !== void 0 ? currentMaxTokens : maxTokens;
         dataSchemas.logger.warn(updatedOptions.max_tokens === maxTokens
             ? '[AnthropicClient] max_tokens is not defined while thinking is enabled. Setting max_tokens to model default.'
@@ -37097,7 +37097,7 @@ function loadAnthropicVertexCredentials(options) {
             throw new Error(`Google service account not found or could not be loaded from ${serviceKeyPath}`);
         }
         return {
-            [librechatDataProvider.AuthKeys.GOOGLE_SERVICE_KEY]: serviceKey,
+            [dataProvider.AuthKeys.GOOGLE_SERVICE_KEY]: serviceKey,
         };
     });
 }
@@ -37116,7 +37116,7 @@ function getVertexCredentialOptions(config) {
  * Checks if credentials are for Vertex AI (has service account key but no API key)
  */
 function isAnthropicVertexCredentials(credentials) {
-    return !!credentials[librechatDataProvider.AuthKeys.GOOGLE_SERVICE_KEY] && !credentials[librechatDataProvider.AuthKeys.ANTHROPIC_API_KEY];
+    return !!credentials[dataProvider.AuthKeys.GOOGLE_SERVICE_KEY] && !credentials[dataProvider.AuthKeys.ANTHROPIC_API_KEY];
 }
 /**
  * Filters anthropic-beta header values to only include those supported by Vertex AI.
@@ -37201,7 +37201,7 @@ function getVertexDeploymentName(modelName, vertexConfig) {
  * @param vertexOptions - Vertex AI specific options (region, projectId) from YAML config
  */
 function createAnthropicVertexClient(credentials, options, vertexOptions) {
-    const serviceKey = credentials[librechatDataProvider.AuthKeys.GOOGLE_SERVICE_KEY];
+    const serviceKey = credentials[dataProvider.AuthKeys.GOOGLE_SERVICE_KEY];
     if (!serviceKey) {
         throw new Error('Google service account key is required for Vertex AI');
     }
@@ -37236,7 +37236,7 @@ function parseCredentials(credentials) {
         catch (_a) {
             // If not valid JSON, treat as a plain API key
             dataSchemas.logger.debug('[Anthropic] Credentials not JSON, treating as API key');
-            return { [librechatDataProvider.AuthKeys.ANTHROPIC_API_KEY]: credentials };
+            return { [dataProvider.AuthKeys.ANTHROPIC_API_KEY]: credentials };
         }
     }
     return credentials && typeof credentials === 'object' ? credentials : {};
@@ -37280,10 +37280,10 @@ function applyDefaultParams$2(target, defaults) {
 function getLLMConfig(credentials, options = {}) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     const systemOptions = {
-        thinking: (_b = (_a = options.modelOptions) === null || _a === void 0 ? void 0 : _a.thinking) !== null && _b !== void 0 ? _b : librechatDataProvider.anthropicSettings.thinking.default,
-        promptCache: (_d = (_c = options.modelOptions) === null || _c === void 0 ? void 0 : _c.promptCache) !== null && _d !== void 0 ? _d : librechatDataProvider.anthropicSettings.promptCache.default,
-        thinkingBudget: (_f = (_e = options.modelOptions) === null || _e === void 0 ? void 0 : _e.thinkingBudget) !== null && _f !== void 0 ? _f : librechatDataProvider.anthropicSettings.thinkingBudget.default,
-        effort: (_h = (_g = options.modelOptions) === null || _g === void 0 ? void 0 : _g.effort) !== null && _h !== void 0 ? _h : librechatDataProvider.anthropicSettings.effort.default,
+        thinking: (_b = (_a = options.modelOptions) === null || _a === void 0 ? void 0 : _a.thinking) !== null && _b !== void 0 ? _b : dataProvider.anthropicSettings.thinking.default,
+        promptCache: (_d = (_c = options.modelOptions) === null || _c === void 0 ? void 0 : _c.promptCache) !== null && _d !== void 0 ? _d : dataProvider.anthropicSettings.promptCache.default,
+        thinkingBudget: (_f = (_e = options.modelOptions) === null || _e === void 0 ? void 0 : _e.thinkingBudget) !== null && _f !== void 0 ? _f : dataProvider.anthropicSettings.thinkingBudget.default,
+        effort: (_h = (_g = options.modelOptions) === null || _g === void 0 ? void 0 : _g.effort) !== null && _h !== void 0 ? _h : dataProvider.anthropicSettings.effort.default,
     };
     if (options.modelOptions) {
         delete options.modelOptions.thinking;
@@ -37295,7 +37295,7 @@ function getLLMConfig(credentials, options = {}) {
         throw new Error('No modelOptions provided');
     }
     const defaultOptions = {
-        model: librechatDataProvider.anthropicSettings.model.default,
+        model: dataProvider.anthropicSettings.model.default,
         stream: true,
     };
     const mergedOptions = Object.assign(defaultOptions, options.modelOptions);
@@ -37305,7 +37305,7 @@ function getLLMConfig(credentials, options = {}) {
         stream: mergedOptions.stream,
         temperature: mergedOptions.temperature,
         stopSequences: mergedOptions.stop,
-        maxTokens: mergedOptions.maxOutputTokens || librechatDataProvider.anthropicSettings.maxOutputTokens.reset(mergedOptions.model),
+        maxTokens: mergedOptions.maxOutputTokens || dataProvider.anthropicSettings.maxOutputTokens.reset(mergedOptions.model),
         clientOptions: {},
         invocationKwargs: {
             metadata: {
@@ -37314,7 +37314,7 @@ function getLLMConfig(credentials, options = {}) {
         },
     };
     const creds = parseCredentials(credentials);
-    const apiKey = (_j = creds[librechatDataProvider.AuthKeys.ANTHROPIC_API_KEY]) !== null && _j !== void 0 ? _j : null;
+    const apiKey = (_j = creds[dataProvider.AuthKeys.ANTHROPIC_API_KEY]) !== null && _j !== void 0 ? _j : null;
     if (isAnthropicVertexCredentials(creds)) {
         // Vertex AI configuration - use custom client with optional YAML config
         // Map the visible model name to the actual deployment name for Vertex AI
@@ -37330,7 +37330,7 @@ function getLLMConfig(credentials, options = {}) {
         throw new Error('Invalid credentials provided. Please provide either a valid Anthropic API key or service account credentials for Vertex AI.');
     }
     requestOptions = configureReasoning(requestOptions, systemOptions);
-    if (librechatDataProvider.supportsAdaptiveThinking(mergedOptions.model)) {
+    if (dataProvider.supportsAdaptiveThinking(mergedOptions.model)) {
         if (systemOptions.effort &&
             systemOptions.effort !== '' &&
             !((_l = requestOptions.invocationKwargs) === null || _l === void 0 ? void 0 : _l.output_config)) {
@@ -37347,7 +37347,7 @@ function getLLMConfig(credentials, options = {}) {
         }
     }
     const hasActiveThinking = requestOptions.thinking != null;
-    const isThinkingModel = /claude-3[-.]7/.test(mergedOptions.model) || librechatDataProvider.supportsAdaptiveThinking(mergedOptions.model);
+    const isThinkingModel = /claude-3[-.]7/.test(mergedOptions.model) || dataProvider.supportsAdaptiveThinking(mergedOptions.model);
     if (!isThinkingModel || !hasActiveThinking) {
         requestOptions.topP = mergedOptions.topP;
         requestOptions.topK = mergedOptions.topK;
@@ -37435,7 +37435,7 @@ function getLLMConfig(credentials, options = {}) {
     }
     return {
         tools,
-        llmConfig: librechatDataProvider.removeNullishValues(requestOptions),
+        llmConfig: dataProvider.removeNullishValues(requestOptions),
     };
 }
 
@@ -37455,8 +37455,8 @@ function initializeAnthropic(_a) {
         const { key: expiresAt } = req.body;
         let credentials = {};
         let vertexOptions;
-        /** @type {undefined | import('librechat-data-provider').TVertexAIConfig} */
-        const vertexConfig = (_c = (_b = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _b === void 0 ? void 0 : _b[librechatDataProvider.EModelEndpoint.anthropic]) === null || _c === void 0 ? void 0 : _c.vertexConfig;
+        /** @type {undefined | import('@hanzochat/data-provider').TVertexAIConfig} */
+        const vertexConfig = (_c = (_b = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _b === void 0 ? void 0 : _b[dataProvider.EModelEndpoint.anthropic]) === null || _c === void 0 ? void 0 : _c.vertexConfig;
         // Check for Vertex AI configuration: YAML config takes priority over env var
         // When vertexConfig exists and enabled is not explicitly false, Vertex AI is enabled
         const useVertexAI = (vertexConfig && vertexConfig.enabled !== false) || isEnabled(process.env.ANTHROPIC_USE_VERTEX);
@@ -37475,18 +37475,18 @@ function initializeAnthropic(_a) {
         else {
             const isUserProvided = ANTHROPIC_API_KEY === 'user_provided';
             const anthropicApiKey = isUserProvided
-                ? yield db.getUserKey({ userId: (_e = (_d = req.user) === null || _d === void 0 ? void 0 : _d.id) !== null && _e !== void 0 ? _e : '', name: librechatDataProvider.EModelEndpoint.anthropic })
+                ? yield db.getUserKey({ userId: (_e = (_d = req.user) === null || _d === void 0 ? void 0 : _d.id) !== null && _e !== void 0 ? _e : '', name: dataProvider.EModelEndpoint.anthropic })
                 : ANTHROPIC_API_KEY;
             if (!anthropicApiKey) {
                 throw new Error('Anthropic API key not provided. Please provide it again.');
             }
             if (expiresAt && isUserProvided) {
-                checkUserKeyExpiry(expiresAt, librechatDataProvider.EModelEndpoint.anthropic);
+                checkUserKeyExpiry(expiresAt, dataProvider.EModelEndpoint.anthropic);
             }
-            credentials[librechatDataProvider.AuthKeys.ANTHROPIC_API_KEY] = anthropicApiKey;
+            credentials[dataProvider.AuthKeys.ANTHROPIC_API_KEY] = anthropicApiKey;
         }
         const clientOptions = Object.assign(Object.assign({ proxy: PROXY !== null && PROXY !== void 0 ? PROXY : undefined, reverseProxyUrl: ANTHROPIC_REVERSE_PROXY !== null && ANTHROPIC_REVERSE_PROXY !== void 0 ? ANTHROPIC_REVERSE_PROXY : undefined, modelOptions: Object.assign(Object.assign({}, (model_parameters !== null && model_parameters !== void 0 ? model_parameters : {})), { user: (_f = req.user) === null || _f === void 0 ? void 0 : _f.id }) }, (vertexOptions && { vertexOptions })), (vertexConfig && { vertexConfig }));
-        const anthropicConfig = (_g = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _g === void 0 ? void 0 : _g[librechatDataProvider.EModelEndpoint.anthropic];
+        const anthropicConfig = (_g = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _g === void 0 ? void 0 : _g[dataProvider.EModelEndpoint.anthropic];
         const allConfig = (_h = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _h === void 0 ? void 0 : _h.all;
         const result = getLLMConfig(credentials, clientOptions);
         if (anthropicConfig === null || anthropicConfig === void 0 ? void 0 : anthropicConfig.streamRate) {
@@ -37527,13 +37527,13 @@ function initializeBedrock(_a) {
     return __awaiter(this, arguments, void 0, function* ({ req, endpoint, model_parameters, db, }) {
         var _b, _c, _d, _e, _f;
         const appConfig = req.config;
-        const bedrockConfig = (_b = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _b === void 0 ? void 0 : _b[librechatDataProvider.EModelEndpoint.bedrock];
+        const bedrockConfig = (_b = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _b === void 0 ? void 0 : _b[dataProvider.EModelEndpoint.bedrock];
         const { BEDROCK_AWS_SECRET_ACCESS_KEY, BEDROCK_AWS_ACCESS_KEY_ID, BEDROCK_AWS_SESSION_TOKEN, BEDROCK_REVERSE_PROXY, BEDROCK_AWS_DEFAULT_REGION, PROXY, } = process.env;
         const { key: expiresAt } = req.body;
-        const isUserProvided = BEDROCK_AWS_SECRET_ACCESS_KEY === librechatDataProvider.AuthType.USER_PROVIDED;
+        const isUserProvided = BEDROCK_AWS_SECRET_ACCESS_KEY === dataProvider.AuthType.USER_PROVIDED;
         let credentials = isUserProvided
             ? yield db
-                .getUserKey({ userId: (_d = (_c = req.user) === null || _c === void 0 ? void 0 : _c.id) !== null && _d !== void 0 ? _d : '', name: librechatDataProvider.EModelEndpoint.bedrock })
+                .getUserKey({ userId: (_d = (_c = req.user) === null || _c === void 0 ? void 0 : _c.id) !== null && _d !== void 0 ? _d : '', name: dataProvider.EModelEndpoint.bedrock })
                 .then((key) => JSON.parse(key))
             : Object.assign({ accessKeyId: BEDROCK_AWS_ACCESS_KEY_ID, secretAccessKey: BEDROCK_AWS_SECRET_ACCESS_KEY }, (BEDROCK_AWS_SESSION_TOKEN && { sessionToken: BEDROCK_AWS_SESSION_TOKEN }));
         if (!credentials) {
@@ -37545,20 +37545,20 @@ function initializeBedrock(_a) {
             credentials = undefined;
         }
         if (expiresAt && isUserProvided) {
-            checkUserKeyExpiry(expiresAt, librechatDataProvider.EModelEndpoint.bedrock);
+            checkUserKeyExpiry(expiresAt, dataProvider.EModelEndpoint.bedrock);
         }
         const requestOptions = {
             model: model_parameters === null || model_parameters === void 0 ? void 0 : model_parameters.model,
             region: BEDROCK_AWS_DEFAULT_REGION,
         };
         const configOptions = {};
-        const llmConfig = librechatDataProvider.bedrockOutputParser(librechatDataProvider.bedrockInputParser.parse(librechatDataProvider.removeNullishValues(Object.assign(Object.assign({}, requestOptions), (model_parameters !== null && model_parameters !== void 0 ? model_parameters : {})))));
+        const llmConfig = dataProvider.bedrockOutputParser(dataProvider.bedrockInputParser.parse(dataProvider.removeNullishValues(Object.assign(Object.assign({}, requestOptions), (model_parameters !== null && model_parameters !== void 0 ? model_parameters : {})))));
         if (bedrockConfig === null || bedrockConfig === void 0 ? void 0 : bedrockConfig.guardrailConfig) {
             llmConfig.guardrailConfig = bedrockConfig.guardrailConfig;
         }
         const model = model_parameters === null || model_parameters === void 0 ? void 0 : model_parameters.model;
         if (model && ((_e = bedrockConfig === null || bedrockConfig === void 0 ? void 0 : bedrockConfig.inferenceProfiles) === null || _e === void 0 ? void 0 : _e[model])) {
-            const applicationInferenceProfile = librechatDataProvider.extractEnvVariable(bedrockConfig.inferenceProfiles[model]);
+            const applicationInferenceProfile = dataProvider.extractEnvVariable(bedrockConfig.inferenceProfiles[model]);
             llmConfig.applicationInferenceProfile = applicationInferenceProfile;
         }
         /** Only include credentials if they're complete (accessKeyId and secretAccessKey are both set) */
@@ -37693,7 +37693,7 @@ function applyDefaultParams$1(target, defaults) {
 function getOpenAILLMConfig({ azure, apiKey, baseURL, endpoint, streaming, addParams, dropParams, defaultParams, useOpenRouter, modelOptions: _modelOptions, }) {
     var _a;
     /** Clean empty strings from model options (e.g., temperature: "" should be removed) */
-    const cleanedModelOptions = librechatDataProvider.removeNullishValues(_modelOptions, true);
+    const cleanedModelOptions = dataProvider.removeNullishValues(_modelOptions, true);
     const { reasoning_effort, reasoning_summary, verbosity, web_search, frequency_penalty, presence_penalty } = cleanedModelOptions, modelOptions = __rest(cleanedModelOptions, ["reasoning_effort", "reasoning_summary", "verbosity", "web_search", "frequency_penalty", "presence_penalty"]);
     const llmConfig = Object.assign({
         streaming,
@@ -37758,8 +37758,8 @@ function getOpenAILLMConfig({ azure, apiKey, baseURL, endpoint, streaming, addPa
     }
     if (hasReasoningParams({ reasoning_effort, reasoning_summary }) &&
         (llmConfig.useResponsesApi === true ||
-            (endpoint !== librechatDataProvider.EModelEndpoint.openAI && endpoint !== librechatDataProvider.EModelEndpoint.azureOpenAI))) {
-        llmConfig.reasoning = librechatDataProvider.removeNullishValues({
+            (endpoint !== dataProvider.EModelEndpoint.openAI && endpoint !== dataProvider.EModelEndpoint.azureOpenAI))) {
+        llmConfig.reasoning = dataProvider.removeNullishValues({
             effort: reasoning_effort,
             summary: reasoning_summary,
         }, true);
@@ -37997,7 +37997,7 @@ function getGoogleConfig(credentials, options = {}, acceptRawApiKey = false) {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     let creds = {};
     if (acceptRawApiKey && typeof credentials === 'string') {
-        creds[librechatDataProvider.AuthKeys.GOOGLE_API_KEY] = credentials;
+        creds[dataProvider.AuthKeys.GOOGLE_API_KEY] = credentials;
     }
     else if (typeof credentials === 'string') {
         try {
@@ -38010,15 +38010,15 @@ function getGoogleConfig(credentials, options = {}, acceptRawApiKey = false) {
     else if (credentials && typeof credentials === 'object') {
         creds = credentials;
     }
-    const serviceKeyRaw = (_a = creds[librechatDataProvider.AuthKeys.GOOGLE_SERVICE_KEY]) !== null && _a !== void 0 ? _a : {};
+    const serviceKeyRaw = (_a = creds[dataProvider.AuthKeys.GOOGLE_SERVICE_KEY]) !== null && _a !== void 0 ? _a : {};
     const serviceKey = typeof serviceKeyRaw === 'string' ? JSON.parse(serviceKeyRaw) : (serviceKeyRaw !== null && serviceKeyRaw !== void 0 ? serviceKeyRaw : {});
-    const apiKey = (_b = creds[librechatDataProvider.AuthKeys.GOOGLE_API_KEY]) !== null && _b !== void 0 ? _b : null;
+    const apiKey = (_b = creds[dataProvider.AuthKeys.GOOGLE_API_KEY]) !== null && _b !== void 0 ? _b : null;
     const project_id = !apiKey ? ((_c = serviceKey === null || serviceKey === void 0 ? void 0 : serviceKey.project_id) !== null && _c !== void 0 ? _c : null) : null;
     const reverseProxyUrl = options.reverseProxyUrl;
     const authHeader = options.authHeader;
-    const _j = options.modelOptions || {}, { web_search, thinking = librechatDataProvider.googleSettings.thinking.default, thinkingBudget = librechatDataProvider.googleSettings.thinkingBudget.default } = _j, modelOptions = __rest(_j, ["web_search", "thinking", "thinkingBudget"]);
+    const _j = options.modelOptions || {}, { web_search, thinking = dataProvider.googleSettings.thinking.default, thinkingBudget = dataProvider.googleSettings.thinkingBudget.default } = _j, modelOptions = __rest(_j, ["web_search", "thinking", "thinkingBudget"]);
     let enableWebSearch = web_search;
-    const llmConfig = librechatDataProvider.removeNullishValues(Object.assign(Object.assign({}, (modelOptions || {})), { model: (_d = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.model) !== null && _d !== void 0 ? _d : '', maxRetries: 2, topP: (_e = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.topP) !== null && _e !== void 0 ? _e : undefined, topK: (_f = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.topK) !== null && _f !== void 0 ? _f : undefined, temperature: (_g = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.temperature) !== null && _g !== void 0 ? _g : undefined, maxOutputTokens: (_h = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.maxOutputTokens) !== null && _h !== void 0 ? _h : undefined }), true);
+    const llmConfig = dataProvider.removeNullishValues(Object.assign(Object.assign({}, (modelOptions || {})), { model: (_d = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.model) !== null && _d !== void 0 ? _d : '', maxRetries: 2, topP: (_e = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.topP) !== null && _e !== void 0 ? _e : undefined, topK: (_f = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.topK) !== null && _f !== void 0 ? _f : undefined, temperature: (_g = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.temperature) !== null && _g !== void 0 ? _g : undefined, maxOutputTokens: (_h = modelOptions === null || modelOptions === void 0 ? void 0 : modelOptions.maxOutputTokens) !== null && _h !== void 0 ? _h : undefined }), true);
     /** Used only for Safety Settings */
     llmConfig.safetySettings = getSafetySettings(llmConfig.model);
     let provider;
@@ -38045,14 +38045,14 @@ function getGoogleConfig(credentials, options = {}, acceptRawApiKey = false) {
     const shouldEnableThinking = thinking && thinkingBudget != null && (thinkingBudget > 0 || thinkingBudget === -1);
     if (shouldEnableThinking && provider === agents.Providers.GOOGLE) {
         llmConfig.thinkingConfig = {
-            thinkingBudget: thinking ? thinkingBudget : librechatDataProvider.googleSettings.thinkingBudget.default,
+            thinkingBudget: thinking ? thinkingBudget : dataProvider.googleSettings.thinkingBudget.default,
             includeThoughts: Boolean(thinking),
         };
     }
     else if (shouldEnableThinking && provider === agents.Providers.VERTEXAI) {
         llmConfig.thinkingBudget = thinking
             ? thinkingBudget
-            : librechatDataProvider.googleSettings.thinkingBudget.default;
+            : dataProvider.googleSettings.thinkingBudget.default;
         llmConfig.includeThoughts = Boolean(thinking);
     }
     /*
@@ -38167,8 +38167,8 @@ function transformToOpenAIConfig({ tools, addParams, dropParams, defaultParams, 
     let configOptions = {};
     let modelKwargs = {};
     let hasModelKwargs = false;
-    const isAnthropic = fromEndpoint === librechatDataProvider.EModelEndpoint.anthropic;
-    const isGoogle = fromEndpoint === librechatDataProvider.EModelEndpoint.google;
+    const isAnthropic = fromEndpoint === dataProvider.EModelEndpoint.anthropic;
+    const isGoogle = fromEndpoint === dataProvider.EModelEndpoint.google;
     let excludeParams = new Set();
     if (isAnthropic) {
         excludeParams = anthropicExcludeParams;
@@ -38284,16 +38284,16 @@ function getOpenAIConfig(apiKey, options = {}, endpoint) {
     const defaultParams = extractDefaultParams((_a = options.customParams) === null || _a === void 0 ? void 0 : _a.paramDefinitions);
     let llmConfig;
     let tools;
-    const isAnthropic = ((_b = options.customParams) === null || _b === void 0 ? void 0 : _b.defaultParamsEndpoint) === librechatDataProvider.EModelEndpoint.anthropic;
-    const isGoogle = ((_c = options.customParams) === null || _c === void 0 ? void 0 : _c.defaultParamsEndpoint) === librechatDataProvider.EModelEndpoint.google;
+    const isAnthropic = ((_b = options.customParams) === null || _b === void 0 ? void 0 : _b.defaultParamsEndpoint) === dataProvider.EModelEndpoint.anthropic;
+    const isGoogle = ((_c = options.customParams) === null || _c === void 0 ? void 0 : _c.defaultParamsEndpoint) === dataProvider.EModelEndpoint.google;
     const useOpenRouter = !isAnthropic &&
         !isGoogle &&
-        ((baseURL && baseURL.includes(librechatDataProvider.KnownEndpoints.openrouter)) ||
-            (endpoint != null && endpoint.toLowerCase().includes(librechatDataProvider.KnownEndpoints.openrouter)));
+        ((baseURL && baseURL.includes(dataProvider.KnownEndpoints.openrouter)) ||
+            (endpoint != null && endpoint.toLowerCase().includes(dataProvider.KnownEndpoints.openrouter)));
     const isVercel = !isAnthropic &&
         !isGoogle &&
         ((baseURL && baseURL.includes('ai-gateway.vercel.sh')) ||
-            (endpoint != null && endpoint.toLowerCase().includes(librechatDataProvider.KnownEndpoints.vercel)));
+            (endpoint != null && endpoint.toLowerCase().includes(dataProvider.KnownEndpoints.vercel)));
     let azure = options.azure;
     let headers = options.headers;
     if (isAnthropic) {
@@ -38310,7 +38310,7 @@ function getOpenAIConfig(apiKey, options = {}, endpoint) {
             addParams,
             dropParams,
             llmConfig: anthropicResult.llmConfig,
-            fromEndpoint: librechatDataProvider.EModelEndpoint.anthropic,
+            fromEndpoint: dataProvider.EModelEndpoint.anthropic,
         });
         llmConfig = transformed.llmConfig;
         tools = anthropicResult.tools;
@@ -38334,7 +38334,7 @@ function getOpenAIConfig(apiKey, options = {}, endpoint) {
             defaultParams,
             tools: googleResult.tools,
             llmConfig: googleResult.llmConfig,
-            fromEndpoint: librechatDataProvider.EModelEndpoint.google,
+            fromEndpoint: dataProvider.EModelEndpoint.google,
         });
         llmConfig = transformed.llmConfig;
         tools = transformed.tools;
@@ -38362,8 +38362,8 @@ function getOpenAIConfig(apiKey, options = {}, endpoint) {
     }
     if (useOpenRouter || isVercel) {
         configOptions.defaultHeaders = Object.assign({
-            'HTTP-Referer': 'https://librechat.ai',
-            'X-Title': 'LibreChat',
+            'HTTP-Referer': 'https://hanzo.chat',
+            'X-Title': 'Hanzo Chat',
         }, headers);
     }
     else if (headers) {
@@ -38459,7 +38459,7 @@ function splitAndTrim(input) {
  * @returns A promise that resolves to an array of model identifiers.
  */
 function fetchModels(_a) {
-    return __awaiter(this, arguments, void 0, function* ({ user, apiKey, baseURL: _baseURL, name = librechatDataProvider.EModelEndpoint.openAI, direct = false, azure = false, userIdQuery = false, createTokenConfig = true, tokenKey, headers, userObject, }) {
+    return __awaiter(this, arguments, void 0, function* ({ user, apiKey, baseURL: _baseURL, name = dataProvider.EModelEndpoint.openAI, direct = false, azure = false, userIdQuery = false, createTokenConfig = true, tokenKey, headers, userObject, }) {
         let models = [];
         const baseURL = direct ? extractBaseURL(_baseURL !== null && _baseURL !== void 0 ? _baseURL : '') : _baseURL;
         if (!baseURL && !azure) {
@@ -38468,7 +38468,7 @@ function fetchModels(_a) {
         if (!apiKey) {
             return models;
         }
-        if (name && name.toLowerCase().startsWith(librechatDataProvider.KnownEndpoints.ollama)) {
+        if (name && name.toLowerCase().startsWith(dataProvider.KnownEndpoints.ollama)) {
             try {
                 return yield fetchOllamaModels(baseURL !== null && baseURL !== void 0 ? baseURL : '', { headers, user: userObject });
             }
@@ -38482,7 +38482,7 @@ function fetchModels(_a) {
                 headers: Object.assign({}, (headers !== null && headers !== void 0 ? headers : {})),
                 timeout: 5000,
             };
-            if (name === librechatDataProvider.EModelEndpoint.anthropic) {
+            if (name === dataProvider.EModelEndpoint.anthropic) {
                 options.headers = {
                     'x-api-key': apiKey,
                     'anthropic-version': process.env.ANTHROPIC_VERSION || '2023-06-01',
@@ -38506,7 +38506,7 @@ function fetchModels(_a) {
             const validationResult = inputSchema.safeParse(input);
             if (validationResult.success && createTokenConfig) {
                 const endpointTokenConfig = processModelData(input);
-                const cache = standardCache(librechatDataProvider.CacheKeys.TOKEN_CONFIG);
+                const cache = standardCache(dataProvider.CacheKeys.TOKEN_CONFIG);
                 yield cache.set(tokenKey !== null && tokenKey !== void 0 ? tokenKey : name, endpointTokenConfig);
             }
             models = input.data.map((item) => item.id);
@@ -38541,7 +38541,7 @@ function fetchOpenAIModels(opts_1) {
         if (reverseProxyUrl) {
             baseURL = (_c = extractBaseURL(reverseProxyUrl)) !== null && _c !== void 0 ? _c : openaiBaseURL;
         }
-        const modelsCache = standardCache(librechatDataProvider.CacheKeys.MODEL_QUERIES);
+        const modelsCache = standardCache(dataProvider.CacheKeys.MODEL_QUERIES);
         const cachedModels = yield modelsCache.get(baseURL);
         if (cachedModels) {
             return cachedModels;
@@ -38552,7 +38552,7 @@ function fetchOpenAIModels(opts_1) {
                 baseURL,
                 azure: opts.azure,
                 user: opts.user,
-                name: librechatDataProvider.EModelEndpoint.openAI,
+                name: dataProvider.EModelEndpoint.openAI,
             });
         }
         if (models.length === 0) {
@@ -38577,12 +38577,12 @@ function fetchOpenAIModels(opts_1) {
  */
 function getOpenAIModels() {
     return __awaiter(this, arguments, void 0, function* (opts = {}) {
-        let models = librechatDataProvider.defaultModels[librechatDataProvider.EModelEndpoint.openAI];
+        let models = dataProvider.defaultModels[dataProvider.EModelEndpoint.openAI];
         if (opts.assistants) {
-            models = librechatDataProvider.defaultModels[librechatDataProvider.EModelEndpoint.assistants];
+            models = dataProvider.defaultModels[dataProvider.EModelEndpoint.assistants];
         }
         else if (opts.azure) {
-            models = librechatDataProvider.defaultModels[librechatDataProvider.EModelEndpoint.azureAssistants];
+            models = dataProvider.defaultModels[dataProvider.EModelEndpoint.azureAssistants];
         }
         let key;
         if (opts.assistants) {
@@ -38623,7 +38623,7 @@ function fetchAnthropicModels() {
         if (!apiKey) {
             return models;
         }
-        const modelsCache = standardCache(librechatDataProvider.CacheKeys.MODEL_QUERIES);
+        const modelsCache = standardCache(dataProvider.CacheKeys.MODEL_QUERIES);
         const cachedModels = yield modelsCache.get(baseURL);
         if (cachedModels) {
             return cachedModels;
@@ -38633,8 +38633,8 @@ function fetchAnthropicModels() {
                 apiKey,
                 baseURL,
                 user: opts.user,
-                name: librechatDataProvider.EModelEndpoint.anthropic,
-                tokenKey: librechatDataProvider.EModelEndpoint.anthropic,
+                name: dataProvider.EModelEndpoint.anthropic,
+                tokenKey: dataProvider.EModelEndpoint.anthropic,
             });
         }
         if (models.length === 0) {
@@ -38651,7 +38651,7 @@ function fetchAnthropicModels() {
  */
 function getAnthropicModels() {
     return __awaiter(this, arguments, void 0, function* (opts = {}) {
-        const models = librechatDataProvider.defaultModels[librechatDataProvider.EModelEndpoint.anthropic];
+        const models = dataProvider.defaultModels[dataProvider.EModelEndpoint.anthropic];
         // Vertex AI models from YAML config take priority
         if (opts.vertexModels && opts.vertexModels.length > 0) {
             return opts.vertexModels;
@@ -38676,7 +38676,7 @@ function getAnthropicModels() {
  * @returns Array of model IDs
  */
 function getGoogleModels() {
-    let models = librechatDataProvider.defaultModels[librechatDataProvider.EModelEndpoint.google];
+    let models = dataProvider.defaultModels[dataProvider.EModelEndpoint.google];
     if (process.env.GOOGLE_MODELS) {
         models = splitAndTrim(process.env.GOOGLE_MODELS);
     }
@@ -38687,7 +38687,7 @@ function getGoogleModels() {
  * @returns Array of model IDs
  */
 function getBedrockModels() {
-    let models = librechatDataProvider.defaultModels[librechatDataProvider.EModelEndpoint.bedrock];
+    let models = dataProvider.defaultModels[dataProvider.EModelEndpoint.bedrock];
     if (process.env.BEDROCK_AWS_MODELS) {
         models = splitAndTrim(process.env.BEDROCK_AWS_MODELS);
     }
@@ -38781,13 +38781,33 @@ function resolveTenantBearer(req) {
     return null;
 }
 /**
+ * The active org a member has switched to, or null for their home org.
+ *
+ * A multi-org member selects a working org in the account menu; the switch is
+ * pinned in the `hanzo_active_org` cookie (set server-side by
+ * `/v1/chat/user/active-org`, which admits ONLY an org in the caller's own
+ * membership set). Chat forwards it as `X-Org-Id` on the on-behalf-of calls to
+ * cloud so the completion (and its billing) lands on the chosen org.
+ *
+ * This value is a HINT, not an authority: the gateway (HIP-0026) re-derives the
+ * tenant from the verified JWT and admits a sent `X-Org-Id` only when it is in
+ * that member's set, pinning to `owner` otherwise. So a forged cookie can never
+ * reach an org the caller isn't a member of — cloud is the enforcer, this is the
+ * selection. Returns null (home org, no header) when unset.
+ */
+function resolveActiveOrg(req) {
+    var _a;
+    const org = parseCookies((_a = req.headers) === null || _a === void 0 ? void 0 : _a.cookie).hanzo_active_org;
+    return org ? org : null;
+}
+/**
  * The endpoint-config sentinel that opts a custom endpoint into IAM-bearer
  * forwarding. An endpoint whose `apiKey` is this value bills the signed-in user's
  * own org via their forwarded IAM token (the canonical Hanzo Cloud path) instead
- * of any static key. This reuses LibreChat's existing OIDC-token placeholder name
- * so librechat.yaml stays self-documenting.
+ * of any static key. This reuses Chat's existing OIDC-token placeholder name
+ * so chat.yaml stays self-documenting.
  */
-const OPENID_BEARER_SENTINEL = '{{LIBRECHAT_OPENID_TOKEN}}';
+const OPENID_BEARER_SENTINEL = '{{CHAT_OPENID_TOKEN}}';
 
 /**
  * Wrap an OpenAI-client `fetch` so the Hanzo Cloud gateway's HTTP-200 error
@@ -38871,7 +38891,7 @@ function buildCustomOptions(endpointConfig, appConfig, endpointTokenConfig) {
 }
 /**
  * Initializes a custom endpoint client configuration.
- * This function handles custom endpoints defined in librechat.yaml, including
+ * This function handles custom endpoints defined in chat.yaml, including
  * user-provided API keys and URLs.
  *
  * @param params - Configuration parameters
@@ -38880,7 +38900,7 @@ function buildCustomOptions(endpointConfig, appConfig, endpointTokenConfig) {
  */
 function initializeCustom(_a) {
     return __awaiter(this, arguments, void 0, function* ({ req, endpoint, model_parameters, db, }) {
-        var _b, _c, _d, _e, _f, _g, _h;
+        var _b, _c, _d, _e, _f, _g, _h, _j;
         const appConfig = req.config;
         const { key: expiresAt } = req.body;
         const endpointConfig = getCustomEndpointConfig({
@@ -38890,12 +38910,12 @@ function initializeCustom(_a) {
         if (!endpointConfig) {
             throw new Error(`Config not found for the ${endpoint} custom endpoint.`);
         }
-        const CUSTOM_API_KEY = librechatDataProvider.extractEnvVariable((_b = endpointConfig.apiKey) !== null && _b !== void 0 ? _b : '');
-        const CUSTOM_BASE_URL = librechatDataProvider.extractEnvVariable((_c = endpointConfig.baseURL) !== null && _c !== void 0 ? _c : '');
-        if (CUSTOM_API_KEY.match(librechatDataProvider.envVarRegex)) {
+        const CUSTOM_API_KEY = dataProvider.extractEnvVariable((_b = endpointConfig.apiKey) !== null && _b !== void 0 ? _b : '');
+        const CUSTOM_BASE_URL = dataProvider.extractEnvVariable((_c = endpointConfig.baseURL) !== null && _c !== void 0 ? _c : '');
+        if (CUSTOM_API_KEY.match(dataProvider.envVarRegex)) {
             throw new Error(`Missing API Key for ${endpoint}.`);
         }
-        if (CUSTOM_BASE_URL.match(librechatDataProvider.envVarRegex)) {
+        if (CUSTOM_BASE_URL.match(dataProvider.envVarRegex)) {
             throw new Error(`Missing Base URL for ${endpoint}.`);
         }
         const userProvidesKey = isUserProvided(CUSTOM_API_KEY);
@@ -38908,28 +38928,36 @@ function initializeCustom(_a) {
         let apiKey = userProvidesKey ? userValues === null || userValues === void 0 ? void 0 : userValues.apiKey : CUSTOM_API_KEY;
         const baseURL = userProvidesURL ? userValues === null || userValues === void 0 ? void 0 : userValues.baseURL : CUSTOM_BASE_URL;
         // Canonical Hanzo Cloud auth+billing: an endpoint that declares
-        // `apiKey: "{{LIBRECHAT_OPENID_TOKEN}}"` bills the signed-in user's OWN org by
+        // `apiKey: "{{CHAT_OPENID_TOKEN}}"` bills the signed-in user's OWN org by
         // forwarding THEIR IAM bearer to cloud (api.hanzo.ai) as the request
         // credential. cloud validates the JWT, pins the tenant org from the verified
         // `owner` claim, and meters the org's shared plan then PAYG — no shared key, no
         // per-user minted key (see AUTH_BILLING_CONTRACT.md in hanzoai/cloud). If no
         // forwardable bearer exists (signed out / expired) we FAIL CLOSED: the user
         // must sign in with Hanzo. There is no fallback credential to spend on.
+        // The active org a multi-org member has switched to, forwarded as `X-Org-Id`
+        // ONLY on the bearer path — it is meaningful solely alongside the IAM token
+        // whose membership the gateway checks it against.
+        let tenantHeaders;
         if (apiKey === OPENID_BEARER_SENTINEL) {
             const bearer = resolveTenantBearer(req);
             if (!bearer) {
                 throw new Error('Sign in with Hanzo to chat — your Hanzo account funds this request.');
             }
             apiKey = bearer;
+            const activeOrg = resolveActiveOrg(req);
+            if (activeOrg) {
+                tenantHeaders = { 'X-Org-Id': activeOrg };
+            }
         }
         if (userProvidesKey && !apiKey) {
             throw new Error(JSON.stringify({
-                type: librechatDataProvider.ErrorTypes.NO_USER_KEY,
+                type: dataProvider.ErrorTypes.NO_USER_KEY,
             }));
         }
         if (userProvidesURL && !baseURL) {
             throw new Error(JSON.stringify({
-                type: librechatDataProvider.ErrorTypes.NO_BASE_URL,
+                type: dataProvider.ErrorTypes.NO_BASE_URL,
             }));
         }
         if (!apiKey) {
@@ -38940,15 +38968,15 @@ function initializeCustom(_a) {
         }
         let endpointTokenConfig;
         const userId = (_g = (_f = req.user) === null || _f === void 0 ? void 0 : _f.id) !== null && _g !== void 0 ? _g : '';
-        const cache = standardCache(librechatDataProvider.CacheKeys.TOKEN_CONFIG);
+        const cache = standardCache(dataProvider.CacheKeys.TOKEN_CONFIG);
         /** tokenConfig is an optional extended property on custom endpoints */
         const hasTokenConfig = endpointConfig.tokenConfig != null;
         const tokenKey = !hasTokenConfig && (userProvidesKey || userProvidesURL) ? `${endpoint}:${userId}` : endpoint;
         const cachedConfig = !hasTokenConfig &&
-            librechatDataProvider.FetchTokenConfig[endpoint.toLowerCase()] &&
+            dataProvider.FetchTokenConfig[endpoint.toLowerCase()] &&
             (yield cache.get(tokenKey));
         endpointTokenConfig = cachedConfig || undefined;
-        if (librechatDataProvider.FetchTokenConfig[endpoint.toLowerCase()] &&
+        if (dataProvider.FetchTokenConfig[endpoint.toLowerCase()] &&
             endpointConfig &&
             ((_h = endpointConfig.models) === null || _h === void 0 ? void 0 : _h.fetch) &&
             !endpointTokenConfig) {
@@ -38956,6 +38984,9 @@ function initializeCustom(_a) {
             endpointTokenConfig = (yield cache.get(tokenKey));
         }
         const customOptions = buildCustomOptions(endpointConfig, appConfig, endpointTokenConfig);
+        if (tenantHeaders) {
+            customOptions.headers = Object.assign(Object.assign({}, ((_j = customOptions.headers) !== null && _j !== void 0 ? _j : {})), tenantHeaders);
+        }
         const clientOptions = Object.assign({ reverseProxyUrl: baseURL !== null && baseURL !== void 0 ? baseURL : null, proxy: PROXY !== null && PROXY !== void 0 ? PROXY : null }, customOptions);
         const modelOptions = Object.assign(Object.assign({}, (model_parameters !== null && model_parameters !== void 0 ? model_parameters : {})), { user: userId });
         const finalClientOptions = Object.assign({ modelOptions }, clientOptions);
@@ -39000,8 +39031,8 @@ function initializeGoogle(_a) {
         const { key: expiresAt } = req.body;
         let userKey = null;
         if (expiresAt && isUserProvided) {
-            checkUserKeyExpiry(expiresAt, librechatDataProvider.EModelEndpoint.google);
-            userKey = yield db.getUserKey({ userId: (_b = req.user) === null || _b === void 0 ? void 0 : _b.id, name: librechatDataProvider.EModelEndpoint.google });
+            checkUserKeyExpiry(expiresAt, dataProvider.EModelEndpoint.google);
+            userKey = yield db.getUserKey({ userId: (_b = req.user) === null || _b === void 0 ? void 0 : _b.id, name: dataProvider.EModelEndpoint.google });
         }
         let serviceKey = {};
         /** Check if GOOGLE_KEY is provided at all (including 'user_provided') */
@@ -39023,14 +39054,14 @@ function initializeGoogle(_a) {
         const credentials = isUserProvided
             ? userKey
             : {
-                [librechatDataProvider.AuthKeys.GOOGLE_SERVICE_KEY]: serviceKey,
-                [librechatDataProvider.AuthKeys.GOOGLE_API_KEY]: GOOGLE_KEY,
+                [dataProvider.AuthKeys.GOOGLE_SERVICE_KEY]: serviceKey,
+                [dataProvider.AuthKeys.GOOGLE_API_KEY]: GOOGLE_KEY,
             };
         let clientOptions = {};
         /** @type {undefined | TBaseEndpoint} */
         const allConfig = (_c = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _c === void 0 ? void 0 : _c.all;
         /** @type {undefined | TBaseEndpoint} */
-        const googleConfig = (_d = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _d === void 0 ? void 0 : _d[librechatDataProvider.EModelEndpoint.google];
+        const googleConfig = (_d = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _d === void 0 ? void 0 : _d[dataProvider.EModelEndpoint.google];
         if (googleConfig) {
             clientOptions.streamRate = googleConfig.streamRate;
             clientOptions.titleModel = googleConfig.titleModel;
@@ -39059,12 +39090,12 @@ function initializeOpenAI(_a) {
         const { key: expiresAt } = req.body;
         const modelName = model_parameters === null || model_parameters === void 0 ? void 0 : model_parameters.model;
         const credentials = {
-            [librechatDataProvider.EModelEndpoint.openAI]: OPENAI_API_KEY,
-            [librechatDataProvider.EModelEndpoint.azureOpenAI]: AZURE_API_KEY,
+            [dataProvider.EModelEndpoint.openAI]: OPENAI_API_KEY,
+            [dataProvider.EModelEndpoint.azureOpenAI]: AZURE_API_KEY,
         };
         const baseURLOptions = {
-            [librechatDataProvider.EModelEndpoint.openAI]: OPENAI_REVERSE_PROXY,
-            [librechatDataProvider.EModelEndpoint.azureOpenAI]: AZURE_OPENAI_BASEURL,
+            [dataProvider.EModelEndpoint.openAI]: OPENAI_REVERSE_PROXY,
+            [dataProvider.EModelEndpoint.azureOpenAI]: AZURE_OPENAI_BASEURL,
         };
         const userProvidesKey = isUserProvided(credentials[endpoint]);
         const userProvidesURL = isUserProvided(baseURLOptions[endpoint]);
@@ -39084,12 +39115,12 @@ function initializeOpenAI(_a) {
             reverseProxyUrl: baseURL || undefined,
             streaming: true,
         };
-        const isAzureOpenAI = endpoint === librechatDataProvider.EModelEndpoint.azureOpenAI;
-        const azureConfig = isAzureOpenAI && ((_d = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _d === void 0 ? void 0 : _d[librechatDataProvider.EModelEndpoint.azureOpenAI]);
+        const isAzureOpenAI = endpoint === dataProvider.EModelEndpoint.azureOpenAI;
+        const azureConfig = isAzureOpenAI && ((_d = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _d === void 0 ? void 0 : _d[dataProvider.EModelEndpoint.azureOpenAI]);
         let isServerless = false;
         if (isAzureOpenAI && azureConfig) {
             const { modelGroupMap, groupMap } = azureConfig;
-            const { azureOptions, baseURL: configBaseURL, headers = {}, serverless, } = librechatDataProvider.mapModelToAzureConfig({
+            const { azureOptions, baseURL: configBaseURL, headers = {}, serverless, } = dataProvider.mapModelToAzureConfig({
                 modelName: modelName || '',
                 modelGroupMap,
                 groupMap,
@@ -39124,7 +39155,7 @@ function initializeOpenAI(_a) {
         }
         if (userProvidesKey && !apiKey) {
             throw new Error(JSON.stringify({
-                type: librechatDataProvider.ErrorTypes.NO_USER_KEY,
+                type: dataProvider.ErrorTypes.NO_USER_KEY,
             }));
         }
         if (!apiKey) {
@@ -39137,7 +39168,7 @@ function initializeOpenAI(_a) {
         if (isServerless) {
             options.useLegacyContent = true;
         }
-        const openAIConfig = (_k = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _k === void 0 ? void 0 : _k[librechatDataProvider.EModelEndpoint.openAI];
+        const openAIConfig = (_k = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _k === void 0 ? void 0 : _k[dataProvider.EModelEndpoint.openAI];
         const allConfig = (_l = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _l === void 0 ? void 0 : _l.all;
         const azureRate = (modelName === null || modelName === void 0 ? void 0 : modelName.includes('gpt-4')) ? 30 : 17;
         let streamRate;
@@ -39174,11 +39205,11 @@ const providerConfigMap = {
     [agents.Providers.DEEPSEEK]: initializeCustom,
     [agents.Providers.MOONSHOT]: initializeCustom,
     [agents.Providers.OPENROUTER]: initializeCustom,
-    [librechatDataProvider.EModelEndpoint.openAI]: initializeOpenAI,
-    [librechatDataProvider.EModelEndpoint.google]: initializeGoogle,
-    [librechatDataProvider.EModelEndpoint.bedrock]: initializeBedrock,
-    [librechatDataProvider.EModelEndpoint.azureOpenAI]: initializeOpenAI,
-    [librechatDataProvider.EModelEndpoint.anthropic]: initializeAnthropic,
+    [dataProvider.EModelEndpoint.openAI]: initializeOpenAI,
+    [dataProvider.EModelEndpoint.google]: initializeGoogle,
+    [dataProvider.EModelEndpoint.bedrock]: initializeBedrock,
+    [dataProvider.EModelEndpoint.azureOpenAI]: initializeOpenAI,
+    [dataProvider.EModelEndpoint.anthropic]: initializeAnthropic,
 };
 /**
  * Get the provider configuration and override endpoint based on the provider string
@@ -39236,10 +39267,10 @@ function loadCustomEndpointsConfig(customEndpoints) {
         for (let i = 0; i < filteredEndpoints.length; i++) {
             const endpoint = filteredEndpoints[i];
             const { baseURL, apiKey, name: configName, iconURL, modelDisplayLabel, customParams, customOrder, } = endpoint;
-            const name = librechatDataProvider.normalizeEndpointName(configName);
-            const resolvedApiKey = librechatDataProvider.extractEnvVariable(apiKey !== null && apiKey !== void 0 ? apiKey : '');
-            const resolvedBaseURL = librechatDataProvider.extractEnvVariable(baseURL !== null && baseURL !== void 0 ? baseURL : '');
-            customEndpointsConfig[name] = Object.assign({ type: librechatDataProvider.EModelEndpoint.custom, userProvide: isUserProvided(resolvedApiKey), userProvideURL: isUserProvided(resolvedBaseURL), customParams,
+            const name = dataProvider.normalizeEndpointName(configName);
+            const resolvedApiKey = dataProvider.extractEnvVariable(apiKey !== null && apiKey !== void 0 ? apiKey : '');
+            const resolvedBaseURL = dataProvider.extractEnvVariable(baseURL !== null && baseURL !== void 0 ? baseURL : '');
+            customEndpointsConfig[name] = Object.assign({ type: dataProvider.EModelEndpoint.custom, userProvide: isUserProvided(resolvedApiKey), userProvideURL: isUserProvided(resolvedBaseURL), customParams,
                 modelDisplayLabel,
                 iconURL }, (customOrder != null ? { order: customOrder } : {}));
         }
@@ -39294,7 +39325,7 @@ const categorizeFileForToolResources = ({ file, tool_resources, requestFileSet, 
     if ((_a = file.metadata) === null || _a === void 0 ? void 0 : _a.fileIdentifier) {
         addFileToResource({
             file,
-            resourceType: librechatDataProvider.EToolResources.execute_code,
+            resourceType: dataProvider.EToolResources.execute_code,
             tool_resources,
             processedResourceFiles,
         });
@@ -39303,7 +39334,7 @@ const categorizeFileForToolResources = ({ file, tool_resources, requestFileSet, 
     if (file.embedded === true) {
         addFileToResource({
             file,
-            resourceType: librechatDataProvider.EToolResources.file_search,
+            resourceType: dataProvider.EToolResources.file_search,
             tool_resources,
             processedResourceFiles,
         });
@@ -39315,7 +39346,7 @@ const categorizeFileForToolResources = ({ file, tool_resources, requestFileSet, 
         file.width) {
         addFileToResource({
             file,
-            resourceType: librechatDataProvider.EToolResources.image_edit,
+            resourceType: dataProvider.EToolResources.image_edit,
             tool_resources,
             processedResourceFiles,
         });
@@ -39376,22 +39407,22 @@ const primeResources = (_a) => __awaiter(void 0, [_a], void 0, function* ({ req,
                     if (file === null || file === void 0 ? void 0 : file.file_id) {
                         processedResourceFiles.add(`${resourceType}:${file.file_id}`);
                         // Files from non-context resources should not be added to attachments from _attachments
-                        if (resourceType !== librechatDataProvider.EToolResources.context && resourceType !== librechatDataProvider.EToolResources.ocr) {
+                        if (resourceType !== dataProvider.EToolResources.context && resourceType !== dataProvider.EToolResources.ocr) {
                             attachmentFileIds.add(file.file_id);
                         }
                     }
                 }
             }
         }
-        const isContextEnabled = ((_d = (_c = (_b = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _b === void 0 ? void 0 : _b[librechatDataProvider.EModelEndpoint.agents]) === null || _c === void 0 ? void 0 : _c.capabilities) !== null && _d !== void 0 ? _d : []).includes(librechatDataProvider.AgentCapabilities.context);
-        const fileIds = (_f = (_e = tool_resources[librechatDataProvider.EToolResources.context]) === null || _e === void 0 ? void 0 : _e.file_ids) !== null && _f !== void 0 ? _f : [];
-        const ocrFileIds = (_g = tool_resources[librechatDataProvider.EToolResources.ocr]) === null || _g === void 0 ? void 0 : _g.file_ids;
+        const isContextEnabled = ((_d = (_c = (_b = appConfig === null || appConfig === void 0 ? void 0 : appConfig.endpoints) === null || _b === void 0 ? void 0 : _b[dataProvider.EModelEndpoint.agents]) === null || _c === void 0 ? void 0 : _c.capabilities) !== null && _d !== void 0 ? _d : []).includes(dataProvider.AgentCapabilities.context);
+        const fileIds = (_f = (_e = tool_resources[dataProvider.EToolResources.context]) === null || _e === void 0 ? void 0 : _e.file_ids) !== null && _f !== void 0 ? _f : [];
+        const ocrFileIds = (_g = tool_resources[dataProvider.EToolResources.ocr]) === null || _g === void 0 ? void 0 : _g.file_ids;
         if (ocrFileIds != null) {
             fileIds.push(...ocrFileIds);
-            delete tool_resources[librechatDataProvider.EToolResources.ocr];
+            delete tool_resources[dataProvider.EToolResources.ocr];
         }
         if (fileIds.length > 0 && isContextEnabled) {
-            delete tool_resources[librechatDataProvider.EToolResources.context];
+            delete tool_resources[dataProvider.EToolResources.context];
             const context = yield getFiles({
                 file_id: { $in: fileIds },
             }, {}, {}, { userId: (_h = req.user) === null || _h === void 0 ? void 0 : _h.id, agentId });
@@ -39478,14 +39509,14 @@ function initializeAgent(params, db) {
         if (!db) {
             throw new Error('initializeAgent requires db methods to be passed');
         }
-        if (librechatDataProvider.isAgentsEndpoint(endpointOption === null || endpointOption === void 0 ? void 0 : endpointOption.endpoint) &&
+        if (dataProvider.isAgentsEndpoint(endpointOption === null || endpointOption === void 0 ? void 0 : endpointOption.endpoint) &&
             allowedProviders.size > 0 &&
             !allowedProviders.has(agent.provider)) {
-            throw new Error(`{ "type": "${librechatDataProvider.ErrorTypes.INVALID_AGENT_PROVIDER}", "info": "${agent.provider}" }`);
+            throw new Error(`{ "type": "${dataProvider.ErrorTypes.INVALID_AGENT_PROVIDER}", "info": "${agent.provider}" }`);
         }
         let currentFiles;
         const _modelOptions = structuredClone(Object.assign({ model: agent.model }, (_a = agent.model_parameters) !== null && _a !== void 0 ? _a : { model: agent.model }, isInitialAgent === true ? endpointOption === null || endpointOption === void 0 ? void 0 : endpointOption.model_parameters : {}));
-        const { resendFiles, maxContextTokens, modelOptions } = extractLibreChatParams(_modelOptions);
+        const { resendFiles, maxContextTokens, modelOptions } = extractChatParams(_modelOptions);
         const provider = agent.provider;
         agent.endpoint = provider;
         /**
@@ -39498,8 +39529,8 @@ function initializeAgent(params, db) {
             const fileIds = (_b = (yield db.getConvoFiles(conversationId))) !== null && _b !== void 0 ? _b : [];
             const toolResourceSet = new Set();
             for (const tool of (_c = agent.tools) !== null && _c !== void 0 ? _c : []) {
-                if (librechatDataProvider.EToolResources[tool]) {
-                    toolResourceSet.add(librechatDataProvider.EToolResources[tool]);
+                if (dataProvider.EToolResources[tool]) {
+                    toolResourceSet.add(dataProvider.EToolResources[tool]);
                 }
             }
             const toolFiles = (yield db.getToolFilesByIds(fileIds, toolResourceSet));
@@ -39509,10 +39540,10 @@ function initializeAgent(params, db) {
              */
             let codeGeneratedFiles = [];
             let userCodeFiles = [];
-            if (toolResourceSet.has(librechatDataProvider.EToolResources.execute_code)) {
+            if (toolResourceSet.has(dataProvider.EToolResources.execute_code)) {
                 let threadMessageIds;
                 let threadFileIds;
-                if (parentMessageId && parentMessageId !== librechatDataProvider.Constants.NO_PARENT && db.getMessages) {
+                if (parentMessageId && parentMessageId !== dataProvider.Constants.NO_PARENT && db.getMessages) {
                     /** Only select fields needed for thread traversal */
                     const messages = yield db.getMessages({ conversationId }, 'messageId parentMessageId files');
                     if (messages && messages.length > 0) {
@@ -39541,8 +39572,8 @@ function initializeAgent(params, db) {
         }
         if (currentFiles && currentFiles.length) {
             let endpointType;
-            if (!librechatDataProvider.paramEndpoints.has((_d = agent.endpoint) !== null && _d !== void 0 ? _d : '')) {
-                endpointType = librechatDataProvider.EModelEndpoint.custom;
+            if (!dataProvider.paramEndpoints.has((_d = agent.endpoint) !== null && _d !== void 0 ? _d : '')) {
+                endpointType = dataProvider.EModelEndpoint.custom;
             }
             currentFiles = filterFilesByEndpointConfig(req, {
                 files: currentFiles,
@@ -39593,10 +39624,10 @@ function initializeAgent(params, db) {
             db,
         });
         const llmConfig = options.llmConfig;
-        const tokensModel = agent.provider === librechatDataProvider.EModelEndpoint.azureOpenAI ? agent.model : llmConfig === null || llmConfig === void 0 ? void 0 : llmConfig.model;
+        const tokensModel = agent.provider === dataProvider.EModelEndpoint.azureOpenAI ? agent.model : llmConfig === null || llmConfig === void 0 ? void 0 : llmConfig.model;
         const maxOutputTokens = optionalChainWithEmptyCheck(llmConfig === null || llmConfig === void 0 ? void 0 : llmConfig.maxOutputTokens, llmConfig === null || llmConfig === void 0 ? void 0 : llmConfig.maxTokens, 0);
-        const agentMaxContextTokens = optionalChainWithEmptyCheck(maxContextTokens, getModelMaxTokens(tokensModel !== null && tokensModel !== void 0 ? tokensModel : '', librechatDataProvider.providerEndpointMap[provider], options.endpointTokenConfig), 18000);
-        if (agent.endpoint === librechatDataProvider.EModelEndpoint.azureOpenAI &&
+        const agentMaxContextTokens = optionalChainWithEmptyCheck(maxContextTokens, getModelMaxTokens(tokensModel !== null && tokensModel !== void 0 ? tokensModel : '', dataProvider.providerEndpointMap[provider], options.endpointTokenConfig), 18000);
+        if (agent.endpoint === dataProvider.EModelEndpoint.azureOpenAI &&
             (llmConfig === null || llmConfig === void 0 ? void 0 : llmConfig.azureOpenAIApiInstanceName) == null) {
             agent.provider = agents.Providers.OPENAI;
         }
@@ -39611,7 +39642,7 @@ function initializeAgent(params, db) {
         if ((agent.provider === agents.Providers.GOOGLE || agent.provider === agents.Providers.VERTEXAI) &&
             ((_l = options.tools) === null || _l === void 0 ? void 0 : _l.length) &&
             hasAgentTools) {
-            throw new Error(`{ "type": "${librechatDataProvider.ErrorTypes.GOOGLE_TOOL_CONFLICT}"}`);
+            throw new Error(`{ "type": "${dataProvider.ErrorTypes.GOOGLE_TOOL_CONFLICT}"}`);
         }
         else if ((agent.provider === agents.Providers.OPENAI ||
             agent.provider === agents.Providers.AZURE ||
@@ -39625,7 +39656,7 @@ function initializeAgent(params, db) {
             agent.model_parameters.configuration = options.configOptions;
         }
         if (agent.instructions && agent.instructions !== '') {
-            agent.instructions = librechatDataProvider.replaceSpecialVars({
+            agent.instructions = dataProvider.replaceSpecialVars({
                 text: agent.instructions,
                 user: req.user ? req.user : null,
             });
@@ -39690,8 +39721,8 @@ function convertOcrToContextInPlace(data) {
         delete data.tool_resources.ocr;
     }
     // Convert OCR to context in tools array
-    if ((_f = data.tools) === null || _f === void 0 ? void 0 : _f.includes(librechatDataProvider.EToolResources.ocr)) {
-        data.tools = data.tools.map((tool) => tool === librechatDataProvider.EToolResources.ocr ? librechatDataProvider.EToolResources.context : tool);
+    if ((_f = data.tools) === null || _f === void 0 ? void 0 : _f.includes(dataProvider.EToolResources.ocr)) {
+        data.tools = data.tools.map((tool) => tool === dataProvider.EToolResources.ocr ? dataProvider.EToolResources.context : tool);
         data.tools = [...new Set(data.tools)];
     }
 }
@@ -39741,8 +39772,8 @@ function mergeAgentOcrConversion(existingAgent, updateData) {
     // Remove the deprecated ocr resource
     delete result.tool_resources.ocr;
     // Update tools array: replace 'ocr' with 'context'
-    if ((_g = existingAgent.tools) === null || _g === void 0 ? void 0 : _g.includes(librechatDataProvider.EToolResources.ocr)) {
-        result.tools = existingAgent.tools.map((tool) => tool === librechatDataProvider.EToolResources.ocr ? librechatDataProvider.EToolResources.context : tool);
+    if ((_g = existingAgent.tools) === null || _g === void 0 ? void 0 : _g.includes(dataProvider.EToolResources.ocr)) {
+        result.tools = existingAgent.tools.map((tool) => tool === dataProvider.EToolResources.ocr ? dataProvider.EToolResources.context : tool);
         // Remove duplicates if context already existed
         result.tools = [...new Set(result.tools)];
     }
@@ -40693,7 +40724,7 @@ class GenerationJobManagerClass {
             /** Collected usage for all models */
             const collectedUsage = this.jobStore.getCollectedUsage(streamId);
             /** Text from content parts for fallback token counting */
-            const text = librechatDataProvider.parseTextParts(content);
+            const text = dataProvider.parseTextParts(content);
             /** Detect "early abort" - aborted before any generation happened (e.g., during tool loading)
             In this case, no messages were saved to DB, so frontend shouldn't navigate to conversation */
             const isEarlyAbort = content.length === 0 && !jobData.responseMessageId;
@@ -41254,7 +41285,7 @@ const createMemoryTool = ({ userId, setMemory, validKeys, tokenLimit, totalToken
             const tokenCount = TokenizerSingleton.getTokenCount(value, 'o200k_base');
             if (isOverflowing) {
                 const errorArtifact = {
-                    [librechatDataProvider.Tools.memory]: {
+                    [dataProvider.Tools.memory]: {
                         key: 'system',
                         type: 'error',
                         value: JSON.stringify({
@@ -41273,7 +41304,7 @@ const createMemoryTool = ({ userId, setMemory, validKeys, tokenLimit, totalToken
                 const newRemainingTokens = tokenLimit - newTotalTokens;
                 if (newRemainingTokens < 0) {
                     const errorArtifact = {
-                        [librechatDataProvider.Tools.memory]: {
+                        [dataProvider.Tools.memory]: {
                             key: 'system',
                             type: 'error',
                             value: JSON.stringify({
@@ -41289,7 +41320,7 @@ const createMemoryTool = ({ userId, setMemory, validKeys, tokenLimit, totalToken
                 }
             }
             const artifact = {
-                [librechatDataProvider.Tools.memory]: {
+                [dataProvider.Tools.memory]: {
                     key,
                     value,
                     tokenCount,
@@ -41335,7 +41366,7 @@ const createDeleteMemoryTool = ({ userId, deleteMemory, validKeys, }) => {
                 return [`Invalid key "${key}". Must be one of: ${validKeys.join(', ')}`, undefined];
             }
             const artifact = {
-                [librechatDataProvider.Tools.memory]: {
+                [dataProvider.Tools.memory]: {
                     key,
                     type: 'delete',
                 },
@@ -41577,16 +41608,16 @@ function handleMemoryArtifact(_a) {
         if (!output.artifact) {
             return null;
         }
-        const memoryArtifact = output.artifact[librechatDataProvider.Tools.memory];
+        const memoryArtifact = output.artifact[dataProvider.Tools.memory];
         if (!memoryArtifact) {
             return null;
         }
         const attachment = {
-            type: librechatDataProvider.Tools.memory,
+            type: dataProvider.Tools.memory,
             toolCallId: output.tool_call_id,
             messageId: (_b = metadata === null || metadata === void 0 ? void 0 : metadata.run_id) !== null && _b !== void 0 ? _b : '',
             conversationId: (_c = metadata === null || metadata === void 0 ? void 0 : metadata.thread_id) !== null && _c !== void 0 ? _c : '',
-            [librechatDataProvider.Tools.memory]: memoryArtifact,
+            [dataProvider.Tools.memory]: memoryArtifact,
         };
         if (!res.headersSent) {
             return attachment;
@@ -41612,7 +41643,7 @@ function createMemoryCallback({ res, artifactPromises, streamId = null, }) {
     return (data, metadata) => __awaiter(this, void 0, void 0, function* () {
         var _a;
         const output = data === null || data === void 0 ? void 0 : data.output;
-        const memoryArtifact = (_a = output === null || output === void 0 ? void 0 : output.artifact) === null || _a === void 0 ? void 0 : _a[librechatDataProvider.Tools.memory];
+        const memoryArtifact = (_a = output === null || output === void 0 ? void 0 : output.artifact) === null || _a === void 0 ? void 0 : _a[dataProvider.Tools.memory];
         if (memoryArtifact == null) {
             return;
         }
@@ -41623,7 +41654,7 @@ function createMemoryCallback({ res, artifactPromises, streamId = null, }) {
     });
 }
 
-const { GLOBAL_PROJECT_NAME } = librechatDataProvider.Constants;
+const { GLOBAL_PROJECT_NAME } = dataProvider.Constants;
 /**
  * Check if agents need to be migrated to the new permission system
  * This performs a dry-run check similar to the migration script
@@ -41637,9 +41668,9 @@ function checkAgentPermissionsMigration(_a) {
                 yield ensureRequiredCollectionsExist(db);
             }
             // Verify required roles exist
-            const ownerRole = yield methods.findRoleByIdentifier(librechatDataProvider.AccessRoleIds.AGENT_OWNER);
-            const viewerRole = yield methods.findRoleByIdentifier(librechatDataProvider.AccessRoleIds.AGENT_VIEWER);
-            const editorRole = yield methods.findRoleByIdentifier(librechatDataProvider.AccessRoleIds.AGENT_EDITOR);
+            const ownerRole = yield methods.findRoleByIdentifier(dataProvider.AccessRoleIds.AGENT_OWNER);
+            const viewerRole = yield methods.findRoleByIdentifier(dataProvider.AccessRoleIds.AGENT_VIEWER);
+            const editorRole = yield methods.findRoleByIdentifier(dataProvider.AccessRoleIds.AGENT_EDITOR);
             if (!ownerRole || !viewerRole || !editorRole) {
                 dataSchemas.logger.warn('Required agent roles not found. Permission system may not be fully initialized.');
                 return {
@@ -41670,8 +41701,8 @@ function checkAgentPermissionsMigration(_a) {
                                 as: 'aclEntry',
                                 cond: {
                                     $and: [
-                                        { $eq: ['$$aclEntry.resourceType', librechatDataProvider.ResourceType.AGENT] },
-                                        { $eq: ['$$aclEntry.principalType', librechatDataProvider.PrincipalType.USER] },
+                                        { $eq: ['$$aclEntry.resourceType', dataProvider.ResourceType.AGENT] },
+                                        { $eq: ['$$aclEntry.principalType', dataProvider.PrincipalType.USER] },
                                     ],
                                 },
                             },
@@ -41884,7 +41915,7 @@ const GraphEvents = {
     ON_TOOL_EXECUTE: 'on_tool_execute',
 };
 /**
- * Step types from librechat-data-provider
+ * Step types from @hanzochat/data-provider
  */
 const StepTypes = {
     MESSAGE_CREATION: 'message_creation',
@@ -41976,7 +42007,7 @@ class OpenAIRunStepHandler {
     }
     handle(_event, data) {
         var _a;
-        // Run step events are primarily for LibreChat UI, we use deltas for streaming
+        // Run step events are primarily for Chat UI, we use deltas for streaming
         // This handler is a no-op for OpenAI format
         if (((_a = data === null || data === void 0 ? void 0 : data.stepDetails) === null || _a === void 0 ? void 0 : _a.type) === StepTypes.TOOL_CALLS) ;
     }
@@ -42112,7 +42143,7 @@ let nanoid = (size = 21) => {
 };
 
 /**
- * Convert OpenAI messages to LibreChat format
+ * Convert OpenAI messages to Chat format
  */
 function convertMessages(messages) {
     return messages.map((msg) => {
@@ -42382,7 +42413,7 @@ function listAgentModels(_req, res, deps) {
                 id: agent.id,
                 object: 'model',
                 created: Math.floor(Date.now() / 1000),
-                owned_by: 'librechat',
+                owned_by: 'chat',
                 permission: [],
                 root: agent.id,
                 parent: null,
@@ -43082,14 +43113,14 @@ function emitError(config, error) {
     });
 }
 /**
- * Emit librechat:attachment event for file/image attachments
- * This is a LibreChat extension to the Open Responses streaming protocol.
+ * Emit chat:attachment event for file/image attachments
+ * This is a Chat extension to the Open Responses streaming protocol.
  * External clients can safely ignore these events.
  */
 function emitAttachment(config, attachment, options) {
     const { res, tracker } = config;
     writeEvent(res, {
-        type: 'librechat:attachment',
+        type: 'chat:attachment',
         sequence_number: tracker.nextSequence(),
         attachment,
         message_id: options === null || options === void 0 ? void 0 : options.messageId,
@@ -43102,7 +43133,7 @@ function emitAttachment(config, attachment, options) {
  */
 function writeAttachmentEvent(res, sequenceNumber, attachment, options) {
     writeEvent(res, {
-        type: 'librechat:attachment',
+        type: 'chat:attachment',
         sequence_number: sequenceNumber,
         attachment,
         message_id: options === null || options === void 0 ? void 0 : options.messageId,
@@ -43233,7 +43264,7 @@ function convertInputToMessages(input) {
             else {
                 content = '';
             }
-            // Map developer role to system (LibreChat convention)
+            // Map developer role to system (Chat convention)
             let role;
             if (messageItem.role === 'developer') {
                 role = 'system';
@@ -43339,7 +43370,7 @@ function setupStreamingResponse(res) {
     res.flushHeaders();
 }
 /**
- * Create LibreChat event handlers that emit Open Responses events
+ * Create Chat event handlers that emit Open Responses events
  */
 function createResponsesEventHandlers(config) {
     const state = {
@@ -43870,7 +43901,7 @@ const customProviders = new Set([
     agents.Providers.DEEPSEEK,
     agents.Providers.MOONSHOT,
     agents.Providers.OPENROUTER,
-    librechatDataProvider.KnownEndpoints.ollama,
+    dataProvider.KnownEndpoints.ollama,
 ]);
 function getReasoningKey(provider, llmConfig, agentEndpoint) {
     var _a, _b;
@@ -43878,8 +43909,8 @@ function getReasoningKey(provider, llmConfig, agentEndpoint) {
     if (provider === agents.Providers.GOOGLE) {
         reasoningKey = 'reasoning';
     }
-    else if (((_b = (_a = llmConfig.configuration) === null || _a === void 0 ? void 0 : _a.baseURL) === null || _b === void 0 ? void 0 : _b.includes(librechatDataProvider.KnownEndpoints.openrouter)) ||
-        (agentEndpoint && agentEndpoint.toLowerCase().includes(librechatDataProvider.KnownEndpoints.openrouter))) {
+    else if (((_b = (_a = llmConfig.configuration) === null || _a === void 0 ? void 0 : _a.baseURL) === null || _b === void 0 ? void 0 : _b.includes(dataProvider.KnownEndpoints.openrouter)) ||
+        (agentEndpoint && agentEndpoint.toLowerCase().includes(dataProvider.KnownEndpoints.openrouter))) {
         reasoningKey = 'reasoning';
     }
     else if (llmConfig.useResponsesApi === true &&
@@ -43921,7 +43952,7 @@ function createRun(_a) {
         const agentInputs = [];
         const buildAgentContext = (agent) => {
             var _a, _b, _c, _d, _e, _f, _g, _h;
-            const provider = (_a = librechatDataProvider.providerEndpointMap[agent.provider]) !== null && _a !== void 0 ? _a : agent.provider;
+            const provider = (_a = dataProvider.providerEndpointMap[agent.provider]) !== null && _a !== void 0 ? _a : agent.provider;
             const llmConfig = Object.assign({
                 provider,
                 streaming,
@@ -44140,7 +44171,7 @@ function validateAgentModel(params) {
             return {
                 isValid: false,
                 error: {
-                    message: `{ "type": "${librechatDataProvider.ErrorTypes.MISSING_MODEL}", "info": "${endpoint}" }`,
+                    message: `{ "type": "${dataProvider.ErrorTypes.MISSING_MODEL}", "info": "${endpoint}" }`,
                 },
             };
         }
@@ -44148,7 +44179,7 @@ function validateAgentModel(params) {
             return {
                 isValid: false,
                 error: {
-                    message: `{ "type": "${librechatDataProvider.ErrorTypes.MODELS_NOT_LOADED}" }`,
+                    message: `{ "type": "${dataProvider.ErrorTypes.MODELS_NOT_LOADED}" }`,
                 },
             };
         }
@@ -44157,7 +44188,7 @@ function validateAgentModel(params) {
             return {
                 isValid: false,
                 error: {
-                    message: `{ "type": "${librechatDataProvider.ErrorTypes.ENDPOINT_MODELS_NOT_LOADED}", "info": "${endpoint}" }`,
+                    message: `{ "type": "${dataProvider.ErrorTypes.ENDPOINT_MODELS_NOT_LOADED}", "info": "${endpoint}" }`,
                 },
             };
         }
@@ -44166,7 +44197,7 @@ function validateAgentModel(params) {
             return { isValid: true };
         }
         const { ILLEGAL_MODEL_REQ_SCORE: score = 1 } = (_a = process.env) !== null && _a !== void 0 ? _a : {};
-        const type = librechatDataProvider.ViolationTypes.ILLEGAL_MODEL_REQUEST;
+        const type = dataProvider.ViolationTypes.ILLEGAL_MODEL_REQUEST;
         const errorMessage = {
             type,
             model,
@@ -44176,7 +44207,7 @@ function validateAgentModel(params) {
         return {
             isValid: false,
             error: {
-                message: `{ "type": "${librechatDataProvider.ViolationTypes.ILLEGAL_MODEL_REQUEST}", "info": "${endpoint}|${model}" }`,
+                message: `{ "type": "${dataProvider.ViolationTypes.ILLEGAL_MODEL_REQUEST}", "info": "${endpoint}|${model}" }`,
             },
         };
     });
@@ -44212,7 +44243,7 @@ const checkPluginAuth = (plugin) => {
         let isFieldAuthenticated = false;
         for (const fieldOption of authFieldOptions) {
             const envValue = process.env[fieldOption];
-            if (envValue && envValue.trim() !== '' && envValue !== librechatDataProvider.AuthType.USER_PROVIDED) {
+            if (envValue && envValue.trim() !== '' && envValue !== dataProvider.AuthType.USER_PROVIDED) {
                 isFieldAuthenticated = true;
                 break;
             }
@@ -44231,7 +44262,7 @@ function getToolkitKey({ toolkits, toolName, }) {
         return toolkitKey;
     }
     for (const toolkit of toolkits) {
-        if (toolName.startsWith(librechatDataProvider.EToolResources.image_edit)) {
+        if (toolName.startsWith(dataProvider.EToolResources.image_edit)) {
             const splitMatches = toolkit.pluginKey.split('_');
             const suffix = splitMatches[splitMatches.length - 1];
             if (toolName.endsWith(suffix)) {
@@ -45055,8 +45086,8 @@ const oaiToolkit = {
 
 /** Builds the web search tool context with citation format instructions. */
 function buildWebSearchContext() {
-    return `# \`${librechatDataProvider.Tools.web_search}\`:
-Current Date & Time: ${librechatDataProvider.replaceSpecialVars({ text: '{{iso_datetime}}' })}
+    return `# \`${dataProvider.Tools.web_search}\`:
+Current Date & Time: ${dataProvider.replaceSpecialVars({ text: '{{iso_datetime}}' })}
 
 **Execute immediately without preface.** After search, provide a brief summary addressing the query directly, then structure your response with clear Markdown formatting (## headers, lists, tables). Cite sources properly, tailor tone to query type, and provide comprehensive details.
 
@@ -45088,7 +45119,7 @@ Anchor pattern: \\ue202turn{N}{type}{index} where N=turn number, type=search|new
  * @returns The server name or undefined if not an MCP tool
  */
 function getServerNameFromTool(toolName) {
-    const parts = toolName.split(librechatDataProvider.Constants.mcp_delimiter);
+    const parts = toolName.split(dataProvider.Constants.mcp_delimiter);
     if (parts.length >= 2) {
         return parts[parts.length - 1];
     }
@@ -45368,9 +45399,9 @@ function loadToolDefinitions(params, deps) {
         const builtInToolDefs = [];
         let actionToolDefs = [];
         const actionToolNames = [];
-        const mcpAllPattern = `${librechatDataProvider.Constants.mcp_all}${librechatDataProvider.Constants.mcp_delimiter}`;
+        const mcpAllPattern = `${dataProvider.Constants.mcp_all}${dataProvider.Constants.mcp_delimiter}`;
         for (const toolName of tools) {
-            if (toolName.includes(librechatDataProvider.actionDelimiter)) {
+            if (toolName.includes(dataProvider.actionDelimiter)) {
                 actionToolNames.push(toolName);
                 continue;
             }
@@ -45389,7 +45420,7 @@ function loadToolDefinitions(params, deps) {
                 });
                 continue;
             }
-            const parts = toolName.split(librechatDataProvider.Constants.mcp_delimiter);
+            const parts = toolName.split(dataProvider.Constants.mcp_delimiter);
             const serverName = parts[parts.length - 1];
             if (!mcpServerToolsCache.has(serverName)) {
                 const serverTools = yield getOrFetchMCPServerTools(userId, serverName);
@@ -45493,7 +45524,7 @@ function extractWebSearchEnvVars({ keys, config, }) {
     for (const key of relevantKeys) {
         const value = config[key];
         if (typeof value === 'string') {
-            const varName = librechatDataProvider.extractVariableName(value);
+            const varName = dataProvider.extractVariableName(value);
             if (varName) {
                 authFields.push(varName);
             }
@@ -45517,13 +45548,13 @@ function loadWebSearchAuth(_a) {
                 let isUserProvided = false;
                 // Check if a specific service is specified in the config
                 let specificService;
-                if (category === librechatDataProvider.SearchCategories.PROVIDERS && (webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.searchProvider)) {
+                if (category === dataProvider.SearchCategories.PROVIDERS && (webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.searchProvider)) {
                     specificService = webSearchConfig.searchProvider;
                 }
-                else if (category === librechatDataProvider.SearchCategories.SCRAPERS && (webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.scraperProvider)) {
+                else if (category === dataProvider.SearchCategories.SCRAPERS && (webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.scraperProvider)) {
                     specificService = webSearchConfig.scraperProvider;
                 }
-                else if (category === librechatDataProvider.SearchCategories.RERANKERS && (webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.rerankerType)) {
+                else if (category === dataProvider.SearchCategories.RERANKERS && (webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.rerankerType)) {
                     specificService = webSearchConfig.rerankerType;
                 }
                 // If a specific service is specified, only check that one
@@ -45588,13 +45619,13 @@ function loadWebSearchAuth(_a) {
                         if (!allFieldsAuthenticated) {
                             continue;
                         }
-                        if (category === librechatDataProvider.SearchCategories.PROVIDERS) {
+                        if (category === dataProvider.SearchCategories.PROVIDERS) {
                             authResult.searchProvider = service;
                         }
-                        else if (category === librechatDataProvider.SearchCategories.SCRAPERS) {
+                        else if (category === dataProvider.SearchCategories.SCRAPERS) {
                             authResult.scraperProvider = service;
                         }
-                        else if (category === librechatDataProvider.SearchCategories.RERANKERS) {
+                        else if (category === dataProvider.SearchCategories.RERANKERS) {
                             authResult.rerankerType = service;
                         }
                         return [true, isUserProvided];
@@ -45607,21 +45638,21 @@ function loadWebSearchAuth(_a) {
             });
         }
         const categories = [
-            librechatDataProvider.SearchCategories.PROVIDERS,
-            librechatDataProvider.SearchCategories.SCRAPERS,
-            librechatDataProvider.SearchCategories.RERANKERS,
+            dataProvider.SearchCategories.PROVIDERS,
+            dataProvider.SearchCategories.SCRAPERS,
+            dataProvider.SearchCategories.RERANKERS,
         ];
         const authTypes = [];
         for (const category of categories) {
             const [isCategoryAuthenticated, isUserProvided] = yield checkAuth(category);
             if (!isCategoryAuthenticated) {
                 authenticated = false;
-                authTypes.push([category, librechatDataProvider.AuthType.USER_PROVIDED]);
+                authTypes.push([category, dataProvider.AuthType.USER_PROVIDED]);
                 continue;
             }
-            authTypes.push([category, isUserProvided ? librechatDataProvider.AuthType.USER_PROVIDED : librechatDataProvider.AuthType.SYSTEM_DEFINED]);
+            authTypes.push([category, isUserProvided ? dataProvider.AuthType.USER_PROVIDED : dataProvider.AuthType.SYSTEM_DEFINED]);
         }
-        authResult.safeSearch = (_b = webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.safeSearch) !== null && _b !== void 0 ? _b : librechatDataProvider.SafeSearchTypes.MODERATE;
+        authResult.safeSearch = (_b = webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.safeSearch) !== null && _b !== void 0 ? _b : dataProvider.SafeSearchTypes.MODERATE;
         authResult.scraperTimeout =
             (_e = (_c = webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.scraperTimeout) !== null && _c !== void 0 ? _c : (_d = webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.firecrawlOptions) === null || _d === void 0 ? void 0 : _d.timeout) !== null && _e !== void 0 ? _e : 7500;
         authResult.firecrawlOptions = webSearchConfig === null || webSearchConfig === void 0 ? void 0 : webSearchConfig.firecrawlOptions;
@@ -47045,7 +47076,7 @@ Object.defineProperty(exports, "hashBackupCode", {
 });
 Object.defineProperty(exports, "supportsAdaptiveThinking", {
     enumerable: true,
-    get: function () { return librechatDataProvider.supportsAdaptiveThinking; }
+    get: function () { return dataProvider.supportsAdaptiveThinking; }
 });
 exports.AVATAR_REFRESH_BATCH_SIZE = AVATAR_REFRESH_BATCH_SIZE;
 exports.AgentApiKeyService = AgentApiKeyService;
@@ -47228,10 +47259,10 @@ exports.escapeRegExp = escapeRegExp;
 exports.escapeRegex = escapeRegex;
 exports.exchangeAdminCode = exchangeAdminCode;
 exports.extractBaseURL = extractBaseURL;
+exports.extractChatParams = extractChatParams;
 exports.extractDefaultParams = extractDefaultParams;
 exports.extractDiscoveredToolsFromHistory = extractDiscoveredToolsFromHistory;
 exports.extractFileContext = extractFileContext;
-exports.extractLibreChatParams = extractLibreChatParams;
 exports.extractMCPServerDomain = extractMCPServerDomain;
 exports.extractMCPServers = extractMCPServers;
 exports.extractMCPToolDefinition = extractMCPToolDefinition;
@@ -47407,6 +47438,7 @@ exports.recordContainsGraphTokenPlaceholder = recordContainsGraphTokenPlaceholde
 exports.refreshAccessToken = refreshAccessToken;
 exports.refreshListAvatars = refreshListAvatars;
 exports.requireAdmin = requireAdmin;
+exports.resolveActiveOrg = resolveActiveOrg;
 exports.resolveGraphTokenPlaceholder = resolveGraphTokenPlaceholder;
 exports.resolveGraphTokensInRecord = resolveGraphTokensInRecord;
 exports.resolveHeaders = resolveHeaders;

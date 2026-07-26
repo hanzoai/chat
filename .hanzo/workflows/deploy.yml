@@ -1,0 +1,67 @@
+# Build only. Deploying is a universe commit, not a step in here — see below.
+name: build
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+jobs:
+  build:
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve the image tag
+        id: tag
+        run: |
+          # A v* tag publishes the SEMVER image — that is the only kind of tag a
+          # deploy may pin. A branch push publishes an immutable sha- image for
+          # review, which must never be what the CR points at.
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "image=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "deployable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            echo "deployable=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build + push image
+        run: |
+          buildctl-daemonless.sh build --frontend=dockerfile.v0 \
+            --opt context="${{ github.server_url }}/${{ github.repository }}.git#${GITHUB_SHA}" \
+            --opt filename=Dockerfile --opt platform=linux/amd64 \
+            --secret id=GIT_AUTH_TOKEN,env=GIT_AUTH_TOKEN \
+            --output "type=image,name=ghcr.io/hanzoai/chat:${{ steps.tag.outputs.image }},push=true" \
+            --progress=plain
+        env:
+          GIT_AUTH_TOKEN: ${{ secrets.GIT_CLONE_TOKEN }}
+      - name: How to deploy this
+        run: |
+          echo "built ghcr.io/hanzoai/chat:${{ steps.tag.outputs.image }}"
+          if [ "${{ steps.tag.outputs.deployable }}" = "true" ]; then
+            echo "To ship it: set tag: \"${{ steps.tag.outputs.image }}\" in"
+            echo "  universe/infra/k8s/operator/crs/chat.yaml"
+            echo "then commit, push, and sync universe-crs (ns hanzo-cd)."
+          else
+            echo "Branch build — review only. Do NOT pin a CR to a sha- tag."
+          fi
+
+# ── Why there is no deploy step here ────────────────────────────────────────
+#
+# This workflow used to end with:
+#     kubectl -n hanzo patch app chat --type=merge -p '{"spec":{"image":{"tag":"<sha>"}}}'
+# which was wrong twice over.
+#
+# 1. `chat.yaml` IS CD-managed — it is listed in
+#    universe/infra/k8s/operator/crs/kustomization.yaml. Anything this pipeline
+#    patched onto the CR was reconciled straight back by Hanzo CD, so the
+#    pipeline and the CD system were writing the same field and fighting. Two
+#    writers over one value is the bug, not the deploy mechanism.
+#
+# 2. It pinned `${GITHUB_SHA::8}` — a sha, which the semver-only rule forbids
+#    for anything a deployment points at.
+#
+# And because the old trigger was `branches: [main]` alone, a `v*` tag produced
+# NO image at all: the 0.9.x/1.0.x release tags were real in git and invisible to
+# the cluster. That is why fixes could sit tagged and never ship.
+#
+# The one way: git tag -> this builds the semver image -> a universe commit moves
+# the CR -> Hanzo CD (cd.hanzo.ai, ghcr.io/hanzoai/deploy — not ArgoCD) reconciles
+# it. One writer, one direction.

@@ -89,9 +89,17 @@ export function createSqliteHandle(
     }
     models[name] = new DocModel(db, spec);
   }
+  const modelsByLowerName = new Map(Object.keys(models).map((n) => [n.toLowerCase(), n]));
   // Wire cross-collection resolution for `.populate()`.
   for (const model of Object.values(models)) {
-    model.resolver = (name: string) => models[name];
+    // Exact name first; then a case-insensitive fallback. $lookup derives a
+    // model name from a mongo COLLECTION name by capitalizing and de-pluralizing
+    // ("prompts" -> "Prompt"), which loses interior camelCase: "accessroles"
+    // became "Accessrole" and missed the registered "AccessRole", so that join
+    // silently returned [] for every document. Resolving case-insensitively
+    // fixes it in ONE place for every caller rather than special-casing names.
+    model.resolver = (name: string) =>
+      models[name] ?? models[modelsByLowerName.get(name.toLowerCase()) ?? ''];
   }
   return {
     models,

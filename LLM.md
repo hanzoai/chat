@@ -95,9 +95,22 @@ CREDS_KEY= CREDS_IV=        # Credential encryption
 Off by default (`ALLOW_GUEST_CHAT=false`). When enabled, the landing IS the chat
 composer (ChatGPT-style): an unauthenticated visitor renders the real chat view —
 composer, starter cards, model picker — WITHOUT logging in, scoped to the free
-Zen model (`GUEST_MODEL`, default `zen3-nano`) via the `Hanzo` custom endpoint
+Zen model (`GUEST_MODEL`, default `zen5-flash`) via the `Hanzo` custom endpoint
 (`api.hanzo.ai`). Prod uses `GUEST_MESSAGE_MAX=2`. Exhausting the quota returns
 `402 {type:'GUEST_LIMIT'}` and the client opens the existing OpenID/hanzo.id login.
+
+The login gate is ONE component for every not-signed-in outcome. `requireLogin(reason)`
+(`client/src/utils/login.ts`, beside `startHanzoLogin`) dispatches `loginRequired`;
+`components/Auth/LoginGate.tsx` renders the reason's copy and the hanzo.id PKCE
+redirect. Reasons: `limit` (402 GUEST_LIMIT, quota spent) and `anonymous` (401 —
+the guest bearer lapsed or was never minted). Both submit paths
+(`useResumableSSE.startGeneration`, `useSSE`'s 401-after-failed-refresh) ask for the
+gate instead of handing the refusal to `errorHandler`, because a refused request has
+no answer to render — a 401 used to surface as `Something went wrong. Here's the
+specific error message we encountered: "Unauthorized"` (passport's bare body) in the
+message list. `Messages/Content/Error.tsx` maps any Unauthorized body shape to
+`com_error_unauthorized` so no other path can print it either. `Root` mounts the gate
+for every `!isAuthenticated` visitor, not only a minted guest.
 
 Client render path (guest === chat, not a marketing gate):
 - `AuthContext` auto-acquires a guest token when `startupConfig.allowGuestChat`
@@ -110,34 +123,43 @@ Client render path (guest === chat, not a marketing gate):
   `requireGuestOrJwtAuth` and return the guest-scoped single-model config), and the
   roles gate treats a guest as loaded (guests have no agent access). Files:
   `client/src/routes/{ChatRoute,useAuthRedirect}.tsx`, `hooks/useGuestAuth.ts`,
-  `hooks/AuthContext.tsx`, `components/Auth/GuestLimitDialog.tsx`.
+  `hooks/AuthContext.tsx`, `components/Auth/LoginGate.tsx`.
 
 Security model (fail-closed, server-enforced):
 - `POST /v1/chat/auth/guest` issues a short-lived guest JWT (`{guest:true}`,
   per-token random id) signed with `JWT_SECRET`. Rate-limited per IP
   (`guestTokenLimiter`, `GUEST_TOKEN_MAX`/`GUEST_TOKEN_WINDOW`) so tokens can't be
   spam-minted.
-- `requireGuestOrJwtAuth` (chat-completion route ONLY) accepts guest tokens;
-  the standard `jwt` strategy rejects them everywhere else (no DB user), so
-  every other route stays closed. `enforceGuestScope` pins endpoint+model and
-  strips agents/tools/files/spec/preset. Guests always use the shared, capped
-  `HANZO_API_KEY` (per-user `hk-` billing is skipped for `guest` principals).
+- `requireGuestOrJwtAuth` (chat-completion + guest-safe bootstrap routes: models,
+  endpoints, user, convos, favorites, agents `/chat/active`) accepts guest tokens;
+  the standard `jwt` strategy rejects them everywhere else (no DB user), so every
+  other route stays closed. `enforceGuestScope` pins endpoint+model and strips
+  agents/tools/files/spec/preset. Guests use the shared, capped guest gateway key
+  `GUEST_API_KEY` (the KMS `chat-guest-key`; `HANZO_API_KEY` is the dev fallback),
+  resolved in `packages/api/src/endpoints/custom/initialize.ts` — the guest key's
+  OWN org is metered+capped at the gateway, and per-user `hk-` billing is skipped
+  for `guest` principals (they carry no forwardable bearer and no `X-Org-Id`).
 - `guestMessageLimiter` enforces the quota against the REAL client IP
   (`utils/guestClientIp` → Cloudflare `CF-Connecting-IP`, falls back to `req.ip`),
   NOT the token — clearing cookies / incognito / minting a fresh token does NOT
-  reset it. Backed by the shared Redis `limiterCache` so it holds across replicas.
-  `USE_REDIS=true` is MANDATORY (a memory store would let a visitor round-robin
-  pods to multiply their quota).
+  reset it. The store is `limiterCache`, which returns `undefined` when `USE_REDIS`
+  is off → `express-rate-limit` uses its in-process MemoryStore. That store is
+  authoritative at the live deploy's `replicas: 1` + `Recreate` (never two live
+  pods to round-robin); Redis is NOT required (it was killed platform-wide). The
+  only reset is a pod restart — operational, not attacker-triggerable. If guest
+  chat ever scales past one replica, set `USE_REDIS=true` so the count holds
+  across pods.
 - Key files: `api/server/services/guestConfig.js`,
   `api/server/controllers/auth/GuestController.js`,
   `api/server/middleware/{requireGuestOrJwtAuth,enforceGuestScope}.js`,
   `api/server/middleware/limiters/{guestLimiters,guestMessageLimiter}.js`,
   `api/server/utils/guestClientIp.js`,
   router wiring in `api/server/routes/agents/index.js`.
-- Env: `ALLOW_GUEST_CHAT`, `GUEST_MESSAGE_MAX`, `GUEST_ENDPOINT`, `GUEST_MODEL`,
-  `GUEST_TOKEN_EXPIRY`, `GUEST_TOKEN_MAX`, `GUEST_TOKEN_WINDOW`. Requires
-  `HANZO_API_KEY` (the free publishable gateway key) and `USE_REDIS` for the
-  shared per-IP quota across replicas.
+- Env: `ALLOW_GUEST_CHAT`, `GUEST_MODEL` (prod `zen5-flash`), `GUEST_ENDPOINT`
+  (`Hanzo`), `GUEST_MESSAGE_MAX` (prod `2`), `GUEST_TOKEN_EXPIRY`, `GUEST_TOKEN_MAX`,
+  `GUEST_TOKEN_WINDOW`. Requires the shared, capped guest key `GUEST_API_KEY`
+  (KMS `chat-guest-key`; falls back to `HANZO_API_KEY`). No Redis dependency at
+  `replicas: 1` — the in-process MemoryStore is the quota's single source of truth.
 
 ## Cloud Agents (canonical /v1/agents)
 

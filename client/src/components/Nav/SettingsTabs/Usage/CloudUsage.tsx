@@ -12,7 +12,7 @@ import { useAuthContext } from '~/hooks';
 
 /**
  * Cloud usage — the canonical, org-scoped AI usage from `GET /v1/get-cloud-usages`
- * (proxied on-behalf-of by the chat backend). Rendered as a native, LibreChat-styled
+ * (proxied on-behalf-of by the chat backend). Rendered as a native, Hanzo Chat-styled
  * view over the SHARED `@hanzo/usage` `CloudUsageOverview` shape: nothing is re-derived,
  * the numbers come straight from the ledger, and `normalizeCloudUsage` is the ONE
  * boundary guard (a partial/absent field degrades to honest zeros, never fabricated).

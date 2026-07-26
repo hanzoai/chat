@@ -798,7 +798,7 @@ export function emitError(
 }
 
 /* =============================================================================
- * LIBRECHAT EXTENSION EVENTS
+ * HANZO CHAT EXTENSION EVENTS
  * Custom events prefixed with 'chat:' per Open Responses spec
  * @see https://openresponses.org/specification#extending-streaming-events
  * ============================================================================= */

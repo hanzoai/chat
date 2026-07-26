@@ -210,3 +210,55 @@ describe('initializeCustom – SSRF guard wiring', () => {
     expect(mockGetOpenAIConfig).not.toHaveBeenCalled();
   });
 });
+
+describe('initializeCustom – guest principal billing (shared capped key)', () => {
+  const OPENID_BEARER_SENTINEL = '{{CHAT_OPENID_TOKEN}}';
+  const ORIGINAL_ENV = { ...process.env };
+
+  const guestParams = () => {
+    const params = createParams({
+      apiKey: OPENID_BEARER_SENTINEL,
+      baseURL: 'https://api.example.com/v1',
+    });
+    params.req.user = { id: 'guest_abc', guest: true } as unknown as typeof params.req.user;
+    params.req.body = { model: 'zen5-flash' };
+    return params;
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete process.env.GUEST_API_KEY;
+    delete process.env.HANZO_API_KEY;
+  });
+
+  afterAll(() => {
+    process.env = ORIGINAL_ENV;
+  });
+
+  it('routes a guest to the shared GUEST_API_KEY, never a per-user bearer', async () => {
+    process.env.GUEST_API_KEY = 'hk-guest-capped';
+    await initializeCustom(guestParams());
+    expect(mockGetOpenAIConfig).toHaveBeenCalledWith(
+      'hk-guest-capped',
+      expect.any(Object),
+      'test-custom',
+    );
+  });
+
+  it('falls back to HANZO_API_KEY when GUEST_API_KEY is unset', async () => {
+    process.env.HANZO_API_KEY = 'hk-fallback';
+    await initializeCustom(guestParams());
+    expect(mockGetOpenAIConfig).toHaveBeenCalledWith(
+      'hk-fallback',
+      expect.any(Object),
+      'test-custom',
+    );
+  });
+
+  it('fails closed for a guest when no guest key is configured', async () => {
+    await expect(initializeCustom(guestParams())).rejects.toThrow(
+      'Guest chat is temporarily unavailable',
+    );
+    expect(mockGetOpenAIConfig).not.toHaveBeenCalled();
+  });
+});

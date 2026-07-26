@@ -22,6 +22,7 @@ import {
   coerceId,
   deepCoerceIds,
   getPath,
+  hasPath,
   type Doc,
   type Filter,
   type Update,
@@ -610,12 +611,31 @@ export class DocModel {
 
   /**
    * Aggregation pipeline — the bounded stage set the chat methods use:
-   * `$match $lookup $unwind $sort $limit $project`. Runs in JS over candidate
-   * docs. `$lookup` resolves `from` (a mongo collection name) to a sibling model
-   * via the naive singular-capitalized mapping (`prompts` -> `Prompt`).
+   * `$match $lookup $unwind $group $sort $limit $skip $project $facet`. Runs in JS over
+   * candidate docs. `$lookup` resolves `from` (a mongo collection name) to a
+   * sibling model via the naive singular-capitalized mapping
+   * (`prompts` -> `Prompt`).
+   *
+   * Anything outside that set THROWS — it is never skipped. See the else branch
+   * for why: a silently dropped stage returns a wrong answer that looks right.
+   *
+   * Known-unsupported and therefore loud: `$replaceRoot`, `$count`.
+   *
+   * `$project` and `$addFields` evaluate expressions via evalAggExpr —
+   * `$arrayElemAt`, `$filter`, `$and`, `$eq`, and `$field` / `$$variable`
+   * references. Anything else there throws too.
    */
   async aggregate(pipeline: Array<Record<string, unknown>>): Promise<Doc[]> {
-    let docs = this.candidates({});
+    return this.runPipeline(this.candidates({}), pipeline);
+  }
+
+  /**
+   * Evaluates `pipeline` over `input`. Split out of `aggregate` so `$facet` can
+   * run its sub-pipelines through the SAME evaluator — one stage implementation,
+   * not a second one that drifts.
+   */
+  private runPipeline(input: Doc[], pipeline: Array<Record<string, unknown>>): Doc[] {
+    let docs = input;
     for (const stage of pipeline) {
       const op = Object.keys(stage)[0];
       if (op === '$match') {
@@ -630,10 +650,21 @@ export class DocModel {
         };
         const modelName = from.charAt(0).toUpperCase() + from.slice(1).replace(/s$/, '');
         const target = this.resolver?.(modelName);
+        if (!target) {
+          // An unresolvable `from` used to yield [] for every document — a join
+          // that quietly produced nothing, which reads exactly like "no matches".
+          // That is how `from: 'accessroles'` (-> 'Accessrole', no such model)
+          // silently emptied the ACL joins. Resolution is now case-insensitive,
+          // and anything still unresolvable is loud.
+          throw new Error(
+            `aggregate $lookup: no model for from='${from}' (tried '${modelName}'). ` +
+              `An unresolvable join is NOT silently empty — it throws, because ` +
+              `returning [] is indistinguishable from a genuine no-match.`,
+          );
+        }
         docs = docs.map((d) => {
           const local = coerceId(getPath(d, localField));
-          const joined = target ? target.candidates({ [foreignField]: local }) : [];
-          return { ...d, [as]: joined };
+          return { ...d, [as]: target.candidates({ [foreignField]: local }) };
         });
       } else if (op === '$unwind') {
         const spec = stage.$unwind as string | { path: string; preserveNullAndEmptyArrays?: boolean };
@@ -666,18 +697,102 @@ export class DocModel {
         docs = sortDocs(docs, stage.$sort as SortSpec);
       } else if (op === '$limit') {
         docs = docs.slice(0, stage.$limit as number);
+      } else if (op === '$facet') {
+        // Each key runs its own sub-pipeline over the SAME input docs, and the
+        // whole stage collapses to ONE document mapping key -> results. That
+        // single-doc shape is why callers destructure `const [facet] = await
+        // aggregate(...)`. Previously unsupported, so the usage controller
+        // silently reported all-zero spend to every customer.
+        const spec = stage.$facet as Record<string, Array<Record<string, unknown>>>;
+        const out: Doc = {};
+        for (const [key, sub] of Object.entries(spec)) {
+          out[key] = this.runPipeline(docs, sub);
+        }
+        docs = [out];
+      } else if (op === '$skip') {
+        // Was missing while $limit was present, so a paginated aggregate
+        // silently returned page 1 for every page.
+        docs = docs.slice(stage.$skip as number);
       } else if (op === '$project') {
-        docs = docs.map((d) => projectDoc(d, stage.$project as Record<string, 0 | 1>));
+        // An aggregate $project is NOT a find projection: alongside 0/1 it may
+        // carry expressions. projectDoc only understands 0/1, so expression keys
+        // were dropped without a word — that is how `accessRoleId:
+        // { $arrayElemAt: [...] }` vanished from the permissions response.
+        // Deliberately NOT taught to projectDoc: that function is shared with
+        // find().select(), where expressions are not valid. Same name, two
+        // different jobs; evaluating them here keeps find's semantics untouched.
+        const spec = stage.$project as Record<string, unknown>;
+        const flags: Record<string, 0 | 1> = {};
+        const exprs: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(spec)) {
+          if (v === 0 || v === 1) {
+            flags[k] = v;
+          } else {
+            exprs[k] = v;
+          }
+        }
+        const hasExprs = Object.keys(exprs).length > 0;
+        docs = docs.map((d) => {
+          // A projection that is only expressions still includes _id, matching
+          // mongo; projectDoc handles that when any 1 is present.
+          const base = projectDoc(d, hasExprs ? { ...flags, _id: flags._id ?? 1 } : flags);
+          for (const [k, e] of Object.entries(exprs)) {
+            base[k] = evalAggExpr(e, d);
+          }
+          return base;
+        });
+      } else if (op === '$addFields') {
+        // Adds computed fields, keeping every existing one — the difference from
+        // $project, which keeps only what it names. Every expression is evaluated
+        // against the ORIGINAL document, so two fields added in one stage cannot
+        // see each other, matching mongo.
+        const spec = stage.$addFields as Record<string, unknown>;
+        docs = docs.map((d) => {
+          const out = { ...d };
+          for (const [k, e] of Object.entries(spec)) {
+            out[k] = evalAggExpr(e, d);
+          }
+          return out;
+        });
+      } else {
+        // FAIL LOUD. This chain used to end here with no else, so an unsupported
+        // stage was silently skipped and the pipeline returned a confident wrong
+        // answer — which is strictly worse than throwing.
+        //
+        // What that actually cost: `$addFields` was unsupported, so all four
+        // permission-migration pipelines matched ZERO documents and reported
+        // "nothing to migrate". Anyone who ran them migrated nothing and was
+        // told it worked. `$facet` was unsupported, so the usage controller
+        // returned all-zero usage, and `$skip` was missing entirely so a
+        // paginated aggregate returned page 1 forever — all now implemented.
+        //
+        // Adding a stage means implementing it here — not adding it to a doc
+        // comment. Throwing is what makes that non-optional.
+        throw new Error(
+          `aggregate: unsupported stage ${op}. Supported: $match $lookup $unwind ` +
+            `$group $sort $limit $skip $project $addFields $facet. An unsupported stage ` +
+            `is NOT skipped — it throws, because silently dropping a stage returns a ` +
+            `plausible wrong answer (a filter that never applied, a count that is zero).`,
+        );
       }
     }
     return docs;
   }
 
+  /**
+   * Mongo `distinct`: the deduped set of `field` across docs matching `filter`.
+   * Resolves dotted paths and, like Mongo, SKIPS documents where the path is
+   * absent — a missing path contributes nothing rather than `undefined`. (An
+   * explicit `null` is present, so it is kept.) Array values fan out per element.
+   */
   async distinct(field: string, filter: Filter = {}): Promise<unknown[]> {
     const seen = new Set<unknown>();
     const out: unknown[] = [];
     for (const doc of this.candidates(filter)) {
-      const v = doc[field];
+      if (!hasPath(doc, field)) {
+        continue;
+      }
+      const v = getPath(doc, field);
       const values = Array.isArray(v) ? v : [v];
       for (const el of values) {
         const key = el instanceof Date ? el.getTime() : el;
@@ -968,12 +1083,84 @@ function stripMethods(doc: Doc): Doc {
   return out;
 }
 
-/** Resolves a `$field` reference (or literal) against a doc, for aggregate exprs. */
-function resolveExpr(expr: unknown, doc: Doc): unknown {
+/**
+ * Resolves a `$field` reference, a `$$variable` binding, or a literal.
+ *
+ * `$$name` / `$$name.path` reads a binding introduced by an enclosing `$filter`
+ * — it is NOT a field of the document, and resolving it as one would silently
+ * yield undefined.
+ */
+function resolveExpr(expr: unknown, doc: Doc, vars: Record<string, unknown> = {}): unknown {
+  if (typeof expr === 'string' && expr.startsWith('$$')) {
+    const ref = expr.slice(2);
+    const dot = ref.indexOf('.');
+    const name = dot === -1 ? ref : ref.slice(0, dot);
+    if (!(name in vars)) {
+      const inScope = Object.keys(vars).map((v) => `$$${v}`).join(', ') || '(none)';
+      throw new Error(
+        `aggregate: undefined variable $$${name}. In scope: ${inScope}. An unbound ` +
+          `variable is NOT undefined — it throws, because comparing undefined to ` +
+          `anything quietly yields false and reads like a real, empty result.`,
+      );
+    }
+    const base = vars[name];
+    return dot === -1 ? base : getPath(base as Doc, ref.slice(dot + 1));
+  }
   if (typeof expr === 'string' && expr.startsWith('$')) {
     return getPath(doc, expr.slice(1));
   }
   return expr;
+}
+
+/** Mongo expression truthiness: only false, null, undefined and 0 are falsey. */
+function exprTruthy(v: unknown): boolean {
+  return v !== false && v !== null && v !== undefined && v !== 0;
+}
+
+/**
+ * Evaluates the expression set an aggregate `$project` or `$addFields` may carry.
+ * Anything outside it THROWS rather than yielding undefined — a field that is
+ * silently absent reads as "no value", which is how the `$arrayElemAt` fields
+ * disappeared from the permissions response without anyone noticing.
+ */
+function evalAggExpr(expr: unknown, doc: Doc, vars: Record<string, unknown> = {}): unknown {
+  if (expr && typeof expr === 'object' && !Array.isArray(expr)) {
+    const [op, arg] = Object.entries(expr as Record<string, unknown>)[0] ?? [];
+    if (op === '$arrayElemAt' && Array.isArray(arg)) {
+      const [src, idx] = arg as [unknown, number];
+      const arr = evalAggExpr(src, doc, vars);
+      if (!Array.isArray(arr)) {
+        return undefined;
+      }
+      return idx < 0 ? arr[arr.length + idx] : arr[idx];
+    }
+    if (op === '$filter') {
+      const { input, as, cond } = (arg ?? {}) as { input: unknown; as?: string; cond: unknown };
+      const arr = evalAggExpr(input, doc, vars);
+      if (!Array.isArray(arr)) {
+        return [];
+      }
+      // Mongo defaults the binding to `this` when `as` is omitted.
+      const name = as ?? 'this';
+      return arr.filter((el) => exprTruthy(evalAggExpr(cond, doc, { ...vars, [name]: el })));
+    }
+    if (op === '$and' && Array.isArray(arg)) {
+      return arg.every((e) => exprTruthy(evalAggExpr(e, doc, vars)));
+    }
+    if (op === '$eq' && Array.isArray(arg)) {
+      const [a, b] = arg as [unknown, unknown];
+      // Compare through coerceId so an ObjectId and its hex string are the same
+      // value — otherwise two references to one document read as different.
+      return coerceId(evalAggExpr(a, doc, vars)) === coerceId(evalAggExpr(b, doc, vars));
+    }
+    throw new Error(
+      `aggregate: unsupported expression ${op}. Supported: $arrayElemAt $filter ` +
+        `$and $eq, plus $field and $$variable references. An unsupported expression ` +
+        `is NOT dropped — it throws, because a silently missing field reads as ` +
+        `"no value" and a silently false condition reads as "no matches".`,
+    );
+  }
+  return resolveExpr(expr, doc, vars);
 }
 
 /**
