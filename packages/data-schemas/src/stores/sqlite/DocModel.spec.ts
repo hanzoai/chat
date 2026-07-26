@@ -316,8 +316,8 @@ describe('DocModel — aggregate fails loud on unsupported stages', () => {
       Message.aggregate([{ $match: { user: 'u1' } }, { $addFields: { x: 1 } }]),
     ).rejects.toThrow(/unsupported stage \$addFields/);
 
-    await expect(Message.aggregate([{ $facet: { a: [] } }])).rejects.toThrow(
-      /unsupported stage \$facet/,
+    await expect(Message.aggregate([{ $replaceRoot: {} }])).rejects.toThrow(
+      /unsupported stage \$replaceRoot/,
     );
   });
 
@@ -340,6 +340,51 @@ describe('DocModel — aggregate fails loud on unsupported stages', () => {
       { $limit: 2 },
     ]);
     expect(page2.map((d) => d.messageId)).toEqual(['c', 'd']);
+  });
+
+
+  // $facet was unsupported, so api/server/controllers/Usage.js reported
+  // all-zero spend to every customer on a billing-adjacent surface.
+  it('$facet runs each sub-pipeline over the same input and collapses to ONE doc', async () => {
+    await Message.create({ messageId: 'a', user: 'u1', text: 'x' });
+    await Message.create({ messageId: 'b', user: 'u1', text: 'y' });
+    await Message.create({ messageId: 'c', user: 'u2', text: 'z' });
+
+    const out = await Message.aggregate([
+      { $match: { user: { $in: ['u1', 'u2'] } } },
+      {
+        $facet: {
+          mine: [{ $match: { user: 'u1' } }],
+          theirs: [{ $match: { user: 'u2' } }],
+          firstOnly: [{ $sort: { messageId: 1 } }, { $limit: 1 }],
+        },
+      },
+    ]);
+
+    // Callers destructure `const [facet] = await aggregate(...)`, so the stage
+    // MUST yield exactly one document.
+    expect(out).toHaveLength(1);
+    const ids = (v: unknown) => (v as Array<{ messageId: string }>).map((d) => d.messageId);
+    expect(ids(out[0].mine)).toEqual(['a', 'b']);
+    expect(ids(out[0].theirs)).toEqual(['c']);
+    expect(ids(out[0].firstOnly)).toEqual(['a']);
+  });
+
+  it('$facet sub-pipelines are independent — one does not filter another', async () => {
+    await Message.create({ messageId: 'a', user: 'u1', text: 'x' });
+    await Message.create({ messageId: 'b', user: 'u2', text: 'y' });
+
+    const out = await Message.aggregate([
+      { $facet: { a: [{ $match: { user: 'u1' } }], b: [{ $match: { user: 'u2' } }] } },
+    ]);
+    expect(out[0].a).toHaveLength(1);
+    expect(out[0].b).toHaveLength(1); // would be 0 if `a` had narrowed the input
+  });
+
+  it('an unsupported stage INSIDE a $facet still throws', async () => {
+    await expect(
+      Message.aggregate([{ $facet: { x: [{ $addFields: { q: 1 } }] } }]),
+    ).rejects.toThrow(/unsupported stage \$addFields/);
   });
 
   it('still runs a fully-supported pipeline', async () => {
