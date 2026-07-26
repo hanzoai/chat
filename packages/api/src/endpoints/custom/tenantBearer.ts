@@ -146,6 +146,26 @@ export function resolveActiveOrg(req: TenantBearerRequest): string | null {
 }
 
 /**
+ * The IAM org that owns this request's data — the member's selected working org,
+ * else their home org.
+ *
+ * `resolveActiveOrg` answers "did they switch?" and is null for the home org,
+ * because cloud pins `owner` itself when no `X-Org-Id` is sent. Storage has no
+ * such enforcer downstream, so it needs the org SPELLED OUT — hence this one
+ * composition, next to the resolver it extends.
+ *
+ * There is no separate tenant identity in chat: the tenant IS the IAM org
+ * (`user.organization`, projected from the verified `owner` claim). Nothing here
+ * invents or persists a tenant id; a caller with no IAM org resolves to null and
+ * keeps the historical un-scoped behaviour.
+ */
+export function resolveRequestOrg(
+  req: TenantBearerRequest & { user?: { organization?: string } | null },
+): string | null {
+  return resolveActiveOrg(req) ?? req.user?.organization ?? null;
+}
+
+/**
  * The endpoint-config sentinel that opts a custom endpoint into IAM-bearer
  * forwarding. An endpoint whose `apiKey` is this value bills the signed-in user's
  * own org via their forwarded IAM token (the canonical Hanzo Cloud path) instead
