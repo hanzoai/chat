@@ -22,6 +22,7 @@ import {
   coerceId,
   deepCoerceIds,
   getPath,
+  hasPath,
   type Doc,
   type Filter,
   type Update,
@@ -673,11 +674,20 @@ export class DocModel {
     return docs;
   }
 
+  /**
+   * Mongo `distinct`: the deduped set of `field` across docs matching `filter`.
+   * Resolves dotted paths and, like Mongo, SKIPS documents where the path is
+   * absent — a missing path contributes nothing rather than `undefined`. (An
+   * explicit `null` is present, so it is kept.) Array values fan out per element.
+   */
   async distinct(field: string, filter: Filter = {}): Promise<unknown[]> {
     const seen = new Set<unknown>();
     const out: unknown[] = [];
     for (const doc of this.candidates(filter)) {
-      const v = doc[field];
+      if (!hasPath(doc, field)) {
+        continue;
+      }
+      const v = getPath(doc, field);
       const values = Array.isArray(v) ? v : [v];
       for (const el of values) {
         const key = el instanceof Date ? el.getTime() : el;
