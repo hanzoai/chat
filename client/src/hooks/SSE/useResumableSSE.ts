@@ -20,6 +20,7 @@ import { useGetStartupConfig, useGetUserBalance, queueTitleGeneration } from '~/
 import type { ActiveJobsResponse } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
+import { requireLogin } from '~/utils/login';
 import store from '~/store';
 
 const clearDraft = (conversationId?: string | null) => {
@@ -615,10 +616,22 @@ export default function useResumableSSE(
         response?: { status?: number; data?: Record<string, unknown> };
       };
       const errorData = axiosError?.response?.data;
+      const status = axiosError?.response?.status;
 
-      // Guest quota exhausted: signal the UI to open the login gate (existing OpenID flow).
-      if (axiosError?.response?.status === 402 && errorData?.type === 'GUEST_LIMIT') {
-        window.dispatchEvent(new CustomEvent('guestLimitReached'));
+      // Refused for want of a session — a lapsed or never-minted guest token, or
+      // a signed-out visitor. The axios interceptor deliberately does NOT bounce
+      // these to /login (that strands a guest mid-page), so the gate is what tells
+      // them they are not signed in. Never render the raw `Unauthorized` body as
+      // if it were a reply.
+      if (status === 401) {
+        requireLogin('anonymous');
+        setIsSubmitting(false);
+        return null;
+      }
+
+      // Free preview quota exhausted: same gate, quota copy.
+      if (status === 402 && errorData?.type === 'GUEST_LIMIT') {
+        requireLogin('limit');
         setIsSubmitting(false);
         return null;
       }
