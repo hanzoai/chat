@@ -611,7 +611,7 @@ export class DocModel {
 
   /**
    * Aggregation pipeline — the bounded stage set the chat methods use:
-   * `$match $lookup $unwind $group $sort $limit $project`. Runs in JS over
+   * `$match $lookup $unwind $group $sort $limit $skip $project $facet`. Runs in JS over
    * candidate docs. `$lookup` resolves `from` (a mongo collection name) to a
    * sibling model via the naive singular-capitalized mapping
    * (`prompts` -> `Prompt`).
@@ -619,12 +619,21 @@ export class DocModel {
    * Anything outside that set THROWS — it is never skipped. See the else branch
    * for why: a silently dropped stage returns a wrong answer that looks right.
    *
-   * Known-unsupported and therefore now loud: `$addFields`, `$facet`,
-   * `$replaceRoot`, `$count`. `$project` also handles only 0/1 inclusion — it
-   * does not evaluate expressions such as `$arrayElemAt`.
+   * Known-unsupported and therefore now loud: `$addFields`, `$replaceRoot`,
+   * `$count`. `$project` also handles only 0/1 inclusion — it does not evaluate
+   * expressions such as `$arrayElemAt`.
    */
   async aggregate(pipeline: Array<Record<string, unknown>>): Promise<Doc[]> {
-    let docs = this.candidates({});
+    return this.runPipeline(this.candidates({}), pipeline);
+  }
+
+  /**
+   * Evaluates `pipeline` over `input`. Split out of `aggregate` so `$facet` can
+   * run its sub-pipelines through the SAME evaluator — one stage implementation,
+   * not a second one that drifts.
+   */
+  private runPipeline(input: Doc[], pipeline: Array<Record<string, unknown>>): Doc[] {
+    let docs = input;
     for (const stage of pipeline) {
       const op = Object.keys(stage)[0];
       if (op === '$match') {
@@ -675,6 +684,18 @@ export class DocModel {
         docs = sortDocs(docs, stage.$sort as SortSpec);
       } else if (op === '$limit') {
         docs = docs.slice(0, stage.$limit as number);
+      } else if (op === '$facet') {
+        // Each key runs its own sub-pipeline over the SAME input docs, and the
+        // whole stage collapses to ONE document mapping key -> results. That
+        // single-doc shape is why callers destructure `const [facet] = await
+        // aggregate(...)`. Previously unsupported, so the usage controller
+        // silently reported all-zero spend to every customer.
+        const spec = stage.$facet as Record<string, Array<Record<string, unknown>>>;
+        const out: Doc = {};
+        for (const [key, sub] of Object.entries(spec)) {
+          out[key] = this.runPipeline(docs, sub);
+        }
+        docs = [out];
       } else if (op === '$skip') {
         // Was missing while $limit was present, so a paginated aggregate
         // silently returned page 1 for every page.
@@ -690,14 +711,14 @@ export class DocModel {
         // permission-migration pipelines matched ZERO documents and reported
         // "nothing to migrate". Anyone who ran them migrated nothing and was
         // told it worked. `$facet` is unsupported, so the usage controller
-        // returned all-zero usage. `$skip` was missing entirely, so a paginated
-        // aggregate silently returned page 1 forever — that one is now implemented.
+        // returned all-zero usage, and `$skip` was missing entirely so a
+        // paginated aggregate returned page 1 forever — both now implemented.
         //
         // Adding a stage means implementing it here — not adding it to a doc
         // comment. Throwing is what makes that non-optional.
         throw new Error(
           `aggregate: unsupported stage ${op}. Supported: $match $lookup $unwind ` +
-            `$group $sort $limit $skip $project. An unsupported stage is NOT skipped — ` +
+            `$group $sort $limit $skip $project $facet. An unsupported stage is NOT skipped — ` +
             `it throws, because silently dropping a stage returns a plausible ` +
             `wrong answer (a filter that never applied, a count that is zero).`,
         );
