@@ -1,6 +1,9 @@
 // getS3Key is a pure function; stub the heavy transitive deps crud.js pulls in at
 // require time (the SDK clients and the built @hanzochat/api bundle) so the key
 // convention can be asserted without booting S3 or the agents runtime.
+jest.mock('~/server/services/RagClient', () => ({ remove: jest.fn(), ragEnabled: () => true }), {
+  virtual: true,
+});
 jest.mock('@hanzochat/api', () => ({
   initializeS3: jest.fn(),
   deleteRagFile: jest.fn(),

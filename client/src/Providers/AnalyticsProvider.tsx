@@ -6,6 +6,7 @@ import {
   useAnalytics,
   usePageview,
 } from '@hanzo/event/react';
+import { ObserveProvider } from '@hanzo/observe/react';
 import { useAuthContext } from '~/hooks/AuthContext';
 
 const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
@@ -66,6 +67,13 @@ function AnalyticsBridge() {
  * and error (sentry) lenses. There is no page tag — this client covers pageviews
  * and errors for logged-in, guest AND logged-out visitors alike. Mounted inside
  * AuthContextProvider so it can read the live JWT and the resolved user.
+ *
+ * <ObserveProvider> rides the SAME client (it defaults to the one from
+ * CaptureProvider) and adds default-on interaction autocapture ($click/$input/
+ * $change/$submit) over a semantic DOM hierarchy; input values are redacted by
+ * default (PII-free). nav={false} because AnalyticsBridge already counts each
+ * pageview exactly once — observe must not patch history and double-count.
+ * `enabled` is the one consent gate, shared by the client and autocapture.
  */
 export default function AnalyticsProvider({ children }: { children: ReactNode }) {
   const { token } = useAuthContext();
@@ -75,24 +83,28 @@ export default function AnalyticsProvider({ children }: { children: ReactNode })
   const tokenRef = useRef<string | undefined>(token);
   tokenRef.current = token;
 
+  const enabled = consented();
+
   const config = useMemo(
     () => ({
       product: 'chat',
       host: ANALYTICS_HOST,
       ingestKey: INGEST_KEY,
-      enabled: consented(),
+      enabled,
       getToken: () => {
         const value = tokenRef.current;
         return value && value !== 'session' ? value : undefined;
       },
     }),
-    [],
+    [enabled],
   );
 
   return (
     <CaptureProvider config={config}>
-      <AnalyticsBridge />
-      {children}
+      <ObserveProvider nav={false} enabled={enabled}>
+        <AnalyticsBridge />
+        {children}
+      </ObserveProvider>
     </CaptureProvider>
   );
 }

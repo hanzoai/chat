@@ -1,6 +1,6 @@
-const axios = require('axios');
 const { tool } = require('@langchain/core/tools');
 const { logger } = require('@hanzochat/data-schemas');
+const ragClient = require('~/server/services/RagClient');
 const { generateShortLivedToken } = require('@hanzochat/api');
 const { Tools, EToolResources } = require('@hanzochat/data-provider');
 const { filterFilesByAgentAccess } = require('~/server/services/Files/permissions');
@@ -85,7 +85,7 @@ const primeFiles = async (options) => {
  * @param {boolean} [options.fileCitations=false] - Whether to include citation instructions
  * @returns
  */
-const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = false }) => {
+const createFileSearchTool = async ({ req, userId, files, entity_id, fileCitations = false }) => {
   return tool(
     async ({ query }) => {
       if (files.length === 0) {
@@ -96,32 +96,15 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
         return ['There was an error authenticating the file search request.', undefined];
       }
 
-      /**
-       * @param {import('@hanzochat/data-provider').TFile} file
-       * @returns {{ file_id: string, query: string, k: number, entity_id?: string }}
-       */
-      const createQueryBody = (file) => {
-        const body = {
-          file_id: file.file_id,
-          query,
-          k: 5,
-        };
-        if (!entity_id) {
-          return body;
-        }
-        body.entity_id = entity_id;
-        logger.debug(`[${Tools.file_search}] RAG API /query body`, body);
-        return body;
-      };
-
       const queryPromises = files.map((file) =>
-        axios
-          .post(`${process.env.RAG_API_URL}/query`, createQueryBody(file), {
-            headers: {
-              Authorization: `Bearer ${jwtToken}`,
-              'Content-Type': 'application/json',
-            },
+        ragClient
+          .query(req, {
+            query,
+            file_id: file.file_id,
+            k: +process.env.FILE_SEARCH_RESULTS || 5,
+            ...(entity_id ? { store: entity_id } : {}),
           })
+          .then((data) => ({ data }))
           .catch((error) => {
             logger.error('Error encountered in `file_search` while querying file:', error);
             return null;

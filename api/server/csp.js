@@ -14,7 +14,9 @@
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hanzo.app https://analytics.hanzo.ai https://static.cloudflareinsights.com",
+  // No analytics.hanzo.ai: the last page tag that loaded a script from it is gone.
+  // Telemetry is the @hanzo/event client, which only ever POSTs (connect-src).
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hanzo.app https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
