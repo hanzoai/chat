@@ -155,6 +155,67 @@ describe('DocModel — QueryBuilder.distinct (ACL path)', () => {
     const values = (await AgentCategory.find({ isActive: true }).distinct('value').lean()) as string[];
     expect([...values].sort()).toEqual(['coding', 'general']);
   });
+
+  /**
+   * Mongo's `distinct` walks the path per document and SKIPS documents where the
+   * path is missing — a missing path contributes nothing, it does not contribute
+   * `undefined`. This is load-bearing on the live `getRandomPromptGroups` path:
+   * `PromptGroup.distinct('category', { category: { $ne: '' } })`. `$ne` matches
+   * a missing field (missing !== ''), so every uncategorized group reaches
+   * distinct; emitting `undefined` puts a junk "category" into the shuffled list
+   * that later feeds a `category: { $in: [...] }` lookup.
+   */
+  it('distinct skips documents missing the path instead of emitting undefined', async () => {
+    handle.close();
+    handle = createSqliteHandle(['PromptGroup']);
+    const PromptGroup = handle.models.PromptGroup;
+    await PromptGroup.create({ name: 'a', author: 'u1', category: 'writing' });
+    await PromptGroup.create({ name: 'b', author: 'u1', category: 'coding' });
+    await PromptGroup.create({ name: 'c', author: 'u1', category: '' });
+    // Uncategorized: no `category` key at all. `$ne: ''` still matches it.
+    await PromptGroup.create({ name: 'd', author: 'u1' });
+
+    const categories = (await PromptGroup.distinct('category', {
+      category: { $ne: '' },
+    })) as string[];
+
+    expect(categories).not.toContain(undefined);
+    expect([...categories].sort()).toEqual(['coding', 'writing']);
+  });
+
+  /** Mongo resolves dotted paths in `distinct`; `doc[field]` alone cannot. */
+  it('distinct resolves dotted paths', async () => {
+    await AclEntry.create({
+      principalType: 'user',
+      principalId: 'u1',
+      resourceType: 'agent',
+      resourceId: 'r1',
+      permBits: 1,
+      metadata: { origin: 'share' },
+    });
+    await AclEntry.create({
+      principalType: 'user',
+      principalId: 'u2',
+      resourceType: 'agent',
+      resourceId: 'r2',
+      permBits: 1,
+      metadata: { origin: 'share' },
+    });
+    await AclEntry.create({
+      principalType: 'user',
+      principalId: 'u3',
+      resourceType: 'agent',
+      resourceId: 'r3',
+      permBits: 1,
+      metadata: { origin: 'owner' },
+    });
+
+    const origins = (await AclEntry.find({ resourceType: 'agent' }).distinct(
+      'metadata.origin',
+    )) as string[];
+
+    expect([...origins].sort()).toEqual(['owner', 'share']);
+  });
 });
 
 describe('DocModel — Batch 2 primitives', () => {
