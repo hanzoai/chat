@@ -1,13 +1,31 @@
-import { useState, memo, useRef } from 'react';
-import * as Select from '@ariakit/react/select';
-import { FileText, LogOut, CreditCard, Building2, FolderGit2, UserCog, LayoutDashboard } from 'lucide-react';
-import { LinkIcon, GearIcon, DropdownMenuSeparator, Avatar } from '@hanzochat/client';
+import { useState, memo, useCallback, useContext } from 'react';
+import { FileText, UserCog, LayoutDashboard } from 'lucide-react';
+import {
+  UserMenu,
+  resolveIdentity,
+  type OrgState,
+  type ThemeMode,
+  type UserMenuItem,
+} from '@hanzo/iam/react';
+import { LinkIcon, GearIcon, ThemeContext, isDark } from '@hanzochat/client';
 import { MyFilesModal } from '~/components/Chat/Input/Files/MyFilesModal';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { startHanzoLogin } from '~/utils/login';
 import { useLocalize } from '~/hooks';
 import Settings from './Settings';
 
+/**
+ * The account control IS `@hanzo/iam`'s `UserMenu` — the same one every Hanzo
+ * surface mounts. Identity, the org/team switcher, the balance, click-away, Escape
+ * and close-before-navigate all live in the package; this file supplies only what
+ * is chat's own: its Files and Settings modals, its links, and the org switch
+ * (chat pins the active org server-side, then reloads).
+ *
+ * Identity is passed explicitly rather than read from `IamProvider`: chat logs in
+ * through @hanzo/iam but the resulting session is a chat JWT owned by its own
+ * AuthContext, and two providers for one session would be two sources of truth.
+ */
 function AccountSettings() {
   const localize = useLocalize();
   const { user, isAuthenticated, logout } = useAuthContext();
@@ -17,11 +35,13 @@ function AccountSettings() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
-  const accountSettingsButtonRef = useRef<HTMLButtonElement>(null);
+
+  // One control, chat's store: the menu renders the light/dark/system choice and
+  // chat's ThemeProvider remains the single writer of the applied theme.
+  const { theme, setTheme } = useContext(ThemeContext);
 
   const currentOrg = user?.organization ?? '';
-  const otherOrgs = (user?.groups ?? []).filter((g) => g && g !== currentOrg);
-  const switchOrg = async (organization: string) => {
+  const switchOrg = useCallback(async (organization: string) => {
     try {
       await fetch('/v1/chat/user/active-org', {
         method: 'POST',
@@ -33,167 +53,114 @@ function AccountSettings() {
     } catch (error) {
       console.error('[AccountSettings] org switch failed', error);
     }
-  };
+  }, []);
+
+  // chat's memberships come from its own user record (groups), not the IAM token —
+  // the shape is the shared one so the switcher renders identically everywhere.
+  const orgNames = [currentOrg, ...(user?.groups ?? [])].filter(
+    (o, i, all) => !!o && all.indexOf(o) === i,
+  );
+  const orgState: OrgState | undefined = currentOrg
+    ? {
+        organizations: orgNames.map((name) => ({ owner: 'admin', name, displayName: name })),
+        roles: {},
+        currentRole: null,
+        currentOrg: { owner: 'admin', name: currentOrg, displayName: currentOrg },
+        currentOrgId: currentOrg,
+        switchOrg: (org: string) => void switchOrg(org),
+        projects: user?.project
+          ? [{ owner: currentOrg, name: user.project, displayName: user.project }]
+          : [],
+        currentProject: null,
+        currentProjectId: user?.project ?? null,
+        switchProject: () => undefined,
+        isLoading: false,
+      }
+    : undefined;
+
+  const items: UserMenuItem[] = [
+    {
+      label: localize('com_nav_my_files'),
+      icon: <FileText className="icon-md" aria-hidden="true" />,
+      onSelect: () => setShowFiles(true),
+    },
+    ...(startupConfig?.helpAndFaqURL !== '/'
+      ? ([
+          {
+            label: localize('com_nav_help_faq'),
+            icon: <LinkIcon aria-hidden="true" />,
+            href: startupConfig?.helpAndFaqURL,
+            external: true,
+          },
+        ] as UserMenuItem[])
+      : []),
+    {
+      label: 'Account',
+      icon: <UserCog className="icon-md" aria-hidden="true" />,
+      href: 'https://hanzo.id/account',
+      external: true,
+      separatorBefore: true,
+    },
+    {
+      label: 'Console',
+      icon: <LayoutDashboard className="icon-md" aria-hidden="true" />,
+      href: 'https://console.hanzo.ai',
+      external: true,
+    },
+    {
+      label: localize('com_nav_settings'),
+      icon: <GearIcon className="icon-md" aria-hidden="true" />,
+      onSelect: () => setShowSettings(true),
+    },
+  ];
+
+  // tokenCredits: 1,000,000 = $1 USD. An expired grant is spent, not held.
+  const credits = balanceQuery.data?.tokenCredits;
+  const expired = balanceQuery.data?.expiresAt
+    ? new Date(balanceQuery.data.expiresAt) < new Date()
+    : false;
+  const balance =
+    startupConfig?.balance?.enabled === true && credits != null
+      ? {
+          amountUsd: expired ? 0 : Number(credits) / 1000000,
+          label: localize('com_nav_balance'),
+          topUpLabel: 'Add Funds',
+          topUpUrl: 'https://billing.hanzo.ai',
+        }
+      : undefined;
 
   return (
-    <Select.SelectProvider>
-      <Select.Select
-        ref={accountSettingsButtonRef}
-        aria-label={localize('com_nav_account_settings')}
-        data-testid="nav-user"
-        className="mt-text-sm flex h-auto w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt"
-      >
-        <div className="-ml-0.9 -mt-0.8 h-8 w-8 flex-shrink-0">
-          <div className="relative flex">
-            <Avatar user={user} size={32} />
-          </div>
-        </div>
-        <div
-          className="mt-2 grow overflow-hidden text-ellipsis whitespace-nowrap text-left text-text-primary"
-          style={{ marginTop: '0', marginLeft: '0' }}
-        >
-          {user?.name ?? user?.username ?? localize('com_nav_user')}
-        </div>
-      </Select.Select>
-      <Select.SelectPopover
-        className="account-settings-popover popover-ui z-[125] w-[305px] rounded-lg md:w-[244px]"
-        style={{
-          transformOrigin: 'bottom',
-          translate: '0 -4px',
+    <>
+      <UserMenu
+        identity={resolveIdentity(user as unknown as Record<string, unknown> | null, {})}
+        isAuthenticated={isAuthenticated}
+        onSignIn={startHanzoLogin}
+        onSignOut={() => logout()}
+        orgState={orgState}
+        items={items}
+        balance={balance}
+        signOutLabel={localize('com_nav_log_out')}
+        usageUrl="https://cloud.hanzo.ai/usage"
+        brand={{ name: 'Hanzo AI', href: 'https://hanzo.ai' }}
+        usageLabel="Usage & billing"
+        theme={{
+          mode: (theme as ThemeMode) ?? 'system',
+          resolved: isDark(theme) ? 'dark' : 'light',
+          setMode: (mode) => setTheme(mode),
         }}
-      >
-        <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
-          {user?.email ?? localize('com_nav_user')}
-        </div>
-        {currentOrg ? (
-          <>
-            <DropdownMenuSeparator />
-            <div className="ml-3 mr-2 py-1.5 text-xs" role="note">
-              <div className="flex items-center gap-1.5 text-text-primary">
-                <Building2 className="icon-sm opacity-70" aria-hidden="true" />
-                <span className="truncate font-medium">{currentOrg}</span>
-              </div>
-              {user?.project ? (
-                <div className="mt-1 flex items-center gap-1.5 text-token-text-secondary">
-                  <FolderGit2 className="icon-sm" aria-hidden="true" />
-                  <span className="truncate">{user.project}</span>
-                </div>
-              ) : null}
-            </div>
-            {otherOrgs.map((org) => (
-              <Select.SelectItem
-                key={org}
-                value=""
-                onClick={() => switchOrg(org)}
-                className="select-item text-sm"
-              >
-                <Building2 className="icon-md opacity-70" aria-hidden="true" />
-                {org}
-              </Select.SelectItem>
-            ))}
-          </>
-        ) : null}
-        <DropdownMenuSeparator />
-        {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (() => {
-          const credits = balanceQuery.data.tokenCredits;
-          const usd = (credits / 1000000).toFixed(2);
-          const isLow = credits > 0 && credits < 2000000;
-          const isExpired = balanceQuery.data.expiresAt
-            ? new Date(balanceQuery.data.expiresAt) < new Date()
-            : false;
-          const isEmpty = credits === 0 || isExpired;
-          return (
-            <>
-              <div
-                className={`ml-3 mr-2 py-2 text-sm ${
-                  isEmpty
-                    ? 'text-red-600 dark:text-red-400'
-                    : isLow
-                      ? 'text-yellow-600 dark:text-yellow-400'
-                      : 'text-token-text-secondary'
-                }`}
-                role="note"
-              >
-                {localize('com_nav_balance')}: ${usd} USD
-                {isEmpty && ' (depleted)'}
-                {isLow && !isEmpty && ' (low)'}
-              </div>
-              {(isEmpty || isLow) && (
-                <Select.SelectItem
-                  value=""
-                  onClick={() => window.open('https://billing.hanzo.ai', '_blank')}
-                  className="select-item text-sm text-green-600 dark:text-green-400"
-                >
-                  <CreditCard className="icon-md" aria-hidden="true" />
-                  Add Funds
-                </Select.SelectItem>
-              )}
-              <DropdownMenuSeparator />
-            </>
-          );
-        })()}
-        <Select.SelectItem
-          value=""
-          onClick={() => setShowFiles(true)}
-          className="select-item text-sm"
-        >
-          <FileText className="icon-md" aria-hidden="true" />
-          {localize('com_nav_my_files')}
-        </Select.SelectItem>
-        {startupConfig?.helpAndFaqURL !== '/' && (
-          <Select.SelectItem
-            value=""
-            onClick={() => window.open(startupConfig?.helpAndFaqURL, '_blank')}
-            className="select-item text-sm"
-          >
-            <LinkIcon aria-hidden="true" />
-            {localize('com_nav_help_faq')}
-          </Select.SelectItem>
-        )}
-        <Select.SelectItem
-          value=""
-          onClick={() => window.open('https://hanzo.id/account', '_blank')}
-          className="select-item text-sm"
-        >
-          <UserCog className="icon-md" aria-hidden="true" />
-          Account
-        </Select.SelectItem>
-        <Select.SelectItem
-          value=""
-          onClick={() => window.open('https://console.hanzo.ai', '_blank')}
-          className="select-item text-sm"
-        >
-          <LayoutDashboard className="icon-md" aria-hidden="true" />
-          Console
-        </Select.SelectItem>
-        <Select.SelectItem
-          value=""
-          onClick={() => setShowSettings(true)}
-          className="select-item text-sm"
-        >
-          <GearIcon className="icon-md" aria-hidden="true" />
-          {localize('com_nav_settings')}
-        </Select.SelectItem>
-        <DropdownMenuSeparator />
-        <Select.SelectItem
-          aria-selected={true}
-          onClick={() => logout()}
-          value="logout"
-          className="select-item text-sm"
-        >
-          <LogOut className="icon-md" aria-hidden="true" />
-          {localize('com_nav_log_out')}
-        </Select.SelectItem>
-      </Select.SelectPopover>
-      {showFiles && (
-        <MyFilesModal
-          open={showFiles}
-          onOpenChange={setShowFiles}
-          triggerRef={accountSettingsButtonRef}
-        />
-      )}
+        // The menu's own look comes from @hanzo/design (that is the point of the
+        // shared control) — chat only flavors the trigger and the rows. The legacy
+        // `.popover-ui` / `.account-settings-popover` classes are NOT passed: they
+        // were written for ariakit's enter/leave lifecycle and set opacity:0.
+        classNames={{
+          trigger:
+            'flex h-auto w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt',
+          item: 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-surface-hover',
+        }}
+      />
+      {showFiles && <MyFilesModal open={showFiles} onOpenChange={setShowFiles} />}
       {showSettings && <Settings open={showSettings} onOpenChange={setShowSettings} />}
-    </Select.SelectProvider>
+    </>
   );
 }
 

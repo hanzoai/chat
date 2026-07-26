@@ -18,6 +18,7 @@ import type { TResData } from '~/common';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
+import { requireLogin } from '~/utils/login';
 import store from '~/store';
 
 const clearDraft = (conversationId?: string | null) => {
@@ -239,8 +240,11 @@ export default function useSSE(
           sse.stream();
           return;
         } catch (error) {
-          /* token refresh failed, continue handling the original 401 */
+          /* token refresh failed: the visitor is not signed in — open the gate */
           console.log(error);
+          requireLogin('anonymous');
+          setIsSubmitting(false);
+          return;
         }
       }
 

@@ -22,7 +22,7 @@ import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
 import LandingPage from '~/components/Landing/LandingPage';
-import GuestLimitDialog from '~/components/Auth/GuestLimitDialog';
+import LoginGate from '~/components/Auth/LoginGate';
 import ChatHanzoHeader from '~/components/Nav/HanzoHeader';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 
@@ -85,8 +85,25 @@ export default function Root() {
   if (!authChecked) {
     // Show minimal loading while checking auth (prevents landing page flash)
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--main-surface-primary, #050505)' }}>
-        <div style={{ width: 24, height: 24, border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'rgba(255,255,255,0.5)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--main-surface-primary, #050505)',
+        }}
+      >
+        <div
+          style={{
+            width: 24,
+            height: 24,
+            border: '2px solid rgba(255,255,255,0.1)',
+            borderTopColor: 'rgba(255,255,255,0.5)',
+            borderRadius: '50%',
+            animation: 'spin 0.6s linear infinite',
+          }}
+        />
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     );
@@ -104,7 +121,10 @@ export default function Root() {
             <PromptGroupsProvider>
               <ChatHanzoHeader />
               <ProjectBanner />
-              {isGuest && <GuestLimitDialog />}
+              {/* Mounted for every not-signed-in visitor, not just a minted guest:
+                  a lapsed or unminted guest token is exactly the case that needs
+                  the gate. */}
+              {!isAuthenticated && <LoginGate />}
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">

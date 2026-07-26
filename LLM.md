@@ -99,6 +99,19 @@ Zen model (`GUEST_MODEL`, default `zen5-flash`) via the `Hanzo` custom endpoint
 (`api.hanzo.ai`). Prod uses `GUEST_MESSAGE_MAX=2`. Exhausting the quota returns
 `402 {type:'GUEST_LIMIT'}` and the client opens the existing OpenID/hanzo.id login.
 
+The login gate is ONE component for every not-signed-in outcome. `requireLogin(reason)`
+(`client/src/utils/login.ts`, beside `startHanzoLogin`) dispatches `loginRequired`;
+`components/Auth/LoginGate.tsx` renders the reason's copy and the hanzo.id PKCE
+redirect. Reasons: `limit` (402 GUEST_LIMIT, quota spent) and `anonymous` (401 —
+the guest bearer lapsed or was never minted). Both submit paths
+(`useResumableSSE.startGeneration`, `useSSE`'s 401-after-failed-refresh) ask for the
+gate instead of handing the refusal to `errorHandler`, because a refused request has
+no answer to render — a 401 used to surface as `Something went wrong. Here's the
+specific error message we encountered: "Unauthorized"` (passport's bare body) in the
+message list. `Messages/Content/Error.tsx` maps any Unauthorized body shape to
+`com_error_unauthorized` so no other path can print it either. `Root` mounts the gate
+for every `!isAuthenticated` visitor, not only a minted guest.
+
 Client render path (guest === chat, not a marketing gate):
 - `AuthContext` auto-acquires a guest token when `startupConfig.allowGuestChat`
   is true (`silentRefresh` fallback + a dedicated effect closing the config race);
@@ -110,7 +123,7 @@ Client render path (guest === chat, not a marketing gate):
   `requireGuestOrJwtAuth` and return the guest-scoped single-model config), and the
   roles gate treats a guest as loaded (guests have no agent access). Files:
   `client/src/routes/{ChatRoute,useAuthRedirect}.tsx`, `hooks/useGuestAuth.ts`,
-  `hooks/AuthContext.tsx`, `components/Auth/GuestLimitDialog.tsx`.
+  `hooks/AuthContext.tsx`, `components/Auth/LoginGate.tsx`.
 
 Security model (fail-closed, server-enforced):
 - `POST /v1/chat/auth/guest` issues a short-lived guest JWT (`{guest:true}`,

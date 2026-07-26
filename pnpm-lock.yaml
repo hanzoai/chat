@@ -348,7 +348,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@25.5.0)(ts-node@10.9.2(@types/node@25.5.0)(typescript@5.9.3))
+        version: 30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -377,20 +377,23 @@ importers:
         specifier: ^9.2.2
         version: 9.4.2
       '@hanzo/ai':
-        specifier: ^0.2.3
-        version: 0.2.3
+        specifier: ^0.3.0
+        version: 0.3.0
       '@hanzo/brand':
-        specifier: ^1.4.1
-        version: 1.4.1(react@18.3.1)
+        specifier: ^1.4.4
+        version: 1.4.4(react@18.3.1)
       '@hanzo/event':
         specifier: ^0.3.3
         version: 0.3.3(react@18.3.1)
       '@hanzo/iam':
-        specifier: ^0.13.8
-        version: 0.13.8(react@18.3.1)
+        specifier: ^0.21.0
+        version: 0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@18.3.1)
+      '@hanzo/observe':
+        specifier: ^0.1.0
+        version: 0.1.0(react@18.3.1)
       '@hanzo/ui':
         specifier: npm:@hanzo/ui-shadcn@^5.7.4
         version: '@hanzo/ui-shadcn@5.7.4(@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@18.3.1)))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(@tanstack/react-query@4.43.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(date-fns@3.6.0)(embla-carousel@8.6.0)(framer-motion@11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lucide-react@0.394.0(react@18.3.1))(mermaid@11.13.0)(mobx@6.15.0)(next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.5.12(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.71.2(react@18.3.1))(react-resizable-panels@3.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.19(yaml@2.8.3))(validator@13.15.26)'
@@ -405,7 +408,7 @@ importers:
         version: link:../packages/data-provider
       '@hanzogui/shell':
         specifier: ^7.4.2
-        version: 7.4.2(@hanzo/iam@0.13.8(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 7.4.2(@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3799,12 +3802,12 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hanzo/ai@0.2.3':
-    resolution: {integrity: sha512-vL042sYaVzmWUTrjcCrx3Gay/a+oa9Mgv1cVetapeyikSS4wKOw9lMdSbxw2OD8puJK/Ozew7cglL43MYI9L3Q==}
+  '@hanzo/ai@0.3.0':
+    resolution: {integrity: sha512-nHj5rgSu5WD1fttfWv65HQ3WG65iztLFrwjb5B5BKSVwLVt7ZSLbioOZ6Of7GnFRG4PxtD0Sy961NnEA2FkaYA==}
     engines: {node: '>=18'}
 
-  '@hanzo/brand@1.4.1':
-    resolution: {integrity: sha512-tApXct8gE/HOYa61h6TWQfDp07l1pmB+vqmxlJtU+MhocbwEkW4VPJrQdPuwF/5GPZYQauNT2uaRpnZdCK8ikw==}
+  '@hanzo/brand@1.4.4':
+    resolution: {integrity: sha512-yD5Hej+6zMezavpN6SVszl+Yn6IM9JvF8M/aKmsalPK5LFnyvdNxxjKHfAnG6P7EvJSpSDpY1npZ+X+fnidnrw==}
     hasBin: true
     peerDependencies:
       react: '>=18'
@@ -3820,19 +3823,30 @@ packages:
       react:
         optional: true
 
-  '@hanzo/iam@0.13.8':
-    resolution: {integrity: sha512-6D4lZSSuTBWV/bof5u5l6VEE0VZhNnpF99svirmHTRko5MsZ5sEd3+7xZ28KH0UL0oquvHwRJ6tkvn+E+f5YuQ==}
+  '@hanzo/iam@0.21.0':
+    resolution: {integrity: sha512-VvnPXQqvyQQ0rwraaMUIRrc8N2eXMtUsXsT3hltstYmghv7F/03sfmus/lWvkShiVYHWzHkh8B/vno8VphgnTg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
+      react-dom: '>=17'
     peerDependenciesMeta:
       react:
+        optional: true
+      react-dom:
         optional: true
 
   '@hanzo/logo@1.0.13':
     resolution: {integrity: sha512-94VA6S7oVY5UZ816295Ez12p8a76ZGEct14JQwE6r5UCutD3K9TBgx5V01gjwxwVL9tWnXn/yut4PHRAY/9RNQ==}
     peerDependencies:
       react: '>=16.8.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+
+  '@hanzo/observe@0.1.0':
+    resolution: {integrity: sha512-VWfMz4F6gexchEaEjK9btxcTOVhWk8km64TN69hWLa1jWB4uTL9VdTj3cWZRDl/OP1lS8YcjpLdSI1q+C7fymg==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       react:
         optional: true
@@ -17724,9 +17738,9 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@hanzo/ai@0.2.3': {}
+  '@hanzo/ai@0.3.0': {}
 
-  '@hanzo/brand@1.4.1(react@18.3.1)':
+  '@hanzo/brand@1.4.4(react@18.3.1)':
     dependencies:
       '@hanzo/logo': 1.0.13(react@18.3.1)
     optionalDependencies:
@@ -17736,15 +17750,22 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  '@hanzo/iam@0.13.8(react@18.3.1)':
+  '@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
       passport-oauth2: 1.8.0
     optionalDependencies:
       react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@hanzo/logo@1.0.13(react@18.3.1)':
+    optionalDependencies:
+      react: 18.3.1
+
+  '@hanzo/observe@0.1.0(react@18.3.1)':
+    dependencies:
+      '@hanzo/event': 0.3.3(react@18.3.1)
     optionalDependencies:
       react: 18.3.1
 
@@ -17885,9 +17906,9 @@ snapshots:
       - ws
       - zod
 
-  '@hanzogui/shell@7.4.2(@hanzo/iam@0.13.8(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hanzogui/shell@7.4.2(@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@hanzo/iam': 0.13.8(react@18.3.1)
+      '@hanzo/iam': 0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 

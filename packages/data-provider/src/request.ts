@@ -177,7 +177,16 @@ if (typeof window !== 'undefined') {
             dispatchTokenUpdatedEvent(token);
             processQueue(null, token);
             return await axios(originalRequest);
-          } else if (window.location.href.includes('share/')) {
+          }
+
+          // No new token. Every queued caller must still be answered, or its
+          // promise never settles: a guest whose chat POST queued behind another
+          // 401's refresh would spin forever instead of being told it is not
+          // signed in. Reject with the original 401 so each caller sees the real
+          // status (the chat submit path turns that into the login gate).
+          processQueue(error as AxiosError, null);
+
+          if (window.location.href.includes('share/')) {
             console.log(
               `Refresh token failed from shared link, attempting request to ${originalRequest.url}`,
             );
