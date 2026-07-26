@@ -289,3 +289,64 @@ describe('DocModel — Batch 2 primitives', () => {
     expect(((await Tag.findOne({ tag: 'a' }).lean()) as { position: number }).position).toBe(2);
   });
 });
+
+describe('DocModel — aggregate fails loud on unsupported stages', () => {
+  let handle: SqliteHandle;
+  let Message: DocModel;
+
+  beforeEach(() => {
+    handle = createSqliteHandle(['Conversation', 'Message']);
+    Message = handle.models.Message;
+  });
+
+  afterEach(() => {
+    handle.close();
+  });
+
+  // The whole point. This chain used to end at $project with no else, so an
+  // unsupported stage was DROPPED and the pipeline returned a confident wrong
+  // answer. That cost real correctness: $addFields is unsupported, so all four
+  // permission-migration pipelines matched zero documents and reported
+  // "nothing to migrate" — anyone who ran them migrated nothing and was told it
+  // worked. Silence is the bug; throwing is the fix.
+  it('throws on an unsupported stage instead of skipping it', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
+
+    await expect(
+      Message.aggregate([{ $match: { user: 'u1' } }, { $addFields: { x: 1 } }]),
+    ).rejects.toThrow(/unsupported stage \$addFields/);
+
+    await expect(Message.aggregate([{ $facet: { a: [] } }])).rejects.toThrow(
+      /unsupported stage \$facet/,
+    );
+  });
+
+  it('names the supported set in the error, so the fix is obvious', async () => {
+    await expect(Message.aggregate([{ $replaceRoot: {} }])).rejects.toThrow(
+      /\$match \$lookup \$unwind \$group \$sort \$limit \$skip \$project/,
+    );
+  });
+
+  // $skip was missing while $limit was present, so a paginated aggregate
+  // silently returned page 1 for every page.
+  it('$skip paginates instead of being silently dropped', async () => {
+    for (const n of ['a', 'b', 'c', 'd']) {
+      await Message.create({ messageId: n, user: 'u1', text: n });
+    }
+    const page2 = await Message.aggregate([
+      { $match: { user: 'u1' } },
+      { $sort: { messageId: 1 } },
+      { $skip: 2 },
+      { $limit: 2 },
+    ]);
+    expect(page2.map((d) => d.messageId)).toEqual(['c', 'd']);
+  });
+
+  it('still runs a fully-supported pipeline', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
+    await Message.create({ messageId: 'm2', user: 'u2', text: 'b' });
+    const out = await Message.aggregate([{ $match: { user: 'u1' } }, { $limit: 10 }]);
+    expect(out).toHaveLength(1);
+    expect(out[0].messageId).toBe('m1');
+  });
+});
