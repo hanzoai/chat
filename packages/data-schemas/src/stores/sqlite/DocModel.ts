@@ -611,9 +611,17 @@ export class DocModel {
 
   /**
    * Aggregation pipeline — the bounded stage set the chat methods use:
-   * `$match $lookup $unwind $sort $limit $project`. Runs in JS over candidate
-   * docs. `$lookup` resolves `from` (a mongo collection name) to a sibling model
-   * via the naive singular-capitalized mapping (`prompts` -> `Prompt`).
+   * `$match $lookup $unwind $group $sort $limit $project`. Runs in JS over
+   * candidate docs. `$lookup` resolves `from` (a mongo collection name) to a
+   * sibling model via the naive singular-capitalized mapping
+   * (`prompts` -> `Prompt`).
+   *
+   * Anything outside that set THROWS — it is never skipped. See the else branch
+   * for why: a silently dropped stage returns a wrong answer that looks right.
+   *
+   * Known-unsupported and therefore now loud: `$addFields`, `$facet`,
+   * `$replaceRoot`, `$count`. `$project` also handles only 0/1 inclusion — it
+   * does not evaluate expressions such as `$arrayElemAt`.
    */
   async aggregate(pipeline: Array<Record<string, unknown>>): Promise<Doc[]> {
     let docs = this.candidates({});
@@ -667,8 +675,32 @@ export class DocModel {
         docs = sortDocs(docs, stage.$sort as SortSpec);
       } else if (op === '$limit') {
         docs = docs.slice(0, stage.$limit as number);
+      } else if (op === '$skip') {
+        // Was missing while $limit was present, so a paginated aggregate
+        // silently returned page 1 for every page.
+        docs = docs.slice(stage.$skip as number);
       } else if (op === '$project') {
         docs = docs.map((d) => projectDoc(d, stage.$project as Record<string, 0 | 1>));
+      } else {
+        // FAIL LOUD. This chain used to end here with no else, so an unsupported
+        // stage was silently skipped and the pipeline returned a confident wrong
+        // answer — which is strictly worse than throwing.
+        //
+        // What that actually cost: `$addFields` is unsupported, so all four
+        // permission-migration pipelines matched ZERO documents and reported
+        // "nothing to migrate". Anyone who ran them migrated nothing and was
+        // told it worked. `$facet` is unsupported, so the usage controller
+        // returned all-zero usage. `$skip` was missing entirely, so a paginated
+        // aggregate silently returned page 1 forever — that one is now implemented.
+        //
+        // Adding a stage means implementing it here — not adding it to a doc
+        // comment. Throwing is what makes that non-optional.
+        throw new Error(
+          `aggregate: unsupported stage ${op}. Supported: $match $lookup $unwind ` +
+            `$group $sort $limit $skip $project. An unsupported stage is NOT skipped — ` +
+            `it throws, because silently dropping a stage returns a plausible ` +
+            `wrong answer (a filter that never applied, a count that is zero).`,
+        );
       }
     }
     return docs;
