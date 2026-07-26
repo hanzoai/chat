@@ -1,4 +1,4 @@
-import type { AgentToolResources, TFile } from 'librechat-data-provider';
+import type { AgentToolResources, TFile } from '@hanzochat/data-provider';
 import type { IMongoFile, AppConfig, IUser } from '@hanzochat/data-schemas';
 import type { FilterQuery, QueryOptions, ProjectionType } from 'mongoose';
 import type { Request as ServerRequest } from 'express';
