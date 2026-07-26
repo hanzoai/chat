@@ -3,7 +3,12 @@ const fetch = require('node-fetch');
 const { logger } = require('@hanzochat/data-schemas');
 const { FileSources } = require('@hanzochat/data-provider');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { initializeS3, deleteRagFile, isEnabled } = require('@hanzochat/api');
+const {
+  initializeS3,
+  deleteRagFile,
+  isEnabled,
+  resolveRequestOrg,
+} = require('@hanzochat/api');
 const {
   PutObjectCommand,
   GetObjectCommand,
@@ -45,9 +50,48 @@ if (process.env.S3_REFRESH_EXPIRY_MS !== null && process.env.S3_REFRESH_EXPIRY_M
 }
 
 /**
- * Constructs the S3 key based on the base path, user ID, and file name.
+ * Whether an object exists at `key`. Used only to fall back to a pre-tenancy key
+ * during the migration window; a HeadObject is a metadata-only round trip.
  */
-const getS3Key = (basePath, userId, fileName) => `${basePath}/${userId}/${fileName}`;
+const s3ObjectExists = async (key) => {
+  try {
+    const s3 = initializeS3();
+    await s3.send(new HeadObjectCommand({ Bucket: bucketName, Key: key }));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Rejects a path segment that could escape its prefix. The tenant is the IAM org
+ * claim, not user input, but the key is a filesystem-ish path — so it is validated
+ * at the boundary rather than trusted.
+ */
+const assertTenantSegment = (value) => {
+  if (typeof value !== 'string' || !value.length) {
+    return null;
+  }
+  if (value.includes('/') || value.includes('\\') || value === '.' || value === '..') {
+    throw new Error(`[getS3Key] invalid tenantId segment: "${value}"`);
+  }
+  return value;
+};
+
+/**
+ * Constructs the S3 key from the base path, user ID, and file name.
+ *
+ * When a tenant is present the key is prefixed `t/<tenantId>/`, giving each org
+ * its own subtree of the shared bucket. This is byte-identical to the convention
+ * in `packages/api/src/storage/s3` (`getS3Key`), so both implementations address
+ * the same object for the same request — and a caller with no tenant still gets
+ * the historical flat key, which is what every pre-existing object uses.
+ */
+const getS3Key = (basePath, userId, fileName, tenantId = null) => {
+  const tenant = assertTenantSegment(tenantId);
+  const suffix = `${basePath}/${userId}/${fileName}`;
+  return tenant ? `t/${tenant}/${suffix}` : suffix;
+};
 
 /**
  * Uploads a buffer to S3 and returns a signed URL.
@@ -59,14 +103,20 @@ const getS3Key = (basePath, userId, fileName) => `${basePath}/${userId}/${fileNa
  * @param {string} [params.basePath='images'] - The base path in the bucket.
  * @returns {Promise<string>} Signed URL of the uploaded file.
  */
-async function saveBufferToS3({ userId, buffer, fileName, basePath = defaultBasePath }) {
-  const key = getS3Key(basePath, userId, fileName);
+async function saveBufferToS3({
+  userId,
+  buffer,
+  fileName,
+  basePath = defaultBasePath,
+  tenantId = null,
+}) {
+  const key = getS3Key(basePath, userId, fileName, tenantId);
   const params = { Bucket: bucketName, Key: key, Body: buffer };
 
   try {
     const s3 = initializeS3();
     await s3.send(new PutObjectCommand(params));
-    return await getS3URL({ userId, fileName, basePath });
+    return await getS3URL({ userId, fileName, basePath, tenantId });
   } catch (error) {
     logger.error('[saveBufferToS3] Error uploading buffer to S3:', error.message);
     throw error;
@@ -91,8 +141,19 @@ async function getS3URL({
   basePath = defaultBasePath,
   customFilename = null,
   contentType = null,
+  tenantId = null,
 }) {
-  const key = getS3Key(basePath, userId, fileName);
+  // A tenant-scoped caller may still be reading an object written before its org
+  // was scoped (or before the migration moved it). Prefer the tenant key, but fall
+  // back to the historical flat key when nothing lives at the tenant key — so a
+  // pre-existing file keeps resolving instead of signing a URL to a missing object.
+  let key = getS3Key(basePath, userId, fileName, tenantId);
+  if (tenantId && !(await s3ObjectExists(key))) {
+    const flatKey = getS3Key(basePath, userId, fileName);
+    if (await s3ObjectExists(flatKey)) {
+      key = flatKey;
+    }
+  }
   const params = { Bucket: bucketName, Key: key };
 
   // Add response headers if specified
@@ -123,12 +184,12 @@ async function getS3URL({
  * @param {string} [params.basePath='images'] - The base path in the bucket.
  * @returns {Promise<string>} Signed URL of the uploaded file.
  */
-async function saveURLToS3({ userId, URL, fileName, basePath = defaultBasePath }) {
+async function saveURLToS3({ userId, URL, fileName, basePath = defaultBasePath, tenantId = null }) {
   try {
     const response = await fetch(URL);
     const buffer = await response.buffer();
     // Optionally you can call getBufferMetadata(buffer) if needed.
-    return await saveBufferToS3({ userId, buffer, fileName, basePath });
+    return await saveBufferToS3({ userId, buffer, fileName, basePath, tenantId });
   } catch (error) {
     logger.error('[saveURLToS3] Error uploading file from URL to S3:', error.message);
     throw error;
@@ -208,8 +269,9 @@ async function uploadFileToS3({ req, file, file_id, basePath = defaultBasePath }
   try {
     const inputFilePath = file.path;
     const userId = req.user.id;
+    const tenantId = resolveRequestOrg(req);
     const fileName = `${file_id}__${file.originalname}`;
-    const key = getS3Key(basePath, userId, fileName);
+    const key = getS3Key(basePath, userId, fileName, tenantId);
 
     const stats = await fs.promises.stat(inputFilePath);
     const bytes = stats.size;
@@ -223,7 +285,7 @@ async function uploadFileToS3({ req, file, file_id, basePath = defaultBasePath }
     };
 
     await s3.send(new PutObjectCommand(uploadParams));
-    const fileURL = await getS3URL({ userId, fileName, basePath });
+    const fileURL = await getS3URL({ userId, fileName, basePath, tenantId });
     return { filepath: fileURL, bytes };
   } catch (error) {
     logger.error('[uploadFileToS3] Error streaming file to S3:', error);
@@ -542,6 +604,7 @@ async function refreshS3Url(fileObj, bufferSeconds = 3600) {
 }
 
 module.exports = {
+  getS3Key,
   saveBufferToS3,
   saveURLToS3,
   getS3URL,

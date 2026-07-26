@@ -19,7 +19,12 @@ const {
 } = require('@hanzochat/data-provider');
 const { EnvVar } = require('@hanzochat/agents');
 const { logger } = require('@hanzochat/data-schemas');
-const { sanitizeFilename, parseText, processAudioFile } = require('@hanzochat/api');
+const {
+  sanitizeFilename,
+  parseText,
+  processAudioFile,
+  resolveRequestOrg,
+} = require('@hanzochat/api');
 const {
   convertImage,
   resizeAndConvert,
@@ -347,7 +352,12 @@ const uploadImageBuffer = async ({ req, context, metadata = {}, resize = true })
     }`;
   }
   const fileName = `${file_id}-${filename}`;
-  const filepath = await saveBuffer({ userId: req.user.id, fileName, buffer });
+  const filepath = await saveBuffer({
+    userId: req.user.id,
+    fileName,
+    buffer,
+    tenantId: resolveRequestOrg(req),
+  });
   return await createFile(
     {
       user: req.user.id,
@@ -920,6 +930,7 @@ async function saveBase64Image(
     userId: req.user.id,
     fileName: filename,
     buffer: image.buffer,
+    tenantId: resolveRequestOrg(req),
   });
   return await createFile(
     {
