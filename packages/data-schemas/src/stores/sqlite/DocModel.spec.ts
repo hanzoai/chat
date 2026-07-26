@@ -305,17 +305,11 @@ describe('DocModel — aggregate fails loud on unsupported stages', () => {
 
   // The whole point. This chain used to end at $project with no else, so an
   // unsupported stage was DROPPED and the pipeline returned a confident wrong
-  // answer. That cost real correctness: $addFields is unsupported, so all four
+  // answer. That cost real correctness: $addFields was unsupported, so all four
   // permission-migration pipelines matched zero documents and reported
   // "nothing to migrate" — anyone who ran them migrated nothing and was told it
   // worked. Silence is the bug; throwing is the fix.
   it('throws on an unsupported stage instead of skipping it', async () => {
-    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
-
-    await expect(
-      Message.aggregate([{ $match: { user: 'u1' } }, { $addFields: { x: 1 } }]),
-    ).rejects.toThrow(/unsupported stage \$addFields/);
-
     await expect(Message.aggregate([{ $replaceRoot: {} }])).rejects.toThrow(
       /unsupported stage \$replaceRoot/,
     );
@@ -383,8 +377,109 @@ describe('DocModel — aggregate fails loud on unsupported stages', () => {
 
   it('an unsupported stage INSIDE a $facet still throws', async () => {
     await expect(
-      Message.aggregate([{ $facet: { x: [{ $addFields: { q: 1 } }] } }]),
-    ).rejects.toThrow(/unsupported stage \$addFields/);
+      Message.aggregate([{ $facet: { x: [{ $replaceRoot: {} }] } }]),
+    ).rejects.toThrow(/unsupported stage \$replaceRoot/);
+  });
+
+  it('$addFields adds a field and keeps every existing one', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
+
+    const out = await Message.aggregate([{ $addFields: { copied: '$user' } }]);
+    expect(out).toHaveLength(1);
+    expect(out[0].copied).toBe('u1');
+    // $project keeps only what it names; $addFields keeps everything.
+    expect(out[0].messageId).toBe('m1');
+    expect(out[0].text).toBe('a');
+  });
+
+  it('$addFields expressions see the ORIGINAL doc, not each other', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
+
+    const out = await Message.aggregate([{ $addFields: { first: '$user', second: '$first' } }]);
+    // `second` reads $first from the input document, where it does not exist.
+    // If the stage applied fields progressively it would wrongly be 'u1'.
+    expect(out[0].first).toBe('u1');
+    expect(out[0].second).toBeUndefined();
+  });
+
+  // The exact shape of the four permission-migration pipelines, which is why
+  // this stage exists at all. Before it landed they threw; before THAT they
+  // silently matched zero documents and reported "nothing to migrate".
+  it('$addFields + $filter/$and/$eq computes the migration predicate', async () => {
+    await Message.create({
+      messageId: 'm1',
+      user: 'u1',
+      text: 'a',
+      aclEntries: [
+        { resourceType: 'agent', principalType: 'user' },
+        { resourceType: 'agent', principalType: 'group' },
+        { resourceType: 'prompt', principalType: 'user' },
+      ],
+    });
+
+    const out = await Message.aggregate([
+      {
+        $addFields: {
+          userAclEntries: {
+            $filter: {
+              input: '$aclEntries',
+              as: 'aclEntry',
+              cond: {
+                $and: [
+                  { $eq: ['$$aclEntry.resourceType', 'agent'] },
+                  { $eq: ['$$aclEntry.principalType', 'user'] },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+    // Only the entry matching BOTH conditions survives.
+    expect(out[0].userAclEntries).toHaveLength(1);
+    expect(out[0].userAclEntries[0]).toMatchObject({
+      resourceType: 'agent',
+      principalType: 'user',
+    });
+  });
+
+  it('a $match on the computed field works — the whole migration predicate', async () => {
+    await Message.create({ messageId: 'has', user: 'u1', aclEntries: [{ principalType: 'user' }] });
+    await Message.create({ messageId: 'none', user: 'u1', aclEntries: [] });
+
+    const out = await Message.aggregate([
+      {
+        $addFields: {
+          userAclEntries: {
+            $filter: {
+              input: '$aclEntries',
+              as: 'e',
+              cond: { $eq: ['$$e.principalType', 'user'] },
+            },
+          },
+        },
+      },
+      { $match: { userAclEntries: { $size: 0 } } },
+    ]);
+    // Exactly the "needs migrating" set: documents with no user ACL entry.
+    expect(out).toHaveLength(1);
+    expect(out[0].messageId).toBe('none');
+  });
+
+  it('an unbound $$variable throws instead of comparing against undefined', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+
+    await expect(
+      Message.aggregate([{ $addFields: { x: { $eq: ['$$nope.field', 'v'] } } }]),
+    ).rejects.toThrow(/undefined variable \$\$nope/);
+  });
+
+  it('an unsupported expression throws rather than yielding undefined', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+
+    await expect(
+      Message.aggregate([{ $addFields: { x: { $toUpper: '$user' } } }]),
+    ).rejects.toThrow(/unsupported expression \$toUpper/);
   });
 
 
