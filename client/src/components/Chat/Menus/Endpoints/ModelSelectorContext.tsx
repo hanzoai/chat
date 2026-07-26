@@ -8,6 +8,8 @@ import {
   isAssistantsEndpoint,
 } from '@hanzochat/data-provider';
 import type * as t from '@hanzochat/data-provider';
+import { useAnalytics } from '@hanzo/event/react';
+import { EVENTS } from '@hanzo/event';
 import type { Endpoint, SelectedValues } from '~/common';
 import { sendRewardSignal } from '~/utils/rewardSignal';
 import {
@@ -63,6 +65,7 @@ interface ModelSelectorProviderProps {
 
 export function ModelSelectorProvider({ children, startupConfig }: ModelSelectorProviderProps) {
   const queryClient = useQueryClient();
+  const analytics = useAnalytics();
   const agentsMap = useAgentsMapContext();
   const assistantsMap = useAssistantsMapContext();
   const { data: endpointsConfig } = useGetEndpointsQuery();
@@ -223,6 +226,18 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     const conversationId = conversation?.conversationId;
     const isActualChange =
       endpoint.value !== conversation?.endpoint || model !== conversation?.model;
+    if (isActualChange) {
+      // A switch mid-conversation is the strongest dissatisfaction signal a chat
+      // surface produces — `from*` is what makes "which model gets abandoned"
+      // answerable. Identifiers only; never message content.
+      analytics.capture(EVENTS.MODEL_SWITCHED, {
+        endpoint: endpoint.value,
+        model,
+        fromEndpoint: conversation?.endpoint ?? undefined,
+        fromModel: conversation?.model ?? undefined,
+        inConversation: Boolean(conversationId),
+      });
+    }
     if (isActualChange && conversationId) {
       const messages = queryClient.getQueryData<t.TMessage[]>([QueryKeys.messages, conversationId]);
       const lastAssistant = messages
