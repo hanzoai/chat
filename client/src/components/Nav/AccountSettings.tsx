@@ -1,7 +1,13 @@
-import { useState, memo, useCallback } from 'react';
+import { useState, memo, useCallback, useContext } from 'react';
 import { FileText, UserCog, LayoutDashboard } from 'lucide-react';
-import { UserMenu, resolveIdentity, type OrgState, type UserMenuItem } from '@hanzo/iam/react';
-import { LinkIcon, GearIcon } from '@hanzochat/client';
+import {
+  UserMenu,
+  resolveIdentity,
+  type OrgState,
+  type ThemeMode,
+  type UserMenuItem,
+} from '@hanzo/iam/react';
+import { LinkIcon, GearIcon, ThemeContext, isDark } from '@hanzochat/client';
 import { MyFilesModal } from '~/components/Chat/Input/Files/MyFilesModal';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
@@ -29,6 +35,10 @@ function AccountSettings() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
+
+  // One control, chat's store: the menu renders the light/dark/system choice and
+  // chat's ThemeProvider remains the single writer of the applied theme.
+  const { theme, setTheme } = useContext(ThemeContext);
 
   const currentOrg = user?.organization ?? '';
   const switchOrg = useCallback(async (organization: string) => {
@@ -130,6 +140,14 @@ function AccountSettings() {
         items={items}
         balance={balance}
         signOutLabel={localize('com_nav_log_out')}
+        usageUrl="https://cloud.hanzo.ai/usage"
+        brand={{ name: 'Hanzo AI', href: 'https://hanzo.ai' }}
+        usageLabel="Usage & billing"
+        theme={{
+          mode: (theme as ThemeMode) ?? 'system',
+          resolved: isDark(theme) ? 'dark' : 'light',
+          setMode: (mode) => setTheme(mode),
+        }}
         classNames={{
           trigger:
             'flex h-auto w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt',
