@@ -619,9 +619,11 @@ export class DocModel {
    * Anything outside that set THROWS — it is never skipped. See the else branch
    * for why: a silently dropped stage returns a wrong answer that looks right.
    *
-   * Known-unsupported and therefore now loud: `$addFields`, `$replaceRoot`,
-   * `$count`. `$project` also handles only 0/1 inclusion — it does not evaluate
-   * expressions such as `$arrayElemAt`.
+   * Known-unsupported and therefore loud: `$replaceRoot`, `$count`.
+   *
+   * `$project` and `$addFields` evaluate expressions via evalAggExpr —
+   * `$arrayElemAt`, `$filter`, `$and`, `$eq`, and `$field` / `$$variable`
+   * references. Anything else there throws too.
    */
   async aggregate(pipeline: Array<Record<string, unknown>>): Promise<Doc[]> {
     return this.runPipeline(this.candidates({}), pipeline);
@@ -735,29 +737,42 @@ export class DocModel {
           // mongo; projectDoc handles that when any 1 is present.
           const base = projectDoc(d, hasExprs ? { ...flags, _id: flags._id ?? 1 } : flags);
           for (const [k, e] of Object.entries(exprs)) {
-            base[k] = evalProjectExpr(e, d);
+            base[k] = evalAggExpr(e, d);
           }
           return base;
+        });
+      } else if (op === '$addFields') {
+        // Adds computed fields, keeping every existing one — the difference from
+        // $project, which keeps only what it names. Every expression is evaluated
+        // against the ORIGINAL document, so two fields added in one stage cannot
+        // see each other, matching mongo.
+        const spec = stage.$addFields as Record<string, unknown>;
+        docs = docs.map((d) => {
+          const out = { ...d };
+          for (const [k, e] of Object.entries(spec)) {
+            out[k] = evalAggExpr(e, d);
+          }
+          return out;
         });
       } else {
         // FAIL LOUD. This chain used to end here with no else, so an unsupported
         // stage was silently skipped and the pipeline returned a confident wrong
         // answer — which is strictly worse than throwing.
         //
-        // What that actually cost: `$addFields` is unsupported, so all four
+        // What that actually cost: `$addFields` was unsupported, so all four
         // permission-migration pipelines matched ZERO documents and reported
         // "nothing to migrate". Anyone who ran them migrated nothing and was
-        // told it worked. `$facet` is unsupported, so the usage controller
+        // told it worked. `$facet` was unsupported, so the usage controller
         // returned all-zero usage, and `$skip` was missing entirely so a
-        // paginated aggregate returned page 1 forever — both now implemented.
+        // paginated aggregate returned page 1 forever — all now implemented.
         //
         // Adding a stage means implementing it here — not adding it to a doc
         // comment. Throwing is what makes that non-optional.
         throw new Error(
           `aggregate: unsupported stage ${op}. Supported: $match $lookup $unwind ` +
-            `$group $sort $limit $skip $project $facet. An unsupported stage is NOT skipped — ` +
-            `it throws, because silently dropping a stage returns a plausible ` +
-            `wrong answer (a filter that never applied, a count that is zero).`,
+            `$group $sort $limit $skip $project $addFields $facet. An unsupported stage ` +
+            `is NOT skipped — it throws, because silently dropping a stage returns a ` +
+            `plausible wrong answer (a filter that never applied, a count that is zero).`,
         );
       }
     }
@@ -1068,38 +1083,84 @@ function stripMethods(doc: Doc): Doc {
   return out;
 }
 
-/** Resolves a `$field` reference (or literal) against a doc, for aggregate exprs. */
-function resolveExpr(expr: unknown, doc: Doc): unknown {
+/**
+ * Resolves a `$field` reference, a `$$variable` binding, or a literal.
+ *
+ * `$$name` / `$$name.path` reads a binding introduced by an enclosing `$filter`
+ * — it is NOT a field of the document, and resolving it as one would silently
+ * yield undefined.
+ */
+function resolveExpr(expr: unknown, doc: Doc, vars: Record<string, unknown> = {}): unknown {
+  if (typeof expr === 'string' && expr.startsWith('$$')) {
+    const ref = expr.slice(2);
+    const dot = ref.indexOf('.');
+    const name = dot === -1 ? ref : ref.slice(0, dot);
+    if (!(name in vars)) {
+      const inScope = Object.keys(vars).map((v) => `$$${v}`).join(', ') || '(none)';
+      throw new Error(
+        `aggregate: undefined variable $$${name}. In scope: ${inScope}. An unbound ` +
+          `variable is NOT undefined — it throws, because comparing undefined to ` +
+          `anything quietly yields false and reads like a real, empty result.`,
+      );
+    }
+    const base = vars[name];
+    return dot === -1 ? base : getPath(base as Doc, ref.slice(dot + 1));
+  }
   if (typeof expr === 'string' && expr.startsWith('$')) {
     return getPath(doc, expr.slice(1));
   }
   return expr;
 }
 
+/** Mongo expression truthiness: only false, null, undefined and 0 are falsey. */
+function exprTruthy(v: unknown): boolean {
+  return v !== false && v !== null && v !== undefined && v !== 0;
+}
+
 /**
- * Evaluates the small expression set an aggregate `$project` may carry. Anything
- * outside it THROWS rather than yielding undefined — a projected field that is
+ * Evaluates the expression set an aggregate `$project` or `$addFields` may carry.
+ * Anything outside it THROWS rather than yielding undefined — a field that is
  * silently absent reads as "no value", which is how the `$arrayElemAt` fields
  * disappeared from the permissions response without anyone noticing.
  */
-function evalProjectExpr(expr: unknown, doc: Doc): unknown {
+function evalAggExpr(expr: unknown, doc: Doc, vars: Record<string, unknown> = {}): unknown {
   if (expr && typeof expr === 'object' && !Array.isArray(expr)) {
     const [op, arg] = Object.entries(expr as Record<string, unknown>)[0] ?? [];
     if (op === '$arrayElemAt' && Array.isArray(arg)) {
       const [src, idx] = arg as [unknown, number];
-      const arr = resolveExpr(src, doc);
+      const arr = evalAggExpr(src, doc, vars);
       if (!Array.isArray(arr)) {
         return undefined;
       }
       return idx < 0 ? arr[arr.length + idx] : arr[idx];
     }
+    if (op === '$filter') {
+      const { input, as, cond } = (arg ?? {}) as { input: unknown; as?: string; cond: unknown };
+      const arr = evalAggExpr(input, doc, vars);
+      if (!Array.isArray(arr)) {
+        return [];
+      }
+      // Mongo defaults the binding to `this` when `as` is omitted.
+      const name = as ?? 'this';
+      return arr.filter((el) => exprTruthy(evalAggExpr(cond, doc, { ...vars, [name]: el })));
+    }
+    if (op === '$and' && Array.isArray(arg)) {
+      return arg.every((e) => exprTruthy(evalAggExpr(e, doc, vars)));
+    }
+    if (op === '$eq' && Array.isArray(arg)) {
+      const [a, b] = arg as [unknown, unknown];
+      // Compare through coerceId so an ObjectId and its hex string are the same
+      // value — otherwise two references to one document read as different.
+      return coerceId(evalAggExpr(a, doc, vars)) === coerceId(evalAggExpr(b, doc, vars));
+    }
     throw new Error(
-      `aggregate $project: unsupported expression ${op}. Supported: $arrayElemAt ` +
-        `and a plain $field reference. An unsupported expression is NOT dropped — ` +
-        `it throws, because a silently missing field reads as "no value".`,
+      `aggregate: unsupported expression ${op}. Supported: $arrayElemAt $filter ` +
+        `$and $eq, plus $field and $$variable references. An unsupported expression ` +
+        `is NOT dropped — it throws, because a silently missing field reads as ` +
+        `"no value" and a silently false condition reads as "no matches".`,
     );
   }
-  return resolveExpr(expr, doc);
+  return resolveExpr(expr, doc, vars);
 }
 
 /**
