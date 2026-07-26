@@ -1,4 +1,5 @@
 const axios = require('axios');
+const ragClient = require('~/server/services/RagClient');
 const { logger } = require('@hanzochat/data-schemas');
 const { isEnabled, generateShortLivedToken } = require('@hanzochat/api');
 
@@ -11,7 +12,7 @@ In your response, remember to follow these guidelines:
 `;
 
 function createContextHandlers(req, userMessageContent) {
-  if (!process.env.RAG_API_URL) {
+  if (!ragClient.ragEnabled()) {
     return;
   }
 
@@ -21,29 +22,21 @@ function createContextHandlers(req, userMessageContent) {
   const jwtToken = generateShortLivedToken(req.user.id);
   const useFullContext = isEnabled(process.env.RAG_USE_FULL_CONTEXT);
 
+  // Both shapes go to the ONE RAG surface (services/RagClient) with the caller's
+  // own IAM bearer; the response is normalised to `{ data }` so the callers below
+  // keep reading `.data` exactly as they did from the axios responses.
   const query = async (file) => {
     if (useFullContext) {
-      return axios.get(`${process.env.RAG_API_URL}/documents/${file.file_id}/context`, {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      });
+      return { data: await ragClient.context(req, { file_id: file.file_id }) };
     }
 
-    return axios.post(
-      `${process.env.RAG_API_URL}/query`,
-      {
-        file_id: file.file_id,
+    return {
+      data: await ragClient.query(req, {
         query: userMessageContent,
+        file_id: file.file_id,
         k: 4,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+      }),
+    };
   };
 
   const processFile = async (file) => {

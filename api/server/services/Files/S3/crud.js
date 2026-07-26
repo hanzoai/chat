@@ -1,14 +1,10 @@
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { logger } = require('@hanzochat/data-schemas');
+const ragClient = require('~/server/services/RagClient');
 const { FileSources } = require('@hanzochat/data-provider');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const {
-  initializeS3,
-  deleteRagFile,
-  isEnabled,
-  resolveRequestOrg,
-} = require('@hanzochat/api');
+const { initializeS3, isEnabled, resolveRequestOrg } = require('@hanzochat/api');
 const {
   PutObjectCommand,
   GetObjectCommand,
@@ -205,7 +201,14 @@ async function saveURLToS3({ userId, URL, fileName, basePath = defaultBasePath, 
  * @returns {Promise<void>}
  */
 async function deleteFileFromS3(req, file) {
-  await deleteRagFile({ userId: req.user.id, file });
+  // Drop the file's chunks on the ONE RAG surface (services/RagClient) so deleting
+  // the object never leaves its embeddings behind. Best-effort: a retrieval-side
+  // failure must not block the S3 delete.
+  try {
+    await ragClient.remove(req, { file_id: file.file_id });
+  } catch (err) {
+    logger.warn(`[deleteFileFromS3] could not drop RAG chunks for ${file.file_id}: ${err.message}`);
+  }
 
   const key = extractKeyFromS3Url(file.filepath);
   const params = { Bucket: bucketName, Key: key };
