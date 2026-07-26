@@ -387,6 +387,42 @@ describe('DocModel — aggregate fails loud on unsupported stages', () => {
     ).rejects.toThrow(/unsupported stage \$addFields/);
   });
 
+
+  it('$lookup resolves a camelCase model from a lowercase collection name', async () => {
+    // 'accessroles' -> 'Accessrole' by the naive rule, which matched NO
+    // registered model, so every ACL join silently returned [].
+    const h = createSqliteHandle(['Message', 'AccessRole']);
+    try {
+      const M = h.models.Message;
+      const R = h.models.AccessRole;
+      await R.create({ accessRoleId: 'promptGroup_owner', resourceType: 'promptGroup' });
+      await M.create({ messageId: 'm1', user: 'u1', roleKind: 'promptGroup_owner' });
+
+      const out = await M.aggregate([
+        {
+          $lookup: {
+            from: 'accessroles',
+            localField: 'roleKind',
+            foreignField: 'accessRoleId',
+            as: 'role',
+          },
+        },
+      ]);
+      expect(out[0].role).toHaveLength(1); // 0 was the silent bug
+    } finally {
+      h.close();
+    }
+  });
+
+  it('$lookup THROWS when `from` resolves to no model at all', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+    await expect(
+      Message.aggregate([
+        { $lookup: { from: 'nosuchthings', localField: 'user', foreignField: 'x', as: 'y' } },
+      ]),
+    ).rejects.toThrow(/no model for from='nosuchthings'/);
+  });
+
   it('still runs a fully-supported pipeline', async () => {
     await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
     await Message.create({ messageId: 'm2', user: 'u2', text: 'b' });
