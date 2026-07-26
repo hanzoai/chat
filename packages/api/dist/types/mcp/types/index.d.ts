@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { Tools, SSEOptionsSchema, MCPOptionsSchema, MCPServersSchema, StdioOptionsSchema, WebSocketOptionsSchema, StreamableHTTPOptionsSchema } from 'librechat-data-provider';
+import { Tools, SSEOptionsSchema, MCPOptionsSchema, MCPServersSchema, StdioOptionsSchema, WebSocketOptionsSchema, StreamableHTTPOptionsSchema } from '@hanzochat/data-provider';
 import type { EmbeddedResource, ListToolsResult, ImageContent, AudioContent, TextContent, Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { SearchResultData, UIResource, TPlugin } from 'librechat-data-provider';
+import type { SearchResultData, UIResource, TPlugin } from '@hanzochat/data-provider';
 import type { TokenMethods, IUser } from '@hanzochat/data-schemas';
 import type { LCTool } from '@hanzochat/agents';
 import type { FlowStateManager } from '~/flow/manager';

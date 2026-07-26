@@ -1,4 +1,4 @@
-import { type MCPOptions } from 'librechat-data-provider';
+import { type MCPOptions } from '@hanzochat/data-provider';
 import type { FlowStateManager } from '~/flow/manager';
 import type { OAuthClientInformation, MCPOAuthFlowMetadata, MCPOAuthTokens } from './types';
 export declare class MCPOAuthHandler {

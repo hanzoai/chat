@@ -1,5 +1,5 @@
-import { EModelEndpoint } from 'librechat-data-provider';
-import type { SettingDefinition } from 'librechat-data-provider';
+import { EModelEndpoint } from '@hanzochat/data-provider';
+import type { SettingDefinition } from '@hanzochat/data-provider';
 import type * as t from '~/types';
 export declare const knownOpenAIParams: Set<string>;
 /**

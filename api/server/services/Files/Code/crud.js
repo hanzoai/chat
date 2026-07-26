@@ -1,8 +1,39 @@
 const FormData = require('form-data');
 const { getCodeBaseURL } = require('@hanzochat/agents');
-const { createAxiosInstance, logAxiosError } = require('@hanzochat/api');
+const { createAxiosInstance, logAxiosError, resolveTenantBearer } = require('@hanzochat/api');
 
 const axios = createAxiosInstance();
+
+/**
+ * Headers for a code-environment call: the S2S key, plus the end user's validated
+ * Hanzo IAM bearer when one is resolvable.
+ *
+ * The X-API-Key authenticates chat->cloud (service to service). It carries NO
+ * tenant, so cloud cannot tell which org a sandbox session belongs to — every
+ * exec, upload and download looks identical. Forwarding the user's IAM bearer
+ * (the SAME canonical resolver the cloud-agents path uses, so there is one way to
+ * do this) lets cloud derive the org from a validated principal and scope the
+ * sandbox to it.
+ *
+ * Additive and fail-open by design: with no resolvable bearer the request is
+ * byte-identical to before, so this cannot break the current path. Cloud decides
+ * whether to REQUIRE the principal.
+ *
+ * @param {string} apiKey - The code-environment service key.
+ * @param {ServerRequest} [req] - The request, when the caller has one.
+ * @returns {Record<string, string>} The header bag.
+ */
+function codeAuthHeaders(apiKey, req) {
+  const headers = {
+    'User-Agent': 'HanzoChat/1.0',
+    'X-API-Key': apiKey,
+  };
+  const bearer = req ? resolveTenantBearer(req) : null;
+  if (bearer) {
+    headers.Authorization = `Bearer ${bearer}`;
+  }
+  return headers;
+}
 
 const MAX_FILE_SIZE = 150 * 1024 * 1024;
 
@@ -10,10 +41,11 @@ const MAX_FILE_SIZE = 150 * 1024 * 1024;
  * Retrieves a download stream for a specified file.
  * @param {string} fileIdentifier - The identifier for the file (e.g., "session_id/fileId").
  * @param {string} apiKey - The API key for authentication.
+ * @param {ServerRequest} [req] - The request, so the user's IAM bearer can be forwarded.
  * @returns {Promise<AxiosResponse>} A promise that resolves to a readable stream of the file content.
  * @throws {Error} If there's an error during the download process.
  */
-async function getCodeOutputDownloadStream(fileIdentifier, apiKey) {
+async function getCodeOutputDownloadStream(fileIdentifier, apiKey, req) {
   try {
     const baseURL = getCodeBaseURL();
     /** @type {import('axios').AxiosRequestConfig} */
@@ -21,10 +53,7 @@ async function getCodeOutputDownloadStream(fileIdentifier, apiKey) {
       method: 'get',
       url: `${baseURL}/download/${fileIdentifier}`,
       responseType: 'stream',
-      headers: {
-        'User-Agent': 'HanzoChat/1.0',
-        'X-API-Key': apiKey,
-      },
+      headers: codeAuthHeaders(apiKey, req),
       timeout: 15000,
     };
 
@@ -65,9 +94,8 @@ async function uploadCodeEnvFile({ req, stream, filename, apiKey, entity_id = ''
       headers: {
         ...form.getHeaders(),
         'Content-Type': 'multipart/form-data',
-        'User-Agent': 'HanzoChat/1.0',
         'User-Id': req.user.id,
-        'X-API-Key': apiKey,
+        ...codeAuthHeaders(apiKey, req),
       },
       maxContentLength: MAX_FILE_SIZE,
       maxBodyLength: MAX_FILE_SIZE,
