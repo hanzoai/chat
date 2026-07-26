@@ -6,7 +6,7 @@ on:
     tags: ['v*']
 jobs:
   build:
-    runs-on: hanzo-linux-amd64
+    runs-on: hanzo-build-linux-amd64
     steps:
       - uses: actions/checkout@v4
       - name: Resolve the image tag
