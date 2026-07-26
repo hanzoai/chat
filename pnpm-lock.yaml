@@ -377,8 +377,8 @@ importers:
         specifier: ^9.2.2
         version: 9.4.2
       '@hanzo/ai':
-        specifier: ^0.2.3
-        version: 0.2.3
+        specifier: ^0.3.0
+        version: 0.3.0
       '@hanzo/brand':
         specifier: ^1.4.4
         version: 1.4.4(react@18.3.1)
@@ -386,8 +386,8 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3(react@18.3.1)
       '@hanzo/iam':
-        specifier: ^0.13.8
-        version: 0.13.8(react@18.3.1)
+        specifier: ^0.16.0
+        version: 0.16.0(react@18.3.1)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@18.3.1)
@@ -405,7 +405,7 @@ importers:
         version: link:../packages/data-provider
       '@hanzogui/shell':
         specifier: ^7.4.2
-        version: 7.4.2(@hanzo/iam@0.13.8(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 7.4.2(@hanzo/iam@0.16.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3799,8 +3799,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hanzo/ai@0.2.3':
-    resolution: {integrity: sha512-vL042sYaVzmWUTrjcCrx3Gay/a+oa9Mgv1cVetapeyikSS4wKOw9lMdSbxw2OD8puJK/Ozew7cglL43MYI9L3Q==}
+  '@hanzo/ai@0.3.0':
+    resolution: {integrity: sha512-nHj5rgSu5WD1fttfWv65HQ3WG65iztLFrwjb5B5BKSVwLVt7ZSLbioOZ6Of7GnFRG4PxtD0Sy961NnEA2FkaYA==}
     engines: {node: '>=18'}
 
   '@hanzo/brand@1.4.4':
@@ -3820,8 +3820,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/iam@0.13.8':
-    resolution: {integrity: sha512-6D4lZSSuTBWV/bof5u5l6VEE0VZhNnpF99svirmHTRko5MsZ5sEd3+7xZ28KH0UL0oquvHwRJ6tkvn+E+f5YuQ==}
+  '@hanzo/iam@0.16.0':
+    resolution: {integrity: sha512-OApTFl/UHDXXcnApj5hMVRbg0OcTkYGZyl/s1UtHrnLQOqWM+km83Z55u7RD0gH17l5dSwK2xjd+6denqKnc1A==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
@@ -17724,7 +17724,7 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@hanzo/ai@0.2.3': {}
+  '@hanzo/ai@0.3.0': {}
 
   '@hanzo/brand@1.4.4(react@18.3.1)':
     dependencies:
@@ -17736,7 +17736,7 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  '@hanzo/iam@0.13.8(react@18.3.1)':
+  '@hanzo/iam@0.16.0(react@18.3.1)':
     dependencies:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
@@ -17885,9 +17885,9 @@ snapshots:
       - ws
       - zod
 
-  '@hanzogui/shell@7.4.2(@hanzo/iam@0.13.8(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hanzogui/shell@7.4.2(@hanzo/iam@0.16.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@hanzo/iam': 0.13.8(react@18.3.1)
+      '@hanzo/iam': 0.16.0(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
