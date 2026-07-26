@@ -196,6 +196,12 @@ export const loginGoogle = () => `${BASE_URL}/v1/chat/auth/google`;
 export const refreshToken = (retry?: boolean) =>
   `${BASE_URL}/v1/chat/auth/refresh${retry === true ? '?retry=true' : ''}`;
 
+/**
+ * Session-bridge: exchange an @hanzo/iam SPA token for a Chat session
+ * (refresh cookie + Mongo Session + Chat JWT). POST { accessToken, idToken }.
+ */
+export const iamSession = () => `${BASE_URL}/oauth/iam/session`;
+
 export const guestToken = () => `${BASE_URL}/v1/chat/auth/guest`;
 
 export const requestPasswordReset = () => `${BASE_URL}/v1/chat/auth/requestPasswordReset`;

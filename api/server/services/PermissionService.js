@@ -806,6 +806,73 @@ const bulkUpdateResourcePermissions = async ({
  * @param {string|mongoose.Types.ObjectId} params.resourceId - The ID of the resource
  * @returns {Promise<Object>} Result of the deletion operation
  */
+/**
+ * Resource IDs of `resourceType` that `principalId` owns ALONE — i.e. the ones
+ * that would be orphaned if that user were deleted, and only those.
+ *
+ * "Owns" is decided by the DELETE permission bit, not by a roleId lookup. The
+ * role ladder is viewer=VIEW, editor=VIEW|EDIT, owner=VIEW|EDIT|DELETE|SHARE
+ * (accessPermissions.ts), so DELETE is exactly the owner discriminator. Keying
+ * on the bit rather than on a resourceType -> `<type>_owner` name table means
+ * there is no second mapping to keep in step with AccessRoleIds, and a new
+ * resource type works with no change here.
+ *
+ * FAIL-SAFE BY CONSTRUCTION: the caller feeds this straight into
+ * `deleteMany`, so a false positive destroys somebody else's data. A resource
+ * is therefore returned ONLY when this principal is the single owner — any
+ * other owning principal (another user, a group, or PUBLIC) keeps it off the
+ * list, and it is left behind rather than deleted.
+ *
+ * @param {string|ObjectId} principalId - the user being deleted
+ * @param {string} resourceType - e.g. ResourceType.PROMPTGROUP
+ * @returns {Promise<ObjectId[]>} sole-owned resource IDs (possibly empty)
+ */
+const getSoleOwnedResourceIds = async (principalId, resourceType) => {
+  try {
+    validateResourceType(resourceType);
+    if (!principalId || !mongoose.Types.ObjectId.isValid(principalId)) {
+      throw new Error(`Invalid principal ID: ${principalId}`);
+    }
+
+    const OWNER_BIT = 4; // PermissionBits.DELETE
+    const ownerFilter = { resourceType, permBits: { $bitsAllSet: OWNER_BIT } };
+
+    const mine = await AclEntry.find({
+      ...ownerFilter,
+      principalType: PrincipalType.USER,
+      principalId: new mongoose.Types.ObjectId(principalId),
+    })
+      .select('resourceId')
+      .lean();
+
+    if (mine.length === 0) {
+      return [];
+    }
+
+    const candidateIds = mine.map((e) => e.resourceId);
+
+    /** Every OTHER owner entry on those same resources — any principal type. */
+    const otherOwners = await AclEntry.find({
+      ...ownerFilter,
+      resourceId: { $in: candidateIds },
+      $nor: [
+        {
+          principalType: PrincipalType.USER,
+          principalId: new mongoose.Types.ObjectId(principalId),
+        },
+      ],
+    })
+      .select('resourceId')
+      .lean();
+
+    const shared = new Set(otherOwners.map((e) => e.resourceId.toString()));
+    return candidateIds.filter((id) => !shared.has(id.toString()));
+  } catch (error) {
+    logger.error(`[PermissionService.getSoleOwnedResourceIds] Error: ${error.message}`);
+    throw error;
+  }
+};
+
 const removeAllPermissions = async ({ resourceType, resourceId }) => {
   try {
     validateResourceType(resourceType);
@@ -840,4 +907,5 @@ module.exports = {
   ensureGroupPrincipalExists,
   syncUserEntraGroupMemberships,
   removeAllPermissions,
+  getSoleOwnedResourceIds,
 };

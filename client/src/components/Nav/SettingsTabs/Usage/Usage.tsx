@@ -147,7 +147,7 @@ function Usage() {
       <SmartRoutingToggle />
 
       {/* Canonical cloud usage (api.hanzo.ai) — renders nothing when unavailable.
-          A separate concern from the LibreChat token-credit view below. */}
+          A separate concern from the legacy token-credit view below. */}
       <CloudUsage />
 
       {/* Spend header card */}

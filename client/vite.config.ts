@@ -289,6 +289,10 @@ export default defineConfig(({ command }) => ({
       'micromark-extension-math': 'micromark-extension-llm-math',
     },
   },
+  // Pre-bundle the compiled-ESM shell so the dev server resolves it cleanly.
+  optimizeDeps: {
+    include: ['@hanzogui/shell'],
+  },
 }));
 
 interface SourcemapExclude {

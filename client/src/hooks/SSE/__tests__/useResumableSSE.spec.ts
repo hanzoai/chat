@@ -119,6 +119,7 @@ jest.mock('@hanzochat/data-provider', () => {
 });
 
 import useResumableSSE from '~/hooks/SSE/useResumableSSE';
+import { LOGIN_REQUIRED } from '~/utils/login';
 
 const CONV_ID = 'conv-abc-123';
 
@@ -615,5 +616,58 @@ describe('useResumableSSE - 404 error path', () => {
       }),
     );
     unmount();
+  });
+});
+
+describe('useResumableSSE - refused submission opens the login gate', () => {
+  const { request } = jest.requireMock('@hanzochat/data-provider');
+  let reasons: string[];
+  let listener: (event: Event) => void;
+
+  beforeEach(() => {
+    mockSSEInstances.length = 0;
+    mockErrorHandler.mockClear();
+    mockSetIsSubmitting.mockClear();
+    reasons = [];
+    listener = (event: Event) =>
+      reasons.push((event as CustomEvent<{ reason: string }>).detail.reason);
+    window.addEventListener(LOGIN_REQUIRED, listener);
+  });
+
+  afterEach(() => {
+    window.removeEventListener(LOGIN_REQUIRED, listener);
+    request.post.mockResolvedValue({ streamId: 'stream-123' });
+  });
+
+  const refuse = async (status: number, data?: unknown) => {
+    request.post.mockRejectedValueOnce({ response: { status, data } });
+    const { unmount } = renderHook(() => useResumableSSE(buildSubmission(), buildChatHelpers()));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    unmount();
+  };
+
+  it('asks for login (not a raw error bubble) when the visitor is not signed in', async () => {
+    await refuse(401, 'Unauthorized');
+
+    expect(reasons).toEqual(['anonymous']);
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+    expect(mockSetIsSubmitting).toHaveBeenCalledWith(false);
+    expect(mockSSEInstances).toHaveLength(0);
+  });
+
+  it('asks for login with the quota reason when the free preview is spent', async () => {
+    await refuse(402, { type: 'GUEST_LIMIT' });
+
+    expect(reasons).toEqual(['limit']);
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+  });
+
+  it('still surfaces other server errors as an error message', async () => {
+    await refuse(500, { message: 'boom' });
+
+    expect(reasons).toEqual([]);
+    expect(mockErrorHandler).toHaveBeenCalled();
   });
 });

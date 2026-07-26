@@ -1,3 +1,8 @@
+/* Shared Hanzo brand tokens (monochrome --hanzo-* scale). Imported first so the
+   chat :root below overrides any collision — chat keeps its own grey ramp while
+   the --hanzo-* palette becomes the single shared source across every surface. */
+@import '@hanzo/brand/styles/variables.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

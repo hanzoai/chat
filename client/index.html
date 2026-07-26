@@ -45,7 +45,8 @@
       document.head.appendChild(loadingContainerStyle);
     </script>
     <script defer type="module" src="/src/main.jsx"></script>
-    <!-- Telemetry is the one @hanzo/event client (POST /v1/event), mounted in AnalyticsProvider — no direct third-party tags. -->
+    <!-- No analytics tag: telemetry is the ONE @hanzo/event client mounted in
+         client/src/Providers/AnalyticsProvider.tsx (POST /v1/event). -->
   </head>
   <body>
     <div id="root">
