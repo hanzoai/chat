@@ -20,14 +20,14 @@ interface ViolationData {
   };
 }
 
-/** Waits for both Redis clients (ioredis + keyv/node-redis) to be ready */
+/** Waits for both Redis clients (@hanzo/kv + keyv/node-redis) to be ready */
 async function waitForRedisClients() {
   const redisClients = await import('../../redisClients');
-  const { ioredisClient, keyvRedisClientReady } = redisClients;
+  const { kvClient, keyvRedisClientReady } = redisClients;
 
-  if (ioredisClient && ioredisClient.status !== 'ready') {
+  if (kvClient && kvClient.status !== 'ready') {
     await new Promise<void>((resolve) => {
-      ioredisClient.once('ready', resolve);
+      kvClient.once('ready', resolve);
     });
   }
 

@@ -95,7 +95,7 @@ async function flushRedisCache(dryRun = false, verbose = false) {
     }
 
     // Create Redis client using same pattern as main app
-    const IoRedis = require('ioredis');
+    const KV = require('@hanzo/kv');
     let redis;
 
     // Parse credentials from URI or use environment variables (same as redisClients.ts)
@@ -129,13 +129,13 @@ async function flushRedisCache(dryRun = false, verbose = false) {
         clusterOptions.dnsLookup = (address, callback) => callback(null, address);
       }
 
-      redis = new IoRedis.Cluster(
+      redis = new KV.Cluster(
         urls.map((url) => ({ host: url.hostname, port: parseInt(url.port, 10) || 6379 })),
         clusterOptions,
       );
     } else {
-      // @ts-ignore - ioredis default export is constructable despite linter warning
-      redis = new IoRedis(REDIS_URI, redisOptions);
+      // @ts-ignore - @hanzo/kv default export is constructable despite linter warning
+      redis = new KV(REDIS_URI, redisOptions);
     }
 
     // Wait for connection

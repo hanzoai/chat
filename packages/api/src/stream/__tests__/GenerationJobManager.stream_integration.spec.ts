@@ -1,4 +1,4 @@
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 import type { ServerSentEvent } from '~/types/events';
 import { InMemoryEventTransport } from '~/stream/implementations/InMemoryEventTransport';
 import { RedisEventTransport } from '~/stream/implementations/RedisEventTransport';
@@ -8,7 +8,7 @@ import { RedisJobStore } from '~/stream/implementations/RedisJobStore';
 import { createStreamServices } from '~/stream/createStreamServices';
 import { GenerationJobManager } from '~/stream/GenerationJobManager';
 import {
-  ioredisClient as staticRedisClient,
+  kvClient as staticRedisClient,
   keyvRedisClient as staticKeyvClient,
   keyvRedisClientReady,
 } from '~/cache/redisClients';
@@ -16,14 +16,14 @@ import {
 /**
  * Integration tests for GenerationJobManager.
  *
- * Tests the job manager with both in-memory and Redis backends
+ * Tests the job manager with both in-memory and KV backends
  * to ensure consistent behavior across deployment modes.
  *
  * Run with: USE_REDIS=true npx jest GenerationJobManager.stream_integration
  */
 describe('GenerationJobManager Integration Tests', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let ioredisClient: Redis | Cluster | null = null;
+  let kvClient: KV | Cluster | null = null;
   let dynamicKeyvClient: unknown = null;
   let dynamicKeyvReady: Promise<unknown> | null = null;
   const testPrefix = 'JobManager-Integration-Test';
@@ -38,7 +38,7 @@ describe('GenerationJobManager Integration Tests', () => {
     jest.resetModules();
 
     const redisModule = await import('~/cache/redisClients');
-    ioredisClient = redisModule.ioredisClient;
+    kvClient = redisModule.kvClient;
     dynamicKeyvClient = redisModule.keyvRedisClient;
     dynamicKeyvReady = redisModule.keyvRedisClientReady;
   });
@@ -47,13 +47,13 @@ describe('GenerationJobManager Integration Tests', () => {
     // Clean up module state
     jest.resetModules();
 
-    // Clean up Redis keys (delete individually for cluster compatibility)
-    if (ioredisClient) {
+    // Clean up KV keys (delete individually for cluster compatibility)
+    if (kvClient) {
       try {
-        const keys = await ioredisClient.keys(`${testPrefix}*`);
-        const streamKeys = await ioredisClient.keys(`stream:*`);
+        const keys = await kvClient.keys(`${testPrefix}*`);
+        const streamKeys = await kvClient.keys(`stream:*`);
         const allKeys = [...keys, ...streamKeys];
-        await Promise.all(allKeys.map((key) => ioredisClient!.del(key)));
+        await Promise.all(allKeys.map((key) => kvClient!.del(key)));
       } catch {
         // Ignore cleanup errors
       }
@@ -67,7 +67,7 @@ describe('GenerationJobManager Integration Tests', () => {
       }
     }
 
-    const clients = [ioredisClient, staticRedisClient, staticKeyvClient, dynamicKeyvClient];
+    const clients = [kvClient, staticRedisClient, staticKeyvClient, dynamicKeyvClient];
     for (const client of clients) {
       if (!client) {
         continue;
@@ -147,7 +147,7 @@ describe('GenerationJobManager Integration Tests', () => {
       // Wait for first subscriber to be registered
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // Emit chunks (emitChunk takes { event, data } format, now async for Redis ordering)
+      // Emit chunks (emitChunk takes { event, data } format, now async for KV ordering)
       await GenerationJobManager.emitChunk(streamId, {
         event: 'on_message_delta',
         data: { type: 'text', text: 'Hello' },
@@ -171,17 +171,17 @@ describe('GenerationJobManager Integration Tests', () => {
     });
   });
 
-  describe('Redis Mode', () => {
-    test('should create and manage jobs via Redis', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+  describe('KV Mode', () => {
+    test('should create and manage jobs via KV', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
-      // Create Redis services
+      // Create KV services
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       expect(services.isRedis).toBe(true);
@@ -196,7 +196,7 @@ describe('GenerationJobManager Integration Tests', () => {
       const job = await GenerationJobManager.createJob(streamId, userId);
       expect(job.streamId).toBe(streamId);
 
-      // Verify in Redis
+      // Verify in KV
       const hasJob = await GenerationJobManager.hasJob(streamId);
       expect(hasJob).toBe(true);
 
@@ -209,14 +209,14 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should persist chunks for cross-instance resume', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -225,8 +225,8 @@ describe('GenerationJobManager Integration Tests', () => {
       const streamId = `redis-chunks-${Date.now()}`;
       await GenerationJobManager.createJob(streamId, 'user-1');
 
-      // Emit chunks (these should be persisted to Redis)
-      // emitChunk takes { event, data } format, now async for Redis ordering
+      // Emit chunks (these should be persisted to KV)
+      // emitChunk takes { event, data } format, now async for KV ordering
       await GenerationJobManager.emitChunk(streamId, {
         event: 'on_run_step',
         data: {
@@ -264,14 +264,14 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should handle abort and return content', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -311,18 +311,18 @@ describe('GenerationJobManager Integration Tests', () => {
   });
 
   describe('Cross-Mode Consistency', () => {
-    test('should have consistent API between in-memory and Redis modes', async () => {
+    test('should have consistent API between in-memory and KV modes', async () => {
       // This test verifies that the same operations work identically
       // regardless of backend mode
 
       const runTestWithMode = async (isRedis: boolean) => {
         jest.resetModules();
 
-        if (isRedis && ioredisClient) {
+        if (isRedis && kvClient) {
           GenerationJobManager.configure({
             ...createStreamServices({
               useRedis: true,
-              redisClient: ioredisClient,
+              redisClient: kvClient,
             }),
             cleanupOnComplete: false, // Keep job for verification
           });
@@ -367,41 +367,41 @@ describe('GenerationJobManager Integration Tests', () => {
       // Test in-memory mode
       await runTestWithMode(false);
 
-      // Test Redis mode if available
-      if (ioredisClient) {
+      // Test KV mode if available
+      if (kvClient) {
         await runTestWithMode(true);
       }
     });
   });
 
-  describe('Cross-Replica Support (Redis)', () => {
+  describe('Cross-Replica Support (KV)', () => {
     /**
-     * Problem: In k8s with Redis and multiple replicas, when a user sends a message:
+     * Problem: In k8s with KV and multiple replicas, when a user sends a message:
      * 1. POST /v1/chat/agents/chat hits Replica A, creates job
      * 2. GET /v1/chat/agents/chat/stream/:streamId hits Replica B
      * 3. Replica B calls getJob() which returned undefined because runtimeState
      *    was only in Replica A's memory
      * 4. Stream endpoint returns 404
      *
-     * Fix: getJob() and subscribe() now lazily create runtime state from Redis
-     * when the job exists in Redis but not in local memory.
+     * Fix: getJob() and subscribe() now lazily create runtime state from KV
+     * when the job exists in KV but not in local memory.
      */
     test('should NOT return 404 when stream endpoint hits different replica than job creator', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       // === REPLICA A: Creates the job ===
-      // Simulate Replica A creating the job directly in Redis
+      // Simulate Replica A creating the job directly in KV
       // (In real scenario, this happens via GenerationJobManager.createJob on Replica A)
-      const replicaAJobStore = new RedisJobStore(ioredisClient);
+      const replicaAJobStore = new RedisJobStore(kvClient);
       await replicaAJobStore.initialize();
 
       const streamId = `cross-replica-404-test-${Date.now()}`;
       const userId = 'test-user';
 
-      // Create job in Redis (simulates Replica A's createJob)
+      // Create job in KV (simulates Replica A's createJob)
       await replicaAJobStore.createJob(streamId, userId);
 
       // === REPLICA B: Receives the stream request ===
@@ -410,7 +410,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -452,13 +452,13 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should lazily create runtime state for jobs created on other replicas', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
-      // Instance 1: Create the job directly in Redis (simulating another replica)
-      const jobStore = new RedisJobStore(ioredisClient);
+      // Instance 1: Create the job directly in KV (simulating another replica)
+      const jobStore = new RedisJobStore(kvClient);
       await jobStore.initialize();
 
       const streamId = `cross-replica-${Date.now()}`;
@@ -472,14 +472,14 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
       GenerationJobManager.initialize();
 
       // This should work even though the job was created by "another instance"
-      // The manager should lazily create runtime state from Redis data
+      // The manager should lazily create runtime state from KV data
       const job = await GenerationJobManager.getJob(streamId);
 
       expect(job).not.toBeNull();
@@ -499,15 +499,15 @@ describe('GenerationJobManager Integration Tests', () => {
       await jobStore.destroy();
     });
 
-    test('should persist syncSent to Redis for cross-replica consistency', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+    test('should persist syncSent to KV for cross-replica consistency', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -523,14 +523,14 @@ describe('GenerationJobManager Integration Tests', () => {
       // Mark sync sent
       GenerationJobManager.markSyncSent(streamId);
 
-      // Wait for async Redis update
+      // Wait for async KV update
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Should now be true
       wasSent = await GenerationJobManager.wasSyncSent(streamId);
       expect(wasSent).toBe(true);
 
-      // Verify it's actually in Redis by checking via jobStore
+      // Verify it's actually in KV by checking via jobStore
       const jobStore = services.jobStore;
       const jobData = await jobStore.getJob(streamId);
       expect(jobData?.syncSent).toBe(true);
@@ -538,15 +538,15 @@ describe('GenerationJobManager Integration Tests', () => {
       await GenerationJobManager.destroy();
     });
 
-    test('should persist finalEvent to Redis for cross-replica access', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+    test('should persist finalEvent to KV for cross-replica access', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure({
@@ -568,7 +568,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Verify finalEvent is in Redis
+      // Verify finalEvent is in KV
       const jobStore = services.jobStore;
       const jobData = await jobStore.getJob(streamId);
       expect(jobData?.finalEvent).toBeDefined();
@@ -580,15 +580,15 @@ describe('GenerationJobManager Integration Tests', () => {
       await GenerationJobManager.destroy();
     });
 
-    test('should emit cross-replica abort signal via Redis pub/sub', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+    test('should emit cross-replica abort signal via KV pub/sub', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -606,7 +606,7 @@ describe('GenerationJobManager Integration Tests', () => {
       // Wait for abort listener setup
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Abort the job - this should emit abort signal via Redis
+      // Abort the job - this should emit abort signal via KV
       await GenerationJobManager.abortJob(streamId);
 
       // Wait for signal propagation
@@ -620,16 +620,16 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should handle abort for lazily-initialized cross-replica jobs', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       // This test validates that jobs created on Replica A and lazily-initialized
       // on Replica B can still receive and handle abort signals.
 
-      // === Replica A: Create job directly in Redis ===
-      const replicaAJobStore = new RedisJobStore(ioredisClient);
+      // === Replica A: Create job directly in KV ===
+      const replicaAJobStore = new RedisJobStore(kvClient);
       await replicaAJobStore.initialize();
 
       const streamId = `lazy-abort-${Date.now()}`;
@@ -640,7 +640,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -656,10 +656,10 @@ describe('GenerationJobManager Integration Tests', () => {
         abortSignaled = true;
       });
 
-      // Wait for abort listener to be set up via Redis subscription
+      // Wait for abort listener to be set up via KV subscription
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      // Abort the job - this should emit abort signal via Redis pub/sub
+      // Abort the job - this should emit abort signal via KV pub/sub
       // The lazily-initialized runtime should receive it
       await GenerationJobManager.abortJob(streamId);
 
@@ -675,8 +675,8 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should abort generation when abort signal received from another replica', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
@@ -688,7 +688,7 @@ describe('GenerationJobManager Integration Tests', () => {
       // Create the job on "Replica A"
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -702,14 +702,14 @@ describe('GenerationJobManager Integration Tests', () => {
         abortSignaled = true;
       });
 
-      // Wait for abort listener to be set up via Redis subscription
+      // Wait for abort listener to be set up via KV subscription
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      // Simulate "Replica B" emitting abort signal directly via Redis
+      // Simulate "Replica B" emitting abort signal directly via KV
       // This is what would happen if abortJob was called on a different replica
-      const subscriber2 = (ioredisClient as unknown as { duplicate: () => unknown }).duplicate();
+      const subscriber2 = (kvClient as unknown as { duplicate: () => unknown }).duplicate();
       const replicaBTransport = new RedisEventTransport(
-        ioredisClient as never,
+        kvClient as never,
         subscriber2 as never,
       );
 
@@ -729,13 +729,13 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should handle wasSyncSent for cross-replica scenarios', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
-      // Create job directly in Redis with syncSent: true
-      const jobStore = new RedisJobStore(ioredisClient);
+      // Create job directly in KV with syncSent: true
+      const jobStore = new RedisJobStore(kvClient);
       await jobStore.initialize();
 
       const streamId = `cross-sync-${Date.now()}`;
@@ -747,13 +747,13 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
       GenerationJobManager.initialize();
 
-      // wasSyncSent should check Redis even without local runtime
+      // wasSyncSent should check KV even without local runtime
       const wasSent = await GenerationJobManager.wasSyncSent(streamId);
       expect(wasSent).toBe(true);
 
@@ -762,19 +762,19 @@ describe('GenerationJobManager Integration Tests', () => {
     });
   });
 
-  describe('Sequential Event Ordering (Redis)', () => {
+  describe('Sequential Event Ordering (KV)', () => {
     /**
      * These tests verify that events are delivered in strict sequential order
-     * when using Redis mode. This is critical because:
+     * when using KV mode. This is critical because:
      * 1. LLM streaming tokens must arrive in order for coherent output
      * 2. Tool call argument deltas must be concatenated in order
      * 3. Run step events must precede their deltas
      *
-     * The fix: emitChunk now awaits Redis publish to ensure ordered delivery.
+     * The fix: emitChunk now awaits KV publish to ensure ordered delivery.
      */
     test('should maintain strict order for rapid sequential emits', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
@@ -782,7 +782,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -823,8 +823,8 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should maintain order for tool call argument deltas', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
@@ -832,7 +832,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -882,8 +882,8 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should maintain order: on_run_step before on_run_step_delta', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
@@ -891,7 +891,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -945,8 +945,8 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should not block other streams when awaiting emitChunk', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
@@ -954,7 +954,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure(services);
@@ -1018,18 +1018,18 @@ describe('GenerationJobManager Integration Tests', () => {
   describe('Race Condition: Events Before Subscriber Ready', () => {
     /**
      * These tests verify the fix for the race condition where early events
-     * (like the 'created' event at seq 0) are lost because the Redis SUBSCRIBE
+     * (like the 'created' event at seq 0) are lost because the KV SUBSCRIBE
      * command hasn't completed when events are published.
      *
      * Symptom: "[RedisEventTransport] Stream <id>: timeout waiting for seq 0"
      *          followed by truncated responses in the UI.
      *
-     * Root cause: RedisEventTransport.subscribe() fired Redis SUBSCRIBE as
+     * Root cause: RedisEventTransport.subscribe() fired KV SUBSCRIBE as
      * fire-and-forget. GenerationJobManager set hasSubscriber=true immediately,
-     * disabling the earlyEventBuffer before Redis was actually listening.
+     * disabling the earlyEventBuffer before KV was actually listening.
      *
      * Fix: subscribe() now returns a `ready` promise that resolves when the
-     * Redis subscription is confirmed. earlyEventBuffer stays active until then.
+     * KV subscription is confirmed. earlyEventBuffer stays active until then.
      */
 
     test('should buffer and replay events emitted before subscribe (in-memory)', async () => {
@@ -1069,16 +1069,16 @@ describe('GenerationJobManager Integration Tests', () => {
       await manager.destroy();
     });
 
-    test('should buffer and replay events emitted before subscribe (Redis)', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+    test('should buffer and replay events emitted before subscribe (KV)', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const manager = new GenerationJobManagerClass();
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       manager.configure(services);
@@ -1118,16 +1118,16 @@ describe('GenerationJobManager Integration Tests', () => {
       await manager.destroy();
     });
 
-    test('should not lose events when emitting before and after subscribe (Redis)', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+    test('should not lose events when emitting before and after subscribe (KV)', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const manager = new GenerationJobManagerClass();
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       manager.configure(services);
@@ -1174,13 +1174,13 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('RedisEventTransport.subscribe() should return a ready promise', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
-      const subscriber = (ioredisClient as unknown as { duplicate: () => unknown }).duplicate();
-      const transport = new RedisEventTransport(ioredisClient as never, subscriber as never);
+      const subscriber = (kvClient as unknown as { duplicate: () => unknown }).duplicate();
+      const transport = new RedisEventTransport(kvClient as never, subscriber as never);
 
       const streamId = `ready-promise-${Date.now()}`;
       const result = transport.subscribe(streamId, {
@@ -1369,14 +1369,14 @@ describe('GenerationJobManager Integration Tests', () => {
       await GenerationJobManager.destroy();
     });
 
-    test('should handle error preservation in Redis mode (cross-replica)', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+    test('should handle error preservation in KV mode (cross-replica)', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       // === Replica A: Creates job and emits error ===
-      const replicaAJobStore = new RedisJobStore(ioredisClient);
+      const replicaAJobStore = new RedisJobStore(kvClient);
       await replicaAJobStore.initialize();
 
       const streamId = `redis-error-${Date.now()}`;
@@ -1394,7 +1394,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       GenerationJobManager.configure({
@@ -1418,7 +1418,7 @@ describe('GenerationJobManager Integration Tests', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Error should be loaded from Redis and sent to subscriber
+      // Error should be loaded from KV and sent to subscriber
       expect(receivedError).toBe(errorMessage);
 
       subscription?.unsubscribe();
@@ -1463,17 +1463,17 @@ describe('GenerationJobManager Integration Tests', () => {
     });
   });
 
-  describe('Cross-Replica Live Streaming (Redis)', () => {
-    test('should publish events to Redis even when no local subscriber exists', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+  describe('Cross-Replica Live Streaming (KV)', () => {
+    test('should publish events to KV even when no local subscriber exists', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const replicaA = new GenerationJobManagerClass();
       const servicesA = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       replicaA.configure(servicesA);
       replicaA.initialize();
@@ -1481,7 +1481,7 @@ describe('GenerationJobManager Integration Tests', () => {
       const replicaB = new GenerationJobManagerClass();
       const servicesB = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       replicaB.configure(servicesB);
       replicaB.initialize();
@@ -1489,7 +1489,7 @@ describe('GenerationJobManager Integration Tests', () => {
       const streamId = `cross-live-${Date.now()}`;
       await replicaA.createJob(streamId, 'user-1');
 
-      const replicaBJobStore = new RedisJobStore(ioredisClient);
+      const replicaBJobStore = new RedisJobStore(kvClient);
       await replicaBJobStore.initialize();
       await replicaBJobStore.createJob(streamId, 'user-1');
 
@@ -1519,15 +1519,15 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should not cause data loss on cross-replica subscribers when local subscriber joins', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const replicaA = new GenerationJobManagerClass();
       const servicesA = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       replicaA.configure(servicesA);
       replicaA.initialize();
@@ -1535,7 +1535,7 @@ describe('GenerationJobManager Integration Tests', () => {
       const replicaB = new GenerationJobManagerClass();
       const servicesB = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       replicaB.configure(servicesB);
       replicaB.initialize();
@@ -1543,7 +1543,7 @@ describe('GenerationJobManager Integration Tests', () => {
       const streamId = `cross-seq-safe-${Date.now()}`;
 
       await replicaA.createJob(streamId, 'user-1');
-      const replicaBJobStore = new RedisJobStore(ioredisClient);
+      const replicaBJobStore = new RedisJobStore(kvClient);
       await replicaBJobStore.initialize();
       await replicaBJobStore.createJob(streamId, 'user-1');
 
@@ -1603,15 +1603,15 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should deliver buffered events locally AND publish live events cross-replica', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const replicaA = new GenerationJobManagerClass();
       const servicesA = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       replicaA.configure(servicesA);
       replicaA.initialize();
@@ -1636,12 +1636,12 @@ describe('GenerationJobManager Integration Tests', () => {
       const replicaB = new GenerationJobManagerClass();
       const servicesB = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       replicaB.configure(servicesB);
       replicaB.initialize();
 
-      const replicaBJobStore = new RedisJobStore(ioredisClient);
+      const replicaBJobStore = new RedisJobStore(kvClient);
       await replicaBJobStore.initialize();
       await replicaBJobStore.createJob(streamId, 'user-1');
 
@@ -1671,17 +1671,17 @@ describe('GenerationJobManager Integration Tests', () => {
     });
   });
 
-  describe('Concurrent Subscriber Readiness (Redis)', () => {
+  describe('Concurrent Subscriber Readiness (KV)', () => {
     test('should return ready promise to all concurrent subscribers for same stream', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const subscriber = (
-        ioredisClient as unknown as { duplicate: () => typeof ioredisClient }
+        kvClient as unknown as { duplicate: () => typeof kvClient }
       ).duplicate()!;
-      const transport = new RedisEventTransport(ioredisClient as never, subscriber as never);
+      const transport = new RedisEventTransport(kvClient as never, subscriber as never);
 
       const streamId = `concurrent-sub-${Date.now()}`;
 
@@ -1706,17 +1706,17 @@ describe('GenerationJobManager Integration Tests', () => {
     });
   });
 
-  describe('Sequence Reset Safety (Redis)', () => {
-    test('should not receive stale pre-subscribe events via Redis after sequence reset', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+  describe('Sequence Reset Safety (KV)', () => {
+    test('should not receive stale pre-subscribe events via KV after sequence reset', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const manager = new GenerationJobManagerClass();
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       manager.configure(services);
       manager.initialize();
@@ -1774,15 +1774,15 @@ describe('GenerationJobManager Integration Tests', () => {
     });
 
     test('should not reset sequence when second subscriber joins mid-stream', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const manager = new GenerationJobManagerClass();
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
       manager.configure({ ...services, cleanupOnComplete: false });
       manager.initialize();
@@ -1837,15 +1837,15 @@ describe('GenerationJobManager Integration Tests', () => {
     });
   });
 
-  describe('Subscribe Error Recovery (Redis)', () => {
-    test('should allow resubscription after Redis subscribe failure', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+  describe('Subscribe Error Recovery (KV)', () => {
+    test('should allow resubscription after KV subscribe failure', async () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const subscriber = (
-        ioredisClient as unknown as { duplicate: () => typeof ioredisClient }
+        kvClient as unknown as { duplicate: () => typeof kvClient }
       ).duplicate()!;
 
       const realSubscribe = subscriber.subscribe.bind(subscriber);
@@ -1853,12 +1853,12 @@ describe('GenerationJobManager Integration Tests', () => {
       subscriber.subscribe = ((...args: Parameters<typeof subscriber.subscribe>) => {
         callCount++;
         if (callCount === 1) {
-          return Promise.reject(new Error('Simulated Redis SUBSCRIBE failure'));
+          return Promise.reject(new Error('Simulated KV SUBSCRIBE failure'));
         }
         return realSubscribe(...args);
       }) as typeof subscriber.subscribe;
 
-      const transport = new RedisEventTransport(ioredisClient as never, subscriber as never);
+      const transport = new RedisEventTransport(kvClient as never, subscriber as never);
 
       const streamId = `err-retry-${Date.now()}`;
 
@@ -1892,15 +1892,15 @@ describe('GenerationJobManager Integration Tests', () => {
   });
 
   describe('createStreamServices Auto-Detection', () => {
-    test('should use Redis when useRedis is true and client is available', () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+    test('should use KV when useRedis is true and client is available', () => {
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       expect(services.isRedis).toBe(true);
