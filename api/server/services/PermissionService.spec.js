@@ -14,6 +14,7 @@ const {
   getAvailableRoles,
   grantPermission,
   checkPermission,
+  getSoleOwnedResourceIds,
 } = require('./PermissionService');
 const { findRoleByIdentifier, getUserPrincipals, seedDefaultRoles } = require('~/models');
 
@@ -1931,5 +1932,84 @@ describe('PermissionService', () => {
       expect(permissionsMap.get(resource1.toString())).toBe(1);
       expect(permissionsMap.get(resource2.toString())).toBe(3);
     });
+  });
+});
+
+
+describe('getSoleOwnedResourceIds', () => {
+  // This feeds straight into deleteMany on account deletion, so a false
+  // positive destroys another user's data. These tests exist to pin that.
+  const me = new mongoose.Types.ObjectId();
+  const someoneElse = new mongoose.Types.ObjectId();
+  const aGroup = new mongoose.Types.ObjectId();
+
+  const ownerBits = 15; // VIEW|EDIT|DELETE|SHARE
+  const editorBits = 3; // VIEW|EDIT — no DELETE, so NOT an owner
+  const viewerBits = 1; // VIEW
+
+  const own = async (principalId, resourceId, permBits, principalType = PrincipalType.USER) =>
+    AclEntry.create({
+      principalType,
+      principalId,
+      resourceType: ResourceType.PROMPTGROUP,
+      resourceId,
+      permBits,
+      grantedBy: me,
+    });
+
+  test('returns a resource this user owns alone', async () => {
+    const mine = new mongoose.Types.ObjectId();
+    await own(me, mine, ownerBits);
+
+    const ids = await getSoleOwnedResourceIds(me, ResourceType.PROMPTGROUP);
+    expect(ids.map(String)).toEqual([mine.toString()]);
+  });
+
+  test('does NOT return a resource co-owned by another user', async () => {
+    const shared = new mongoose.Types.ObjectId();
+    await own(me, shared, ownerBits);
+    await own(someoneElse, shared, ownerBits);
+
+    const ids = await getSoleOwnedResourceIds(me, ResourceType.PROMPTGROUP);
+    expect(ids).toEqual([]); // deleting this would destroy someone else's data
+  });
+
+  test('does NOT return a resource also owned by a GROUP', async () => {
+    const shared = new mongoose.Types.ObjectId();
+    await own(me, shared, ownerBits);
+    await own(aGroup, shared, ownerBits, PrincipalType.GROUP);
+
+    const ids = await getSoleOwnedResourceIds(me, ResourceType.PROMPTGROUP);
+    expect(ids).toEqual([]);
+  });
+
+  test('a viewer/editor on my resource does not make it shared-owned', async () => {
+    const mine = new mongoose.Types.ObjectId();
+    await own(me, mine, ownerBits);
+    await own(someoneElse, mine, editorBits);
+    await own(aGroup, mine, viewerBits, PrincipalType.GROUP);
+
+    const ids = await getSoleOwnedResourceIds(me, ResourceType.PROMPTGROUP);
+    expect(ids.map(String)).toEqual([mine.toString()]); // still solely OWNED
+  });
+
+  test('ignores resources where I am only an editor', async () => {
+    const theirs = new mongoose.Types.ObjectId();
+    await own(me, theirs, editorBits);
+    await own(someoneElse, theirs, ownerBits);
+
+    const ids = await getSoleOwnedResourceIds(me, ResourceType.PROMPTGROUP);
+    expect(ids).toEqual([]);
+  });
+
+  test('returns empty rather than throwing when the user owns nothing', async () => {
+    const ids = await getSoleOwnedResourceIds(me, ResourceType.PROMPTGROUP);
+    expect(ids).toEqual([]);
+  });
+
+  test('rejects an invalid principal id instead of returning a wrong set', async () => {
+    await expect(getSoleOwnedResourceIds('not-an-objectid', ResourceType.PROMPTGROUP)).rejects.toThrow(
+      /Invalid principal ID/,
+    );
   });
 });
