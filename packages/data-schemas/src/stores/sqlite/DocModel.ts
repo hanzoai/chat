@@ -648,10 +648,21 @@ export class DocModel {
         };
         const modelName = from.charAt(0).toUpperCase() + from.slice(1).replace(/s$/, '');
         const target = this.resolver?.(modelName);
+        if (!target) {
+          // An unresolvable `from` used to yield [] for every document — a join
+          // that quietly produced nothing, which reads exactly like "no matches".
+          // That is how `from: 'accessroles'` (-> 'Accessrole', no such model)
+          // silently emptied the ACL joins. Resolution is now case-insensitive,
+          // and anything still unresolvable is loud.
+          throw new Error(
+            `aggregate $lookup: no model for from='${from}' (tried '${modelName}'). ` +
+              `An unresolvable join is NOT silently empty — it throws, because ` +
+              `returning [] is indistinguishable from a genuine no-match.`,
+          );
+        }
         docs = docs.map((d) => {
           const local = coerceId(getPath(d, localField));
-          const joined = target ? target.candidates({ [foreignField]: local }) : [];
-          return { ...d, [as]: joined };
+          return { ...d, [as]: target.candidates({ [foreignField]: local }) };
         });
       } else if (op === '$unwind') {
         const spec = stage.$unwind as string | { path: string; preserveNullAndEmptyArrays?: boolean };
