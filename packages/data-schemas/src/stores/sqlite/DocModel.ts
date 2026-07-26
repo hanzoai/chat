@@ -712,7 +712,33 @@ export class DocModel {
         // silently returned page 1 for every page.
         docs = docs.slice(stage.$skip as number);
       } else if (op === '$project') {
-        docs = docs.map((d) => projectDoc(d, stage.$project as Record<string, 0 | 1>));
+        // An aggregate $project is NOT a find projection: alongside 0/1 it may
+        // carry expressions. projectDoc only understands 0/1, so expression keys
+        // were dropped without a word — that is how `accessRoleId:
+        // { $arrayElemAt: [...] }` vanished from the permissions response.
+        // Deliberately NOT taught to projectDoc: that function is shared with
+        // find().select(), where expressions are not valid. Same name, two
+        // different jobs; evaluating them here keeps find's semantics untouched.
+        const spec = stage.$project as Record<string, unknown>;
+        const flags: Record<string, 0 | 1> = {};
+        const exprs: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(spec)) {
+          if (v === 0 || v === 1) {
+            flags[k] = v;
+          } else {
+            exprs[k] = v;
+          }
+        }
+        const hasExprs = Object.keys(exprs).length > 0;
+        docs = docs.map((d) => {
+          // A projection that is only expressions still includes _id, matching
+          // mongo; projectDoc handles that when any 1 is present.
+          const base = projectDoc(d, hasExprs ? { ...flags, _id: flags._id ?? 1 } : flags);
+          for (const [k, e] of Object.entries(exprs)) {
+            base[k] = evalProjectExpr(e, d);
+          }
+          return base;
+        });
       } else {
         // FAIL LOUD. This chain used to end here with no else, so an unsupported
         // stage was silently skipped and the pipeline returned a confident wrong
@@ -1048,6 +1074,32 @@ function resolveExpr(expr: unknown, doc: Doc): unknown {
     return getPath(doc, expr.slice(1));
   }
   return expr;
+}
+
+/**
+ * Evaluates the small expression set an aggregate `$project` may carry. Anything
+ * outside it THROWS rather than yielding undefined — a projected field that is
+ * silently absent reads as "no value", which is how the `$arrayElemAt` fields
+ * disappeared from the permissions response without anyone noticing.
+ */
+function evalProjectExpr(expr: unknown, doc: Doc): unknown {
+  if (expr && typeof expr === 'object' && !Array.isArray(expr)) {
+    const [op, arg] = Object.entries(expr as Record<string, unknown>)[0] ?? [];
+    if (op === '$arrayElemAt' && Array.isArray(arg)) {
+      const [src, idx] = arg as [unknown, number];
+      const arr = resolveExpr(src, doc);
+      if (!Array.isArray(arr)) {
+        return undefined;
+      }
+      return idx < 0 ? arr[arr.length + idx] : arr[idx];
+    }
+    throw new Error(
+      `aggregate $project: unsupported expression ${op}. Supported: $arrayElemAt ` +
+        `and a plain $field reference. An unsupported expression is NOT dropped — ` +
+        `it throws, because a silently missing field reads as "no value".`,
+    );
+  }
+  return resolveExpr(expr, doc);
 }
 
 /**

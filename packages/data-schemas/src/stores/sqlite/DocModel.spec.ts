@@ -423,6 +423,44 @@ describe('DocModel — aggregate fails loud on unsupported stages', () => {
     ).rejects.toThrow(/no model for from='nosuchthings'/);
   });
 
+
+  // PermissionsController.js:231 projects
+  //   accessRoleId: { $arrayElemAt: ['$role.accessRoleId', 0] }
+  // and those fields were silently dropped, so the permissions response carried
+  // principals with no role at all.
+  it('$project evaluates $arrayElemAt instead of dropping the field', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1', roles: ['owner', 'viewer'] });
+
+    const out = await Message.aggregate([
+      {
+        $project: {
+          messageId: 1,
+          firstRole: { $arrayElemAt: ['$roles', 0] },
+          lastRole: { $arrayElemAt: ['$roles', -1] },
+        },
+      },
+    ]);
+    expect(out[0].firstRole).toBe('owner');
+    expect(out[0].lastRole).toBe('viewer');
+    expect(out[0].messageId).toBe('m1'); // plain 0/1 inclusion still works
+  });
+
+  it('$project on a missing/!array path yields undefined, not a crash', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+    const out = await Message.aggregate([
+      { $project: { messageId: 1, nope: { $arrayElemAt: ['$notThere', 0] } } },
+    ]);
+    expect(out[0].nope).toBeUndefined();
+    expect(out[0].messageId).toBe('m1');
+  });
+
+  it('$project THROWS on an expression it does not implement', async () => {
+    await Message.create({ messageId: 'm1', user: 'u1' });
+    await expect(
+      Message.aggregate([{ $project: { x: { $concat: ['a', 'b'] } } }]),
+    ).rejects.toThrow(/unsupported expression \$concat/);
+  });
+
   it('still runs a fully-supported pipeline', async () => {
     await Message.create({ messageId: 'm1', user: 'u1', text: 'a' });
     await Message.create({ messageId: 'm2', user: 'u2', text: 'b' });
