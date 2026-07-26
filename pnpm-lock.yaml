@@ -386,8 +386,8 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3(react@18.3.1)
       '@hanzo/iam':
-        specifier: ^0.19.0
-        version: 0.19.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.21.0
+        version: 0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@18.3.1)
@@ -408,7 +408,7 @@ importers:
         version: link:../packages/data-provider
       '@hanzogui/shell':
         specifier: ^7.4.2
-        version: 7.4.2(@hanzo/iam@0.19.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 7.4.2(@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3823,8 +3823,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/iam@0.19.0':
-    resolution: {integrity: sha512-dxx9HiFYd5NcQ9FL9EnzJ2qUWXIu8xkSISIm540bMvkxubUGYMxvHnX5gcXlenlTe8gb4datULZUtC4PxzJmOA==}
+  '@hanzo/iam@0.21.0':
+    resolution: {integrity: sha512-VvnPXQqvyQQ0rwraaMUIRrc8N2eXMtUsXsT3hltstYmghv7F/03sfmus/lWvkShiVYHWzHkh8B/vno8VphgnTg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
@@ -17750,7 +17750,7 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  '@hanzo/iam@0.19.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
@@ -17906,9 +17906,9 @@ snapshots:
       - ws
       - zod
 
-  '@hanzogui/shell@7.4.2(@hanzo/iam@0.19.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hanzogui/shell@7.4.2(@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@hanzo/iam': 0.19.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@hanzo/iam': 0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 

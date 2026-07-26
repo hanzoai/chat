@@ -148,11 +148,13 @@ function AccountSettings() {
           resolved: isDark(theme) ? 'dark' : 'light',
           setMode: (mode) => setTheme(mode),
         }}
+        // The menu's own look comes from @hanzo/design (that is the point of the
+        // shared control) — chat only flavors the trigger and the rows. The legacy
+        // `.popover-ui` / `.account-settings-popover` classes are NOT passed: they
+        // were written for ariakit's enter/leave lifecycle and set opacity:0.
         classNames={{
           trigger:
             'flex h-auto w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt',
-          menu: 'account-settings-popover popover-ui absolute bottom-full left-0 z-[125] mb-2 w-[305px] overflow-hidden rounded-lg md:w-[244px]',
-          section: 'border-b border-border-light px-3 py-2',
           item: 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-surface-hover',
         }}
       />
