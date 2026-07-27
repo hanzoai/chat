@@ -144,6 +144,9 @@ importers:
       '@google/genai':
         specifier: ^1.19.0
         version: 1.46.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))
+      '@hanzo/kv':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@hanzochat/agents':
         specifier: ^3.2.63
         version: 3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)
@@ -234,9 +237,6 @@ importers:
       https-proxy-agent:
         specifier: ^7.0.6
         version: 7.0.6
-      ioredis:
-        specifier: ^5.3.2
-        version: 5.10.1
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
@@ -803,6 +803,9 @@ importers:
       '@google/genai':
         specifier: ^1.19.0
         version: 1.42.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))
+      '@hanzo/kv':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@hanzochat/agents':
         specifier: ^3.2.63
         version: 3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)
@@ -848,9 +851,6 @@ importers:
       https-proxy-agent:
         specifier: ^7.0.6
         version: 7.0.6
-      ioredis:
-        specifier: ^5.3.2
-        version: 5.9.3
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
@@ -3920,6 +3920,19 @@ packages:
       react-dom:
         optional: true
 
+  '@hanzo/kv-commands@0.1.1':
+    resolution: {integrity: sha512-6hCH69HcA3EbFhPUgK445VwbcY/qoneaHGv+DRRdKVNzLDsewigcMWCyE7+XT7CdNYs/yFwCTBZKI4DBTIf1nA==}
+
+  '@hanzo/kv-errors@1.2.2':
+    resolution: {integrity: sha512-Lzf7vw1WXiS/8FqzdxLGcgocKzm4B9KgUy7rDQUuMJ17O3TfHIOEa1npVrkdXrNT022ji5S6nesAiOLp8gjEQw==}
+
+  '@hanzo/kv-parser@3.0.2':
+    resolution: {integrity: sha512-bEfP1pfzUaau1j67WODNL92n71gCDq1w+6gjArhBzGgCp1HbA8tFN8S4ajoavE7Gws/ccm7W1lXSF4ToEUsppg==}
+
+  '@hanzo/kv@0.4.1':
+    resolution: {integrity: sha512-gIMxg5lpiLPUkEPqqhzY6nAbGl8RzJD0HhiV6GgBIbsXM2vgaLzNUw3ot6/AoOwIg/nlVFZghabYMcRcn+1kdg==}
+    engines: {node: '>=18.12.0'}
+
   '@hanzo/logo@1.0.13':
     resolution: {integrity: sha512-94VA6S7oVY5UZ816295Ez12p8a76ZGEct14JQwE6r5UCutD3K9TBgx5V01gjwxwVL9tWnXn/yut4PHRAY/9RNQ==}
     peerDependencies:
@@ -4321,12 +4334,6 @@ packages:
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [win32]
-
-  '@ioredis/commands@1.5.0':
-    resolution: {integrity: sha512-eUgLqrMf8nJkZxT24JvVRrQya1vZkQh8BBeYNwGDqa5I0VUi8ACx7uFvAaLxintokpTenkK6DASvo/bvNbBGow==}
-
-  '@ioredis/commands@1.5.1':
-    resolution: {integrity: sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -9830,14 +9837,6 @@ packages:
     resolution: {integrity: sha512-fn4bQ0Xq8FTej09YC/jqKZwtijpvARlRp6wxL5WTA6yPe2YWSJ5RJh7Nm79rK2qB0wr6iDQzH60XGq5V/7u8YQ==}
     deprecated: The Intersection Observer polyfill is no longer needed and can safely be removed. Intersection Observer has been Baseline since 2019.
 
-  ioredis@5.10.1:
-    resolution: {integrity: sha512-HuEDBTI70aYdx1v6U97SbNx9F1+svQKBDo30o0b9fw055LMepzpOOd0Ccg9Q6tbqmBSJaMuY0fB7yw9/vjBYCA==}
-    engines: {node: '>=12.22.0'}
-
-  ioredis@5.9.3:
-    resolution: {integrity: sha512-VI5tMCdeoxZWU5vjHWsiE/Su76JGhBvWF1MJnV9ZtGltHk9BmD48oDq8Tj8haZ85aceXZMxLNDQZRVo5QKNgXA==}
-    engines: {node: '>=12.22.0'}
-
   ip-address@10.1.0:
     resolution: {integrity: sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q==}
     engines: {node: '>= 12'}
@@ -12571,14 +12570,6 @@ packages:
   redent@3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
-
-  redis-errors@1.2.0:
-    resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
-    engines: {node: '>=4'}
-
-  redis-parser@3.0.0:
-    resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
-    engines: {node: '>=4'}
 
   redux@4.2.1:
     resolution: {integrity: sha512-LAUYz4lc+Do8/g7aeRa8JkyDErK6ekstQaqWQrNRW//MY1TvCEpMtpTWvlQ+FPbWCx+Xixu/6SHt5N0HR+SB4w==}
@@ -18021,6 +18012,28 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
+  '@hanzo/kv-commands@0.1.1': {}
+
+  '@hanzo/kv-errors@1.2.2': {}
+
+  '@hanzo/kv-parser@3.0.2':
+    dependencies:
+      '@hanzo/kv-errors': 1.2.2
+
+  '@hanzo/kv@0.4.1':
+    dependencies:
+      '@hanzo/kv-commands': 0.1.1
+      '@hanzo/kv-errors': 1.2.2
+      '@hanzo/kv-parser': 3.0.2
+      cluster-key-slot: 1.1.2
+      debug: 4.4.3(supports-color@5.5.0)
+      denque: 2.1.0
+      lodash.defaults: 4.2.0
+      lodash.isarguments: 3.1.0
+      standard-as-callback: 2.1.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@hanzo/logo@1.0.13(react@18.3.1)':
     optionalDependencies:
       react: 18.3.1
@@ -18378,10 +18391,6 @@ snapshots:
 
   '@img/sharp-win32-x64@0.34.5':
     optional: true
-
-  '@ioredis/commands@1.5.0': {}
-
-  '@ioredis/commands@1.5.1': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -25052,34 +25061,6 @@ snapshots:
 
   intersection-observer@0.10.0: {}
 
-  ioredis@5.10.1:
-    dependencies:
-      '@ioredis/commands': 1.5.1
-      cluster-key-slot: 1.1.2
-      debug: 4.4.3(supports-color@5.5.0)
-      denque: 2.1.0
-      lodash.defaults: 4.2.0
-      lodash.isarguments: 3.1.0
-      redis-errors: 1.2.0
-      redis-parser: 3.0.0
-      standard-as-callback: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-
-  ioredis@5.9.3:
-    dependencies:
-      '@ioredis/commands': 1.5.0
-      cluster-key-slot: 1.1.2
-      debug: 4.4.3(supports-color@5.5.0)
-      denque: 2.1.0
-      lodash.defaults: 4.2.0
-      lodash.isarguments: 3.1.0
-      redis-errors: 1.2.0
-      redis-parser: 3.0.0
-      standard-as-callback: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-
   ip-address@10.1.0: {}
 
   ipaddr.js@1.9.1: {}
@@ -28437,12 +28418,6 @@ snapshots:
     dependencies:
       indent-string: 4.0.0
       strip-indent: 3.0.0
-
-  redis-errors@1.2.0: {}
-
-  redis-parser@3.0.0:
-    dependencies:
-      redis-errors: 1.2.0
 
   redux@4.2.1:
     dependencies:

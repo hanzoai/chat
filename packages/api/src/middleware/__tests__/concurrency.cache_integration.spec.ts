@@ -1,4 +1,4 @@
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 
 /**
  * Integration tests for concurrency middleware atomic Lua scripts.
@@ -10,7 +10,7 @@ import type { Redis, Cluster } from 'ioredis';
  */
 describe('Concurrency Middleware Integration Tests', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let ioredisClient: Redis | Cluster | null = null;
+  let kvClient: KV | Cluster | null = null;
   let checkAndIncrementPendingRequest: (
     userId: string,
   ) => Promise<{ allowed: boolean; pendingRequests: number; limit: number }>;
@@ -31,29 +31,29 @@ describe('Concurrency Middleware Integration Tests', () => {
 
     jest.resetModules();
 
-    const { ioredisClient: client } = await import('../../cache/redisClients');
-    ioredisClient = client;
+    const { kvClient: client } = await import('../../cache/redisClients');
+    kvClient = client;
 
-    if (!ioredisClient) {
-      console.warn('Redis not available, skipping integration tests');
+    if (!kvClient) {
+      console.warn('KV not available, skipping integration tests');
       return;
     }
 
-    // Import concurrency module after Redis client is available
+    // Import concurrency module after KV client is available
     const concurrency = await import('../concurrency');
     checkAndIncrementPendingRequest = concurrency.checkAndIncrementPendingRequest;
     decrementPendingRequest = concurrency.decrementPendingRequest;
   });
 
   afterEach(async () => {
-    if (!ioredisClient) {
+    if (!kvClient) {
       return;
     }
 
     try {
-      const keys = await ioredisClient.keys(`${testPrefix}*`);
+      const keys = await kvClient.keys(`${testPrefix}*`);
       if (keys.length > 0) {
-        await Promise.all(keys.map((key) => ioredisClient!.del(key)));
+        await Promise.all(keys.map((key) => kvClient!.del(key)));
       }
     } catch (error) {
       console.warn('Error cleaning up test keys:', error);
@@ -61,12 +61,12 @@ describe('Concurrency Middleware Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (ioredisClient) {
+    if (kvClient) {
       try {
-        await ioredisClient.quit();
+        await kvClient.quit();
       } catch {
         try {
-          ioredisClient.disconnect();
+          kvClient.disconnect();
         } catch {
           // Ignore
         }
@@ -77,7 +77,7 @@ describe('Concurrency Middleware Integration Tests', () => {
 
   describe('Atomic Check and Increment', () => {
     test('should allow requests within the concurrency limit', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -96,7 +96,7 @@ describe('Concurrency Middleware Integration Tests', () => {
     });
 
     test('should reject requests over the concurrency limit', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -113,7 +113,7 @@ describe('Concurrency Middleware Integration Tests', () => {
     });
 
     test('should not leave stale counter after rejection (atomic rollback)', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -129,12 +129,12 @@ describe('Concurrency Middleware Integration Tests', () => {
 
       // The key value should still be 2, not 3 — verify the Lua script decremented back
       const key = `PENDING_REQ:${userId}`;
-      const rawValue = await ioredisClient.get(key);
+      const rawValue = await kvClient.get(key);
       expect(rawValue).toBe('2');
     });
 
     test('should handle concurrent requests atomically (no over-admission)', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -154,7 +154,7 @@ describe('Concurrency Middleware Integration Tests', () => {
 
       // The key value should be exactly 2 after all atomic operations
       const key = `PENDING_REQ:${userId}`;
-      const rawValue = await ioredisClient.get(key);
+      const rawValue = await kvClient.get(key);
       expect(rawValue).toBe('2');
 
       // Clean up
@@ -165,7 +165,7 @@ describe('Concurrency Middleware Integration Tests', () => {
 
   describe('Atomic Decrement', () => {
     test('should decrement pending requests', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -178,12 +178,12 @@ describe('Concurrency Middleware Integration Tests', () => {
       await decrementPendingRequest(userId);
 
       const key = `PENDING_REQ:${userId}`;
-      const rawValue = await ioredisClient.get(key);
+      const rawValue = await kvClient.get(key);
       expect(rawValue).toBe('1');
     });
 
     test('should clean up key when count reaches zero', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -194,12 +194,12 @@ describe('Concurrency Middleware Integration Tests', () => {
 
       // Key should be deleted (not left as "0")
       const key = `PENDING_REQ:${userId}`;
-      const exists = await ioredisClient.exists(key);
+      const exists = await kvClient.exists(key);
       expect(exists).toBe(0);
     });
 
     test('should clean up key on double-decrement (negative protection)', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -211,12 +211,12 @@ describe('Concurrency Middleware Integration Tests', () => {
 
       // Key should be deleted, not negative
       const key = `PENDING_REQ:${userId}`;
-      const exists = await ioredisClient.exists(key);
+      const exists = await kvClient.exists(key);
       expect(exists).toBe(0);
     });
 
     test('should allow new requests after decrement frees a slot', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -242,7 +242,7 @@ describe('Concurrency Middleware Integration Tests', () => {
 
   describe('TTL Behavior', () => {
     test('should set TTL on the concurrency key', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
@@ -250,7 +250,7 @@ describe('Concurrency Middleware Integration Tests', () => {
       await checkAndIncrementPendingRequest(userId);
 
       const key = `PENDING_REQ:${userId}`;
-      const ttl = await ioredisClient.ttl(key);
+      const ttl = await kvClient.ttl(key);
       expect(ttl).toBeGreaterThan(0);
       expect(ttl).toBeLessThanOrEqual(60);
     });

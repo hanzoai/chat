@@ -53,13 +53,13 @@ describe('sessionCache', () => {
   test('should return ConnectRedis store when USE_REDIS is true', async () => {
     const cacheFactory = await import('../../cacheFactory');
     const redisClients = await import('../../redisClients');
-    const { ioredisClient } = redisClients;
+    const { kvClient } = redisClients;
     const store = cacheFactory.sessionCache('test-sessions', 3600);
 
     // Wait for Redis connection to be ready
-    if (ioredisClient && ioredisClient.status !== 'ready') {
+    if (kvClient && kvClient.status !== 'ready') {
       await new Promise<void>((resolve) => {
-        ioredisClient.once('ready', resolve);
+        kvClient.once('ready', resolve);
       });
     }
 
@@ -142,10 +142,10 @@ describe('sessionCache', () => {
   test('should register error handler for Redis connection', async () => {
     const cacheFactory = await import('../../cacheFactory');
     const redisClients = await import('../../redisClients');
-    const { ioredisClient } = redisClients;
+    const { kvClient } = redisClients;
 
-    // Spy on ioredisClient.on
-    const onSpy = jest.spyOn(ioredisClient!, 'on');
+    // Spy on kvClient.on
+    const onSpy = jest.spyOn(kvClient!, 'on');
 
     // Create session store
     cacheFactory.sessionCache('error-test');
@@ -159,14 +159,14 @@ describe('sessionCache', () => {
   test('should handle session expiration with TTL', async () => {
     const cacheFactory = await import('../../cacheFactory');
     const redisClients = await import('../../redisClients');
-    const { ioredisClient } = redisClients;
+    const { kvClient } = redisClients;
     const ttl = 1; // 1 second TTL
     const store = cacheFactory.sessionCache('ttl-sessions', ttl);
 
     // Wait for Redis connection to be ready
-    if (ioredisClient && ioredisClient.status !== 'ready') {
+    if (kvClient && kvClient.status !== 'ready') {
       await new Promise<void>((resolve) => {
-        ioredisClient.once('ready', resolve);
+        kvClient.once('ready', resolve);
       });
     }
 

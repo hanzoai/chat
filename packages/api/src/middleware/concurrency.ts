@@ -1,6 +1,6 @@
 import { logger } from '@hanzochat/data-schemas';
 import { CacheKeys, Time, ViolationTypes } from '@hanzochat/data-provider';
-import { standardCache, cacheConfig, ioredisClient } from '~/cache';
+import { standardCache, cacheConfig, kvClient } from '~/cache';
 import { isEnabled, math } from '~/utils';
 
 const { USE_REDIS } = cacheConfig;
@@ -62,7 +62,7 @@ function getPendingReqCache(): ReturnType<typeof standardCache> | null {
 
 /**
  * Build the cache key for a user's pending requests.
- * Note: ioredisClient already has keyPrefix applied, so we only add namespace:userId
+ * Note: kvClient already has keyPrefix applied, so we only add namespace:userId
  */
 function buildKey(userId: string): string {
   const namespace = CacheKeys.PENDING_REQ;
@@ -116,10 +116,10 @@ export async function checkAndIncrementPendingRequest(
 
   // Use atomic Lua script when Redis is available to prevent race conditions.
   // A single EVAL round-trip atomically increments, checks, and decrements if over-limit.
-  if (USE_REDIS && ioredisClient) {
+  if (USE_REDIS && kvClient) {
     const key = buildKey(userId);
     try {
-      const result = (await ioredisClient.eval(
+      const result = (await kvClient.eval(
         CHECK_AND_INCREMENT_SCRIPT,
         1,
         key,
@@ -191,10 +191,10 @@ export async function decrementPendingRequest(userId: string): Promise<void> {
     }
 
     // Use atomic Lua script to decrement and clean up zero/negative keys in one round-trip
-    if (USE_REDIS && ioredisClient) {
+    if (USE_REDIS && kvClient) {
       const key = buildKey(userId);
       try {
-        const newCount = (await ioredisClient.eval(DECREMENT_SCRIPT, 1, key)) as number;
+        const newCount = (await kvClient.eval(DECREMENT_SCRIPT, 1, key)) as number;
         if (newCount === 0) {
           logger.debug(`[concurrency] User ${userId} pending requests cleared`);
         } else {

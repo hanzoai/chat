@@ -2,7 +2,7 @@ import { logger } from '@hanzochat/data-schemas';
 import { createContentAggregator } from '@hanzochat/agents';
 import type { StandardGraph } from '@hanzochat/agents';
 import type { Agents } from '@hanzochat/data-provider';
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 import type {
   SerializableJobData,
   UsageMetadata,
@@ -11,11 +11,11 @@ import type {
 } from '~/stream/interfaces/IJobStore';
 
 /**
- * Key prefixes for Redis storage.
+ * Key prefixes for KV storage.
  * All keys include the streamId for easy cleanup.
  * Note: streamId === conversationId, so no separate mapping needed.
  *
- * IMPORTANT: Uses hash tags {streamId} for Redis Cluster compatibility.
+ * IMPORTANT: Uses hash tags {streamId} for KV Cluster compatibility.
  * All keys for the same stream hash to the same slot, enabling:
  * - Pipeline operations across related keys
  * - Atomic multi-key operations
@@ -23,7 +23,7 @@ import type {
 const KEYS = {
   /** Job metadata: stream:{streamId}:job */
   job: (streamId: string) => `stream:{${streamId}}:job`,
-  /** Chunk stream (Redis Streams): stream:{streamId}:chunks */
+  /** Chunk stream (KV Streams): stream:{streamId}:chunks */
   chunks: (streamId: string) => `stream:{${streamId}}:chunks`,
   /** Run steps: stream:{streamId}:runsteps */
   runSteps: (streamId: string) => `stream:{${streamId}}:runsteps`,
@@ -49,20 +49,20 @@ const DEFAULT_TTL = {
 };
 
 /**
- * Redis implementation of IJobStore.
+ * KV implementation of IJobStore.
  * Enables horizontal scaling with multi-instance deployments.
  *
  * Storage strategy:
- * - Job metadata: Redis Hash (fast field access)
- * - Chunks: Redis Streams (append-only, efficient for streaming)
- * - Run steps: Redis String (JSON serialized)
+ * - Job metadata: KV Hash (fast field access)
+ * - Chunks: KV Streams (append-only, efficient for streaming)
+ * - Run steps: KV String (JSON serialized)
  *
  * Note: streamId === conversationId, so getJob(conversationId) works directly.
  *
  * @example
  * ```ts
- * import { ioredisClient } from '~/cache';
- * const store = new RedisJobStore(ioredisClient);
+ * import { kvClient } from '~/cache';
+ * const store = new RedisJobStore(kvClient);
  * await store.initialize();
  * ```
  */
@@ -81,11 +81,11 @@ export interface RedisJobStoreOptions {
 }
 
 export class RedisJobStore implements IJobStore {
-  private redis: Redis | Cluster;
+  private redis: KV | Cluster;
   private cleanupInterval: NodeJS.Timeout | null = null;
   private ttl: typeof DEFAULT_TTL;
 
-  /** Whether Redis client is in cluster mode (affects pipeline usage) */
+  /** Whether KV client is in cluster mode (affects pipeline usage) */
   private isCluster: boolean;
 
   /**
@@ -105,7 +105,7 @@ export class RedisJobStore implements IJobStore {
   /** Cleanup interval in ms (1 minute) */
   private cleanupIntervalMs = 60000;
 
-  constructor(redis: Redis | Cluster, options?: RedisJobStoreOptions) {
+  constructor(redis: KV | Cluster, options?: RedisJobStoreOptions) {
     this.redis = redis;
     this.ttl = {
       completed: options?.completedTtl ?? DEFAULT_TTL.completed,
@@ -113,7 +113,7 @@ export class RedisJobStore implements IJobStore {
       chunksAfterComplete: options?.chunksAfterCompleteTtl ?? DEFAULT_TTL.chunksAfterComplete,
       runStepsAfterComplete: options?.runStepsAfterCompleteTtl ?? DEFAULT_TTL.runStepsAfterComplete,
     };
-    // Detect cluster mode using ioredis's isCluster property
+    // Detect cluster mode using @hanzo/kv's isCluster property
     this.isCluster = (redis as Cluster).isCluster === true;
   }
 
@@ -418,18 +418,18 @@ export class RedisJobStore implements IJobStore {
     // Clear local caches
     this.localGraphCache.clear();
     this.localCollectedUsageCache.clear();
-    // Don't close the Redis connection - it's shared
+    // Don't close the KV connection - it's shared
     logger.info('[RedisJobStore] Destroyed');
   }
 
   // ===== Content State Methods =====
-  // For Redis, content is primarily reconstructed from chunks.
+  // For KV, content is primarily reconstructed from chunks.
   // However, we keep a LOCAL graph cache for fast same-instance reconnects.
 
   /**
    * Store graph reference in local cache.
    * This enables fast reconnects when client returns to the same instance.
-   * Falls back to Redis chunk reconstruction for cross-instance reconnects.
+   * Falls back to KV chunk reconstruction for cross-instance reconnects.
    *
    * @param streamId - The stream identifier
    * @param graph - The graph instance (stored as WeakRef)
@@ -439,7 +439,7 @@ export class RedisJobStore implements IJobStore {
   }
 
   /**
-   * No-op for Redis - content parts are reconstructed from chunks.
+   * No-op for KV - content parts are reconstructed from chunks.
    * Metadata (agentId, groupId) is embedded directly on content parts by the agent runtime.
    */
   setContentParts(): void {
@@ -465,11 +465,11 @@ export class RedisJobStore implements IJobStore {
   }
 
   /**
-   * Get aggregated content - tries local cache first, falls back to Redis reconstruction.
+   * Get aggregated content - tries local cache first, falls back to KV reconstruction.
    *
    * Optimization: If this instance has the live graph (same-instance reconnect),
-   * we return the content directly without Redis round-trip.
-   * For cross-instance reconnects, we reconstruct from Redis Streams.
+   * we return the content directly without KV round-trip.
+   * For cross-instance reconnects, we reconstruct from KV Streams.
    *
    * @param streamId - The stream identifier
    * @returns Content parts array or null if not found
@@ -494,7 +494,7 @@ export class RedisJobStore implements IJobStore {
       }
     }
 
-    // 2. Fall back to Redis chunk reconstruction (cross-instance reconnect)
+    // 2. Fall back to KV chunk reconstruction (cross-instance reconnect)
     const chunks = await this.getChunks(streamId);
     if (chunks.length === 0) {
       return null;
@@ -538,10 +538,10 @@ export class RedisJobStore implements IJobStore {
   }
 
   /**
-   * Get run steps - tries local cache first, falls back to Redis.
+   * Get run steps - tries local cache first, falls back to KV.
    *
    * Optimization: If this instance has the live graph, we get run steps
-   * directly without Redis round-trip.
+   * directly without KV round-trip.
    *
    * @param streamId - The stream identifier
    * @returns Run steps array
@@ -561,7 +561,7 @@ export class RedisJobStore implements IJobStore {
       // but just not have run steps yet
     }
 
-    // 2. Fall back to Redis (cross-instance reconnect)
+    // 2. Fall back to KV (cross-instance reconnect)
     const key = KEYS.runSteps(streamId);
     const data = await this.redis.get(key);
     if (!data) {
@@ -576,14 +576,14 @@ export class RedisJobStore implements IJobStore {
 
   /**
    * Clear content state for a job.
-   * Removes both local cache and Redis data.
+   * Removes both local cache and KV data.
    */
   clearContentState(streamId: string): void {
     // Clear local caches immediately
     this.localGraphCache.delete(streamId);
     this.localCollectedUsageCache.delete(streamId);
 
-    // Fire and forget - async cleanup for Redis
+    // Fire and forget - async cleanup for KV
     this.clearContentStateAsync(streamId).catch((err) => {
       logger.error(`[RedisJobStore] Failed to clear content state for ${streamId}:`, err);
     });
@@ -600,7 +600,7 @@ export class RedisJobStore implements IJobStore {
   }
 
   /**
-   * Append a streaming chunk to Redis Stream.
+   * Append a streaming chunk to KV Stream.
    * Uses XADD for efficient append-only storage.
    * Sets TTL on first chunk to ensure cleanup if job crashes.
    */
@@ -617,7 +617,7 @@ export class RedisJobStore implements IJobStore {
   }
 
   /**
-   * Get all chunks from Redis Stream.
+   * Get all chunks from KV Stream.
    */
   private async getChunks(streamId: string): Promise<unknown[]> {
     const key = KEYS.chunks(streamId);
@@ -684,7 +684,7 @@ export class RedisJobStore implements IJobStore {
    * @param groupName - Consumer group name
    * @param consumerName - Name of the consumer within the group
    * @param count - Maximum number of chunks to read (default: all available)
-   * @returns Array of { id, event } where id is the Redis stream entry ID
+   * @returns Array of { id, event } where id is the KV stream entry ID
    */
   async readChunksFromGroup(
     streamId: string,
@@ -748,11 +748,11 @@ export class RedisJobStore implements IJobStore {
 
   /**
    * Acknowledge that chunks have been processed.
-   * This tells Redis we've successfully delivered these chunks to the client.
+   * This tells KV we've successfully delivered these chunks to the client.
    *
    * @param streamId - The stream identifier
    * @param groupName - Consumer group name
-   * @param messageIds - Array of Redis stream entry IDs to acknowledge
+   * @param messageIds - Array of KV stream entry IDs to acknowledge
    */
   async acknowledgeChunks(
     streamId: string,
@@ -838,7 +838,7 @@ export class RedisJobStore implements IJobStore {
   }
 
   /**
-   * Serialize job data for Redis hash storage.
+   * Serialize job data for KV hash storage.
    * Converts complex types to strings.
    */
   private serializeJob(job: Partial<SerializableJobData>): Record<string, string> {
@@ -862,7 +862,7 @@ export class RedisJobStore implements IJobStore {
   }
 
   /**
-   * Deserialize job data from Redis hash.
+   * Deserialize job data from KV hash.
    */
   private deserializeJob(data: Record<string, string>): SerializableJobData {
     return {

@@ -1,9 +1,9 @@
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 import { logger } from '@hanzochat/data-schemas';
 import type { IEventTransport } from '~/stream/interfaces/IJobStore';
 
 /**
- * Redis key prefixes for pub/sub channels
+ * KV key prefixes for pub/sub channels
  */
 const CHANNELS = {
   /** Main event channel: stream:{streamId}:events (hash tag for cluster compatibility) */
@@ -22,7 +22,7 @@ const EventTypes = {
 
 interface PubSubMessage {
   type: (typeof EventTypes)[keyof typeof EventTypes];
-  /** Sequence number for ordering (critical for Redis Cluster) */
+  /** Sequence number for ordering (critical for KV Cluster) */
   seq?: number;
   data?: unknown;
   error?: string;
@@ -30,7 +30,7 @@ interface PubSubMessage {
 
 /**
  * Reorder buffer state for a stream subscription.
- * Handles out-of-order message delivery in Redis Cluster mode.
+ * Handles out-of-order message delivery in KV Cluster mode.
  */
 interface ReorderBuffer {
   /** Next expected sequence number */
@@ -62,21 +62,21 @@ interface StreamSubscribers {
   allSubscribersLeftCallbacks: Array<() => void>;
   /** Abort callbacks - called when abort signal is received from any replica */
   abortCallbacks: Array<() => void>;
-  /** Reorder buffer for handling out-of-order delivery in Redis Cluster */
+  /** Reorder buffer for handling out-of-order delivery in KV Cluster */
   reorderBuffer: ReorderBuffer;
 }
 
 /**
- * Redis Pub/Sub implementation of IEventTransport.
+ * KV Pub/Sub implementation of IEventTransport.
  * Enables real-time event delivery across multiple instances.
  *
  * Architecture (inspired by https://upstash.com/blog/resumable-llm-streams):
- * - Publisher: Emits events to Redis channel when chunks arrive
- * - Subscriber: Listens to Redis channel and forwards to SSE clients
+ * - Publisher: Emits events to KV channel when chunks arrive
+ * - Subscriber: Listens to KV channel and forwards to SSE clients
  * - Decoupled: Generator and consumer don't need direct connection
  *
- * Note: Requires TWO Redis connections - one for publishing, one for subscribing.
- * This is a Redis limitation: a client in subscribe mode can't publish.
+ * Note: Requires TWO KV connections - one for publishing, one for subscribing.
+ * This is a KV limitation: a client in subscribe mode can't publish.
  *
  * @example
  * ```ts
@@ -86,10 +86,10 @@ interface StreamSubscribers {
  * ```
  */
 export class RedisEventTransport implements IEventTransport {
-  /** Redis client for publishing events */
-  private publisher: Redis | Cluster;
-  /** Redis client for subscribing to events (separate connection required) */
-  private subscriber: Redis | Cluster;
+  /** KV client for publishing events */
+  private publisher: KV | Cluster;
+  /** KV client for subscribing to events (separate connection required) */
+  private subscriber: KV | Cluster;
   /** Track subscribers per stream */
   private streams = new Map<string, StreamSubscribers>();
   /** Track channel subscription state: resolved promise = active, pending = in-flight */
@@ -100,12 +100,12 @@ export class RedisEventTransport implements IEventTransport {
   private sequenceCounters = new Map<string, number>();
 
   /**
-   * Create a new Redis event transport.
+   * Create a new KV event transport.
    *
-   * @param publisher - Redis client for publishing (can be shared)
-   * @param subscriber - Redis client for subscribing (must be dedicated)
+   * @param publisher - KV client for publishing (can be shared)
+   * @param subscriber - KV client for subscribing (must be dedicated)
    */
-  constructor(publisher: Redis | Cluster, subscriber: Redis | Cluster) {
+  constructor(publisher: KV | Cluster, subscriber: KV | Cluster) {
     this.publisher = publisher;
     this.subscriber = subscriber;
 
@@ -151,7 +151,7 @@ export class RedisEventTransport implements IEventTransport {
   }
 
   /**
-   * Handle incoming pub/sub message with reordering support for Redis Cluster
+   * Handle incoming pub/sub message with reordering support for KV Cluster
    */
   private handleMessage(channel: string, message: string): void {
     const match = channel.match(/^stream:\{([^}]+)\}:events$/);
@@ -344,7 +344,7 @@ export class RedisEventTransport implements IEventTransport {
   /**
    * Subscribe to events for a stream.
    *
-   * On first subscriber for a stream, subscribes to the Redis channel.
+   * On first subscriber for a stream, subscribes to the KV channel.
    * Returns unsubscribe function that cleans up when last subscriber leaves.
    */
   subscribe(
@@ -403,7 +403,7 @@ export class RedisEventTransport implements IEventTransport {
         state.handlers.delete(subscriberId);
         state.count--;
 
-        // If last subscriber left, unsubscribe from Redis and notify
+        // If last subscriber left, unsubscribe from KV and notify
         if (state.count === 0) {
           // Clear any pending flush timeout and buffered messages
           if (state.reorderBuffer.flushTimeout) {
@@ -441,7 +441,7 @@ export class RedisEventTransport implements IEventTransport {
 
   /**
    * Publish a chunk event to all subscribers across all instances.
-   * Includes sequence number for ordered delivery in Redis Cluster mode.
+   * Includes sequence number for ordered delivery in KV Cluster mode.
    */
   async emitChunk(streamId: string, event: unknown): Promise<void> {
     const channel = CHANNELS.events(streamId);
@@ -493,7 +493,7 @@ export class RedisEventTransport implements IEventTransport {
    * Get subscriber count for a stream (local instance only).
    *
    * Note: In a multi-instance setup, this only returns local subscriber count.
-   * For global count, would need to track in Redis (e.g., with a counter key).
+   * For global count, would need to track in KV (e.g., with a counter key).
    */
   getSubscriberCount(streamId: string): number {
     return this.streams.get(streamId)?.count ?? 0;

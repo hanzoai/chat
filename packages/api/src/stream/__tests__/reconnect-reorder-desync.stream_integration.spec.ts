@@ -1,9 +1,9 @@
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 import { RedisEventTransport } from '~/stream/implementations/RedisEventTransport';
 import { GenerationJobManagerClass } from '~/stream/GenerationJobManager';
 import { createStreamServices } from '~/stream/createStreamServices';
 import {
-  ioredisClient as staticRedisClient,
+  kvClient as staticRedisClient,
   keyvRedisClient as staticKeyvClient,
   keyvRedisClientReady,
 } from '~/cache/redisClients';
@@ -36,8 +36,8 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'callback-persist-test';
@@ -80,8 +80,8 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'abort-callback-persist-test';
@@ -135,8 +135,8 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'reorder-multi-reconnect-test';
@@ -199,8 +199,8 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
       };
 
       const transport = new RedisEventTransport(
-        mockPublisher as unknown as Redis,
-        mockSubscriber as unknown as Redis,
+        mockPublisher as unknown as KV,
+        mockSubscriber as unknown as KV,
       );
 
       const streamId = 'reorder-sync-test';
@@ -242,7 +242,7 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
 
   describe('End-to-end reconnect with GenerationJobManager (Integration)', () => {
     let originalEnv: NodeJS.ProcessEnv;
-    let ioredisClient: Redis | Cluster | null = null;
+    let kvClient: KV | Cluster | null = null;
     let dynamicKeyvClient: unknown = null;
     let dynamicKeyvReady: Promise<unknown> | null = null;
     const testPrefix = 'ReconnectDesync-Test';
@@ -257,7 +257,7 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
       jest.resetModules();
 
       const redisModule = await import('~/cache/redisClients');
-      ioredisClient = redisModule.ioredisClient;
+      kvClient = redisModule.kvClient;
       dynamicKeyvClient = redisModule.keyvRedisClient;
       dynamicKeyvReady = redisModule.keyvRedisClientReady;
     });
@@ -265,12 +265,12 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
     afterEach(async () => {
       jest.resetModules();
 
-      if (ioredisClient) {
+      if (kvClient) {
         try {
-          const keys = await ioredisClient.keys(`${testPrefix}*`);
-          const streamKeys = await ioredisClient.keys('stream:*');
+          const keys = await kvClient.keys(`${testPrefix}*`);
+          const streamKeys = await kvClient.keys('stream:*');
           const allKeys = [...keys, ...streamKeys];
-          await Promise.all(allKeys.map((key) => ioredisClient!.del(key)));
+          await Promise.all(allKeys.map((key) => kvClient!.del(key)));
         } catch {
           // Ignore cleanup errors
         }
@@ -284,7 +284,7 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
         }
       }
 
-      const clients = [ioredisClient, staticRedisClient, staticKeyvClient, dynamicKeyvClient];
+      const clients = [kvClient, staticRedisClient, staticKeyvClient, dynamicKeyvClient];
       for (const client of clients) {
         if (!client) {
           continue;
@@ -304,15 +304,15 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
      * not just the first reconnect.
      */
     test('chunks are delivered immediately on every reconnect cycle', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const manager = new GenerationJobManagerClass();
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       manager.configure(services);
@@ -356,15 +356,15 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
      * proving the onAllSubscribersLeft callback survives reconnect cycles.
      */
     test('onAllSubscribersLeft callback resets state on every disconnect', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const manager = new GenerationJobManagerClass();
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       manager.configure(services);
@@ -401,15 +401,15 @@ describe('Reconnect Reorder Buffer Desync (Regression)', () => {
      * increasing gap pattern.
      */
     test('no increasing gap pattern across reconnect cycles', async () => {
-      if (!ioredisClient) {
-        console.warn('Redis not available, skipping test');
+      if (!kvClient) {
+        console.warn('KV not available, skipping test');
         return;
       }
 
       const manager = new GenerationJobManagerClass();
       const services = createStreamServices({
         useRedis: true,
-        redisClient: ioredisClient,
+        redisClient: kvClient,
       });
 
       manager.configure(services);

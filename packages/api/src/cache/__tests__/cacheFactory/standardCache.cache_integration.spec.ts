@@ -19,9 +19,9 @@ describe('standardCache', () => {
   // Helper function to verify Redis keys exist
   const expectRedisKeysExist = async (expectedKeys: string[]) => {
     const redisClients = await import('../../redisClients');
-    const { ioredisClient } = redisClients;
-    if (!ioredisClient) throw new Error('ioredisClient is null');
-    const allKeys = await ioredisClient.keys('Cache-Integration-Test*');
+    const { kvClient } = redisClients;
+    if (!kvClient) throw new Error('kvClient is null');
+    const allKeys = await kvClient.keys('Cache-Integration-Test*');
     expectedKeys.forEach((expectedKey) => {
       expect(allKeys).toContain(expectedKey);
     });
@@ -45,8 +45,8 @@ describe('standardCache', () => {
   afterEach(async () => {
     // Clean up test keys using prefix and test namespaces
     const redisClients = await import('../../redisClients');
-    const { ioredisClient } = redisClients;
-    if (ioredisClient && ioredisClient.status === 'ready') {
+    const { kvClient } = redisClients;
+    if (kvClient && kvClient.status === 'ready') {
       try {
         const patterns = [
           'Cache-Integration-Test>>*',
@@ -55,9 +55,9 @@ describe('standardCache', () => {
         ];
 
         for (const pattern of patterns) {
-          const keys = await ioredisClient.keys(pattern);
+          const keys = await kvClient.keys(pattern);
           if (keys.length > 0) {
-            await ioredisClient.del(...keys);
+            await kvClient.del(...keys);
           }
         }
       } catch (error: unknown) {

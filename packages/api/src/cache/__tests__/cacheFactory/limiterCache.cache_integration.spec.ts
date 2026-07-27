@@ -41,13 +41,13 @@ describe('limiterCache', () => {
   test('should return RedisStore with sendCommand when USE_REDIS is true', async () => {
     const cacheFactory = await import('../../cacheFactory');
     const redisClients = await import('../../redisClients');
-    const { ioredisClient } = redisClients;
+    const { kvClient } = redisClients;
     testStore = cacheFactory.limiterCache('test-limiter');
 
     // Wait for Redis connection to be ready
-    if (ioredisClient && ioredisClient.status !== 'ready') {
+    if (kvClient && kvClient.status !== 'ready') {
       await new Promise<void>((resolve) => {
-        ioredisClient.once('ready', resolve);
+        kvClient.once('ready', resolve);
       });
     }
 
@@ -62,13 +62,13 @@ describe('limiterCache', () => {
     // SET operation
     await testStore!.sendCommand('SET', testKey, '1', 'EX', '60');
 
-    // Verify the key was created WITHOUT prefix using ioredis
+    // Verify the key was created WITHOUT prefix using @hanzo/kv
     // Note: Using call method since get method seems to have issues in test environment
-    // Type assertion for ioredis call method
-    type RedisClientWithCall = typeof ioredisClient & {
+    // Type assertion for @hanzo/kv call method
+    type RedisClientWithCall = typeof kvClient & {
       call: (command: string, key: string) => Promise<string | null>;
     };
-    const directValue = await (ioredisClient as RedisClientWithCall).call('GET', testKey);
+    const directValue = await (kvClient as RedisClientWithCall).call('GET', testKey);
 
     expect(directValue).toBe('1');
 
@@ -80,8 +80,8 @@ describe('limiterCache', () => {
     const incremented = await testStore!.sendCommand('INCR', testKey);
     expect(incremented).toBe(2);
 
-    // Verify increment worked with ioredis
-    const incrementedValue = await (ioredisClient as RedisClientWithCall).call('GET', testKey);
+    // Verify increment worked with @hanzo/kv
+    const incrementedValue = await (kvClient as RedisClientWithCall).call('GET', testKey);
     expect(incrementedValue).toBe('2');
 
     // TTL operation
@@ -96,7 +96,7 @@ describe('limiterCache', () => {
     // Verify deletion
     const afterDelete = await testStore!.sendCommand('GET', testKey);
     expect(afterDelete).toBeNull();
-    const directAfterDelete = await ioredisClient!.get(testKey);
+    const directAfterDelete = await kvClient!.get(testKey);
     expect(directAfterDelete).toBeNull();
 
     // Test error handling
