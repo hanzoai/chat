@@ -135,6 +135,15 @@ export const router = createBrowserRouter(
         },
       ],
     },
+    // An address the app does not serve (`/register`, a stale bookmark) had no
+    // match, so react-router threw and RouteErrorBoundary printed a stack-trace
+    // panel — "Status: 404 Not Found", "Download error logs" — at a URL a person
+    // types. The splat ranks last, so it only catches what nothing else claims,
+    // and sends it to the one canonical entry point.
+    {
+      path: '*',
+      element: <Navigate to="/" replace={true} />,
+    },
   ],
   { basename: baseHref },
 );
