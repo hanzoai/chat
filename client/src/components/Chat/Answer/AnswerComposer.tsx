@@ -68,7 +68,15 @@ export default function AnswerComposer({
 
   return (
     <div className="w-full">
-      <div className="rounded-3xl border border-border-medium bg-surface-primary shadow-sm transition-colors focus-within:border-text-secondary">
+      {/*
+        Focus reads as a LIFT, not a second box. `focus-within:border-text-secondary`
+        flipped this 1px border to a near-white TEXT token, which painted a hard
+        bright rectangle whose square corners fought the 24px radius — it looked
+        like a second border stacked inside the rounded one. ChatForm already had
+        the right language for this (steady border, `shadow-md` -> `shadow-lg` on
+        focus), so use that: one focus treatment across both composers.
+      */}
+      <div className="rounded-3xl border border-border-medium bg-surface-primary shadow-md transition-shadow duration-200 focus-within:shadow-lg">
         <label htmlFor="answer-input" className="sr-only">
           {localize('com_answer_ask_placeholder')}
         </label>

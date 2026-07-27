@@ -102,4 +102,64 @@ test.describe('Signed-out visitor', () => {
     }
     expect(steps, `text grew in ${steps} step(s); a stream grows across many`).toBeGreaterThan(2);
   });
+
+  /**
+   * The footer must OCCUPY space, not cover its neighbours.
+   *
+   * `pointer-events-none` stopped the strip eating clicks, but pointer-events
+   * cannot move a box: it still painted over "New search" (a ~9px vertical
+   * intersection) and rendered as collided text. Laying it out in flow fixes
+   * that, and only a numeric rect check can prove it stayed fixed.
+   */
+  test('footer occupies its own space and intersects nothing', async ({ page }) => {
+    await openGuestChat(page);
+
+    const collisions = await page.evaluate(() => {
+      const footer = document.querySelector('[role="contentinfo"]');
+      if (!footer) return { found: false, hits: [] as string[] };
+      const fr = footer.getBoundingClientRect();
+      const hits: string[] = [];
+      for (const el of Array.from(document.querySelectorAll('button, a, textarea, h1, h2, p'))) {
+        if (footer.contains(el) || el.contains(footer)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) continue;
+        const y = Math.min(fr.bottom, r.bottom) - Math.max(fr.top, r.top);
+        const x = Math.min(fr.right, r.right) - Math.max(fr.left, r.left);
+        if (y > 0 && x > 0) {
+          hits.push(`${el.tagName.toLowerCase()}"${(el.textContent || '').trim().slice(0, 30)}" ${Math.round(y)}px`);
+        }
+      }
+      return { found: true, hits };
+    });
+
+    expect(collisions.found, 'no footer rendered').toBe(true);
+    expect(collisions.hits, `footer overlaps: ${collisions.hits.join(', ')}`).toEqual([]);
+  });
+
+  /** A loading skeleton that can never resolve is an empty box, not a promise. */
+  test('sidebar shows no permanently-empty bordered box', async ({ page }) => {
+    await openGuestChat(page);
+    await page.waitForTimeout(6000); // well past any real settle
+
+    const ghosts = await page.evaluate(() => {
+      const nav = document.querySelector('nav');
+      if (!nav) return [];
+      const out: string[] = [];
+      for (const el of Array.from(nav.querySelectorAll('div, input, form'))) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 80 || r.height < 20 || r.height > 80) continue;
+        const cs = getComputedStyle(el);
+        const bordered =
+          parseFloat(cs.borderTopWidth) > 0 ||
+          (cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)');
+        if (!bordered) continue;
+        if ((el.textContent || '').trim() !== '') continue;
+        if (el.querySelector('svg, img, input, textarea')) continue;
+        out.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 50)} ${Math.round(r.width)}x${Math.round(r.height)}`);
+      }
+      return out;
+    });
+
+    expect(ghosts, `empty bordered box(es) in the sidebar: ${ghosts.join(' | ')}`).toEqual([]);
+  });
 });
