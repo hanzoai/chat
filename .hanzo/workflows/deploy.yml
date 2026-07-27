@@ -1,67 +1,68 @@
-# Build only. Deploying is a universe commit, not a step in here — see below.
-name: build
+# Build the image and push it. Nothing else.
+#
+# The previous version called buildctl-daemonless.sh, which does not exist in
+# the job image (catthehacker/ubuntu:act-24.04, per GIT_RUNNER_LABELS) — exit
+# 127 — and read secrets.GIT_CLONE_TOKEN, which exists on neither the repo nor
+# the hanzoai org. It had never produced an image.
+#
+# No deploy step on purpose: kubectl is absent from the job image too, and a
+# CI-side patch is reverted within minutes by cd.hanzo.ai's selfHeal, which
+# restores the App CR from the reviewed pin in hanzoai/universe. CI's job ends
+# at "the tag exists and resolves"; choosing which tag runs is a reviewed change.
+#
+# This matters more than it used to: actions-runner-controller was decommissioned
+# 2026-07-27, so this pipeline is now the ONLY CI this repo has.
+name: deploy
 on:
   push:
     branches: [main]
-    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-chat-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: hanzo-build-linux-amd64
+    # Must name a label a runner ACTUALLY advertises. The git-runners offer
+    # hanzo-build-linux-amd64; a label nothing offers does not fail, it queues
+    # until the 24h timeout — silence, not an error.
+    runs-on: [hanzo-build-linux-amd64]
     steps:
       - uses: actions/checkout@v4
-      - name: Resolve the image tag
-        id: tag
-        run: |
-          # A v* tag publishes the SEMVER image — that is the only kind of tag a
-          # deploy may pin. A branch push publishes an immutable sha- image for
-          # review, which must never be what the CR points at.
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            echo "image=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "deployable=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "image=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-            echo "deployable=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Build + push image
-        run: |
-          buildctl-daemonless.sh build --frontend=dockerfile.v0 \
-            --opt context="${{ github.server_url }}/${{ github.repository }}.git#${GITHUB_SHA}" \
-            --opt filename=Dockerfile --opt platform=linux/amd64 \
-            --secret id=GIT_AUTH_TOKEN,env=GIT_AUTH_TOKEN \
-            --output "type=image,name=ghcr.io/hanzoai/chat:${{ steps.tag.outputs.image }},push=true" \
-            --progress=plain
-        env:
-          GIT_AUTH_TOKEN: ${{ secrets.GIT_CLONE_TOKEN }}
-      - name: How to deploy this
-        run: |
-          echo "built ghcr.io/hanzoai/chat:${{ steps.tag.outputs.image }}"
-          if [ "${{ steps.tag.outputs.deployable }}" = "true" ]; then
-            echo "To ship it: set tag: \"${{ steps.tag.outputs.image }}\" in"
-            echo "  universe/infra/k8s/operator/crs/chat.yaml"
-            echo "then commit, push, and sync universe-crs (ns hanzo-cd)."
-          else
-            echo "Branch build — review only. Do NOT pin a CR to a sha- tag."
-          fi
 
-# ── Why there is no deploy step here ────────────────────────────────────────
-#
-# This workflow used to end with:
-#     kubectl -n hanzo patch app chat --type=merge -p '{"spec":{"image":{"tag":"<sha>"}}}'
-# which was wrong twice over.
-#
-# 1. `chat.yaml` IS CD-managed — it is listed in
-#    universe/infra/k8s/operator/crs/kustomization.yaml. Anything this pipeline
-#    patched onto the CR was reconciled straight back by Hanzo CD, so the
-#    pipeline and the CD system were writing the same field and fighting. Two
-#    writers over one value is the bug, not the deploy mechanism.
-#
-# 2. It pinned `${GITHUB_SHA::8}` — a sha, which the semver-only rule forbids
-#    for anything a deployment points at.
-#
-# And because the old trigger was `branches: [main]` alone, a `v*` tag produced
-# NO image at all: the 0.9.x/1.0.x release tags were real in git and invisible to
-# the cluster. That is why fixes could sit tagged and never ship.
-#
-# The one way: git tag -> this builds the semver image -> a universe commit moves
-# the CR -> Hanzo CD (cd.hanzo.ai, ghcr.io/hanzoai/deploy — not ArgoCD) reconciles
-# it. One writer, one direction.
+      - id: meta
+        run: echo "tag=sha-$(echo "$GITHUB_SHA" | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+        with: { driver: docker-container, driver-opts: network=host }
+
+      # Without this the push is unauthenticated and 403s at the registry.
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GH_PAT }}
+
+      # build-push-action can exit 0 before the manifest resolves, so a green run
+      # could still mean a future ImagePullBackOff. Prove it pulls.
+      - name: Verify the pushed image resolves
+        run: |
+          set -euo pipefail
+          img="ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }}"
+          for i in 1 2 3 4 5 6; do
+            docker buildx imagetools inspect "$img" >/dev/null 2>&1 && { echo "resolved $img"; exit 0; }
+            sleep 5
+          done
+          echo "::error::pushed image never resolved: $img"; exit 1
