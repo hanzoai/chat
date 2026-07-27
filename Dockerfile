@@ -37,9 +37,9 @@ COPY --chown=node:node packages/client/package.json ./packages/client/package.js
 
 RUN \
     # Allow mounting of these files, which have no default
-    touch .env ; \
+    touch .env && \
     # Create directories for the volumes to inherit the correct permissions
-    mkdir -p /app/client/public/images /app/logs /app/uploads ; \
+    mkdir -p /app/client/public/images /app/logs /app/uploads && \
     pnpm install --frozen-lockfile
 
 COPY --chown=node:node . .
@@ -53,9 +53,13 @@ COPY --chown=node:node . .
 ARG VITE_ANALYTICS_SITE_ID=2f72b944-f1f8-4d2d-8f6c-26063bde0d1a
 ENV VITE_ANALYTICS_SITE_ID=$VITE_ANALYTICS_SITE_ID
 
+# `&&`, not `;`. With `;` the RUN exits with the status of the LAST command, so a
+# failed `pnpm run frontend` was masked by a successful `pnpm store prune` and the
+# build went green with no dist — which is how an image that cannot boot reached
+# the registry to be pinned. A build that fails must fail.
 RUN \
     # React client build with configurable memory
-    NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}" pnpm run frontend; \
+    NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}" pnpm run frontend && \
     pnpm store prune
 
 # Boot gate — see scripts/check-barrel.cjs. Runs against the dist that was just
