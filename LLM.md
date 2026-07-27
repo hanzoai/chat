@@ -319,18 +319,39 @@ store that is NOT on the Go backend.
   client_id **`app-chat`** while prod uses `hanzo-chat` — align to `hanzo-chat`.
   `@hanzo/iam` is pinned `^0.4.0` (HIP-0111 wants ≥0.11.0); this path is dormant.
 
-### One brand system, but pick the RIGHT one for a Tailwind app
+### One shell, one accent, one menu
 
-`@hanzo/ui` and `@hanzo/gui` are **two different, non-overlapping** design systems:
-- **`@hanzo/ui`** = shadcn/ui + Tailwind + Radix (multi-framework). chat is
-  Vite + React 18 + Tailwind, so THIS is the correct shared lib. Already used:
-  `client/src/components/Nav/HanzoHeader.tsx` mounts `@hanzo/ui/navigation`
-  `HanzoHeader` for cross-app chrome. Monochrome rebrand already done (grey ramp,
-  H mark, favicon = hanzo.app set).
-- **`@hanzo/gui`** = a **Tamagui** fork (Next.js 15 / React 19, RN-web) — console's
-  stack. Forcing it into the Vite/React18 Chat client = a ground-up rewrite
-  of a live product; NOT done. Unify by widening `@hanzo/ui` adoption + matching
-  console's monochrome tokens, NOT by swapping component frameworks.
+Chat used to carry TWO cross-app headers: `@hanzogui/shell`'s on the landing and
+`@hanzo/ui/navigation`'s in the app. The second was resolved with `require()`
+inside a try/catch — `require` does not exist in a Vite ESM browser bundle, so
+the catch swallowed the ReferenceError and the component returned `null` for
+every signed-in and guest visitor. **`@hanzo/ui` (the shadcn library) is retired
+and is gone from chat**: `Nav/HanzoHeader.tsx` and `Nav/NetworkWallet.tsx` are
+deleted, the dependency is out of `client/package.json`, and the two dead
+`node_modules/@hanzo/ui/dist/**` globs are out of `tailwind.config.cjs`.
+
+- **Shell chrome** = `@hanzogui/shell` only (HanzoHeader / HanzoAppHeader /
+  HanzoFooter / HanzoPreFooterCTA / MeetHanzoMenu / HanzoAppLauncher). It is
+  self-contained — inline styles + `theme.ts` tokens — so it drops into Vite
+  with no provider. `HanzoAppLauncher` is the in-app cross-app affordance
+  (`Chat/Header.tsx`); `HanzoAppHeader` is the signed-in shell header chat does
+  not mount yet.
+- **Tailwind must scan the shell.** A distributed library that paints itself
+  with utility class names (`bg-[#0e0e13]`, `z-[101]`, `border-white/[0.06]`)
+  renders transparent and unstacked in a host that never scans it. 45 of the
+  147 class names in `@hanzogui/shell/dist` had no rule in chat's stylesheet;
+  `tailwind.config.cjs` now includes `../node_modules/@hanzogui/shell/dist/**`.
+- **Accent.** `@hanzo/brand` ships violet `--hanzo-accent: #8b5cf6` as the shared
+  Hanzo accent and the shell reads it via `var(--hanzo-accent, #ffffff)`, which
+  put a violet "New chat" CTA beside a white "Get Started Free" CTA in one frame.
+  `style.css` overrides `--hanzo-accent` (and hover/muted/soft/rgb) to white —
+  the mechanism `@hanzo/brand` documents for a host that does not take violet.
+  Chat is monochrome; nothing in chat's own source reads the token.
+- **`@hanzo/gui`** = a **Tamagui** fork (Next.js 15 / React 19, RN-web). Forcing
+  it into the Vite/React18 client is a ground-up rewrite of a live product; the
+  convergence target inside chat is `@hanzochat/client`'s own primitives —
+  `DropdownPopup` (Ariakit; `.popover-ui` is REAL CSS, not a scanned class
+  string) is the canonical anchored menu, 28 call sites.
 
 ### Config filename caveat
 

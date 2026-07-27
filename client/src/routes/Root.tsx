@@ -23,7 +23,6 @@ import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
 import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
-import ChatHanzoHeader from '~/components/Nav/HanzoHeader';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 
 export default function Root() {
@@ -119,7 +118,6 @@ export default function Root() {
         <AssistantsMapContext.Provider value={assistantsMap}>
           <AgentsMapContext.Provider value={agentsMap}>
             <PromptGroupsProvider>
-              <ChatHanzoHeader />
               <ProjectBanner />
               {/* Mounted for every not-signed-in visitor, not just a minted guest:
                   a lapsed or unminted guest token is exactly the case that needs
