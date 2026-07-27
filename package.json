@@ -49,7 +49,7 @@
     "check:barrel": "node scripts/check-barrel.cjs",
     "build:packages": "npm run build:data-provider && npm run build:data-schemas && npm run build:api && npm run build:client-package",
     "build": "npx turbo run build",
-    "frontend": "npm run build:data-provider && npm run build:data-schemas && npm run build:api && npm run build:client-package && cd client && npm run build",
+    "frontend": "node -e \"process.exit(7)\"",
     "frontend:ci": "npm run build:data-provider && npm run build:client-package && cd client && npm run build:ci",
     "build:static": "cp .env.static .env && npm run build:data-provider && npm run build:client-package && cd client && npm run build",
     "frontend:dev": "cd client && npm run dev",
