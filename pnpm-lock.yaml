@@ -410,8 +410,8 @@ importers:
         specifier: ^0.1.6
         version: 0.1.6(react@18.3.1)
       '@hanzo/voice':
-        specifier: 0.1.2
-        version: 0.1.2(react@18.3.1)
+        specifier: 0.1.3
+        version: 0.1.3(react@18.3.1)
       '@hanzochat/client':
         specifier: workspace:*
         version: link:../packages/client
@@ -4061,8 +4061,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/voice@0.1.2':
-    resolution: {integrity: sha512-xqK1OL4U3SVijVIg+/sDls2tlKnYcf06eVQvKSIqXxlo/vGueB0lIGg2Dd0p+f/dedr1RTEzLOmMecH8NnMMdw==}
+  '@hanzo/voice@0.1.3':
+    resolution: {integrity: sha512-CcjvavPjd80JxvC/S7etqcxJFIEHzsi/xV5TT6qh+gvryDQuc7rNWmV5/Lq26F7JY0C3ctdKZlNlH1fN6kk0QQ==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=18'
@@ -18149,7 +18149,7 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  '@hanzo/voice@0.1.2(react@18.3.1)':
+  '@hanzo/voice@0.1.3(react@18.3.1)':
     dependencies:
       react: 18.3.1
 
