@@ -10,6 +10,9 @@ export {
   openDatabase,
   DocModel,
   CHAT_COLLECTION_SPECS,
+  attachMeili,
+  backfillMeili,
+  isMeiliEnabled,
   type SqliteHandle,
   type CollectionSpec,
 } from './stores/sqlite';

@@ -22,9 +22,11 @@ const JEST = join(dirname(require.resolve('jest/package.json')), 'bin', 'jest.js
 const ISOLATED = [
   'src/stores/sqlite/DocModel.spec.ts',
   'src/stores/sqlite/DualWriteModel.spec.ts',
+  'src/stores/sqlite/meili.sqlite.spec.ts',
   'src/models/storeRegistry.spec.ts',
   'src/models/plugins/tenantIsolation.coverage.spec.ts',
   'src/methods/convoMessage.sqlite.spec.ts',
+  'src/methods/distinct.sqlite.spec.ts',
   'src/methods/skill.harness.sqlite.spec.ts',
   'src/methods/batch2.sqlite.spec.ts',
   'src/methods/batch3.sqlite.spec.ts',
