@@ -18,7 +18,7 @@
  */
 import _ from 'lodash';
 import { MeiliSearch, type Index } from 'meilisearch';
-import { parseTextParts } from 'librechat-data-provider';
+import { parseTextParts } from '@hanzochat/data-provider';
 import logger from '~/config/meiliLogger';
 import type { DocModel } from './DocModel';
 import type { Doc } from './engine';
