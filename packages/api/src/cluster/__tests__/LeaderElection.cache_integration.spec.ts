@@ -4,7 +4,7 @@ describe('LeaderElection with Redis', () => {
   let LeaderElection: typeof import('../LeaderElection').LeaderElection;
   let instances: InstanceType<typeof import('../LeaderElection').LeaderElection>[] = [];
   let keyvRedisClient: Awaited<typeof import('~/cache/redisClients')>['keyvRedisClient'];
-  let ioredisClient: Awaited<typeof import('~/cache/redisClients')>['ioredisClient'];
+  let kvClient: Awaited<typeof import('~/cache/redisClients')>['kvClient'];
 
   beforeAll(async () => {
     // Set up environment variables for Redis
@@ -18,7 +18,7 @@ describe('LeaderElection with Redis', () => {
 
     LeaderElection = leaderElectionModule.LeaderElection;
     keyvRedisClient = redisClients.keyvRedisClient;
-    ioredisClient = redisClients.ioredisClient;
+    kvClient = redisClients.kvClient;
 
     // Ensure Redis is connected
     if (!keyvRedisClient) {
@@ -45,7 +45,7 @@ describe('LeaderElection with Redis', () => {
   afterAll(async () => {
     // Close both Redis clients to prevent hanging
     if (keyvRedisClient?.isOpen) await keyvRedisClient.disconnect();
-    if (ioredisClient?.status === 'ready') await ioredisClient.quit();
+    if (kvClient?.status === 'ready') await kvClient.quit();
   });
 
   describe('Test Case 1: Simulate shutdown of the leader', () => {
