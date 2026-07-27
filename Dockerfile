@@ -58,6 +58,13 @@ RUN \
     NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}" pnpm run frontend; \
     pnpm store prune
 
+# Boot gate. The server destructures from the workspace barrels in CommonJS, so a
+# name the barrel forgot to re-export is silently `undefined` and only throws at
+# its first call site — at boot, in production (v1.0.20/21 exited 1 on
+# `createSkillsHandlers is not a function` and served nothing). Check it here,
+# against the dist that was just built, so that failure is a red build.
+RUN node scripts/check-barrel.cjs
+
 # Node API setup
 EXPOSE 3080
 ENV HOST=0.0.0.0
