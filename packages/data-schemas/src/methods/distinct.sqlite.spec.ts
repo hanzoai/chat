@@ -12,7 +12,7 @@
  * (`.find(...).distinct('resourceId')`) on SQLite, matching the PermissionService
  * behavior the gate requires.
  */
-import { PermissionBits, PrincipalType, ResourceType } from 'librechat-data-provider';
+import { PermissionBits, PrincipalType, ResourceType } from '@hanzochat/data-provider';
 import { createAclEntryMethods } from './aclEntry';
 import { createSqliteHandle, type SqliteHandle } from '~/stores/sqlite';
 import type { DocModel } from '~/stores/sqlite';
