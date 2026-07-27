@@ -53,11 +53,12 @@ describe('normalizePath', () => {
     // Static paths are not modified
     ['/v1/chat/auth/login', '/v1/chat/auth/login'],
     ['/v1/chat/config', '/v1/chat/config'],
-    ['/health', '/health'],
+    ['/v1/chat/health', '/v1/chat/health'],
     ['/metrics', '/metrics'],
     ['/', '/'],
     // Unknown/user-generated routes collapse into bounded label buckets
     ['/v1/chat/not-a-real-route/user-generated-value', '/v1/chat/#path'],
+    ['/v1/chat/images/user-123/avatar-1700000000000.png', '/v1/chat/images/#path'],
     ['/images/user-123/avatar-1700000000000.png', '/images/#path'],
     ['/avatars/user-123/avatar-1700000000000.png', '/avatars/#path'],
     ['/t/tenant-a/images/user-123/avatar-1700000000000.png', '/t/#path'],

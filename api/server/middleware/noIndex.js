@@ -1,10 +1,6 @@
-const noIndex = (req, res, next) => {
-  const shouldNoIndex = process.env.NO_INDEX ? process.env.NO_INDEX === 'true' : true;
-
-  if (shouldNoIndex) {
-    res.setHeader('X-Robots-Tag', 'noindex');
-  }
-
+/** A signed-in chat surface is never a search result. */
+const noIndex = (_req, res, next) => {
+  res.setHeader('X-Robots-Tag', 'noindex');
   next();
 };
 

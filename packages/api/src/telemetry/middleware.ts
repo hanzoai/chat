@@ -41,7 +41,7 @@ function getRoutePath(req: ServerRequest): string {
   }
 
   if (isHealthPath(req)) {
-    return '/health';
+    return DEFAULT_HEALTH_PATH;
   }
 
   if (isApiPath(req)) {

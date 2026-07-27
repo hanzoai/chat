@@ -148,8 +148,8 @@ describe('Server metrics route', () => {
 async function healthCheckPoll(app, retries = 0) {
   const maxRetries = Math.floor(10000 / 30);
   try {
-    const response = await request(app).get('/health');
-    if (response.status === 200) {
+    const response = await request(app).get('/v1/chat/health');
+    if (response.text === 'OK') {
       return;
     }
   } catch {

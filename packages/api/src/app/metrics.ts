@@ -32,7 +32,7 @@ const PATH_NORMALIZATIONS: [RegExp, string][] = [
 
 const STATIC_PATHS = new Set([
   '/',
-  '/health',
+  '/v1/chat/health',
   '/metrics',
   '/v1/chat/auth/login',
   '/v1/chat/config',
@@ -89,6 +89,10 @@ const normalizeKnownPath = (path: string): string => {
 const normalizeUnknownPath = (path: string): string => {
   if (STATIC_PATHS.has(path)) {
     return path;
+  }
+
+  if (path === '/v1/chat/images' || path.startsWith('/v1/chat/images/')) {
+    return '/v1/chat/images/#path';
   }
 
   if (path === '/v1/chat' || path.startsWith('/v1/chat/')) {

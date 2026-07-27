@@ -87,7 +87,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/example.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/example.jpg`;
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
@@ -98,7 +98,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = '/images/65cfb246f7ecadb8b1e8036c/example.jpg'; // Different ObjectId
+      req.originalUrl = '/v1/chat/images/65cfb246f7ecadb8b1e8036c/example.jpg'; // Different ObjectId
       await validateImageRequest(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Access Denied');
@@ -110,7 +110,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = '/images/65cfb246f7ecadb8b1e8036c/agent-avatar-12345.png';
+      req.originalUrl = '/v1/chat/images/65cfb246f7ecadb8b1e8036c/agent-avatar-12345.png';
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
@@ -123,10 +123,10 @@ describe('validateImageRequest middleware', () => {
       req.headers.cookie = `refreshToken=${validToken}`;
 
       const traversalAttempts = [
-        `/images/${validObjectId}/../../../etc/passwd`,
-        `/images/${validObjectId}/..%2F..%2F..%2Fetc%2Fpasswd`,
-        `/images/${validObjectId}/image.jpg/../../../etc/passwd`,
-        `/images/${validObjectId}/%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd`,
+        `/v1/chat/images/${validObjectId}/../../../etc/passwd`,
+        `/v1/chat/images/${validObjectId}/..%2F..%2F..%2Fetc%2Fpasswd`,
+        `/v1/chat/images/${validObjectId}/image.jpg/../../../etc/passwd`,
+        `/v1/chat/images/${validObjectId}/%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd`,
       ];
 
       for (const attempt of traversalAttempts) {
@@ -147,7 +147,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/image%20with%20spaces.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/image%20with%20spaces.jpg`;
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
@@ -174,7 +174,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=dummy-token; token_provider=openid; openid_user_id=${signedUserId}`;
-      req.originalUrl = `/images/${validObjectId}/example.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/example.jpg`;
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
@@ -205,7 +205,7 @@ describe('validateImageRequest middleware', () => {
       );
       const differentObjectId = '65cfb246f7ecadb8b1e8036c';
       req.headers.cookie = `refreshToken=dummy-token; token_provider=openid; openid_user_id=${signedUserId}`;
-      req.originalUrl = `/images/${differentObjectId}/example.jpg`;
+      req.originalUrl = `/v1/chat/images/${differentObjectId}/example.jpg`;
       await validateImageRequest(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Access Denied');
@@ -217,7 +217,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=dummy-token; token_provider=openid; openid_user_id=${signedUserId}`;
-      req.originalUrl = '/images/65cfb246f7ecadb8b1e8036c/agent-avatar-12345.png';
+      req.originalUrl = '/v1/chat/images/65cfb246f7ecadb8b1e8036c/agent-avatar-12345.png';
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
@@ -237,7 +237,7 @@ describe('validateImageRequest middleware', () => {
     test('should handle very long image filenames', async () => {
       const longFilename = 'a'.repeat(1000) + '.jpg';
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/${longFilename}`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/${longFilename}`;
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
@@ -246,25 +246,25 @@ describe('validateImageRequest middleware', () => {
       // Most browsers support URLs up to ~2000 characters
       const longFilename = 'x'.repeat(1900) + '.jpg';
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/${longFilename}`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/${longFilename}`;
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
 
     test('should accept URLs just under the 2048 limit', async () => {
       // Create a URL exactly 2047 characters long
-      const baseLength = `/images/${validObjectId}/`.length + '.jpg'.length;
+      const baseLength = `/v1/chat/images/${validObjectId}/`.length + '.jpg'.length;
       const filenameLength = 2047 - baseLength;
       const filename = 'a'.repeat(filenameLength) + '.jpg';
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/${filename}`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/${filename}`;
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
     });
 
     test('should handle malformed URL encoding gracefully', async () => {
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/test%ZZinvalid.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/test%ZZinvalid.jpg`;
       await validateImageRequest(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Access Denied');
@@ -272,7 +272,7 @@ describe('validateImageRequest middleware', () => {
 
     test('should reject URLs with null bytes', async () => {
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/test\x00.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/test\x00.jpg`;
       await validateImageRequest(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Access Denied');
@@ -280,7 +280,7 @@ describe('validateImageRequest middleware', () => {
 
     test('should handle URLs with repeated slashes', async () => {
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}//test.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}//test.jpg`;
       await validateImageRequest(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Access Denied');
@@ -288,11 +288,11 @@ describe('validateImageRequest middleware', () => {
 
     test('should reject extremely long URLs as potential DoS', async () => {
       // Create a URL longer than 2048 characters
-      const baseLength = `/images/${validObjectId}/`.length + '.jpg'.length;
+      const baseLength = `/v1/chat/images/${validObjectId}/`.length + '.jpg'.length;
       const filenameLength = 2049 - baseLength; // Ensure total length exceeds 2048
       const extremelyLongFilename = 'x'.repeat(filenameLength) + '.jpg';
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/${extremelyLongFilename}`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/${extremelyLongFilename}`;
       // Verify our test URL is actually too long
       expect(req.originalUrl.length).toBeGreaterThan(2048);
       await validateImageRequest(req, res, next);
@@ -319,7 +319,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/chat/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/chat/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -332,7 +332,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/chat/images/${validObjectId}/agent-avatar.png`;
+      req.originalUrl = `/chat/v1/chat/images/${validObjectId}/agent-avatar.png`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -345,7 +345,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
@@ -359,7 +359,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -372,7 +372,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -385,7 +385,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/apps/chat/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/apps/chat/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -398,7 +398,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/chat/images/${validObjectId}/../../../etc/passwd`;
+      req.originalUrl = `/chat/v1/chat/images/${validObjectId}/../../../etc/passwd`;
 
       await validateImageRequest(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
@@ -412,7 +412,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/chat/images/${validObjectId}/test.jpg?version=1`;
+      req.originalUrl = `/chat/v1/chat/images/${validObjectId}/test.jpg?version=1`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -425,7 +425,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/chat/images/${validObjectId}/test.jpg#section`;
+      req.originalUrl = `/chat/v1/chat/images/${validObjectId}/test.jpg#section`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -438,7 +438,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/chat/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/chat/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -451,7 +451,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}`;
-      req.originalUrl = `/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();
@@ -465,7 +465,7 @@ describe('validateImageRequest middleware', () => {
         process.env.JWT_REFRESH_SECRET,
       );
       req.headers.cookie = `refreshToken=${validToken}; token_provider=openid; openid_user_id=${validToken}`;
-      req.originalUrl = `/chat/images/${validObjectId}/test.jpg`;
+      req.originalUrl = `/chat/v1/chat/images/${validObjectId}/test.jpg`;
 
       await validateImageRequest(req, res, next);
       expect(next).toHaveBeenCalled();

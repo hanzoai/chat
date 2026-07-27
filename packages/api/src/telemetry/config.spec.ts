@@ -7,7 +7,7 @@ describe('getTelemetryConfig', () => {
     expect(config.enabled).toBe(false);
     expect(config.sdkDisabled).toBe(false);
     expect(config.serviceName).toBe('chat');
-    expect(config.healthPath).toBe('/health');
+    expect(config.healthPath).toBe('/v1/chat/health');
   });
 
   it('enables tracing only when OTEL_TRACING_ENABLED is true', () => {

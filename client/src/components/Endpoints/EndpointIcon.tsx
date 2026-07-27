@@ -1,4 +1,4 @@
-import { getEndpointField, isAssistantsEndpoint } from '@hanzochat/data-provider';
+import { getEndpointField, isAssistantsEndpoint, isServedImage } from '@hanzochat/data-provider';
 import type {
   TPreset,
   TConversation,
@@ -39,7 +39,7 @@ export default function EndpointIcon({
 
   const iconURL = assistantAvatar || convoIconURL;
 
-  if (iconURL && (iconURL.includes('http') || iconURL.startsWith('/images/'))) {
+  if (iconURL && (iconURL.includes('http') || isServedImage(iconURL))) {
     return (
       <ConvoIconURL
         iconURL={iconURL}

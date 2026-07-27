@@ -1,20 +1,22 @@
 /**
- * Regression test for the OAuth login rate-limiter scoping fix.
+ * The auth router owns every credential step, at ONE prefix: `/v1/chat/auth`.
  *
- * Background: `loginLimiter` (LOGIN_MAX per 5 min, keyed by IP) used to be
- * applied as blanket router middleware (`router.use(loginLimiter)`), which also
- * covered the OIDC/social callback routes. Behind a shared LB/CDN IP, with
- * OPENID_AUTO_REDIRECT firing `/oauth/openid` on every page load, the per-IP
- * budget was exhausted instantly and the IdP code-exchange callback got 429 -
- * aborting the token exchange and breaking login.
+ * Two things are asserted here.
  *
- * The fix scopes `loginLimiter` to the human-initiated entry points (the GETs
- * that REDIRECT to the IdP) and leaves the machine-driven callback routes
- * (the IdP returning a one-time code) un-limited.
+ * 1. Namespace. `POST /iam/session` (the IAM PKCE bridge the SPA uses to sign
+ *    in) and the dormant server-side OIDC redirect pair used to hang off a
+ *    top-level `/oauth` router. They are auth, they now live with auth, and
+ *    nothing of chat's answers at the top level.
  *
- * This test mounts the REAL oauth router with the REAL `loginLimiter` and only
- * stubs the heavy leaf deps (passport, openid-client, controllers, config, db),
- * mirroring server/routes/__tests__/convos-duplicate-ratelimit.spec.js.
+ * 2. Rate-limiter scoping (regression). `loginLimiter` (LOGIN_MAX per 5 min,
+ *    keyed by IP) was once blanket router middleware, which also covered the
+ *    OIDC callback. Behind a shared LB/CDN IP the per-IP budget was exhausted
+ *    instantly and the IdP code-exchange callback got 429 — aborting the token
+ *    exchange and breaking login. The limiter belongs on the human-initiated
+ *    GET that redirects to the IdP, never on the machine-driven callback.
+ *
+ * This mounts the REAL auth router with the REAL `loginLimiter` and stubs only
+ * the heavy leaf deps (passport, openid-client, controllers, config, db).
  */
 const express = require('express');
 const request = require('supertest');
@@ -59,23 +61,51 @@ jest.mock('~/server/utils', () => ({
   removePorts: jest.requireActual('~/server/utils/removePorts'),
 }));
 
-// oauth.js imports { checkDomainAllowed, loginLimiter, logHeaders } from the
-// middleware index, whose full require graph is too heavy for a hermetic unit
+// The middleware index's full require graph is too heavy for a hermetic unit
 // test. Mock the index but expose the REAL `loginLimiter` (the unit under test)
 // via requireActual of the leaf file — mirroring how
-// convos-duplicate-ratelimit.spec.js pulls the real forkLimiters. The other two
-// are inert passthroughs (not under test here).
+// convos-duplicate-ratelimit.spec.js pulls the real forkLimiters. The rest are
+// inert passthroughs (not under test here).
 jest.mock('~/server/middleware', () => {
   const loginLimiter = jest.requireActual('~/server/middleware/limiters/loginLimiter');
+  const pass = (req, res, next) => next();
   return {
     loginLimiter,
-    logHeaders: (req, res, next) => next(),
-    checkDomainAllowed: (req, res, next) => next(),
+    logHeaders: pass,
+    checkDomainAllowed: pass,
+    requireJwtAuth: pass,
+    checkBan: pass,
+    guestTokenLimiter: pass,
   };
 });
 
+const reached = (name) => (req, res) => res.status(200).json({ handler: name });
+
 jest.mock('~/server/controllers/auth/oauth', () => ({
   createOAuthHandler: jest.fn(() => (req, res) => res.status(200).json({ handler: true })),
+}));
+jest.mock('~/server/controllers/auth/iamSession', () => ({
+  iamSessionController: (req, res) => res.status(200).json({ handler: 'iamSession' }),
+}));
+jest.mock('~/server/controllers/AuthController', () => ({
+  graphTokenController: (req, res) => res.status(200).json({ handler: 'graphToken' }),
+  refreshController: (req, res) => res.status(200).json({ handler: 'refresh' }),
+}));
+jest.mock('~/server/controllers/TwoFactorController', () => ({
+  regenerateBackupCodes: (req, res) => res.sendStatus(200),
+  disable2FA: (req, res) => res.sendStatus(200),
+  confirm2FA: (req, res) => res.sendStatus(200),
+  enable2FA: (req, res) => res.sendStatus(200),
+  verify2FA: (req, res) => res.sendStatus(200),
+}));
+jest.mock('~/server/controllers/auth/TwoFactorAuthController', () => ({
+  verify2FAWithTempToken: (req, res) => res.sendStatus(200),
+}));
+jest.mock('~/server/controllers/auth/LogoutController', () => ({
+  logoutController: (req, res) => res.sendStatus(200),
+}));
+jest.mock('~/server/controllers/auth/GuestController', () => ({
+  guestTokenController: (req, res) => res.sendStatus(200),
 }));
 
 jest.mock('~/server/services/Config', () => ({
@@ -86,10 +116,12 @@ jest.mock('~/db/models', () => ({
   Balance: {},
 }));
 
-const LOGIN_INITIATION = '/oauth/openid';
-const LOGIN_CALLBACK = '/oauth/openid/callback';
+const MOUNT = '/v1/chat/auth';
+const IAM_SESSION = `${MOUNT}/iam/session`;
+const LOGIN_INITIATION = `${MOUNT}/openid`;
+const LOGIN_CALLBACK = `${MOUNT}/openid/callback`;
 
-describe('OAuth router — loginLimiter scoping', () => {
+describe('auth router', () => {
   const savedEnv = {};
 
   beforeAll(() => {
@@ -112,13 +144,13 @@ describe('OAuth router — loginLimiter scoping', () => {
   // The limiter reads LOGIN_MAX/LOGIN_WINDOW at module-load time, so build the
   // app inside isolateModules AFTER setting env to get a fresh limiter+store.
   const buildApp = () => {
-    let oauthRouter;
+    let authRouter;
     jest.isolateModules(() => {
-      oauthRouter = require('../oauth');
+      authRouter = require('../auth');
     });
     const app = express();
     app.use(express.json());
-    app.use('/oauth', oauthRouter);
+    app.use(MOUNT, authRouter);
     return app;
   };
 
@@ -128,6 +160,34 @@ describe('OAuth router — loginLimiter scoping', () => {
     process.env.LOGIN_WINDOW = '5';
     process.env.DOMAIN_CLIENT = 'http://localhost:3080';
     process.env.DOMAIN_SERVER = 'http://localhost:3080';
+  });
+
+  describe('namespace', () => {
+    it('serves the IAM session bridge under the auth prefix', async () => {
+      const res = await request(buildApp()).post(IAM_SESSION).send({ token: 'x' });
+      expect(res.status).toBe(200);
+      expect(res.body.handler).toBe('iamSession');
+    });
+
+    it('serves the OIDC redirect pair under the auth prefix', async () => {
+      const app = buildApp();
+      expect((await request(app).get(LOGIN_INITIATION)).status).toBe(200);
+      expect((await request(app).get(LOGIN_CALLBACK)).status).toBe(200);
+    });
+
+    it('sends a failed OIDC callback to the error route inside the prefix', () => {
+      let authRouter;
+      let failureRedirects;
+      jest.isolateModules(() => {
+        authRouter = require('../auth');
+        failureRedirects = require('passport')
+          .authenticate.mock.calls.map(([, options]) => options?.failureRedirect)
+          .filter(Boolean);
+      });
+
+      expect(authRouter.stack.some((l) => l.route?.path === '/error')).toBe(true);
+      expect(failureRedirects).toContain('http://localhost:3080/v1/chat/auth/error');
+    });
   });
 
   describe('initiation route (redirect-to-IdP) IS rate-limited', () => {
@@ -178,53 +238,31 @@ describe('OAuth router — loginLimiter scoping', () => {
 
   describe('router wiring (defense-in-depth structural assertion)', () => {
     // Even independent of runtime behavior, assert the limiter is present in the
-    // initiation route's middleware stack and absent from every callback stack.
+    // initiation route's middleware stack and absent from the callback stack.
     const limiterStackByPath = () => {
-      let oauthRouter;
+      let authRouter;
       let loginLimiter;
       jest.isolateModules(() => {
-        oauthRouter = require('../oauth');
+        authRouter = require('../auth');
         // Same instance the router received (the mocked index re-exports the
         // real leaf limiter), so reference-equality in the stack is meaningful.
         ({ loginLimiter } = require('~/server/middleware'));
       });
       const byPath = {};
-      for (const layer of oauthRouter.stack) {
-        if (!layer.route) continue; // skip router.use(logHeaders) etc.
+      for (const layer of authRouter.stack) {
+        if (!layer.route) continue;
         const handles = layer.route.stack.map((s) => s.handle);
         byPath[layer.route.path] = handles.includes(loginLimiter);
       }
       return byPath;
     };
 
-    it('applies loginLimiter to every initiation route and to NO callback route', () => {
+    it('applies loginLimiter to the initiation route and to NO callback route', () => {
       const limited = limiterStackByPath();
 
-      const initiationRoutes = [
-        '/google',
-        '/facebook',
-        '/openid',
-        '/github',
-        '/discord',
-        '/apple',
-        '/saml',
-      ];
-      const callbackRoutes = [
-        '/google/callback',
-        '/facebook/callback',
-        '/openid/callback',
-        '/github/callback',
-        '/discord/callback',
-        '/apple/callback',
-        '/saml/callback',
-      ];
-
-      for (const path of initiationRoutes) {
-        expect(limited[path]).toBe(true);
-      }
-      for (const path of callbackRoutes) {
-        expect(limited[path]).toBe(false);
-      }
+      expect(limited['/openid']).toBe(true);
+      expect(limited['/openid/callback']).toBe(false);
+      expect(limited['/iam/session']).toBe(false);
     });
   });
 });

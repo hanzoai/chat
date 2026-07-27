@@ -209,7 +209,7 @@ describe('telemetryMiddleware', () => {
     telemetryMiddleware(
       createRequest({
         baseUrl: '',
-        path: '/health',
+        path: '/v1/chat/health',
         route: undefined,
       }),
       createResponse() as Response,

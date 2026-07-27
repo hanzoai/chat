@@ -2,6 +2,7 @@ const cookies = require('cookie');
 const jwt = require('jsonwebtoken');
 const { logger } = require('@hanzochat/data-schemas');
 const { isEnabled, getBasePath } = require('@hanzochat/api');
+const { imagesRoute } = require('@hanzochat/data-provider');
 
 const OBJECT_ID_LENGTH = 24;
 const OBJECT_ID_PATTERN = /^[0-9a-f]{24}$/i;
@@ -130,7 +131,7 @@ function createValidateImageRequest(secureImageLinks) {
       }
 
       const basePath = getBasePath();
-      const imagesPath = `${basePath}/images`;
+      const imagesPath = `${basePath}${imagesRoute}`;
 
       const agentAvatarPattern = new RegExp(
         `^${imagesPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/[a-f0-9]{24}/agent-[^/]*$`,

@@ -11,6 +11,7 @@ const {
   ContentTypes,
   FileSources,
   EImageOutputType,
+  imagesRoute,
 } = require('@hanzochat/data-provider');
 const {
   geminiToolkit,
@@ -165,7 +166,7 @@ async function saveImageLocally(base64Data, format, userId) {
   await fs.promises.writeFile(filePath, Buffer.from(base64Data, 'base64'));
 
   logger.debug('[GeminiImageGen] Image saved locally to:', filePath);
-  return `/images/${safeUserId}/${imageName}`;
+  return `${imagesRoute}/${safeUserId}/${imageName}`;
 }
 
 /**

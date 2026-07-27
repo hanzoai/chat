@@ -209,11 +209,11 @@ autoscaling:
 
 livenessProbe:
   httpGet:
-    path: /health
+    path: /v1/chat/health
     port: 3080
 readinessProbe:
   httpGet:
-    path: /health
+    path: /v1/chat/health
     port: 3080
 
 # Additional init containers on the output Deployment definition.

@@ -132,12 +132,15 @@ describe('resolveImageUrl', () => {
     expect(resolveImageUrl('data:image/png;base64,AAAA')).toBe('data:image/png;base64,AAAA');
   });
 
-  it('passes through non-/images/ paths untouched', () => {
+  it('passes through paths outside the image namespace untouched', () => {
     expect(resolveImageUrl('/uploads/x.png')).toBe('/uploads/x.png');
+    expect(resolveImageUrl('/v1/chat/files/x.png')).toBe('/v1/chat/files/x.png');
   });
 
-  it('prefixes /images/ paths with the api base url', () => {
+  it('prefixes served images with the api base url', () => {
     /* In jsdom with no <base>, apiBaseUrl() resolves to '' so the path is preserved. */
+    expect(resolveImageUrl('/v1/chat/images/x.png')).toBe('/v1/chat/images/x.png');
+    /* Conversations written before the move still resolve. */
     expect(resolveImageUrl('/images/x.png')).toBe('/images/x.png');
   });
 });

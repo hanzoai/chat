@@ -12,8 +12,7 @@ import { buildTenantContext, runWithTenantContext } from './tenant';
  * **Where to use**: Mount on routes that must be tenant-aware before
  * authentication has occurred:
  * - `GET /v1/chat/config` — login page needs tenant-specific config (social logins, registration)
- * - `/v1/chat/auth/*` — login, register, password reset
- * - `/oauth/*` — OAuth callback flows
+ * - `/v1/chat/auth/*` — the IAM session bridge and OIDC callback flows
  * - `GET /v1/chat/share/:shareId` — public shared conversation links
  *
  * **How the header gets set**: The deployment's reverse proxy, auth gateway,

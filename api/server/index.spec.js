@@ -86,10 +86,27 @@ describe('Server Configuration', () => {
     await mongoose.disconnect();
   });
 
-  it('should return OK for /health', async () => {
-    const response = await request(app).get('/health');
+  it('serves health under the chat namespace', async () => {
+    const response = await request(app).get('/v1/chat/health');
     expect(response.status).toBe(200);
     expect(response.text).toBe('OK');
+  });
+
+  it('serves nothing of its own at the top level', async () => {
+    /* Every one of these used to be a chat route. They now belong to the SPA
+       catch-all, which answers HTML — so a probe or a caller left on the old
+       path fails loudly instead of looking green. */
+    for (const path of ['/health', '/oauth/iam/session', '/oauth/openid']) {
+      const response = await request(app).get(path);
+      expect(response.text).not.toBe('OK');
+      expect(response.headers['content-type']).toMatch(/text\/html/);
+    }
+  });
+
+  it('redirects stored image paths into the namespace', async () => {
+    const response = await request(app).get('/images/65cfb246f7ecadb8b1e8036c/x.png');
+    expect(response.status).toBe(301);
+    expect(response.headers.location).toBe('/v1/chat/images/65cfb246f7ecadb8b1e8036c/x.png');
   });
 
   it('should not cache index page', async () => {
@@ -125,12 +142,12 @@ describe('Server Configuration', () => {
   });
 });
 
-// Polls the /health endpoint every 30ms for up to 10 seconds to wait for the server to start completely
+// Polls the health endpoint every 30ms for up to 10 seconds to wait for the server to start completely
 async function healthCheckPoll(app, retries = 0) {
   const maxRetries = Math.floor(10000 / 30); // 10 seconds / 30ms
   try {
-    const response = await request(app).get('/health');
-    if (response.status === 200) {
+    const response = await request(app).get('/v1/chat/health');
+    if (response.text === 'OK') {
       return; // App is healthy
     }
   } catch {

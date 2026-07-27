@@ -6,7 +6,7 @@
  * 2. hanzo.id redirects back here with ?code=xxx&state=yyy.
  * 3. IAM.handleCallback() exchanges the code for the IAM tokens (PKCE).
  * 4. We POST { accessToken, idToken } to the backend session-bridge
- *    (/oauth/iam/session), which JWKS-validates the token, reconciles the user,
+ *    (/v1/chat/auth/iam/session), which JWKS-validates the token, reconciles the user,
  *    and issues the Chat session (refresh cookie + Mongo Session + Chat JWT) plus
  *    persists the id_token server-side for on-behalf-of cloud calls.
  * 5. We set the returned Chat JWT as the app bearer and redirect to /c/new.

@@ -68,7 +68,7 @@ export default defineConfig(({ command }) => ({
         // self-updates on every release.
         globIgnores: ['images/**/*', '**/*.map'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        navigateFallbackDenylist: [/^\/oauth/, /^\/v1\//],
+        navigateFallbackDenylist: [/^\/v1\//, /^\/images\//],
       },
       includeAssets: [],
       manifest: {

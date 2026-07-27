@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const { imagesRoute } = require('@hanzochat/data-provider');
 const { resizeImageBuffer } = require('../images/resize');
 const { updateUser, updateFile } = require('~/models');
 
@@ -139,7 +140,7 @@ async function processLocalAvatar({ buffer, userId, manual, agentId }) {
   const fileName = agentId
     ? `agent-${agentId}-avatar-${timestamp}.${extension}`
     : `avatar-${timestamp}.${extension}`;
-  const urlRoute = `/images/${userId}/${fileName}`;
+  const urlRoute = `${imagesRoute}/${userId}/${fileName}`;
   const avatarPath = path.join(userDir, fileName);
 
   await fs.promises.mkdir(userDir, { recursive: true });

@@ -1120,7 +1120,8 @@ describe('createRemoteAgentAuth', () => {
       );
     });
 
-    it('honors disabled JWKS caching', async () => {
+    it('caches JWKS regardless of what the environment says', async () => {
+      /* There is no off switch: two requests for one JWKS URI build one client. */
       process.env.OPENID_JWKS_URL_CACHE_ENABLED = 'false';
       const deps = makeDeps(
         makeConfig({
@@ -1141,7 +1142,7 @@ describe('createRemoteAgentAuth', () => {
         mockNext,
       );
 
-      expect(jwksRsa).toHaveBeenCalledTimes(2);
+      expect(jwksRsa).toHaveBeenCalledTimes(1);
     });
 
     it('evicts the oldest JWKS client entry when the cache exceeds its limit', async () => {
