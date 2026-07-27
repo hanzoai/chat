@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
 import { AppWindow } from 'lucide-react';
-import { EModelEndpoint, Constants } from '@hanzochat/data-provider';
+import { EModelEndpoint, Constants, replaceSpecialVars } from '@hanzochat/data-provider';
 import {
   useChatContext,
   useChatFormContext,
@@ -10,26 +10,33 @@ import {
 } from '~/Providers';
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
 import { getIconEndpoint, getEntity, openAppBuilder } from '~/utils';
-import { useSubmitMessage, useLocalize } from '~/hooks';
+import { useAuthContext, useSubmitMessage, useLocalize } from '~/hooks';
 
-/** `label` is the chip caption; `text` is what gets armed into the composer. */
+/** `label` is the chip caption; `text` is the message that gets sent. */
 type Starter = { label: string; text: string };
 
 /**
  * Curated fallback chips for plain-model chats (no agent/assistant-specific
- * starters). Short, honest verbs that seed the composer (hanzo.ai hero style) —
- * a trailing space leaves the cursor ready for the user to finish the thought.
+ * starters). Clicking one SENDS it, so every `text` is a complete, standalone
+ * prompt that stands on its own — the short `label` is only the caption.
  */
 const DEFAULT_STARTERS: Starter[] = [
-  { label: 'Summarize', text: 'Summarize ' },
-  { label: 'Write code', text: 'Write code to ' },
-  { label: 'Explain', text: 'Explain ' },
-  { label: 'Brainstorm', text: 'Brainstorm ideas for ' },
+  { label: 'Summarize', text: 'Summarize the text I paste next into five bullet points.' },
+  {
+    label: 'Write code',
+    text: 'Write a Python script that renames every file in a folder to a slugified version of its name.',
+  },
+  { label: 'Explain', text: 'Explain how HTTPS keeps a connection private, in plain language.' },
+  {
+    label: 'Brainstorm',
+    text: 'Brainstorm ten ideas for a weekend side project I could ship in two days.',
+  },
 ];
 
 const ConversationStarters = () => {
   const localize = useLocalize();
-  const { conversation } = useChatContext();
+  const { user } = useAuthContext();
+  const { conversation, isSubmitting } = useChatContext();
   const agentsMap = useAgentsMapContext();
   const assistantMap = useAssistantsMapContext();
   const { data: endpointsConfig } = useGetEndpointsQuery();
@@ -87,9 +94,25 @@ const ConversationStarters = () => {
     return { starters: DEFAULT_STARTERS, isDefault: true };
   }, [documentsMap, isAgent, entity]);
 
-  // Reuse the ONE composer-arming path (respects the autoSendPrompts preference).
-  const { submitPrompt } = useSubmitMessage();
-  const armComposer = useCallback((text: string) => submitPrompt(text), [submitPrompt]);
+  /**
+   * Clicking a starter is an INTENT, not a draft: it sends. `submitMessage` is
+   * the same function ChatForm's onSubmit calls for a typed message, so there is
+   * one send path — NOT `submitPrompt`, whose `autoSendPrompts` preference is
+   * about inserting saved prompt-library entries into the composer.
+   * `replaceSpecialVars` is kept so author-written starters can still use
+   * `{{current_date}}` and friends. `isSubmitting` makes a second click while a
+   * generation is in flight a no-op instead of a duplicate turn.
+   */
+  const { submitMessage } = useSubmitMessage();
+  const send = useCallback(
+    (text: string) => {
+      if (isSubmitting) {
+        return;
+      }
+      submitMessage({ text: replaceSpecialVars({ text, user }) });
+    },
+    [isSubmitting, submitMessage, user],
+  );
   // "Build an app" hands the composer intent to the hanzo.app builder (new tab).
   const openBuilder = useCallback(() => openAppBuilder(composerText), [composerText]);
 
@@ -102,9 +125,10 @@ const ConversationStarters = () => {
       {starters.slice(0, Constants.MAX_CONVO_STARTERS).map(({ label, text }, index) => (
         <button
           key={index}
-          onClick={() => armComposer(text)}
+          onClick={() => send(text)}
+          disabled={isSubmitting}
           title={label}
-          className="max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none"
+          className="max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
         >
           {label}
         </button>
