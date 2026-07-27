@@ -10,7 +10,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": false,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noImplicitAny": false,
@@ -18,12 +18,20 @@
     "declaration": true,
     "declarationDir": "./types",
     "jsx": "preserve",
-    "baseUrl": "..",
     "paths": {
-      "~/*": ["./client/src/*"],
-      "test/*": ["./client/test/*"],
-      "*": ["./client/*", "../node_modules/*"],
-      "librechat-data-provider/*": ["./packages/data-provider/*"]
+      "~/*": [
+        "../client/src/*"
+      ],
+      "test/*": [
+        "../client/test/*"
+      ],
+      "*": [
+        "../client/*",
+        "../../node_modules/*"
+      ],
+      "librechat-data-provider/*": [
+        "../packages/data-provider/*"
+      ]
     }
   },
   "types": ["node", "jest", "@testing-library/jest-dom"],
