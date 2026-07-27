@@ -46,7 +46,7 @@ npm run format           # Prettier
 ```
 api/                 # Express backend (port 3080)
   server/            # Entry point, routes, controllers, middleware
-  models/            # Mongoose models (MongoDB)
+  models/            # Model wrappers over the store (see "The store" below)
 client/              # React frontend (Vite)
   src/components/    # UI components
   src/routes/        # Client-side routing
@@ -69,7 +69,8 @@ packages/
 Key env vars:
 ```
 OPENAI_BASE_URL=http://llm.hanzo.svc.cluster.local:4000/v1  # Internal LLM gateway
-MONGO_URI=                  # MongoDB connection
+CHAT_SQLITE_PATH=           # Embedded SQLite store (prod: /var/lib/hanzo/chat/chat.db)
+CHAT_STORE_SQLITE=          # CSV of collections served from SQLite (prod: all 29)
 JWT_SECRET=                 # Auth token signing
 CREDS_KEY= CREDS_IV=        # Credential encryption
 ```
@@ -100,7 +101,8 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 - 2 replicas, port 3080
 - Ingress: `hanzo.chat` (primary) + `chat.hanzo.ai` (301 → hanzo.chat)
 - Probes: `/v1/chat/health`
-- Secret: `chat-secrets` (MONGO_URI, JWT_SECRET, CREDS_KEY/IV)
+- Secret: `chat-secrets` (JWT_SECRET, CREDS_KEY/IV)
+- Store: embedded SQLite on the `chat-app-db` PVC — no database service
 - CI: `docker-publish.yml` -> `hanzoai/chat:latest` on Docker Hub
 - Image: `hanzoai/chat:latest` (amd64 only)
 
@@ -279,28 +281,49 @@ Verified by full call-graph + route-table trace; do NOT rip blind.
   `node server/index.js` and hits `api.hanzo.ai/v1` directly — NO local litellm
   sidecar. This is upstream merge residue; safe to delete in a dedicated sweep.
 
-### The ONE real parallel store (FLAG — needs a Go-backend home)
+### The store: SQLite, not Mongo
 
-Chat's Express backend owns, in **MongoDB** (`HanzoChat` DB), all of:
-`convos`, `messages`, `presets`, `prompts`/`promptGroups`, `users`, `balances`/
-`transactions`, `files`, `sessions` (refresh-token hashes), plus agents/assistants/
-memory/RBAC. Schemas: `packages/data-schemas/src/schema/*`. This is the shadow
-store that is NOT on the Go backend.
+**There is no MongoDB.** The cutover finished: `chat-docdb` is deleted from the
+cluster, `MONGO_URI` is unset, `connectDb()` logs `SQLite-only mode, skipping
+MongoDB connection` and returns null, and all 29 domains
+(`Conversation,Message,Preset,…,Balance,Transaction`) are served from one
+embedded SQLite file at `CHAT_SQLITE_PATH=/var/lib/hanzo/chat/chat.db` on the
+`chat-app-db` PVC. The seam is `CHAT_STORE_SQLITE` (prod sets all 29);
+`applySqliteOverrides` in `packages/data-schemas/src/models/index.ts` swaps the
+mongoose models for `DocModel`s. The `CHAT_STORE_DUALWRITE` mirror that carried
+the migration is **removed** — its purpose was keeping Mongo current as a
+rollback target, and there is no Mongo to roll back to.
 
-- The Go backend (`hanzoai/ai`, mounted at bare `/v1/*` in cloud) DOES have a
-  persistence home, but under **casibase names** (`/v1/get-chats`, `/v1/get-chat`,
-  `/v1/add-chat`, `/v1/get-messages`, `/v1/add-message`, `/v1/get-usages`) — a
-  different schema/shape than Chat's Mongo.
-- The canonical OpenAPI repo has `chat/openapi.yaml` describing the INTENDED
-  Chat-shaped REST surface (`/v1/chat/convos`, `/v1/chat/messages`,
-  `/v1/chat/presets`, `/v1/chat/balance`, `/v1/chat/auth/*`) — but the Go binary
-  **does not implement it yet**, and `ai/openapi.yaml` under-documents the real
-  casibase routes.
-- To truly kill the parallel store WITHOUT breaking live chat: the Go backend
-  (or Base) must implement `chat/openapi.yaml` (conversations/messages/presets),
-  then repoint chat's data layer at it behind a flag and dual-write during
-  cutover. Until then Mongo stays (ripping it = data loss + dead chat).
-  **Coordinate with the openapi agent** (canonical spec + SDK regen).
+Read this before deleting anything else Mongo-shaped:
+
+- **`express-mongo-sanitize` is NOT vestigial. Keep it.** The store speaks
+  Mongo-*shaped* queries: `stores/sqlite/engine.ts` interprets `$eq $ne $in
+  $nin $gt $gte $lt $lte $exists $regex $not $and $or $nor` in filters and
+  `$set $unset $inc $push $pull $addToSet` in updates. A `{"$ne": null}` that
+  reaches a filter is operator injection against SQLite exactly as it was
+  against Mongo. The guard outlived the database it is named for.
+- **mongoose is still a real dependency**, and removing it is a migration, not
+  a sweep. Every schema in `packages/data-schemas/src/schema/*` (34 files) is a
+  mongoose `Schema`; `createModels(mongoose)` builds mongoose models first and
+  `applySqliteOverrides` replaces them. `mongoose.Types.ObjectId` is the id
+  generator throughout.
+- **The mongoose path is still the repo default.** Nothing in this tree sets
+  `CHAT_STORE_SQLITE` — prod sets it in the operator App CR (`universe
+  infra/k8s/operator/crs/chat.yaml`). Unset, `createModels` returns pure
+  mongoose. Tests run that way.
+- **`mongoMeili` (`models/plugins/mongoMeili.ts`) is the mongoose path's search
+  driver**, superseded in prod by `stores/sqlite/meili.ts` (`attachMeili` wires
+  `onMutate` + `meiliSearch` onto the DocModels and does its own idempotent
+  `ensureIndex`). It is still applied to the convo/message schemas whenever
+  `MEILI_HOST`+`MEILI_MASTER_KEY` are set, so it runs a redundant index-ensure
+  at boot and logs `[mongoMeili] Error checking index …: fetch failed` when it
+  races the cloud shim. Harmless but noisy; it goes when mongoose goes.
+- **`keyvMongo` (`packages/api/src/cache/keyvMongo.ts`) has no SQLite
+  counterpart** and throws `Mongoose connection not ready` on first use. It
+  backs `ViolationTypes.BAN` and `CacheKeys.ENCODED_DOMAINS`. It is unreachable
+  today only because `BAN_VIOLATIONS` is unset, so `checkBan` returns before
+  touching the cache. **Enabling `BAN_VIOLATIONS` in prod today would throw** —
+  that feature needs a store before it is switched on.
 
 ### IAM-native auth (HIP-0111) — federated to hanzo.id, LIVE
 
