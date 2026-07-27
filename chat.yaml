@@ -99,10 +99,14 @@ endpoints:
         # the gateway serves: zen5-* (flagship) + zen3-* (omni/vision) + enso (the
         # orchestrated router). enso (Enso Pro) leads as the default — it routes
         # each request to the best-fit model, so an easy turn bills cheap and only a
-        # hard one escalates; larger zen5 tiers meter against balance. Order = the
-        # default-selected model for new users.
+        # hard one escalates; larger zen5 tiers meter against balance.
+        # Order = the default a SIGNED-IN session resolves. It is NOT the guest
+        # default: a guest is capped server-side to GUEST_MODEL (zen5-flash) and
+        # nothing about that pin may reach a signed-in session.
         default:
           - "enso"
+          - "enso-flash"
+          - "enso-ultra"
           - "zen5-flash"
           - "zen5"
           - "zen5-pro"

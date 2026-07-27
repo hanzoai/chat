@@ -11,7 +11,12 @@ import {
   useSetRecoilState,
   useRecoilCallback,
 } from 'recoil';
-import { LocalStorageKeys, isEphemeralAgentId, Constants } from '@hanzochat/data-provider';
+import {
+  Constants,
+  SystemRoles,
+  LocalStorageKeys,
+  isEphemeralAgentId,
+} from '@hanzochat/data-provider';
 import type { TMessage, TPreset, TConversation, TSubmission } from '@hanzochat/data-provider';
 import type { TOptionSettings, ExtendedFile } from '~/common';
 import {
@@ -21,6 +26,7 @@ import {
   logger,
 } from '~/utils';
 import { useSetConvoContext } from '~/Providers/SetConvoContext';
+import userStore from './user';
 
 const latestMessageKeysAtom = atom<(string | number)[]>({
   key: 'latestMessageKeys',
@@ -78,10 +84,20 @@ const conversationByIndex = atomFamily<TConversation | null, string | number>({
   key: 'conversationByIndex',
   default: null,
   effects: [
-    ({ onSet, node }) => {
+    ({ onSet, node, getLoadable }) => {
       onSet(async (newValue, oldValue) => {
         const index = Number(node.key.split('__')[1]);
         logger.log('conversation', 'Setting conversation:', { index, newValue, oldValue });
+        /**
+         * A guest leaves nothing behind. Its endpoint and model are a server-side
+         * pin (`GUEST_ENDPOINT`/`GUEST_MODEL`), not a preference the visitor made,
+         * so remembering them would hand the next principal on this browser — the
+         * same person, signed in a redirect later — the guest's capped model and
+         * rob the signed-in session of resolving its own default.
+         */
+        if (getLoadable(userStore.user).getValue()?.role === SystemRoles.GUEST) {
+          return;
+        }
         if (newValue?.assistant_id != null && newValue.assistant_id) {
           localStorage.setItem(
             `${LocalStorageKeys.ASST_ID_PREFIX}${index}${newValue.endpoint}`,

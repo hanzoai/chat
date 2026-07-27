@@ -42,6 +42,14 @@ const AuthContextProvider = ({
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const logoutRedirectRef = useRef<string | undefined>(undefined);
 
+  /**
+   * What the session probe has established about this visitor. A guest is the
+   * FALLBACK identity for `none` — minting one while the probe is still in
+   * flight lets the guest bearer land on top of the real one, and the signed-in
+   * session then reads the guest's capped catalog as if it were its own.
+   */
+  const sessionRef = useRef<'unknown' | 'none' | 'live'>('unknown');
+
   const { data: startupConfig } = useGetStartupConfig();
   const { acquireGuestToken } = useGuestAuth();
 
@@ -63,6 +71,11 @@ const AuthContextProvider = ({
         //@ts-ignore - ok for token to be undefined initially
         setTokenHeader(token);
         setIsAuthenticated(isAuthenticated);
+        sessionRef.current = isAuthenticated ? 'live' : 'none';
+        if (isAuthenticated) {
+          /** A real session supersedes the guest identity it replaces. */
+          setIsGuest(false);
+        }
 
         // Use a custom redirect if set
         const finalRedirect = logoutRedirectRef.current || redirect;
@@ -135,7 +148,8 @@ const AuthContextProvider = ({
 
   const acquireGuest = useCallback(async (): Promise<boolean> => {
     const session = await acquireGuestToken();
-    if (!session) {
+    if (!session || sessionRef.current === 'live') {
+      /* A real session landed while the guest token was in flight — drop it. */
       return false;
     }
     setUser(session.user);
@@ -158,6 +172,7 @@ const AuthContextProvider = ({
    */
   const guestFallbackRef = useRef<() => void>(() => {});
   guestFallbackRef.current = () => {
+    sessionRef.current = 'none';
     if (startupConfig?.allowGuestChat === true) {
       void acquireGuest().then((ok) => {
         if (!ok) {
@@ -232,8 +247,11 @@ const AuthContextProvider = ({
   // silentRefresh's fallback can run before startupConfig has loaded (when
   // `allowGuestChat` is still undefined), and it is not retried — so this effect
   // closes that race by acquiring the guest token when the flag becomes true.
+  // It waits for `sessionRef` to say there is no session: the probe is the ONLY
+  // thing that decides whether this visitor is a guest.
   useEffect(() => {
     if (
+      sessionRef.current === 'none' &&
       startupConfig?.allowGuestChat === true &&
       !isAuthenticated &&
       !isGuest &&

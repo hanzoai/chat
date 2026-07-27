@@ -1,8 +1,6 @@
 import { useCallback } from 'react';
-import { dataService } from '@hanzochat/data-provider';
+import { dataService, SystemRoles } from '@hanzochat/data-provider';
 import type { TUser } from '@hanzochat/data-provider';
-
-const GUEST_ROLE = 'GUEST';
 
 export type GuestSession = {
   token: string;
@@ -23,7 +21,7 @@ export default function useGuestAuth() {
       const data = await dataService.getGuestToken();
       const user = {
         id: 'guest',
-        role: GUEST_ROLE,
+        role: SystemRoles.GUEST,
         username: 'guest',
         name: 'Guest',
         email: '',
