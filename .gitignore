@@ -1,7 +1,6 @@
 
 __azurite**
 __blobstorage__/**/*
-!.env.hanzo-cloud
 !**/.env.example
 !**/.env.test.example
 !/client/src/@types/i18next.d.ts
