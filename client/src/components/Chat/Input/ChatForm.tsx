@@ -34,7 +34,7 @@ import TextareaHeader from './TextareaHeader';
 import BuildAppButton from './BuildAppButton';
 import PromptsCommand from './PromptsCommand';
 import AgentsCommand from './AgentsCommand';
-import AudioRecorder from './AudioRecorder';
+import Mic from './Mic';
 import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
 import StopButton from './StopButton';
@@ -55,6 +55,8 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const [visualRowCount, setVisualRowCount] = useState(1);
   const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
   const [backupBadges, setBackupBadges] = useState<Pick<BadgeItem, 'id'>[]>([]);
+  /** True from the moment the mic opens until it closes. */
+  const [voiceLive, setVoiceLive] = useState(false);
 
   const SpeechToText = useRecoilValue(store.speechToText);
   const TextToSpeech = useRecoilValue(store.textToSpeech);
@@ -376,12 +378,12 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
               />
               <div className="mx-auto flex" />
               {SpeechToText && (
-                <AudioRecorder
-                  methods={methods}
+                <Mic
                   ask={submitMessage}
-                  textAreaRef={textAreaRef}
+                  index={index}
                   disabled={disableInputs || isNotAppendable}
                   isSubmitting={isSubmitting}
+                  onLive={setVoiceLive}
                 />
               )}
               <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
@@ -398,7 +400,9 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 )}
               </div>
             </div>
-            {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
+            {/* While a spoken conversation is live the mic reads the reply, so
+                the automatic-playback stream stands down — one voice at a time. */}
+            {TextToSpeech && automaticPlayback && !voiceLive && <StreamAudio index={index} />}
           </div>
         </div>
       </div>
