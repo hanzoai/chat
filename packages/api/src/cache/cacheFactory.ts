@@ -14,7 +14,7 @@ import { logger } from '@hanzochat/data-schemas';
 import session, { MemoryStore } from 'express-session';
 import { RedisStore as ConnectRedis } from 'connect-redis';
 import type { SendCommandFn } from 'rate-limit-redis';
-import { keyvRedisClient, ioredisClient } from './redisClients';
+import { keyvRedisClient, kvClient } from './redisClients';
 import { cacheConfig } from './cacheConfig';
 import { violationFile } from './keyvFiles';
 import { batchDeleteKeys, scanKeys } from './redisUtils';
@@ -99,9 +99,9 @@ export const sessionCache = (namespace: string, ttl?: number): MemoryStore | Con
     const MemoryStore = createMemoryStore(session);
     return new MemoryStore({ ttl, checkPeriod: Time.ONE_DAY });
   }
-  const store = new ConnectRedis({ client: ioredisClient, ttl, prefix: namespace });
-  if (ioredisClient) {
-    ioredisClient.on('error', (err) => {
+  const store = new ConnectRedis({ client: kvClient, ttl, prefix: namespace });
+  if (kvClient) {
+    kvClient.on('error', (err) => {
       logger.error(`Session store Redis error for namespace ${namespace}:`, err);
     });
   }
@@ -121,17 +121,17 @@ export const limiterCache = (prefix: string): RedisStore | undefined => {
     return undefined;
   }
   // Note: The `prefix` is applied by RedisStore internally to its key operations.
-  // The global REDIS_KEY_PREFIX is applied by ioredisClient's keyPrefix setting.
+  // The global REDIS_KEY_PREFIX is applied by kvClient's keyPrefix setting.
   // Combined key format: `{REDIS_KEY_PREFIX}::{prefix}{identifier}`
   prefix = prefix.endsWith(':') ? prefix : `${prefix}:`;
 
   try {
     const sendCommand: SendCommandFn = (async (...args: string[]) => {
-      if (ioredisClient == null) {
+      if (kvClient == null) {
         throw new Error('Redis client not available');
       }
       try {
-        return await ioredisClient.call(args[0], ...args.slice(1));
+        return await kvClient.call(args[0], ...args.slice(1));
       } catch (err) {
         logger.error('Redis command execution failed:', err);
         throw err;
