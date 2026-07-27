@@ -6,5 +6,4 @@ export * from './json';
 export * from './concurrency';
 export * from './tenant';
 export * from './capabilities';
-export * from './remoteAgentAuth';
 export * from './preAuthTenant';
