@@ -1,5 +1,5 @@
-import IoRedis from 'ioredis';
-import type { Redis, Cluster } from 'ioredis';
+import KV from '@hanzo/kv';
+import type { KV, Cluster } from '@hanzo/kv';
 import { logger } from '@hanzochat/data-schemas';
 import { createClient, createCluster } from '@keyv/redis';
 import type { RedisClientType, RedisClusterType } from '@redis/client';
@@ -11,7 +11,7 @@ const username = urls?.[0]?.username || cacheConfig.REDIS_USERNAME;
 const password = urls?.[0]?.password || cacheConfig.REDIS_PASSWORD;
 const ca = cacheConfig.REDIS_CA;
 
-let ioredisClient: Redis | Cluster | null = null;
+let kvClient: KV | Cluster | null = null;
 if (cacheConfig.USE_REDIS) {
   const redisOptions: Record<string, unknown> = {
     username: username,
@@ -25,20 +25,20 @@ if (cacheConfig.USE_REDIS) {
         times > cacheConfig.REDIS_RETRY_MAX_ATTEMPTS
       ) {
         logger.error(
-          `ioredis giving up after ${cacheConfig.REDIS_RETRY_MAX_ATTEMPTS} reconnection attempts`,
+          `@hanzo/kv giving up after ${cacheConfig.REDIS_RETRY_MAX_ATTEMPTS} reconnection attempts`,
         );
         return null;
       }
       const base = Math.min(Math.pow(2, times) * 50, cacheConfig.REDIS_RETRY_MAX_DELAY);
       const jitter = Math.floor(Math.random() * Math.min(base, 1000));
       const delay = Math.min(base + jitter, cacheConfig.REDIS_RETRY_MAX_DELAY);
-      logger.info(`ioredis reconnecting... attempt ${times}, delay ${delay}ms`);
+      logger.info(`@hanzo/kv reconnecting... attempt ${times}, delay ${delay}ms`);
       return delay;
     },
     reconnectOnError: (err: Error) => {
       const targetError = 'READONLY';
       if (err.message.includes(targetError)) {
-        logger.warn('ioredis reconnecting due to READONLY error');
+        logger.warn('@hanzo/kv reconnecting due to READONLY error');
         return 2; // Return retry delay instead of boolean
       }
       return false;
@@ -48,10 +48,10 @@ if (cacheConfig.USE_REDIS) {
     maxRetriesPerRequest: 3,
   };
 
-  ioredisClient =
+  kvClient =
     urls.length === 1 && !cacheConfig.USE_REDIS_CLUSTER
-      ? new IoRedis(cacheConfig.REDIS_URI!, redisOptions)
-      : new IoRedis.Cluster(
+      ? new KV(cacheConfig.REDIS_URI!, redisOptions)
+      : new KV.Cluster(
           urls.map((url) => ({ host: url.hostname, port: parseInt(url.port, 10) || 6379 })),
           {
             ...(cacheConfig.REDIS_USE_ALTERNATIVE_DNS_LOOKUP
@@ -69,41 +69,41 @@ if (cacheConfig.USE_REDIS) {
                 times > cacheConfig.REDIS_RETRY_MAX_ATTEMPTS
               ) {
                 logger.error(
-                  `ioredis cluster giving up after ${cacheConfig.REDIS_RETRY_MAX_ATTEMPTS} reconnection attempts`,
+                  `@hanzo/kv cluster giving up after ${cacheConfig.REDIS_RETRY_MAX_ATTEMPTS} reconnection attempts`,
                 );
                 return null;
               }
               const base = Math.min(Math.pow(2, times) * 100, cacheConfig.REDIS_RETRY_MAX_DELAY);
               const jitter = Math.floor(Math.random() * Math.min(base, 1000));
               const delay = Math.min(base + jitter, cacheConfig.REDIS_RETRY_MAX_DELAY);
-              logger.info(`ioredis cluster reconnecting... attempt ${times}, delay ${delay}ms`);
+              logger.info(`@hanzo/kv cluster reconnecting... attempt ${times}, delay ${delay}ms`);
               return delay;
             },
             enableOfflineQueue: cacheConfig.REDIS_ENABLE_OFFLINE_QUEUE,
           },
         );
 
-  ioredisClient.on('error', (err) => {
-    logger.error('ioredis client error:', err);
+  kvClient.on('error', (err) => {
+    logger.error('@hanzo/kv client error:', err);
   });
 
-  ioredisClient.on('connect', () => {
-    logger.info('ioredis client connected');
+  kvClient.on('connect', () => {
+    logger.info('@hanzo/kv client connected');
   });
 
-  ioredisClient.on('ready', () => {
-    logger.info('ioredis client ready');
+  kvClient.on('ready', () => {
+    logger.info('@hanzo/kv client ready');
   });
 
-  ioredisClient.on('reconnecting', (delay: number) => {
-    logger.info(`ioredis client reconnecting in ${delay}ms`);
+  kvClient.on('reconnecting', (delay: number) => {
+    logger.info(`@hanzo/kv client reconnecting in ${delay}ms`);
   });
 
-  ioredisClient.on('close', () => {
-    logger.warn('ioredis client connection closed');
+  kvClient.on('close', () => {
+    logger.warn('@hanzo/kv client connection closed');
   });
 
-  /** Ping Interval to keep the Redis server connection alive (if enabled) */
+  /** Ping Interval to keep the KV server connection alive (if enabled) */
   let pingInterval: NodeJS.Timeout | null = null;
   const clearPingInterval = () => {
     if (pingInterval) {
@@ -114,14 +114,14 @@ if (cacheConfig.USE_REDIS) {
 
   if (cacheConfig.REDIS_PING_INTERVAL > 0) {
     pingInterval = setInterval(() => {
-      if (ioredisClient && ioredisClient.status === 'ready') {
-        ioredisClient.ping().catch((err) => {
-          logger.error('ioredis ping failed:', err);
+      if (kvClient && kvClient.status === 'ready') {
+        kvClient.ping().catch((err) => {
+          logger.error('@hanzo/kv ping failed:', err);
         });
       }
     }, cacheConfig.REDIS_PING_INTERVAL * 1000);
-    ioredisClient.on('close', clearPingInterval);
-    ioredisClient.on('end', clearPingInterval);
+    kvClient.on('close', clearPingInterval);
+    kvClient.on('end', clearPingInterval);
   }
 }
 
@@ -133,8 +133,8 @@ let keyvRedisClientReady:
 
 if (cacheConfig.USE_REDIS) {
   /**
-   * ** WARNING ** Keyv Redis client does not support Prefix like ioredis above.
-   * The prefix feature will be handled by the Keyv-Redis store in cacheFactory.js
+   * ** WARNING ** Keyv KV client does not support Prefix like @hanzo/kv above.
+   * The prefix feature will be handled by the Keyv-KV store in cacheFactory.js
    */
   const redisOptions: Record<string, unknown> = {
     username,
@@ -221,4 +221,4 @@ if (cacheConfig.USE_REDIS) {
   });
 }
 
-export { ioredisClient, keyvRedisClient, keyvRedisClientReady };
+export { kvClient, keyvRedisClient, keyvRedisClientReady };

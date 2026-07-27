@@ -6,7 +6,7 @@ jest.mock('@keyv/redis', () => ({
 
 jest.mock('../../redisClients', () => ({
   keyvRedisClient: null,
-  ioredisClient: null,
+  kvClient: null,
 }));
 
 jest.mock('../../redisUtils', () => ({

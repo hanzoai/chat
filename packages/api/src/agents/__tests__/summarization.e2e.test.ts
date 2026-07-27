@@ -34,11 +34,11 @@ import type {
   EventHandler,
 } from '@hanzochat/agents';
 import { hydrateMissingIndexTokenCounts } from '~/utils';
-import { ioredisClient, keyvRedisClient } from '~/cache';
+import { kvClient, keyvRedisClient } from '~/cache';
 import { createRun } from '~/agents';
 
 afterAll(async () => {
-  await ioredisClient?.quit().catch(() => {});
+  await kvClient?.quit().catch(() => {});
   await keyvRedisClient?.disconnect().catch(() => {});
 });
 
