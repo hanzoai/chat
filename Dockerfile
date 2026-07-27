@@ -58,6 +58,14 @@ RUN \
     NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}" pnpm run frontend; \
     pnpm store prune
 
+# Boot gate — see scripts/check-barrel.cjs. Runs against the dist that was just
+# built and fails the BUILD for the two defects that otherwise only show up as a
+# dead pod: an import @hanzochat/api never declared (rollup inlines it, and an
+# inlined native/dynamic require throws at load), and a name api/server/**
+# destructures from the barrel that the barrel does not export (silently
+# `undefined` until its first call site).
+RUN node scripts/check-barrel.cjs
+
 # Node API setup
 EXPOSE 3080
 ENV HOST=0.0.0.0
