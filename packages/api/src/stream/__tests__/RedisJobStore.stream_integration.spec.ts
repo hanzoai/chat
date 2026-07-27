@@ -1,6 +1,6 @@
 import { StepTypes } from '@hanzochat/data-provider';
 import type { Agents } from '@hanzochat/data-provider';
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 import { StandardGraph } from '@hanzochat/agents';
 
 /**
@@ -16,7 +16,7 @@ import { StandardGraph } from '@hanzochat/agents';
  */
 describe('RedisJobStore Integration Tests', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let ioredisClient: Redis | Cluster | null = null;
+  let kvClient: KV | Cluster | null = null;
   const testPrefix = 'Stream-Integration-Test';
 
   beforeAll(async () => {
@@ -32,42 +32,42 @@ describe('RedisJobStore Integration Tests', () => {
 
     jest.resetModules();
 
-    // Import Redis client
-    const { ioredisClient: client } = await import('../../cache/redisClients');
-    ioredisClient = client;
+    // Import KV client
+    const { kvClient: client } = await import('../../cache/redisClients');
+    kvClient = client;
 
-    if (!ioredisClient) {
-      console.warn('Redis not available, skipping integration tests');
+    if (!kvClient) {
+      console.warn('KV not available, skipping integration tests');
     }
   });
 
   afterEach(async () => {
-    if (!ioredisClient) {
+    if (!kvClient) {
       return;
     }
 
     // Clean up all test keys (delete individually for cluster compatibility)
     try {
-      const keys = await ioredisClient.keys(`${testPrefix}*`);
+      const keys = await kvClient.keys(`${testPrefix}*`);
       // Also clean up stream keys which use hash tags
-      const streamKeys = await ioredisClient.keys(`stream:*`);
+      const streamKeys = await kvClient.keys(`stream:*`);
       const allKeys = [...keys, ...streamKeys];
       // Delete individually to avoid CROSSSLOT errors in cluster mode
-      await Promise.all(allKeys.map((key) => ioredisClient!.del(key)));
+      await Promise.all(allKeys.map((key) => kvClient!.del(key)));
     } catch (error) {
       console.warn('Error cleaning up test keys:', error);
     }
   });
 
   afterAll(async () => {
-    if (ioredisClient) {
+    if (kvClient) {
       try {
         // Use quit() to gracefully close - waits for pending commands
-        await ioredisClient.quit();
+        await kvClient.quit();
       } catch {
         // Fall back to disconnect if quit fails
         try {
-          ioredisClient.disconnect();
+          kvClient.disconnect();
         } catch {
           // Ignore
         }
@@ -78,12 +78,12 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Job CRUD Operations', () => {
     test('should create and retrieve a job', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `test-stream-${Date.now()}`;
@@ -110,12 +110,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should update job status', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `test-stream-${Date.now()}`;
@@ -131,12 +131,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should delete job and related data', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `test-stream-${Date.now()}`;
@@ -156,15 +156,15 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Horizontal Scaling - Multi-Instance Simulation', () => {
     test('should share job state between two store instances', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
 
       // Simulate two server instances with separate store instances
-      const instance1 = new RedisJobStore(ioredisClient);
-      const instance2 = new RedisJobStore(ioredisClient);
+      const instance1 = new RedisJobStore(kvClient);
+      const instance2 = new RedisJobStore(kvClient);
 
       await instance1.initialize();
       await instance2.initialize();
@@ -192,14 +192,14 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should share chunks between instances for content reconstruction', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
 
-      const instance1 = new RedisJobStore(ioredisClient);
-      const instance2 = new RedisJobStore(ioredisClient);
+      const instance1 = new RedisJobStore(kvClient);
+      const instance2 = new RedisJobStore(kvClient);
 
       await instance1.initialize();
       await instance2.initialize();
@@ -247,14 +247,14 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should share run steps between instances', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
 
-      const instance1 = new RedisJobStore(ioredisClient);
-      const instance2 = new RedisJobStore(ioredisClient);
+      const instance1 = new RedisJobStore(kvClient);
+      const instance2 = new RedisJobStore(kvClient);
 
       await instance1.initialize();
       await instance2.initialize();
@@ -284,12 +284,12 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Content Reconstruction', () => {
     test('should reconstruct text content from message deltas', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `text-reconstruction-${Date.now()}`;
@@ -339,12 +339,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should reconstruct thinking content from reasoning deltas', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `think-reconstruction-${Date.now()}`;
@@ -404,12 +404,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should return null for empty chunks', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `empty-chunks-${Date.now()}`;
@@ -425,12 +425,12 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Consumer Groups', () => {
     test('should create consumer group and read chunks', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `consumer-group-${Date.now()}`;
@@ -447,7 +447,7 @@ describe('RedisJobStore Integration Tests', () => {
         await store.appendChunk(streamId, chunk);
       }
 
-      // Wait for Redis to sync
+      // Wait for KV to sync
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Create consumer group starting from beginning
@@ -488,14 +488,14 @@ describe('RedisJobStore Integration Tests', () => {
       await store.destroy();
     });
 
-    // TODO: Debug consumer group timing with Redis Streams
+    // TODO: Debug consumer group timing with KV Streams
     test.skip('should resume from where client left off', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `resume-test-${Date.now()}`;
@@ -515,7 +515,7 @@ describe('RedisJobStore Integration Tests', () => {
         data: { type: 'text', text: 'Part 2' },
       });
 
-      // Wait for Redis to sync
+      // Wait for KV to sync
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Client reads first batch
@@ -539,7 +539,7 @@ describe('RedisJobStore Integration Tests', () => {
         data: { type: 'text', text: 'Part 4' },
       });
 
-      // Wait for Redis to sync
+      // Wait for KV to sync
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Client reconnects - should only get new chunks
@@ -553,12 +553,12 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('TTL and Cleanup', () => {
     test('should set running TTL on chunk stream', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient, { runningTtl: 60 });
+      const store = new RedisJobStore(kvClient, { runningTtl: 60 });
       await store.initialize();
 
       const streamId = `ttl-test-${Date.now()}`;
@@ -570,9 +570,9 @@ describe('RedisJobStore Integration Tests', () => {
       });
 
       // Check that TTL was set on the stream key
-      // Note: ioredis client has keyPrefix, so we use the key WITHOUT the prefix
+      // Note: @hanzo/kv client has keyPrefix, so we use the key WITHOUT the prefix
       // Key uses hash tag format: stream:{streamId}:chunks
-      const ttl = await ioredisClient.ttl(`stream:{${streamId}}:chunks`);
+      const ttl = await kvClient.ttl(`stream:{${streamId}}:chunks`);
       expect(ttl).toBeGreaterThan(0);
       expect(ttl).toBeLessThanOrEqual(60);
 
@@ -580,31 +580,31 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should clean up stale jobs', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
       // Very short TTL for testing
-      const store = new RedisJobStore(ioredisClient, { runningTtl: 1 });
+      const store = new RedisJobStore(kvClient, { runningTtl: 1 });
       await store.initialize();
 
       const streamId = `stale-job-${Date.now()}`;
 
       // Manually create a job that looks old
-      // Note: ioredis client has keyPrefix, so we use the key WITHOUT the prefix
+      // Note: @hanzo/kv client has keyPrefix, so we use the key WITHOUT the prefix
       // Key uses hash tag format: stream:{streamId}:job
       const jobKey = `stream:{${streamId}}:job`;
       const veryOldTimestamp = Date.now() - 10000; // 10 seconds ago
 
-      await ioredisClient.hmset(jobKey, {
+      await kvClient.hmset(jobKey, {
         streamId,
         userId: 'user-1',
         status: 'running',
         createdAt: veryOldTimestamp.toString(),
         syncSent: '0',
       });
-      await ioredisClient.sadd(`stream:running`, streamId);
+      await kvClient.sadd(`stream:running`, streamId);
 
       // Run cleanup
       const cleaned = await store.cleanup();
@@ -618,12 +618,12 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Active Jobs by User', () => {
     test('should return active job IDs for a user', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId = `test-user-${Date.now()}`;
@@ -645,12 +645,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should return empty array for user with no jobs', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId = `nonexistent-user-${Date.now()}`;
@@ -663,12 +663,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should not return completed jobs', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId = `test-user-${Date.now()}`;
@@ -693,12 +693,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should not return aborted jobs', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId = `test-user-${Date.now()}`;
@@ -717,12 +717,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should not return error jobs', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId = `test-user-${Date.now()}`;
@@ -745,12 +745,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should perform self-healing cleanup of stale entries', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId = `test-user-${Date.now()}`;
@@ -762,10 +762,10 @@ describe('RedisJobStore Integration Tests', () => {
 
       // Manually add a stale entry to the user's job set (simulating orphaned data)
       const userJobsKey = `stream:user:{${userId}}:jobs`;
-      await ioredisClient.sadd(userJobsKey, staleStreamId);
+      await kvClient.sadd(userJobsKey, staleStreamId);
 
       // Verify both entries exist in the set
-      const beforeCleanup = await ioredisClient.smembers(userJobsKey);
+      const beforeCleanup = await kvClient.smembers(userJobsKey);
       expect(beforeCleanup).toContain(streamId);
       expect(beforeCleanup).toContain(staleStreamId);
 
@@ -777,7 +777,7 @@ describe('RedisJobStore Integration Tests', () => {
       expect(activeJobs).toContain(streamId);
 
       // Verify stale entry was removed
-      const afterCleanup = await ioredisClient.smembers(userJobsKey);
+      const afterCleanup = await kvClient.smembers(userJobsKey);
       expect(afterCleanup).toContain(streamId);
       expect(afterCleanup).not.toContain(staleStreamId);
 
@@ -785,12 +785,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should isolate jobs between different users', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId1 = `user-1-${Date.now()}`;
@@ -818,15 +818,15 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should work across multiple store instances (horizontal scaling)', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
 
       // Simulate two server instances
-      const instance1 = new RedisJobStore(ioredisClient);
-      const instance2 = new RedisJobStore(ioredisClient);
+      const instance1 = new RedisJobStore(kvClient);
+      const instance2 = new RedisJobStore(kvClient);
 
       await instance1.initialize();
       await instance2.initialize();
@@ -854,12 +854,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should clean up user jobs set when job is deleted', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const userId = `test-user-${Date.now()}`;
@@ -885,41 +885,41 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Race Condition: updateJob after deleteJob', () => {
     test('should not re-create job hash when updateJob runs after deleteJob', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `race-condition-${Date.now()}`;
       await store.createJob(streamId, 'user-1', streamId);
 
       const jobKey = `stream:{${streamId}}:job`;
-      const ttlBefore = await ioredisClient.ttl(jobKey);
+      const ttlBefore = await kvClient.ttl(jobKey);
       expect(ttlBefore).toBeGreaterThan(0);
 
       await store.deleteJob(streamId);
 
-      const afterDelete = await ioredisClient.exists(jobKey);
+      const afterDelete = await kvClient.exists(jobKey);
       expect(afterDelete).toBe(0);
 
       await store.updateJob(streamId, { finalEvent: JSON.stringify({ final: true }) });
 
-      const afterUpdate = await ioredisClient.exists(jobKey);
+      const afterUpdate = await kvClient.exists(jobKey);
       expect(afterUpdate).toBe(0);
 
       await store.destroy();
     });
 
     test('should not leave orphan keys from concurrent emitDone and deleteJob', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `concurrent-race-${Date.now()}`;
@@ -934,8 +934,8 @@ describe('RedisJobStore Integration Tests', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const exists = await ioredisClient.exists(jobKey);
-      const ttl = exists ? await ioredisClient.ttl(jobKey) : -2;
+      const exists = await kvClient.exists(jobKey);
+      const ttl = exists ? await kvClient.ttl(jobKey) : -2;
 
       expect(ttl === -2 || ttl > 0).toBe(true);
       expect(ttl).not.toBe(-1);
@@ -946,12 +946,12 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Local Graph Cache Optimization', () => {
     test('should use local cache when available', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `local-cache-${Date.now()}`;
@@ -968,7 +968,7 @@ describe('RedisJobStore Integration Tests', () => {
       // Set graph reference (will be cached locally)
       store.setGraph(streamId, mockGraph as unknown as StandardGraph);
 
-      // Get content - should come from local cache, not Redis
+      // Get content - should come from local cache, not KV
       const result = await store.getContentParts(streamId);
       expect(result!.content).toEqual(mockContentParts);
 
@@ -979,21 +979,21 @@ describe('RedisJobStore Integration Tests', () => {
       await store.destroy();
     });
 
-    test('should fall back to Redis when local cache not available', async () => {
-      if (!ioredisClient) {
+    test('should fall back to KV when local cache not available', async () => {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
 
       // Instance 1 creates and populates data
-      const instance1 = new RedisJobStore(ioredisClient);
+      const instance1 = new RedisJobStore(kvClient);
       await instance1.initialize();
 
       const streamId = `fallback-test-${Date.now()}`;
       await instance1.createJob(streamId, 'user-1', streamId);
 
-      // Add chunks to Redis with correct format
+      // Add chunks to KV with correct format
       await instance1.appendChunk(streamId, {
         event: 'on_run_step',
         data: {
@@ -1005,10 +1005,10 @@ describe('RedisJobStore Integration Tests', () => {
       });
       await instance1.appendChunk(streamId, {
         event: 'on_message_delta',
-        data: { id: 'step-1', delta: { content: { type: 'text', text: 'From Redis' } } },
+        data: { id: 'step-1', delta: { content: { type: 'text', text: 'From KV' } } },
       });
 
-      // Save run steps to Redis
+      // Save run steps to KV
       await instance1.saveRunSteps!(streamId, [
         {
           id: 'step-1',
@@ -1018,16 +1018,16 @@ describe('RedisJobStore Integration Tests', () => {
         } as unknown as Agents.RunStep,
       ]);
 
-      // Instance 2 has NO local cache - should fall back to Redis
-      const instance2 = new RedisJobStore(ioredisClient);
+      // Instance 2 has NO local cache - should fall back to KV
+      const instance2 = new RedisJobStore(kvClient);
       await instance2.initialize();
 
-      // Get content - should reconstruct from Redis chunks
+      // Get content - should reconstruct from KV chunks
       const result = await instance2.getContentParts(streamId);
       expect(result).not.toBeNull();
       expect(result!.content.length).toBeGreaterThan(0);
 
-      // Get run steps - should fetch from Redis
+      // Get run steps - should fetch from KV
       const runSteps = await instance2.getRunSteps(streamId);
       expect(runSteps).toHaveLength(1);
       expect(runSteps[0].id).toBe('step-1');
@@ -1039,34 +1039,34 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('Batched Cleanup', () => {
     test('should clean up many stale jobs in parallel batches', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
       // Very short TTL so jobs are immediately stale
-      const store = new RedisJobStore(ioredisClient, { runningTtl: 1 });
+      const store = new RedisJobStore(kvClient, { runningTtl: 1 });
       await store.initialize();
 
       const jobCount = 75; // More than one batch of 50
       const veryOldTimestamp = Date.now() - 10000; // 10 seconds ago
 
-      // Create many stale jobs directly in Redis
+      // Create many stale jobs directly in KV
       for (let i = 0; i < jobCount; i++) {
         const streamId = `batch-cleanup-${Date.now()}-${i}`;
         const jobKey = `stream:{${streamId}}:job`;
-        await ioredisClient.hmset(jobKey, {
+        await kvClient.hmset(jobKey, {
           streamId,
           userId: 'batch-user',
           status: 'running',
           createdAt: veryOldTimestamp.toString(),
           syncSent: '0',
         });
-        await ioredisClient.sadd('stream:running', streamId);
+        await kvClient.sadd('stream:running', streamId);
       }
 
       // Verify jobs are in the running set
-      const runningBefore = await ioredisClient.scard('stream:running');
+      const runningBefore = await kvClient.scard('stream:running');
       expect(runningBefore).toBeGreaterThanOrEqual(jobCount);
 
       // Run cleanup - should process in batches of 50
@@ -1077,12 +1077,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should not clean up valid running jobs during batch cleanup', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient, { runningTtl: 1200 });
+      const store = new RedisJobStore(kvClient, { runningTtl: 1200 });
       await store.initialize();
 
       // Create a mix of valid and stale jobs
@@ -1091,14 +1091,14 @@ describe('RedisJobStore Integration Tests', () => {
 
       const staleStreamId = `stale-job-${Date.now()}`;
       const jobKey = `stream:{${staleStreamId}}:job`;
-      await ioredisClient.hmset(jobKey, {
+      await kvClient.hmset(jobKey, {
         streamId: staleStreamId,
         userId: 'user-1',
         status: 'running',
         createdAt: (Date.now() - 2000000).toString(), // Very old
         syncSent: '0',
       });
-      await ioredisClient.sadd('stream:running', staleStreamId);
+      await kvClient.sadd('stream:running', staleStreamId);
 
       const cleaned = await store.cleanup();
       expect(cleaned).toBeGreaterThanOrEqual(1);
@@ -1114,12 +1114,12 @@ describe('RedisJobStore Integration Tests', () => {
 
   describe('appendChunk TTL Refresh', () => {
     test('should set TTL on the chunk stream', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient, { runningTtl: 120 });
+      const store = new RedisJobStore(kvClient, { runningTtl: 120 });
       await store.initialize();
 
       const streamId = `append-ttl-${Date.now()}`;
@@ -1131,7 +1131,7 @@ describe('RedisJobStore Integration Tests', () => {
       });
 
       const chunkKey = `stream:{${streamId}}:chunks`;
-      const ttl = await ioredisClient.ttl(chunkKey);
+      const ttl = await kvClient.ttl(chunkKey);
       expect(ttl).toBeGreaterThan(0);
       expect(ttl).toBeLessThanOrEqual(120);
 
@@ -1139,12 +1139,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should refresh TTL on subsequent chunks (not just first)', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient, { runningTtl: 120 });
+      const store = new RedisJobStore(kvClient, { runningTtl: 120 });
       await store.initialize();
 
       const streamId = `append-refresh-${Date.now()}`;
@@ -1157,12 +1157,12 @@ describe('RedisJobStore Integration Tests', () => {
       });
 
       const chunkKey = `stream:{${streamId}}:chunks`;
-      const ttl1 = await ioredisClient.ttl(chunkKey);
+      const ttl1 = await kvClient.ttl(chunkKey);
       expect(ttl1).toBeGreaterThan(0);
 
       // Manually reduce TTL to simulate time passing
-      await ioredisClient.expire(chunkKey, 30);
-      const reducedTtl = await ioredisClient.ttl(chunkKey);
+      await kvClient.expire(chunkKey, 30);
+      const reducedTtl = await kvClient.ttl(chunkKey);
       expect(reducedTtl).toBeLessThanOrEqual(30);
 
       // Append another chunk - TTL should be refreshed back to running TTL
@@ -1171,7 +1171,7 @@ describe('RedisJobStore Integration Tests', () => {
         data: { id: 'step-1', type: 'text', text: 'second' },
       });
 
-      const ttl2 = await ioredisClient.ttl(chunkKey);
+      const ttl2 = await kvClient.ttl(chunkKey);
       // Should be refreshed to ~120, not still ~30
       expect(ttl2).toBeGreaterThan(30);
       expect(ttl2).toBeLessThanOrEqual(120);
@@ -1180,12 +1180,12 @@ describe('RedisJobStore Integration Tests', () => {
     });
 
     test('should store chunks correctly via pipeline', async () => {
-      if (!ioredisClient) {
+      if (!kvClient) {
         return;
       }
 
       const { RedisJobStore } = await import('../implementations/RedisJobStore');
-      const store = new RedisJobStore(ioredisClient);
+      const store = new RedisJobStore(kvClient);
       await store.initialize();
 
       const streamId = `append-pipeline-${Date.now()}`;
@@ -1217,7 +1217,7 @@ describe('RedisJobStore Integration Tests', () => {
 
       // Verify all chunks were stored
       const chunkKey = `stream:{${streamId}}:chunks`;
-      const len = await ioredisClient.xlen(chunkKey);
+      const len = await kvClient.xlen(chunkKey);
       expect(len).toBe(3);
 
       // Verify content can be reconstructed
