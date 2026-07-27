@@ -116,22 +116,6 @@ function reachableImports() {
 // `const { a, b } = require('@hanzochat/api')`. The body is [^{}] so the match
 // cannot run past its own closing brace into the NEXT destructure — the bug that
 // made an earlier version attribute @hanzochat/api's names to data-schemas.
-/**
- * Four names the server requires that a freshly built barrel still does not
- * carry, even though `src/index.ts` re-exports the modules that define them
- * (`./rum/proxy`, `./endpoints` → `./custom` → `./tenantBearer`). They are
- * dropped somewhere between source and dist — not the missing-re-export bug the
- * rest of this file is about, and not yet diagnosed. Listed so the check runs
- * GREEN and enforces everything else today rather than being switched off; the
- * list may only shrink, and the check fails if a name here starts working.
- */
-const KNOWN = new Set([
-  'getRumProxyBodyLimit',
-  'isRumProxyEnabled',
-  'proxyRumRequest',
-  'resolveRequestOrg',
-]);
-
 const DESTRUCTURE = new RegExp(
   String.raw`(?:const|let|var)\s*\{([^{}]*?)\}\s*=\s*require\(\s*['"]${BARREL}['"]\s*\)`,
   'g',
@@ -233,19 +217,13 @@ if (!existsSync(DIST)) {
     const wanted = requiredNames();
     const missing = [...wanted.keys()].filter((n) => !published.has(n)).sort();
     for (const name of missing) {
-      console.error(`${KNOWN.has(name) ? 'KNOWN' : 'FAIL '} ${BARREL} does not export ${name} — required by:`);
+      console.error(`FAIL ${BARREL} does not export ${name} — required by:`);
       for (const f of wanted.get(name)) console.error(`       ${f}`);
-      if (!KNOWN.has(name)) failed += 1;
-    }
-    const stale = [...KNOWN].filter((n) => published.has(n));
-    if (stale.length) {
-      console.error(`FAIL these are exported now — delete them from KNOWN: ${stale.join(', ')}`);
       failed += 1;
     }
     console.log(
-      `${missing.some((n) => !KNOWN.has(n)) ? 'FAIL' : ' ok '} published: ${wanted.size} names ` +
-        `required of ${published.size} exported, ${missing.length} missing ` +
-        `(${missing.filter((n) => KNOWN.has(n)).length} known)`,
+      `${missing.length ? 'FAIL' : ' ok '} published: ${wanted.size} names required of ` +
+        `${published.size} exported, ${missing.length} missing`,
     );
   }
 }
