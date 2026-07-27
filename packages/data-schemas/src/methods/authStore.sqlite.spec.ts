@@ -1,24 +1,23 @@
 /**
  * Regression proof for the P1 that broke COLD logins: the auth + billing methods
  * (Session / Token / User / Transaction) running against the SQLite document
- * store and the DualWriteModel — the two model shapes that
- * `createModels()` + `applySqliteOverrides()` serve once CHAT_STORE_SQLITE flips
- * these domains.
+ * store — the model shape `createModels()` + `applySqliteOverrides()` serve for
+ * every domain named in CHAT_STORE_SQLITE.
  *
  * Before the fix, `createSession` threw "Session is not a constructor" because
  * session.ts used the mongoose-document constructor (`new Session()`) + `.save()`,
- * which the served DocModel / DualWriteModel do not implement. Email-verify /
- * password-reset (Token) and the latent Transaction path were the same class of
- * bug (mongoose.models.<Name> / `new Transaction()`).
+ * which the served DocModel does not implement. Email-verify / password-reset
+ * (Token) and the latent Transaction path were the same class of bug
+ * (mongoose.models.<Name> / `new Transaction()`).
  *
  * These specs use the REAL production factories (createSessionMethods, …) and the
  * REAL `createModels` wiring — only the store backend is the SQLite one, exactly
- * as prod runs post-flip. No mongoose connection: the DocModel/DualWriteModel are
- * self-contained, so a failure here is a failure of the served auth path itself.
+ * as prod runs. No mongoose connection: the DocModel is self-contained, so a
+ * failure here is a failure of the served auth path itself.
  */
 import mongoose from 'mongoose';
 import { createModels, closeSharedSqliteHandle } from '~/models';
-import { createSqliteHandle, createDualWriteModel, type SqliteHandle } from '~/stores/sqlite';
+import { createSqliteHandle, type SqliteHandle } from '~/stores/sqlite';
 import { createSessionMethods } from './session';
 import { createTokenMethods } from './token';
 import { createUserMethods } from './user';
@@ -45,12 +44,11 @@ const stubTx = { getMultiplier: () => 1, getCacheMultiplier: () => null };
 const oid = () => new mongoose.Types.ObjectId().toString();
 
 /* ======================================================================== *
- *  Served shape #1: DualWriteModel (SQLite primary + SQLite mirror)         *
- *  — the model prod serves under CHAT_STORE_SQLITE + CHAT_STORE_DUALWRITE.  *
+ *  The served shape: DocModel — what prod serves for every collection named *
+ *  in CHAT_STORE_SQLITE.                                                    *
  * ======================================================================== */
-describe('auth+billing methods on the DualWriteModel (SQLite primary + mirror)', () => {
-  let primaryH: SqliteHandle;
-  let mirrorH: SqliteHandle;
+describe('auth+billing methods on the SQLite DocModel', () => {
+  let storeH: SqliteHandle;
   let handle: DataHandle;
   let session: ReturnType<typeof createSessionMethods>;
   let token: ReturnType<typeof createTokenMethods>;
@@ -58,11 +56,10 @@ describe('auth+billing methods on the DualWriteModel (SQLite primary + mirror)',
   let tx: ReturnType<typeof createTransactionMethods>;
 
   beforeEach(() => {
-    primaryH = createSqliteHandle(AUTH_NAMES);
-    mirrorH = createSqliteHandle(AUTH_NAMES);
+    storeH = createSqliteHandle(AUTH_NAMES);
     const models: Record<string, unknown> = {};
     for (const name of AUTH_NAMES) {
-      models[name] = createDualWriteModel(primaryH.models[name], mirrorH.models[name]);
+      models[name] = storeH.models[name];
     }
     // Same handle shape createMethods builds in prod: store models + mongoose Types.
     handle = { models, Types: mongoose.Types } as DataHandle;
@@ -73,18 +70,17 @@ describe('auth+billing methods on the DualWriteModel (SQLite primary + mirror)',
   });
 
   afterEach(() => {
-    primaryH.close();
-    mirrorH.close();
+    storeH.close();
   });
 
-  it('served models are the store wrapper, never a mongoose Model', () => {
+  it('served models are the store model, never a mongoose Model', () => {
     for (const name of AUTH_NAMES) {
-      expect((handle.models[name] as any).constructor.name).toBe('DualWriteModel');
+      expect((handle.models[name] as any).constructor.name).toBe('DocModel');
     }
   });
 
   describe('Session — createSession → findSession → updateExpiration → deleteSession', () => {
-    it('creates a session (no `new Session()`), served + mirrored, and finds it by refresh token', async () => {
+    it('creates a session (no `new Session()`) and finds it by refresh token', async () => {
       const userId = oid();
       const { session: s, refreshToken } = await session.createSession(userId);
 
@@ -98,9 +94,9 @@ describe('auth+billing methods on the DualWriteModel (SQLite primary + mirror)',
       expect(found).toBeTruthy();
       expect(String((found as any).user)).toBe(userId);
 
-      // dual-write mirror received the session, keyed by the primary _id
-      const mirrored = await mirrorH.models.Session.findOne({ _id: String((s as any)._id) }).lean();
-      expect(mirrored).toBeTruthy();
+      // the row is really in the store, keyed by _id
+      const stored = await storeH.models.Session.findOne({ _id: String((s as any)._id) }).lean();
+      expect(stored).toBeTruthy();
     });
 
     it('findSession by sessionId, updateExpiration, and countActiveSessions', async () => {
@@ -131,7 +127,7 @@ describe('auth+billing methods on the DualWriteModel (SQLite primary + mirror)',
       expect(await session.findSession({ refreshToken: first })).toBeNull();
     });
 
-    it('deleteSession and deleteAllUserSessions remove served + mirrored rows', async () => {
+    it('deleteSession and deleteAllUserSessions remove the stored rows', async () => {
       const userId = oid();
       const { session: s, refreshToken } = await session.createSession(userId);
 
@@ -160,8 +156,8 @@ describe('auth+billing methods on the DualWriteModel (SQLite primary + mirror)',
       expect(created).toBeTruthy();
       expect((created as any).expiresAt).toBeTruthy();
 
-      // mirrored
-      expect(await mirrorH.models.Token.findOne({ token: 'verify-abc' }).lean()).toBeTruthy();
+      // really in the store
+      expect(await storeH.models.Token.findOne({ token: 'verify-abc' }).lean()).toBeTruthy();
 
       const found = await token.findToken({ token: 'verify-abc' });
       expect(found).toBeTruthy();
@@ -206,8 +202,8 @@ describe('auth+billing methods on the DualWriteModel (SQLite primary + mirror)',
       const updated = await user.updateUser(String(uid), { name: 'Alice II' } as any);
       expect((updated as any).name).toBe('Alice II');
 
-      // mirrored
-      expect(await mirrorH.models.User.findOne({ email }).lean()).toBeTruthy();
+      // really in the store
+      expect(await storeH.models.User.findOne({ email }).lean()).toBeTruthy();
 
       const del = await user.deleteUserById(String(uid));
       expect(del.deletedCount).toBe(1);
@@ -302,7 +298,6 @@ describe('real createModels wiring under CHAT_STORE_SQLITE serves DocModels', ()
 
   beforeEach(() => {
     process.env.CHAT_STORE_SQLITE = AUTH_NAMES.join(',');
-    delete process.env.CHAT_STORE_DUALWRITE;
     // Identical to createMethods' dbHandle: createModels output + mongoose Types.
     handle = { models: createModels(mongoose), Types: mongoose.Types };
     session = createSessionMethods(handle);

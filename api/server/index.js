@@ -57,7 +57,6 @@ const startServer = async () => {
   }
   await connectDb();
 
-  logger.info('Connected to MongoDB');
   indexSync().catch((err) => {
     logger.error('[indexSync] Background sync failed:', err);
   });
@@ -98,8 +97,17 @@ const startServer = async () => {
   app.use(handleJsonParseError);
 
   /**
-   * Express 5 Compatibility: Make req.query writable for mongoSanitize
-   * In Express 5, req.query is read-only by default, but express-mongo-sanitize needs to modify it
+   * Strips `$`-prefixed keys from user input. This is NOT vestigial Mongo
+   * plumbing — keep it. There is no MongoDB, but the SQLite document store
+   * still speaks Mongo-shaped queries: `stores/sqlite/engine.ts` interprets
+   * `$eq $ne $in $nin $gt $gte $lt $lte $exists $regex $not $and $or $nor` in
+   * filters and `$set $unset $inc $push $pull $addToSet` in updates. A
+   * `{"$ne": null}` that reaches a filter is operator injection against SQLite
+   * exactly as it would have been against Mongo, so the guard outlived the
+   * database it was named for.
+   *
+   * Express 5 makes `req.query` read-only and express-mongo-sanitize rewrites
+   * it in place, so the property is made writable first.
    */
   app.use((req, _res, next) => {
     Object.defineProperty(req, 'query', {
