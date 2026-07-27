@@ -53,6 +53,34 @@ webSearch:
   firecrawlApiUrl: '${FIRECRAWL_API_URL}'
   firecrawlApiKey: '${WEBSEARCH_API_KEY}'
   firecrawlVersion: 'v1'
+# Speech — the platform's own services, nothing external. Both are the same
+# api.hanzo.ai/v1 gateway every endpoint below already uses, reached through the
+# routes this server already has (/v1/chat/files/speech/{stt,tts}); the composer
+# mic (@hanzo/voice) is their only caller. Absent this block the browser's own
+# recogniser and voice stand in, so voice never dies with the config.
+#
+# NOTE ON METERING: speech carries the server's ${HANZO_API_KEY} (the same
+# shared IAM key the guest tier uses), not the per-user {{CHAT_OPENID_TOKEN}}
+# that completions carry — the speech services resolve `${VAR}` from the
+# environment only. Transcription and playback therefore bill the shared key.
+speech:
+  stt:
+    openai:
+      url: 'https://api.hanzo.ai/v1/audio/transcriptions'
+      apiKey: '${HANZO_API_KEY}'
+      model: 'whisper-1'
+  tts:
+    openai:
+      url: 'https://api.hanzo.ai/v1/audio/speech'
+      apiKey: '${HANZO_API_KEY}'
+      model: 'tts-1'
+      voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+  speechTab:
+    speechToText:
+      engineSTT: 'external'
+    textToSpeech:
+      engineTTS: 'external'
+      voice: 'alloy'
 # Unified picker (HIP: one source of truth). EVERY endpoint below is the SAME
 # api.hanzo.ai/v1 gateway carrying the per-user ${HANZO_API_KEY}; they differ
 # only by a curated family subset + icon, so metering is identical across all

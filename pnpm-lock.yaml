@@ -357,7 +357,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3))
+        version: 30.3.0(@types/node@25.5.0)(ts-node@10.9.2(@types/node@25.5.0)(typescript@5.9.3))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -409,6 +409,9 @@ importers:
       '@hanzo/usage':
         specifier: ^0.1.6
         version: 0.1.6(react@18.3.1)
+      '@hanzo/voice':
+        specifier: 0.1.0
+        version: 0.1.0(react@18.3.1)
       '@hanzochat/client':
         specifier: workspace:*
         version: link:../packages/client
@@ -4057,6 +4060,12 @@ packages:
         optional: true
       react:
         optional: true
+
+  '@hanzo/voice@0.1.0':
+    resolution: {integrity: sha512-MZ5OuqWmwiKn5NUrABDKbmZlbmR9SzcXrgouN4cKZRYMhD/Op3u2a8UwCC+RgT9k6NXJdIFaEQ3I9kTzlpVRww==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: '>=18'
 
   '@hanzochat/agents@3.2.63':
     resolution: {integrity: sha512-mCB8A2hhKOBCPA56b3gbYTuL4qfk/+2BMzmG+wCY4wyvqSP/oHkdcTKL6rUGLMuhNHrgi/P77tNEFUsBnzMYmQ==}
@@ -18138,6 +18147,10 @@ snapshots:
 
   '@hanzo/usage@0.1.6(react@18.3.1)':
     optionalDependencies:
+      react: 18.3.1
+
+  '@hanzo/voice@0.1.0(react@18.3.1)':
+    dependencies:
       react: 18.3.1
 
   '@hanzochat/agents@3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)':
