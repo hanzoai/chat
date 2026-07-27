@@ -37,8 +37,10 @@ export * from './endpoints';
 export * from './files';
 /* Skills */
 export * from './skills';
-/* Storage */
-export * from './storage';
+/* Storage — the routes need `getStorageMetadata` and nothing else here.
+   Publishing the whole subtree would also publish sharp (a native binary) and
+   the CloudFront SDKs, which this package does not otherwise carry. */
+export * from './storage/metadata';
 /* RUM */
 export * from './rum/proxy';
 /* Tools */
