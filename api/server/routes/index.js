@@ -4,7 +4,6 @@ const categories = require('./categories');
 const adminAuth = require('./admin/auth');
 const endpoints = require('./endpoints');
 const staticRoute = require('./static');
-const skills = require('./skills');
 const rum = require('./rum');
 const messages = require('./messages');
 const memories = require('./memories');
@@ -63,7 +62,6 @@ module.exports = {
   assistants,
   categories,
   staticRoute,
-  skills,
   rum,
   accessPermissions,
 };

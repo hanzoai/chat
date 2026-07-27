@@ -201,8 +201,12 @@ const startServer = async () => {
   app.use('/v1/chat/tags', routes.tags);
   app.use('/v1/chat/mcp', routes.mcp);
   app.use('/v1/chat/ask', routes.ask);
-  app.use('/v1/chat/skills', routes.skills);
   app.use('/v1/chat/rum', routes.rum);
+  /* No skills mount. `routes/skills.js` imports `canAccessSkillResource` from
+     the middleware index — a middleware nobody has written — so requiring it
+     throws before the server listens. The router, its types (which already name
+     /v1/chat/skills) and its client queries are half-built; whoever finishes
+     them mounts it here. */
 
   app.use(ErrorController);
 
