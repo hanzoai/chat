@@ -333,9 +333,15 @@ deleted, the dependency is out of `client/package.json`, and the two dead
 - **Shell chrome** = `@hanzogui/shell` only (HanzoHeader / HanzoAppHeader /
   HanzoFooter / HanzoPreFooterCTA / MeetHanzoMenu / HanzoAppLauncher). It is
   self-contained — inline styles + `theme.ts` tokens — so it drops into Vite
-  with no provider. `HanzoAppLauncher` is the in-app cross-app affordance
-  (`Chat/Header.tsx`); `HanzoAppHeader` is the signed-in shell header chat does
-  not mount yet.
+  with no provider. **The product still has NO cross-app nav.** `Chat/Header.tsx`
+  mounts `HanzoAppLauncher`, but that header does not paint on the default
+  screen: driving live hanzo.chat as a guest finds no `<header>`, no
+  `absolute top-0 h-14` div, and the string "Meet Hanzo" nowhere in the body.
+  Deleting the dead header removed the second implementation; it did not close
+  the gap. `HanzoAppHeader` is the shell's signed-in header and is the way to
+  close it — it is `position: sticky`, `height: 56`, so `Root.tsx`'s
+  `calc(100dvh - bannerHeight)` must subtract it too or the composer falls off
+  the bottom. That is a layout change, not a sweep.
 - **Tailwind must scan the shell.** A distributed library that paints itself
   with utility class names (`bg-[#0e0e13]`, `z-[101]`, `border-white/[0.06]`)
   renders transparent and unstacked in a host that never scans it. 45 of the
