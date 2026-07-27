@@ -41,16 +41,9 @@ describe('Static Route Integration', () => {
     }
   });
 
-  // Helper function to set up static route with specific config
-  const setupStaticRoute = (skipGzipScan = false) => {
-    if (skipGzipScan) {
-      delete process.env.ENABLE_IMAGE_OUTPUT_GZIP_SCAN;
-    } else {
-      process.env.ENABLE_IMAGE_OUTPUT_GZIP_SCAN = 'true';
-    }
-
+  const setupStaticRoute = () => {
     staticRoute = require('../static');
-    app.use('/images', staticRoute);
+    app.use('/v1/chat/images', staticRoute);
   };
 
   beforeEach(() => {
@@ -59,8 +52,6 @@ describe('Static Route Integration', () => {
 
     app = express();
 
-    // Clear environment variables
-    delete process.env.ENABLE_IMAGE_OUTPUT_GZIP_SCAN;
     delete process.env.NODE_ENV;
   });
 
@@ -69,7 +60,7 @@ describe('Static Route Integration', () => {
       process.env.NODE_ENV = 'production';
       setupStaticRoute();
 
-      const response = await request(app).get('/images/test-image.jpg').expect(200);
+      const response = await request(app).get('/v1/chat/images/test-image.jpg').expect(200);
 
       expect(response.body.toString()).toBe('fake-image-data');
     });
@@ -77,7 +68,7 @@ describe('Static Route Integration', () => {
     it('should return 404 for non-existent files', async () => {
       setupStaticRoute();
 
-      const response = await request(app).get('/images/nonexistent.jpg');
+      const response = await request(app).get('/v1/chat/images/nonexistent.jpg');
       expect(response.status).toBe(404);
     });
   });
@@ -87,7 +78,7 @@ describe('Static Route Integration', () => {
       process.env.NODE_ENV = 'production';
       setupStaticRoute();
 
-      const response = await request(app).get('/images/test-image.jpg').expect(200);
+      const response = await request(app).get('/v1/chat/images/test-image.jpg').expect(200);
 
       expect(response.headers['cache-control']).toBe('public, max-age=172800, s-maxage=86400');
     });
@@ -96,7 +87,7 @@ describe('Static Route Integration', () => {
       process.env.NODE_ENV = 'development';
       setupStaticRoute();
 
-      const response = await request(app).get('/images/test-image.jpg').expect(200);
+      const response = await request(app).get('/v1/chat/images/test-image.jpg').expect(200);
 
       // Our middleware should not set the production cache-control header in development
       expect(response.headers['cache-control']).not.toBe('public, max-age=172800, s-maxage=86400');
@@ -108,23 +99,12 @@ describe('Static Route Integration', () => {
       process.env.NODE_ENV = 'production';
     });
 
-    it('should serve gzipped files when gzip scanning is enabled', async () => {
-      setupStaticRoute(false); // Enable gzip scanning
+    it('never serves a gzip-encoded image', async () => {
+      /* We write these files ourselves, as PNG/GIF; none is gzipped on disk. */
+      setupStaticRoute();
 
       const response = await request(app)
-        .get('/images/test-image.jpg')
-        .set('Accept-Encoding', 'gzip')
-        .expect(200);
-
-      expect(response.headers['content-encoding']).toBe('gzip');
-      expect(response.body.toString()).toBe('fake-image-data');
-    });
-
-    it('should not serve gzipped files when gzip scanning is disabled', async () => {
-      setupStaticRoute(true); // Disable gzip scanning
-
-      const response = await request(app)
-        .get('/images/test-image.jpg')
+        .get('/v1/chat/images/test-image.jpg')
         .set('Accept-Encoding', 'gzip')
         .expect(200);
 
@@ -137,7 +117,7 @@ describe('Static Route Integration', () => {
     it('should use the configured imageOutput path', async () => {
       setupStaticRoute();
 
-      const response = await request(app).get('/images/test-image.jpg').expect(200);
+      const response = await request(app).get('/v1/chat/images/test-image.jpg').expect(200);
 
       expect(response.body.toString()).toBe('fake-image-data');
     });
@@ -151,7 +131,7 @@ describe('Static Route Integration', () => {
 
       setupStaticRoute();
 
-      const response = await request(app).get('/images/thumbs/thumb.jpg').expect(200);
+      const response = await request(app).get('/v1/chat/images/thumbs/thumb.jpg').expect(200);
 
       expect(response.body.toString()).toBe('thumbnail-data');
 

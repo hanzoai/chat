@@ -100,16 +100,7 @@ If you're getting this error, please refer to the latest documentation:
 https://hanzo.ai/docs/chat/configuration/stt_tts`);
     }
 
-    if (process.env.CONFIG_BYPASS_VALIDATION === 'true') {
-      logger.warn(
-        'CONFIG_BYPASS_VALIDATION is enabled. Continuing with default configuration despite validation errors.',
-      );
-      return null;
-    }
-
-    logger.error(
-      'Exiting due to invalid configuration. Set CONFIG_BYPASS_VALIDATION=true to bypass this check.',
-    );
+    logger.error('Exiting due to invalid configuration.');
     process.exit(1);
   } else {
     if (printConfig) {

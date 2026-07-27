@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { isServedImage } from '@hanzochat/data-provider';
 import type { IconMapProps } from '~/common';
 import { URLIcon } from '~/components/Endpoints/URLIcon';
 import { icons } from '~/hooks/Endpoint/Icons';
@@ -41,7 +42,7 @@ const ConvoIconURL: React.FC<ConvoIconURLProps> = ({
 }) => {
   const Icon = useMemo(() => icons[iconURL] ?? icons.unknown, [iconURL]);
   const isURL = useMemo(
-    () => !!(iconURL && (iconURL.includes('http') || iconURL.startsWith('/images/'))),
+    () => !!(iconURL && (iconURL.includes('http') || isServedImage(iconURL))),
     [iconURL],
   );
   if (isURL) {

@@ -1,5 +1,5 @@
 const DEFAULT_SERVICE_NAME = 'chat';
-export const DEFAULT_HEALTH_PATH = '/health';
+export const DEFAULT_HEALTH_PATH = '/v1/chat/health';
 
 export type TelemetryStatus = 'disabled' | 'failed' | 'started' | 'starting' | 'stopped';
 

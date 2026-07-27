@@ -1,4 +1,4 @@
-import { apiBaseUrl, ContentTypes, imageExtRegex } from '@hanzochat/data-provider';
+import { apiBaseUrl, ContentTypes, imageExtRegex, isServedImage } from '@hanzochat/data-provider';
 import type { TMessage, TFile, TAttachment } from '@hanzochat/data-provider';
 
 const IMAGE_MIME_BY_EXT: Record<string, string> = {
@@ -34,8 +34,8 @@ export interface ConversationImage {
 }
 
 /**
- * Resolve an image `filepath` to an absolute URL. Server images are served from
- * `/images/...`; for subdirectory deployments these must be prefixed with the
+ * Resolve an image `filepath` to an absolute URL. Server images live under
+ * `imagesRoute`; for subdirectory deployments these must be prefixed with the
  * API base path. Absolute URLs and data URIs are returned untouched. This is the
  * single source of truth shared by the message `Image` renderer and the
  * attach-by-reference path.
@@ -44,11 +44,7 @@ export function resolveImageUrl(imagePath?: string | null): string {
   if (!imagePath) {
     return '';
   }
-  if (
-    imagePath.startsWith('http') ||
-    imagePath.startsWith('data:') ||
-    !imagePath.startsWith('/images/')
-  ) {
+  if (!isServedImage(imagePath)) {
     return imagePath;
   }
   return `${apiBaseUrl()}${imagePath}`;

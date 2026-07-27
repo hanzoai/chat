@@ -9,9 +9,9 @@ const passport = require('passport');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const { logger } = require('@hanzochat/data-schemas');
+const { imagesRoute } = require('@hanzochat/data-provider');
 const mongoSanitize = require('express-mongo-sanitize');
 const {
-  isEnabled,
   ErrorController,
   performStartupChecks,
   handleJsonParseError,
@@ -27,14 +27,14 @@ const { jwtLogin } = require('~/strategies');
 const { updateInterfacePermissions } = require('~/models/interface');
 const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
-const configureSocialLogins = require('./socialLogins');
+const configureIamLogin = require('./iamLogin');
 const { getAppConfig } = require('./services/Config');
 const staticCache = require('./utils/staticCache');
 const noIndex = require('./middleware/noIndex');
 const { seedDatabase } = require('~/models');
 const routes = require('./routes');
 
-const { PORT, HOST, ALLOW_SOCIAL_LOGIN, DISABLE_COMPRESSION, TRUST_PROXY } = process.env ?? {};
+const { PORT, HOST, TRUST_PROXY } = process.env ?? {};
 
 // Allow PORT=0 to be used for automatic free port assignment
 const port = isNaN(Number(PORT)) ? 3080 : Number(PORT);
@@ -42,6 +42,14 @@ const host = HOST || 'localhost';
 const trusted_proxy = Number(TRUST_PROXY) || 1; /* trust first proxy by default */
 
 const app = express();
+
+/**
+ * Images written before the namespace move are addressed by the
+ * `/images/<user>/<file>` filepath stored in every historical conversation —
+ * immutable history, not a second API. One permanent redirect maps them onto
+ * the one namespace; nothing writes the old prefix any more.
+ */
+const imagesMoved = (req, res) => res.redirect(301, `${imagesRoute}${req.url}`);
 
 const startServer = async () => {
   if (typeof Bun !== 'undefined') {
@@ -79,7 +87,9 @@ const startServer = async () => {
     }
   }
 
-  app.get('/health', (_req, res) => res.status(200).send('OK'));
+  /* Liveness. Registered ahead of the middleware stack so a probe costs nothing
+     and can never be answered by the SPA catch-all. */
+  app.get('/v1/chat/health', (_req, res) => res.status(200).send('OK'));
 
   /* Middleware */
   app.use(noIndex);
@@ -142,29 +152,17 @@ const startServer = async () => {
 
   app.use(cookieParser());
 
-  if (!isEnabled(DISABLE_COMPRESSION)) {
-    app.use(compression());
-  } else {
-    console.warn('Response compression has been disabled via DISABLE_COMPRESSION.');
-  }
+  app.use(compression());
 
   app.use(staticCache(appConfig.paths.dist));
   app.use(staticCache(appConfig.paths.fonts));
   app.use(staticCache(appConfig.paths.assets));
 
-  if (!ALLOW_SOCIAL_LOGIN) {
-    console.warn('Social logins are disabled. Set ALLOW_SOCIAL_LOGIN=true to enable them.');
-  }
-
-  /* OAUTH */
+  /* Auth: Hanzo IAM is the one identity provider. */
   app.use(passport.initialize());
   passport.use(jwtLogin());
+  await configureIamLogin(app);
 
-  if (isEnabled(ALLOW_SOCIAL_LOGIN)) {
-    await configureSocialLogins(app);
-  }
-
-  app.use('/oauth', routes.oauth);
   /* API Endpoints */
   app.use('/v1/chat/auth', routes.auth);
   app.use('/v1/chat/admin', routes.adminAuth);
@@ -187,7 +185,12 @@ const startServer = async () => {
   app.use('/v1/chat/config', routes.config);
   app.use('/v1/chat/assistants', routes.assistants);
   app.use('/v1/chat/files', await routes.files.initialize());
-  app.use('/images/', createValidateImageRequest(appConfig.secureImageLinks), routes.staticRoute);
+  app.use(
+    `${imagesRoute}/`,
+    createValidateImageRequest(appConfig.secureImageLinks),
+    routes.staticRoute,
+  );
+  app.use('/images/', imagesMoved);
   app.use('/v1/chat/share', routes.share);
   app.use('/v1/chat/roles', routes.roles);
   app.use('/v1/chat/agents', routes.agents);
@@ -198,6 +201,8 @@ const startServer = async () => {
   app.use('/v1/chat/tags', routes.tags);
   app.use('/v1/chat/mcp', routes.mcp);
   app.use('/v1/chat/ask', routes.ask);
+  app.use('/v1/chat/skills', routes.skills);
+  app.use('/v1/chat/rum', routes.rum);
 
   app.use(ErrorController);
 
@@ -290,15 +295,8 @@ process.on('uncaughtException', (err) => {
     return;
   }
 
-  if (isEnabled(process.env.CONTINUE_ON_UNCAUGHT_EXCEPTION)) {
-    logger.error('Unhandled error encountered. The app will continue running.', {
-      name: err?.name,
-      message: err?.message,
-      stack: err?.stack,
-    });
-    return;
-  }
-
+  /* Anything that reaches here left the process in an unknown state. Exit and let
+     the kubelet restart a clean one — a half-dead pod serves errors forever. */
   process.exit(1);
 });
 

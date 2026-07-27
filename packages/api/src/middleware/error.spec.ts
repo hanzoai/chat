@@ -1,4 +1,5 @@
 import { logger } from '@hanzochat/data-schemas';
+import { ErrorTypes } from '@hanzochat/data-provider';
 import { ErrorController } from './error';
 import type { Request, Response } from 'express';
 import type { ValidationError, MongoServerError, CustomError } from '~/types';
@@ -27,6 +28,28 @@ describe('ErrorController', () => {
     } as unknown as Response;
     (logger.error as jest.Mock).mockClear();
     mockNext = jest.fn();
+  });
+
+  describe('failed OIDC callback', () => {
+    /* The callback moved from /oauth/openid/callback into the chat namespace.
+       A failed sign-in must still land on /login with a readable reason, not a
+       bare 500 — so this matches the route, not the old top-level prefix. */
+    it('redirects a failed sign-in to the login page', () => {
+      mockReq.originalUrl = '/v1/chat/auth/openid/callback?code=abc';
+      mockRes.redirect = jest.fn() as unknown as Response['redirect'];
+
+      ErrorController(
+        { message: ErrorTypes.AUTH_FAILED } as CustomError,
+        mockReq,
+        mockRes,
+        mockNext,
+      );
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(
+        expect.stringContaining(`/login?redirect=false&error=${ErrorTypes.AUTH_FAILED}`),
+      );
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
   });
 
   describe('ValidationError handling', () => {

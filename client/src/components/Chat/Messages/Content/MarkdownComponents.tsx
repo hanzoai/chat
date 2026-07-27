@@ -8,7 +8,7 @@ import Mermaid from '~/components/Messages/Content/Mermaid';
 import useHasAccess from '~/hooks/Roles/useHasAccess';
 import { useFileDownload } from '~/data-provider';
 import { useCodeBlockContext } from '~/Providers';
-import { handleDoubleClick } from '~/utils';
+import { handleDoubleClick, resolveImageUrl } from '~/utils';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
@@ -181,21 +181,9 @@ type TImageProps = {
 };
 
 export const img: React.ElementType = memo(({ src, alt, title, className, style }: TImageProps) => {
-  // Get the base URL from the API endpoints
-  const baseURL = apiBaseUrl();
-
-  // If src starts with /images/, prepend the base URL
-  const fixedSrc = useMemo(() => {
-    if (!src) return src;
-
-    // If it's already an absolute URL or doesn't start with /images/, return as is
-    if (src.startsWith('http') || src.startsWith('data:') || !src.startsWith('/images/')) {
-      return src;
-    }
-
-    // Prepend base URL to the image path
-    return `${baseURL}${src}`;
-  }, [src, baseURL]);
+  /* Server images need the API base path prepended on subdirectory deployments;
+     `resolveImageUrl` is the one place that knows which paths those are. */
+  const fixedSrc = useMemo(() => (src ? resolveImageUrl(src) : src), [src]);
 
   return <img src={fixedSrc} alt={alt} title={title} className={className} style={style} />;
 });

@@ -11,7 +11,7 @@ import type { TAgentsEndpoint } from '@hanzochat/data-provider';
 import type { RequestInit } from 'undici';
 import type { GetAppConfigOptions } from '../app/service';
 import { findOpenIDUser, getOpenIdEmail, normalizeOpenIdIssuer } from '../auth/openid';
-import { isEnabled, math } from '~/utils';
+import { math } from '~/utils';
 
 export interface RemoteAgentAuthDeps {
   apiKeyMiddleware: RequestHandler;
@@ -111,9 +111,7 @@ function hasRequiredScopes(requiredScope: string | undefined, payload: JwtPayloa
 
 function getJwksCacheOptions(): JwksCacheOptions {
   return {
-    enabled: process.env.OPENID_JWKS_URL_CACHE_ENABLED
-      ? isEnabled(process.env.OPENID_JWKS_URL_CACHE_ENABLED)
-      : true,
+    enabled: true,
     maxAge: Math.max(math(process.env.OPENID_JWKS_URL_CACHE_TIME, 60000), 0),
   };
 }

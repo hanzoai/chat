@@ -377,21 +377,8 @@ export class MCPOAuthHandler {
       if (config?.authorization_url && config?.token_url && config?.client_id) {
         logger.debug(`[MCPOAuth] Using pre-configured OAuth settings for ${serverName}`);
 
-        const skipCodeChallengeCheck =
-          config?.skip_code_challenge_check === true ||
-          process.env.MCP_SKIP_CODE_CHALLENGE_CHECK === 'true';
-        let codeChallengeMethodsSupported: string[];
-
-        if (config?.code_challenge_methods_supported !== undefined) {
-          codeChallengeMethodsSupported = config.code_challenge_methods_supported;
-        } else if (skipCodeChallengeCheck) {
-          codeChallengeMethodsSupported = ['S256', 'plain'];
-          logger.debug(
-            `[MCPOAuth] Code challenge check skip enabled, forcing S256 support for ${serverName}`,
-          );
-        } else {
-          codeChallengeMethodsSupported = ['S256', 'plain'];
-        }
+        const codeChallengeMethodsSupported: string[] =
+          config?.code_challenge_methods_supported ?? ['S256', 'plain'];
 
         /** Metadata based on pre-configured settings */
         let tokenEndpointAuthMethod: string;

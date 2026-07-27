@@ -4,6 +4,8 @@ const categories = require('./categories');
 const adminAuth = require('./admin/auth');
 const endpoints = require('./endpoints');
 const staticRoute = require('./static');
+const skills = require('./skills');
+const rum = require('./rum');
 const messages = require('./messages');
 const memories = require('./memories');
 const presets = require('./presets');
@@ -21,7 +23,6 @@ const convos = require('./convos');
 const config = require('./config');
 const agents = require('./agents');
 const roles = require('./roles');
-const oauth = require('./oauth');
 const files = require('./files');
 const share = require('./share');
 const tags = require('./tags');
@@ -41,7 +42,6 @@ module.exports = {
   user,
   tags,
   roles,
-  oauth,
   files,
   share,
   banner,
@@ -63,5 +63,7 @@ module.exports = {
   assistants,
   categories,
   staticRoute,
+  skills,
+  rum,
   accessPermissions,
 };

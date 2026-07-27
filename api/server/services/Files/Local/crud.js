@@ -3,10 +3,34 @@ const path = require('path');
 const axios = require('axios');
 const { deleteRagFile } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
-const { EModelEndpoint } = require('@hanzochat/data-provider');
+const { EModelEndpoint, imagesRoute } = require('@hanzochat/data-provider');
 const { resizeImageBuffer } = require('~/server/services/Files/images/resize');
 const { getBufferMetadata } = require('~/server/utils');
 const paths = require('~/config/paths');
+
+/**
+ * The URL a locally-stored file is served at. Images get their own namespace
+ * (`imagesRoute`); everything else is read back through the API and is never
+ * addressed by URL, so its base path passes through unchanged.
+ *
+ * @param {string} basePath
+ * @param {...string} segments
+ * @returns {string}
+ */
+const servedPath = (basePath, ...segments) =>
+  path.posix.join('/', basePath === 'images' ? imagesRoute : basePath, ...segments);
+
+/**
+ * The disk location, under `client/public`, of an image served at `imagesRoute`.
+ * Images written before the namespace move already store their disk path.
+ *
+ * @param {string} filepath
+ * @returns {string}
+ */
+const diskPath = (filepath) =>
+  filepath.startsWith(`${imagesRoute}/`)
+    ? `/images/${filepath.slice(imagesRoute.length + 1)}`
+    : filepath;
 
 /**
  * Saves a file to a specified output path with a new filename.
@@ -80,9 +104,7 @@ async function saveLocalBuffer({ userId, buffer, fileName, basePath = 'images' }
 
     fs.writeFileSync(path.join(directoryPath, fileName), buffer);
 
-    const filePath = path.posix.join('/', basePath, userId, fileName);
-
-    return filePath;
+    return servedPath(basePath, userId, fileName);
   } catch (error) {
     logger.error('[saveLocalBuffer] Error while saving the buffer:', error);
     throw error;
@@ -161,7 +183,7 @@ async function saveFileFromURL({ userId, URL, fileName, basePath = 'images' }) {
  *          The constructed local file path.
  */
 async function getLocalFileURL({ fileName, basePath = 'images' }) {
-  return path.posix.join('/', basePath, fileName);
+  return servedPath(basePath, fileName);
 }
 
 /**
@@ -210,8 +232,8 @@ const deleteLocalFile = async (req, file) => {
   const appConfig = req.config;
   const { publicPath, uploads } = appConfig.paths;
 
-  /** Filepath stripped of query parameters (e.g., ?manual=true) */
-  const cleanFilepath = file.filepath.split('?')[0];
+  /** Disk path, stripped of query parameters (e.g., ?manual=true) */
+  const cleanFilepath = diskPath(file.filepath.split('?')[0]);
 
   await deleteRagFile({ userId: req.user.id, file });
 

@@ -71,7 +71,24 @@ const buildQuery = (params: Record<string, unknown>): string => {
   return query ? `?${query}` : '';
 };
 
-export const health = () => `${BASE_URL}/health`;
+export const health = () => `${BASE_URL}/v1/chat/health`;
+
+/**
+ * Where chat serves the images it writes (generated images and avatars). A
+ * stored image filepath IS this URL — one string, written by
+ * `Files/Local/crud`, read by `<img src>`.
+ *
+ * Conversations written before the namespace move hold the bare `/images/…`
+ * prefix. That is immutable history, not a second API: the server answers it
+ * with one permanent redirect here, and `isServedImage` recognises both.
+ */
+export const imagesRoute = '/v1/chat/images';
+const storedImagesRoute = '/images/';
+
+/** True when `path` is an image this server stores and serves. */
+export const isServedImage = (path?: string | null): boolean =>
+  typeof path === 'string' &&
+  (path.startsWith(`${imagesRoute}/`) || path.startsWith(storedImagesRoute));
 export const user = () => `${BASE_URL}/v1/chat/user`;
 
 export const balance = () => `${BASE_URL}/v1/chat/balance`;
@@ -200,7 +217,7 @@ export const refreshToken = (retry?: boolean) =>
  * Session-bridge: exchange an @hanzo/iam SPA token for a Chat session
  * (refresh cookie + Mongo Session + Chat JWT). POST { accessToken, idToken }.
  */
-export const iamSession = () => `${BASE_URL}/oauth/iam/session`;
+export const iamSession = () => `${BASE_URL}/v1/chat/auth/iam/session`;
 
 export const guestToken = () => `${BASE_URL}/v1/chat/auth/guest`;
 
@@ -231,7 +248,8 @@ export const cancelMCPOAuth = (serverName: string) => {
   return `${BASE_URL}/v1/chat/mcp/oauth/cancel/${serverName}`;
 };
 
-export const mcpOAuthBind = (serverName: string) => `${BASE_URL}/v1/chat/mcp/${serverName}/oauth/bind`;
+export const mcpOAuthBind = (serverName: string) =>
+  `${BASE_URL}/v1/chat/mcp/${serverName}/oauth/bind`;
 
 export const actionOAuthBind = (actionId: string) =>
   `${BASE_URL}/v1/chat/actions/${actionId}/oauth/bind`;
@@ -256,7 +274,8 @@ export const assistants = ({
   version: number | string;
   isAvatar?: boolean;
 }) => {
-  let url = isAvatar === true ? `${images()}/assistants` : `${BASE_URL}/v1/chat/assistants/v${version}`;
+  let url =
+    isAvatar === true ? `${images()}/assistants` : `${BASE_URL}/v1/chat/assistants/v${version}`;
 
   if (path && path !== '') {
     url += `/${path}`;

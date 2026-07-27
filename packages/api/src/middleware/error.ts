@@ -55,8 +55,7 @@ export const ErrorController = (
     if (
       (error.message === ErrorTypes.AUTH_FAILED || error.code === ErrorTypes.AUTH_FAILED) &&
       req.originalUrl &&
-      req.originalUrl.includes('/oauth/') &&
-      req.originalUrl.includes('/callback')
+      req.originalUrl.includes('/openid/callback')
     ) {
       const domain = process.env.DOMAIN_CLIENT || 'http://localhost:3080';
       return res.redirect(`${domain}/login?redirect=false&error=${ErrorTypes.AUTH_FAILED}`);

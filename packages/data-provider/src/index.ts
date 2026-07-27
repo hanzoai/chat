@@ -43,6 +43,8 @@ export {
   setApiBaseUrl,
   zapUrl,
   iamSession,
+  imagesRoute,
+  isServedImage,
 } from './api-endpoints';
 export { default as request, setPublishableKey, getWithPk } from './request';
 export { dataService };

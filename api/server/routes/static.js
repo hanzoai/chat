@@ -1,11 +1,10 @@
 const express = require('express');
-const { isEnabled } = require('@hanzochat/api');
 const staticCache = require('../utils/staticCache');
 const paths = require('~/config/paths');
 
-const skipGzipScan = !isEnabled(process.env.ENABLE_IMAGE_OUTPUT_GZIP_SCAN);
-
 const router = express.Router();
-router.use(staticCache(paths.imageOutput, { skipGzipScan }));
+/* Generated images and avatars are written by us, as PNG/GIF, and are never
+   gzip-encoded on disk — scanning every byte of every read proved nothing. */
+router.use(staticCache(paths.imageOutput, { skipGzipScan: true }));
 
 module.exports = router;
