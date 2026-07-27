@@ -4,6 +4,15 @@ import TagManager from 'react-gtm-module';
 import { Constants } from '@hanzochat/data-provider';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
+import { cn } from '~/utils';
+
+/**
+ * ONE link style for every footer link (main content, privacy, terms).
+ *
+ * `pointer-events-auto` re-arms the links against the strip's
+ * `pointer-events-none` — see the note on the container below.
+ */
+const LINK = 'pointer-events-auto text-text-secondary underline';
 
 export default function Footer({ className }: { className?: string }) {
   const { data: config } = useGetStartupConfig();
@@ -13,13 +22,13 @@ export default function Footer({ className }: { className?: string }) {
   const termsOfService = config?.interface?.termsOfService;
 
   const privacyPolicyRender = privacyPolicy?.externalUrl != null && (
-    <a className="text-text-secondary underline" href={privacyPolicy.externalUrl} rel="noreferrer">
+    <a className={LINK} href={privacyPolicy.externalUrl} rel="noreferrer">
       {localize('com_ui_privacy_policy')}
     </a>
   );
 
   const termsOfServiceRender = termsOfService?.externalUrl != null && (
-    <a className="text-text-secondary underline" href={termsOfService.externalUrl} rel="noreferrer">
+    <a className={LINK} href={termsOfService.externalUrl} rel="noreferrer">
       {localize('com_ui_terms_of_service')}
     </a>
   );
@@ -49,7 +58,7 @@ export default function Footer({ className }: { className?: string }) {
           a: ({ node: _n, href, children, ...otherProps }) => {
             return (
               <a
-                className="text-text-secondary underline"
+                className={LINK}
                 href={href}
                 rel="noreferrer"
                 {...otherProps}
@@ -73,11 +82,24 @@ export default function Footer({ className }: { className?: string }) {
 
   return (
     <div className="relative w-full">
+      {/*
+        This strip is an OVERLAY: its host is `relative w-full` with no height of
+        its own, so `absolute bottom-0` pins the strip over whatever is rendered
+        above it — on the landing that is the conversation starters. A decorative
+        overlay must never be a pointer target, or it eats clicks aimed at the
+        content it covers (it did: a starter chip's lower half was dead, and the
+        chip still looked clickable). `pointer-events-none` here, re-armed by
+        `pointer-events-auto` on the links, is the fix — the strip stops
+        intercepting and only its links remain clickable. Not a z-index nudge:
+        raising the chips would still leave a decorative bar stealing pointers
+        from anything else that ever renders beneath it.
+      */}
       <div
-        className={
+        className={cn(
           className ??
-          'absolute bottom-0 left-0 right-0 hidden items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]'
-        }
+            'absolute bottom-0 left-0 right-0 hidden items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]',
+          'pointer-events-none',
+        )}
         role="contentinfo"
       >
         {footerElements.map((contentRender, index) => {
