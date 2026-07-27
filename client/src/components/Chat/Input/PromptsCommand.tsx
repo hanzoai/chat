@@ -177,7 +177,7 @@ function PromptsCommand({
       textAreaRef={textAreaRef}
     >
       <div className="absolute bottom-28 z-10 w-full space-y-2">
-        <div className="popover border-token-border-light rounded-2xl border bg-surface-tertiary-alt p-2 shadow-lg">
+        <div className="field popover border-token-border-light rounded-2xl border bg-surface-tertiary-alt p-2 shadow-lg">
           <input
             // The user expects focus to transition to the input field when the popover is opened
             // eslint-disable-next-line jsx-a11y/no-autofocus

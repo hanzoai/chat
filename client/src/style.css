@@ -2627,6 +2627,38 @@ html {
   outline-offset: 2px;
 }
 
+/*
+  `.field` — a rounded shell that owns its text control's focus ring.
+
+  The ring above is square, because an outline follows the radius of the element
+  it is drawn on. A textarea/input that fills a rounded shell has no radius of
+  its own, so the ring paints a hard-cornered box 2px inside a 24px curve — the
+  white block on the composer. `outline-none` on the control cannot win: it is
+  one class (0,1,0) against `.dark :focus-visible` (0,2,0).
+
+  So move the affordance to the element that owns the shape. `.field` draws ONE
+  ring, at the shell's own radius, whenever the control inside is focused; the
+  control draws none. Same trigger as before, right shape — the indicator is not
+  weakened, so keyboard users still see where focus is.
+
+  `:has()` over the control, NOT `:focus-within` over the shell: a button inside
+  the shell must keep the global ring on its OWN bounds, because that is what
+  says WHICH control is focused. `:focus-within` would light the whole shell for
+  the send button and lose that.
+*/
+.field:has(:is(textarea, input):focus-visible) {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.dark .field:has(:is(textarea, input):focus-visible) {
+  outline-color: #fff;
+}
+
+.field :is(textarea, input):focus-visible {
+  outline: none;
+}
+
 .popover-ui {
   display: flex;
   max-height: min(var(--popover-available-height, 1700px), 1700px);

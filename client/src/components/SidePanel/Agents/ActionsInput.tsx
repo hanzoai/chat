@@ -224,7 +224,7 @@ export default function ActionsInput({
           </div>
           */}
         </div>
-        <div className="border-token-border-medium bg-token-surface-primary hover:border-token-border-hover mb-4 w-full overflow-hidden rounded-lg border ring-0">
+        <div className="field border-token-border-medium bg-token-surface-primary hover:border-token-border-hover mb-4 w-full overflow-hidden rounded-lg border ring-0">
           <div className="relative">
             <textarea
               id="schemaInput"
