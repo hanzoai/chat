@@ -167,7 +167,10 @@ if (typeof window !== 'undefined') {
         try {
           const response = await refreshToken(
             // Edge case: avoid a blank screen if the initial 401 is itself a refresh request.
-            originalRequest.url?.includes('api/auth/refresh') === true ? true : false,
+            // Match on 'auth/refresh', not the pre-namespace 'api/auth/refresh': the
+            // endpoint moved to /v1/chat/auth/refresh (api-endpoints.ts), so the old
+            // literal could never match and this guard silently stopped guarding.
+            originalRequest.url?.includes('auth/refresh') === true ? true : false,
           );
 
           const token = response?.token ?? '';

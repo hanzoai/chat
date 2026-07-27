@@ -73,7 +73,7 @@ const refreshController = async (req, res) => {
     const refreshToken = req.session?.openidTokens?.refreshToken || parsedCookies.refreshToken;
 
     if (!refreshToken) {
-      return res.status(200).send('Refresh token not provided');
+      return res.status(200).json({ message: 'Refresh token not provided' });
     }
 
     try {
@@ -136,7 +136,7 @@ const refreshController = async (req, res) => {
   /** For non-OpenID users, read refresh token from cookies */
   const refreshToken = parsedCookies.refreshToken;
   if (!refreshToken) {
-    return res.status(200).send('Refresh token not provided');
+    return res.status(200).json({ message: 'Refresh token not provided' });
   }
 
   try {
