@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import { HanzoHeader, HanzoPreFooterCTA, HanzoFooter } from '@hanzogui/shell';
-import { useGetStartupConfig } from '~/data-provider';
 import { getHanzoIamSdk } from '~/utils/iam';
 
 /* ------------------------------------------------------------------ */
@@ -14,6 +13,9 @@ const colors = {
   mutedFg: 'hsla(0, 0%, 70%, 0.85)',
   border: 'hsla(0, 0%, 40%, 0.2)',
   fg: 'hsl(0, 0%, 96%)',
+  /* Dimmest legible grey on the #050505 card: hsl 45% measured 4.04:1 against the
+     featured tier's rgba(255,255,255,0.04) composite, under the 4.5:1 floor. */
+  dim: 'hsl(0, 0%, 52%)',
   brand: '#ffffff',
   brandDim: 'rgba(255, 255, 255, 0.10)',
   brandGlow: 'rgba(255, 255, 255, 0.06)',
@@ -74,7 +76,7 @@ const features = [
   {
     title: 'Zen Models',
     description:
-      '14 frontier models from 4B to 480B parameters. Code, reason, vision, multimodal -- all trained in-house.',
+      '14 frontier models from 4B to 480B parameters. Code, reason, vision, multimodal — all trained in-house.',
     Icon: IconSparkles,
   },
   {
@@ -117,15 +119,58 @@ const thirdPartyModels = [
 ];
 
 /* ------------------------------------------------------------------ */
+/*  Call to action                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The ONE call-to-action pair, used by the hero and the closing card.
+ *
+ * Both buttons carry a 1px border — the filled one transparent — so the two
+ * boxes measure identically. Bordering only the secondary made it 46px tall
+ * next to a 44px sibling, one pixel higher on the baseline.
+ */
+const CTA =
+  'inline-flex items-center justify-center rounded-full border px-5 py-3 text-sm font-medium tracking-tight transition-colors';
+
+function CtaPair({ onSignIn }: { onSignIn: (e: React.MouseEvent) => void }) {
+  return (
+    <>
+      <a
+        href="#"
+        onClick={onSignIn}
+        className={CTA}
+        style={{ borderColor: 'transparent', backgroundColor: colors.brand, color: '#000' }}
+        onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
+        onMouseOut={(e) => (e.currentTarget.style.filter = 'none')}
+      >
+        Get Started Free
+        <IconArrowRight />
+      </a>
+      <a
+        href="https://docs.hanzo.ai/chat"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={CTA}
+        style={{
+          borderColor: colors.border,
+          backgroundColor: colors.secondary,
+          color: 'hsl(0, 0%, 92%)',
+        }}
+        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'hsla(0, 0%, 40%, 0.3)')}
+        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = colors.secondary)}
+      >
+        Documentation
+      </a>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
 export default function LandingPage() {
-  const { data: config } = useGetStartupConfig();
-  const serverDomain = config?.serverDomain || '';
   // Login is the @hanzo/iam redirect-PKCE flow.
-  const loginHref = '#';
-
   const handleLoginClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     getHanzoIamSdk().signinRedirect();
@@ -176,7 +221,7 @@ export default function LandingPage() {
 
             {/* Heading */}
             <h1 className="my-8 text-4xl font-medium leading-tight tracking-tight lg:text-5xl xl:text-6xl">
-              <span style={{ color: colors.brand }}>Hanzo Chat</span> -- Every
+              <span style={{ color: colors.brand }}>Hanzo Chat</span> — Every
               <br />
               Model, One Interface
             </h1>
@@ -188,32 +233,7 @@ export default function LandingPage() {
 
             {/* Buttons (rounded-full like fd) */}
             <div className="flex flex-row flex-wrap items-center gap-4">
-              <a
-                href={loginHref}
-                onClick={handleLoginClick}
-                className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
-                style={{ backgroundColor: colors.brand, color: '#000' }}
-                onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
-                onMouseOut={(e) => (e.currentTarget.style.filter = 'none')}
-              >
-                Get Started Free
-                <IconArrowRight />
-              </a>
-              <a
-                href="https://docs.hanzo.ai/chat"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  backgroundColor: colors.secondary,
-                  color: 'hsl(0, 0%, 92%)',
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'hsla(0, 0%, 40%, 0.3)')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = colors.secondary)}
-              >
-                Documentation
-              </a>
+              <CtaPair onSignIn={handleLoginClick} />
             </div>
 
             {/* Chat Preview (terminal-style card like dev.hanzo.ai) */}
@@ -418,7 +438,7 @@ zen5-coder: I'll help you refactor the auth module.
               >
                 <p
                   className="mb-2 text-xs font-medium uppercase tracking-wider"
-                  style={{ color: 'hsl(0, 0%, 45%)' }}
+                  style={{ color: colors.dim }}
                 >
                   {name}
                 </p>
@@ -441,7 +461,7 @@ zen5-coder: I'll help you refactor the auth module.
               </a>
             ))}
           </div>
-          <p className="mt-8 text-sm" style={{ color: 'hsl(0, 0%, 45%)' }}>
+          <p className="mt-8 text-sm" style={{ color: colors.dim }}>
             Start free — $5 credit, no card required. Usage is shared across every Hanzo app.
           </p>
         </div>
@@ -462,33 +482,8 @@ zen5-coder: I'll help you refactor the auth module.
           <p className="mx-auto mb-8 max-w-2xl" style={{ color: colors.mutedFg }}>
             Sign in with your Hanzo account. $5 free credit, no setup required.
           </p>
-          <div className="flex flex-row items-center justify-center gap-4">
-            <a
-              href={loginHref}
-              onClick={handleLoginClick}
-              className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
-              style={{ backgroundColor: colors.brand, color: '#000' }}
-              onMouseOver={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
-              onMouseOut={(e) => (e.currentTarget.style.filter = 'none')}
-            >
-              Get Started Free
-              <IconArrowRight />
-            </a>
-            <a
-              href="https://docs.hanzo.ai/chat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium tracking-tight transition-colors"
-              style={{
-                border: `1px solid ${colors.border}`,
-                backgroundColor: colors.secondary,
-                color: 'hsl(0, 0%, 92%)',
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'hsla(0, 0%, 40%, 0.3)')}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = colors.secondary)}
-            >
-              Documentation
-            </a>
+          <div className="flex flex-row flex-wrap items-center justify-center gap-4">
+            <CtaPair onSignIn={handleLoginClick} />
           </div>
         </div>
       </div>
