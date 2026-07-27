@@ -42,7 +42,7 @@
     "@hanzo/observe": "^0.1.0",
     "@hanzo/ui": "npm:@hanzo/ui-shadcn@^5.7.4",
     "@hanzo/usage": "^0.1.6",
-    "@hanzo/voice": "0.1.1",
+    "@hanzo/voice": "0.1.2",
     "@hanzochat/client": "workspace:*",
     "@hanzochat/data-provider": "workspace:*",
     "@hanzogui/shell": "^7.4.2",
