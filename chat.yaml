@@ -53,34 +53,29 @@ webSearch:
   firecrawlApiUrl: '${FIRECRAWL_API_URL}'
   firecrawlApiKey: '${WEBSEARCH_API_KEY}'
   firecrawlVersion: 'v1'
-# Speech — the platform's own services, nothing external. Both are the same
-# api.hanzo.ai/v1 gateway every endpoint below already uses, reached through the
-# routes this server already has (/v1/chat/files/speech/{stt,tts}); the composer
-# mic (@hanzo/voice) is their only caller. Absent this block the browser's own
-# recogniser and voice stand in, so voice never dies with the config.
+# Speech — DELIBERATELY UNCONFIGURED, and this is the reason why.
 #
-# NOTE ON METERING: speech carries the server's ${HANZO_API_KEY} (the same
-# shared IAM key the guest tier uses), not the per-user {{CHAT_OPENID_TOKEN}}
-# that completions carry — the speech services resolve `${VAR}` from the
-# environment only. Transcription and playback therefore bill the shared key.
-speech:
-  stt:
-    openai:
-      url: 'https://api.hanzo.ai/v1/audio/transcriptions'
-      apiKey: '${HANZO_API_KEY}'
-      model: 'whisper-1'
-  tts:
-    openai:
-      url: 'https://api.hanzo.ai/v1/audio/speech'
-      apiKey: '${HANZO_API_KEY}'
-      model: 'tts-1'
-      voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
-  speechTab:
-    speechToText:
-      engineSTT: 'external'
-    textToSpeech:
-      engineTTS: 'external'
-      voice: 'alloy'
+# The composer mic is @hanzo/voice (shared with hanzo.app). Absent a `speech:`
+# block it listens with the browser's own recogniser — which is the leg that
+# gives a LIVE word-by-word transcript, costs nothing and never leaves the
+# device — and reads replies with the browser's voice. Voice works today.
+#
+# Pointing `speech:` at the platform's api.hanzo.ai/v1/audio/{transcriptions,
+# speech} is the intended upgrade (a real Hanzo voice instead of the browser's),
+# and the STTService/TTSService `openai` providers already take the url+apiKey
+# to do it. The ONE blocker, measured from a live chat pod:
+#
+#   /v1/models        + ${HANZO_API_KEY} (sk-…)  -> 200
+#   /v1/audio/speech  + ${HANZO_API_KEY} (sk-…)  -> 401 {"msg":"invalid API key"}
+#   /v1/audio/speech  + an hk- IAM accessKey     -> 402 (auth PASSED, balance)
+#
+# /v1/audio/* resolves its caller through IAM, so it takes an hk- accessKey or a
+# user bearer — not the sk- gateway key chat holds. And these services resolve
+# `${VAR}` from the environment only, so the per-user {{CHAT_OPENID_TOKEN}} that
+# completions carry cannot reach them either. Configuring it against the sk- key
+# would select the external engine and 401 EVERY turn — strictly worse than the
+# browser leg. Turn it on the day chat holds an hk- key (or the day the speech
+# services learn on-behalf-of), and not before.
 # Unified picker (HIP: one source of truth). EVERY endpoint below is the SAME
 # api.hanzo.ai/v1 gateway carrying the per-user ${HANZO_API_KEY}; they differ
 # only by a curated family subset + icon, so metering is identical across all
