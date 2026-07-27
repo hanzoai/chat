@@ -866,6 +866,9 @@ importers:
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      jwks-rsa:
+        specifier: ^3.2.2
+        version: 3.2.2
       keyv:
         specifier: ^5.3.2
         version: 5.6.0

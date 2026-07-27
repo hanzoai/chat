@@ -15,3 +15,4 @@ export * from './responses';
 export * from './run';
 export * from './tools';
 export * from './validation';
+export * from './skillConfigurable';
