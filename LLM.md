@@ -74,10 +74,32 @@ JWT_SECRET=                 # Auth token signing
 CREDS_KEY= CREDS_IV=        # Credential encryption
 ```
 
+## Route namespace
+
+Everything the Express app serves lives under `/v1/chat/` — health, auth,
+images, every resource router. Exactly two things answer at the top level, and
+neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
+`/sw.js`) and the SPA catch-all that backs `/login`, `/c/*`, `/share/*` and
+`/auth/callback`. Anything else at the root is a bug — put it in the namespace.
+
+- Health is `/v1/chat/health` (registered ahead of the middleware stack, returns
+  the literal `OK`). Probes MUST use it: the SPA catch-all answers any other
+  path with 200 text/html, so a wrong probe path stays green through a total API
+  failure.
+- Login is `POST /v1/chat/auth/iam/session` — the @hanzo/iam SPA runs
+  Authorization-Code + PKCE in the browser and POSTs its token here. The
+  server-initiated `/v1/chat/auth/openid[/callback]` pair is a dormant fallback.
+- Images are served at `/v1/chat/images/` and the stored filepath IS that URL.
+  Conversations written before the move hold `/images/…`; the server answers
+  those with one permanent redirect, and `isServedImage` (data-provider — the
+  one place that knows the namespace) recognises both. Nothing writes the old
+  prefix. Do not add a second image namespace.
+
 ## K8s Deployment
 
 - 2 replicas, port 3080
 - Ingress: `hanzo.chat` (primary) + `chat.hanzo.ai` (301 → hanzo.chat)
+- Probes: `/v1/chat/health`
 - Secret: `chat-secrets` (MONGO_URI, JWT_SECRET, CREDS_KEY/IV)
 - CI: `docker-publish.yml` -> `hanzoai/chat:latest` on Docker Hub
 - Image: `hanzoai/chat:latest` (amd64 only)
@@ -286,10 +308,10 @@ store that is NOT on the Go backend.
   OIDC **discovery** from `${OPENID_ISSUER}` = `https://hanzo.id`
   (`/.well-known/openid-configuration`; discovery fetched via in-cluster
   `iam.hanzo.svc` to dodge the CF hairpin), client_id **`hanzo-chat`**, callback
-  `/oauth/openid/callback`. Local email/password is OFF in prod
+  `/v1/chat/auth/openid/callback`. Local email/password is OFF in prod
   (`ALLOW_EMAIL_LOGIN=false`, `ALLOW_REGISTRATION=false`); social OIDC only.
-  Files: `api/strategies/openidStrategy.js`, `api/server/socialLogins.js`,
-  `api/server/routes/oauth.js`. This IS IAM-native (federated), just not the
+  Files: `api/strategies/openidStrategy.js`, `api/server/iamLogin.js`,
+  `api/server/routes/auth.js`. This IS IAM-native (federated), just not the
   console `@hanzo/iam-js-sdk` shape.
 - **Static/IAM SPA mode** (`Dockerfile.static`, not the live prod deploy): browser
   `@hanzo/iam` `BrowserIamSdk` PKCE straight to hanzo.id

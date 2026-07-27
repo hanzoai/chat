@@ -125,7 +125,7 @@ async function reconcileUser(claims) {
 }
 
 /**
- * POST /oauth/iam/session — exchange an IAM SPA token for a Chat session.
+ * POST /v1/chat/auth/iam/session — exchange an IAM SPA token for a Chat session.
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
