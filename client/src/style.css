@@ -74,6 +74,19 @@
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
   --markdown-font-size: 1rem;
+
+  /* Accent — chat is MONOCHROME. @hanzo/brand ships violet as the shared Hanzo
+     accent and @hanzogui/shell reads it through `var(--hanzo-accent, #ffffff)`,
+     which put a violet "New chat" CTA in the header 400px from a white
+     "Get Started Free" CTA in the hero: one concept, two colours, one frame.
+     Overriding here is the mechanism @hanzo/brand documents for a host that
+     does not take the violet, so lux/zoo/pars are untouched. Paper-white is
+     the shell's own monochrome default. */
+  --hanzo-accent: #ffffff;
+  --hanzo-accent-hover: #e5e5e5;
+  --hanzo-accent-muted: rgba(255, 255, 255, 0.7);
+  --hanzo-accent-soft: rgba(255, 255, 255, 0.12);
+  --hanzo-accent-rgb: 255, 255, 255;
 }
 html {
   --brand-purple: #999696;
