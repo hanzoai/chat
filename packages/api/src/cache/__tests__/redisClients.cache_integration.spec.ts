@@ -1,11 +1,11 @@
-import type { Redis, Cluster } from 'ioredis';
+import type { KV, Cluster } from '@hanzo/kv';
 import type { RedisClientType, RedisClusterType } from '@redis/client';
 
-type RedisClient = RedisClientType | RedisClusterType | Redis | Cluster;
+type RedisClient = RedisClientType | RedisClusterType | KV | Cluster;
 
 describe('redisClients Integration Tests', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let ioredisClient: Redis | Cluster | null = null;
+  let kvClient: KV | Cluster | null = null;
   let keyvRedisClient: RedisClientType | RedisClusterType | null = null;
 
   // Helper function to test set/get/delete operations
@@ -41,7 +41,7 @@ describe('redisClients Integration Tests', () => {
 
     // Set common test configuration with fallback defaults for local testing
     process.env.REDIS_PING_INTERVAL = '1000';
-    process.env.REDIS_KEY_PREFIX = 'Redis-Integration-Test';
+    process.env.REDIS_KEY_PREFIX = 'KV-Integration-Test';
     process.env.REDIS_RETRY_MAX_ATTEMPTS = '5';
     process.env.USE_REDIS = process.env.USE_REDIS || 'true';
     process.env.USE_REDIS_CLUSTER = process.env.USE_REDIS_CLUSTER || 'false';
@@ -53,27 +53,27 @@ describe('redisClients Integration Tests', () => {
 
   afterEach(async () => {
     // Clean up test keys using the prefix
-    if (ioredisClient && ioredisClient.status === 'ready') {
+    if (kvClient && kvClient.status === 'ready') {
       try {
-        const keys = await ioredisClient.keys('Redis-Integration-Test::*');
+        const keys = await kvClient.keys('KV-Integration-Test::*');
         if (keys.length > 0) {
-          await ioredisClient.del(...keys);
+          await kvClient.del(...keys);
         }
       } catch (error: any) {
         console.warn('Error cleaning up test keys:', error.message);
       }
     }
 
-    // Cleanup Redis connections
-    if (ioredisClient) {
+    // Cleanup KV connections
+    if (kvClient) {
       try {
-        if (ioredisClient.status === 'ready') {
-          ioredisClient.disconnect();
+        if (kvClient.status === 'ready') {
+          kvClient.disconnect();
         }
       } catch (error: any) {
-        console.warn('Error disconnecting ioredis client:', error.message);
+        console.warn('Error disconnecting @hanzo/kv client:', error.message);
       }
-      ioredisClient = null;
+      kvClient = null;
     }
 
     if (keyvRedisClient) {
@@ -90,35 +90,35 @@ describe('redisClients Integration Tests', () => {
     jest.resetModules();
   });
 
-  describe('ioredis Client Tests', () => {
+  describe('@hanzo/kv Client Tests', () => {
     describe('when USE_REDIS is false', () => {
       test('should have null client', async () => {
         process.env.USE_REDIS = 'false';
 
         const clients = await import('../redisClients');
-        ioredisClient = clients.ioredisClient;
+        kvClient = clients.kvClient;
 
-        expect(ioredisClient).toBeNull();
+        expect(kvClient).toBeNull();
       });
     });
 
-    describe('when connecting to a Redis instance', () => {
+    describe('when connecting to a KV instance', () => {
       test('should connect and perform set/get/delete operations', async () => {
         const clients = await import('../redisClients');
-        ioredisClient = clients.ioredisClient;
-        await testRedisOperations(ioredisClient!, 'ioredis-single');
+        kvClient = clients.kvClient;
+        await testRedisOperations(kvClient!, '@hanzo/kv-single');
       });
     });
 
-    describe('when connecting to a Redis cluster', () => {
+    describe('when connecting to a KV cluster', () => {
       test('should connect to cluster and perform set/get/delete operations', async () => {
         process.env.USE_REDIS_CLUSTER = 'true';
         process.env.REDIS_URI =
           'redis://127.0.0.1:7001,redis://127.0.0.1:7002,redis://127.0.0.1:7003';
 
         const clients = await import('../redisClients');
-        ioredisClient = clients.ioredisClient;
-        await testRedisOperations(ioredisClient!, 'ioredis-cluster');
+        kvClient = clients.kvClient;
+        await testRedisOperations(kvClient!, '@hanzo/kv-cluster');
       });
     });
   });
@@ -134,7 +134,7 @@ describe('redisClients Integration Tests', () => {
       });
     });
 
-    describe('when connecting to a Redis instance', () => {
+    describe('when connecting to a KV instance', () => {
       test('should connect and perform set/get/delete operations', async () => {
         const clients = await import('../redisClients');
         keyvRedisClient = clients.keyvRedisClient;
@@ -142,7 +142,7 @@ describe('redisClients Integration Tests', () => {
       });
     });
 
-    describe('when connecting to a Redis cluster', () => {
+    describe('when connecting to a KV cluster', () => {
       test('should connect to cluster and perform set/get/delete operations', async () => {
         process.env.USE_REDIS_CLUSTER = 'true';
         process.env.REDIS_URI =

@@ -1,4 +1,4 @@
-import type { Redis } from 'ioredis';
+import type { KV } from '@hanzo/kv';
 import { logger } from '@hanzochat/data-schemas';
 import { RedisEventTransport } from '~/stream/implementations/RedisEventTransport';
 import { createMockPublisher } from './helpers/publisher';
@@ -25,8 +25,8 @@ describe('RedisEventTransport', () => {
     const mockPublisher = createMockPublisher();
     const mockSubscriber = createMockSubscriber();
     const transport = new RedisEventTransport(
-      mockPublisher as unknown as Redis,
-      mockSubscriber as unknown as Redis,
+      mockPublisher as unknown as KV,
+      mockSubscriber as unknown as KV,
     );
 
     const streamId = 'reorder-abort-listener-reuse-test';

@@ -131,9 +131,9 @@ class GenerationJobManagerClass {
    * @example Using Redis
    * ```ts
    * import { createStreamServicesFromCache } from '~/stream/createStreamServices';
-   * import { cacheConfig, ioredisClient } from '~/cache';
+   * import { cacheConfig, kvClient } from '~/cache';
    *
-   * const services = createStreamServicesFromCache({ cacheConfig, ioredisClient });
+   * const services = createStreamServicesFromCache({ cacheConfig, kvClient });
    * GenerationJobManager.configure(services);
    * GenerationJobManager.initialize();
    * ```
