@@ -200,8 +200,22 @@ const isUnauthorized = (value: unknown): boolean =>
 const Error = ({ text }: { text: string }) => {
   const localize = useLocalize();
   const jsonString = extractJson(text);
-  const errorMessage = text.length > 512 && !jsonString ? text.slice(0, 512) + '...' : text;
-  const defaultResponse = `Something went wrong. Here's the specific error message we encountered: ${errorMessage}`;
+
+  /**
+   * The fallback is a HUMAN SENTENCE, never the upstream body.
+   *
+   * This used to be `…the specific error message we encountered: ${text}`, which
+   * made every unmapped shape a leak. Two shipped that way — Passport's bare
+   * `Unauthorized`, then a gateway `402 a billable tenant is required (no
+   * anonymous usage)` — because the mapping below enumerates known shapes and
+   * production keeps inventing new ones. Enumerating is fine for the cases that
+   * genuinely say something different to the reader; what has to change is where
+   * the enumeration MISSES. Unrecognised now degrades to a sentence, and the raw
+   * text stays available to whoever is debugging — useResumableSSE already logs
+   * the failure verbatim, so nothing is lost by not repeating it here (and a
+   * console call in render would fire on every re-render anyway).
+   */
+  const defaultResponse = localize('com_error_unknown');
 
   if (isUnauthorized(text)) {
     return localize('com_error_unauthorized');

@@ -32,9 +32,28 @@ describe('Error message content', () => {
     expect(screen.getByText('com_error_unauthorized')).toBeInTheDocument();
   });
 
-  it('still reports an unrecognized error verbatim', () => {
+  /**
+   * This used to assert the opposite — that an unrecognised error was reported
+   * VERBATIM. That contract is what leaked twice: Passport's bare `Unauthorized`
+   * and then a gateway `402 a billable tenant is required (no anonymous usage)`,
+   * each printed to a stranger as "the specific error message we encountered".
+   * The mapping above still handles the shapes that genuinely say something
+   * different; the fallback no longer echoes upstream.
+   */
+  it('renders a human sentence for an unrecognized error, never the upstream body', () => {
     render(<Error text="upstream exploded" />);
 
-    expect(screen.getByText(/Something went wrong.*upstream exploded/)).toBeInTheDocument();
+    expect(screen.queryByText(/upstream exploded/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/specific error message/)).not.toBeInTheDocument();
+    expect(screen.getByText('com_error_unknown')).toBeInTheDocument();
+  });
+
+  it('does not echo an unmapped gateway 402 — the shape that reached production', () => {
+    // No `type`, no `code`: exactly the body the login gate did not recognise.
+    render(<Error text={JSON.stringify({ message: '402 a billable tenant is required (no anonymous usage)' })} />);
+
+    expect(screen.queryByText(/billable tenant/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/402/)).not.toBeInTheDocument();
+    expect(screen.getByText('com_error_unknown')).toBeInTheDocument();
   });
 });
