@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ArrowUp, Check, ChevronDown, Square } from 'lucide-react';
+import * as Ariakit from '@ariakit/react/menu';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
+import { DropdownPopup } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 
 /**
@@ -16,6 +18,10 @@ const SOURCES = ['news', 'academic', 'github', 'reddit', 'x'];
 
 /** The endpoint whose catalog backs the picker (the house Zen family). */
 const CATALOG_ENDPOINT = 'Hanzo';
+
+/** One trigger shape for both pickers. */
+const TRIGGER =
+  'flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover';
 
 export interface AnswerComposerProps {
   model: string;
@@ -41,9 +47,38 @@ export default function AnswerComposer({
   const [modelOpen, setModelOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const areaRef = useRef<HTMLTextAreaElement>(null);
+  const sourcesMenuId = useId();
+  const modelMenuId = useId();
 
   const { data: modelsConfig } = useGetModelsQuery();
   const models = useMemo(() => modelsConfig?.[CATALOG_ENDPOINT] ?? [], [modelsConfig]);
+
+  const sourceItems = useMemo(
+    () =>
+      SOURCES.map((s) => ({
+        id: s,
+        label: `@${s}`,
+        ariaChecked: sources.includes(s),
+        icon: <Tick on={sources.includes(s)} />,
+        hideOnClick: false,
+        onClick: () => toggleSource(s),
+      })),
+    [sources, toggleSource],
+  );
+
+  const modelItems = useMemo(
+    () =>
+      models.length === 0
+        ? [{ id: 'none', label: localize('com_answer_no_models'), disabled: true }]
+        : models.map((m) => ({
+            id: m,
+            label: m,
+            ariaChecked: m === model,
+            icon: <Tick on={m === model} />,
+            onClick: () => setModel(m),
+          })),
+    [models, model, setModel, localize],
+  );
 
   // The catalog is the authority on what this caller may run — a guest is scoped
   // to one model server-side. Selecting the first real model (rather than a
@@ -100,68 +135,43 @@ export default function AnswerComposer({
 
         <div className="flex items-center gap-1.5 px-2 pb-2 pt-1">
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setSourcesOpen((v) => !v);
-                  setModelOpen(false);
-                }}
-                className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover"
-              >
-                {sources.length ? `@${sources.length}` : '@'}
-                <ChevronDown className="size-3.5" aria-hidden="true" />
-              </button>
-              {sourcesOpen && (
-                <Menu onClose={() => setSourcesOpen(false)}>
-                  {SOURCES.map((s) => (
-                    <MenuItem
-                      key={s}
-                      selected={sources.includes(s)}
-                      onClick={() => toggleSource(s)}
-                    >
-                      @{s}
-                    </MenuItem>
-                  ))}
-                </Menu>
-              )}
-            </div>
+            <DropdownPopup
+              portal={false}
+              isOpen={sourcesOpen}
+              setIsOpen={setSourcesOpen}
+              menuId={sourcesMenuId}
+              items={sourceItems}
+              className="max-h-64 overflow-y-auto"
+              trigger={
+                <Ariakit.MenuButton
+                  aria-label={localize('com_answer_sources')}
+                  className={TRIGGER}
+                  onClick={() => setModelOpen(false)}
+                >
+                  {sources.length ? `@${sources.length}` : '@'}
+                  <ChevronDown className="size-3.5" aria-hidden="true" />
+                </Ariakit.MenuButton>
+              }
+            />
 
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setModelOpen((v) => !v);
-                  setSourcesOpen(false);
-                }}
-                className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover"
-              >
-                {model}
-                <ChevronDown className="size-3.5" aria-hidden="true" />
-              </button>
-              {modelOpen && (
-                <Menu onClose={() => setModelOpen(false)}>
-                  {models.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-text-secondary">
-                      {localize('com_answer_no_models')}
-                    </div>
-                  ) : (
-                    models.map((m) => (
-                      <MenuItem
-                        key={m}
-                        selected={m === model}
-                        onClick={() => {
-                          setModel(m);
-                          setModelOpen(false);
-                        }}
-                      >
-                        {m}
-                      </MenuItem>
-                    ))
-                  )}
-                </Menu>
-              )}
-            </div>
+            <DropdownPopup
+              portal={false}
+              isOpen={modelOpen}
+              setIsOpen={setModelOpen}
+              menuId={modelMenuId}
+              items={modelItems}
+              className="max-h-64 overflow-y-auto"
+              trigger={
+                <Ariakit.MenuButton
+                  aria-label={localize('com_answer_model')}
+                  className={TRIGGER}
+                  onClick={() => setSourcesOpen(false)}
+                >
+                  {model}
+                  <ChevronDown className="size-3.5" aria-hidden="true" />
+                </Ariakit.MenuButton>
+              }
+            />
 
             <button
               type="button"
@@ -198,41 +208,7 @@ export default function AnswerComposer({
   );
 }
 
-/** A small anchored popover. Click-away closes it; no portal, no dependency. */
-function Menu({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  const localize = useLocalize();
-  return (
-    <>
-      <button
-        type="button"
-        aria-label={localize('com_answer_close_menu')}
-        className="fixed inset-0 z-10 cursor-default"
-        onClick={onClose}
-      />
-      <div className="absolute bottom-full right-0 z-20 mb-2 max-h-64 min-w-[10rem] overflow-y-auto rounded-xl border border-border-medium bg-surface-primary py-1 shadow-lg">
-        {children}
-      </div>
-    </>
-  );
-}
-
-function MenuItem({
-  children,
-  selected,
-  onClick,
-}: {
-  children: React.ReactNode;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-text-primary transition-colors hover:bg-surface-hover"
-    >
-      <span className="truncate">{children}</span>
-      {selected && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
-    </button>
-  );
+/** Selection mark that always occupies its slot, so labels stay on one axis. */
+function Tick({ on }: { on: boolean }) {
+  return <Check className={on ? 'size-3.5' : 'size-3.5 opacity-0'} aria-hidden="true" />;
 }
