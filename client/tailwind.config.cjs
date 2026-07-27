@@ -27,9 +27,10 @@ module.exports = {
     './src/**/*.{js,jsx,ts,tsx}',
     // Include component library files
     '../packages/client/src/**/*.{js,jsx,ts,tsx}',
-    // Shared @hanzo/ui components (network switcher / wallet menu)
-    './node_modules/@hanzo/ui/dist/network/**/*.{js,mjs}',
-    './node_modules/@hanzo/ui/dist/wallet/**/*.{js,mjs}',
+    // The shared Hanzo shell. Scanned so any surface it paints with utility
+    // class names gets a real CSS rule: a library that ships `bg-*`/`z-*`
+    // strings renders transparent and unstacked in a host that never scans it.
+    '../node_modules/@hanzogui/shell/dist/**/*.js',
   ],
   // darkMode: 'class',
   darkMode: ['class'],
