@@ -118,6 +118,15 @@ const click = async () => {
   });
 };
 
+/**
+ * Hang up. An open microphone is a fact about the PAGE — that is what lets a
+ * conversation survive this composer remounting on its first turn — so a case
+ * that opens one has to end it, exactly as a user would.
+ */
+const hangUp = async () => {
+  if (screen.getByRole('button').getAttribute('aria-pressed') === 'true') await click();
+};
+
 it('shows what it is hearing in the composer, and sends nothing yet', async () => {
   composer();
   await click();
@@ -127,6 +136,7 @@ it('shows what it is hearing in the composer, and sends nothing yet', async () =
     shouldValidate: true,
   });
   expect(mockAsk).not.toHaveBeenCalled();
+  await hangUp();
 });
 
 it('sends the turn through ask exactly once when the speaker pauses', async () => {
@@ -140,6 +150,7 @@ it('sends the turn through ask exactly once when the speaker pauses', async () =
   expect(mockAsk).toHaveBeenCalledTimes(1);
   expect(mockAsk).toHaveBeenCalledWith({ text: 'draft a launch email' });
   expect(mockReset).toHaveBeenCalledWith({ text: '' });
+  await hangUp();
 });
 
 it('reads a new reply back while the conversation is live', async () => {
@@ -152,6 +163,7 @@ it('reads a new reply back while the conversation is live', async () => {
   });
 
   expect(spoken).toEqual(['Here is a draft.']);
+  await hangUp();
 });
 
 it('stays silent for a typed turn — no conversation, no voice', async () => {
@@ -174,6 +186,29 @@ it('does not replay the last answer when the mic opens mid-thread', async () => 
   });
 
   expect(spoken).toEqual([]);
+  await hangUp();
+});
+
+it('keeps the conversation across the remount that sending the first turn causes', async () => {
+  // Sending is exactly what makes this surface swap /c/new for /c/<id>, which
+  // replaces the composer. The user did not hang up.
+  const view = composer();
+  await click();
+  expect(screen.getByRole('button').getAttribute('aria-pressed')).toBe('true');
+
+  view.unmount();
+  composer();
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  expect(screen.getByRole('button').getAttribute('aria-pressed')).toBe('true');
+  act(() => Fake.live!.hear('and shorter', true));
+  await act(async () => {
+    jest.advanceTimersByTime(1_000);
+  });
+  expect(mockAsk).toHaveBeenCalledWith({ text: 'and shorter' });
+  await hangUp();
 });
 
 it('leaves the typed composer working, with the reason on the button, when refused', async () => {
@@ -202,4 +237,5 @@ it('tells you rather than dropping a turn spoken over a running reply', async ()
   expect(mockShowToast).toHaveBeenCalledWith(
     expect.objectContaining({ status: 'error' }),
   );
+  await hangUp();
 });
