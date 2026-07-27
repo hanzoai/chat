@@ -57,7 +57,7 @@ check_service() {
 }
 
 # Check each service
-check_service "IAM" "http://localhost:8000/api/get-account"
+check_service "IAM" "http://localhost:8000/v1/iam/get-account"
 check_service "Router" "http://localhost:4000/health/readiness"
 check_service "Cloud" "http://localhost:3000"
 check_service "Chat" "http://localhost:3081/health"
