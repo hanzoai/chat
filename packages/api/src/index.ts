@@ -39,6 +39,8 @@ export * from './files';
 export * from './skills';
 /* Storage */
 export * from './storage';
+/* RUM */
+export * from './rum/proxy';
 /* Tools */
 export * from './tools';
 /* web search */
