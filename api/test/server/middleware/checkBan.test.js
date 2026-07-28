@@ -1,13 +1,6 @@
 const mockBanCacheGet = jest.fn().mockResolvedValue(undefined);
 const mockBanCacheSet = jest.fn().mockResolvedValue(undefined);
 
-jest.mock('keyv', () => ({
-  Keyv: jest.fn().mockImplementation(() => ({
-    get: mockBanCacheGet,
-    set: mockBanCacheSet,
-  })),
-}));
-
 const mockBanLogsGet = jest.fn().mockResolvedValue(undefined);
 const mockBanLogsDelete = jest.fn().mockResolvedValue(true);
 const mockBanLogs = {
@@ -39,7 +32,10 @@ jest.mock('@hanzochat/api', () => ({
     }
     return false;
   },
-  keyvMongo: {},
+  durableCache: jest.fn(() => ({
+    get: mockBanCacheGet,
+    set: mockBanCacheSet,
+  })),
   removePorts: jest.fn((req) => req.ip),
 }));
 

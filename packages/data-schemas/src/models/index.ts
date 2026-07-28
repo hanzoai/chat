@@ -30,6 +30,8 @@ import { createGroupModel } from './group';
 import { createSystemGrantModel } from './systemGrant';
 import {
   createSqliteHandle,
+  sharedDatabase,
+  closeSharedDatabase,
   attachMeili,
   CHAT_COLLECTION_SPECS,
   type SqliteHandle,
@@ -58,11 +60,12 @@ function parseStoreCsv(value?: string): string[] {
 }
 
 /**
- * One SQLite handle (one driver connection) per process, shared across
- * every `createModels` call — the api requires the data-schemas index from three
- * entry points, and a per-call handle would open three connections to the same
- * file and race for the WAL write lock. Keyed by the collection set so a changed
- * flag set (only happens across a restart) rebuilds cleanly.
+ * One set of models per process, shared across every `createModels` call — the
+ * api requires the data-schemas index from three entry points. Keyed by the
+ * collection set so a changed flag set (only happens across a restart) rebuilds
+ * cleanly. The connection underneath is `sharedDatabase()`, owned by the store
+ * and shared with the Keyv cache; rebuilding models over it opens nothing and
+ * so leaks nothing.
  */
 let sharedHandle: SqliteHandle | undefined;
 let sharedHandleKey = '';
@@ -70,25 +73,22 @@ let sharedHandleKey = '';
 function sharedSqliteHandle(names: string[]): SqliteHandle {
   const key = [...names].sort().join(',');
   if (!sharedHandle || sharedHandleKey !== key) {
-    // Close the prior native connection before replacing it — a bare reassign
-    // leaks the better-sqlite3 handle (its late GC finalizer corrupts sibling
-    // SQLite state in a shared worker; latent prod leak on any rekey).
-    sharedHandle?.close();
-    sharedHandle = createSqliteHandle(names);
+    sharedHandle = createSqliteHandle(names, { db: sharedDatabase() });
     sharedHandleKey = key;
   }
   return sharedHandle;
 }
 
 /**
- * Closes and clears the process-shared SQLite handle. Idempotent. The prod path
- * keeps one handle for the process lifetime; this exists so tests that build the
- * handle tear it down — every native Database opened MUST be closed.
+ * Closes the process-shared SQLite connection and drops the models built on it.
+ * Idempotent. The prod path keeps one connection for the process lifetime; this
+ * exists so tests that build it tear it down — every native Database opened
+ * MUST be closed.
  */
 export function closeSharedSqliteHandle(): void {
-  sharedHandle?.close();
   sharedHandle = undefined;
   sharedHandleKey = '';
+  closeSharedDatabase();
 }
 
 function applySqliteOverrides<T extends Record<string, unknown>>(models: T): T {
