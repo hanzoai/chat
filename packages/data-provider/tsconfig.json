@@ -18,6 +18,17 @@
     "isolatedModules": true,
     "noEmit": true,
     "sourceMap": true,
+    // baseUrl is what makes a bare "src/..." specifier resolvable. Without it
+    // TypeScript has no root to resolve non-relative paths against, so
+    // src/types/assistants.ts fails with
+    //   TS2307: Cannot find module 'src/schemas'
+    // even though src/schemas.ts is right there — and rollup-plugin-typescript2
+    // turns that into a hard RollupError that fails the whole image build.
+    // "paths" was already here and worked, because paths entries resolve
+    // relative to the config file rather than baseUrl.
+    // Deleted by 1266c6b9c as "semantics-preserving"; it is not — the v1.0.49
+    // image build died on exactly the TS2307 above. Restored, with the reason.
+    "baseUrl": ".",
     "paths": {
       "@hanzochat/data-provider/react-query": ["./src/react-query/index.ts"]
     }
