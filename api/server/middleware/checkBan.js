@@ -1,15 +1,23 @@
-const { Keyv } = require('keyv');
 const uap = require('ua-parser-js');
 const { logger } = require('@hanzochat/data-schemas');
-const { isEnabled, keyvMongo } = require('@hanzochat/api');
+const { isEnabled, durableCache } = require('@hanzochat/api');
 const { ViolationTypes } = require('@hanzochat/data-provider');
 const { removePorts } = require('~/server/utils');
 const denyRequest = require('./denyRequest');
 const { getLogStores } = require('~/cache');
 const { findUser } = require('~/models');
 
-const banCache = new Keyv({ store: keyvMongo, namespace: ViolationTypes.BAN, ttl: 0 });
+/** Read-through memo in front of the authoritative ban store; own namespace, per-entry TTL. */
+const banCache = durableCache(ViolationTypes.BAN, 0);
 const message = 'Your account has been temporarily banned due to violations of our service.';
+
+/** @returns {string} Memo key for a ban lookup — prefixed under Redis, raw otherwise. */
+const banCacheKey = (prefix, value, useRedis) => {
+  if (!value) {
+    return '';
+  }
+  return useRedis ? `ban_cache:${prefix}:${value}` : value;
+};
 
 /**
  * Respond to the request if the user is banned.
@@ -64,25 +72,16 @@ const checkBan = async (req, res, next = () => {}) => {
       return next();
     }
 
-    let cachedIPBan;
-    let cachedUserBan;
+    const useRedis = isEnabled(process.env.USE_REDIS);
+    const ipKey = banCacheKey('ip', req.ip, useRedis);
+    const userKey = banCacheKey('user', userId, useRedis);
 
-    let ipKey = '';
-    let userKey = '';
+    const [cachedIPBan, cachedUserBan] = await Promise.all([
+      ipKey ? banCache.get(ipKey) : undefined,
+      userKey ? banCache.get(userKey) : undefined,
+    ]);
 
-    if (req.ip) {
-      ipKey = isEnabled(process.env.USE_REDIS) ? `ban_cache:ip:${req.ip}` : req.ip;
-      cachedIPBan = await banCache.get(ipKey);
-    }
-
-    if (userId) {
-      userKey = isEnabled(process.env.USE_REDIS) ? `ban_cache:user:${userId}` : userId;
-      cachedUserBan = await banCache.get(userKey);
-    }
-
-    const cachedBan = cachedIPBan || cachedUserBan;
-
-    if (cachedBan) {
+    if (cachedIPBan || cachedUserBan) {
       req.banned = true;
       return await banResponse(req, res);
     }
@@ -94,41 +93,53 @@ const checkBan = async (req, res, next = () => {}) => {
       return next();
     }
 
-    let ipBan;
-    let userBan;
+    // `banLogs` is keyed by the raw ip / user id — `ipKey` and `userKey` are the
+    // memo's keys and carry a prefix under Redis, so they must not be used here.
+    const [ipBan, userBan] = await Promise.all([
+      req.ip ? banLogs.get(req.ip) : undefined,
+      userId ? banLogs.get(userId) : undefined,
+    ]);
 
-    if (req.ip) {
-      ipBan = await banLogs.get(req.ip);
-    }
+    const ban = ipBan || userBan;
 
-    if (userId) {
-      userBan = await banLogs.get(userId);
-    }
-
-    const isBanned = !!(ipBan || userBan);
-
-    if (!isBanned) {
+    if (!ban) {
       return next();
     }
 
-    const timeLeft = Number(isBanned.expiresAt) - Date.now();
-
-    if (timeLeft <= 0 && ipKey) {
-      await banLogs.delete(ipKey);
+    // A record with no readable expiry is a ban that cannot be timed out. Deny
+    // it, but never memo it — a NaN ttl is stored as no expiry at all, and the
+    // entry (IP-keyed, so shared) would outlive the ban forever.
+    const expiresAt = Number(ban.expiresAt);
+    if (!ban.expiresAt || Number.isNaN(expiresAt)) {
+      req.banned = true;
+      return await banResponse(req, res);
     }
 
-    if (timeLeft <= 0 && userKey) {
-      await banLogs.delete(userKey);
+    const timeLeft = expiresAt - Date.now();
+
+    if (timeLeft <= 0) {
+      const cleanups = [];
+      if (ipBan) {
+        cleanups.push(banLogs.delete(req.ip));
+      }
+      if (userBan) {
+        cleanups.push(banLogs.delete(userId));
+      }
+      await Promise.all(cleanups);
       return next();
     }
 
+    const writes = [];
     if (ipKey) {
-      banCache.set(ipKey, isBanned, timeLeft);
+      writes.push(banCache.set(ipKey, ban, timeLeft));
     }
-
     if (userKey) {
-      banCache.set(userKey, isBanned, timeLeft);
+      writes.push(banCache.set(userKey, ban, timeLeft));
     }
+    // The memo is an optimization; a failed write must not un-ban the request.
+    await Promise.all(writes).catch((err) =>
+      logger.warn('[checkBan] Failed to write ban cache:', err),
+    );
 
     req.banned = true;
     return await banResponse(req, res);

@@ -1,5 +1,8 @@
+// `KV` is the default export AND its own instance type — re-importing the name
+// as a type declares the same binding twice, which babel (jest) rejects outright
+// and tsc only tolerates because they land in different declaration spaces.
 import KV from '@hanzo/kv';
-import type { KV, Cluster } from '@hanzo/kv';
+import type { Cluster } from '@hanzo/kv';
 import { logger } from '@hanzochat/data-schemas';
 import { createClient, createCluster } from '@keyv/redis';
 import type { RedisClientType, RedisClusterType } from '@redis/client';

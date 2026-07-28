@@ -17,6 +17,7 @@ import type { SendCommandFn } from 'rate-limit-redis';
 import { keyvRedisClient, kvClient } from './redisClients';
 import { cacheConfig } from './cacheConfig';
 import { violationFile } from './keyvFiles';
+import { KeyvSqlite } from './keyvSqlite';
 import { batchDeleteKeys, scanKeys } from './redisUtils';
 
 /**
@@ -85,6 +86,18 @@ export const standardCache = (namespace: string, ttl?: number, fallbackStore?: o
  */
 export const violationCache = (namespace: string, ttl?: number): Keyv => {
   return standardCache(`violations:${namespace}`, ttl, violationFile);
+};
+
+/**
+ * Creates a cache instance for state that must survive a restart — a ban, an
+ * encoded action domain. Falls back to the embedded SQLite database rather than
+ * `standardCache`'s process memory, which forgets on every rollout.
+ * @param namespace - The cache namespace.
+ * @param ttl - Time to live for cache entries.
+ * @returns Durable cache instance.
+ */
+export const durableCache = (namespace: string, ttl?: number): Keyv => {
+  return standardCache(namespace, ttl, new KeyvSqlite(namespace));
 };
 
 /**

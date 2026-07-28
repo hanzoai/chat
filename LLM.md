@@ -318,12 +318,26 @@ Read this before deleting anything else Mongo-shaped:
   `MEILI_HOST`+`MEILI_MASTER_KEY` are set, so it runs a redundant index-ensure
   at boot and logs `[mongoMeili] Error checking index …: fetch failed` when it
   races the cloud shim. Harmless but noisy; it goes when mongoose goes.
-- **`keyvMongo` (`packages/api/src/cache/keyvMongo.ts`) has no SQLite
-  counterpart** and throws `Mongoose connection not ready` on first use. It
-  backs `ViolationTypes.BAN` and `CacheKeys.ENCODED_DOMAINS`. It is unreachable
-  today only because `BAN_VIOLATIONS` is unset, so `checkBan` returns before
-  touching the cache. **Enabling `BAN_VIOLATIONS` in prod today would throw** —
-  that feature needs a store before it is switched on.
+- **`keyvMongo` is gone; durable cache state is `durableCache` on SQLite.**
+  Two namespaces need to outlive the process — `CacheKeys.BANS` (the ban
+  record) and `CacheKeys.ENCODED_DOMAINS` (an action tool's domain; forgetting
+  it orphans the tool). Both went through `keyvMongo`, which threw
+  `Mongoose connection not ready` on first touch once `MONGO_URI` went unset.
+  They now go through `durableCache(namespace, ttl)`
+  (`packages/api/src/cache/cacheFactory.ts`) → `KeyvSqlite`
+  (`packages/api/src/cache/keyvSqlite.ts`) → a two-column `keyv` table on the
+  same `sharedDatabase()` connection the document store uses. Redis, when
+  configured, still wins — `durableCache` is `standardCache` with SQLite as the
+  fallback instead of process memory.
+  - `sharedDatabase()` / `closeSharedDatabase()` (`stores/sqlite/index.ts`) are
+    the ONE connection for the process. `createModels` builds its handle over
+    it rather than opening a second writer against the same WAL.
+  - `BAN_VIOLATIONS` is safe to switch on. `checkBan` also carries upstream
+    #12324's fixes, which the fork had dropped on the floor — it kept the tests
+    and lost the implementation, so the suite crashed on an unhandled rejection
+    and the middleware still coerced the ban record to a boolean
+    (`Number(true.expiresAt)` → `NaN` → a memo entry with no expiry, IP-keyed,
+    blocking whoever inherits that address).
 
 ### IAM-native auth (HIP-0111) — federated to hanzo.id, LIVE
 
