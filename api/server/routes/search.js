@@ -14,8 +14,8 @@ router.get('/enable', async function (req, res) {
 
   try {
     const client = new MeiliSearch({
-      host: process.env.MEILI_HOST,
-      apiKey: process.env.MEILI_MASTER_KEY,
+      host: process.env.INDEX_URL,
+      apiKey: process.env.INDEX_KEY,
     });
 
     const { status } = await client.health();
