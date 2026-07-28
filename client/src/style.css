@@ -1,7 +1,23 @@
-/* Shared Hanzo brand tokens (monochrome --hanzo-* scale). Imported first so the
-   chat :root below overrides any collision — chat keeps its own grey ramp while
-   the --hanzo-* palette becomes the single shared source across every surface. */
-@import '@hanzo/brand/styles/variables.css';
+/* The token layer is @hanzo/design. It replaces @hanzo/brand/styles/variables.css,
+   which chat imported here and which is a SECOND vocabulary for the same ideas:
+   the two packages declare 45 of the same names with 26 different values, so the
+   resolved palette depended on import order. Measured before swapping: of the 67
+   names brand declares that design does not, chat references exactly three groups
+   — --hanzo-accent and --border-light, both of which chat defines itself below,
+   and --hanzo-mono-50..950, whose values are byte-identical to design's
+   --neutral-50..950 (tailwind.config.cjs now points at those). Nothing else in
+   client/src, packages/ or the config reads a brand-only name.
+
+   base.css is deliberately NOT imported: it carries element defaults (body, a,
+   h1-h4, *) that would fight tailwind's preflight. Every token file is. */
+@import '@hanzo/design/tokens/fonts.css';
+@import '@hanzo/design/tokens/colors.css';
+@import '@hanzo/design/tokens/typography.css';
+@import '@hanzo/design/tokens/spacing.css';
+@import '@hanzo/design/tokens/radius.css';
+@import '@hanzo/design/tokens/elevation.css';
+@import '@hanzo/design/tokens/motion.css';
+@import '@hanzo/design/tokens/z.css';
 
 @tailwind base;
 @tailwind components;
@@ -75,20 +91,30 @@
   --font-size-xl: 1.25rem;
   --markdown-font-size: 1rem;
 
-  /* Accent — chat is MONOCHROME. @hanzo/brand ships violet as the shared Hanzo
-     accent and @hanzogui/shell reads it through `var(--hanzo-accent, #ffffff)`,
-     which put a violet "New chat" CTA in the header 400px from a white
-     "Get Started Free" CTA in the hero: one concept, two colours, one frame.
-     Overriding here is the mechanism @hanzo/brand documents for a host that
-     does not take the violet, so lux/zoo/pars are untouched. Paper-white is
-     the shell's own monochrome default. */
+  /* Accent — chat is MONOCHROME. @hanzogui/shell reads the accent through
+     `var(--hanzo-accent, #ffffff)`. @hanzo/design does NOT declare it: a
+     Hanzo-named colour inside the package lux and zoo fork is the layering
+     violation, and the accent belongs to the per-host brand layer. Until that
+     seam emits CSS, the host declares it, and chat's answer is paper-white —
+     the shell's own monochrome default. (@hanzo/brand's static violet is what
+     put a violet "New chat" CTA 400px from a white "Get Started Free" CTA:
+     one concept, two colours, one frame. It is gone with the brand import.) */
   --hanzo-accent: #ffffff;
   --hanzo-accent-hover: #e5e5e5;
   --hanzo-accent-muted: rgba(255, 255, 255, 0.7);
   --hanzo-accent-soft: rgba(255, 255, 255, 0.12);
   --hanzo-accent-rgb: 255, 255, 255;
 }
-html {
+/* chat's LIGHT theme. `:root`, not `html`: a type selector scores (0,0,1) and an
+   imported token layer's `:root` scores (0,1,0), so every name the two shared
+   resolved to the PACKAGE's value and chat's own answer never applied. Two things
+   this was costing, both measured: --radius came out .25rem instead of chat's
+   .5rem in BOTH themes — tailwind maps rounded-lg/md/sm to var(--radius), so every
+   rounded-lg in the app painted 4px and rounded-sm painted 0 — and in light theme
+   --border resolved to the package's hex inside `hsl(var(--border))`, which is
+   invalid, so `border-border` fell through to currentColor and drew BLACK edges
+   where a #e5e5e5 hairline was meant. Ties now go to the later rule: this one. */
+:root {
   --brand-purple: #999696;
   --presentation: var(--white);
   --text-primary: var(--gray-800);
@@ -124,32 +150,32 @@ html {
   --border-heavy: var(--gray-400);
   --border-xheavy: var(--gray-500);
   --border-destructive: var(--red-600);
-  /* These are test styles */
 
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.9%;
-  --primary: 0 0% 9%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.9%;
-  --radius: 0.5rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
-  --switch-unchecked: 0 0% 58%;
+  /* The eighteen semantic colour names — --background --foreground --card --popover
+     --primary --secondary --muted --accent --border --input --ring and their
+     -foreground pairs — are NOT declared here any more. @hanzo/design owns them,
+     and its `:root` (dark) / `.light` split lines up exactly with the class this
+     app's ThemeProvider puts on <html>, so the theme follows with no mapping.
+
+     They used to be shadcn HSL CHANNELS (`--border: 0 0% 11%`), which is a value
+     type nothing outside this app speaks. A shared component painting
+     `border: 1px solid var(--border, #1f1f1f)` got a DEFINED variable, so the
+     literal fallback never fired, and `1px solid 0 0% 11%` is an invalid
+     shorthand, so the whole declaration was dropped. Measured on live hanzo.chat:
+     @hanzo/iam 0.21.1's own menu rule computed to `border: 0px none`. A channel
+     triplet is strictly worse than an undefined token, because an undefined token
+     at least takes the fallback. Real colours, one type, fleet-wide.
+     --chart-1..5 went with them: declared as channels, read nowhere. */
+  --destructive: var(--state-error);          /* the system's red, not a literal */
+  --destructive-foreground: var(--pure-white);
+  --switch-unchecked: var(--neutral-500);     /* 3.50:1 on white, 4.43:1 on black */
+
+  /* Which theme is live is the HOST's fact, so the host declares it. It used to
+     arrive from @hanzo/brand's stylesheet; @hanzo/design declares no
+     color-scheme, and without it the UA paints form fields, scrollbars and the
+     default text colour for the wrong theme (measured: a dark-theme <input> came
+     back with a white field and black text). */
+  color-scheme: light;
 }
 .dark {
   --brand-purple: #999696;
@@ -186,31 +212,9 @@ html {
   --border-heavy: var(--gray-700);
   --border-xheavy: var(--gray-500);
   --border-destructive: var(--red-500);
-  /* Hanzo dark palette — true-black OLED */
-
-  --background: 0 0% 0%;
-  --foreground: 0 0% 95%;
-  --card: 0 0% 3%;
-  --card-foreground: 0 0% 95%;
-  --primary: 0 0% 95%;
-  --primary-foreground: 0 0% 9%;
-  --secondary: 0 0% 11%;
-  --secondary-foreground: 0 0% 95%;
-  --muted: 0 0% 7%;
-  --muted-foreground: 0 0% 56%;
-  --accent: 0 0% 11%;
-  --accent-foreground: 0 0% 95%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 11%;
-  --input: 0 0% 11%;
-  --ring: 0 0% 56%;
-  --chart-1: 0 0% 50%;
-  --chart-2: 160 60% 45%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
-  --switch-unchecked: 0 0% 40%;
+  /* Hanzo dark palette — true-black OLED. The eighteen semantic names come from
+     @hanzo/design's `:root`, which IS the dark theme; see the note above. */
+  color-scheme: dark;
 }
 .gizmo {
   --text-primary: var(--gizmo-gray-950);
@@ -1412,11 +1416,11 @@ button {
 }
 .btn-primary {
   /* Monochrome primary: adaptive white-on-dark / black-on-light (matches send button). */
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 .btn-primary:hover {
-  background-color: hsl(var(--primary) / 0.9);
+  background-color: color-mix(in srgb, var(--primary) 90%, transparent);
 }
 .btn-primary:focus {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width)
@@ -1432,13 +1436,13 @@ button {
     var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 transparent);
 }
 .btn-primary.focus-visible {
-  --tw-ring-color: hsl(var(--ring));
+  --tw-ring-color: var(--ring);
 }
 .btn-primary:focus-visible {
-  --tw-ring-color: hsl(var(--ring));
+  --tw-ring-color: var(--ring);
 }
 .btn-primary:disabled:hover {
-  background-color: hsl(var(--primary));
+  background-color: var(--primary);
 }
 .btn-secondary {
   --tw-text-opacity: 1;
@@ -2711,9 +2715,13 @@ html {
   transform: scale(1) translateY(0);
 }
 
+/* `outline: var(--bg-surface-hover)` — a tailwind CLASS name written as a custom
+   property, so the token was never defined and these popovers had no keyboard
+   focus indicator at all. Caught by e2e/specs/tokens.spec.ts. --ring is the
+   system's focus colour and clears 3:1 in both themes. */
 .popover-ui:focus-visible,
 .popover-ui[data-focus-visible] {
-  outline: var(--bg-surface-hover);
+  outline: 2px solid var(--ring);
   outline-offset: -1px;
 }
 
@@ -2746,7 +2754,7 @@ html {
 }
 
 .account-settings-popover .select-item[data-active-item] {
-  box-shadow: 0 0 0 2px hsl(var(--ring));
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 .popover-ui[data-enter] {
