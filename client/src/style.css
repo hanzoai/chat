@@ -168,7 +168,7 @@
      --chart-1..5 went with them: declared as channels, read nowhere. */
   --destructive: var(--state-error);          /* the system's red, not a literal */
   --destructive-foreground: var(--pure-white);
-  --switch-unchecked: var(--neutral-500);     /* 3.50:1 on white, 4.43:1 on black */
+  --switch-unchecked: var(--neutral-500);     /* 4.74:1 on white, 4.43:1 on black */
 
   /* Which theme is live is the HOST's fact, so the host declares it. It used to
      arrive from @hanzo/brand's stylesheet; @hanzo/design declares no
