@@ -9,7 +9,7 @@
  * No mongoose. No tenant middleware (Conversation/Message are not tenant-plugged
  * upstream; collections that are — skill/config/systemGrant — declare it in their
  * CollectionSpec when migrated). MeiliSearch stays a separate concern: `.meiliSearch`
- * is intentionally absent, matching a mongoose model with no MEILI_HOST configured.
+ * is intentionally absent, matching a mongoose model with no INDEX_URL configured.
  */
 import { getTenantId, SYSTEM_TENANT_ID } from '~/config/tenantContext';
 import {

@@ -80,7 +80,7 @@ const searchEnabled = process.env.SEARCH != null && process.env.SEARCH.toLowerCa
  * Flag to indicate if MeiliSearch is enabled based on required environment variables.
  */
 const meiliEnabled =
-  process.env.MEILI_HOST != null && process.env.MEILI_MASTER_KEY != null && searchEnabled;
+  process.env.INDEX_URL != null && process.env.INDEX_KEY != null && searchEnabled;
 
 /**
  * Get sync configuration from environment variables
