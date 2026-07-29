@@ -336,28 +336,44 @@
 
 /* Base wrapper for both preview and editor */
 .sp-wrapper {
-  @apply flex h-full w-full grow flex-col;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  flex-grow: 1;
 }
 
 /* Stack containers (sp-preview and sp-editor) */
 .sp-preview,
 .sp-editor {
-  @apply flex h-full w-full grow flex-col;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  flex-grow: 1;
 }
 
 /* Inner containers */
 .sp-preview-container,
 .sp-code-editor {
-  @apply flex h-full w-full grow flex-col;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  flex-grow: 1;
 }
 
 /* Content elements */
 .sp-preview-iframe {
-  @apply h-full w-full grow;
+  height: 100%;
+  width: 100%;
+  flex-grow: 1;
 }
 
 .sp-cm {
-  @apply h-full w-full grow;
+  height: 100%;
+  width: 100%;
+  flex-grow: 1;
 }
 
 @keyframes shake {
