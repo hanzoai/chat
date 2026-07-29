@@ -93,7 +93,13 @@ describe('POST /v1/chat/ask', () => {
     mockResolveTenantBearer.mockReturnValue(null);
     const res = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
     expect(res.status).toBe(401);
-    expect(res.body.code).toBe('ASK_SIGNIN_REQUIRED');
+    // This caller HAS a session — only the forwarded IAM bearer went stale, and
+    // that credential lives ~1h with no durable refresh. `code` drives the
+    // client's "Sign in" button, so carrying it here would put that button in
+    // front of a signed-in customer, which is the refusal they cannot act on.
+    // They get the honest cause instead; the client re-mints and retries once.
+    expect(res.body.code).toBeUndefined();
+    expect(res.body.error).toMatch(/session needs refreshing/);
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
@@ -233,8 +239,19 @@ describe('POST /v1/chat/ask', () => {
     // The client renders its sign-in CTA on this code alone, so a refusal that
     // signing in CANNOT fix must not carry it.
     mockResolveTenantBearer.mockReturnValue(null);
+
+    // No session at all — the one state signing in actually resolves.
+    mockUser = { id: 'guest_1', guest: true };
     const noBearer = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
+    expect(noBearer.status).toBe(401);
     expect(noBearer.body.code).toBe('ASK_SIGNIN_REQUIRED');
+
+    // The same refusal for a caller who IS signed in must not carry it: their
+    // credential expired, they did not fail to have one.
+    mockUser = { id: 'u1', provider: 'openid', openidId: 'sub-1' };
+    const staleBearer = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
+    expect(staleBearer.status).toBe(401);
+    expect(staleBearer.body.code).toBeUndefined();
 
     mockUser = { id: 'guest_1', guest: true };
     process.env.GUEST_API_KEY = 'hk-guest';
