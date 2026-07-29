@@ -1,6 +1,19 @@
-chat
-Copyright (c) 2023 Hanzo AI Inc.
+Hanzo Chat
+Copyright (c) 2023 Hanzo AI, Inc.
 
-This product includes software from Chat (https://github.com/danny-avila/Chat), licensed under MIT:
+This product includes software from LibreChat
+(https://github.com/danny-avila/LibreChat), licensed under MIT:
 
-    Copyright (c) 2023 Chat (Danny Avila)
+    Copyright (c) 2023 LibreChat (Danny Avila)
+
+This product includes software from LiteLLM
+(https://github.com/BerriAI/litellm), copyright BerriAI, Inc. LiteLLM code and
+history are present in this repository; see the upstream project for its
+license terms.
+
+Renaming a fork for our own brand is expected. Renaming the UPSTREAM inside its
+own attribution is not: an earlier revision of this file credited "Chat
+(https://github.com/danny-avila/Chat)", which is a project that does not exist
+and a URL that 404s. The debrand pass rewrote the one string it had to leave
+alone, and the attribution stopped pointing at anybody. Both upstreams are
+named here as they name themselves.
