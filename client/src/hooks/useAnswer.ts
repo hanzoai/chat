@@ -3,6 +3,7 @@ import { apiBaseUrl } from '@hanzochat/data-provider';
 import type { SearchSource, SearchMode } from '@hanzo/ai';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useLocalize from '~/hooks/useLocalize';
+import { refreshTenantBearer } from '~/utils/login';
 
 /**
  * The answer engine, client side. Streams a grounded answer from chat's own
@@ -83,7 +84,7 @@ export default function useAnswer(): UseAnswerResult {
 
       void (async () => {
         try {
-          const res = await fetch(`${apiBaseUrl()}/v1/chat/ask`, {
+          let res = await fetch(`${apiBaseUrl()}/v1/chat/ask`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -98,6 +99,40 @@ export default function useAnswer(): UseAnswerResult {
             }),
             signal: controller.signal,
           });
+
+          // A refusal for a caller who IS signed in usually means one thing: the
+          // on-behalf-of bearer aged out. Chat forwards the user's own IAM token
+          // to cloud and `isForwardableToken` requires it UNEXPIRED — the id_token
+          // lives ~1h and chat has no durable refresh for it. An hour into a
+          // perfectly good session, cloud starts answering 403 and the product
+          // says "sign in", to someone already signed in.
+          //
+          // hanzo.id still has the session, so re-mint silently and retry ONCE.
+          // Only for a signed-in caller: an anonymous or guest visitor genuinely
+          // has nothing to refresh, and for them the gate is the right answer.
+          if ((res.status === 401 || res.status === 403) && token != null && token !== '') {
+            const fresh = await refreshTenantBearer();
+            if (fresh != null && fresh !== '' && abortRef.current === controller) {
+              const retry = await fetch(`${apiBaseUrl()}/v1/chat/ask`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: 'text/event-stream',
+                  Authorization: `Bearer ${fresh}`,
+                },
+                body: JSON.stringify({
+                  q: text,
+                  mode: opts?.mode ?? 'search',
+                  ...(opts?.model ? { model: opts.model } : {}),
+                  ...(opts?.sources?.length ? { sources: opts.sources } : {}),
+                }),
+                signal: controller.signal,
+              });
+              if (retry.ok && retry.body) {
+                res = retry;
+              }
+            }
+          }
 
           if (!res.ok || !res.body) {
             const body = await res.json().catch(() => ({}) as Record<string, unknown>);

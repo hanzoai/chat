@@ -17,6 +17,54 @@ const SILENT_SSO_ATTEMPTED = 'hanzo.sso.attempted';
  */
 const SSO_REDIRECT_SPENT = 'hanzo.sso.redirected';
 
+/**
+ * Re-mint the on-behalf-of bearer for a caller who IS signed in.
+ *
+ * Chat forwards the user's own IAM token to cloud (resolveTenantBearer), and
+ * `isForwardableToken` requires it to be UNEXPIRED. The id_token lives ~1 hour
+ * and chat has no durable refresh for it — its own docs call that a tracked
+ * follow-up. So an hour into a perfectly valid session the forwarded bearer goes
+ * stale, cloud answers 403, and the product tells a signed-in user to sign in.
+ *
+ * Silent SSO already solves exactly this: hanzo.id still has the session, so a
+ * prompt=none authorize returns fresh tokens, and the SAME session bridge that
+ * the interactive login posts to writes them back to req.session.openidTokens.
+ * The user never sees anything.
+ *
+ * Deliberately bypasses the once-per-tab arrival guard — that guard exists to
+ * stop an ANONYMOUS render loop from hammering the issuer, which is a different
+ * situation from a signed-in caller whose bearer just aged out. It has its own
+ * re-entry guard instead, so a burst of failing requests triggers ONE re-mint.
+ */
+let reminting: Promise<string | null> | null = null;
+
+export function refreshTenantBearer(): Promise<string | null> {
+  if (typeof window === 'undefined') {
+    return Promise.resolve(null);
+  }
+  if (reminting) {
+    return reminting;
+  }
+  reminting = (async () => {
+    try {
+      const tokens = await getHanzoIamSdk().signinSilent();
+      if (!tokens) {
+        return null;
+      }
+      const { token } = await request.post(iamSession(), {
+        accessToken: tokens.accessToken,
+        idToken: tokens.idToken,
+      });
+      return token ?? null;
+    } catch {
+      return null;
+    } finally {
+      reminting = null;
+    }
+  })();
+  return reminting;
+}
+
 /** True once this tab has bounced through hanzo.id and come back still anonymous. */
 export function ssoRedirectSpent(): boolean {
   return typeof window !== 'undefined' && sessionStorage.getItem(SSO_REDIRECT_SPENT) === '1';

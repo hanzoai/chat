@@ -4,6 +4,7 @@ const { logger } = require('@hanzochat/data-schemas');
 const { resolveTenantBearer, resolveActiveOrg } = require('@hanzochat/api');
 const { requireGuestOrJwtAuth, guestMessageLimiter } = require('~/server/middleware');
 const { getGuestConfig } = require('~/server/services/guestConfig');
+const { upstreamMessage, needsSignIn, SIGNIN_REQUIRED } = require('./askMessage');
 
 /**
  * Answer engine — the grounded-search surface of hanzo.chat. Mounted at
@@ -62,10 +63,6 @@ const UPSTREAM_TIMEOUT_MS = 120000;
 /** Cloud truncates at 2000; reject earlier so an oversized body never leaves chat. */
 const MAX_QUERY = 2000;
 
-/** The client renders a sign-in action for exactly this code. Every refusal that
- *  signing in would actually resolve carries it — and nothing else does, so the
- *  CTA never appears where it cannot help. */
-const SIGNIN_REQUIRED = 'ASK_SIGNIN_REQUIRED';
 
 /**
  * The status this route answers with for an upstream refusal. Only codes the
@@ -78,20 +75,6 @@ function relayStatus(status) {
   return [401, 402, 403, 429].includes(status) ? status : 502;
 }
 
-/** The one honest sentence for an upstream refusal, chosen by status. Never the
- *  upstream's own body — see the call site. */
-function upstreamMessage(status) {
-  if (status === 401 || status === 403) {
-    return 'Sign in with Hanzo to search — your Hanzo account funds this request.';
-  }
-  if (status === 402) {
-    return 'This search is not covered by your current balance.';
-  }
-  if (status === 429) {
-    return 'Too many searches right now — try again in a moment.';
-  }
-  return 'The answer engine is unavailable right now.';
-}
 
 /** Is this request an anonymous guest (shared key, shared balance)? */
 function isGuest(req) {
@@ -142,7 +125,16 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   if (!credential) {
     // Honest, actionable: the surface renders for everyone, but an answer is a
     // real metered cloud call and needs a real principal behind it.
-    return res.status(401).json({ error: upstreamMessage(401), code: SIGNIN_REQUIRED });
+    // SIGNIN_REQUIRED drives the client's "Sign in" button, so it must be sent
+    // ONLY to a caller who actually has no session. A signed-in user whose
+    // forwarded IAM bearer merely expired gets an honest refresh message and no
+    // button — telling them to sign in is both wrong and unactionable.
+    const signedIn = req.user != null && !isGuest(req);
+    const body = { error: upstreamMessage(401, signedIn) };
+    if (!signedIn) {
+      body.code = SIGNIN_REQUIRED;
+    }
+    return res.status(401).json(body);
   }
 
   // The paid modes are not funded by the shared guest key.
@@ -231,8 +223,9 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
       detail: detail.slice(0, 500),
     });
     const status = relayStatus(cloudRes.status);
-    const body = { error: upstreamMessage(status) };
-    if (status === 401 || status === 403) {
+    const signedIn = req.user != null && !isGuest(req);
+    const body = { error: upstreamMessage(status, signedIn) };
+    if ((status === 401 || status === 403) && !signedIn) {
       body.code = SIGNIN_REQUIRED;
     }
     return res.status(status).json(body);
