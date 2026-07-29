@@ -22,6 +22,7 @@ import {
   useGetStartupConfig,
 } from '~/data-provider';
 import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
+import { trySilentSso } from '~/utils/login';
 import useGuestAuth from './useGuestAuth';
 import useTimeout from './useTimeout';
 import store from '~/store';
@@ -173,15 +174,29 @@ const AuthContextProvider = ({
   const guestFallbackRef = useRef<() => void>(() => {});
   guestFallbackRef.current = () => {
     sessionRef.current = 'none';
-    if (startupConfig?.allowGuestChat === true) {
-      void acquireGuest().then((ok) => {
-        if (!ok) {
-          setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
-        }
-      });
-      return;
-    }
-    setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
+
+    // No LOCAL session — which is not the same as no session. Ask the shared
+    // issuer first: a user signed in at hanzo.id (from hanzo.app, the console,
+    // anywhere) should arrive here already signed in, and only an OIDC
+    // `prompt=none` can carry that across registrable domains. This runs BEFORE
+    // the guest fallback on purpose — adopting a real session with real credits
+    // always beats minting an anonymous one, and the reverse order would have
+    // handed a funded customer a 2-message trial.
+    void trySilentSso().then((adopted) => {
+      if (adopted != null && adopted !== '') {
+        // The token-updated event drives setUserContext; nothing more to do.
+        return;
+      }
+      if (startupConfig?.allowGuestChat === true) {
+        void acquireGuest().then((ok) => {
+          if (!ok) {
+            setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
+          }
+        });
+        return;
+      }
+      setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
+    });
   };
 
   const silentRefresh = useCallback(() => {
