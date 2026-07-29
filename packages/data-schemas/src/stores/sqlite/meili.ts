@@ -227,7 +227,7 @@ export function isMeiliEnabled(): boolean {
   const searchEnabled =
     process.env.SEARCH != null && process.env.SEARCH.toLowerCase() === 'true';
   return (
-    searchEnabled && process.env.MEILI_HOST != null && process.env.MEILI_MASTER_KEY != null
+    searchEnabled && process.env.INDEX_URL != null && process.env.INDEX_KEY != null
   );
 }
 
@@ -235,8 +235,8 @@ function buildClient(client?: MeiliSearch): MeiliSearch {
   return (
     client ??
     new MeiliSearch({
-      host: process.env.MEILI_HOST as string,
-      apiKey: process.env.MEILI_MASTER_KEY as string,
+      host: process.env.INDEX_URL as string,
+      apiKey: process.env.INDEX_KEY as string,
     })
   );
 }

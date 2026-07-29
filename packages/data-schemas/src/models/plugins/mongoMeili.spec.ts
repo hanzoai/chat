@@ -41,8 +41,8 @@ describe('Meilisearch Mongoose plugin', () => {
     process.env = {
       ...OLD_ENV,
       // Set a fake meilisearch host/key so that we activate the meilisearch plugin
-      MEILI_HOST: 'foo',
-      MEILI_MASTER_KEY: 'bar',
+      INDEX_URL: 'foo',
+      INDEX_KEY: 'bar',
     };
 
     mongoServer = await MongoMemoryServer.create();

@@ -57,8 +57,8 @@ jest.mock('~/cache', () => ({
 }));
 
 // Set environment before module load
-process.env.MEILI_HOST = 'http://localhost:7700';
-process.env.MEILI_MASTER_KEY = 'test-key';
+process.env.INDEX_URL = 'http://localhost:7700';
+process.env.INDEX_KEY = 'test-key';
 process.env.SEARCH = 'true';
 process.env.MEILI_SYNC_THRESHOLD = '1000'; // Set threshold before module loads
 
@@ -83,8 +83,8 @@ describe('performSync() - syncThreshold logic', () => {
 
     // Set up environment
     process.env = { ...ORIGINAL_ENV };
-    process.env.MEILI_HOST = 'http://localhost:7700';
-    process.env.MEILI_MASTER_KEY = 'test-key';
+    process.env.INDEX_URL = 'http://localhost:7700';
+    process.env.INDEX_KEY = 'test-key';
     process.env.SEARCH = 'true';
     delete process.env.MEILI_NO_SYNC;
 

@@ -37,9 +37,15 @@
   transform: scale(1) translateY(0);
 }
 
+/* `outline: var(--bg-surface-hover)` — a tailwind CLASS name written as a custom
+   property, so it was never defined and these popovers had no keyboard focus
+   indicator at all. The same line exists in client/src/style.css; this is the
+   copy that actually reaches the bundle. Caught by e2e/specs/tokens.spec.ts
+   against the served image, not by reading the source. --ring is the system's
+   focus colour and clears 3:1 in both themes. */
 .popover-ui:focus-visible,
 .popover-ui[data-focus-visible] {
-  outline: var(--bg-surface-hover);
+  outline: 2px solid var(--ring);
   outline-offset: -1px;
 }
 
