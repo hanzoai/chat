@@ -108,7 +108,7 @@ describe('VersionPanel', () => {
           versionIds: expect.any(Array),
         }),
       }),
-      expect.anything(),
+      undefined,
     );
   });
 
@@ -122,7 +122,7 @@ describe('VersionPanel', () => {
     render(<VersionPanel />);
     expect(VersionContent).toHaveBeenCalledWith(
       expect.objectContaining({ selectedAgentId: '' }),
-      expect.anything(),
+      undefined,
     );
 
     // Test with null data
@@ -146,7 +146,7 @@ describe('VersionPanel', () => {
           currentAgent: null,
         }),
       }),
-      expect.anything(),
+      undefined,
     );
 
     // 3. versions is undefined
@@ -161,7 +161,7 @@ describe('VersionPanel', () => {
       expect.objectContaining({
         versionContext: expect.objectContaining({ versions: [] }),
       }),
-      expect.anything(),
+      undefined,
     );
 
     // 4. loading state
@@ -174,7 +174,7 @@ describe('VersionPanel', () => {
     render(<VersionPanel />);
     expect(VersionContent).toHaveBeenCalledWith(
       expect.objectContaining({ isLoading: true }),
-      expect.anything(),
+      undefined,
     );
 
     // 5. error state
@@ -188,7 +188,7 @@ describe('VersionPanel', () => {
     render(<VersionPanel />);
     expect(VersionContent).toHaveBeenCalledWith(
       expect.objectContaining({ error: testError }),
-      expect.anything(),
+      undefined,
     );
   });
 
@@ -215,7 +215,7 @@ describe('VersionPanel', () => {
           ]),
         }),
       }),
-      expect.anything(),
+      undefined,
     );
   });
 });

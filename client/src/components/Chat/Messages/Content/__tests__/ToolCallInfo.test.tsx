@@ -77,7 +77,7 @@ describe('ToolCallInfo', () => {
             autoResizeIframe: { width: true, height: true },
           },
         }),
-        expect.any(Object),
+        undefined,
       );
 
       // Should not render carousel for single resource
@@ -112,7 +112,7 @@ describe('ToolCallInfo', () => {
             { type: 'text', data: 'Resource 3' },
           ],
         }),
-        expect.any(Object),
+        undefined,
       );
 
       // Should not render individual UIResourceRenderer
@@ -240,7 +240,7 @@ describe('ToolCallInfo', () => {
             autoResizeIframe: { width: true, height: true },
           },
         }),
-        expect.any(Object),
+        undefined,
       );
     });
 
@@ -322,7 +322,7 @@ describe('ToolCallInfo', () => {
         expect.objectContaining({
           resource: { type: 'attachment', data: 'From attachments' },
         }),
-        expect.any(Object),
+        undefined,
       );
     });
   });
