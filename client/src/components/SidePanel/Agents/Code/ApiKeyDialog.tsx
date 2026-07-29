@@ -24,8 +24,8 @@ export default function ApiKeyDialog({
   isToolAuthenticated: boolean;
   register: UseFormRegister<ApiKeyFormData>;
   handleSubmit: UseFormHandleSubmit<ApiKeyFormData>;
-  triggerRef?: RefObject<HTMLInputElement | HTMLButtonElement>;
-  triggerRefs?: RefObject<HTMLInputElement | HTMLButtonElement>[];
+  triggerRef?: RefObject<HTMLInputElement | HTMLButtonElement | null>;
+  triggerRefs?: RefObject<HTMLInputElement | HTMLButtonElement | null>[];
 }) {
   const localize = useLocalize();
   const languageIcons = [
@@ -103,7 +103,7 @@ export default function ApiKeyDialog({
           isToolAuthenticated && (
             <Button
               onClick={onRevoke}
-              className="bg-destructive text-white transition-all duration-200 hover:bg-destructive/80"
+              className="hover:bg-destructive/80 bg-destructive text-white transition-all duration-200"
               aria-label={localize('com_ui_revoke')}
             >
               {localize('com_ui_revoke')}

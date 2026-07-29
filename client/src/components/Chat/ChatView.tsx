@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { memo, useCallback } from 'react';
 import { useAtomValue } from 'jotai';
 import { useForm } from 'react-hook-form';

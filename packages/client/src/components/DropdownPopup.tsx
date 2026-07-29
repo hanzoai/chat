@@ -23,7 +23,7 @@ interface DropdownProps {
   menuId: string;
   mountByState?: boolean;
   unmountOnHide?: boolean;
-  finalFocus?: React.RefObject<HTMLElement>;
+  finalFocus?: React.RefObject<HTMLElement | null>;
 }
 
 type MenuProps = Omit<

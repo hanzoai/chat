@@ -16,7 +16,7 @@ type BookmarkEditDialogProps = {
   bookmark?: TConversationTag;
   conversationId?: string;
   children?: React.ReactNode;
-  triggerRef?: React.RefObject<HTMLButtonElement>;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
 };
 
 const BookmarkEditDialog = ({

@@ -32,7 +32,7 @@ const EditPresetDialog = ({
 }: {
   exportPreset: () => void;
   submitPreset: () => void;
-  triggerRef?: React.RefObject<HTMLDivElement>;
+  triggerRef?: React.RefObject<HTMLDivElement | null>;
 }) => {
   const localize = useLocalize();
   const queryClient = useQueryClient();

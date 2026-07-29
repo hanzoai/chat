@@ -24,7 +24,7 @@ export default function OptionsPopover({
   PopoverButtons,
   presetsDisabled,
 }: TOptionsPopoverProps) {
-  const popoverRef = useRef(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(
     popoverRef,
     () => closePopover(),

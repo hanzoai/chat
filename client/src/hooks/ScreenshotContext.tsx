@@ -3,7 +3,7 @@ import { toCanvas } from 'html-to-image';
 import { ThemeContext, isDark } from '@hanzochat/client';
 
 type ScreenshotContextType = {
-  ref?: RefObject<HTMLDivElement>;
+  ref?: RefObject<HTMLDivElement | null>;
 };
 
 const ScreenshotContext = createContext<ScreenshotContextType>({});

@@ -18,7 +18,7 @@ import cn from '~/utils/cn';
 interface MermaidDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  triggerRef: React.RefObject<HTMLButtonElement>;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
   blobUrl: string;
   codeContent: string;
 }
@@ -30,7 +30,7 @@ const MermaidDialog: React.FC<MermaidDialogProps> = memo(
     const [isCopied, setIsCopied] = useState(false);
     const showCodeButtonRef = useRef<HTMLButtonElement>(null);
     const copyButtonRef = useRef<HTMLButtonElement>(null);
-    const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const copyTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     const {
       zoom,

@@ -16,7 +16,7 @@ type SummaryProps = Pick<
 
 function useCopyToClipboard(content?: string) {
   const [isCopied, setIsCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timerRef.current), []);
   const handleCopy = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {

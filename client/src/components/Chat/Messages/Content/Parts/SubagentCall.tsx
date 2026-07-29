@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { ContentTypes, EModelEndpoint } from '@hanzochat/data-provider';

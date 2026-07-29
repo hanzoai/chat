@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { memo, useState, useCallback, useContext } from 'react';
 import Cookies from 'js-cookie';
 import { useAtom } from 'jotai';

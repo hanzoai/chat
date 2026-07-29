@@ -97,7 +97,7 @@ const makeTextAreaRef = (value = '', selectionStart?: number) => {
       value,
       selectionStart: selectionStart ?? value.length,
     },
-  } as unknown as React.RefObject<HTMLTextAreaElement>;
+  } as unknown as React.RefObject<HTMLTextAreaElement | null>;
   return ref;
 };
 
@@ -105,7 +105,7 @@ const makeKeyEvent = (key: string) =>
   ({ key, preventDefault: jest.fn() }) as unknown as React.KeyboardEvent<HTMLTextAreaElement>;
 
 const renderUseHandleKeyUp = (
-  textAreaRef: React.RefObject<HTMLTextAreaElement>,
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>,
   overrides?: { index?: number },
 ) => {
   const { result } = renderHook(() =>

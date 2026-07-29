@@ -20,8 +20,8 @@ export default function useTextarea({
   setIsScrollable,
   disabled = false,
 }: {
-  textAreaRef: React.RefObject<HTMLTextAreaElement>;
-  submitButtonRef: React.RefObject<HTMLButtonElement>;
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
+  submitButtonRef: React.RefObject<HTMLButtonElement | null>;
   setIsScrollable: React.Dispatch<React.SetStateAction<boolean>>;
   disabled?: boolean;
 }) {

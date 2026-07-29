@@ -26,7 +26,7 @@ interface ConversationsProps {
   conversations: Array<TConversation | null>;
   moveToTop: () => void;
   toggleNav: () => void;
-  containerRef: React.RefObject<List>;
+  containerRef: React.RefObject<List | null>;
   loadMoreConversations: () => void;
   isLoading: boolean;
   isSearchLoading: boolean;

@@ -13,12 +13,13 @@ const mockClearMessagesCache = jest.fn();
 
 jest.mock('~/store', () => {
   const { atom } = jest.requireActual('jotai');
+  const { atomFamily } = jest.requireActual('jotai/utils');
   let counter = 0;
   const switchAtom = atom(true);
   return {
     __esModule: true,
     default: {
-      conversationByIndex: () => atom(null),
+      conversationByIndex: atomFamily((_index: unknown) => atom(null)),
       newChatSwitchToHistory: switchAtom,
     },
   };

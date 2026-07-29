@@ -4,8 +4,8 @@ import { DependencyList, EffectCallback, useCallback, useEffect, useRef } from '
 import debounce from 'lodash/debounce';
 
 export function useLazyEffect(effect: EffectCallback, deps: DependencyList = [], wait = 300) {
-  const cleanUp = useRef<void | (() => void)>();
-  const effectRef = useRef<EffectCallback>();
+  const cleanUp = useRef<void | (() => void)>(undefined);
+  const effectRef = useRef<EffectCallback>(undefined);
   effectRef.current = useCallback(effect, deps);
   const lazyEffect = useCallback(
     debounce(() => (cleanUp.current = effectRef.current?.()), wait),

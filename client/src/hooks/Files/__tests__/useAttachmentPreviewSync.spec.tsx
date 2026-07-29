@@ -173,7 +173,7 @@ function setupWithTransitions(
         <Provider
           store={seed((snap) => {
             snap.set(store.isSubmittingFamily(0), isSubmittingAtMount);
-          }}
+          })}
         >
           <FlagProbe id={fileId} />
           {children}

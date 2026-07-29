@@ -24,7 +24,7 @@ const guestConvo = {
 const wrapper =
   (user: TUser) =>
   ({ children }: { children: ReactNode }) => (
-    <Provider initializeState={({ set }) => set(store.user, user)}>{children}</Provider>
+    <Provider store={seed((s) => s.set(store.user, user))}>{children}</Provider>
   );
 
 const asUser = (role: string) => ({ id: 'x', role, name: 'x' }) as unknown as TUser;

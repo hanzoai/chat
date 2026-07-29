@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { useAtomValue } from 'jotai';
-import { useAtomValue } from 'jotai';
 import { CSSTransition } from 'react-transition-group';
 import type { TMessage } from '@hanzochat/data-provider';
 import { useScreenshot, useMessageScrolling, useLocalize } from '~/hooks';

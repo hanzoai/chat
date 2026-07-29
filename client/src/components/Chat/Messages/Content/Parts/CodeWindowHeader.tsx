@@ -12,7 +12,7 @@ interface CodeWindowHeaderProps {
 export default function CodeWindowHeader({ language, code }: CodeWindowHeaderProps) {
   const localize = useLocalize();
   const [isCopied, setIsCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 

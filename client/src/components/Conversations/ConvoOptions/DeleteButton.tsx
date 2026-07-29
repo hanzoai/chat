@@ -24,7 +24,7 @@ type DeleteButtonProps = {
   title: string;
   showDeleteDialog?: boolean;
   setShowDeleteDialog?: (value: boolean) => void;
-  triggerRef?: React.RefObject<HTMLButtonElement>;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
   setMenuOpen?: (open: boolean) => void;
 };
 

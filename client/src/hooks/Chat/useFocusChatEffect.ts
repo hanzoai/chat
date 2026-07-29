@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { logger } from '~/utils';
 
-export default function useFocusChatEffect(textAreaRef: React.RefObject<HTMLTextAreaElement>) {
+export default function useFocusChatEffect(
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>,
+) {
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {

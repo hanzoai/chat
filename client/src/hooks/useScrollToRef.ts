@@ -2,7 +2,7 @@ import { RefObject, useCallback } from 'react';
 import throttle from 'lodash/throttle';
 
 type TUseScrollToRef = {
-  targetRef: RefObject<HTMLDivElement>;
+  targetRef: RefObject<HTMLDivElement | null>;
   callback: () => void;
   smoothCallback: () => void;
 };

@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useAtomValue } from 'jotai';
 import { useAuthContext, useLocalize } from '~/hooks';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import MinimalHoverButtons from '~/components/Chat/Messages/MinimalHoverButtons';

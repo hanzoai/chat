@@ -16,7 +16,7 @@ export const DeleteCache = ({ disabled = false }: { disabled?: boolean }) => {
   const [isCacheEmpty, setIsCacheEmpty] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const contentRef = useRef(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(contentRef, () => confirmClear && setConfirmClear(false), []);
 
   const checkCache = useCallback(async () => {

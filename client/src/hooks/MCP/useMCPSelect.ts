@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
-import { useAtom } from 'jotai';
 import { Constants, LocalStorageKeys } from '@hanzochat/data-provider';
 import { ephemeralAgentByConvoId, mcpValuesAtomFamily, mcpPinnedAtom } from '~/store';
 import { setTimestamp } from '~/utils/timestamps';

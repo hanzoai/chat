@@ -357,7 +357,7 @@ function SkillListItem({
           expanded && hasFiles ? 'opacity-100' : 'max-h-0 opacity-0',
         )}
         style={expanded && hasFiles ? { maxHeight: `${MAX_HEIGHT}px` } : undefined}
-        inert={!expanded ? '' : undefined}
+        inert={!expanded}
       >
         <InlineFileTree files={files} activeFile={activeFile} onFileClick={handleFileClick} />
       </div>

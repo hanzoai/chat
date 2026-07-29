@@ -8,7 +8,7 @@ interface ToolCallState {
   showCode: boolean;
   toggleCode: () => void;
   expandStyle: React.CSSProperties;
-  expandRef: React.RefObject<HTMLDivElement>;
+  expandRef: React.RefObject<HTMLDivElement | null>;
   progress: number;
   cancelled: boolean;
   hasError: boolean;

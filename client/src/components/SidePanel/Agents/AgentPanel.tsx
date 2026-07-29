@@ -296,7 +296,7 @@ export default function AgentPanel() {
     [getValues, uploadAvatarMutation],
   );
   const agent_id = useWatch({ control, name: 'id' });
-  const previousVersionRef = useRef<number | undefined>();
+  const previousVersionRef = useRef<number | undefined>(undefined);
 
   const allowedProviders = useMemo(
     () => new Set(agentsConfig?.allowedProviders),

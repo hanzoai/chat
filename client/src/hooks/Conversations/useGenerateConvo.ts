@@ -34,7 +34,7 @@ const useGenerateConvo = ({
   const assistantsListMap = useAssistantListMap();
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
 
-  const timeoutIdRef = useRef<NodeJS.Timeout>();
+  const timeoutIdRef = useRef<NodeJS.Timeout>(undefined);
   const rootConvo = useAtomValue(store.conversationByKeySelector(rootIndex));
 
   useEffect(() => {

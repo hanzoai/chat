@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useAtomValue } from 'jotai';
 import type { TMessageContentParts } from '@hanzochat/data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import { useMessageHelpers, useLocalize, useAttachments, useContentMetadata } from '~/hooks';

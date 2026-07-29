@@ -12,14 +12,14 @@ import type t from '@hanzochat/data-provider';
 // Mock store before importing FavoritesList
 jest.mock('~/store', () => {
   const { atom } = jest.requireActual('jotai');
+  const { atomFamily } = jest.requireActual('jotai/utils');
   return {
     __esModule: true,
     default: {
-      search: atom({
-        key: 'mock-search-atom',
-        default: { query: '' },
-      }),
-      conversationByIndex: (index: number) => atom(null),
+      search: atom({ query: '' }),
+      // atomFamily, not a bare factory: a factory returns a NEW atom on every
+      // render, and a new atom identity re-renders forever.
+      conversationByIndex: atomFamily((_index: number) => atom(null)),
     },
   };
 });

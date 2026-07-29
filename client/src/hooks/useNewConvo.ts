@@ -69,7 +69,7 @@ const useNewConvo = (index = 0) => {
     routingDefaults?.available ? routingDefaults.auto_routing_active !== false : true,
   );
   const clearAllLatestMessages = store.useClearLatestMessages(`useNewConvo ${index}`);
-  const setSubmission = useSetAtom<TSubmission | null>(store.submissionByIndex(index));
+  const setSubmission = useSetAtom(store.submissionByIndex(index));
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
 
   const hasAgentAccess = useHasAccess({

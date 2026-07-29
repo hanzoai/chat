@@ -1,3 +1,5 @@
+import { useAtomCallback } from 'jotai/utils';
+import { useCallback } from 'react';
 import React from 'react';
 import { act, render } from '@testing-library/react';
 import { Provider, useSetAtom } from 'jotai';
@@ -29,21 +31,10 @@ interface HarnessHandle {
 const Harness = ({ handleRef }: { handleRef: React.MutableRefObject<HarnessHandle | null> }) => {
   useResetArtifactsOnConversationChange();
   const setConvo = useSetAtom(store.conversationByIndex(0));
-  // useJotaiCallback's snapshot is read fresh at call time, so the test
-  // sees the latest committed atom values rather than a stale render-time
-  // closure.
-  const readArtifacts = useJotaiCallback(
-    ({ snapshot }) =>
-      () =>
-        snapshot.getLoadable(store.artifactsState).getValue(),
-    [],
-  );
-  const readCurrentId = useJotaiCallback(
-    ({ snapshot }) =>
-      () =>
-        snapshot.getLoadable(store.currentArtifactId).getValue(),
-    [],
-  );
+  // The store is read fresh at call time, so the test sees the latest
+  // committed atom values rather than a stale render-time closure.
+  const readArtifacts = useAtomCallback(useCallback((get) => get(store.artifactsState), []));
+  const readCurrentId = useAtomCallback(useCallback((get) => get(store.currentArtifactId), []));
 
   if (handleRef.current == null) {
     handleRef.current = {

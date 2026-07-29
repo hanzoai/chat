@@ -20,7 +20,7 @@ export const useOptimizedRowSelection = (initialSelection: Record<string, boolea
 export const useColumnStyles = <TData, TValue>(
   columns: TableColumn<TData, TValue>[],
   isSmallScreen: boolean,
-  containerRef: React.RefObject<HTMLDivElement>,
+  containerRef: React.RefObject<HTMLDivElement | null>,
 ) => {
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -86,7 +86,7 @@ export const useColumnStyles = <TData, TValue>(
 export const useDynamicColumnWidths = useColumnStyles;
 
 export const useKeyboardNavigation = (
-  tableRef: React.RefObject<HTMLDivElement>,
+  tableRef: React.RefObject<HTMLDivElement | null>,
   rowCount: number,
   onRowSelect?: (index: number) => void,
 ) => {

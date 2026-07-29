@@ -72,7 +72,9 @@ const AssistantConversationStarters: React.FC<AssistantConversationStartersProps
         {/* Persistent starter, used for creating only */}
         <div className="relative">
           <input
-            ref={(el) => (inputRefs.current[0] = el)}
+            ref={(el) => {
+              inputRefs.current[0] = el;
+            }}
             value={newStarter}
             maxLength={64}
             className={`${inputClass} pr-10`}
@@ -127,7 +129,9 @@ const AssistantConversationStarters: React.FC<AssistantConversationStartersProps
         {field.value.map((starter, index) => (
           <div key={index} className="relative">
             <input
-              ref={(el) => (inputRefs.current[index + 1] = el)}
+              ref={(el) => {
+                inputRefs.current[index + 1] = el;
+              }}
               value={starter}
               onChange={(e) => {
                 const newValue = [...field.value];

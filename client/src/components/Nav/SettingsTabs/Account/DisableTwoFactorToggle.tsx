@@ -8,7 +8,7 @@ interface DisableTwoFactorToggleProps {
   enabled: boolean;
   onChange: () => void;
   disabled?: boolean;
-  buttonRef?: React.RefObject<HTMLButtonElement>;
+  buttonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 export const DisableTwoFactorToggle: React.FC<DisableTwoFactorToggleProps> = ({

@@ -39,7 +39,7 @@ const mockSetDraft = setDraft as jest.Mock;
 const makeTextAreaRef = (value = '') =>
   ({
     current: { value, addEventListener: jest.fn(), removeEventListener: jest.fn() },
-  }) as unknown as React.RefObject<HTMLTextAreaElement>;
+  }) as unknown as React.RefObject<HTMLTextAreaElement | null>;
 
 beforeEach(() => {
   (useAtomValue as jest.Mock).mockImplementation((atom) => {
