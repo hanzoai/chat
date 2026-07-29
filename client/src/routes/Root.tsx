@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useMediaQuery } from '@hanzochat/client';
 import type { ContextType } from '~/common';
 import {
@@ -52,6 +52,7 @@ export default function Root() {
     }
   }, [isAuthenticated, token]);
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const location = useLocation();
 
   // Offer the account on ARRIVAL, not only after something is refused — the
   // chatgpt.com shape. Gated on authChecked so it never flashes over a session
@@ -139,7 +140,13 @@ export default function Root() {
   //
   // LandingPage also keeps an explicit home at /welcome, the way chatgpt.com/pricing
   // does, so marketing is reachable rather than only a failure state.
-  if (!showChat) {
+  // ...and ONLY at the root. A visitor sitting on /c/<id> has already expressed
+  // intent; answering that URL with a brochure is wrong even as a last resort,
+  // and it is what happened when a session expired mid-conversation — the page
+  // silently became marketing under someone who was reading their own thread.
+  // Everywhere else the shell renders and LoginGate asks for a session, which is
+  // the honest thing to do with a route that names something specific.
+  if (!showChat && location.pathname === '/') {
     return <LandingPage />;
   }
 
