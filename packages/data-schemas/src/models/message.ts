@@ -6,11 +6,11 @@ import messageSchema from '~/schema/message';
  * Creates or returns the Message model using the provided mongoose instance and schema
  */
 export function createMessageModel(mongoose: typeof import('mongoose')) {
-  if (process.env.MEILI_HOST && process.env.MEILI_MASTER_KEY) {
+  if (process.env.INDEX_URL && process.env.INDEX_KEY) {
     messageSchema.plugin(mongoMeili, {
       mongoose,
-      host: process.env.MEILI_HOST,
-      apiKey: process.env.MEILI_MASTER_KEY,
+      host: process.env.INDEX_URL,
+      apiKey: process.env.INDEX_KEY,
       indexName: 'messages',
       primaryKey: 'messageId',
     });

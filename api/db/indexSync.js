@@ -23,12 +23,12 @@ class MeiliSearchClient {
 
   static getInstance() {
     if (!MeiliSearchClient.instance) {
-      if (!process.env.MEILI_HOST || !process.env.MEILI_MASTER_KEY) {
+      if (!process.env.INDEX_URL || !process.env.INDEX_KEY) {
         throw new Error('Meilisearch configuration is missing.');
       }
       MeiliSearchClient.instance = new MeiliSearch({
-        host: process.env.MEILI_HOST,
-        apiKey: process.env.MEILI_MASTER_KEY,
+        host: process.env.INDEX_URL,
+        apiKey: process.env.INDEX_KEY,
       });
     }
     return MeiliSearchClient.instance;
