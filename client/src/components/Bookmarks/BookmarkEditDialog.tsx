@@ -103,12 +103,16 @@ const BookmarkEditDialog = ({
           />
         }
         buttons={
+          // No text-white override here. variant="submit" is `bg-primary
+          // text-primary-foreground` — it PAIRS its own foreground with its own
+          // background. Forcing white on top gave white-on-white: a solid button
+          // with an invisible label, on the only control in the dialog that does
+          // anything. The same override was on both Memory dialogs.
           <Button
             variant="submit"
             type="submit"
             disabled={mutation.isLoading}
             onClick={handleSubmitForm}
-            className="text-white"
           >
             {mutation.isLoading ? <Spinner /> : localize('com_ui_save')}
           </Button>
