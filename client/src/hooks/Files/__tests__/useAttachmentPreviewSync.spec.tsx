@@ -17,7 +17,8 @@
 
 import { useEffect } from 'react';
 import { renderHook } from '@testing-library/react';
-import { RecoilRoot, useRecoilValue, useSetRecoilState } from 'recoil';
+import { Provider, useAtomValue, useSetAtom } from 'jotai';
+import { seed } from 'test/store';
 import type { ReactNode } from 'react';
 import type { TAttachment, TFilePreview } from '@hanzochat/data-provider';
 import store from '~/store';
@@ -29,7 +30,7 @@ jest.mock('~/data-provider', () => ({
 
 import useAttachmentPreviewSync from '../useAttachmentPreviewSync';
 
-const wrapper = ({ children }: { children: ReactNode }) => <RecoilRoot>{children}</RecoilRoot>;
+const wrapper = ({ children }: { children: ReactNode }) => <Provider>{children}</Provider>;
 
 const messageId = 'msg-1';
 const fileId = 'fid-1';
@@ -84,9 +85,9 @@ function setup({
      * for tests that simulate `isAnySubmitting` toggling — the
      * selector reads `conversationKeysAtom` × `isSubmittingFamily(key)`
      * so we have to populate both for the selector to fire. */
-    const setMap = useSetRecoilState(store.messageAttachmentsMap);
-    const setKeys = useSetRecoilState(store.conversationKeysAtom);
-    const setSubmitting = useSetRecoilState(store.isSubmittingFamily(0));
+    const setMap = useSetAtom(store.messageAttachmentsMap);
+    const setKeys = useSetAtom(store.conversationKeysAtom);
+    const setSubmitting = useSetAtom(store.isSubmittingFamily(0));
     useEffect(() => {
       if (seedLiveMap) {
         setMap({ [messageId]: [attachment] });
@@ -94,7 +95,7 @@ function setup({
       setKeys([0]);
       setSubmitting(isSubmitting);
     }, [setMap, setKeys, setSubmitting]);
-    const map = useRecoilValue(store.messageAttachmentsMap);
+    const map = useAtomValue(store.messageAttachmentsMap);
     ref.current = map;
     return null;
   };
@@ -157,7 +158,7 @@ function setupWithTransitions(
      * the transition. (A non-subscribing snapshot read inside an
      * effect would capture the value as of the previous commit, which
      * misses the flag set fired in *this* render's effect tick.) */
-    const flag = useRecoilValue(store.previewJustResolved(id));
+    const flag = useAtomValue(store.previewJustResolved(id));
     useEffect(() => {
       flagRef.current = flag;
     }, [flag]);
@@ -169,14 +170,14 @@ function setupWithTransitions(
     {
       initialProps: { attachment: makeAttachment({ status: 'pending' }) },
       wrapper: ({ children }: { children: ReactNode }) => (
-        <RecoilRoot
-          initializeState={(snap) => {
+        <Provider
+          store={seed((snap) => {
             snap.set(store.isSubmittingFamily(0), isSubmittingAtMount);
           }}
         >
           <FlagProbe id={fileId} />
           {children}
-        </RecoilRoot>
+        </Provider>
       ),
     },
   );

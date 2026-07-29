@@ -1,4 +1,4 @@
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Switch, InfoHoverCard, ESide } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
@@ -8,7 +8,7 @@ export default function SaveBadgesState({
 }: {
   onCheckedChange?: (value: boolean) => void;
 }) {
-  const [saveBadgesState, setSaveBadgesState] = useRecoilState<boolean>(store.saveBadgesState);
+  const [saveBadgesState, setSaveBadgesState] = useAtom<boolean>(store.saveBadgesState);
   const localize = useLocalize();
 
   const handleCheckedChange = (value: boolean) => {

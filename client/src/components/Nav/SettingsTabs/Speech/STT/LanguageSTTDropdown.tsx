@@ -1,11 +1,11 @@
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Dropdown } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 export default function LanguageSTTDropdown() {
   const localize = useLocalize();
-  const [languageSTT, setLanguageSTT] = useRecoilState<string>(store.languageSTT);
+  const [languageSTT, setLanguageSTT] = useAtom<string>(store.languageSTT);
 
   const languageOptions = [
     { value: 'af', label: 'Afrikaans' },

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { usePromptGroupsInfiniteQuery } from '~/data-provider';
 import store from '~/store';
 
 export default function usePromptGroupsNav(hasAccess = true) {
-  const [pageSize] = useRecoilState(store.promptsPageSize);
-  const [category] = useRecoilState(store.promptsCategory);
-  const [name, setName] = useRecoilState(store.promptsName);
+  const [pageSize] = useAtom(store.promptsPageSize);
+  const [category] = useAtom(store.promptsCategory);
+  const [name, setName] = useAtom(store.promptsName);
 
   // Track current page index and cursor history
   const [currentPageIndex, setCurrentPageIndex] = useState(0);

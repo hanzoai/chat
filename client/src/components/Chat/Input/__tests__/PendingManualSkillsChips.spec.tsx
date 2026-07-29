@@ -1,5 +1,7 @@
 import React from 'react';
-import { RecoilRoot, MutableSnapshot } from 'recoil';
+import { Provider } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -14,13 +16,13 @@ import store from '~/store';
 const CONVO_ID = 'convo-1';
 
 const renderWithSkills = (initialSkills: string[]) => {
-  const initializeState = (snapshot: MutableSnapshot) => {
+  const initializeState = (snapshot: Store) => {
     snapshot.set(store.pendingManualSkillsByConvoId(CONVO_ID), initialSkills);
   };
   return render(
-    <RecoilRoot initializeState={initializeState}>
+    <Provider store={seed(initializeState)}>
       <PendingManualSkillsChips conversationId={CONVO_ID} />
-    </RecoilRoot>,
+    </Provider>,
   );
 };
 

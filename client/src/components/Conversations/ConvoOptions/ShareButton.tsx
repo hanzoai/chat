@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, CopyCheck } from 'lucide-react';
 import { useGetSharedLinkQuery } from '@hanzochat/data-provider/react-query';
@@ -35,7 +35,7 @@ export default function ShareButton({
       setAnnouncement('');
     }, 1000);
   };
-  const latestMessage = useRecoilValue(store.latestMessageFamily(0));
+  const latestMessage = useAtomValue(store.latestMessageFamily(0));
   const { data: share, isLoading } = useGetSharedLinkQuery(conversationId);
 
   useEffect(() => {

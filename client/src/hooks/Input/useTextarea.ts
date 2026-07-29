@@ -1,6 +1,6 @@
 import debounce from 'lodash/debounce';
 import { useEffect, useRef, useCallback } from 'react';
-import { useRecoilValue, useRecoilState } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
 import type { KeyboardEvent } from 'react';
 import { forceResize, insertTextAtCursor, getEntity, checkIfScrollable } from '~/utils';
 import { useAssistantsMapContext } from '~/Providers/AssistantsMapContext';
@@ -31,11 +31,11 @@ export default function useTextarea({
   const { handleFiles } = useFileHandling();
   const assistantMap = useAssistantsMapContext();
   const checkHealth = useInteractionHealthCheck();
-  const enterToSend = useRecoilValue(store.enterToSend);
+  const enterToSend = useAtomValue(store.enterToSend);
 
   const { index, conversation, isSubmitting, filesLoading, latestMessage, setFilesLoading } =
     useChatContext();
-  const [activePrompt, setActivePrompt] = useRecoilState(store.activePromptByIndex(index));
+  const [activePrompt, setActivePrompt] = useAtom(store.activePromptByIndex(index));
 
   const { endpoint = '' } = conversation || {};
   // `entity` itself is no longer read — the placeholder used to spell out the

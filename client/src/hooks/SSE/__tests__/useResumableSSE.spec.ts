@@ -53,9 +53,9 @@ jest.mock('@tanstack/react-query', () => ({
   useQueryClient: () => mockQueryClient,
 }));
 
-jest.mock('recoil', () => ({
-  ...jest.requireActual('recoil'),
-  useSetRecoilState: () => jest.fn(),
+jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
+  useSetAtom: () => jest.fn(),
 }));
 
 jest.mock('~/store', () => ({

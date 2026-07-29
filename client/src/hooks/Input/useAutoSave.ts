@@ -1,9 +1,9 @@
 import debounce from 'lodash/debounce';
-import { SetterOrUpdater, useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { LocalStorageKeys, Constants } from '@hanzochat/data-provider';
 import type { TFile } from '@hanzochat/data-provider';
-import type { ExtendedFile } from '~/common';
+import type { Setter, ExtendedFile } from '~/common';
 import { clearDraft, getDraft, setDraft } from '~/utils';
 import { useChatFormContext } from '~/Providers';
 import { useGetFiles } from '~/data-provider';
@@ -20,11 +20,11 @@ export const useAutoSave = ({
   conversationId?: string | null;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
   files: Map<string, ExtendedFile>;
-  setFiles: SetterOrUpdater<Map<string, ExtendedFile>>;
+  setFiles: Setter<Map<string, ExtendedFile>>;
 }) => {
   // setting for auto-save
   const { setValue } = useChatFormContext();
-  const saveDrafts = useRecoilValue<boolean>(store.saveDrafts);
+  const saveDrafts = useAtomValue<boolean>(store.saveDrafts);
   const conversationId = isSubmitting ? Constants.PENDING_CONVO : _conversationId;
 
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);

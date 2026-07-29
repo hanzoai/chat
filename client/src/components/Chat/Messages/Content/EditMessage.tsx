@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { TextareaAutosize, TooltipAnchor } from '@hanzochat/client';
 import { useUpdateMessageMutation } from '@hanzochat/data-provider/react-query';
 import type { TEditProps } from '~/common';
@@ -31,7 +31,7 @@ const EditMessage = ({
   const updateMessageMutation = useUpdateMessageMutation(conversationId ?? '');
   const localize = useLocalize();
 
-  const chatDirection = useRecoilValue(store.chatDirection).toLowerCase();
+  const chatDirection = useAtomValue(store.chatDirection).toLowerCase();
   const isRTL = chatDirection === 'rtl';
 
   const getAddedConvo = useGetAddedConvo();

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useSetRecoilState, useRecoilValue } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { Constants, tMessageSchema, isAssistantsEndpoint } from '@hanzochat/data-provider';
 import type { TMessage, TConversation, TSubmission, Agents } from '@hanzochat/data-provider';
 import { useStreamStatus } from '~/data-provider';
@@ -102,9 +102,9 @@ export default function useResumeOnLoad(
   runIndex = 0,
   messagesLoaded = true,
 ) {
-  const setSubmission = useSetRecoilState(store.submissionByIndex(runIndex));
-  const currentSubmission = useRecoilValue(store.submissionByIndex(runIndex));
-  const currentConversation = useRecoilValue(store.conversationByIndex(runIndex));
+  const setSubmission = useSetAtom(store.submissionByIndex(runIndex));
+  const currentSubmission = useAtomValue(store.submissionByIndex(runIndex));
+  const currentConversation = useAtomValue(store.conversationByIndex(runIndex));
   const endpoint = currentConversation?.endpoint;
   const endpointType = currentConversation?.endpointType;
   const actualEndpoint = endpointType ?? endpoint;

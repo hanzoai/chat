@@ -1,4 +1,4 @@
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import ToggleSwitch from '../../ToggleSwitch';
 import store from '~/store';
 
@@ -7,7 +7,7 @@ export default function CacheTTSSwitch({
 }: {
   onCheckedChange?: (value: boolean) => void;
 }) {
-  const textToSpeech = useRecoilValue(store.textToSpeech);
+  const textToSpeech = useAtomValue(store.textToSpeech);
 
   return (
     <ToggleSwitch

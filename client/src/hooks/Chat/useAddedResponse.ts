@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import {
   getEndpointField,
@@ -25,7 +25,7 @@ const ADDED_INDEX = 1;
 export default function useAddedResponse() {
   const modelsQuery = useGetModelsQuery();
   const assistantsListMap = useAssistantListMap();
-  const rootConvo = useRecoilValue(store.conversationByKeySelector(0));
+  const rootConvo = useAtomValue(store.conversationByKeySelector(0));
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
   const { conversation, setConversation } = store.useCreateConversationAtom(ADDED_INDEX);
 

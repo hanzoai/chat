@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
-import { RecoilRoot, type MutableSnapshot } from 'recoil';
+import { Provider } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -167,18 +169,18 @@ function renderStreamingRow() {
     [userMessage, optimisticAssistantMessage],
   );
 
-  const initializeState = ({ set }: MutableSnapshot) => {
+  const initializeState = ({ set }: Store) => {
     set(store.conversationByIndex(0), conversation);
     set(store.isSubmittingFamily(0), true);
   };
 
   render(
     <QueryClientProvider client={queryClient}>
-      <RecoilRoot initializeState={initializeState}>
+      <Provider store={seed(initializeState)}>
         <MemoryRouter initialEntries={[`/c/${conversation.conversationId}`]}>
           <DerivedStreamingRow />
         </MemoryRouter>
-      </RecoilRoot>
+      </Provider>
     </QueryClientProvider>,
   );
 

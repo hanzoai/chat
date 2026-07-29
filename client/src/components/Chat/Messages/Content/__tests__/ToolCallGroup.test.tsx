@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { Tools, Constants, ContentTypes } from '@hanzochat/data-provider';
 import type { TAttachment, TMessageContentParts } from '@hanzochat/data-provider';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -92,9 +92,9 @@ const fileAttachment: TAttachment = {
 
 const renderGroup = (props: React.ComponentProps<typeof ToolCallGroup>) =>
   render(
-    <RecoilRoot>
+    <Provider>
       <ToolCallGroup {...props} />
-    </RecoilRoot>,
+    </Provider>,
   );
 
 const mockScheduleMessageContentLayoutReconcile =

@@ -1,4 +1,4 @@
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import ToggleSwitch from '../../ToggleSwitch';
 import store from '~/store';
 
@@ -7,7 +7,7 @@ export default function AutoTranscribeAudioSwitch({
 }: {
   onCheckedChange?: (value: boolean) => void;
 }) {
-  const speechToText = useRecoilValue(store.speechToText);
+  const speechToText = useAtomValue(store.speechToText);
 
   return (
     <ToggleSwitch

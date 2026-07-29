@@ -1,27 +1,24 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import '@testing-library/jest-dom/extend-expect';
 import { MessagesSquare, NotebookPen } from 'lucide-react';
 import { render, fireEvent, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { MutableSnapshot } from 'recoil';
 import { ActivePanelProvider, DEFAULT_PANEL } from '~/Providers/ActivePanelContext';
 
 const mockNewConversation = jest.fn();
 const mockClearMessagesCache = jest.fn();
 
 jest.mock('~/store', () => {
-  const { atom } = jest.requireActual('recoil');
+  const { atom } = jest.requireActual('jotai');
   let counter = 0;
-  const switchAtom = atom({
-    key: 'mock-newChatSwitchToHistory',
-    default: true,
-  });
+  const switchAtom = atom(true);
   return {
     __esModule: true,
     default: {
-      conversationByIndex: () =>
-        atom({ key: `mock-conversationByIndex-${counter++}`, default: null }),
+      conversationByIndex: () => atom(null),
       newChatSwitchToHistory: switchAtom,
     },
   };
@@ -75,7 +72,7 @@ function renderPanel({
   onCollapse?: jest.Mock;
   onExpand?: jest.Mock;
   initialPanel?: string;
-  initializeState?: (snapshot: MutableSnapshot) => void;
+  initializeState?: (snapshot: Store) => void;
 } = {}) {
   if (initialPanel !== DEFAULT_PANEL) {
     localStorage.setItem('side:active-panel', initialPanel);
@@ -83,7 +80,7 @@ function renderPanel({
 
   const result = render(
     <QueryClientProvider client={createQueryClient()}>
-      <RecoilRoot initializeState={initializeState}>
+      <Provider store={seed(initializeState)}>
         <ActivePanelProvider>
           <ExpandedPanel
             links={createLinks()}
@@ -92,7 +89,7 @@ function renderPanel({
             onExpand={onExpand}
           />
         </ActivePanelProvider>
-      </RecoilRoot>
+      </Provider>
     </QueryClientProvider>,
   );
 
@@ -152,7 +149,7 @@ describe('ExpandedPanel', () => {
       renderPanel({
         expanded: true,
         initialPanel: 'prompts',
-        initializeState: ({ set }: MutableSnapshot) => {
+        initializeState: ({ set }: Store) => {
           set(store.newChatSwitchToHistory, false);
         },
       });

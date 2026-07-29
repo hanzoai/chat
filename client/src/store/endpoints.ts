@@ -1,4 +1,4 @@
-import { atom, selector } from 'recoil';
+import { atom } from 'jotai';
 import { EModelEndpoint } from '@hanzochat/data-provider';
 import type { TEndpointsConfig } from '@hanzochat/data-provider';
 
@@ -13,27 +13,18 @@ const defaultConfig: TEndpointsConfig = {
   [EModelEndpoint.custom]: null,
 };
 
-const endpointsConfig = atom<TEndpointsConfig>({
-  key: 'endpointsConfig',
-  default: defaultConfig,
-});
+const endpointsConfig = atom<TEndpointsConfig>(defaultConfig);
 
-const endpointsQueryEnabled = atom<boolean>({
-  key: 'endpointsQueryEnabled',
-  default: true,
-});
+const endpointsQueryEnabled = atom<boolean>(true);
 
-const endpointsFilter = selector({
-  key: 'endpointsFilter',
-  get: ({ get }) => {
-    const config = get(endpointsConfig) || {};
+const endpointsFilter = atom((get) => {
+  const config = get(endpointsConfig) || {};
 
-    const filter = {};
-    for (const key of Object.keys(config)) {
-      filter[key] = !!config[key];
-    }
-    return filter;
-  },
+  const filter = {};
+  for (const key of Object.keys(config)) {
+    filter[key] = !!config[key];
+  }
+  return filter;
 });
 
 export default {

@@ -149,7 +149,7 @@ importers:
         version: 0.4.1
       '@hanzochat/agents':
         specifier: ^3.2.63
-        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)
+        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)
       '@hanzochat/api':
         specifier: workspace:*
         version: link:../packages/api
@@ -613,9 +613,6 @@ importers:
       react-virtualized:
         specifier: ^9.22.6
         version: 9.22.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      recoil:
-        specifier: ^0.7.7
-        version: 0.7.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       regenerator-runtime:
         specifier: ^0.14.1
         version: 0.14.1
@@ -808,7 +805,7 @@ importers:
         version: 0.4.1
       '@hanzochat/agents':
         specifier: ^3.2.63
-        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)
+        version: 3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)
       '@hanzochat/data-schemas':
         specifier: workspace:*
         version: link:../data-schemas
@@ -9101,9 +9098,6 @@ packages:
   hachure-fill@0.5.2:
     resolution: {integrity: sha512-3GKBOn+m2LX9iq+JC1064cSFprJY4jL1jCXTcpnfER5HYE2l/4EfWSGzkPa/ZDBmYI0ZOEj5VHV/eKnPGkHuOg==}
 
-  hamt_plus@1.0.2:
-    resolution: {integrity: sha512-t2JXKaehnMb9paaYA7J0BX8QQAY8lwfQ9Gjf4pg/mk4krt+cmwmU652HOoWonf+7+EQV97ARPMhhVgU1ra2GhA==}
-
   handlebars@4.7.8:
     resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
     engines: {node: '>=0.4.7'}
@@ -12047,18 +12041,6 @@ packages:
   readdirp@3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
-
-  recoil@0.7.7:
-    resolution: {integrity: sha512-8Og5KPQW9LwC577Vc7Ug2P0vQshkv1y3zG3tSSkWMqkWSwHmE+by06L8JtnGocjW6gcCvfwB3YtrJG6/tWivNQ==}
-    peerDependencies:
-      react: '>=16.13.1'
-      react-dom: '*'
-      react-native: '*'
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-native:
-        optional: true
 
   redent@3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
@@ -17496,7 +17478,7 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  '@hanzochat/agents@3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)':
+  '@hanzochat/agents@3.2.63(@aws-sdk/credential-provider-node@3.972.72)(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(@smithy/signature-v4@5.6.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod@3.25.76)':
     dependencies:
       '@anthropic-ai/sdk': 0.103.0(zod@3.25.76)
       '@aws-sdk/client-bedrock-runtime': 3.1086.0
@@ -17514,7 +17496,7 @@ snapshots:
       '@langchain/textsplitters': 1.0.1(@langchain/core@1.2.2(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(openai@6.46.0(@aws-sdk/credential-provider-node@3.972.72)(@smithy/signature-v4@5.6.10)(ws@8.20.0)(zod@3.25.76))(ws@8.20.0))
       '@langchain/xai': 1.4.5(@aws-sdk/credential-provider-node@3.972.72)(@langchain/core@1.2.2(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(openai@6.46.0(@aws-sdk/credential-provider-node@3.972.72)(@smithy/signature-v4@5.6.10)(ws@8.20.0)(zod@3.25.76))(ws@8.20.0))(@smithy/signature-v4@5.6.10)(ws@8.20.0)
       '@langfuse/langchain': 5.9.1(@langchain/core@1.2.2(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))(openai@6.46.0(@aws-sdk/credential-provider-node@3.972.72)(@smithy/signature-v4@5.6.10)(ws@8.20.0)(zod@3.25.76))(ws@8.20.0))(@opentelemetry/api@1.9.0)
-      '@langfuse/otel': 5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))
+      '@langfuse/otel': 5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))
       '@langfuse/tracing': 5.9.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/context-async-hooks': 2.9.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-node': 0.220.0(@opentelemetry/api@1.9.0)
@@ -18160,12 +18142,12 @@ snapshots:
       '@langfuse/tracing': 5.9.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/api': 1.9.0
 
-  '@langfuse/otel@5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))':
+  '@langfuse/otel@5.9.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0))(@opentelemetry/exporter-trace-otlp-http@0.212.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0))':
     dependencies:
       '@langfuse/core': 5.9.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-http': 0.220.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/exporter-trace-otlp-http': 0.212.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 2.9.0(@opentelemetry/api@1.9.0)
 
   '@langfuse/tracing@5.9.1(@opentelemetry/api@1.9.0)':
@@ -23759,8 +23741,6 @@ snapshots:
 
   hachure-fill@0.5.2: {}
 
-  hamt_plus@1.0.2: {}
-
   handlebars@4.7.8:
     dependencies:
       minimist: 1.2.8
@@ -27372,13 +27352,6 @@ snapshots:
   readdirp@3.6.0:
     dependencies:
       picomatch: 2.3.1
-
-  recoil@0.7.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      hamt_plus: 1.0.2
-      react: 18.3.1
-    optionalDependencies:
-      react-dom: 18.3.1(react@18.3.1)
 
   redent@3.0.0:
     dependencies:

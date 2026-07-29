@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { TextareaAutosize } from '@hanzochat/client';
 import { ContentTypes } from '@hanzochat/data-provider';
@@ -35,7 +35,7 @@ const EditTextPart = ({
     [getMessages, messageId],
   );
 
-  const chatDirection = useRecoilValue(store.chatDirection);
+  const chatDirection = useAtomValue(store.chatDirection);
 
   const getAddedConvo = useGetAddedConvo();
 

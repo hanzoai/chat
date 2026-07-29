@@ -9,7 +9,7 @@ import {
   useRef,
   startTransition,
 } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
 import { Skeleton, useMediaQuery } from '@hanzochat/client';
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
@@ -89,7 +89,7 @@ const Nav = memo(
       permission: Permissions.USE,
     });
 
-    const search = useRecoilValue(store.search);
+    const search = useAtomValue(store.search);
 
     const { data, fetchNextPage, isFetchingNextPage, isLoading, isFetching, refetch } =
       useConversationsInfiniteQuery(

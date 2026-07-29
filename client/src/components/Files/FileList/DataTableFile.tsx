@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ListFilter } from 'lucide-react';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import {
   flexRender,
   getCoreRowModel,
@@ -60,7 +60,7 @@ export default function DataTableFile<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const localize = useLocalize();
-  const setFiles = useSetRecoilState(store.filesByIndex(0));
+  const setFiles = useSetAtom(store.filesByIndex(0));
   const [isDeleting, setIsDeleting] = React.useState(false);
   const { deleteFiles } = useDeleteFilesFromTable(() => setIsDeleting(false));
 

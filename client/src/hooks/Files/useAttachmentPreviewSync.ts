@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useRecoilCallback, useSetRecoilState } from 'recoil';
+import { useCallback, useEffect, useRef } from 'react';
+import { useSetAtom } from 'jotai';
+import { useAtomCallback } from 'jotai/utils';
 import type { TAttachment, TFile, TFilePreview } from '@hanzochat/data-provider';
 import { useFilePreview } from '~/data-provider';
 import store from '~/store';
@@ -59,19 +60,17 @@ interface UseAttachmentPreviewSyncResult {
 export default function useAttachmentPreviewSync(
   attachment: TAttachment | undefined,
 ): UseAttachmentPreviewSyncResult {
-  const setAttachmentsMap = useSetRecoilState(store.messageAttachmentsMap);
-  /* `useRecoilCallback` reads/writes without subscribing this hook to
-   * the per-file_id flag — we only ever set it on the pending→ready
-   * edge, so subscribing would cause needless re-renders. */
-  const flagJustResolved = useRecoilCallback(
-    ({ set }) =>
-      (id: string) => {
-        set(store.previewJustResolved(id), true);
-      },
-    [],
+  const setAttachmentsMap = useSetAtom(store.messageAttachmentsMap);
+  /* `useAtomCallback` writes without subscribing this hook to the
+   * per-file_id flag — we only ever set it on the pending→ready edge,
+   * so subscribing would cause needless re-renders. */
+  const flagJustResolved = useAtomCallback(
+    useCallback((_get, set, id: string) => {
+      set(store.previewJustResolved(id), true);
+    }, []),
   );
   /* Capture `isAnySubmitting` at first render via a non-subscribing
-   * snapshot read. Mirrors `ToolArtifactCard`'s `mountedDuringStreamRef`
+   * store read. Mirrors `ToolArtifactCard`'s `mountedDuringStreamRef`
    * pattern so this hook applies the same "is the user actively in a
    * turn?" classification as the card itself. The ref is the gate that
    * distinguishes a *fresh* deferred-preview resolution (auto-open
@@ -83,11 +82,8 @@ export default function useAttachmentPreviewSync(
    * every time the polling layer caught up — which is exactly the
    * pre-PR "panel pops open on every visit" UX the team explicitly
    * removed. */
-  const readInitialIsSubmitting = useRecoilCallback(
-    ({ snapshot }) =>
-      () =>
-        snapshot.getLoadable(store.isSubmittingFamily(0)).valueMaybe() ?? false,
-    [],
+  const readInitialIsSubmitting = useAtomCallback(
+    useCallback((get) => get(store.isSubmittingFamily(0)) ?? false, []),
   );
   const mountedDuringStreamRef = useRef<boolean | null>(null);
   if (mountedDuringStreamRef.current === null) {

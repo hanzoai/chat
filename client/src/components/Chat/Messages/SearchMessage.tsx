@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useAuthContext, useLocalize } from '~/hooks';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import MinimalHoverButtons from '~/components/Chat/Messages/MinimalHoverButtons';
@@ -37,7 +37,7 @@ const MessageBody = ({ message, messageLabel, fontSize }) => (
 
 export default function SearchMessage({ message }: Pick<TMessageProps, 'message'>) {
   const fontSize = useAtomValue(fontSizeAtom);
-  const UsernameDisplay = useRecoilValue<boolean>(store.UsernameDisplay);
+  const UsernameDisplay = useAtomValue<boolean>(store.UsernameDisplay);
   const { user } = useAuthContext();
   const localize = useLocalize();
 

@@ -15,7 +15,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { RecoilRoot, useRecoilValue } from 'recoil';
+import { Provider, useAtomValue } from 'jotai';
 import { QueryClient } from '@tanstack/react-query';
 import { Tools } from '@hanzochat/data-provider';
 import type { ReactNode } from 'react';
@@ -23,7 +23,7 @@ import type { TAttachment, EventSubmission } from '@hanzochat/data-provider';
 import useAttachmentHandler from '../useAttachmentHandler';
 import store from '~/store';
 
-const wrapper = ({ children }: { children: ReactNode }) => <RecoilRoot>{children}</RecoilRoot>;
+const wrapper = ({ children }: { children: ReactNode }) => <Provider>{children}</Provider>;
 
 const submission = {} as EventSubmission;
 const messageId = 'msg-1';
@@ -44,7 +44,7 @@ function makeAttachment(overrides: Partial<TAttachment>): TAttachment {
 }
 
 /* Co-mount the handler and a reader of the messageAttachmentsMap atom in
- * the same RecoilRoot so each act() shows the post-write state. The
+ * the same Provider so each act() shows the post-write state. The
  * `attachmentsMap` ref is mutated by the reader on every render, so
  * callers read it after their `act()` to assert.
  *
@@ -58,7 +58,7 @@ function setup() {
   const { result } = renderHook(
     () => {
       const handler = useAttachmentHandler(queryClient);
-      const map = useRecoilValue(store.messageAttachmentsMap);
+      const map = useAtomValue(store.messageAttachmentsMap);
       ref.current = map;
       return handler;
     },
@@ -259,7 +259,7 @@ describe('useAttachmentHandler upsert-by-file_id', () => {
       const { result } = renderHook(
         () => {
           const handler = useAttachmentHandler(queryClient);
-          const map = useRecoilValue(store.messageAttachmentsMap);
+          const map = useAtomValue(store.messageAttachmentsMap);
           ref.current = map;
           return handler;
         },

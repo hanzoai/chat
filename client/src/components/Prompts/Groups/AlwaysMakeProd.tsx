@@ -1,4 +1,4 @@
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Switch } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
@@ -11,7 +11,7 @@ export default function AlwaysMakeProd({
   onCheckedChange?: (value: boolean) => void;
   className?: string;
 }) {
-  const [alwaysMakeProd, setAlwaysMakeProd] = useRecoilState<boolean>(store.alwaysMakeProd);
+  const [alwaysMakeProd, setAlwaysMakeProd] = useAtom<boolean>(store.alwaysMakeProd);
   const localize = useLocalize();
 
   const handleCheckedChange = (value: boolean) => {

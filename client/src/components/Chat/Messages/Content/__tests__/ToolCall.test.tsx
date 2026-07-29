@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { Tools } from '@hanzochat/data-provider';
 import ToolCall from '../ToolCall';
 
@@ -80,8 +80,8 @@ describe('ToolCall', () => {
     isSubmitting: false,
   };
 
-  const renderWithRecoil = (component: React.ReactElement) => {
-    return render(<RecoilRoot>{component}</RecoilRoot>);
+  const renderWithStore = (component: React.ReactElement) => {
+    return render(<Provider>{component}</Provider>);
   };
 
   beforeEach(() => {
@@ -102,7 +102,7 @@ describe('ToolCall', () => {
         },
       ];
 
-      renderWithRecoil(<ToolCall {...mockProps} attachments={attachments} />);
+      renderWithStore(<ToolCall {...mockProps} attachments={attachments} />);
 
       fireEvent.click(screen.getByText('Completed testFunction'));
 
@@ -114,7 +114,7 @@ describe('ToolCall', () => {
     });
 
     it('should pass empty array when no attachments', () => {
-      renderWithRecoil(<ToolCall {...mockProps} />);
+      renderWithStore(<ToolCall {...mockProps} />);
 
       fireEvent.click(screen.getByText('Completed testFunction'));
 
@@ -145,7 +145,7 @@ describe('ToolCall', () => {
         },
       ];
 
-      renderWithRecoil(<ToolCall {...mockProps} attachments={attachments} />);
+      renderWithStore(<ToolCall {...mockProps} attachments={attachments} />);
 
       fireEvent.click(screen.getByText('Completed testFunction'));
 
@@ -169,7 +169,7 @@ describe('ToolCall', () => {
         },
       ];
 
-      renderWithRecoil(<ToolCall {...mockProps} attachments={attachments} />);
+      renderWithStore(<ToolCall {...mockProps} attachments={attachments} />);
 
       const attachmentGroup = screen.getByTestId('attachment-group');
       expect(attachmentGroup).toBeInTheDocument();
@@ -177,13 +177,13 @@ describe('ToolCall', () => {
     });
 
     it('should not render AttachmentGroup when no attachments', () => {
-      renderWithRecoil(<ToolCall {...mockProps} />);
+      renderWithStore(<ToolCall {...mockProps} />);
 
       expect(screen.queryByTestId('attachment-group')).not.toBeInTheDocument();
     });
 
     it('should not render AttachmentGroup when attachments is empty array', () => {
-      renderWithRecoil(<ToolCall {...mockProps} attachments={[]} />);
+      renderWithStore(<ToolCall {...mockProps} attachments={[]} />);
 
       expect(screen.queryByTestId('attachment-group')).not.toBeInTheDocument();
     });
@@ -191,7 +191,7 @@ describe('ToolCall', () => {
 
   describe('tool call info visibility', () => {
     it('should toggle tool call info when clicking header', () => {
-      renderWithRecoil(<ToolCall {...mockProps} />);
+      renderWithStore(<ToolCall {...mockProps} />);
 
       // Initially closed
       expect(screen.queryByTestId('tool-call-info')).not.toBeInTheDocument();
@@ -225,7 +225,7 @@ describe('ToolCall', () => {
         attachments,
       };
 
-      renderWithRecoil(<ToolCall {...propsWithDomain} />);
+      renderWithStore(<ToolCall {...propsWithDomain} />);
 
       fireEvent.click(screen.getByText('Completed action on test.domain.com'));
 
@@ -246,7 +246,7 @@ describe('ToolCall', () => {
       const originalOpen = window.open;
       window.open = jest.fn();
 
-      renderWithRecoil(
+      renderWithStore(
         <ToolCall
           {...mockProps}
           initialProgress={0.5} // Less than 1 so it's not complete
@@ -269,7 +269,7 @@ describe('ToolCall', () => {
     });
 
     it('should pass pendingAuth as true when auth is pending', () => {
-      renderWithRecoil(
+      renderWithStore(
         <ToolCall
           {...mockProps}
           auth="https://auth.example.com" // Need auth URL to extract domain
@@ -286,7 +286,7 @@ describe('ToolCall', () => {
     });
 
     it('should not show auth section when cancelled', () => {
-      renderWithRecoil(
+      renderWithStore(
         <ToolCall
           {...mockProps}
           auth="https://auth.example.com"
@@ -300,7 +300,7 @@ describe('ToolCall', () => {
     });
 
     it('should not show auth section when progress is complete', () => {
-      renderWithRecoil(
+      renderWithStore(
         <ToolCall
           {...mockProps}
           auth="https://auth.example.com"
@@ -316,7 +316,7 @@ describe('ToolCall', () => {
 
   describe('edge cases', () => {
     it('should handle undefined args', () => {
-      renderWithRecoil(<ToolCall {...mockProps} args={undefined} />);
+      renderWithStore(<ToolCall {...mockProps} args={undefined} />);
 
       fireEvent.click(screen.getByText('Completed testFunction'));
 
@@ -326,7 +326,7 @@ describe('ToolCall', () => {
     });
 
     it('should handle null output', () => {
-      renderWithRecoil(<ToolCall {...mockProps} output={null} />);
+      renderWithStore(<ToolCall {...mockProps} output={null} />);
 
       fireEvent.click(screen.getByText('Completed testFunction'));
 
@@ -336,7 +336,7 @@ describe('ToolCall', () => {
     });
 
     it('should handle missing domain', () => {
-      renderWithRecoil(<ToolCall {...mockProps} domain={undefined} authDomain={undefined} />);
+      renderWithStore(<ToolCall {...mockProps} domain={undefined} authDomain={undefined} />);
 
       fireEvent.click(screen.getByText('Completed testFunction'));
 
@@ -367,7 +367,7 @@ describe('ToolCall', () => {
         },
       ];
 
-      renderWithRecoil(<ToolCall {...mockProps} attachments={complexAttachments} />);
+      renderWithStore(<ToolCall {...mockProps} attachments={complexAttachments} />);
 
       fireEvent.click(screen.getByText('Completed testFunction'));
 

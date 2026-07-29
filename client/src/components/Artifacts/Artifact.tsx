@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import throttle from 'lodash/throttle';
 import { visit } from 'unist-util-visit';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { useLocation } from 'react-router-dom';
 import type { Pluggable } from 'unified';
 import type { Artifact } from '~/common';
@@ -51,7 +51,7 @@ export function Artifact({
   const { getNextIndex, resetCounter } = useArtifactContext();
   const artifactIndex = useRef(getNextIndex(false)).current;
 
-  const setArtifacts = useSetRecoilState(artifactsState);
+  const setArtifacts = useSetAtom(artifactsState);
   const [artifact, setArtifact] = useState<Artifact | null>(null);
 
   const throttledUpdateRef = useRef(

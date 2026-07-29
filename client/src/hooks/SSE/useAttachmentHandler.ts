@@ -1,4 +1,4 @@
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryKeys, Tools } from '@hanzochat/data-provider';
 import type {
@@ -11,7 +11,7 @@ import { handleMemoryArtifact } from '~/utils/memory';
 import store from '~/store';
 
 export default function useAttachmentHandler(queryClient?: QueryClient) {
-  const setAttachmentsMap = useSetRecoilState(store.messageAttachmentsMap);
+  const setAttachmentsMap = useSetAtom(store.messageAttachmentsMap);
 
   return ({ data }: { data: TAttachment; submission: EventSubmission }) => {
     const { messageId } = data;

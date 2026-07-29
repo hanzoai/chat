@@ -9,7 +9,7 @@ import {
   createContext,
 } from 'react';
 import { debounce } from 'lodash';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { useNavigate } from 'react-router-dom';
 import { setTokenHeader, SystemRoles } from '@hanzochat/data-provider';
 import type * as t from '@hanzochat/data-provider';
@@ -36,7 +36,7 @@ const AuthContextProvider = ({
   authConfig?: TAuthConfig;
   children: ReactNode;
 }) => {
-  const [user, setUser] = useRecoilState(store.user);
+  const [user, setUser] = useAtom(store.user);
   const [token, setToken] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);

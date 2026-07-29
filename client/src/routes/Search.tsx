@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { Spinner, useToastContext } from '@hanzochat/client';
 import MinimalMessagesWrapper from '~/components/Chat/Messages/MinimalMessages';
 import { useNavScrolling, useLocalize, useAuthContext } from '~/hooks';
@@ -13,7 +13,7 @@ export default function Search() {
   const fileMap = useFileMapContext();
   const { showToast } = useToastContext();
   const { isAuthenticated } = useAuthContext();
-  const search = useRecoilValue(store.search);
+  const search = useAtomValue(store.search);
   const searchQuery = search.debouncedQuery;
 
   const {

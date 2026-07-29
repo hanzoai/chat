@@ -1,5 +1,5 @@
 import { memo, Suspense, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { DelayedRender } from '@hanzochat/client';
 import type { TMessage } from '@hanzochat/data-provider';
 import type { TMessageContentProps, TDisplayProps } from '~/common';
@@ -93,7 +93,7 @@ export const ErrorMessage = ({
 
 const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplayProps) => {
   const { isSubmitting = false, isLatestMessage = false } = useMessageContext();
-  const enableUserMsgMarkdown = useRecoilValue(store.enableUserMsgMarkdown);
+  const enableUserMsgMarkdown = useAtomValue(store.enableUserMsgMarkdown);
 
   const showCursorState = useMemo(
     () => showCursor === true && isSubmitting,

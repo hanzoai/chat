@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Dropdown } from '@hanzochat/client';
 import type { Option } from '~/common';
 import { useLocalize, useTTSBrowser, useTTSExternal } from '~/hooks';
@@ -9,7 +9,7 @@ import store from '~/store';
 export function BrowserVoiceDropdown() {
   const localize = useLocalize();
   const { voices = [] } = useTTSBrowser();
-  const [voice, setVoice] = useRecoilState(store.voice);
+  const [voice, setVoice] = useAtom(store.voice);
 
   const handleVoiceChange = (newValue?: string | Option) => {
     logger.log('Browser Voice changed:', newValue);
@@ -41,7 +41,7 @@ export function BrowserVoiceDropdown() {
 export function ExternalVoiceDropdown() {
   const localize = useLocalize();
   const { voices = [] } = useTTSExternal();
-  const [voice, setVoice] = useRecoilState(store.voice);
+  const [voice, setVoice] = useAtom(store.voice);
 
   const handleVoiceChange = (newValue?: string | Option) => {
     logger.log('External Voice changed:', newValue);

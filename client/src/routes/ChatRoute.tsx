@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { Spinner, useToastContext } from '@hanzochat/client';
 import { Constants, EModelEndpoint } from '@hanzochat/data-provider';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
@@ -29,14 +29,8 @@ export default function ChatRoute() {
   // an authenticated user, minus the capability-gated queries below.
   const canChat = isAuthenticated || isGuest;
 
-  const defaultTemporaryChat = useRecoilValue(temporaryStore.defaultTemporaryChat);
-  const setIsTemporary = useRecoilCallback(
-    ({ set }) =>
-      (value: boolean) => {
-        set(temporaryStore.isTemporary, value);
-      },
-    [],
-  );
+  const defaultTemporaryChat = useAtomValue(temporaryStore.defaultTemporaryChat);
+  const setIsTemporary = useSetAtom(temporaryStore.isTemporary);
   useAppStartup({ startupConfig, user });
 
   const index = 0;

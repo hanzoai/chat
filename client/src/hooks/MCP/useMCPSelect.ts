@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Constants, LocalStorageKeys } from '@hanzochat/data-provider';
 import { ephemeralAgentByConvoId, mcpValuesAtomFamily, mcpPinnedAtom } from '~/store';
 import { setTimestamp } from '~/utils/timestamps';
@@ -31,7 +31,7 @@ export function useMCPSelect({
 
   const [isPinned, setIsPinned] = useAtom(mcpPinnedAtom);
   const [mcpValues, setMCPValuesRaw] = useAtom(mcpValuesAtomFamily(mcpAtomKey));
-  const [ephemeralAgent, setEphemeralAgent] = useRecoilState(ephemeralAgentByConvoId(key));
+  const [ephemeralAgent, setEphemeralAgent] = useAtom(ephemeralAgentByConvoId(key));
 
   // Sync ephemeral agent MCP → Jotai atom (strip unconfigured servers)
   useEffect(() => {

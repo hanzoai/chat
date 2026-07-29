@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { useRecoilCallback } from 'recoil';
-import { useRecoilValue } from 'recoil';
+import { useCallback, useMemo } from 'react';
+import { useAtomValue } from 'jotai';
+import { RESET, useAtomCallback } from 'jotai/utils';
 import { MessageCircleDashed, Box } from 'lucide-react';
 import type { BadgeItem } from '~/common';
 import { useLocalize, TranslationKeys } from '~/hooks';
@@ -25,7 +25,7 @@ const badgeConfig: ReadonlyArray<ChatBadgeConfig> = [
 
 export default function useChatBadges(): BadgeItem[] {
   const localize = useLocalize();
-  const activeBadges = useRecoilValue(store.chatBadges) as Array<{ id: string }>;
+  const activeBadges = useAtomValue(store.chatBadges) as Array<{ id: string }>;
   const activeBadgeIds = useMemo(
     () => new Set(activeBadges.map((badge) => badge.id)),
     [activeBadges],
@@ -45,12 +45,10 @@ export default function useChatBadges(): BadgeItem[] {
 }
 
 export function useResetChatBadges() {
-  return useRecoilCallback(
-    ({ reset }) =>
-      () => {
-        badgeConfig.forEach(({ atom }) => reset(atom));
-        reset(store.chatBadges);
-      },
-    [],
+  return useAtomCallback(
+    useCallback((_get, set) => {
+      badgeConfig.forEach(({ atom }) => set(atom, RESET));
+      set(store.chatBadges, RESET);
+    }, []),
   );
 }

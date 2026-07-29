@@ -1,61 +1,47 @@
-import { atom, selectorFamily } from 'recoil';
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 import { TAttachment } from '@hanzochat/data-provider';
 import { atomWithLocalStorage } from './utils';
 import { BadgeItem } from '~/common';
 
 const hideBannerHint = atomWithLocalStorage('hideBannerHint', [] as string[]);
 
-const messageAttachmentsMap = atom<Record<string, TAttachment[] | undefined>>({
-  key: 'messageAttachmentsMap',
-  default: {},
-});
+const messageAttachmentsMap = atom<Record<string, TAttachment[] | undefined>>({});
 
 /**
  * Selector to get attachments for a specific conversation.
  */
-const conversationAttachmentsSelector = selectorFamily<
-  Record<string, TAttachment[]>,
-  string | undefined
->({
-  key: 'conversationAttachments',
-  get:
-    (conversationId) =>
-    ({ get }) => {
-      if (!conversationId) {
-        return {};
+const conversationAttachmentsSelector = atomFamily((conversationId: string | undefined) =>
+  atom((get): Record<string, TAttachment[]> => {
+    if (!conversationId) {
+      return {};
+    }
+
+    const attachmentsMap = get(messageAttachmentsMap);
+    const result: Record<string, TAttachment[]> = {};
+
+    // Filter to only include attachments for this conversation
+    Object.entries(attachmentsMap).forEach(([messageId, attachments]) => {
+      if (!attachments || attachments.length === 0) {
+        return;
       }
 
-      const attachmentsMap = get(messageAttachmentsMap);
-      const result: Record<string, TAttachment[]> = {};
+      const relevantAttachments = attachments.filter(
+        (attachment) => attachment.conversationId === conversationId,
+      );
 
-      // Filter to only include attachments for this conversation
-      Object.entries(attachmentsMap).forEach(([messageId, attachments]) => {
-        if (!attachments || attachments.length === 0) {
-          return;
-        }
+      if (relevantAttachments.length > 0) {
+        result[messageId] = relevantAttachments;
+      }
+    });
 
-        const relevantAttachments = attachments.filter(
-          (attachment) => attachment.conversationId === conversationId,
-        );
+    return result;
+  }),
+);
 
-        if (relevantAttachments.length > 0) {
-          result[messageId] = relevantAttachments;
-        }
-      });
+const queriesEnabled = atom<boolean>(true);
 
-      return result;
-    },
-});
-
-const queriesEnabled = atom<boolean>({
-  key: 'queriesEnabled',
-  default: true,
-});
-
-const isEditingBadges = atom<boolean>({
-  key: 'isEditingBadges',
-  default: false,
-});
+const isEditingBadges = atom<boolean>(false);
 
 const chatBadges = atomWithLocalStorage<Pick<BadgeItem, 'id'>[]>('chatBadges', [
   // When adding new badges, make sure to add them to useChatBadges.ts as well and add them as last item

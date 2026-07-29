@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { ListFilter, User, Share2 } from 'lucide-react';
 import { SystemCategories } from '@hanzochat/data-provider';
 import { Dropdown, FilterInput } from '@hanzochat/client';
@@ -20,7 +20,7 @@ export default function FilterPrompts({
   const { name, setName, hasAccess, promptGroups } = usePromptGroupsContext();
   const { categories } = useCategories({ className: 'h-4 w-4', hasAccess });
   const [searchTerm, setSearchTerm] = useState(name || '');
-  const [categoryFilter, setCategory] = useRecoilState(store.promptsCategory);
+  const [categoryFilter, setCategory] = useAtom(store.promptsCategory);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const prevNameRef = useRef(name);
 

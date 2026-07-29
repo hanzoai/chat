@@ -1,4 +1,5 @@
-import { useRecoilCallback } from 'recoil';
+import { useCallback } from 'react';
+import { RESET, useAtomCallback } from 'jotai/utils';
 import { clearLocalStorage } from '~/utils/localStorage';
 import store from '~/store';
 
@@ -7,43 +8,46 @@ export default function useClearStates() {
   const clearSubmissions = store.useClearSubmissionState();
   const clearLatestMessages = store.useClearLatestMessages();
 
-  const clearStates = useRecoilCallback(
-    ({ reset, snapshot }) =>
-      async (skipFirst?: boolean) => {
+  const clearStates = useAtomCallback(
+    useCallback(
+      async (get, set, skipFirst?: boolean) => {
+        /** Read the keys BEFORE the clears below reset `conversationKeysAtom`,
+         * otherwise there is nothing left to iterate. */
+        const keys = get(store.conversationKeysAtom);
+
         await clearSubmissions(skipFirst);
         await clearConversations(skipFirst);
         await clearLatestMessages(skipFirst);
-
-        const keys = await snapshot.getPromise(store.conversationKeysAtom);
 
         for (const key of keys) {
           if (skipFirst === true && key === 0) {
             continue;
           }
 
-          reset(store.filesByIndex(key));
-          reset(store.presetByIndex(key));
-          reset(store.textByIndex(key));
-          reset(store.showStopButtonByIndex(key));
-          reset(store.abortScrollFamily(key));
-          reset(store.isSubmittingFamily(key));
-          reset(store.optionSettingsFamily(key));
-          reset(store.showPopoverFamily(key));
-          reset(store.showMentionPopoverFamily(key));
-          reset(store.showPlusPopoverFamily(key));
-          reset(store.showPromptsPopoverFamily(key));
-          reset(store.activePromptByIndex(key));
-          reset(store.globalAudioURLFamily(key));
-          reset(store.globalAudioFetchingFamily(key));
-          reset(store.globalAudioPlayingFamily(key));
-          reset(store.activeRunFamily(key));
-          reset(store.audioRunFamily(key));
-          reset(store.messagesSiblingIdxFamily(key.toString()));
+          set(store.filesByIndex(key), RESET);
+          set(store.presetByIndex(key), RESET);
+          set(store.textByIndex(key), RESET);
+          set(store.showStopButtonByIndex(key), RESET);
+          set(store.abortScrollFamily(key), RESET);
+          set(store.isSubmittingFamily(key), RESET);
+          set(store.optionSettingsFamily(key), RESET);
+          set(store.showPopoverFamily(key), RESET);
+          set(store.showMentionPopoverFamily(key), RESET);
+          set(store.showPlusPopoverFamily(key), RESET);
+          set(store.showPromptsPopoverFamily(key), RESET);
+          set(store.activePromptByIndex(key), RESET);
+          set(store.globalAudioURLFamily(key), RESET);
+          set(store.globalAudioFetchingFamily(key), RESET);
+          set(store.globalAudioPlayingFamily(key), RESET);
+          set(store.activeRunFamily(key), RESET);
+          set(store.audioRunFamily(key), RESET);
+          set(store.messagesSiblingIdxFamily(key.toString()), RESET);
         }
 
         clearLocalStorage(skipFirst);
       },
-    [],
+      [clearSubmissions, clearConversations, clearLatestMessages],
+    ),
   );
 
   return clearStates;

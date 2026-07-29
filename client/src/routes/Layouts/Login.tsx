@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { useAuthContext } from '~/hooks/AuthContext';
 import StartupLayout from './Startup';
 import store from '~/store';
 
 export default function LoginLayout() {
   const { isAuthenticated } = useAuthContext();
-  const [queriesEnabled, setQueriesEnabled] = useRecoilState<boolean>(store.queriesEnabled);
+  const [queriesEnabled, setQueriesEnabled] = useAtom<boolean>(store.queriesEnabled);
   useEffect(() => {
     if (queriesEnabled) {
       return;

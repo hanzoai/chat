@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import TagManager from 'react-gtm-module';
 import { LocalStorageKeys } from '@hanzochat/data-provider';
 import type { TStartupConfig, TUser } from '@hanzochat/data-provider';
@@ -15,7 +15,7 @@ export default function useAppStartup({
   startupConfig?: TStartupConfig;
   user?: TUser;
 }) {
-  const [defaultPreset, setDefaultPreset] = useRecoilState(store.defaultPreset);
+  const [defaultPreset, setDefaultPreset] = useAtom(store.defaultPreset);
 
   useSpeechSettingsInit(!!user);
   const { data: loadedServers, isLoading: serversLoading } = useMCPServersQuery();

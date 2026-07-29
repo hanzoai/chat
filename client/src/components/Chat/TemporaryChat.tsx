@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TooltipAnchor } from '@hanzochat/client';
 import { MessageCircleDashed } from 'lucide-react';
-import { useRecoilState, useRecoilCallback } from 'recoil';
+import { useAtom } from 'jotai';
 import { useChatContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
@@ -9,7 +9,7 @@ import store from '~/store';
 
 export function TemporaryChat() {
   const localize = useLocalize();
-  const [isTemporary, setIsTemporary] = useRecoilState(store.isTemporary);
+  const [isTemporary, setIsTemporary] = useAtom(store.isTemporary);
   const { conversation, isSubmitting } = useChatContext();
 
   const temporaryBadge = {
@@ -18,12 +18,9 @@ export function TemporaryChat() {
     isAvailable: true,
   };
 
-  const handleBadgeToggle = useRecoilCallback(
-    () => () => {
-      setIsTemporary(!isTemporary);
-    },
-    [isTemporary],
-  );
+  const handleBadgeToggle = useCallback(() => {
+    setIsTemporary(!isTemporary);
+  }, [isTemporary, setIsTemporary]);
 
   if (
     (Array.isArray(conversation?.messages) && conversation.messages.length >= 1) ||

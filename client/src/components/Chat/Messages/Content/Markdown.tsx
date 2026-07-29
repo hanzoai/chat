@@ -3,7 +3,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
 import rehypeKatex from 'rehype-katex';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import remarkDirective from 'remark-directive';
@@ -28,7 +28,7 @@ type TContentProps = {
 };
 
 const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
-  const LaTeXParsing = useRecoilValue<boolean>(store.LaTeXParsing);
+  const LaTeXParsing = useAtomValue<boolean>(store.LaTeXParsing);
   const isInitializing = content === '';
 
   const currentContent = useMemo(() => {

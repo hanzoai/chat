@@ -1,14 +1,14 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithStorage } from 'jotai/utils';
 import { Constants, LocalStorageKeys } from '@hanzochat/data-provider';
-import { createTabIsolatedStorage } from './jotai-utils';
+import { tabStorage } from './utils';
 
 /**
  * Tab-isolated storage for MCP values — prevents cross-tab sync so that
  * each tab's MCP server selections are independent (especially for new chats
  * which all share the same `LAST_MCP_new` localStorage key).
  */
-const mcpTabIsolatedStorage = createTabIsolatedStorage<string[]>();
+const mcpTabIsolatedStorage = tabStorage<string[]>();
 
 /**
  * Creates a storage atom for MCP values per conversation

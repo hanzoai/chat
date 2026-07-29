@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -30,7 +30,7 @@ const useNavigateToConvo = (index = 0) => {
   const queryClient = useQueryClient();
   const clearAllConversations = store.useClearConvoState();
   const applyModelSpecEffects = useApplyModelSpecEffects();
-  const setSubmission = useSetRecoilState(store.submissionByIndex(index));
+  const setSubmission = useSetAtom(store.submissionByIndex(index));
   const clearAllLatestMessages = store.useClearLatestMessages(`useNavigateToConvo ${index}`);
   const { hasSetConversation, setConversation: setConvo } = store.useCreateConversationAtom(index);
 

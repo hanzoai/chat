@@ -1,7 +1,8 @@
 import React from 'react';
 import { act, render } from '@testing-library/react';
-import { RecoilRoot, useRecoilCallback, useSetRecoilState } from 'recoil';
-import type { MutableSnapshot } from 'recoil';
+import { Provider, useSetAtom } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import type { Artifact } from '~/common';
 import type { TConversation } from '@hanzochat/data-provider';
 import useResetArtifactsOnConversationChange from '../useResetArtifactsOnConversationChange';
@@ -27,17 +28,17 @@ interface HarnessHandle {
 
 const Harness = ({ handleRef }: { handleRef: React.MutableRefObject<HarnessHandle | null> }) => {
   useResetArtifactsOnConversationChange();
-  const setConvo = useSetRecoilState(store.conversationByIndex(0));
-  // useRecoilCallback's snapshot is read fresh at call time, so the test
+  const setConvo = useSetAtom(store.conversationByIndex(0));
+  // useJotaiCallback's snapshot is read fresh at call time, so the test
   // sees the latest committed atom values rather than a stale render-time
   // closure.
-  const readArtifacts = useRecoilCallback(
+  const readArtifacts = useJotaiCallback(
     ({ snapshot }) =>
       () =>
         snapshot.getLoadable(store.artifactsState).getValue(),
     [],
   );
-  const readCurrentId = useRecoilCallback(
+  const readCurrentId = useJotaiCallback(
     ({ snapshot }) =>
       () =>
         snapshot.getLoadable(store.currentArtifactId).getValue(),
@@ -59,16 +60,16 @@ const renderHarness = (initial: {
   artifacts: Record<string, Artifact>;
   currentId: string | null;
 }) => {
-  const initializeState = (snapshot: MutableSnapshot) => {
+  const initializeState = (snapshot: Store) => {
     snapshot.set(store.conversationByIndex(0), buildConversation(initial.conversationId));
     snapshot.set(store.artifactsState, initial.artifacts);
     snapshot.set(store.currentArtifactId, initial.currentId);
   };
   const handleRef: React.MutableRefObject<HarnessHandle | null> = { current: null };
   render(
-    <RecoilRoot initializeState={initializeState}>
+    <Provider store={seed(initializeState)}>
       <Harness handleRef={handleRef} />
-    </RecoilRoot>,
+    </Provider>,
   );
   if (!handleRef.current) {
     throw new Error('Harness did not attach handle');

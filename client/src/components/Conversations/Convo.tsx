@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useParams } from 'react-router-dom';
 import { Constants } from '@hanzochat/data-provider';
 import { useToastContext, useMediaQuery } from '@hanzochat/client';
@@ -35,7 +35,7 @@ export default function Conversation({
   const { data: endpointsConfig } = useGetEndpointsQuery();
   const currentConvoId = useMemo(() => params.conversationId, [params.conversationId]);
   const updateConvoMutation = useUpdateConversationMutation(currentConvoId ?? '');
-  const activeConvos = useRecoilValue(store.allConversationsSelector);
+  const activeConvos = useAtomValue(store.allConversationsSelector);
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const isShiftHeld = useShiftKey();
   const { conversationId, title = '' } = conversation;

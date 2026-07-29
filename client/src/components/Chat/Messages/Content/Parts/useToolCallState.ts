@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { isError } from '~/components/Chat/Messages/Content/ToolOutput';
 import { useProgress, useExpandCollapse } from '~/hooks';
 import store from '~/store';
@@ -23,7 +23,7 @@ export default function useToolCallState(
   hasInput: boolean,
   onExpand?: () => void,
 ): ToolCallState {
-  const autoExpand = useRecoilValue(store.autoExpandTools);
+  const autoExpand = useAtomValue(store.autoExpandTools);
   const hasOutput = output.length > 0;
   const hasError = hasOutput && isError(output);
   const hasContent = hasInput || hasOutput;

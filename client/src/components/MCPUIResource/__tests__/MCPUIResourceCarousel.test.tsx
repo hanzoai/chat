@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { MCPUIResourceCarousel } from '../MCPUIResourceCarousel';
 import { useMessageContext, useMessagesConversation, useMessagesOperations } from '~/Providers';
 
@@ -47,7 +47,7 @@ describe('MCPUIResourceCarousel', () => {
     } as any);
   });
 
-  const renderWithRecoil = (ui: React.ReactNode) => render(<RecoilRoot>{ui}</RecoilRoot>);
+  const renderWithStore = (ui: React.ReactNode) => render(<Provider>{ui}</Provider>);
 
   describe('multiple resource fetching', () => {
     it('should fetch resources by resourceIds across conversation messages', () => {
@@ -81,7 +81,7 @@ describe('MCPUIResourceCarousel', () => {
         },
       ];
 
-      renderWithRecoil(
+      renderWithStore(
         <MCPUIResourceCarousel node={{ properties: { resourceIds: ['id-2', 'id-1'] } }} />,
       );
 
@@ -108,7 +108,7 @@ describe('MCPUIResourceCarousel', () => {
         },
       ];
 
-      const { container } = renderWithRecoil(
+      const { container } = renderWithStore(
         <MCPUIResourceCarousel node={{ properties: { resourceIds: ['id1', 'id2'] } }} />,
       );
 
@@ -136,7 +136,7 @@ describe('MCPUIResourceCarousel', () => {
         },
       ];
 
-      const { container } = renderWithRecoil(
+      const { container } = renderWithStore(
         <MCPUIResourceCarousel node={{ properties: { resourceIds: ['non-existent-id'] } }} />,
       );
 
@@ -156,7 +156,7 @@ describe('MCPUIResourceCarousel', () => {
         },
       ];
 
-      const { container } = renderWithRecoil(
+      const { container } = renderWithStore(
         <MCPUIResourceCarousel node={{ properties: { resourceIds: ['id1', 'id2'] } }} />,
       );
 
@@ -185,7 +185,7 @@ describe('MCPUIResourceCarousel', () => {
         },
       ];
 
-      const { container } = renderWithRecoil(
+      const { container } = renderWithStore(
         <MCPUIResourceCarousel node={{ properties: { resourceIds: [] } }} />,
       );
 
@@ -218,7 +218,7 @@ describe('MCPUIResourceCarousel', () => {
         },
       ];
 
-      renderWithRecoil(
+      renderWithStore(
         <MCPUIResourceCarousel
           node={{ properties: { resourceIds: ['id-a', 'id-a', 'id-b', 'id-b', 'id-a'] } }}
         />,
@@ -239,7 +239,7 @@ describe('MCPUIResourceCarousel', () => {
     it('should handle null messages data', () => {
       currentTestMessages = [];
 
-      const { container } = renderWithRecoil(
+      const { container } = renderWithStore(
         <MCPUIResourceCarousel node={{ properties: { resourceIds: ['test-id'] } }} />,
       );
 
@@ -253,7 +253,7 @@ describe('MCPUIResourceCarousel', () => {
       } as any);
       currentTestMessages = [];
 
-      const { container } = renderWithRecoil(
+      const { container } = renderWithStore(
         <MCPUIResourceCarousel node={{ properties: { resourceIds: ['test-id'] } }} />,
       );
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EModelEndpoint } from '@hanzochat/data-provider';
 import AttachFileMenu from '../AttachFileMenu';
@@ -151,9 +151,9 @@ describe('AttachFileMenu', () => {
   const renderAttachFileMenu = (props: any = {}) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <RecoilRoot>
+        <Provider>
           <AttachFileMenu conversationId="test-conversation" {...props} />
-        </RecoilRoot>
+        </Provider>
       </QueryClientProvider>,
     );
   };

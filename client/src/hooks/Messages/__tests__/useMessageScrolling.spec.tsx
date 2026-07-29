@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import type { TConversation, TMessage } from '@hanzochat/data-provider';
 import {
@@ -157,11 +157,11 @@ function renderScrolling({
   messagesTree?: TMessage[] | null;
 } = {}) {
   return render(
-    <RecoilRoot>
+    <Provider>
       <MessagesViewContext.Provider value={createContextValue(contextOverrides)}>
         <ScrollingHarness messagesTree={messagesTree} />
       </MessagesViewContext.Provider>
-    </RecoilRoot>,
+    </Provider>,
   );
 }
 

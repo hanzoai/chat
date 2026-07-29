@@ -1,6 +1,6 @@
 import { memo, useId, useLayoutEffect } from 'react';
 import { Download } from 'lucide-react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import type { TAttachment, TFile, TAttachmentMetadata } from '@hanzochat/data-provider';
 import Mermaid from '~/components/Messages/Content/Mermaid/Mermaid';
 import { toolArtifactKey } from '~/utils/artifacts';
@@ -28,7 +28,7 @@ const ToolMermaidArtifact = memo(({ attachment, text }: ToolMermaidArtifactProps
   const localize = useLocalize();
   const file = attachment as TFile & TAttachmentMetadata;
   const claimKey = useId();
-  const [claim, setClaim] = useRecoilState(store.toolArtifactClaim(toolArtifactKey(file)));
+  const [claim, setClaim] = useAtom(store.toolArtifactClaim(toolArtifactKey(file)));
   const isMyClaim = claim === claimKey;
 
   useLayoutEffect(() => {

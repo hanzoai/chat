@@ -1,5 +1,5 @@
 import { Suspense, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { DelayedRender } from '@hanzochat/client';
 import { ContentTypes } from '@hanzochat/data-provider';
 import type {
@@ -26,7 +26,7 @@ const SearchContent = ({
   attachments?: TAttachment[];
   searchResults?: { [key: string]: SearchResultData };
 }) => {
-  const enableUserMsgMarkdown = useRecoilValue(store.enableUserMsgMarkdown);
+  const enableUserMsgMarkdown = useAtomValue(store.enableUserMsgMarkdown);
   const { messageId } = message;
 
   const attachmentMap = useMemo(() => mapAttachments(attachments ?? []), [attachments]);

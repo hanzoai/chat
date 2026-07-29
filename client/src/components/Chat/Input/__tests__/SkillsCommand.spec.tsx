@@ -23,18 +23,18 @@ const mockSetEphemeralAgent = jest.fn();
 const mockSetPendingManualSkills = jest.fn();
 const mockShowSkillsPopover = { current: true };
 
-jest.mock('recoil', () => {
-  const actual = jest.requireActual('recoil');
+jest.mock('jotai', () => {
+  const actual = jest.requireActual('jotai');
   return {
     ...actual,
-    useRecoilValue: jest.fn((atom: unknown) => {
+    useAtomValue: jest.fn((atom: unknown) => {
       if (atom === 'show-skills-popover') {
         return mockShowSkillsPopover.current;
       }
       return undefined;
     }),
-    useRecoilState: jest.fn(() => [null, jest.fn()]),
-    useSetRecoilState: jest.fn((atom: unknown) => {
+    useAtom: jest.fn(() => [null, jest.fn()]),
+    useSetAtom: jest.fn((atom: unknown) => {
       if (atom === 'show-skills-popover') {
         return mockSetShowSkillsPopover;
       }

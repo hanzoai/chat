@@ -2,7 +2,7 @@ import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { BrowserRouter } from 'react-router-dom';
@@ -11,7 +11,7 @@ import type t from '@hanzochat/data-provider';
 
 // Mock store before importing FavoritesList
 jest.mock('~/store', () => {
-  const { atom } = jest.requireActual('recoil');
+  const { atom } = jest.requireActual('jotai');
   return {
     __esModule: true,
     default: {
@@ -19,11 +19,7 @@ jest.mock('~/store', () => {
         key: 'mock-search-atom',
         default: { query: '' },
       }),
-      conversationByIndex: (index: number) =>
-        atom({
-          key: `mock-conversation-atom-${index}`,
-          default: null,
-        }),
+      conversationByIndex: (index: number) => atom(null),
     },
   };
 });
@@ -93,11 +89,11 @@ const renderWithProviders = (ui: React.ReactElement) => {
   const queryClient = createTestQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <RecoilRoot>
+      <Provider>
         <BrowserRouter>
           <DndProvider backend={HTML5Backend}>{ui}</DndProvider>
         </BrowserRouter>
-      </RecoilRoot>
+      </Provider>
     </QueryClientProvider>,
   );
 };

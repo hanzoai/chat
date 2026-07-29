@@ -1,4 +1,4 @@
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { ForkOptions } from '@hanzochat/data-provider';
 import { Dropdown, Switch, InfoHoverCard, ESide } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
@@ -6,9 +6,9 @@ import store from '~/store';
 
 export const ForkSettings = () => {
   const localize = useLocalize();
-  const [forkSetting, setForkSetting] = useRecoilState(store.forkSetting);
-  const [splitAtTarget, setSplitAtTarget] = useRecoilState(store.splitAtTarget);
-  const [remember, setRemember] = useRecoilState<boolean>(store.rememberDefaultFork);
+  const [forkSetting, setForkSetting] = useAtom(store.forkSetting);
+  const [splitAtTarget, setSplitAtTarget] = useAtom(store.splitAtTarget);
+  const [remember, setRemember] = useAtom<boolean>(store.rememberDefaultFork);
 
   const forkOptions = [
     { value: ForkOptions.DIRECT_PATH, label: localize('com_ui_fork_visible') },

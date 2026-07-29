@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { useRecoilValue, useResetRecoilState } from 'recoil';
+import { useAtomValue } from 'jotai';
+import { useResetAtom } from 'jotai/utils';
 import store from '~/store';
 
 /**
@@ -12,9 +13,9 @@ import store from '~/store';
  * self-heal subscription after this wipe lands.
  */
 export default function useResetArtifactsOnConversationChange(): void {
-  const conversationId = useRecoilValue(store.conversationIdByIndex(0));
-  const resetArtifacts = useResetRecoilState(store.artifactsState);
-  const resetCurrentArtifactId = useResetRecoilState(store.currentArtifactId);
+  const conversationId = useAtomValue(store.conversationIdByIndex(0));
+  const resetArtifacts = useResetAtom(store.artifactsState);
+  const resetCurrentArtifactId = useResetAtom(store.currentArtifactId);
   const prevConversationIdRef = useRef<string | null>(null);
 
   useEffect(() => {

@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Code, Play, RefreshCw, X } from 'lucide-react';
-import { useSetRecoilState, useResetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
+import { useResetAtom } from 'jotai/utils';
 import { Button, Spinner, useMediaQuery, Radio } from '@hanzochat/client';
 import type { SandpackPreviewRef, CodeEditorRef } from '@codesandbox/sandpack-react';
 import { useShareContext, useMutationState } from '~/Providers';
@@ -33,8 +34,8 @@ export default function Artifacts() {
   const [blurAmount, setBlurAmount] = useState(0);
   const dragStartY = useRef(0);
   const dragStartHeight = useRef(90);
-  const setArtifactsVisible = useSetRecoilState(store.artifactsVisibility);
-  const resetCurrentArtifactId = useResetRecoilState(store.currentArtifactId);
+  const setArtifactsVisible = useSetAtom(store.artifactsVisibility);
+  const resetCurrentArtifactId = useResetAtom(store.currentArtifactId);
 
   const tabOptions = [
     {

@@ -1,5 +1,7 @@
 import React from 'react';
-import { RecoilRoot, type MutableSnapshot } from 'recoil';
+import { Provider } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -62,19 +64,19 @@ const olderFollowUpAssistantMessage = {
 
 function createWrapper(
   queryClient = createQueryClient(),
-  initializeState?: (snapshot: MutableSnapshot) => void,
+  initializeState?: (snapshot: Store) => void,
   initialEntry = '/c/conversation-1',
 ) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <RecoilRoot initializeState={initializeState}>
+        <Provider store={seed(initializeState)}>
           <MemoryRouter initialEntries={[initialEntry]}>
             <Routes>
               <Route path="/c/:conversationId?" element={children} />
             </Routes>
           </MemoryRouter>
-        </RecoilRoot>
+        </Provider>
       </QueryClientProvider>
     );
   };

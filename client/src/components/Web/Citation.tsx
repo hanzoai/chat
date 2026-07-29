@@ -1,5 +1,5 @@
 import { memo, useState, useContext, useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useToastContext } from '@hanzochat/client';
 import type { CitationProps } from './types';
 import { SourceHovercard, FaviconImage, getCleanDomain } from '~/components/Web/SourceHovercard';
@@ -118,7 +118,7 @@ interface CitationComponentProps {
 
 export function Citation(props: CitationComponentProps) {
   const localize = useLocalize();
-  const user = useRecoilValue(store.user);
+  const user = useAtomValue(store.user);
   const { showToast } = useToastContext();
   const { citation, citationId } = props.node?.properties ?? {};
   const { setHoveredCitationId } = useContext(CitationContext);

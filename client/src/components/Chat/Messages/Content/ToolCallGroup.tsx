@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { ChevronDown, Users } from 'lucide-react';
 import { Tools, Constants, ContentTypes, ToolCallTypes } from '@hanzochat/data-provider';
 import type {
@@ -150,7 +150,7 @@ export default function ToolCallGroup({
     return `${labels.slice(0, 3).join(', ')}, +${labels.length - 3}`;
   }, [toolNames, localize]);
 
-  const autoExpand = useRecoilValue(store.autoExpandTools);
+  const autoExpand = useAtomValue(store.autoExpandTools);
   const autoCollapse = !autoExpand && count >= 2 && allCompleted;
   const initialState = initialExpansionState?.userOverride === true ? initialExpansionState : null;
   const [isExpanded, setIsExpanded] = useState(

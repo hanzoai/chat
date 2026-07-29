@@ -9,7 +9,8 @@ import React, {
   useCallback,
 } from 'react';
 import { Badge } from '@hanzochat/client';
-import { useRecoilValue, useRecoilCallback } from 'recoil';
+import { useAtomValue } from 'jotai';
+import { useAtomCallback } from 'jotai/utils';
 import type { LucideIcon } from 'lucide-react';
 import CodeInterpreter from './CodeInterpreter';
 import { BadgeRowProvider } from '~/Providers';
@@ -46,7 +47,7 @@ interface BadgeWrapperProps {
 const BadgeWrapper = React.memo(
   forwardRef<HTMLDivElement, BadgeWrapperProps>(
     ({ badge, isEditing, isInChat, onToggle, onDelete, onMouseDown, badgeRefs }, ref) => {
-      const atomBadge = useRecoilValue(badge.atom);
+      const atomBadge = useAtomValue(badge.atom);
       const isActive = badge.atom ? atomBadge : false;
 
       return (
@@ -164,20 +165,17 @@ function BadgeRow({
   const containerRectRef = useRef<DOMRect | null>(null);
 
   const allBadges = useChatBadges();
-  const isEditing = useRecoilValue(store.isEditingBadges);
+  const isEditing = useAtomValue(store.isEditingBadges);
 
   const badges = useMemo(
     () => allBadges.filter((badge) => badge.isAvailable !== false),
     [allBadges],
   );
 
-  const toggleBadge = useRecoilCallback(
-    ({ snapshot, set }) =>
-      async (badgeAtom: any) => {
-        const current = await snapshot.getPromise(badgeAtom);
-        set(badgeAtom, !current);
-      },
-    [],
+  const toggleBadge = useAtomCallback(
+    useCallback((get, set, badgeAtom: any) => {
+      set(badgeAtom, !get(badgeAtom));
+    }, []),
   );
 
   useEffect(() => {

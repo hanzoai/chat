@@ -1,4 +1,4 @@
-import { createTabIsolatedAtom } from './jotai-utils';
+import { atomWithTabStorage } from './utils';
 
 export type Favorite = {
   agentId?: string;
@@ -16,4 +16,4 @@ export type FavoritesState = Favorite[];
 /**
  * This atom stores the user's favorite models/agents
  */
-export const favoritesAtom = createTabIsolatedAtom<FavoritesState>('favorites', []);
+export const favoritesAtom = atomWithTabStorage<FavoritesState>('favorites', []);

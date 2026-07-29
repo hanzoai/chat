@@ -1,6 +1,6 @@
 import { memo, useCallback, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { SquarePen } from 'lucide-react';
 import { QueryKeys } from '@hanzochat/data-provider';
 import { Skeleton, Sidebar, Button, TooltipAnchor } from '@hanzochat/client';
@@ -21,8 +21,8 @@ const NewChatButton = memo(function NewChatButton({
   const localize = useLocalize();
   const queryClient = useQueryClient();
   const { newConversation } = useNewConvo();
-  const conversation = useRecoilValue(store.conversationByIndex(0));
-  const switchToHistory = useRecoilValue(store.newChatSwitchToHistory);
+  const conversation = useAtomValue(store.conversationByIndex(0));
+  const switchToHistory = useAtomValue(store.newChatSwitchToHistory);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {

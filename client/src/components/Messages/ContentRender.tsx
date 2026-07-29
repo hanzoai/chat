@@ -1,6 +1,6 @@
 import { useCallback, useMemo, memo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import type { TMessage, TMessageContentParts } from '@hanzochat/data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import { useAttachments, useLocalize, useMessageActions, useContentMetadata } from '~/hooks';
@@ -57,7 +57,7 @@ const ContentRender = memo(
       setCurrentEditId,
     });
     const fontSize = useAtomValue(fontSizeAtom);
-    const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
+    const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
 
     const handleRegenerateMessage = useCallback(() => regenerateMessage(), [regenerateMessage]);
     const isLast = useMemo(

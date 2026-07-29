@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import debounce from 'lodash/debounce';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { Menu, Rocket, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -183,10 +183,10 @@ const PromptForm = ({ promptId: promptIdProp }: { promptId?: string }) => {
   const localize = useLocalize();
   const { showToast } = useToastContext();
   const { hasAccess, groupsQuery } = usePromptGroupsContext() ?? {};
-  const alwaysMakeProd = useRecoilValue(store.alwaysMakeProd);
+  const alwaysMakeProd = useAtomValue(store.alwaysMakeProd);
   const promptId = promptIdProp || params.promptId || '';
 
-  const editorMode = useRecoilValue(store.promptsEditorMode);
+  const editorMode = useAtomValue(store.promptsEditorMode);
   const [selectionIndex, setSelectionIndex] = useState<number>(0);
 
   const prevIsEditingRef = useRef(false);

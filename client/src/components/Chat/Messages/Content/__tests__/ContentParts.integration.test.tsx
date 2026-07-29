@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { ContentTypes } from '@hanzochat/data-provider';
 import type { TAttachment, TMessageContentParts } from '@hanzochat/data-provider';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -153,9 +153,9 @@ const imageAttachment = (toolCallId: string, name = 'tiny.png'): TAttachment =>
 
 const renderContentParts = (props: React.ComponentProps<typeof ContentParts>) =>
   render(
-    <RecoilRoot>
+    <Provider>
       <ContentParts {...props} />
-    </RecoilRoot>,
+    </Provider>,
   );
 
 describe('ContentParts integration: MCP image hoist and grouping', () => {
@@ -242,9 +242,9 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     const nextContent = [makeTextPart('streamed preface'), ...content];
 
     const { rerender } = render(
-      <RecoilRoot>
+      <Provider>
         <ContentParts {...baseProps} content={content} />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     const toggle = screen.getByRole('button', { name: 'Used 2 tools' });
@@ -254,9 +254,9 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
 
     rerender(
-      <RecoilRoot>
+      <Provider>
         <ContentParts {...baseProps} content={nextContent} />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     expect(screen.getByRole('button', { name: 'Used 2 tools' })).toHaveAttribute(
@@ -270,9 +270,9 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     const completedContent = [makeMcpToolCall('t1'), makeMcpToolCall('t2')];
 
     const { rerender } = render(
-      <RecoilRoot>
+      <Provider>
         <ContentParts {...baseProps} isSubmitting isLatestMessage content={runningContent} />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     const toggle = screen.getByRole('button', { name: 'Used 2 tools' });
@@ -281,14 +281,14 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     fireEvent.click(screen.getAllByTestId('progress-text')[0]);
 
     rerender(
-      <RecoilRoot>
+      <Provider>
         <ContentParts
           {...baseProps}
           isSubmitting={false}
           isLatestMessage
           content={completedContent}
         />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     expect(screen.getByRole('button', { name: 'Used 2 tools' })).toHaveAttribute(
@@ -301,9 +301,9 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     const content = [makeMcpToolCallWithoutId('first'), makeMcpToolCallWithoutId('second')];
 
     const { rerender } = render(
-      <RecoilRoot>
+      <Provider>
         <ContentParts {...baseProps} messageId="msg1" content={content} />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     const toggle = screen.getByRole('button', { name: 'Used 2 tools' });
@@ -313,9 +313,9 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
 
     rerender(
-      <RecoilRoot>
+      <Provider>
         <ContentParts {...baseProps} messageId="msg2" content={content} />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     expect(screen.getByRole('button', { name: 'Used 2 tools' })).toHaveAttribute(
@@ -328,9 +328,9 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     const content = [makeMcpToolCall('t1'), makeMcpToolCall('t2')];
 
     const { rerender } = render(
-      <RecoilRoot>
+      <Provider>
         <ContentParts {...baseProps} messageId="placeholder-msg" content={content} />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     const toggle = screen.getByRole('button', { name: 'Used 2 tools' });
@@ -340,9 +340,9 @@ describe('ContentParts integration: MCP image hoist and grouping', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
 
     rerender(
-      <RecoilRoot>
+      <Provider>
         <ContentParts {...baseProps} messageId="server-msg" content={content} />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     expect(screen.getByRole('button', { name: 'Used 2 tools' })).toHaveAttribute(

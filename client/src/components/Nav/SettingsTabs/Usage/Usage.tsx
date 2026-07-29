@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Switch } from '@hanzochat/client';
 import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3, Sparkles } from 'lucide-react';
 import { useGetStartupConfig, useGetUserUsage, useGetRoutingDefaults } from '~/data-provider';
@@ -15,11 +15,11 @@ const ROUTING_DOCS_URL = 'https://docs.hanzo.ai/chat';
 function SmartRoutingToggle() {
   const localize = useLocalize();
   // The stored value is the user OVERRIDE (null === follow org default).
-  const [smartRoutingPref, setSmartRouting] = useRecoilState<boolean | null>(store.smartRouting);
+  const [smartRoutingPref, setSmartRouting] = useAtom<boolean | null>(store.smartRouting);
   // Server-driven org defaults (fail-soft: absent === today's local-only behavior).
   const { data: routingDefaults } = useGetRoutingDefaults();
   const available = routingDefaults?.available === true;
-  const orgDefault = available ? routingDefaults?.default_session_routing ?? null : null;
+  const orgDefault = available ? (routingDefaults?.default_session_routing ?? null) : null;
   const autoRoutingActive = available ? routingDefaults?.auto_routing_active !== false : true;
   const { enabled, toggleDisabled } = resolveSmartRouting(
     smartRoutingPref,

@@ -1,4 +1,4 @@
-import { atom } from 'recoil';
+import { atom } from 'jotai';
 import { TSubmission } from '@hanzochat/data-provider';
 
 // current submission
@@ -12,15 +12,9 @@ import { TSubmission } from '@hanzochat/data-provider';
 //   isRegenerate=false, // isRegenerate?
 // }
 
-const submission = atom<TSubmission | null>({
-  key: 'submission',
-  default: null,
-});
+const submission = atom<TSubmission | null>(null);
 
-const isSubmitting = atom({
-  key: 'isSubmitting',
-  default: false,
-});
+const isSubmitting = atom(false);
 
 export default {
   submission,

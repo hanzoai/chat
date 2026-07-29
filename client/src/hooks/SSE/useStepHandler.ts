@@ -14,8 +14,7 @@ import type {
   EventSubmission,
   TMessageContentParts,
 } from '@hanzochat/data-provider';
-import type { SetterOrUpdater } from 'recoil';
-import type { AnnounceOptions } from '~/common';
+import type { Setter, AnnounceOptions } from '~/common';
 import { MESSAGE_UPDATE_INTERVAL } from '~/common';
 
 type TUseStepHandler = {
@@ -23,7 +22,7 @@ type TUseStepHandler = {
   setMessages: (messages: TMessage[]) => void;
   getMessages: () => TMessage[] | undefined;
   /** @deprecated - isSubmitting should be derived from submission state */
-  setIsSubmitting?: SetterOrUpdater<boolean>;
+  setIsSubmitting?: Setter<boolean>;
   lastAnnouncementTimeRef: React.MutableRefObject<number>;
 };
 

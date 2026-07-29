@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { Constants } from '@hanzochat/data-provider';
-import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
+import { useResetAtom } from 'jotai/utils';
 import { useArtifactsContext } from '~/Providers';
 import { logger } from '~/utils';
 import store from '~/store';
@@ -10,10 +11,10 @@ export default function useArtifacts() {
   const { isSubmitting, latestMessageId, latestMessageText, conversationId } =
     useArtifactsContext();
 
-  const artifacts = useRecoilValue(store.artifactsState);
-  const resetArtifacts = useResetRecoilState(store.artifactsState);
-  const resetCurrentArtifactId = useResetRecoilState(store.currentArtifactId);
-  const [currentArtifactId, setCurrentArtifactId] = useRecoilState(store.currentArtifactId);
+  const artifacts = useAtomValue(store.artifactsState);
+  const resetArtifacts = useResetAtom(store.artifactsState);
+  const resetCurrentArtifactId = useResetAtom(store.currentArtifactId);
+  const [currentArtifactId, setCurrentArtifactId] = useAtom(store.currentArtifactId);
 
   const orderedArtifactIds = useMemo(() => {
     return Object.keys(artifacts ?? {}).sort(

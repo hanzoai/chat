@@ -1,4 +1,4 @@
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { SettingsViews } from '@hanzochat/data-provider';
 import type { TSettingsProps } from '~/common';
 import { Advanced } from './Settings';
@@ -11,7 +11,7 @@ export default function AlternativeSettings({
   isPreset = false,
   className = '',
 }: TSettingsProps) {
-  const currentSettingsView = useRecoilValue(store.currentSettingsView);
+  const currentSettingsView = useAtomValue(store.currentSettingsView);
   if (!conversation?.endpoint || currentSettingsView === SettingsViews.default) {
     return null;
   }

@@ -1,16 +1,8 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { createSearchParams } from 'react-router-dom';
-import {
-  atom,
-  selector,
-  atomFamily,
-  DefaultValue,
-  selectorFamily,
-  useRecoilState,
-  useRecoilValue,
-  useSetRecoilState,
-  useRecoilCallback,
-} from 'recoil';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { RESET, atomFamily, atomWithReset, useAtomCallback } from 'jotai/utils';
+import type { SetStateAction } from 'jotai';
 import {
   Constants,
   SystemRoles,
@@ -26,272 +18,174 @@ import {
   logger,
 } from '~/utils';
 import { useSetConvoContext } from '~/Providers/SetConvoContext';
+import { family } from './utils';
 import userStore from './user';
 
-const latestMessageKeysAtom = atom<(string | number)[]>({
-  key: 'latestMessageKeys',
-  default: [],
-});
+const latestMessageKeysAtom = atomWithReset<(string | number)[]>([]);
 
-const submissionKeysAtom = atom<(string | number)[]>({
-  key: 'submissionKeys',
-  default: [],
-});
+const submissionKeysAtom = atomWithReset<(string | number)[]>([]);
 
-const latestMessageFamily = atomFamily<TMessage | null, string | number | null>({
-  key: 'latestMessageByIndex',
-  default: null,
-  effects: [
-    ({ onSet, node }) => {
-      onSet(async (newValue) => {
-        const key = Number(node.key.split(Constants.COMMON_DIVIDER)[1]);
-        logger.log('Recoil Effect: Setting latestMessage', { key, newValue });
-      });
-    },
-  ] as const,
-});
+const latestMessageFamily = family<string | number | null, TMessage | null>(null);
 
-const submissionByIndex = atomFamily<TSubmission | null, string | number>({
-  key: 'submissionByIndex',
-  default: null,
-});
+const submissionByIndex = family<string | number, TSubmission | null>(null);
 
-const latestMessageKeysSelector = selector<(string | number)[]>({
-  key: 'latestMessageKeysSelector',
-  get: ({ get }) => {
+const conversationKeysAtom = atomWithReset<(string | number)[]>([]);
+
+const latestMessageKeysSelector = atom(
+  (get) => {
     const keys = get(conversationKeysAtom);
     return keys.filter((key) => get(latestMessageFamily(key)) !== null);
   },
-  set: ({ set }, newKeys) => {
+  (_get, set, newKeys: (string | number)[]) => {
     logger.log('setting latestMessageKeys', { newKeys });
     set(latestMessageKeysAtom, newKeys);
   },
-});
+);
 
-const submissionKeysSelector = selector<(string | number)[]>({
-  key: 'submissionKeysSelector',
-  get: ({ get }) => {
+const submissionKeysSelector = atom(
+  (get) => {
     const keys = get(conversationKeysAtom);
     return keys.filter((key) => get(submissionByIndex(key)) !== null);
   },
-  set: ({ set }, newKeys) => {
+  (_get, set, newKeys: (string | number)[]) => {
     logger.log('setting submissionKeysAtom', newKeys);
     set(submissionKeysAtom, newKeys);
   },
-});
+);
 
-const conversationByIndex = atomFamily<TConversation | null, string | number>({
-  key: 'conversationByIndex',
-  default: null,
-  effects: [
-    ({ onSet, node, getLoadable }) => {
-      onSet(async (newValue, oldValue) => {
-        const index = Number(node.key.split('__')[1]);
-        logger.log('conversation', 'Setting conversation:', { index, newValue, oldValue });
-        /**
-         * A guest leaves nothing behind. Its endpoint and model are a server-side
-         * pin (`GUEST_ENDPOINT`/`GUEST_MODEL`), not a preference the visitor made,
-         * so remembering them would hand the next principal on this browser — the
-         * same person, signed in a redirect later — the guest's capped model and
-         * rob the signed-in session of resolving its own default.
-         */
-        if (getLoadable(userStore.user).getValue()?.role === SystemRoles.GUEST) {
-          return;
-        }
-        if (newValue?.assistant_id != null && newValue.assistant_id) {
-          localStorage.setItem(
-            `${LocalStorageKeys.ASST_ID_PREFIX}${index}${newValue.endpoint}`,
-            newValue.assistant_id,
-          );
-        }
-        if (newValue?.agent_id != null && !isEphemeralAgentId(newValue.agent_id)) {
-          localStorage.setItem(`${LocalStorageKeys.AGENT_ID_PREFIX}${index}`, newValue.agent_id);
-        }
-        if (newValue?.spec != null && newValue.spec) {
-          localStorage.setItem(LocalStorageKeys.LAST_SPEC, newValue.spec);
-        }
-        if (newValue?.tools && Array.isArray(newValue.tools)) {
-          localStorage.setItem(
-            LocalStorageKeys.LAST_TOOLS,
-            JSON.stringify(newValue.tools.filter((el) => !!el)),
-          );
-        }
+/**
+ * The conversation as stored. `conversationByIndex` wraps this to carry the
+ * write-through to localStorage and the URL, so the raw value stays resettable.
+ */
+const storedConversation = family<string | number, TConversation | null>(null);
 
-        if (!newValue) {
-          return;
-        }
+const conversationByIndex = atomFamily((index: string | number) =>
+  atom(
+    (get) => get(storedConversation(index)),
+    (get, set, update: SetStateAction<TConversation | null> | typeof RESET) => {
+      const oldValue = get(storedConversation(index));
+      set(storedConversation(index), update);
 
-        storeEndpointSettings(newValue);
+      if (update === RESET) {
+        return;
+      }
 
-        const convoToStore = { ...newValue };
-        clearModelForNonEphemeralAgent(convoToStore);
+      const newValue = get(storedConversation(index));
+      logger.log('conversation', 'Setting conversation:', { index, newValue, oldValue });
+
+      /**
+       * A guest leaves nothing behind. Its endpoint and model are a server-side
+       * pin (`GUEST_ENDPOINT`/`GUEST_MODEL`), not a preference the visitor made,
+       * so remembering them would hand the next principal on this browser — the
+       * same person, signed in a redirect later — the guest's capped model and
+       * rob the signed-in session of resolving its own default.
+       */
+      if (get(userStore.user)?.role === SystemRoles.GUEST) {
+        return;
+      }
+      if (newValue?.assistant_id != null && newValue.assistant_id) {
         localStorage.setItem(
-          `${LocalStorageKeys.LAST_CONVO_SETUP}_${index}`,
-          JSON.stringify(convoToStore),
+          `${LocalStorageKeys.ASST_ID_PREFIX}${index}${newValue.endpoint}`,
+          newValue.assistant_id,
         );
+      }
+      if (newValue?.agent_id != null && !isEphemeralAgentId(newValue.agent_id)) {
+        localStorage.setItem(`${LocalStorageKeys.AGENT_ID_PREFIX}${index}`, newValue.agent_id);
+      }
+      if (newValue?.spec != null && newValue.spec) {
+        localStorage.setItem(LocalStorageKeys.LAST_SPEC, newValue.spec);
+      }
+      if (newValue?.tools && Array.isArray(newValue.tools)) {
+        localStorage.setItem(
+          LocalStorageKeys.LAST_TOOLS,
+          JSON.stringify(newValue.tools.filter((el) => !!el)),
+        );
+      }
 
-        const disableParams = newValue.disableParams === true;
-        const shouldUpdateParams =
-          index === 0 &&
-          !disableParams &&
-          newValue.createdAt === '' &&
-          JSON.stringify(newValue) !== JSON.stringify(oldValue) &&
-          (oldValue as TConversation)?.conversationId === Constants.NEW_CONVO;
+      if (!newValue) {
+        return;
+      }
 
-        if (shouldUpdateParams) {
-          const newParams = createChatSearchParams(newValue);
-          const searchParams = createSearchParams(newParams);
-          const url = `${window.location.pathname}?${searchParams.toString()}`;
-          window.history.pushState({}, '', url);
-        }
-      });
+      storeEndpointSettings(newValue);
+
+      const convoToStore = { ...newValue };
+      clearModelForNonEphemeralAgent(convoToStore);
+      localStorage.setItem(
+        `${LocalStorageKeys.LAST_CONVO_SETUP}_${index}`,
+        JSON.stringify(convoToStore),
+      );
+
+      const disableParams = newValue.disableParams === true;
+      const shouldUpdateParams =
+        Number(index) === 0 &&
+        !disableParams &&
+        newValue.createdAt === '' &&
+        JSON.stringify(newValue) !== JSON.stringify(oldValue) &&
+        oldValue?.conversationId === Constants.NEW_CONVO;
+
+      if (shouldUpdateParams) {
+        const newParams = createChatSearchParams(newValue);
+        const searchParams = createSearchParams(newParams);
+        const url = `${window.location.pathname}?${searchParams.toString()}`;
+        window.history.pushState({}, '', url);
+      }
     },
-  ] as const,
+  ),
+);
+
+const filesByIndex = family<string | number, Map<string, ExtendedFile>>(new Map());
+
+const allConversationsSelector = atom((get) => {
+  const keys = get(conversationKeysAtom);
+  return keys.map((key) => get(conversationByIndex(key))).map((convo) => convo?.conversationId);
 });
 
-const filesByIndex = atomFamily<Map<string, ExtendedFile>, string | number>({
-  key: 'filesByIndex',
-  default: new Map(),
+const presetByIndex = family<string | number, TPreset | null>(null);
+
+const textByIndex = family<string | number, string>('');
+
+const showStopButtonByIndex = family<string | number, boolean>(false);
+
+const abortScrollFamily = family<string | number, boolean>(false);
+
+const isSubmittingFamily = family<string | number, boolean>(false);
+
+const anySubmittingSelector = atom((get) => {
+  const keys = get(conversationKeysAtom);
+  return keys.some((key) => get(isSubmittingFamily(key)) === true);
 });
 
-const conversationKeysAtom = atom<(string | number)[]>({
-  key: 'conversationKeys',
-  default: [],
-});
+const optionSettingsFamily = family<string | number, TOptionSettings>({});
 
-const allConversationsSelector = selector({
-  key: 'allConversationsSelector',
-  get: ({ get }) => {
-    const keys = get(conversationKeysAtom);
-    return keys.map((key) => get(conversationByIndex(key))).map((convo) => convo?.conversationId);
-  },
-});
+const showPopoverFamily = family<string | number, boolean>(false);
 
-const presetByIndex = atomFamily<TPreset | null, string | number>({
-  key: 'presetByIndex',
-  default: null,
-});
+const activePromptByIndex = family<string | number | null, string | undefined>(undefined);
 
-const textByIndex = atomFamily<string, string | number>({
-  key: 'textByIndex',
-  default: '',
-});
+const showMentionPopoverFamily = family<string | number | null, boolean>(false);
 
-const showStopButtonByIndex = atomFamily<boolean, string | number>({
-  key: 'showStopButtonByIndex',
-  default: false,
-});
+const showPlusPopoverFamily = family<string | number | null, boolean>(false);
 
-const abortScrollFamily = atomFamily<boolean, string | number>({
-  key: 'abortScrollByIndex',
-  default: false,
-  effects: [
-    ({ onSet, node }) => {
-      onSet(async (newValue) => {
-        const key = Number(node.key.split(Constants.COMMON_DIVIDER)[1]);
-        logger.log('message_scrolling', 'Recoil Effect: Setting abortScrollByIndex', {
-          key,
-          newValue,
-        });
-      });
-    },
-  ] as const,
-});
+const showPromptsPopoverFamily = family<string | number | null, boolean>(false);
 
-const isSubmittingFamily = atomFamily({
-  key: 'isSubmittingByIndex',
-  default: false,
-  effects: [
-    ({ onSet, node }) => {
-      onSet(async (newValue) => {
-        const key = Number(node.key.split(Constants.COMMON_DIVIDER)[1]);
-        logger.log('message_stream', 'Recoil Effect: Setting isSubmittingByIndex', {
-          key,
-          newValue,
-        });
-      });
-    },
-  ],
-});
+const showAgentsPopoverFamily = family<string | number | null, boolean>(false);
 
-const anySubmittingSelector = selector<boolean>({
-  key: 'anySubmittingSelector',
-  get: ({ get }) => {
-    const keys = get(conversationKeysAtom);
-    return keys.some((key) => get(isSubmittingFamily(key)) === true);
-  },
-});
+const globalAudioURLFamily = family<string | number | null, string | null>(null);
 
-const optionSettingsFamily = atomFamily<TOptionSettings, string | number>({
-  key: 'optionSettingsByIndex',
-  default: {},
-});
+const globalAudioFetchingFamily = family<string | number | null, boolean>(false);
 
-const showPopoverFamily = atomFamily({
-  key: 'showPopoverByIndex',
-  default: false,
-});
+const globalAudioPlayingFamily = family<string | number | null, boolean>(false);
 
-const activePromptByIndex = atomFamily<string | undefined, string | number | null>({
-  key: 'activePromptByIndex',
-  default: undefined,
-});
+const activeRunFamily = family<string | number | null, string | null>(null);
 
-const showMentionPopoverFamily = atomFamily<boolean, string | number | null>({
-  key: 'showMentionPopoverByIndex',
-  default: false,
-});
+const audioRunFamily = family<string | number | null, string | null>(null);
 
-const showPlusPopoverFamily = atomFamily<boolean, string | number | null>({
-  key: 'showPlusPopoverByIndex',
-  default: false,
-});
-
-const showPromptsPopoverFamily = atomFamily<boolean, string | number | null>({
-  key: 'showPromptsPopoverByIndex',
-  default: false,
-});
-
-const showAgentsPopoverFamily = atomFamily<boolean, string | number | null>({
-  key: 'showAgentsPopoverByIndex',
-  default: false,
-});
-
-const globalAudioURLFamily = atomFamily<string | null, string | number | null>({
-  key: 'globalAudioURLByIndex',
-  default: null,
-});
-
-const globalAudioFetchingFamily = atomFamily<boolean, string | number | null>({
-  key: 'globalAudioisFetchingByIndex',
-  default: false,
-});
-
-const globalAudioPlayingFamily = atomFamily<boolean, string | number | null>({
-  key: 'globalAudioisPlayingByIndex',
-  default: false,
-});
-
-const activeRunFamily = atomFamily<string | null, string | number | null>({
-  key: 'activeRunByIndex',
-  default: null,
-});
-
-const audioRunFamily = atomFamily<string | null, string | number | null>({
-  key: 'audioRunByIndex',
-  default: null,
-});
-
-const messagesSiblingIdxFamily = atomFamily<number, string | null | undefined>({
-  key: 'messagesSiblingIdx',
-  default: 0,
-});
+const messagesSiblingIdxFamily = family<string | null | undefined, number>(0);
 
 function useCreateConversationAtom(key: string | number) {
   const hasSetConversation = useSetConvoContext();
-  const [keys, setKeys] = useRecoilState(conversationKeysAtom);
-  const setConversation = useSetRecoilState(conversationByIndex(key));
-  const conversation = useRecoilValue(conversationByIndex(key));
+  const [keys, setKeys] = useAtom(conversationKeysAtom);
+  const setConversation = useSetAtom(conversationByIndex(key));
+  const conversation = useAtomValue(conversationByIndex(key));
 
   useEffect(() => {
     if (!keys.includes(key)) {
@@ -304,71 +198,64 @@ function useCreateConversationAtom(key: string | number) {
 
 function useClearConvoState() {
   /** Clears all active conversations. Pass `true` to skip the first or root conversation */
-  const clearAllConversations = useRecoilCallback(
-    ({ reset, snapshot }) =>
-      async (skipFirst?: boolean) => {
-        const conversationKeys = await snapshot.getPromise(conversationKeysAtom);
+  const clearAllConversations = useAtomCallback(
+    useCallback((get, set, skipFirst?: boolean) => {
+      const conversationKeys = get(conversationKeysAtom);
 
-        for (const conversationKey of conversationKeys) {
-          if (skipFirst === true && conversationKey == 0) {
-            continue;
-          }
-
-          reset(conversationByIndex(conversationKey));
-
-          const conversation = await snapshot.getPromise(conversationByIndex(conversationKey));
-          if (conversation) {
-            reset(latestMessageFamily(conversationKey));
-          }
+      for (const conversationKey of conversationKeys) {
+        if (skipFirst === true && conversationKey == 0) {
+          continue;
         }
 
-        reset(conversationKeysAtom);
-      },
-    [],
+        /**
+         * Read before the reset: the latest message is cleared only for a
+         * conversation that actually held one.
+         */
+        const conversation = get(conversationByIndex(conversationKey));
+        set(conversationByIndex(conversationKey), RESET);
+        if (conversation) {
+          set(latestMessageFamily(conversationKey), RESET);
+        }
+      }
+
+      set(conversationKeysAtom, RESET);
+    }, []),
   );
 
   return clearAllConversations;
 }
 
-const conversationByKeySelector = selectorFamily({
-  key: 'conversationByKeySelector',
-  get:
-    (index: string | number) =>
-    ({ get }) => {
-      const conversation = get(conversationByIndex(index));
-      return conversation;
-    },
-});
+const conversationByKeySelector = atomFamily((index: string | number) =>
+  atom((get) => get(conversationByIndex(index))),
+);
 
 function useClearSubmissionState() {
-  const clearAllSubmissions = useRecoilCallback(
-    ({ reset, set, snapshot }) =>
-      async (skipFirst?: boolean) => {
-        const submissionKeys = await snapshot.getPromise(submissionKeysSelector);
-        logger.log('submissionKeys', submissionKeys);
+  const clearAllSubmissions = useAtomCallback(
+    useCallback((get, set, skipFirst?: boolean) => {
+      const submissionKeys = get(submissionKeysSelector);
+      logger.log('submissionKeys', submissionKeys);
 
-        for (const key of submissionKeys) {
-          if (skipFirst === true && key == 0) {
-            continue;
-          }
-
-          logger.log('resetting submission', key);
-          reset(submissionByIndex(key));
+      for (const key of submissionKeys) {
+        if (skipFirst === true && key == 0) {
+          continue;
         }
 
-        set(submissionKeysSelector, []);
-      },
-    [],
+        logger.log('resetting submission', key);
+        set(submissionByIndex(key), RESET);
+      }
+
+      set(submissionKeysSelector, []);
+    }, []),
   );
 
   return clearAllSubmissions;
 }
 
 function useClearLatestMessages(context?: string) {
-  const clearAllLatestMessages = useRecoilCallback(
-    ({ reset, set, snapshot }) =>
-      async (skipFirst?: boolean) => {
-        const latestMessageKeys = await snapshot.getPromise(latestMessageKeysSelector);
+  const clearAllLatestMessages = useAtomCallback(
+    useCallback(
+      (get, set, skipFirst?: boolean) => {
+        const latestMessageKeys = get(latestMessageKeysSelector);
         logger.log('[clearAllLatestMessages] latestMessageKeys', latestMessageKeys);
         if (context != null && context) {
           logger.log(`[clearAllLatestMessages] context: ${context}`);
@@ -380,41 +267,34 @@ function useClearLatestMessages(context?: string) {
           }
 
           logger.log(`[clearAllLatestMessages] resetting latest message; key: ${key}`);
-          reset(latestMessageFamily(key));
+          set(latestMessageFamily(key), RESET);
         }
 
         set(latestMessageKeysSelector, []);
       },
-    [],
+      [context],
+    ),
   );
 
   return clearAllLatestMessages;
 }
 
-const updateConversationSelector = selectorFamily({
-  key: 'updateConversationSelector',
-  get: () => () => null as Partial<TConversation> | null,
-  set:
-    (conversationId: string) =>
-    ({ set, get }, newPartialConversation) => {
-      if (newPartialConversation instanceof DefaultValue) {
-        return;
-      }
-
-      const keys = get(conversationKeysAtom);
-      keys.forEach((key) => {
-        set(conversationByIndex(key), (prevConversation) => {
-          if (prevConversation && prevConversation.conversationId === conversationId) {
-            return {
-              ...prevConversation,
-              ...newPartialConversation,
-            };
-          }
-          return prevConversation;
-        });
+const updateConversationSelector = atomFamily((conversationId: string) =>
+  atom(null, (get, set, newPartialConversation: Partial<TConversation>) => {
+    const keys = get(conversationKeysAtom);
+    keys.forEach((key) => {
+      set(conversationByIndex(key), (prevConversation) => {
+        if (prevConversation && prevConversation.conversationId === conversationId) {
+          return {
+            ...prevConversation,
+            ...newPartialConversation,
+          };
+        }
+        return prevConversation;
       });
-    },
-});
+    });
+  }),
+);
 
 export default {
   conversationKeysAtom,

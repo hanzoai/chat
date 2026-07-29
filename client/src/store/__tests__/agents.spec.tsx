@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot, useRecoilValue } from 'recoil';
+import { Provider, useAtomValue } from 'jotai';
 import { renderHook, act, waitFor } from '@testing-library/react';
 
 import { ephemeralAgentByConvoId, useApplyNewAgentTemplate } from '../agents';
@@ -12,13 +12,11 @@ jest.mock('~/utils', () => ({
   },
 }));
 
-const Wrapper = ({ children }: { children: React.ReactNode }) => (
-  <RecoilRoot>{children}</RecoilRoot>
-);
+const Wrapper = ({ children }: { children: React.ReactNode }) => <Provider>{children}</Provider>;
 
 const useAgentTemplateHarness = (conversationId: string) => {
   const applyTemplate = useApplyNewAgentTemplate();
-  const ephemeralAgent = useRecoilValue(ephemeralAgentByConvoId(conversationId));
+  const ephemeralAgent = useAtomValue(ephemeralAgentByConvoId(conversationId));
   return { applyTemplate, ephemeralAgent };
 };
 

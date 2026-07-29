@@ -39,8 +39,8 @@ jest.mock('@hanzochat/data-provider', () => ({
   dataService: { speechToText: jest.fn(), textToSpeech: jest.fn() },
 }));
 
-jest.mock('recoil', () => ({
-  useRecoilValue: (atom: { key?: string }) =>
+jest.mock('jotai', () => ({
+  useAtomValue: (atom: { key?: string }) =>
     atom?.key === 'latestMessage' ? mockLatest.current : 'alloy',
 }));
 
@@ -94,7 +94,13 @@ beforeEach(() => {
   Object.assign(window, {
     SpeechRecognition: Fake,
     isSecureContext: true,
-    speechSynthesis: { speak: (u: { text: string; onend?: () => void }) => { spoken.push(u.text); u.onend?.(); }, cancel: () => {} },
+    speechSynthesis: {
+      speak: (u: { text: string; onend?: () => void }) => {
+        spoken.push(u.text);
+        u.onend?.();
+      },
+      cancel: () => {},
+    },
     SpeechSynthesisUtterance: class {
       onend: (() => void) | null = null;
       onerror: (() => void) | null = null;
@@ -234,8 +240,6 @@ it('tells you rather than dropping a turn spoken over a running reply', async ()
   });
 
   expect(mockAsk).not.toHaveBeenCalled();
-  expect(mockShowToast).toHaveBeenCalledWith(
-    expect.objectContaining({ status: 'error' }),
-  );
+  expect(mockShowToast).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
   await hangUp();
 });

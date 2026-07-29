@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo, memo } from 'react';
 import { AutoSizer, List } from 'react-virtualized';
 import { Spinner, useCombobox } from '@hanzochat/client';
-import { useSetRecoilState, useRecoilValue } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import type { MentionOption } from '~/common';
 import { useListCloudAgentsQuery } from '~/data-provider';
 import { removeCharIfLast } from '~/utils';
@@ -27,8 +27,8 @@ function AgentsCommand({
   textAreaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
 }) {
   const localize = useLocalize();
-  const setShowAgentsPopover = useSetRecoilState(store.showAgentsPopoverFamily(index));
-  const showAgentsPopover = useRecoilValue(store.showAgentsPopoverFamily(index));
+  const setShowAgentsPopover = useSetAtom(store.showAgentsPopoverFamily(index));
+  const showAgentsPopover = useAtomValue(store.showAgentsPopoverFamily(index));
 
   const { data, isLoading } = useListCloudAgentsQuery({ enabled: showAgentsPopover });
 

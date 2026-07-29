@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import type { TMessage } from '@hanzochat/data-provider';
 import type { TMessageProps } from '~/common';
 
@@ -13,7 +13,7 @@ export default function MultiMessage({
   currentEditId,
   setCurrentEditId,
 }: TMessageProps) {
-  const [siblingIdx, setSiblingIdx] = useRecoilState(store.messagesSiblingIdxFamily(messageId));
+  const [siblingIdx, setSiblingIdx] = useAtom(store.messagesSiblingIdxFamily(messageId));
 
   const setSiblingIdxRev = (value: number) => {
     setSiblingIdx((messagesTree?.length ?? 0) - value - 1);

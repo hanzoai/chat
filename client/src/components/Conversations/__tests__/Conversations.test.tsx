@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import type { CellMeasurerCache, List } from 'react-virtualized';
 
 let mockCapturedCache: CellMeasurerCache | null = null;
@@ -48,7 +48,7 @@ jest.mock('react-virtualized', () => {
 });
 
 jest.mock('~/store', () => {
-  const { atom } = jest.requireActual('recoil');
+  const { atom } = jest.requireActual('jotai');
   return {
     __esModule: true,
     default: {
@@ -110,7 +110,7 @@ describe('Conversations – favorites CellMeasurerCache key invalidation', () =>
   });
 
   const Wrapper = () => (
-    <RecoilRoot>
+    <Provider>
       <Conversations
         conversations={[]}
         moveToTop={jest.fn()}
@@ -122,7 +122,7 @@ describe('Conversations – favorites CellMeasurerCache key invalidation', () =>
         isChatsExpanded={true}
         setIsChatsExpanded={jest.fn()}
       />
-    </RecoilRoot>
+    </Provider>
   );
 
   it('should invalidate the cached favorites height when favorites count changes', () => {
