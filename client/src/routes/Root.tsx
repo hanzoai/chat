@@ -21,6 +21,7 @@ import { Nav, MobileNav, NAV_WIDTH } from '~/components/Nav';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
+import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 
@@ -32,12 +33,12 @@ export default function Root() {
     return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
   });
 
-  const { isAuthenticated, logout, token } = useAuthContext();
+  const { isAuthenticated, isGuest, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
 
   // Guests get the chat UI without a full session. Capability-scoped hooks below
-  // stay gated on `isAuthenticated`, so guests never query agents/files/search —
-  // and so does an anonymous visitor, who now reaches this shell too.
+  // stay gated on `isAuthenticated`, so guests never query agents/files/search.
+  const showChat = isAuthenticated || isGuest;
 
   // Wait for the initial silent refresh before deciding to show landing vs chat
   useEffect(() => {
@@ -107,10 +108,13 @@ export default function Root() {
     );
   }
 
-  // NO front-door branch. The app IS the landing (ChatGPT's shape): an anonymous
-  // visitor gets the composer, not a brochure, and `LoginGate` — already mounted
-  // for every `!isAuthenticated` visitor — asks for a session at the moment they
-  // submit, which is the first moment one is actually needed.
+  // LAST RESORT, not the front door. The fix for "hanzo.chat shows a brochure" is
+  // upstream of here — silent SSO adopts a hanzo.id session (utils/login.ts) and
+  // the guest mint is no longer rate-limited out — so `showChat` is now true for
+  // anyone who has any path to chat at all. This branch survives only for the
+  // visitor who has NONE, because `ChatRoute` renders `null` when it cannot chat:
+  // dropping the branch outright traded a brochure for a BLANK PANE in exactly
+  // the state that was already broken. Something must always paint.
   //
   // This used to `return <LandingPage/>` whenever `isAuthenticated || isGuest` was
   // false, for EVERY route. Two independent failures then read as a design choice:
@@ -122,9 +126,11 @@ export default function Root() {
   // never reached AnswerEngine. A failure in an AUXILIARY token mint must never
   // decide what product the visitor sees.
   //
-  // LandingPage is not deleted: it is marketing, and marketing keeps a home at an
-  // explicit route the way chatgpt.com/pricing does. It is simply no longer what
-  // answers `/`.
+  // LandingPage also keeps an explicit home at /welcome, the way chatgpt.com/pricing
+  // does, so marketing is reachable rather than only a failure state.
+  if (!showChat) {
+    return <LandingPage />;
+  }
 
   return (
     <SetConvoProvider>
