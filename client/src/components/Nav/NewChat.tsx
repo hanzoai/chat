@@ -4,6 +4,7 @@ import { QueryKeys } from '@hanzochat/data-provider';
 import { useQueryClient } from '@tanstack/react-query';
 import { TooltipAnchor, NewChatIcon, MobileSidebar, Sidebar, Button } from '@hanzochat/client';
 import { CLOSE_SIDEBAR_ID, OPEN_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
+import BrandCorner from './BrandCorner';
 import { useLocalize, useNewConvo } from '~/hooks';
 import { clearMessagesCache } from '~/utils';
 import store from '~/store';
@@ -56,28 +57,11 @@ export default function NewChat({
   return (
     <>
       <div className="flex items-center justify-between px-0.5 py-[2px] md:py-2">
-        <TooltipAnchor
-          description={localize('com_nav_close_sidebar')}
-          render={
-            <Button
-              id={CLOSE_SIDEBAR_ID}
-              size="icon"
-              variant="outline"
-              data-testid="close-sidebar-button"
-              aria-label={localize('com_nav_close_sidebar')}
-              aria-expanded={true}
-              className="rounded-full border-none bg-transparent duration-0 hover:bg-surface-active-alt focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl"
-              onClick={handleToggleNav}
-            >
-              <Sidebar aria-hidden="true" className="max-md:hidden" />
-              <MobileSidebar
-                aria-hidden="true"
-                className="icon-lg m-1 inline-flex items-center justify-center md:hidden"
-              />
-            </Button>
-          }
-        />
-        <div className="flex gap-0.5">
+        {/* Top-left of the app: the Hanzo mark. It replaces the collapse button
+            that used to sit here — the toggle now closes the sidebar from the
+            sidebar's own right edge, which is the side it collapses toward. */}
+        <BrandCorner />
+        <div className="flex items-center gap-0.5">
           {headerButtons}
 
           <TooltipAnchor
@@ -92,6 +76,28 @@ export default function NewChat({
                 onClick={clickHandler}
               >
                 <NewChatIcon className="icon-lg text-text-primary" />
+              </Button>
+            }
+          />
+
+          <TooltipAnchor
+            description={localize('com_nav_close_sidebar')}
+            render={
+              <Button
+                id={CLOSE_SIDEBAR_ID}
+                size="icon"
+                variant="outline"
+                data-testid="close-sidebar-button"
+                aria-label={localize('com_nav_close_sidebar')}
+                aria-expanded={true}
+                className="rounded-full border-none bg-transparent duration-0 hover:bg-surface-active-alt focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl"
+                onClick={handleToggleNav}
+              >
+                <Sidebar aria-hidden="true" className="max-md:hidden" />
+                <MobileSidebar
+                  aria-hidden="true"
+                  className="icon-lg m-1 inline-flex items-center justify-center md:hidden"
+                />
               </Button>
             }
           />
