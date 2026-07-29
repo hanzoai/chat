@@ -19,8 +19,11 @@ MCP integration, agents, and RAG. Live at **hanzo.chat**.
 ## Commands
 
 ```bash
-# Install (NOT npm ci -- workspace peer deps break it)
-npm install          # .npmrc has legacy-peer-deps=true
+# Install -- pnpm, and only pnpm. `packageManager` pins pnpm@10.27.0, the
+# lockfile is pnpm-lock.yaml, there is no package-lock.json, and .npmrc sets
+# node-linker=hoisted. `npm install` resolves a tree nobody ships: it leaves
+# pnpm-lock.yaml stale, so the image still installs whatever the lockfile says.
+pnpm install
 
 # Build
 npm run build:packages   # Build data-provider, data-schemas, api, client-package
@@ -108,7 +111,9 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 
 ## Docker Build Notes
 
-- Uses `npm install` not `npm ci` (workspace peer dep issues)
+- Installs with `pnpm install --frozen-lockfile` (corepack). The lockfile is the
+  contract: a dependency change that does not update `pnpm-lock.yaml` does not
+  reach the image.
 - `--max-old-space-size=4096` for client build
 - jemalloc preloaded for memory efficiency
 - `uv` bundled for MCP server support
@@ -390,9 +395,12 @@ deleted, the dependency is out of `client/package.json`, and the two dead
   `style.css` overrides `--hanzo-accent` (and hover/muted/soft/rgb) to white —
   the mechanism `@hanzo/brand` documents for a host that does not take violet.
   Chat is monochrome; nothing in chat's own source reads the token.
-- **`@hanzo/gui`** = a **Tamagui** fork (Next.js 15 / React 19, RN-web). Forcing
-  it into the Vite/React18 client is a ground-up rewrite of a live product; the
-  convergence target inside chat is `@hanzochat/client`'s own primitives —
+- **`@hanzo/gui`** = a **Tamagui** fork (Next.js 15 / React 19, RN-web). The
+  react version is no longer the obstacle — the client is on react 19.2.4, so
+  `@hanzo/ui@8.0.28` and `@hanzo/gui@7.3.1` can be installed. What remains is
+  that gui is Tamagui/RN-web against a Vite client, which is a rewrite, not an
+  install; the convergence target inside chat is `@hanzochat/client`'s own
+  primitives —
   `DropdownPopup` (Ariakit; `.popover-ui` is REAL CSS, not a scanned class
   string) is the canonical anchored menu, 28 call sites.
 
