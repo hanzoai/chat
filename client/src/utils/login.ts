@@ -10,11 +10,47 @@ import { getHanzoIamSdk } from '~/utils/iam';
 const SILENT_SSO_ATTEMPTED = 'hanzo.sso.attempted';
 
 /**
+ * Marks that this tab has already spent its ONE top-level `prompt=none` bounce.
+ * Set BEFORE navigating away, never after: the flag has to survive the round trip
+ * and be visible on the way back, or an issuer that answers `login_required`
+ * would send us straight back out again — an infinite redirect on the front door.
+ */
+const SSO_REDIRECT_SPENT = 'hanzo.sso.redirected';
+
+/** True once this tab has bounced through hanzo.id and come back still anonymous. */
+export function ssoRedirectSpent(): boolean {
+  return typeof window !== 'undefined' && sessionStorage.getItem(SSO_REDIRECT_SPENT) === '1';
+}
+
+/**
  * Why the login gate opened. `limit` — the free preview quota is spent;
  * `anonymous` — the request was refused because the visitor is not signed in
  * (no bearer at all, or an expired guest/session bearer).
  */
-export type LoginReason = 'limit' | 'anonymous';
+export type LoginReason = 'limit' | 'anonymous' | 'welcome';
+
+/** Marks that this tab has already shown the arrival gate; dismissing must stick. */
+const WELCOME_SHOWN = 'hanzo.login.welcomed';
+
+/**
+ * Open the arrival gate once per tab for a visitor who is not signed in.
+ *
+ * `limit` and `anonymous` are REFUSALS — something was denied and the gate
+ * explains it. `welcome` is not: nothing failed, we are simply offering the
+ * better product before they start, the way chatgpt.com does. It must therefore
+ * be dismissible and must stay dismissed, or it becomes a wall in front of a
+ * product we deliberately let people use signed out.
+ */
+export function offerLogin(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (sessionStorage.getItem(WELCOME_SHOWN) === '1') {
+    return;
+  }
+  sessionStorage.setItem(WELCOME_SHOWN, '1');
+  window.dispatchEvent(new CustomEvent(LOGIN_REQUIRED, { detail: { reason: 'welcome' } }));
+}
 
 /** Window event carrying a {@link LoginReason}. `LoginGate` listens for it. */
 export const LOGIN_REQUIRED = 'loginRequired';

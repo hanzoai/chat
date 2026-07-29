@@ -487,3 +487,28 @@ already describes the target and was failing against the brochure.
 - Marketing moved to `/welcome`, declared outside `<Root/>` so it keeps its own
   full-page chrome. Its hero still advertises the deprecated `chat.hanzo.ai` and a
   coding demo — content work, still outstanding.
+
+### Arrival gate (2026-07-28)
+
+The signed-out default is now chatgpt.com's shape: the app renders and a
+DISMISSIBLE login modal sits over it. `LoginGate` gained a third reason,
+`welcome`, and `Root` fires `offerLogin()` once `authChecked && !isAuthenticated`.
+
+`welcome` is deliberately not like `limit`/`anonymous`. Those are REFUSALS —
+something was denied and the gate explains it, so it offers no dismissal (there
+is nothing behind it but the thing that just failed). `welcome` is an OFFER: no
+request failed, so it carries "Stay logged out" and `offerLogin` fires once per
+tab, meaning a dismissal sticks for the visit. Gating a product we deliberately
+let people use signed out would undo the front-door fix directly above.
+
+### Header restructure — NOT done, and it is not a tweak
+
+Owner wants: Hanzo mark top-left, search + sidebar toggle to the RIGHT of the
+sidebar, and a ChatGPT-style model/agent dropdown where `ChatGPT ⌄` sits.
+
+`@hanzogui/shell` already ships `HanzoAppHeader` (the signed-in header carrying
+the mark). Chat mounts only `HanzoAppLauncher` in `Chat/Header.tsx`, and that
+header **does not paint on the default screen** — driving live hanzo.chat finds no
+`<header>` at all. Adopting the real one is a LAYOUT change: `HanzoAppHeader` is
+`position: sticky; height: 56`, so `Root.tsx`'s `calc(100dvh - ${bannerHeight}px)`
+must subtract it too or the composer falls off the bottom of the viewport.
