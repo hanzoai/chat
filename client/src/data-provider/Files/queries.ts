@@ -1,4 +1,4 @@
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys, DynamicQueryKeys, dataService } from '@hanzochat/data-provider';
 import type { QueryObserverResult, UseQueryOptions } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import store from '~/store';
 export const useGetFiles = <TData = t.TFile[] | boolean>(
   config?: UseQueryOptions<t.TFile[], unknown, TData>,
 ): QueryObserverResult<TData, unknown> => {
-  const queriesEnabled = useRecoilValue<boolean>(store.queriesEnabled);
+  const queriesEnabled = useAtomValue<boolean>(store.queriesEnabled);
   return useQuery<t.TFile[], unknown, TData>([QueryKeys.files], () => dataService.getFiles(), {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -24,7 +24,7 @@ export const useGetAgentFiles = <TData = t.TFile[]>(
   agentId: string | undefined,
   config?: UseQueryOptions<t.TFile[], unknown, TData>,
 ): QueryObserverResult<TData, unknown> => {
-  const queriesEnabled = useRecoilValue<boolean>(store.queriesEnabled);
+  const queriesEnabled = useAtomValue<boolean>(store.queriesEnabled);
   return useQuery<t.TFile[], unknown, TData>(
     DynamicQueryKeys.agentFiles(agentId ?? ''),
     () => (agentId ? dataService.getAgentFiles(agentId) : Promise.resolve([])),

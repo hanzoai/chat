@@ -1,17 +1,18 @@
-import { useRecoilCallback } from 'recoil';
+import { useCallback } from 'react';
+import { useAtomCallback } from 'jotai/utils';
 import type { TMessage } from '@hanzochat/data-provider';
 import store from '~/store';
 
 export default function useBuildMessageTree() {
-  const getSiblingIdx = useRecoilCallback(
-    ({ snapshot }) =>
-      async (messageId: string | null | undefined) =>
-        await snapshot.getPromise(store.messagesSiblingIdxFamily(messageId)),
-    [],
+  const getSiblingIdx = useAtomCallback(
+    useCallback(
+      (get, _set, messageId: string | null | undefined) =>
+        get(store.messagesSiblingIdxFamily(messageId)),
+      [],
+    ),
   );
-
   // return an object or an array based on branches and recursive option
-  // messageId is used to get siblindIdx from recoil snapshot
+  // messageId is used to read the sibling index from the store
   const buildMessageTree = async ({
     messageId,
     message,

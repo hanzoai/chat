@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { RecoilRoot, useRecoilValue } from 'recoil';
-import type { MutableSnapshot } from 'recoil';
+import { Provider, useAtomValue } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import type { TAttachment } from '@hanzochat/data-provider';
 import Attachment, { AttachmentGroup } from '../Attachment';
 import store from '~/store';
@@ -74,10 +75,10 @@ const baseAttachment = (overrides: Partial<TAttachment> = {}): TAttachment =>
  */
 const renderWith = (ui: React.ReactElement, opts: { streaming?: boolean } = {}) => {
   const streaming = opts.streaming ?? true;
-  const initializeState = (snapshot: MutableSnapshot) => {
+  const initializeState = (snapshot: Store) => {
     snapshot.set(store.isSubmittingFamily(0), streaming);
   };
-  return render(<RecoilRoot initializeState={initializeState}>{ui}</RecoilRoot>);
+  return render(<Provider store={seed(initializeState)}>{ui}</Provider>);
 };
 
 interface ArtifactsSnapshot {
@@ -87,9 +88,9 @@ interface ArtifactsSnapshot {
 }
 
 const StateProbe = ({ onSnapshot }: { onSnapshot: (snap: ArtifactsSnapshot) => void }) => {
-  const visibility = useRecoilValue(store.artifactsVisibility);
-  const currentArtifactId = useRecoilValue(store.currentArtifactId);
-  const artifacts = useRecoilValue(store.artifactsState);
+  const visibility = useAtomValue(store.artifactsVisibility);
+  const currentArtifactId = useAtomValue(store.currentArtifactId);
+  const artifacts = useAtomValue(store.artifactsState);
   React.useEffect(() => {
     onSnapshot({
       visibility,
@@ -102,7 +103,7 @@ const StateProbe = ({ onSnapshot }: { onSnapshot: (snap: ArtifactsSnapshot) => v
 
 const renderWithProbe = (ui: React.ReactElement, opts: { streaming?: boolean } = {}) => {
   const streaming = opts.streaming ?? true;
-  const initializeState = (snap: MutableSnapshot) => {
+  const initializeState = (snap: Store) => {
     snap.set(store.isSubmittingFamily(0), streaming);
   };
   let snapshot: ArtifactsSnapshot = {
@@ -111,14 +112,14 @@ const renderWithProbe = (ui: React.ReactElement, opts: { streaming?: boolean } =
     artifactIds: [],
   };
   const utils = render(
-    <RecoilRoot initializeState={initializeState}>
+    <Provider store={seed(initializeState)}>
       <StateProbe
         onSnapshot={(snap) => {
           snapshot = snap;
         }}
       />
       {ui}
-    </RecoilRoot>,
+    </Provider>,
   );
   return {
     ...utils,
@@ -320,7 +321,7 @@ describe('ToolArtifactCard click behaviour', () => {
     }
     let snapshot: ContentSnapshot = { ids: [], contentForDup: null };
     const ContentProbe = () => {
-      const artifacts = useRecoilValue(store.artifactsState);
+      const artifacts = useAtomValue(store.artifactsState);
       React.useEffect(() => {
         const ids = Object.keys(artifacts ?? {});
         const dup = artifacts?.['tool-artifact-dup-divergent'];
@@ -339,11 +340,11 @@ describe('ToolArtifactCard click behaviour', () => {
       text: '<h1>v2 (newer)</h1>',
     } as Partial<TAttachment>);
     render(
-      <RecoilRoot>
+      <Provider>
         <ContentProbe />
         <AttachmentGroup attachments={[older]} />
         <AttachmentGroup attachments={[newer]} />
-      </RecoilRoot>,
+      </Provider>,
     );
     expect(snapshot.ids).toContain('tool-artifact-dup-divergent');
     // Newer (claim-winner) content must win and stay won.
@@ -439,7 +440,7 @@ describe('ToolArtifactCard click behaviour', () => {
       filename: 'test.py',
       text: 'print("hello")',
     } as Partial<TAttachment>);
-    const initializeState = (snap: MutableSnapshot) => {
+    const initializeState = (snap: Store) => {
       snap.set(store.isSubmittingFamily(0), true);
     };
     let snapshot: ArtifactsSnapshot = {
@@ -448,14 +449,14 @@ describe('ToolArtifactCard click behaviour', () => {
       artifactIds: [],
     };
     render(
-      <RecoilRoot initializeState={initializeState}>
+      <Provider store={seed(initializeState)}>
         <StateProbe
           onSnapshot={(snap) => {
             snapshot = snap;
           }}
         />
         <Attachment attachment={py} />
-      </RecoilRoot>,
+      </Provider>,
     );
     // Artifact registered (so the panel can find it on click)…
     expect(snapshot.artifactIds).toContain('tool-artifact-helper-script');
@@ -475,7 +476,7 @@ describe('ToolArtifactCard click behaviour', () => {
       filename: 'fresh.html',
       text: '<h1>fresh</h1>',
     } as Partial<TAttachment>);
-    const initializeState = (snap: MutableSnapshot) => {
+    const initializeState = (snap: Store) => {
       snap.set(store.isSubmittingFamily(0), true);
       snap.set(store.artifactsVisibility, false);
     };
@@ -485,14 +486,14 @@ describe('ToolArtifactCard click behaviour', () => {
       artifactIds: [],
     };
     render(
-      <RecoilRoot initializeState={initializeState}>
+      <Provider store={seed(initializeState)}>
         <StateProbe
           onSnapshot={(snap) => {
             snapshot = snap;
           }}
         />
         <Attachment attachment={html} />
-      </RecoilRoot>,
+      </Provider>,
     );
     expect(snapshot.visibility).toBe(true);
     expect(snapshot.currentArtifactId).toBe('tool-artifact-fresh-stream');
@@ -507,7 +508,7 @@ describe('ToolArtifactCard click behaviour', () => {
       filename: 'historic.html',
       text: '<h1>old</h1>',
     } as Partial<TAttachment>);
-    const initializeState = (snap: MutableSnapshot) => {
+    const initializeState = (snap: Store) => {
       snap.set(store.isSubmittingFamily(0), false);
       snap.set(store.artifactsVisibility, false);
     };
@@ -517,14 +518,14 @@ describe('ToolArtifactCard click behaviour', () => {
       artifactIds: [],
     };
     render(
-      <RecoilRoot initializeState={initializeState}>
+      <Provider store={seed(initializeState)}>
         <StateProbe
           onSnapshot={(snap) => {
             snapshot = snap;
           }}
         />
         <Attachment attachment={html} />
-      </RecoilRoot>,
+      </Provider>,
     );
     expect(snapshot.visibility).toBe(false);
     expect(snapshot.currentArtifactId).toBeNull();
@@ -548,7 +549,7 @@ describe('ToolArtifactCard click behaviour', () => {
       text: '<table>resolved</table>',
       textFormat: 'html',
     } as Partial<TAttachment>);
-    const initializeState = (snap: MutableSnapshot) => {
+    const initializeState = (snap: Store) => {
       snap.set(store.isSubmittingFamily(0), false);
       snap.set(store.artifactsVisibility, false);
       snap.set(store.previewJustResolved('just-resolved-xlsx'), true);
@@ -559,14 +560,14 @@ describe('ToolArtifactCard click behaviour', () => {
       artifactIds: [],
     };
     render(
-      <RecoilRoot initializeState={initializeState}>
+      <Provider store={seed(initializeState)}>
         <StateProbe
           onSnapshot={(snap) => {
             snapshot = snap;
           }}
         />
         <Attachment attachment={xlsx} />
-      </RecoilRoot>,
+      </Provider>,
     );
     expect(snapshot.currentArtifactId).toBe('tool-artifact-just-resolved-xlsx');
     expect(snapshot.visibility).toBe(true);
@@ -584,7 +585,7 @@ describe('ToolArtifactCard click behaviour', () => {
       text: '<table>resolved</table>',
       textFormat: 'html',
     } as Partial<TAttachment>);
-    const initializeState = (snap: MutableSnapshot) => {
+    const initializeState = (snap: Store) => {
       snap.set(store.isSubmittingFamily(0), false);
       snap.set(store.artifactsVisibility, false);
       snap.set(store.previewJustResolved('one-shot-xlsx'), true);
@@ -595,36 +596,36 @@ describe('ToolArtifactCard click behaviour', () => {
       artifactIds: [],
     };
     const { unmount } = render(
-      <RecoilRoot initializeState={initializeState}>
+      <Provider store={seed(initializeState)}>
         <StateProbe
           onSnapshot={(snap) => {
             snapshot = snap;
           }}
         />
         <Attachment attachment={xlsx} />
-      </RecoilRoot>,
+      </Provider>,
     );
-    /* First mount auto-opened. Now simulate a fresh Recoil tree with the
+    /* First mount auto-opened. Now simulate a fresh Jotai tree with the
      * flag in the post-consume state (false) and assert the second
-     * mount stays closed. We use a fresh RecoilRoot to mirror what a
+     * mount stays closed. We use a fresh Provider to mirror what a
      * real "panel was closed and the user then revealed the chip
      * again" pathway would look like at the state level. */
     unmount();
     snapshot = { visibility: false, currentArtifactId: null, artifactIds: [] };
-    const secondInit = (snap: MutableSnapshot) => {
+    const secondInit = (snap: Store) => {
       snap.set(store.isSubmittingFamily(0), false);
       snap.set(store.artifactsVisibility, false);
       // flag stays at default (false) — already consumed
     };
     render(
-      <RecoilRoot initializeState={secondInit}>
+      <Provider store={seed(secondInit)}>
         <StateProbe
           onSnapshot={(snap) => {
             snapshot = snap;
           }}
         />
         <Attachment attachment={xlsx} />
-      </RecoilRoot>,
+      </Provider>,
     );
     expect(snapshot.currentArtifactId).toBeNull();
     expect(snapshot.visibility).toBe(false);

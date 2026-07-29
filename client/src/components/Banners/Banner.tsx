@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { XIcon } from 'lucide-react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Button, cn } from '@hanzochat/client';
 import { useGetBannerQuery } from '~/data-provider';
 import store from '~/store';
 
 export const Banner = ({ onHeightChange }: { onHeightChange?: (height: number) => void }) => {
   const { data: banner } = useGetBannerQuery();
-  const [hideBannerHint, setHideBannerHint] = useRecoilState<string[]>(store.hideBannerHint);
+  const [hideBannerHint, setHideBannerHint] = useAtom<string[]>(store.hideBannerHint);
   const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

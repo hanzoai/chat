@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect, useRef, memo, startTransition } from 'react';
 import type { ReactNode } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from '@hanzochat/client';
 import type { ChatFormValues } from '~/common';
@@ -24,10 +24,10 @@ function getInitialWidth(): number {
 }
 
 /**
- * Isolates useChatHelpers Recoil subscriptions from the sidebar layout.
+ * Isolates useChatHelpers Jotai subscriptions from the sidebar layout.
  * Atom changes (e.g. during streaming) only re-render this component
  * and the active panel — not the sidebar shell, resize logic, or icon strip.
- * This works because Recoil subscriptions don't propagate to parent components.
+ * This works because Jotai subscriptions don't propagate to parent components.
  */
 function SidebarChatProvider({ children }: { children: ReactNode }) {
   const chatHelpers = useChatHelpers(0);
@@ -42,7 +42,7 @@ function SidebarChatProvider({ children }: { children: ReactNode }) {
 function UnifiedSidebar() {
   const localize = useLocalize();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
-  const [expanded, setExpanded] = useRecoilState(store.sidebarExpanded);
+  const [expanded, setExpanded] = useAtom(store.sidebarExpanded);
   const [sidebarWidth, setSidebarWidth] = useState(getInitialWidth);
   const [isResizing, setIsResizing] = useState(false);
   const resizeHandlers = useRef<{ move: (e: MouseEvent) => void; up: () => void } | null>(null);

@@ -15,14 +15,14 @@ import {
 } from '@hanzochat/client';
 import { useRegenerateBackupCodesMutation } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import store from '~/store';
 
 const BackupCodesItem: React.FC = () => {
   const localize = useLocalize();
   const { user } = useAuthContext();
   const { showToast } = useToastContext();
-  const setUser = useSetRecoilState(store.user);
+  const setUser = useSetAtom(store.user);
   const [isDialogOpen, setDialogOpen] = useState<boolean>(false);
 
   const { mutate: regenerateBackupCodes, isLoading } = useRegenerateBackupCodesMutation();

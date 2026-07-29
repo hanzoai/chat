@@ -1,5 +1,5 @@
 import { render, act, waitFor } from '@testing-library/react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContextProvider, useAuthContext } from '../AuthContext';
@@ -60,13 +60,13 @@ function renderProvider() {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <RecoilRoot>
+      <Provider>
         <MemoryRouter>
           <AuthContextProvider authConfig={{ loginRedirect: '/login' }}>
             <Consumer />
           </AuthContextProvider>
         </MemoryRouter>
-      </RecoilRoot>
+      </Provider>
     </QueryClientProvider>,
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EModelEndpoint, mergeFileConfig } from '@hanzochat/data-provider';
 import type { TEndpointsConfig, Agent } from '@hanzochat/data-provider';
@@ -58,7 +58,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false 
 function renderComponent(conversation: Record<string, unknown> | null, disableInputs = false) {
   return render(
     <QueryClientProvider client={queryClient}>
-      <RecoilRoot>
+      <Provider>
         <AttachFileChat
           conversation={conversation as never}
           disableInputs={disableInputs}
@@ -66,7 +66,7 @@ function renderComponent(conversation: Record<string, unknown> | null, disableIn
           setFiles={() => {}}
           setFilesLoading={() => {}}
         />
-      </RecoilRoot>
+      </Provider>
     </QueryClientProvider>,
   );
 }

@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react';
 import { ScrollText, X } from 'lucide-react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
@@ -16,8 +16,8 @@ import store from '~/store';
  */
 function PendingManualSkillsChips({ conversationId }: { conversationId: string }) {
   const localize = useLocalize();
-  const skills = useRecoilValue(store.pendingManualSkillsByConvoId(conversationId));
-  const setSkills = useSetRecoilState(store.pendingManualSkillsByConvoId(conversationId));
+  const skills = useAtomValue(store.pendingManualSkillsByConvoId(conversationId));
+  const setSkills = useSetAtom(store.pendingManualSkillsByConvoId(conversationId));
 
   const remove = useCallback(
     (name: string) => {

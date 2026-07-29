@@ -1,14 +1,13 @@
-import { useRecoilCallback } from 'recoil';
+import { useCallback } from 'react';
+import { useAtomCallback } from 'jotai/utils';
 import type { TConversation } from '@hanzochat/data-provider';
 import store from '~/store';
 
 export default function useGetConversation(index: string | number = 0) {
-  return useRecoilCallback(
-    ({ snapshot }) =>
-      () =>
-        snapshot
-          .getLoadable(store.conversationByKeySelector(index))
-          .getValue() as TConversation | null,
-    [index],
+  return useAtomCallback(
+    useCallback(
+      (get) => get(store.conversationByKeySelector(index)) as TConversation | null,
+      [index],
+    ),
   );
 }

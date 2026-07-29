@@ -1,9 +1,10 @@
-import { RecoilRoot, useRecoilValue } from 'recoil';
+import { Provider, useAtomValue } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import { Constants } from '@hanzochat/data-provider';
 import { renderHook, act } from '@testing-library/react';
 
 import type { TMessage, TConversation, TSubmission } from '@hanzochat/data-provider';
-import type { MutableSnapshot } from 'recoil';
 import type { ReactNode } from 'react';
 
 import useResumeOnLoad from '../useResumeOnLoad';
@@ -76,22 +77,22 @@ function renderUseResumeOnLoad({
   onSubmission?: (submission: TSubmission | null) => void;
 }) {
   const getMessages = jest.fn(getMessagesOverride ?? (() => messages));
-  const initializeState = (snapshot: MutableSnapshot) => {
+  const initializeState = (snapshot: Store) => {
     snapshot.set(store.conversationByIndex(0), buildConversation(conversationId));
     snapshot.set(store.submissionByIndex(0), submission);
   };
 
   const SubmissionProbe = () => {
-    const currentSubmission = useRecoilValue(store.submissionByIndex(0));
+    const currentSubmission = useAtomValue(store.submissionByIndex(0));
     onSubmission?.(currentSubmission);
     return null;
   };
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <RecoilRoot initializeState={initializeState}>
+    <Provider store={seed(initializeState)}>
       <SubmissionProbe />
       {children}
-    </RecoilRoot>
+    </Provider>
   );
 
   return {

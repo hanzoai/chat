@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { OGDialog, OGDialogTemplate } from '@hanzochat/client';
 import {
   Providers,
@@ -48,7 +48,7 @@ const DragDropModal = ({ onOptionSelect, setShowModal, files, isVisible }: DragD
    * */
   const capabilities = useAgentCapabilities(agentsConfig?.capabilities ?? defaultAgentCapabilities);
   const { conversationId, agentId, endpoint, endpointType, useResponsesApi } = useDragDropContext();
-  const ephemeralAgent = useRecoilValue(ephemeralAgentByConvoId(conversationId ?? ''));
+  const ephemeralAgent = useAtomValue(ephemeralAgentByConvoId(conversationId ?? ''));
   const { fileSearchAllowedByAgent, codeAllowedByAgent, provider } = useAgentToolPermissions(
     agentId,
     ephemeralAgent,

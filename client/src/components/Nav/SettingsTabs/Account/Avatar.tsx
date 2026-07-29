@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 // @ts-ignore - no type definitions available
 import AvatarEditor from 'react-avatar-editor';
 import { FileImage, RotateCw, Upload, ZoomIn, ZoomOut, Move, X } from 'lucide-react';
@@ -33,7 +33,7 @@ interface Position {
 }
 
 function Avatar() {
-  const setUser = useSetRecoilState(store.user);
+  const setUser = useSetAtom(store.user);
 
   const [scale, setScale] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0);

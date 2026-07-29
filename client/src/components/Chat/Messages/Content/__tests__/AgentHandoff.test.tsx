@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { render, screen } from '@testing-library/react';
 import AgentHandoff from '../AgentHandoff';
 
@@ -47,9 +47,9 @@ const renderAgentHandoff = (props: {
   output?: string | null;
 }) =>
   render(
-    <RecoilRoot>
+    <Provider>
       <AgentHandoff {...props} />
-    </RecoilRoot>,
+    </Provider>,
   );
 
 describe('AgentHandoff - A11Y accessibility stubs', () => {

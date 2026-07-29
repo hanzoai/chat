@@ -1,5 +1,5 @@
 import { useCallback, useId } from 'react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useAtom, useSetAtom } from 'jotai';
 import { Switch, InfoHoverCard, ESide } from '@hanzochat/client';
 import { PromptsEditorMode } from '~/common';
 import { useLocalize } from '~/hooks';
@@ -9,8 +9,8 @@ const { promptsEditorMode, alwaysMakeProd } = store;
 
 export default function AdvancedPrompts() {
   const localize = useLocalize();
-  const [mode, setMode] = useRecoilState(promptsEditorMode);
-  const setAlwaysMakeProd = useSetRecoilState(alwaysMakeProd);
+  const [mode, setMode] = useAtom(promptsEditorMode);
+  const setAlwaysMakeProd = useSetAtom(alwaysMakeProd);
 
   const isAdvanced = mode === PromptsEditorMode.ADVANCED;
 

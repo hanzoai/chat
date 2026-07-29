@@ -1,7 +1,7 @@
 import { useCallback, useState, useMemo, useEffect } from 'react';
 import { Trans } from 'react-i18next';
 import debounce from 'lodash/debounce';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { Link } from 'react-router-dom';
 import {
   ArrowUp,
@@ -48,7 +48,7 @@ export default function SharedLinks() {
   const localize = useLocalize();
   const { showToast } = useToastContext();
   const [isOpen, setIsOpen] = useState(false);
-  const searchStore = useRecoilValue(store.search);
+  const searchStore = useAtomValue(store.search);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const [deleteRow, setDeleteRow] = useState<SharedLinkItem | null>(null);

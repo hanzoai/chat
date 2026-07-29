@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import { v4 } from 'uuid';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { useToastContext } from '@hanzochat/client';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -39,7 +39,7 @@ const useFileHandling = (params?: UseFileHandling) => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const { startUploadTimer, clearUploadTimer } = useDelayedUploadToast();
   const { files, setFiles, setFilesLoading, conversation } = useChatContext();
-  const setEphemeralAgent = useSetRecoilState(
+  const setEphemeralAgent = useSetAtom(
     ephemeralAgentByConvoId(conversation?.conversationId ?? Constants.NEW_CONVO),
   );
   const setError = (error: string) => setErrors((prevErrors) => [...prevErrors, error]);

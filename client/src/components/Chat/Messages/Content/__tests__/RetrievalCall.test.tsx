@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { TAttachment } from '@hanzochat/data-provider';
 import RetrievalCall from '../RetrievalCall';
@@ -99,9 +99,9 @@ const renderRetrievalCall = (
   props: Partial<typeof defaultProps & { output?: string; attachments?: TAttachment[] }> = {},
 ) =>
   render(
-    <RecoilRoot>
+    <Provider>
       <RetrievalCall {...defaultProps} {...props} />
-    </RecoilRoot>,
+    </Provider>,
   );
 
 const mockedUseGetFiles = jest.requireMock('~/data-provider').useGetFiles as jest.Mock;

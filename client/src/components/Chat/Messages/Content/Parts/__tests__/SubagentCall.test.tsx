@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot, useRecoilCallback } from 'recoil';
+import { Provider } from 'jotai';
 import { render, screen, act, fireEvent, waitFor, within } from '@testing-library/react';
 import type { SubagentUpdateEvent } from '@hanzochat/data-provider';
 import type {
@@ -139,7 +139,7 @@ afterEach(() => {
 /** The dialog wraps single parts in `Container` and grouped tool_calls in
  *  `ToolCallGroup`. Stub both as transparent wrappers so the tests still
  *  assert on the leaf renderers (Text/Reasoning/ToolCall) without pulling
- *  Recoil-backed tool-call batching state into the component tree. */
+ *  Jotai-backed tool-call batching state into the component tree. */
 jest.mock('~/components/Chat/Messages/Content/Container', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => (
@@ -201,9 +201,9 @@ function progressFromEvents(
 }
 
 /**
- * Mount the component inside a RecoilRoot and expose a setter so each test
+ * Mount the component inside a Provider and expose a setter so each test
  * can seed the `subagentProgressByToolCallId` atom with the state under test.
- * Real Recoil, no mocks of the store — matches the hook-integration test
+ * Real Jotai, no mocks of the store — matches the hook-integration test
  * style in useStepHandler.spec.ts.
  */
 function renderWithState(args: {
@@ -214,7 +214,7 @@ function renderWithState(args: {
 }) {
   const setter = { current: null as null | ((next: SubagentProgress | null) => void) };
   const SeedHelper = () => {
-    setter.current = useRecoilCallback(
+    setter.current = useJotaiCallback(
       ({ set }) =>
         (next: SubagentProgress | null) => {
           set(subagentProgressByToolCallId(args.toolCallId), next);
@@ -224,7 +224,7 @@ function renderWithState(args: {
     return null;
   };
   const rendered = render(
-    <RecoilRoot>
+    <Provider>
       <SeedHelper />
       <SubagentCall
         toolCallId={args.toolCallId}
@@ -232,7 +232,7 @@ function renderWithState(args: {
         isSubmitting={args.isSubmitting ?? false}
         args={{ subagent_type: 'self', description: 'compute' }}
       />
-    </RecoilRoot>,
+    </Provider>,
   );
   const setProgress = (next: SubagentProgress | null) => {
     act(() => {
@@ -509,7 +509,7 @@ describe('SubagentCall — ticker', () => {
 describe('SubagentCall — dialog content', () => {
   it('renders the prompt through MarkdownLite and expands it inline with the activity area', () => {
     render(
-      <RecoilRoot>
+      <Provider>
         <SubagentCall
           toolCallId="call_prompt"
           initialProgress={1}
@@ -520,7 +520,7 @@ describe('SubagentCall — dialog content', () => {
             description: '# Review prompt\n\n**Focus:** edge cases',
           }}
         />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     openSubagentDialog();
@@ -611,23 +611,23 @@ describe('SubagentCall — dialog content', () => {
      *  render the raw final `output` that came back in the parent's
      *  tool_call. */
     const { rerender } = render(
-      <RecoilRoot>
+      <Provider>
         <SubagentCall
           toolCallId="call_fallback_2"
           initialProgress={1}
           output="raw final text"
           isSubmitting={false}
         />
-      </RecoilRoot>,
+      </Provider>,
     );
     openSubagentDialog();
     expect(screen.getByText('raw final text')).toBeInTheDocument();
-    rerender(<RecoilRoot />);
+    rerender(<Provider />);
   });
 
   it('renders persistedContent parts when no live events are available (page-refresh flow)', () => {
     /**
-     * After a refresh the Recoil atom is empty — the child's history has
+     * After a refresh the Jotai atom is empty — the child's history has
      * to come from the `subagent_content` array the backend attached to
      * the tool_call at message-save time. Verifies that a
      * `persistedContent` prop routes through the same leaf renderers
@@ -650,14 +650,14 @@ describe('SubagentCall — dialog content', () => {
     ] as unknown as Parameters<typeof SubagentCall>[0]['persistedContent'];
 
     render(
-      <RecoilRoot>
+      <Provider>
         <SubagentCall
           toolCallId="call_refresh"
           initialProgress={1}
           isSubmitting={false}
           persistedContent={persistedContent}
         />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     openSubagentDialog();
@@ -670,7 +670,7 @@ describe('SubagentCall — dialog content', () => {
   it('prefers persistedContent when both are populated (sync/reconnect canonical)', () => {
     /**
      * Codex P2 regression: after a disconnect/reconnect the live
-     * Recoil bucket can be stale or partial — it missed events
+     * Jotai bucket can be stale or partial — it missed events
      * while the socket was down. The server-written
      * `persistedContent` on the `tool_call` is the canonical trace
      * of the completed run, so when it's present the dialog should
@@ -681,7 +681,7 @@ describe('SubagentCall — dialog content', () => {
      * persisted is still correct because it's the authoritative copy.
      */
     render(
-      <RecoilRoot>
+      <Provider>
         <SubagentCall
           toolCallId="call_both_seeded"
           initialProgress={1}
@@ -692,7 +692,7 @@ describe('SubagentCall — dialog content', () => {
             >[0]['persistedContent']
           }
         />
-      </RecoilRoot>,
+      </Provider>,
     );
     openSubagentDialog();
     expect(screen.getByText('Persisted answer.')).toBeInTheDocument();

@@ -1,13 +1,13 @@
 import AddedConvo from './AddedConvo';
+import type { Setter } from '~/common';
 import type { TConversation } from '@hanzochat/data-provider';
-import type { SetterOrUpdater } from 'recoil';
 
 export default function TextareaHeader({
   addedConvo,
   setAddedConvo,
 }: {
   addedConvo: TConversation | null;
-  setAddedConvo: SetterOrUpdater<TConversation | null>;
+  setAddedConvo: Setter<TConversation | null>;
 }) {
   if (!addedConvo) {
     return null;

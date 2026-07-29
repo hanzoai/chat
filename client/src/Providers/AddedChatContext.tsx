@@ -1,11 +1,10 @@
 import { createContext, useContext } from 'react';
 import type { TConversation } from '@hanzochat/data-provider';
-import type { SetterOrUpdater } from 'recoil';
-import type { ConvoGenerator } from '~/common';
+import type { Setter, ConvoGenerator } from '~/common';
 
 type TAddedChatContext = {
   conversation: TConversation | null;
-  setConversation: SetterOrUpdater<TConversation | null>;
+  setConversation: Setter<TConversation | null>;
   generateConversation: ConvoGenerator;
 };
 

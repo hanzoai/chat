@@ -2,7 +2,7 @@ import React from 'react';
 import '@testing-library/jest-dom/extend-expect';
 import { render, fireEvent } from 'test/layout-test-utils';
 import SpeechToTextSwitch from '../SpeechToTextSwitch';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 
 describe('SpeechToTextSwitch', () => {
   /**
@@ -16,9 +16,9 @@ describe('SpeechToTextSwitch', () => {
 
   it('renders correctly', () => {
     const { getByTestId } = render(
-      <RecoilRoot>
+      <Provider>
         <SpeechToTextSwitch />
-      </RecoilRoot>,
+      </Provider>,
     );
 
     expect(getByTestId('SpeechToText')).toBeInTheDocument();
@@ -26,9 +26,9 @@ describe('SpeechToTextSwitch', () => {
 
   it('calls onCheckedChange when the switch is toggled', () => {
     const { getByTestId } = render(
-      <RecoilRoot>
+      <Provider>
         <SpeechToTextSwitch onCheckedChange={mockSetSpeechToText} />
-      </RecoilRoot>,
+      </Provider>,
     );
     const switchElement = getByTestId('SpeechToText');
     fireEvent.click(switchElement);

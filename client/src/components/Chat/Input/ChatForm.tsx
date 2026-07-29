@@ -1,7 +1,7 @@
 import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
 import { TextareaAutosize } from '@hanzochat/client';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from '@hanzochat/data-provider';
 import {
   useChatContext,
@@ -58,21 +58,21 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   /** True from the moment the mic opens until it closes. */
   const [voiceLive, setVoiceLive] = useState(false);
 
-  const SpeechToText = useRecoilValue(store.speechToText);
-  const TextToSpeech = useRecoilValue(store.textToSpeech);
-  const chatDirection = useRecoilValue(store.chatDirection);
-  const automaticPlayback = useRecoilValue(store.automaticPlayback);
-  const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
-  const isTemporary = useRecoilValue(store.isTemporary);
+  const SpeechToText = useAtomValue(store.speechToText);
+  const TextToSpeech = useAtomValue(store.textToSpeech);
+  const chatDirection = useAtomValue(store.chatDirection);
+  const automaticPlayback = useAtomValue(store.automaticPlayback);
+  const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
+  const isTemporary = useAtomValue(store.isTemporary);
 
-  const [badges, setBadges] = useRecoilState(store.chatBadges);
-  const [isEditingBadges, setIsEditingBadges] = useRecoilState(store.isEditingBadges);
-  const [showStopButton, setShowStopButton] = useRecoilState(store.showStopButtonByIndex(index));
-  const [showPlusPopover, setShowPlusPopover] = useRecoilState(store.showPlusPopoverFamily(index));
-  const [showMentionPopover, setShowMentionPopover] = useRecoilState(
+  const [badges, setBadges] = useAtom(store.chatBadges);
+  const [isEditingBadges, setIsEditingBadges] = useAtom(store.isEditingBadges);
+  const [showStopButton, setShowStopButton] = useAtom(store.showStopButtonByIndex(index));
+  const [showPlusPopover, setShowPlusPopover] = useAtom(store.showPlusPopoverFamily(index));
+  const [showMentionPopover, setShowMentionPopover] = useAtom(
     store.showMentionPopoverFamily(index),
   );
-  const setShowAgentsPopover = useSetRecoilState(store.showAgentsPopoverFamily(index));
+  const setShowAgentsPopover = useSetAtom(store.showAgentsPopoverFamily(index));
 
   const { requiresKey } = useRequiresKey();
   const methods = useChatFormContext();

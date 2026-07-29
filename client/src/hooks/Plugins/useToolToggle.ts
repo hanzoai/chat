@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useEffect } from 'react';
 import debounce from 'lodash/debounce';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Constants, LocalStorageKeys } from '@hanzochat/data-provider';
 import type { VerifyToolAuthResponse } from '@hanzochat/data-provider';
 import type { UseQueryOptions } from '@tanstack/react-query';
@@ -35,7 +35,7 @@ export function useToolToggle({
   authConfig,
 }: UseToolToggleOptions) {
   const key = conversationId ?? Constants.NEW_CONVO;
-  const [ephemeralAgent, setEphemeralAgent] = useRecoilState(ephemeralAgentByConvoId(key));
+  const [ephemeralAgent, setEphemeralAgent] = useAtom(ephemeralAgentByConvoId(key));
 
   const authQuery = useVerifyAgentToolAuth(
     { toolId: authConfig?.toolId || '' },

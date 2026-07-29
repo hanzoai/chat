@@ -3,8 +3,7 @@ import { useCombobox } from '@hanzochat/client';
 import { AutoSizer, List } from 'react-virtualized';
 import { EModelEndpoint } from '@hanzochat/data-provider';
 import type { TConversation } from '@hanzochat/data-provider';
-import type { MentionOption, ConvoGenerator } from '~/common';
-import type { SetterOrUpdater } from 'recoil';
+import type { Setter, MentionOption, ConvoGenerator } from '~/common';
 import useSelectMention from '~/hooks/Input/useSelectMention';
 import { useLocalize, TranslationKeys } from '~/hooks';
 import { useAssistantsMapContext } from '~/Providers';
@@ -24,7 +23,7 @@ export default function Mention({
   includeAssistants = true,
 }: {
   conversation: TConversation | null;
-  setShowMentionPopover: SetterOrUpdater<boolean>;
+  setShowMentionPopover: Setter<boolean>;
   newConversation: ConvoGenerator;
   textAreaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   commandChar?: string;

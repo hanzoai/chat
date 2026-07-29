@@ -1,12 +1,7 @@
-import { memo, useEffect, useId, useLayoutEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useId, useLayoutEffect, useRef } from 'react';
 import { Download } from 'lucide-react';
-import {
-  useRecoilCallback,
-  useRecoilState,
-  useRecoilValue,
-  useResetRecoilState,
-  useSetRecoilState,
-} from 'recoil';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { RESET, useAtomCallback, useResetAtom } from 'jotai/utils';
 import type { TAttachment, TFile, TAttachmentMetadata } from '@hanzochat/data-provider';
 import type { Artifact } from '~/common';
 import FilePreview from '~/components/Chat/Input/Files/FilePreview';
@@ -72,30 +67,28 @@ const ToolArtifactCard = memo(({ attachment, artifact }: ToolArtifactCardProps) 
   const claimKey = useId();
   const file = attachment as TFile & TAttachmentMetadata;
   const fileId = file.file_id;
-  const setVisible = useSetRecoilState(store.artifactsVisibility);
-  const setArtifacts = useSetRecoilState(store.artifactsState);
-  const setCurrentArtifactId = useSetRecoilState(store.currentArtifactId);
-  const resetCurrentArtifactId = useResetRecoilState(store.currentArtifactId);
-  const currentArtifactId = useRecoilValue(store.currentArtifactId);
-  const existingEntry = useRecoilValue(store.artifactByIdSelector(artifact.id));
-  const [claim, setClaim] = useRecoilState(store.toolArtifactClaim(artifact.id));
+  const setVisible = useSetAtom(store.artifactsVisibility);
+  const setArtifacts = useSetAtom(store.artifactsState);
+  const setCurrentArtifactId = useSetAtom(store.currentArtifactId);
+  const resetCurrentArtifactId = useResetAtom(store.currentArtifactId);
+  const currentArtifactId = useAtomValue(store.currentArtifactId);
+  const existingEntry = useAtomValue(store.artifactByIdSelector(artifact.id));
+  const [claim, setClaim] = useAtom(store.toolArtifactClaim(artifact.id));
   const isSelected = artifact.id === currentArtifactId;
   const isMyClaim = claim === claimKey;
-  /* Read+reset on mount only — `useRecoilCallback` avoids subscribing
+  /* Read+reset on mount only — `useJotaiCallback` avoids subscribing
    * to the per-file_id flag (no re-renders when other files resolve).
    * The deferred-preview hook flips this to `true` on the pending→ready
    * edge; we consume it once and reset, so repeat mounts (panel close
    * then reopen, history scroll) don't auto-open a second time. */
-  const consumeJustResolved = useRecoilCallback(
-    ({ snapshot, reset }) =>
-      (id: string) => {
-        const flagged = snapshot.getLoadable(store.previewJustResolved(id)).valueMaybe() ?? false;
-        if (flagged) {
-          reset(store.previewJustResolved(id));
-        }
-        return flagged;
-      },
-    [],
+  const consumeJustResolved = useAtomCallback(
+    useCallback((get, set, id: string) => {
+      const flagged = get(store.previewJustResolved(id)) ?? false;
+      if (flagged) {
+        set(store.previewJustResolved(id), RESET);
+      }
+      return flagged;
+    }, []),
   );
   /**
    * Captured at first render via a non-subscribing snapshot read so the
@@ -105,17 +98,11 @@ const ToolArtifactCard = memo(({ attachment, artifact }: ToolArtifactCardProps) 
    * mount post-stream stay "history" even if the user sends a new
    * message while this card stays mounted.
    */
-  const readInitialIsSubmitting = useRecoilCallback(
-    ({ snapshot }) =>
-      () =>
-        // `valueMaybe()` returns `undefined` if the atom is in an error
-        // or loading state instead of throwing — defensive against an
-        // upstream selector failure surfacing during card mount. The
-        // `?? false` default is correct because a card we can't classify
-        // as streaming is one we should treat as history (don't steal
-        // focus / open the panel).
-        snapshot.getLoadable(store.isSubmittingFamily(0)).valueMaybe() ?? false,
-    [],
+  const readInitialIsSubmitting = useAtomCallback(
+    // The `?? false` default is correct because a card we can't classify
+    // as streaming is one we should treat as history (don't steal focus /
+    // open the panel).
+    useCallback((get) => get(store.isSubmittingFamily(0)) ?? false, []),
   );
   const mountedDuringStreamRef = useRef<boolean | null>(null);
   if (mountedDuringStreamRef.current === null) {

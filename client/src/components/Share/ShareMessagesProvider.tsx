@@ -14,7 +14,7 @@ interface ShareMessagesProviderProps {
  * Uses the same MessagesViewContext as the main app for compatibility with existing hooks.
  *
  * Note: conversationId is set to undefined because share view is read-only and doesn't
- * need to check Recoil state for in-flight messages during streaming.
+ * need to check Jotai state for in-flight messages during streaming.
  */
 export function ShareMessagesProvider({ messages, children }: ShareMessagesProviderProps) {
   const contextValue = useMemo<MessagesViewContextValue>(

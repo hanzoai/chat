@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import {
   useMediaQuery,
   ResizablePanel,
@@ -53,8 +53,8 @@ export function ShareArtifactsContainer({
   conversationId,
   mainContent,
 }: ShareArtifactsContainerProps) {
-  const artifacts = useRecoilValue(store.artifactsState);
-  const artifactsVisibility = useRecoilValue(store.artifactsVisibility);
+  const artifacts = useAtomValue(store.artifactsState);
+  const artifactsVisibility = useAtomValue(store.artifactsVisibility);
   const isSmallScreen = useMediaQuery('(max-width: 1023px)');
   const [artifactPanelSize, setArtifactPanelSize] = useState(getInitialArtifactPanelSize);
 

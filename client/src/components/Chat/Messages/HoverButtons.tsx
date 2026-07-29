@@ -1,5 +1,5 @@
 import React, { useState, useMemo, memo } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { AppWindow } from 'lucide-react';
 import type { TConversation, TMessage, TFeedback } from '@hanzochat/data-provider';
 import { EditIcon, Clipboard, CheckMark, ContinueIcon, RegenerateIcon } from '@hanzochat/client';
@@ -126,7 +126,7 @@ const HoverButtons = ({
 }: THoverButtons) => {
   const localize = useLocalize();
   const [isCopied, setIsCopied] = useState(false);
-  const [TextToSpeech] = useRecoilState<boolean>(store.textToSpeech);
+  const [TextToSpeech] = useAtom<boolean>(store.textToSpeech);
 
   const endpoint = useMemo(() => {
     if (!conversation) {

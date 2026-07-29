@@ -18,7 +18,7 @@ jest.mock('~/Providers', () => ({
   useChatContext: jest.fn(),
 }));
 
-// Mock useChatHelpers to avoid Recoil dependency
+// Mock useChatHelpers to avoid Jotai dependency
 jest.mock('~/hooks', () => ({
   useChatHelpers: jest.fn(),
 }));

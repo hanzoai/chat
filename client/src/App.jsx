@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { DndProvider } from 'react-dnd';
 import { RouterProvider } from 'react-router-dom';
 import * as RadixToast from '@radix-ui/react-toast';
@@ -61,7 +61,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RecoilRoot>
+      <Provider>
         <LiveAnnouncer>
           <ThemeProvider
             // Only pass initialTheme and themeRGB if environment theme exists
@@ -90,7 +90,7 @@ const App = () => {
             </RadixToast.Provider>
           </ThemeProvider>
         </LiveAnnouncer>
-      </RecoilRoot>
+      </Provider>
     </QueryClientProvider>
   );
 };

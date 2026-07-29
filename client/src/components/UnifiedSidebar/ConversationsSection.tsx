@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useMemo, memo, lazy, Suspense, useRef } from 'react';
-import { useSetRecoilState, useRecoilValue } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useMediaQuery } from '@hanzochat/client';
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
@@ -22,7 +22,7 @@ const BookmarkNav = lazy(() => import('~/components/Nav/Bookmarks/BookmarkNav'))
 const ConversationsSection = memo(() => {
   const localize = useLocalize();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
-  const setSidebarExpanded = useSetRecoilState(store.sidebarExpanded);
+  const setSidebarExpanded = useSetAtom(store.sidebarExpanded);
   const { isAuthenticated } = useAuthContext();
   useTitleGeneration(isAuthenticated);
 
@@ -35,7 +35,7 @@ const ConversationsSection = memo(() => {
     permission: Permissions.USE,
   });
 
-  const search = useRecoilValue(store.search);
+  const search = useAtomValue(store.search);
 
   const { data, fetchNextPage, isFetchingNextPage, isLoading, isFetching } =
     useConversationsInfiniteQuery(

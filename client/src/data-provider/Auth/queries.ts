@@ -1,4 +1,4 @@
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import { useQuery } from '@tanstack/react-query';
 import type { QueryObserverResult, UseQueryOptions } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import store from '~/store';
 export const useGetUserQuery = (
   config?: UseQueryOptions<t.TUser>,
 ): QueryObserverResult<t.TUser> => {
-  const queriesEnabled = useRecoilValue<boolean>(store.queriesEnabled);
+  const queriesEnabled = useAtomValue<boolean>(store.queriesEnabled);
   return useQuery<t.TUser>([QueryKeys.user], () => dataService.getUser(), {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

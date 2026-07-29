@@ -369,7 +369,7 @@ const summarizeOutput = (output: unknown): string => {
 
 /**
  * Incrementally fold a single {@link SubagentUpdateEvent} into the ticker
- * state. Pure — never mutates inputs. Stored in the Recoil atom so the
+ * state. Pure — never mutates inputs. Stored in the atom so the
  * ticker always reflects the *full* run, not just the rolling event
  * window (which trims as deltas pile up and can drop earlier tool_call
  * lifecycle events).

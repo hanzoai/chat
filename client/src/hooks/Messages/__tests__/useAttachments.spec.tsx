@@ -12,7 +12,7 @@
 
 import { useEffect } from 'react';
 import { renderHook } from '@testing-library/react';
-import { RecoilRoot, useSetRecoilState } from 'recoil';
+import { Provider, useSetAtom } from 'jotai';
 import type { ReactNode } from 'react';
 import type { TAttachment } from '@hanzochat/data-provider';
 import store from '~/store';
@@ -46,7 +46,7 @@ function setup({
   liveMap?: Record<string, TAttachment[]>;
 }) {
   const Seed = () => {
-    const setMap = useSetRecoilState(store.messageAttachmentsMap);
+    const setMap = useSetAtom(store.messageAttachmentsMap);
     useEffect(() => {
       if (liveMap) {
         setMap(liveMap);
@@ -57,10 +57,10 @@ function setup({
 
   return renderHook(() => useAttachments({ messageId, attachments }), {
     wrapper: ({ children }: { children: ReactNode }) => (
-      <RecoilRoot>
+      <Provider>
         <Seed />
         {children}
-      </RecoilRoot>
+      </Provider>
     ),
   });
 }

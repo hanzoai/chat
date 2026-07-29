@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useResetRecoilState } from 'recoil';
+import { useResetAtom } from 'jotai/utils';
 import { logger } from '~/utils';
 import store from '~/store';
 
@@ -9,7 +9,7 @@ import store from '~/store';
  */
 export default function useIdChangeEffect(conversationId: string) {
   const lastConvoId = useRef<string | null>(null);
-  const resetVisibleArtifacts = useResetRecoilState(store.visibleArtifacts);
+  const resetVisibleArtifacts = useResetAtom(store.visibleArtifacts);
 
   useEffect(() => {
     if (conversationId !== lastConvoId.current) {

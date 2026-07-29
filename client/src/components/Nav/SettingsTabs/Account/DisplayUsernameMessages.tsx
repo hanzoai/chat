@@ -1,12 +1,12 @@
 import React from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Switch, Label, InfoHoverCard, ESide } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 export default function DisplayUsernameMessages() {
   const localize = useLocalize();
-  const [UsernameDisplay, setUsernameDisplay] = useRecoilState(store.UsernameDisplay);
+  const [UsernameDisplay, setUsernameDisplay] = useAtom(store.UsernameDisplay);
 
   const handleCheckedChange = (checked: boolean) => {
     setUsernameDisplay(checked);

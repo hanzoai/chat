@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { selectorFamily, useRecoilValue } from 'recoil';
+import { useCallback, useMemo } from 'react';
+import { atom, useAtomValue } from 'jotai';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Constants, QueryKeys } from '@hanzochat/data-provider';
@@ -12,24 +12,6 @@ const EMPTY_PARENT_IDS: (string | null)[] = [];
 
 const getParentLookupKey = (parentMessageId: string | null | undefined) =>
   parentMessageId ?? NULL_PARENT_KEY;
-
-const siblingIndexesByParentSelector = selectorFamily<
-  Record<string, number>,
-  readonly (string | null)[]
->({
-  key: 'latestMessageSiblingIndexesByParent',
-  get:
-    (parentIds) =>
-    ({ get }) => {
-      const indexes: Record<string, number> = {};
-
-      for (const parentId of parentIds) {
-        indexes[getParentLookupKey(parentId)] = get(store.messagesSiblingIdxFamily(parentId));
-      }
-
-      return indexes;
-    },
-});
 
 function useMessagesCacheSelect<TData>(
   messagesQueryId: string | null | undefined,
@@ -85,14 +67,30 @@ function useLatestMessageSiblingIndexes(
     [rootSiblingKey],
   );
   const parentIds = useMessagesCacheSelect(messagesQueryId, selectParentIds) ?? EMPTY_PARENT_IDS;
-  return useRecoilValue(siblingIndexesByParentSelector(parentIds));
+  /* The parent-id list is a fresh array on most renders, so key the derived
+   * atom by its CONTENT. A jotai atomFamily compares params by identity and
+   * would leak one atom per render. */
+  const parentKey = parentIds.join('\u0000');
+  const siblingIndexes = useMemo(
+    () =>
+      atom((get) => {
+        const indexes: Record<string, number> = {};
+        for (const parentId of parentIds) {
+          indexes[getParentLookupKey(parentId)] = get(store.messagesSiblingIdxFamily(parentId));
+        }
+        return indexes;
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [parentKey],
+  );
+  return useAtomValue(siblingIndexes);
 }
 
 export function useLatestMessage(
   index: string | number,
   messagesQueryIdOverride?: string | null,
 ): TMessage | null {
-  const conversationId = useRecoilValue(store.conversationIdByIndex(index));
+  const conversationId = useAtomValue(store.conversationIdByIndex(index));
   const messagesQueryId = useLatestMessagesQueryId(index, conversationId, messagesQueryIdOverride);
   const siblingIndexes = useLatestMessageSiblingIndexes(messagesQueryId, conversationId);
   const select = useCallback(
@@ -112,7 +110,7 @@ export function useLatestMessageId(
   index: string | number,
   messagesQueryIdOverride?: string | null,
 ): string | null {
-  const conversationId = useRecoilValue(store.conversationIdByIndex(index));
+  const conversationId = useAtomValue(store.conversationIdByIndex(index));
   const messagesQueryId = useLatestMessagesQueryId(index, conversationId, messagesQueryIdOverride);
   const siblingIndexes = useLatestMessageSiblingIndexes(messagesQueryId, conversationId);
   const select = useCallback(

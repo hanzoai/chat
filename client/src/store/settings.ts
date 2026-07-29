@@ -1,17 +1,14 @@
-import { atom } from 'recoil';
+import { atom } from 'jotai';
 import { SettingsViews, LocalStorageKeys } from '@hanzochat/data-provider';
 import { atomWithLocalStorage } from '~/store/utils';
 import type { TOptionSettings } from '~/common';
 
 // Static atoms without localStorage
 const staticAtoms = {
-  abortScroll: atom<boolean>({ key: 'abortScroll', default: false }),
-  optionSettings: atom<TOptionSettings>({ key: 'optionSettings', default: {} }),
-  currentSettingsView: atom<SettingsViews>({
-    key: 'currentSettingsView',
-    default: SettingsViews.default,
-  }),
-  showPopover: atom<boolean>({ key: 'showPopover', default: false }),
+  abortScroll: atom<boolean>(false),
+  optionSettings: atom<TOptionSettings>({}),
+  currentSettingsView: atom<SettingsViews>(SettingsViews.default),
+  showPopover: atom<boolean>(false),
 };
 
 const localStorageAtoms = {

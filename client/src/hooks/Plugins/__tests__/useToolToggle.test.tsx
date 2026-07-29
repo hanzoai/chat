@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { LocalStorageKeys, Tools } from '@hanzochat/data-provider';
-import { RecoilRoot, useRecoilValue, useSetRecoilState } from 'recoil';
+import { Provider, useAtomValue, useSetAtom } from 'jotai';
 import { ephemeralAgentByConvoId } from '~/store';
 import { useToolToggle } from '../useToolToggle';
 
@@ -33,7 +33,7 @@ jest.mock('~/utils/timestamps', () => ({
 jest.mock('~/hooks/useLocalStorageAlt', () => jest.fn(() => [false, jest.fn()]));
 
 const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <RecoilRoot>{children}</RecoilRoot>
+  <Provider>{children}</Provider>
 );
 
 describe('useToolToggle', () => {
@@ -142,7 +142,7 @@ describe('useToolToggle', () => {
           localStorageKey: LocalStorageKeys.LAST_CODE_TOGGLE_,
           isAuthenticated: true,
         });
-        const ephemeralAgent = useRecoilValue(ephemeralAgentByConvoId(conversationId));
+        const ephemeralAgent = useAtomValue(ephemeralAgentByConvoId(conversationId));
         return { toggle, ephemeralAgent };
       };
 
@@ -182,7 +182,7 @@ describe('useToolToggle', () => {
           localStorageKey: LocalStorageKeys.LAST_CODE_TOGGLE_,
           isAuthenticated: true,
         });
-        const ephemeralAgent = useRecoilValue(ephemeralAgentByConvoId(conversationId));
+        const ephemeralAgent = useAtomValue(ephemeralAgentByConvoId(conversationId));
         return { toggle, ephemeralAgent };
       };
 
@@ -214,7 +214,7 @@ describe('useToolToggle', () => {
           localStorageKey: LocalStorageKeys.LAST_WEB_SEARCH_TOGGLE_,
           isAuthenticated: true,
         });
-        const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
+        const setEphemeralAgent = useSetAtom(ephemeralAgentByConvoId(conversationId));
         return { toggle, setEphemeralAgent };
       };
 
@@ -240,7 +240,7 @@ describe('useToolToggle', () => {
           localStorageKey: LocalStorageKeys.LAST_FILE_SEARCH_TOGGLE_,
           isAuthenticated: true,
         });
-        const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
+        const setEphemeralAgent = useSetAtom(ephemeralAgentByConvoId(conversationId));
         return { toggle, setEphemeralAgent };
       };
 
@@ -286,7 +286,7 @@ describe('useToolToggle', () => {
           localStorageKey: LocalStorageKeys.LAST_ARTIFACTS_TOGGLE_,
           isAuthenticated: true,
         });
-        const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
+        const setEphemeralAgent = useSetAtom(ephemeralAgentByConvoId(conversationId));
         return { toggle, setEphemeralAgent };
       };
 
@@ -310,7 +310,7 @@ describe('useToolToggle', () => {
           localStorageKey: LocalStorageKeys.LAST_ARTIFACTS_TOGGLE_,
           isAuthenticated: true,
         });
-        const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
+        const setEphemeralAgent = useSetAtom(ephemeralAgentByConvoId(conversationId));
         return { toggle, setEphemeralAgent };
       };
 

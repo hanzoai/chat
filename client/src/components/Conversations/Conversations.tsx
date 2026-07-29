@@ -1,7 +1,7 @@
 import { useMemo, memo, type FC, useCallback, useEffect, useRef } from 'react';
 import throttle from 'lodash/throttle';
 import { ChevronDown } from 'lucide-react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { Spinner, useMediaQuery } from '@hanzochat/client';
 import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import type { TConversation } from '@hanzochat/data-provider';
@@ -159,7 +159,7 @@ const Conversations: FC<ConversationsProps> = ({
   setIsChatsExpanded,
 }) => {
   const localize = useLocalize();
-  const search = useRecoilValue(store.search);
+  const search = useAtomValue(store.search);
   const { favorites, isLoading: isFavoritesLoading } = useFavorites();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const convoHeight = isSmallScreen ? 44 : 34;

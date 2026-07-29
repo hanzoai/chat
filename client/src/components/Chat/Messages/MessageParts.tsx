@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import type { TMessageContentParts } from '@hanzochat/data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import { useMessageHelpers, useLocalize, useAttachments, useContentMetadata } from '~/hooks';
@@ -39,7 +39,7 @@ export default function Message(props: TMessageProps) {
   } = useMessageHelpers(props);
 
   const fontSize = useAtomValue(fontSizeAtom);
-  const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
+  const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
   const { children, messageId = null, isCreatedByUser } = message ?? {};
 
   const name = useMemo(() => {

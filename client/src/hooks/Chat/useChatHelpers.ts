@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 import { QueryKeys, isAssistantsEndpoint } from '@hanzochat/data-provider';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
+import { useAtom, useSetAtom } from 'jotai';
+import { useResetAtom } from 'jotai/utils';
 import type { TMessage } from '@hanzochat/data-provider';
 import type { ActiveJobsResponse } from '~/data-provider';
 import { useGetMessagesByConvoId, useAbortStreamMutation } from '~/data-provider';
@@ -13,7 +14,7 @@ import store from '~/store';
 // this to be set somewhere else
 export default function useChatHelpers(index = 0, paramId?: string) {
   const clearAllSubmissions = store.useClearSubmissionState();
-  const [files, setFiles] = useRecoilState(store.filesByIndex(index));
+  const [files, setFiles] = useAtom(store.filesByIndex(index));
   const [filesLoading, setFilesLoading] = useState(false);
 
   const queryClient = useQueryClient();
@@ -26,7 +27,7 @@ export default function useChatHelpers(index = 0, paramId?: string) {
   const { conversationId, endpoint, endpointType } = conversation ?? {};
 
   /** Use paramId (from URL) as primary source for query key - this must match what ChatView uses
-  Falling back to conversationId (Recoil) only if paramId is not available */
+  Falling back to conversationId (Jotai) only if paramId is not available */
   const queryParam = paramId === 'new' ? paramId : (paramId ?? conversationId ?? '');
 
   /* Messages: here simply to fetch, don't export and use `getMessages()` instead */
@@ -35,10 +36,10 @@ export default function useChatHelpers(index = 0, paramId?: string) {
     enabled: isAuthenticated,
   });
 
-  const resetLatestMessage = useResetRecoilState(store.latestMessageFamily(index));
-  const [isSubmitting, setIsSubmitting] = useRecoilState(store.isSubmittingFamily(index));
-  const [latestMessage, setLatestMessage] = useRecoilState(store.latestMessageFamily(index));
-  const setSiblingIdx = useSetRecoilState(
+  const resetLatestMessage = useResetAtom(store.latestMessageFamily(index));
+  const [isSubmitting, setIsSubmitting] = useAtom(store.isSubmittingFamily(index));
+  const [latestMessage, setLatestMessage] = useAtom(store.latestMessageFamily(index));
+  const setSiblingIdx = useSetAtom(
     store.messagesSiblingIdxFamily(latestMessage?.parentMessageId ?? null),
   );
 
@@ -57,7 +58,7 @@ export default function useChatHelpers(index = 0, paramId?: string) {
   }, [queryParam, queryClient]);
 
   /* Conversation */
-  // const setActiveConvos = useSetRecoilState(store.activeConversations);
+  // const setActiveConvos = useSetAtom(store.activeConversations);
 
   // const setConversation = useCallback(
   //   (convoUpdate: TConversation) => {
@@ -75,7 +76,7 @@ export default function useChatHelpers(index = 0, paramId?: string) {
   //   [_setConversation, setActiveConvos],
   // );
 
-  const setSubmission = useSetRecoilState(store.submissionByIndex(index));
+  const setSubmission = useSetAtom(store.submissionByIndex(index));
 
   const { ask, regenerate } = useChatFunctions({
     index,
@@ -174,10 +175,10 @@ export default function useChatHelpers(index = 0, paramId?: string) {
     setSiblingIdx(0);
   };
 
-  const [preset, setPreset] = useRecoilState(store.presetByIndex(index));
-  const [showPopover, setShowPopover] = useRecoilState(store.showPopoverFamily(index));
-  const [abortScroll, setAbortScroll] = useRecoilState(store.abortScrollFamily(index));
-  const [optionSettings, setOptionSettings] = useRecoilState(store.optionSettingsFamily(index));
+  const [preset, setPreset] = useAtom(store.presetByIndex(index));
+  const [showPopover, setShowPopover] = useAtom(store.showPopoverFamily(index));
+  const [abortScroll, setAbortScroll] = useAtom(store.abortScrollFamily(index));
+  const [optionSettings, setOptionSettings] = useAtom(store.optionSettingsFamily(index));
 
   return {
     newConversation,

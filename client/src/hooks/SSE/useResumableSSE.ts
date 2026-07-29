@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { v4 } from 'uuid';
 import { SSE } from 'sse.js';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   request,
@@ -62,7 +62,7 @@ export default function useResumableSSE(
   runIndex = 0,
 ) {
   const queryClient = useQueryClient();
-  const setActiveRunId = useSetRecoilState(store.activeRunFamily(runIndex));
+  const setActiveRunId = useSetAtom(store.activeRunFamily(runIndex));
 
   const { token, isAuthenticated } = useAuthContext();
 
@@ -93,8 +93,8 @@ export default function useResumableSSE(
   );
   const [_completed, setCompleted] = useState(new Set());
   const [streamId, setStreamId] = useState<string | null>(null);
-  const setAbortScroll = useSetRecoilState(store.abortScrollFamily(runIndex));
-  const setShowStopButton = useSetRecoilState(store.showStopButtonByIndex(runIndex));
+  const setAbortScroll = useSetAtom(store.abortScrollFamily(runIndex));
+  const setShowStopButton = useSetAtom(store.showStopButtonByIndex(runIndex));
 
   const sseRef = useRef<SSE | null>(null);
   const reconnectAttemptRef = useRef(0);

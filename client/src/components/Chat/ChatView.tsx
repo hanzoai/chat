@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { Spinner } from '@hanzochat/client';
 import { useParams } from 'react-router-dom';
@@ -30,7 +30,7 @@ function LoadingSpinner() {
 
 function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
-  const rootSubmission = useRecoilValue(store.submissionByIndex(index));
+  const rootSubmission = useAtomValue(store.submissionByIndex(index));
 
   const fileMap = useFileMapContext();
 

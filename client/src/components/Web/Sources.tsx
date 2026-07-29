@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import * as Ariakit from '@ariakit/react';
 import { VisuallyHidden } from '@ariakit/react';
 import { Tools } from '@hanzochat/data-provider';
@@ -202,7 +202,7 @@ const FileItem = React.memo(function FileItem({
   expanded = false,
 }: FileItemProps) {
   const localize = useLocalize();
-  const user = useRecoilValue(store.user);
+  const user = useAtomValue(store.user);
   const { showToast } = useToastContext();
 
   const { refetch: downloadFile } = useFileDownload(user?.id ?? '', file.file_id);

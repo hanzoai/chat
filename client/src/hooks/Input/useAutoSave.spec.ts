@@ -1,6 +1,6 @@
-jest.mock('recoil', () => ({
-  ...jest.requireActual('recoil'),
-  useRecoilValue: jest.fn(),
+jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
+  useAtomValue: jest.fn(),
 }));
 
 jest.mock('~/store', () => ({
@@ -25,7 +25,7 @@ jest.mock('~/utils', () => ({
 
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useChatFormContext } from '~/Providers';
 import { useGetFiles } from '~/data-provider';
 import { getDraft, setDraft } from '~/utils';
@@ -42,7 +42,7 @@ const makeTextAreaRef = (value = '') =>
   }) as unknown as React.RefObject<HTMLTextAreaElement>;
 
 beforeEach(() => {
-  (useRecoilValue as jest.Mock).mockImplementation((atom) => {
+  (useAtomValue as jest.Mock).mockImplementation((atom) => {
     if (atom === store.saveDrafts) return true;
     return undefined;
   });

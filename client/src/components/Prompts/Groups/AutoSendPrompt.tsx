@@ -1,4 +1,4 @@
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { Switch } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
@@ -11,7 +11,7 @@ export default function AutoSendPrompt({
   onCheckedChange?: (value: boolean) => void;
   className?: string;
 }) {
-  const [autoSendPrompts, setAutoSendPrompts] = useRecoilState<boolean>(store.autoSendPrompts);
+  const [autoSendPrompts, setAutoSendPrompts] = useAtom<boolean>(store.autoSendPrompts);
   const localize = useLocalize();
 
   const handleCheckedChange = (value: boolean) => {

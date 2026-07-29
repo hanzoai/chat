@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { Tools, Constants, LocalStorageKeys, AgentCapabilities } from '@hanzochat/data-provider';
 import type { TAgentsEndpoint } from '@hanzochat/data-provider';
 import {
@@ -79,7 +79,7 @@ export default function BadgeRowProvider({
   const isNewConvo = key === Constants.NEW_CONVO;
   const storageSuffix = isNewConvo && storageContextKey ? storageContextKey : key;
 
-  const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(key));
+  const setEphemeralAgent = useSetAtom(ephemeralAgentByConvoId(key));
 
   /** Initialize ephemeralAgent from localStorage on mount and when conversation/spec changes.
    *  Skipped when a spec is active — applyModelSpecEphemeralAgent handles both new conversations

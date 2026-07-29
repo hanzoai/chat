@@ -1,4 +1,4 @@
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { EModelEndpoint, SettingsViews } from '@hanzochat/data-provider';
 import { Button, MessagesSquared, AssistantIcon, DataIcon } from '@hanzochat/client';
 import type { ReactNode } from 'react';
@@ -30,7 +30,7 @@ export default function PopoverButtons({
 }) {
   const localize = useLocalize();
   const { conversation, optionSettings, setOptionSettings } = useChatContext();
-  const [settingsView, setSettingsView] = useRecoilState(store.currentSettingsView);
+  const [settingsView, setSettingsView] = useAtom(store.currentSettingsView);
 
   const { model: _model, endpoint: _endpoint, endpointType } = conversation ?? {};
   const overrideEndpoint = overrideEndpointType ?? _overrideEndpoint;

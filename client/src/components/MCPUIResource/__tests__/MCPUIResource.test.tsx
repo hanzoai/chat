@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { MCPUIResource } from '../MCPUIResource';
 import { useMessageContext, useMessagesConversation, useMessagesOperations } from '~/Providers';
 import { useLocalize } from '~/hooks';
@@ -42,7 +42,7 @@ describe('MCPUIResource', () => {
 
   const mockAskFn = jest.fn();
 
-  const renderWithRecoil = (ui: React.ReactNode) => render(<RecoilRoot>{ui}</RecoilRoot>);
+  const renderWithStore = (ui: React.ReactNode) => render(<Provider>{ui}</Provider>);
 
   // Store the current test's messages so getMessages can return them
   let currentTestMessages: any[] = [];
@@ -86,7 +86,7 @@ describe('MCPUIResource', () => {
         },
       ];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
 
       const renderer = screen.getByTestId('ui-resource-renderer');
       expect(renderer).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('MCPUIResource', () => {
         },
       ];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'nonexistent-id' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'nonexistent-id' } }} />);
 
       expect(screen.getByText('UI resource nonexistent-id not found')).toBeInTheDocument();
       expect(screen.queryByTestId('ui-resource-renderer')).not.toBeInTheDocument();
@@ -132,7 +132,7 @@ describe('MCPUIResource', () => {
         },
       ];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
 
       expect(screen.getByText('UI resource resource-1 not found')).toBeInTheDocument();
     });
@@ -162,7 +162,7 @@ describe('MCPUIResource', () => {
         },
       ];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'abc123' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'abc123' } }} />);
 
       const renderer = screen.getByTestId('ui-resource-renderer');
       expect(renderer).toBeInTheDocument();
@@ -191,7 +191,7 @@ describe('MCPUIResource', () => {
         },
       ];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
 
       const renderer = screen.getByTestId('ui-resource-renderer');
       renderer.click();
@@ -204,7 +204,7 @@ describe('MCPUIResource', () => {
     it('should handle empty messages array', () => {
       currentTestMessages = [];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
 
       expect(screen.getByText('UI resource resource-1 not found')).toBeInTheDocument();
     });
@@ -212,7 +212,7 @@ describe('MCPUIResource', () => {
     it('should handle null messages data', () => {
       currentTestMessages = [];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
 
       expect(screen.getByText('UI resource resource-1 not found')).toBeInTheDocument();
     });
@@ -224,7 +224,7 @@ describe('MCPUIResource', () => {
         conversationId: null,
       } as any);
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'resource-1' } }} />);
 
       expect(screen.getByText('UI resource resource-1 not found')).toBeInTheDocument();
     });
@@ -266,7 +266,7 @@ describe('MCPUIResource', () => {
         },
       ];
 
-      renderWithRecoil(<MCPUIResource node={{ properties: { resourceId: 'resource-2' } }} />);
+      renderWithStore(<MCPUIResource node={{ properties: { resourceId: 'resource-2' } }} />);
 
       const renderer = screen.getByTestId('ui-resource-renderer');
       expect(renderer).toBeInTheDocument();

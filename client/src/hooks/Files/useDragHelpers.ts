@@ -3,7 +3,7 @@ import { useDrop } from 'react-dnd';
 import { useToastContext } from '@hanzochat/client';
 import { NativeTypes } from 'react-dnd-html5-backend';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import {
   Tools,
   QueryKeys,
@@ -29,8 +29,8 @@ export default function useDragHelpers() {
   const localize = useLocalize();
   const [showModal, setShowModal] = useState(false);
   const [draggedFiles, setDraggedFiles] = useState<File[]>([]);
-  const conversation = useRecoilValue(store.conversationByIndex(0)) || undefined;
-  const setEphemeralAgent = useSetRecoilState(
+  const conversation = useAtomValue(store.conversationByIndex(0)) || undefined;
+  const setEphemeralAgent = useSetAtom(
     ephemeralAgentByConvoId(conversation?.conversationId ?? Constants.NEW_CONVO),
   );
 

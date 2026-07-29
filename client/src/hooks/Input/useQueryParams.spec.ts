@@ -1,13 +1,13 @@
 // useQueryParams.spec.ts
-jest.mock('recoil', () => {
-  const originalModule = jest.requireActual('recoil');
+jest.mock('jotai', () => {
+  const originalModule = jest.requireActual('jotai');
   return {
     ...originalModule,
     atom: jest.fn().mockImplementation((config) => ({
       key: config.key,
       default: config.default,
     })),
-    useRecoilValue: jest.fn(),
+    useAtomValue: jest.fn(),
   };
 });
 
@@ -20,7 +20,7 @@ jest.mock('~/store', () => ({
 import { renderHook, act } from '@testing-library/react';
 import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import useQueryParams from './useQueryParams';
 import { useChatContext, useChatFormContext } from '~/Providers';
 import useSubmitMessage from '~/hooks/Messages/useSubmitMessage';
@@ -153,7 +153,7 @@ describe('useQueryParams', () => {
     };
     (useQueryClient as jest.Mock).mockReturnValue(mockQueryClient);
 
-    (useRecoilValue as jest.Mock).mockImplementation((atom) => {
+    (useAtomValue as jest.Mock).mockImplementation((atom) => {
       if (atom === store.modularChat) return false;
       if (atom === store.availableTools) return [];
       return null;

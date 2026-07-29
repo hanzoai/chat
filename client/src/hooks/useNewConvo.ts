@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
-import { useRecoilState, useRecoilValue, useSetRecoilState, useRecoilCallback } from 'recoil';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
   Constants,
   FileSources,
@@ -55,21 +55,21 @@ const useNewConvo = (index = 0) => {
   const { data: startupConfig } = useGetStartupConfig();
   const applyModelSpecEffects = useApplyModelSpecEffects();
   const clearAllConversations = store.useClearConvoState();
-  const defaultPreset = useRecoilValue(store.defaultPreset);
+  const defaultPreset = useAtomValue(store.defaultPreset);
   const { setConversation } = store.useCreateConversationAtom(index);
-  const [files, setFiles] = useRecoilState(store.filesByIndex(index));
-  const saveBadgesState = useRecoilValue<boolean>(store.saveBadgesState);
-  const smartRoutingPref = useRecoilValue<boolean | null>(store.smartRouting);
+  const [files, setFiles] = useAtom(store.filesByIndex(index));
+  const saveBadgesState = useAtomValue<boolean>(store.saveBadgesState);
+  const smartRoutingPref = useAtomValue<boolean | null>(store.smartRouting);
   // Server-driven org defaults (fail-soft: `available:false` when the endpoint is
   // absent/older cloud-api — resolveSmartRouting then keeps today's behavior).
   const { data: routingDefaults } = useGetRoutingDefaults();
   const { enabled: smartRouting } = resolveSmartRouting(
     smartRoutingPref,
-    routingDefaults?.available ? routingDefaults.default_session_routing ?? null : null,
+    routingDefaults?.available ? (routingDefaults.default_session_routing ?? null) : null,
     routingDefaults?.available ? routingDefaults.auto_routing_active !== false : true,
   );
   const clearAllLatestMessages = store.useClearLatestMessages(`useNewConvo ${index}`);
-  const setSubmission = useSetRecoilState<TSubmission | null>(store.submissionByIndex(index));
+  const setSubmission = useSetAtom<TSubmission | null>(store.submissionByIndex(index));
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
 
   const hasAgentAccess = useHasAccess({
@@ -80,7 +80,7 @@ const useNewConvo = (index = 0) => {
   const modelsQuery = useGetModelsQuery();
   const assistantsListMap = useAssistantListMap();
   const { pauseGlobalAudio } = usePauseGlobalAudio(index);
-  const saveDrafts = useRecoilValue<boolean>(store.saveDrafts);
+  const saveDrafts = useAtomValue<boolean>(store.saveDrafts);
   const resetBadges = useResetChatBadges();
 
   const { mutateAsync } = useDeleteFilesMutation({
@@ -92,197 +92,195 @@ const useNewConvo = (index = 0) => {
     },
   });
 
-  const switchToConversation = useRecoilCallback(
-    () =>
-      async (
-        conversation: TConversation,
-        preset: Partial<TPreset> | null = null,
-        modelsData?: TModelsConfig,
-        buildDefault?: boolean,
-        keepLatestMessage?: boolean,
-        keepAddedConvos?: boolean,
-        disableFocus?: boolean,
-        _disableParams?: boolean,
-      ) => {
-        const modelsConfig = modelsData ?? modelsQuery.data;
-        const { endpoint = null } = conversation;
-        const buildDefaultConversation = (endpoint === null || buildDefault) ?? false;
-        const activePreset =
-          // use default preset only when it's defined,
-          // preset is not provided,
-          // endpoint matches or is null (to allow endpoint change),
-          // and buildDefaultConversation is true
-          defaultPreset &&
-          !preset &&
-          (defaultPreset.endpoint === endpoint || !endpoint) &&
-          buildDefaultConversation
-            ? defaultPreset
-            : preset;
+  const switchToConversation = useCallback(
+    async (
+      conversation: TConversation,
+      preset: Partial<TPreset> | null = null,
+      modelsData?: TModelsConfig,
+      buildDefault?: boolean,
+      keepLatestMessage?: boolean,
+      keepAddedConvos?: boolean,
+      disableFocus?: boolean,
+      _disableParams?: boolean,
+    ) => {
+      const modelsConfig = modelsData ?? modelsQuery.data;
+      const { endpoint = null } = conversation;
+      const buildDefaultConversation = (endpoint === null || buildDefault) ?? false;
+      const activePreset =
+        // use default preset only when it's defined,
+        // preset is not provided,
+        // endpoint matches or is null (to allow endpoint change),
+        // and buildDefaultConversation is true
+        defaultPreset &&
+        !preset &&
+        (defaultPreset.endpoint === endpoint || !endpoint) &&
+        buildDefaultConversation
+          ? defaultPreset
+          : preset;
 
-        const disableParams =
-          _disableParams ??
-          (activePreset?.presetId != null &&
-            activePreset.presetId &&
-            activePreset.presetId === defaultPreset?.presetId);
+      const disableParams =
+        _disableParams ??
+        (activePreset?.presetId != null &&
+          activePreset.presetId &&
+          activePreset.presetId === defaultPreset?.presetId);
 
-        if (buildDefaultConversation) {
-          // Did the user explicitly pick a model for THIS new conversation
-          // (model menu / preset)? If so, never override it — smart routing only
-          // sets the *default* model, it doesn't rewrite an explicit choice.
-          const userSelectedModel = !!(conversation.model ?? activePreset?.model);
+      if (buildDefaultConversation) {
+        // Did the user explicitly pick a model for THIS new conversation
+        // (model menu / preset)? If so, never override it — smart routing only
+        // sets the *default* model, it doesn't rewrite an explicit choice.
+        const userSelectedModel = !!(conversation.model ?? activePreset?.model);
 
-          let defaultEndpoint = getDefaultEndpoint({
-            convoSetup: activePreset ?? conversation,
-            endpointsConfig,
-          });
-
-          // If the selected endpoint is agents but user doesn't have access, find an alternative
-          // Skip this check for existing agent conversations (they have agent_id set)
-          // Also check localStorage for new conversations restored after refresh
-          const { lastConversationSetup } = getLocalStorageItems();
-          const storedAgentId =
-            isAgentsEndpoint(lastConversationSetup?.endpoint) && lastConversationSetup?.agent_id;
-          const isExistingAgentConvo =
-            isAgentsEndpoint(defaultEndpoint) &&
-            ((conversation.agent_id && !isEphemeralAgentId(conversation.agent_id)) ||
-              (storedAgentId && !isEphemeralAgentId(storedAgentId)));
-          if (
-            defaultEndpoint &&
-            isAgentsEndpoint(defaultEndpoint) &&
-            !hasAgentAccess &&
-            !isExistingAgentConvo
-          ) {
-            defaultEndpoint = Object.keys(endpointsConfig ?? {}).find(
-              (ep) => !isAgentsEndpoint(ep as EModelEndpoint) && endpointsConfig?.[ep],
-            ) as EModelEndpoint | undefined;
-          }
-
-          if (!defaultEndpoint) {
-            // Find first available endpoint that's not agents (if no access) or any endpoint
-            defaultEndpoint = Object.keys(endpointsConfig ?? {}).find((ep) => {
-              if (
-                isAgentsEndpoint(ep as EModelEndpoint) &&
-                !hasAgentAccess &&
-                !isExistingAgentConvo
-              ) {
-                return false;
-              }
-              return !!endpointsConfig?.[ep];
-            }) as EModelEndpoint;
-          }
-
-          const endpointType = getEndpointField(endpointsConfig, defaultEndpoint, 'type');
-          if (!conversation.endpointType && endpointType) {
-            conversation.endpointType = endpointType;
-          } else if (conversation.endpointType && !endpointType) {
-            conversation.endpointType = undefined;
-          }
-
-          const isAssistantEndpoint = isAssistantsEndpoint(defaultEndpoint);
-          const assistants: AssistantListItem[] = assistantsListMap[defaultEndpoint] ?? [];
-          const currentAssistantId = conversation.assistant_id ?? '';
-          const currentAssistant = assistantsListMap[defaultEndpoint]?.[currentAssistantId] as
-            | AssistantListItem
-            | undefined;
-
-          if (currentAssistantId && !currentAssistant) {
-            conversation.assistant_id = undefined;
-          }
-
-          if (!currentAssistantId && isAssistantEndpoint) {
-            conversation.assistant_id =
-              localStorage.getItem(
-                `${LocalStorageKeys.ASST_ID_PREFIX}${index}${defaultEndpoint}`,
-              ) ?? assistants[0]?.id;
-          }
-
-          if (
-            currentAssistantId &&
-            isAssistantEndpoint &&
-            conversation.conversationId === Constants.NEW_CONVO
-          ) {
-            const assistant = assistants.find((asst) => asst.id === currentAssistantId);
-            conversation.model = assistant?.model;
-            updateLastSelectedModel({
-              endpoint: defaultEndpoint,
-              model: conversation.model,
-            });
-          }
-
-          if (currentAssistantId && !isAssistantEndpoint) {
-            conversation.assistant_id = undefined;
-          }
-
-          const models = modelsConfig?.[defaultEndpoint] ?? [];
-          const defaultParamsEndpoint = getDefaultParamsEndpoint(endpointsConfig, defaultEndpoint);
-          conversation = buildDefaultConvo({
-            conversation,
-            lastConversationSetup: activePreset as TConversation,
-            endpoint: defaultEndpoint,
-            models,
-            defaultParamsEndpoint,
-          });
-
-          // Smart routing: default a fresh Hanzo-endpoint conversation to the
-          // gateway's `auto` model (routes to the best/cheapest capable model).
-          // Scoped to the Hanzo endpoint and only when the user hasn't picked a
-          // model explicitly — provider families and explicit choices are left
-          // untouched.
-          if (smartRouting && !userSelectedModel && isHanzoEndpoint(defaultEndpoint)) {
-            conversation.model = SMART_ROUTING_MODEL;
-          }
-        }
-
-        if (disableParams === true) {
-          conversation.disableParams = true;
-        }
-
-        if (!(keepAddedConvos ?? false)) {
-          clearAllConversations(true);
-        }
-        const isCancelled = conversation.conversationId?.startsWith('_');
-        if (isCancelled) {
-          logger.log(
-            'conversation',
-            'Cancelled conversation, setting to `new` in `useNewConvo`',
-            conversation,
-          );
-          setConversation({
-            ...conversation,
-            conversationId: Constants.NEW_CONVO as string,
-          });
-        } else {
-          logger.log('conversation', 'Setting conversation from `useNewConvo`', conversation);
-          setConversation(conversation);
-        }
-        setSubmission({} as TSubmission);
-        if (!(keepLatestMessage ?? false)) {
-          logger.log('latest_message', 'Clearing all latest messages');
-          clearAllLatestMessages();
-        }
-        if (isCancelled) {
-          return;
-        }
-
-        const searchParamsString = searchParams?.toString();
-        const getParams = () => (searchParamsString ? `?${searchParamsString}` : '');
-
-        if (conversation.conversationId === Constants.NEW_CONVO && !modelsData) {
-          const appTitle = localStorage.getItem(LocalStorageKeys.APP_TITLE) ?? '';
-          if (appTitle) {
-            document.title = appTitle;
-          }
-          const path = `/c/${Constants.NEW_CONVO}${getParams()}`;
-          navigate(path, { state: { focusChat: true } });
-          return;
-        }
-
-        const path = `/c/${conversation.conversationId}${getParams()}`;
-        navigate(path, {
-          replace: true,
-          state: disableFocus ? {} : { focusChat: true },
+        let defaultEndpoint = getDefaultEndpoint({
+          convoSetup: activePreset ?? conversation,
+          endpointsConfig,
         });
-      },
+
+        // If the selected endpoint is agents but user doesn't have access, find an alternative
+        // Skip this check for existing agent conversations (they have agent_id set)
+        // Also check localStorage for new conversations restored after refresh
+        const { lastConversationSetup } = getLocalStorageItems();
+        const storedAgentId =
+          isAgentsEndpoint(lastConversationSetup?.endpoint) && lastConversationSetup?.agent_id;
+        const isExistingAgentConvo =
+          isAgentsEndpoint(defaultEndpoint) &&
+          ((conversation.agent_id && !isEphemeralAgentId(conversation.agent_id)) ||
+            (storedAgentId && !isEphemeralAgentId(storedAgentId)));
+        if (
+          defaultEndpoint &&
+          isAgentsEndpoint(defaultEndpoint) &&
+          !hasAgentAccess &&
+          !isExistingAgentConvo
+        ) {
+          defaultEndpoint = Object.keys(endpointsConfig ?? {}).find(
+            (ep) => !isAgentsEndpoint(ep as EModelEndpoint) && endpointsConfig?.[ep],
+          ) as EModelEndpoint | undefined;
+        }
+
+        if (!defaultEndpoint) {
+          // Find first available endpoint that's not agents (if no access) or any endpoint
+          defaultEndpoint = Object.keys(endpointsConfig ?? {}).find((ep) => {
+            if (
+              isAgentsEndpoint(ep as EModelEndpoint) &&
+              !hasAgentAccess &&
+              !isExistingAgentConvo
+            ) {
+              return false;
+            }
+            return !!endpointsConfig?.[ep];
+          }) as EModelEndpoint;
+        }
+
+        const endpointType = getEndpointField(endpointsConfig, defaultEndpoint, 'type');
+        if (!conversation.endpointType && endpointType) {
+          conversation.endpointType = endpointType;
+        } else if (conversation.endpointType && !endpointType) {
+          conversation.endpointType = undefined;
+        }
+
+        const isAssistantEndpoint = isAssistantsEndpoint(defaultEndpoint);
+        const assistants: AssistantListItem[] = assistantsListMap[defaultEndpoint] ?? [];
+        const currentAssistantId = conversation.assistant_id ?? '';
+        const currentAssistant = assistantsListMap[defaultEndpoint]?.[currentAssistantId] as
+          | AssistantListItem
+          | undefined;
+
+        if (currentAssistantId && !currentAssistant) {
+          conversation.assistant_id = undefined;
+        }
+
+        if (!currentAssistantId && isAssistantEndpoint) {
+          conversation.assistant_id =
+            localStorage.getItem(`${LocalStorageKeys.ASST_ID_PREFIX}${index}${defaultEndpoint}`) ??
+            assistants[0]?.id;
+        }
+
+        if (
+          currentAssistantId &&
+          isAssistantEndpoint &&
+          conversation.conversationId === Constants.NEW_CONVO
+        ) {
+          const assistant = assistants.find((asst) => asst.id === currentAssistantId);
+          conversation.model = assistant?.model;
+          updateLastSelectedModel({
+            endpoint: defaultEndpoint,
+            model: conversation.model,
+          });
+        }
+
+        if (currentAssistantId && !isAssistantEndpoint) {
+          conversation.assistant_id = undefined;
+        }
+
+        const models = modelsConfig?.[defaultEndpoint] ?? [];
+        const defaultParamsEndpoint = getDefaultParamsEndpoint(endpointsConfig, defaultEndpoint);
+        conversation = buildDefaultConvo({
+          conversation,
+          lastConversationSetup: activePreset as TConversation,
+          endpoint: defaultEndpoint,
+          models,
+          defaultParamsEndpoint,
+        });
+
+        // Smart routing: default a fresh Hanzo-endpoint conversation to the
+        // gateway's `auto` model (routes to the best/cheapest capable model).
+        // Scoped to the Hanzo endpoint and only when the user hasn't picked a
+        // model explicitly — provider families and explicit choices are left
+        // untouched.
+        if (smartRouting && !userSelectedModel && isHanzoEndpoint(defaultEndpoint)) {
+          conversation.model = SMART_ROUTING_MODEL;
+        }
+      }
+
+      if (disableParams === true) {
+        conversation.disableParams = true;
+      }
+
+      if (!(keepAddedConvos ?? false)) {
+        clearAllConversations(true);
+      }
+      const isCancelled = conversation.conversationId?.startsWith('_');
+      if (isCancelled) {
+        logger.log(
+          'conversation',
+          'Cancelled conversation, setting to `new` in `useNewConvo`',
+          conversation,
+        );
+        setConversation({
+          ...conversation,
+          conversationId: Constants.NEW_CONVO as string,
+        });
+      } else {
+        logger.log('conversation', 'Setting conversation from `useNewConvo`', conversation);
+        setConversation(conversation);
+      }
+      setSubmission({} as TSubmission);
+      if (!(keepLatestMessage ?? false)) {
+        logger.log('latest_message', 'Clearing all latest messages');
+        clearAllLatestMessages();
+      }
+      if (isCancelled) {
+        return;
+      }
+
+      const searchParamsString = searchParams?.toString();
+      const getParams = () => (searchParamsString ? `?${searchParamsString}` : '');
+
+      if (conversation.conversationId === Constants.NEW_CONVO && !modelsData) {
+        const appTitle = localStorage.getItem(LocalStorageKeys.APP_TITLE) ?? '';
+        if (appTitle) {
+          document.title = appTitle;
+        }
+        const path = `/c/${Constants.NEW_CONVO}${getParams()}`;
+        navigate(path, { state: { focusChat: true } });
+        return;
+      }
+
+      const path = `/c/${conversation.conversationId}${getParams()}`;
+      navigate(path, {
+        replace: true,
+        state: disableFocus ? {} : { focusChat: true },
+      });
+    },
     [
       endpointsConfig,
       defaultPreset,

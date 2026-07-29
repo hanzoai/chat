@@ -1,4 +1,4 @@
-import { atomFamily } from 'recoil';
+import { family } from './utils';
 import type { SubagentUpdatePhase } from '@hanzochat/data-provider';
 import type {
   SubagentAggregatorState,
@@ -41,7 +41,4 @@ export interface SubagentProgress {
 }
 
 /** Progress state keyed by parent tool_call_id. */
-export const subagentProgressByToolCallId = atomFamily<SubagentProgress | null, string>({
-  key: 'subagentProgressByToolCallId',
-  default: null,
-});
+export const subagentProgressByToolCallId = family<string, SubagentProgress | null>(null);

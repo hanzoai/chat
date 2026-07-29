@@ -66,8 +66,8 @@ const textAttachment = (overrides: Partial<TAttachment> = {}): TAttachment =>
     file_id: 'file-1',
     /* JSON stays on the inline `<pre>` rendering path. CSV used to live
      * here too but now routes through the SPREADSHEET artifact panel
-     * (Recoil-bound), so a CSV fixture would force every test in this
-     * file to add a `RecoilRoot` wrapper. JSON has the same shape (text-
+     * (Jotai-bound), so a CSV fixture would force every test in this
+     * file to add a `JotaiRoot` wrapper. JSON has the same shape (text-
      * bearing, downloadable, expandable) without the panel coupling. */
     filename: 'output.json',
     filepath: '/files/output.json',

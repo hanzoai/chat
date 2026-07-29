@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { renderHook } from '@testing-library/react';
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { TUser } from '@hanzochat/data-provider';
@@ -62,7 +62,7 @@ const mockUser = {
 } as TUser;
 
 const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <RecoilRoot>{children}</RecoilRoot>
+  <Provider>{children}</Provider>
 );
 
 describe('useAppStartup — MCP permission gating', () => {

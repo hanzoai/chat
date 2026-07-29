@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { ContentTypes, EModelEndpoint } from '@hanzochat/data-provider';
 import { ArrowDown, ChevronRight, Maximize2, Minimize2, Users } from 'lucide-react';
 import { OGDialog, OGDialogContent, OGDialogTitle, OGDialogDescription } from '@hanzochat/client';
@@ -33,7 +33,7 @@ interface SubagentCallProps {
   output?: string | null;
   attachments?: TAttachment[];
   /** Aggregated content parts the backend attached to the tool_call at
-   *  message-save time. Takes precedence over the in-memory Recoil atom
+   *  message-save time. Takes precedence over the in-memory Jotai atom
    *  so a page refresh shows the same history the user saw live. Older
    *  runs recorded before the persistence path landed will not have this
    *  field; those fall back to the atom (or the raw `output` string). */
@@ -150,7 +150,7 @@ function useThrottledValue<T>(value: T, intervalMs: number, enabled: boolean): T
  * `<Part />` pipeline the main conversation uses, so tool calls, reasoning
  * blocks, and the final response all look like a regular assistant message.
  *
- * Progress is sourced from the `subagentProgressByToolCallId` Recoil atom
+ * Progress is sourced from the `subagentProgressByToolCallId` Jotai atom
  * family, populated by `useStepHandler` as `ON_SUBAGENT_UPDATE` SSE
  * envelopes arrive. The atom is keyed by the parent's `tool_call_id`.
  */
@@ -165,7 +165,7 @@ export default function SubagentCall({
   hideAttachments = false,
 }: SubagentCallProps) {
   const localize = useLocalize();
-  const progress = useRecoilValue(subagentProgressByToolCallId(toolCallId));
+  const progress = useAtomValue(subagentProgressByToolCallId(toolCallId));
   const agentsMap = useAgentsMapContext();
   const [open, setOpen] = useState(false);
   const [promptExpanded, setPromptExpanded] = useState(false);

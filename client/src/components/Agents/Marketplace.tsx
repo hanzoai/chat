@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { useOutletContext } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
@@ -40,7 +40,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
 
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
-  const [hideSidePanel, setHideSidePanel] = useRecoilState(store.hideSidePanel);
+  const [hideSidePanel, setHideSidePanel] = useAtom(store.hideSidePanel);
 
   // Get URL parameters
   const searchQuery = searchParams.get('q') || '';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { render, screen } from '@testing-library/react';
 import BashCall from '../BashCall';
 
@@ -67,7 +67,7 @@ jest.mock('~/utils', () => ({
 
 const renderBashCall = (args?: string | Record<string, unknown>, commandField?: string) =>
   render(
-    <RecoilRoot>
+    <Provider>
       <BashCall
         initialProgress={0.1}
         isSubmitting={true}
@@ -75,7 +75,7 @@ const renderBashCall = (args?: string | Record<string, unknown>, commandField?: 
         output=""
         commandField={commandField}
       />
-    </RecoilRoot>,
+    </Provider>,
   );
 
 describe('BashCall status text', () => {

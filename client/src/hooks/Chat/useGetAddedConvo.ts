@@ -1,4 +1,5 @@
-import { useRecoilCallback } from 'recoil';
+import { useCallback } from 'react';
+import { useAtomCallback } from 'jotai/utils';
 import store from '~/store';
 
 /**
@@ -6,10 +7,5 @@ import store from '~/store';
  * Use this to avoid unnecessary re-renders when addedConvo changes.
  */
 export default function useGetAddedConvo() {
-  return useRecoilCallback(
-    ({ snapshot }) =>
-      () =>
-        snapshot.getLoadable(store.conversationByKeySelector(1)).getValue(),
-    [],
-  );
+  return useAtomCallback(useCallback((get) => get(store.conversationByKeySelector(1)), []));
 }

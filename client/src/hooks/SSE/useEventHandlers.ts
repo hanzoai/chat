@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { v4 } from 'uuid';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -19,9 +19,8 @@ import type {
   EventSubmission,
   TStartupConfig,
 } from '@hanzochat/data-provider';
-import type { TResData, TFinalResData, ConvoGenerator } from '~/common';
+import type { Setter, TResData, TFinalResData, ConvoGenerator } from '~/common';
 import type { InfiniteData } from '@tanstack/react-query';
-import type { SetterOrUpdater, Resetter } from 'recoil';
 import type { ConversationCursorData } from '~/utils';
 import {
   logger,
@@ -57,11 +56,11 @@ export type EventHandlerParams = {
   setCompleted: React.Dispatch<React.SetStateAction<Set<unknown>>>;
   setMessages: (messages: TMessage[]) => void;
   getMessages: () => TMessage[] | undefined;
-  setIsSubmitting: SetterOrUpdater<boolean>;
-  setConversation?: SetterOrUpdater<TConversation | null>;
+  setIsSubmitting: Setter<boolean>;
+  setConversation?: Setter<TConversation | null>;
   newConversation?: ConvoGenerator;
-  setShowStopButton: SetterOrUpdater<boolean>;
-  resetLatestMessage?: Resetter;
+  setShowStopButton: Setter<boolean>;
+  resetLatestMessage?: () => void;
 };
 
 const createErrorMessage = ({
@@ -179,7 +178,7 @@ export default function useEventHandlers({
   const queryClient = useQueryClient();
   const { announcePolite } = useLiveAnnouncer();
   const applyAgentTemplate = useApplyAgentTemplate();
-  const setAbortScroll = useSetRecoilState(store.abortScroll);
+  const setAbortScroll = useSetAtom(store.abortScroll);
   const navigate = useNavigate();
   const location = useLocation();
 

@@ -2,7 +2,7 @@ import { memo, useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { ScrollText } from 'lucide-react';
 import { AutoSizer, List } from 'react-virtualized';
 import { Spinner, useCombobox } from '@hanzochat/client';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import type { TSkillSummary } from '@hanzochat/data-provider';
 import type { MentionOption } from '~/common';
 import useInitPopoverInput from '~/hooks/Input/useInitPopoverInput';
@@ -87,11 +87,9 @@ function SkillsCommandContent({
   agentId?: string | null;
 }) {
   const localize = useLocalize();
-  const setShowSkillsPopover = useSetRecoilState(store.showSkillsPopoverFamily(index));
-  const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
-  const setPendingManualSkills = useSetRecoilState(
-    store.pendingManualSkillsByConvoId(conversationId),
-  );
+  const setShowSkillsPopover = useSetAtom(store.showSkillsPopoverFamily(index));
+  const setEphemeralAgent = useSetAtom(ephemeralAgentByConvoId(conversationId));
+  const setPendingManualSkills = useSetAtom(store.pendingManualSkillsByConvoId(conversationId));
 
   const agentsMap = useAgentsMapContext();
   const { isActive } = useSkillActiveState();
@@ -390,7 +388,7 @@ const SkillsCommand = memo(function SkillsCommand({
   conversationId: string;
   agentId?: string | null;
 }) {
-  const show = useRecoilValue(store.showSkillsPopoverFamily(index));
+  const show = useAtomValue(store.showSkillsPopoverFamily(index));
   if (!show) {
     return null;
   }

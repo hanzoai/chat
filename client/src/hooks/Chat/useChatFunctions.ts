@@ -2,7 +2,8 @@ import { v4 } from 'uuid';
 import { cloneDeep } from 'lodash';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSetRecoilState, useResetRecoilState, useRecoilValue } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useResetAtom } from 'jotai/utils';
 import {
   Constants,
   QueryKeys,
@@ -24,10 +25,9 @@ import type {
   TEndpointsConfig,
   EndpointSchemaKey,
 } from '@hanzochat/data-provider';
-import type { SetterOrUpdater } from 'recoil';
 import { useAnalytics } from '@hanzo/event/react';
 import { EVENTS } from '@hanzo/event';
-import type { TAskFunction, ExtendedFile } from '~/common';
+import type { Setter, TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';
 import useGetSender from '~/hooks/Conversations/useGetSender';
 import { logger, createDualMessageContent, referrerProduct } from '~/utils';
@@ -61,9 +61,9 @@ export default function useChatFunctions({
   getMessages: () => TMessage[] | undefined;
   setMessages: (messages: TMessage[]) => void;
   files?: Map<string, ExtendedFile>;
-  setFiles?: SetterOrUpdater<Map<string, ExtendedFile>>;
-  setSubmission: SetterOrUpdater<TSubmission | null>;
-  setLatestMessage?: SetterOrUpdater<TMessage | null>;
+  setFiles?: Setter<Map<string, ExtendedFile>>;
+  setSubmission: Setter<TSubmission | null>;
+  setLatestMessage?: Setter<TMessage | null>;
 }) {
   const navigate = useNavigate();
   const getSender = useGetSender();
@@ -72,11 +72,11 @@ export default function useChatFunctions({
   const queryClient = useQueryClient();
   const setFilesToDelete = useSetFilesToDelete();
   const getEphemeralAgent = useGetEphemeralAgent();
-  const isTemporary = useRecoilValue(store.isTemporary);
+  const isTemporary = useAtomValue(store.isTemporary);
   const { getExpiry } = useUserKey(immutableConversation?.endpoint ?? '');
-  const setIsSubmitting = useSetRecoilState(store.isSubmittingFamily(index));
-  const setShowStopButton = useSetRecoilState(store.showStopButtonByIndex(index));
-  const resetLatestMultiMessage = useResetRecoilState(store.latestMessageFamily(index + 1));
+  const setIsSubmitting = useSetAtom(store.isSubmittingFamily(index));
+  const setShowStopButton = useSetAtom(store.showStopButtonByIndex(index));
+  const resetLatestMultiMessage = useResetAtom(store.latestMessageFamily(index + 1));
 
   const ask: TAskFunction = (
     {

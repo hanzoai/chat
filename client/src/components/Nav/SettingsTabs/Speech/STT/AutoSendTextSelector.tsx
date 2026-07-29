@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
 import { Slider, InputNumber, Switch } from '@hanzochat/client';
 import { cn, defaultTextProps, optionText } from '~/utils/';
 import { useLocalize } from '~/hooks';
@@ -8,8 +8,8 @@ import store from '~/store';
 export default function AutoSendTextSelector() {
   const localize = useLocalize();
 
-  const speechToText = useRecoilValue(store.speechToText);
-  const [autoSendText, setAutoSendText] = useRecoilState(store.autoSendText);
+  const speechToText = useAtomValue(store.speechToText);
+  const [autoSendText, setAutoSendText] = useAtom(store.autoSendText);
 
   // Local state for enabled/disabled toggle
   const [isEnabled, setIsEnabled] = useState(autoSendText !== -1);

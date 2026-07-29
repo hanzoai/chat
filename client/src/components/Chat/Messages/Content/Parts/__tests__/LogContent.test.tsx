@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { RecoilRoot } from 'recoil';
-import type { MutableSnapshot } from 'recoil';
+import { Provider } from 'jotai';
+import type { Store } from 'test/store';
+import { seed } from 'test/store';
 import type { TAttachment } from '@hanzochat/data-provider';
 import LogContent from '../LogContent';
 import store from '~/store';
@@ -72,10 +73,10 @@ const baseAttachment = (overrides: Partial<TAttachment> = {}): TAttachment =>
  */
 const renderWith = (ui: React.ReactElement, opts: { streaming?: boolean } = {}) => {
   const streaming = opts.streaming ?? true;
-  const initializeState = (snapshot: MutableSnapshot) => {
+  const initializeState = (snapshot: Store) => {
     snapshot.set(store.isSubmittingFamily(0), streaming);
   };
-  return render(<RecoilRoot initializeState={initializeState}>{ui}</RecoilRoot>);
+  return render(<Provider store={seed(initializeState)}>{ui}</Provider>);
 };
 
 describe('LogContent attachment routing', () => {

@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useRef, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useToastContext } from '@hanzochat/client';
 import { PermissionTypes, Permissions, apiBaseUrl } from '@hanzochat/data-provider';
 import MermaidErrorBoundary from '~/components/Messages/Content/MermaidErrorBoundary';
@@ -89,7 +89,7 @@ type TAnchorProps = {
 };
 
 export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
-  const user = useRecoilValue(store.user);
+  const user = useAtomValue(store.user);
   const { showToast } = useToastContext();
   const localize = useLocalize();
 

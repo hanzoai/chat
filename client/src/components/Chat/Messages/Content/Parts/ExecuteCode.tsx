@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import type { TAttachment } from '@hanzochat/data-provider';
 import ProgressText from '~/components/Chat/Messages/Content/ProgressText';
 import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
@@ -62,7 +62,7 @@ export default function ExecuteCode({
   const outputRef = useRef<string>(output);
   const codeContentRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const showAnalysisCode = useRecoilValue(store.showCode);
+  const showAnalysisCode = useAtomValue(store.showCode);
   const [showCode, setShowCode] = useState(showAnalysisCode);
   const [contentHeight, setContentHeight] = useState<number | undefined>(0);
 

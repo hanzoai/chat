@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAtomValue } from 'jotai';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { CSSTransition } from 'react-transition-group';
 import type { TMessage } from '@hanzochat/data-provider';
 import { useScreenshot, useMessageScrolling, useLocalize } from '~/hooks';
@@ -19,7 +19,7 @@ function MessagesViewContent({
   const localize = useLocalize();
   const fontSize = useAtomValue(fontSizeAtom);
   const { screenshotTargetRef } = useScreenshot();
-  const scrollButtonPreference = useRecoilValue(store.showScrollButton);
+  const scrollButtonPreference = useAtomValue(store.showScrollButton);
   const [currentEditId, setCurrentEditId] = useState<number | string | null>(-1);
   const scrollToBottomRef = useRef<HTMLButtonElement>(null);
 

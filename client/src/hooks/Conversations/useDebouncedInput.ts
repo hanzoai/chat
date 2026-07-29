@@ -1,7 +1,6 @@
 import debounce from 'lodash/debounce';
 import React, { useState, useCallback, useMemo } from 'react';
-import type { SetterOrUpdater } from 'recoil';
-import type { TSetOption } from '~/common';
+import type { Setter, TSetOption } from '~/common';
 import { defaultDebouncedDelay } from '~/common';
 
 /** A custom hook that accepts a setOption function and an option key (e.g., 'title').
@@ -15,14 +14,14 @@ function useDebouncedInput<T = unknown>({
   delay = defaultDebouncedDelay,
 }: {
   setOption?: TSetOption;
-  setter?: SetterOrUpdater<T>;
+  setter?: Setter<T>;
   optionKey?: string | number;
   initialValue: T;
   delay?: number;
 }): [
   (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | T, numeric?: boolean) => void,
   T,
-  SetterOrUpdater<T>,
+  Setter<T>,
   // (newValue: string) => void,
 ] {
   const [value, setValue] = useState<T>(initialValue);

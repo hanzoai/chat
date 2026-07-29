@@ -1,4 +1,4 @@
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import { getEndpointField, SettingsViews } from '@hanzochat/data-provider';
 import type { TConversation } from '@hanzochat/data-provider';
@@ -16,7 +16,7 @@ export default function Settings({
 }: TSettingsProps) {
   const modelsQuery = useGetModelsQuery();
   const { data: endpointsConfig } = useGetEndpointsQuery();
-  const currentSettingsView = useRecoilValue(store.currentSettingsView);
+  const currentSettingsView = useAtomValue(store.currentSettingsView);
   const endpointType = getEndpointField(endpointsConfig, conversation?.endpoint ?? '', 'type');
   const endpoint = endpointType ?? conversation?.endpoint ?? '';
   if (!endpoint || currentSettingsView !== SettingsViews.default) {

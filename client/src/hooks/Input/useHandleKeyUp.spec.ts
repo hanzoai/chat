@@ -9,9 +9,9 @@ const mockSkillsEnabled = { current: true };
 const mockEndpoint = { current: 'openAI' as string | null };
 const mockCommandToggles = { at: true, plus: true, slash: true, dollar: true };
 
-jest.mock('recoil', () => ({
-  ...jest.requireActual('recoil'),
-  useRecoilValue: jest.fn((atom) => {
+jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
+  useAtomValue: jest.fn((atom) => {
     if (atom === 'effectiveEndpointByIndex-0') {
       return mockEndpoint.current;
     }
@@ -29,7 +29,7 @@ jest.mock('recoil', () => ({
     }
     return undefined;
   }),
-  useSetRecoilState: jest.fn((atom: string) => {
+  useSetAtom: jest.fn((atom: string) => {
     if (atom === 'showMentionPopoverFamily-0') {
       return mockSetShowMentionPopover;
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { Tools } from '@hanzochat/data-provider';
 import { render, screen } from '@testing-library/react';
 import type { TAttachment, SearchResultData, ValidSource } from '@hanzochat/data-provider';
@@ -95,7 +95,7 @@ function renderWebSearch({
   output?: string | null;
 }) {
   return render(
-    <RecoilRoot>
+    <Provider>
       <SearchContext.Provider value={{ searchResults }}>
         <WebSearch
           initialProgress={initialProgress}
@@ -105,7 +105,7 @@ function renderWebSearch({
           attachments={attachments}
         />
       </SearchContext.Provider>
-    </RecoilRoot>,
+    </Provider>,
   );
 }
 
@@ -155,7 +155,7 @@ describe('WebSearch', () => {
 
     it('two instances under the same SearchContext show distinct sources', () => {
       const { container: container0 } = render(
-        <RecoilRoot>
+        <Provider>
           <SearchContext.Provider value={{ searchResults }}>
             <WebSearch
               initialProgress={1}
@@ -163,11 +163,11 @@ describe('WebSearch', () => {
               attachments={[makeAttachment(0, searchResults['0'])]}
             />
           </SearchContext.Provider>
-        </RecoilRoot>,
+        </Provider>,
       );
 
       const { container: container1 } = render(
-        <RecoilRoot>
+        <Provider>
           <SearchContext.Provider value={{ searchResults }}>
             <WebSearch
               initialProgress={1}
@@ -175,7 +175,7 @@ describe('WebSearch', () => {
               attachments={[makeAttachment(1, searchResults['1'])]}
             />
           </SearchContext.Provider>
-        </RecoilRoot>,
+        </Provider>,
       );
 
       const links0 = Array.from(container0.querySelectorAll('a[href]')).map((a) =>

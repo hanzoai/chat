@@ -1,14 +1,14 @@
 import React from 'react';
 import { Slider, InputNumber } from '@hanzochat/client';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
 import { cn, defaultTextProps, optionText } from '~/utils';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 export default function DecibelSelector() {
   const localize = useLocalize();
-  const speechToText = useRecoilValue(store.speechToText);
-  const [decibelValue, setDecibelValue] = useRecoilState(store.decibelValue);
+  const speechToText = useAtomValue(store.speechToText);
+  const [decibelValue, setDecibelValue] = useAtom(store.decibelValue);
 
   return (
     <div className="flex items-center justify-between">

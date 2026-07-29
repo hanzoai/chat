@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { replaceSpecialVars } from '@hanzochat/data-provider';
 import { useChatContext, useChatFormContext, useAddedChatContext } from '~/Providers';
 import { useAuthContext } from '~/hooks/AuthContext';
@@ -11,8 +11,8 @@ export default function useSubmitMessage() {
   const { conversation: addedConvo } = useAddedChatContext();
   const { ask, index, getMessages, setMessages, latestMessage } = useChatContext();
 
-  const autoSendPrompts = useRecoilValue(store.autoSendPrompts);
-  const setActivePrompt = useSetRecoilState(store.activePromptByIndex(index));
+  const autoSendPrompts = useAtomValue(store.autoSendPrompts);
+  const setActivePrompt = useSetAtom(store.activePromptByIndex(index));
 
   const submitMessage = useCallback(
     (data?: { text: string }) => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { Voice, useVoice, type Speech } from '@hanzo/voice';
 import { dataService } from '@hanzochat/data-provider';
 import { useToastContext } from '@hanzochat/client';
@@ -40,8 +40,8 @@ export default function Mic({
   const { showToast } = useToastContext();
   const { setValue, getValues, reset } = useChatFormContext();
   const { speechToTextEndpoint, textToSpeechEndpoint } = useGetAudioSettings();
-  const chosenVoice = useRecoilValue(store.voice);
-  const latestMessage = useRecoilValue(store.latestMessageFamily(index));
+  const chosenVoice = useAtomValue(store.voice);
+  const latestMessage = useAtomValue(store.latestMessageFamily(index));
 
   // Configured speech goes through this server's own speech routes; anything
   // unconfigured is simply absent, and the browser leg covers it.

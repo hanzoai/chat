@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
-import { RecoilRoot, useSetRecoilState } from 'recoil';
+import { Provider, useSetAtom } from 'jotai';
+import { seed } from 'test/store';
 import { LocalStorageKeys, SystemRoles } from '@hanzochat/data-provider';
 import type { TConversation, TUser } from '@hanzochat/data-provider';
 import store from '..';
@@ -23,13 +24,13 @@ const guestConvo = {
 const wrapper =
   (user: TUser) =>
   ({ children }: { children: ReactNode }) => (
-    <RecoilRoot initializeState={({ set }) => set(store.user, user)}>{children}</RecoilRoot>
+    <Provider initializeState={({ set }) => set(store.user, user)}>{children}</Provider>
   );
 
 const asUser = (role: string) => ({ id: 'x', role, name: 'x' }) as unknown as TUser;
 
 function setConversation(user: TUser, conversation: TConversation) {
-  const { result } = renderHook(() => useSetRecoilState(store.conversationByIndex(0)), {
+  const { result } = renderHook(() => useSetAtom(store.conversationByIndex(0)), {
     wrapper: wrapper(user),
   });
   act(() => result.current(conversation));

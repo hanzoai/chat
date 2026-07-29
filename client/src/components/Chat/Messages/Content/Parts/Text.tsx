@@ -1,5 +1,5 @@
 import { memo, useMemo, ReactElement } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import Markdown from '~/components/Chat/Messages/Content/Markdown';
 import { useMessageContext } from '~/Providers';
@@ -19,7 +19,7 @@ type ContentType =
 
 const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => {
   const { isSubmitting = false, isLatestMessage = false } = useMessageContext();
-  const enableUserMsgMarkdown = useRecoilValue(store.enableUserMsgMarkdown);
+  const enableUserMsgMarkdown = useAtomValue(store.enableUserMsgMarkdown);
   const showCursorState = useMemo(() => showCursor && isSubmitting, [showCursor, isSubmitting]);
 
   const content: ContentType = useMemo(() => {

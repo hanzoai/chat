@@ -1,4 +1,4 @@
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import useWakeLock from '~/hooks/useWakeLock';
 import store from '~/store';
 
@@ -16,11 +16,11 @@ import store from '~/store';
  * to ensure wake lock state persists across all conversations and routes.
  *
  * @see useWakeLock - The hook that manages the actual wake lock implementation
- * @see anySubmittingSelector - Recoil selector tracking if any conversation is generating
+ * @see anySubmittingSelector - Jotai selector tracking if any conversation is generating
  */
 const WakeLockManager = () => {
-  const isSubmitting = useRecoilValue(store.anySubmittingSelector);
-  const keepScreenAwake = useRecoilValue(store.keepScreenAwake);
+  const isSubmitting = useAtomValue(store.anySubmittingSelector);
+  const keepScreenAwake = useAtomValue(store.keepScreenAwake);
 
   const shouldPreventSleep = isSubmitting && keepScreenAwake;
   useWakeLock(shouldPreventSleep);

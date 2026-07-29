@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import type { TConversation } from '@hanzochat/data-provider';
 import { useChatContext } from '~/Providers';
 import { useFileHandling } from '~/hooks';
@@ -8,7 +8,7 @@ import store from '~/store';
 
 function FileFormChat({ conversation }: { conversation: TConversation | null }) {
   const { files, setFiles, setFilesLoading } = useChatContext();
-  const chatDirection = useRecoilValue(store.chatDirection).toLowerCase();
+  const chatDirection = useAtomValue(store.chatDirection).toLowerCase();
   const { endpoint: _endpoint } = conversation ?? { endpoint: null };
   const { abortUpload } = useFileHandling();
 

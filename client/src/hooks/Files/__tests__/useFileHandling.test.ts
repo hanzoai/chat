@@ -28,10 +28,10 @@ jest.mock('@hanzochat/client', () => ({
   })),
 }));
 
-jest.mock('recoil', () => ({
-  ...jest.requireActual('recoil'),
-  useSetRecoilState: jest.fn(() => jest.fn()),
-  useRecoilValue: jest.fn(() => mockIsTemporary),
+jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
+  useSetAtom: jest.fn(() => jest.fn()),
+  useAtomValue: jest.fn(() => mockIsTemporary),
 }));
 
 jest.mock('~/store', () => ({

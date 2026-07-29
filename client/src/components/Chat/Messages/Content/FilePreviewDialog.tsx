@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import copy from 'copy-to-clipboard';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { Download } from 'lucide-react';
 import { OGDialog, OGDialogContent, OGDialogTitle, OGDialogDescription } from '@hanzochat/client';
 import CopyButton from '~/components/Messages/Content/CopyButton';
@@ -135,7 +135,7 @@ export default function FilePreviewDialog({
   fileSize,
 }: FilePreviewDialogProps) {
   const localize = useLocalize();
-  const user = useRecoilValue(store.user);
+  const user = useAtomValue(store.user);
   const { refetch: downloadFile } = useFileDownload(user?.id ?? '', fileId, { direct: false });
 
   const [fileContent, setFileContent] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 import { memo, useState, useCallback, useContext } from 'react';
 import Cookies from 'js-cookie';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { useParams } from 'react-router-dom';
 import { buildTree } from '@hanzochat/data-provider';
 import { CalendarDays, Settings } from 'lucide-react';
@@ -36,7 +36,7 @@ function SharedView() {
   const dataTree = data && buildTree({ messages: data.messages });
   const messagesTree = dataTree?.length === 0 ? null : (dataTree ?? null);
 
-  const [langcode, setLangcode] = useRecoilState(store.lang);
+  const [langcode, setLangcode] = useAtom(store.lang);
 
   // configure document title
   let docTitle = '';

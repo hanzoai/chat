@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
 import { Slider, InputNumber } from '@hanzochat/client';
 import { cn, defaultTextProps, optionText } from '~/utils';
 import { useLocalize } from '~/hooks';
@@ -7,8 +7,8 @@ import store from '~/store';
 
 export default function DecibelSelector() {
   const localize = useLocalize();
-  const textToSpeech = useRecoilValue(store.textToSpeech);
-  const [playbackRate, setPlaybackRate] = useRecoilState(store.playbackRate);
+  const textToSpeech = useAtomValue(store.textToSpeech);
+  const [playbackRate, setPlaybackRate] = useAtom(store.playbackRate);
 
   return (
     <div className="flex items-center justify-between">

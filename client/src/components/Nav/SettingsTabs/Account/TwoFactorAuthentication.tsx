@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { SmartphoneIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -33,7 +33,7 @@ const phaseVariants = {
 const TwoFactorAuthentication: React.FC = () => {
   const localize = useLocalize();
   const { user } = useAuthContext();
-  const setUser = useSetRecoilState(store.user);
+  const setUser = useSetAtom(store.user);
   const { showToast } = useToastContext();
   const buttonRef = useRef<HTMLButtonElement>(null);
 

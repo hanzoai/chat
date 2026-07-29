@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import debounce from 'lodash/debounce';
 import { useLocation } from 'react-router-dom';
-import { useRecoilState, useSetRecoilState, useResetRecoilState } from 'recoil';
+import { useAtom, useSetAtom } from 'jotai';
+import { useResetAtom } from 'jotai/utils';
 import type { Artifact } from '~/common';
 import FilePreview from '~/components/Chat/Input/Files/FilePreview';
 import { cn, getFileType, logger, isArtifactRoute } from '~/utils';
@@ -11,12 +12,12 @@ import store from '~/store';
 const ArtifactButton = ({ artifact }: { artifact: Artifact | null }) => {
   const localize = useLocalize();
   const location = useLocation();
-  const setVisible = useSetRecoilState(store.artifactsVisibility);
-  const [artifacts, setArtifacts] = useRecoilState(store.artifactsState);
-  const [currentArtifactId, setCurrentArtifactId] = useRecoilState(store.currentArtifactId);
-  const resetCurrentArtifactId = useResetRecoilState(store.currentArtifactId);
+  const setVisible = useSetAtom(store.artifactsVisibility);
+  const [artifacts, setArtifacts] = useAtom(store.artifactsState);
+  const [currentArtifactId, setCurrentArtifactId] = useAtom(store.currentArtifactId);
+  const resetCurrentArtifactId = useResetAtom(store.currentArtifactId);
   const isSelected = artifact?.id === currentArtifactId;
-  const [visibleArtifacts, setVisibleArtifacts] = useRecoilState(store.visibleArtifacts);
+  const [visibleArtifacts, setVisibleArtifacts] = useAtom(store.visibleArtifacts);
 
   const debouncedSetVisibleRef = useRef(
     debounce((artifactToSet: Artifact) => {
