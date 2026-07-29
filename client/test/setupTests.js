@@ -35,23 +35,43 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-beforeEach(() => {
-  jest.clearAllMocks();
+/* jsdom marks Location [Unforgeable]: `assign`, `replace` and `reload` are own
+ * properties with `writable: false, configurable: false`, so
+ * `jest.spyOn(window.location, 'replace')` throws and takes the WHOLE suite down
+ * with "Test suite failed to run" — zero tests reported. `window.location`
+ * itself IS configurable, so swap it for a stand-in whose navigation methods are
+ * plain mocks and whose URL fields read through to the real Location, keeping
+ * `window.history.pushState/replaceState` authoritative for `pathname`. */
+const liveLocation = document.location;
+Object.defineProperty(window, 'location', {
+  configurable: true,
+  value: Object.defineProperties(
+    {
+      assign: jest.fn(),
+      replace: jest.fn(),
+      reload: jest.fn(),
+      toString: () => liveLocation.href,
+    },
+    Object.fromEntries(
+      ['href', 'origin', 'protocol', 'host', 'hostname', 'port', 'pathname', 'search', 'hash'].map(
+        (field) => [
+          field,
+          {
+            enumerable: true,
+            configurable: true,
+            get: () => liveLocation[field],
+            set: (value) => {
+              liveLocation[field] = value;
+            },
+          },
+        ],
+      ),
+    ),
+  ),
 });
 
-// Mock window.matchMedia for tests
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
 jest.mock('react-i18next', () => {

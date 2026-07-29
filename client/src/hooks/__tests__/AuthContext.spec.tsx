@@ -1,6 +1,3 @@
-/**
- * @jest-environment @happy-dom/jest-environment
- */
 import React from 'react';
 import { render, act } from '@testing-library/react';
 import { Provider } from 'jotai';
@@ -65,6 +62,10 @@ jest.mock('~/data-provider', () => ({
   })),
   useGetRole: jest.fn(() => ({ data: null })),
   useListRoles: jest.fn(() => ({ data: undefined })),
+  /* Guest chat reads the startup config to decide whether to mint an anonymous
+   * session. Undefined keeps that path inert, which is what these
+   * login/redirect cases assert against. */
+  useGetStartupConfig: jest.fn(() => ({ data: undefined })),
 }));
 
 const authConfig: TAuthConfig = { loginRedirect: '/login', test: true };

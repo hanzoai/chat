@@ -1,6 +1,3 @@
-/**
- * @jest-environment @happy-dom/jest-environment
- */
 import React from 'react';
 import { Provider as JotaiProvider, createStore } from 'jotai';
 import { renderHook, act } from '@testing-library/react';
