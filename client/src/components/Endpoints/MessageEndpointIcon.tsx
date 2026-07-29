@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import HanzoLogoIcon from '~/components/svg/HanzoLogoIcon';
 import ZenLogoIcon from '~/components/svg/ZenLogoIcon';
+import EnsoLogoIcon from '~/components/svg/EnsoLogoIcon';
+
 import { EModelEndpoint, isAssistantsEndpoint, alternateName } from '@hanzochat/data-provider';
 import {
   Plugin,
@@ -16,6 +18,16 @@ import {
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
 import { IconProps } from '~/common';
 import { cn } from '~/utils';
+
+/**
+ * Whether a model id belongs to the Enso router family (enso, enso-flash,
+ * enso-ultra). Prefix match, so a future enso-* rung is covered without another
+ * edit here; anchored so a model merely CONTAINING "enso" is not caught.
+ */
+function isEnso(model?: string | null): boolean {
+  return typeof model === 'string' && /^enso(-|$)/.test(model.trim().toLowerCase());
+}
+
 
 type EndpointIcon = {
   icon: React.ReactNode | React.JSX.Element;
@@ -148,10 +160,21 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       name: alternateName[EModelEndpoint.bedrock],
     },
     [EModelEndpoint.custom]: {
-      // hanzo.chat's custom endpoint is Zen-only (Hanzo AI zen* models) — brand it
-      // with the ensō mark instead of the generic Chat "custom" glyph.
-      icon: <ZenLogoIcon size={size * 0.72} className="text-white" />,
-      name: 'Zen',
+      // Two marks, and the difference is load-bearing. Enso is drawn CLOSED — it
+      // is the rung that completes the circle by routing to the right model. The
+      // Zen ensō (円相) is drawn OPEN, a single brush arc with a gap. Same viewBox,
+      // same stroke weight, same radius, so they sit at identical optical weight
+      // and ONLY the gap tells them apart.
+      //
+      // The comment here used to say this endpoint is "Zen-only", which stopped
+      // being true: the gateway serves enso, enso-flash and enso-ultra alongside
+      // the zen* family, and enso is the default.
+      icon: isEnso(model) ? (
+        <EnsoLogoIcon size={size * 0.72} className="text-white" />
+      ) : (
+        <ZenLogoIcon size={size * 0.72} className="text-white" />
+      ),
+      name: isEnso(model) ? 'Enso' : 'Zen',
     },
     null: { icon: <GPTIcon size={size * 0.7} />, bg: 'grey', name: 'N/A' },
     default: {
