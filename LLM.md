@@ -428,3 +428,45 @@ All user-visible `Chat` / `chat.ai` references replaced with Hanzo equivalents:
 - JSDoc comments: Chat -> Hanzo Chat
 - Log messages: Chat -> Hanzo Chat
 - Helm chart URLs -> hanzo.ai/docs/chat/...
+
+## hanzo.chat front door — the app IS the landing (CTO direction, 2026-07-28)
+
+Target: ChatGPT's shape. A signed-out visitor lands in the **product** — composer
+centred, thin sidebar, `Log in` / `Sign up free` top-right — and marketing lives at
+sub-routes (`/pricing`, `/product`, `/models`) reachable from the sidebar, never as
+the entry point. Reference for the composer/sources/modes treatment is the Hanzo
+extension's search surface (`~/work/hanzo/extension`), not a new design.
+
+**Three defects, measured 2026-07-28, in the order they must be fixed:**
+
+1. **No silent SSO — this is the root one.** `hanzo.chat` and `hanzo.app` are
+   different registrable domains, so a session cookie can NEVER span them. The only
+   mechanism that makes a signed-in hanzo.id user already-signed-in here is a
+   `prompt=none` authorize on load. Chat has none: zero hits for
+   `prompt=none|silentAuth|checkSession` across `client/src` and `api/server`.
+   `silentRefresh` only refreshes chat's OWN local JWT — it cannot mint one. So a
+   real user with credits renders anonymous on first visit, every visit.
+   This is the generalisable fix: every Hanzo surface needs it, not just chat.
+
+2. **The landing swallows chat intent.** `routes/Root.tsx:41`
+   `showChat = isAuthenticated || isGuest`; `:111` returns `<LandingPage/>` for EVERY
+   route when both are false — including `/c/new?q=…&submit=true`, whose `q`/`submit`
+   params (`AnswerEngine.tsx: CHAT_PARAMS`) are then dropped. A deep link must reach
+   the chat regardless of auth state. Note the failure shape: a 429 on an AUXILIARY
+   token mint silently downgrades the whole product to a brochure.
+
+3. **The guest mint is rate-limited out.** `POST /v1/chat/auth/guest` → 429
+   "Too many guest sessions, try again after 60 minutes". `ALLOW_GUEST_CHAT=true` IS
+   live and `/v1/chat/config` advertises `allowGuestChat: true`, so guest-as-landing
+   is enabled and simply never reached. The limiter keys on `CF-Connecting-IP` with an
+   in-process MemoryStore at `replicas:1` — behind Cloudflare one IP is many people,
+   and the only reset is a pod restart. Raise/re-key `GUEST_TOKEN_MAX` / `GUEST_TOKEN_WINDOW`.
+
+**Then the design work**, which is small once the above lands:
+`components/Landing/LandingPage.tsx` stops being the front door. Its hero mock
+advertises the DEPRECATED `chat.hanzo.ai` (301s to hanzo.chat) and shows a CODING
+session (`zen5-coder`, "Refactor the auth module") — that is hanzo.app's story on the
+chat product. Marketing moves to sub-routes or hanzo.ai; the composer, source pills
+(@web/@news/@academic/@github/@reddit/@x), mode tabs (Search/News/Research/Deep) and
+model picker become the first paint. `e2e/specs/landing.spec.ts` pins current
+behaviour and must be rewritten with it.
