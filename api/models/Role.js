@@ -37,8 +37,8 @@ const getRoleByName = async function (roleName, fieldsToSelect = null) {
     // generation for that role died. roleDefaults[roleName] always carries a
     // name, so this guard makes the nameless create structurally impossible.
     if (!role && roleDefaults[roleName]) {
-      // Store-aware: Role resolves to the SQLite DocModel/DualWriteModel under the
-      // CHAT_STORE_SQLITE flip, where `new Role()` throws "Role is not a constructor".
+      // Store-aware: Role resolves to the SQLite DocModel under
+      // CHAT_STORE_SQLITE, where `new Role()` throws "Role is not a constructor".
       // `.create()` is the bounded equivalent; it returns the created doc (toObject).
       role = await Role.create(roleDefaults[roleName]);
       await cache.set(roleName, role);

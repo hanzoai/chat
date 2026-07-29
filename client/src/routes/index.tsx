@@ -13,6 +13,7 @@ import { AuthContextProvider } from '~/hooks/AuthContext';
 import { AnalyticsProvider } from '~/Providers';
 import RouteErrorBoundary from './RouteErrorBoundary';
 import BuildRoute from './BuildRoute';
+import LandingPage from '~/components/Landing/LandingPage';
 import LoginLayout from './Layouts/Login';
 import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
@@ -97,6 +98,14 @@ export const router = createBrowserRouter(
               element: <TwoFactorScreen />,
             },
           ],
+        },
+        // Marketing keeps a home, it just stops being the front door — the same
+        // shape chatgpt.com uses, where the app answers `/` and the pitch lives at
+        // `/pricing`. Declared OUTSIDE <Root/> because LandingPage brings its own
+        // full-page chrome and must not mount inside the chat shell.
+        {
+          path: 'welcome',
+          element: <LandingPage />,
         },
         dashboardRoutes,
         {
