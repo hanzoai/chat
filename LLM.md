@@ -226,7 +226,7 @@ agent builder, which is untouched.
   `refreshController`/`logoutController` read it). That keeps login, refresh AND
   logout on the local-JWT path byte-identical to a non-OpenID login; that flag
   SOLELY gates whether `/v1/chat/auth/refresh` performs the OIDC refresh-grant.
-  The ~1h id_token is used while valid; durable refresh (hanzo.id/Casdoor OIDC
+  The ~1h id_token is used while valid; durable refresh (hanzo.id OIDC
   refresh or an RFC-8693 token-exchange from the chat session) is a tracked
   FOLLOW-UP — the login-breaking refresh-grant is NOT enabled here.
 - Abuse limits (a run is a real billable completion): a per-user rate limiter
