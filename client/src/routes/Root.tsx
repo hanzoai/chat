@@ -23,6 +23,7 @@ import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
 import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
+import { offerLogin } from '~/utils/login';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 
 export default function Root() {
@@ -51,6 +52,16 @@ export default function Root() {
     }
   }, [isAuthenticated, token]);
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
+
+  // Offer the account on ARRIVAL, not only after something is refused — the
+  // chatgpt.com shape. Gated on authChecked so it never flashes over a session
+  // that is still resolving, and `offerLogin` itself fires once per tab, so
+  // dismissing it sticks for the visit.
+  useEffect(() => {
+    if (authChecked && !isAuthenticated) {
+      offerLogin();
+    }
+  }, [authChecked, isAuthenticated]);
 
   // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);
