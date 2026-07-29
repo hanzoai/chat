@@ -16,12 +16,16 @@ const MODES = [
   { id: 'chat', key: 'com_answer_mode_chat' },
   { id: 'search', key: 'com_answer_mode_search' },
   { id: 'news', key: 'com_answer_mode_news' },
+  // No 'deep'. It was research with the dials up -- same system prompt, same
+  // models, same gate -- so it offered a choice that was really an intensity, and
+  // hid its 2x price behind an adjective. Cloud folded the two into one research
+  // mode (apps/answer/mode.go) which always does the deeper pass; 'deep' still
+  // RESOLVES there for any client that has not shipped this, so nothing 400s.
   { id: 'research', key: 'com_answer_mode_research' },
-  { id: 'deep', key: 'com_answer_mode_deep' },
 ] as const satisfies readonly { id: SearchMode | 'chat'; key: TranslationKeys }[];
 
 /**
- * Modes a guest may run. Research and deep gather a far wider source set and run
+ * Modes a guest may run. Research gathers a far wider source set and runs
  * far longer on a SHARED balance, so the relay refuses them for a guest
  * (`GUEST_MODES` in api/server/routes/ask.js — that is the authority). Filtering
  * here keeps a guest from walking into a refusal.
