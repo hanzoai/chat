@@ -468,5 +468,22 @@ advertises the DEPRECATED `chat.hanzo.ai` (301s to hanzo.chat) and shows a CODIN
 session (`zen5-coder`, "Refactor the auth module") — that is hanzo.app's story on the
 chat product. Marketing moves to sub-routes or hanzo.ai; the composer, source pills
 (@web/@news/@academic/@github/@reddit/@x), mode tabs (Search/News/Research/Deep) and
-model picker become the first paint. `e2e/specs/landing.spec.ts` pins current
-behaviour and must be rewritten with it.
+model picker become the first paint. `e2e/specs/landing.spec.ts` does NOT pin the
+marketing page — it asserts `/` shows the nav and a composer textbox, i.e. it
+already describes the target and was failing against the brochure.
+
+**Landed 2026-07-28 (increments 1–3 of the above):**
+- `Root.tsx` no longer has a front-door branch. The chat shell answers every
+  route; `LoginGate` (already mounted for every `!isAuthenticated` visitor) asks
+  for a session at submit — the first moment one is needed.
+- `utils/login.ts#trySilentSso()` — one `prompt=none` attempt per tab via
+  `IAM#signinSilent()`, posting to the SAME `/v1/chat/auth/iam/session` bridge the
+  interactive callback uses. Wired into `AuthContext`'s no-local-session path
+  BEFORE the guest fallback, so a funded customer adopts their real session
+  instead of being handed a 2-message anonymous trial. 5 tests, negative-controlled.
+- `GUEST_TOKEN_MAX` default 20 → 120. Spend is unchanged: `guestMessageLimiter`
+  caps MESSAGES per real client IP (`GUEST_MESSAGE_MAX`, prod 2) and no amount of
+  token minting resets it. Two limiters, two concerns.
+- Marketing moved to `/welcome`, declared outside `<Root/>` so it keeps its own
+  full-page chrome. Its hero still advertises the deprecated `chat.hanzo.ai` and a
+  coding demo — content work, still outstanding.

@@ -21,7 +21,6 @@ import { Nav, MobileNav, NAV_WIDTH } from '~/components/Nav';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
-import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 
@@ -33,12 +32,12 @@ export default function Root() {
     return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
   });
 
-  const { isAuthenticated, isGuest, logout, token } = useAuthContext();
+  const { isAuthenticated, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Guests get the chat UI without a full session. Capability-scoped hooks
-  // below stay gated on `isAuthenticated`, so guests never query agents/files/search.
-  const showChat = isAuthenticated || isGuest;
+  // Guests get the chat UI without a full session. Capability-scoped hooks below
+  // stay gated on `isAuthenticated`, so guests never query agents/files/search —
+  // and so does an anonymous visitor, who now reaches this shell too.
 
   // Wait for the initial silent refresh before deciding to show landing vs chat
   useEffect(() => {
@@ -108,9 +107,24 @@ export default function Root() {
     );
   }
 
-  if (!showChat) {
-    return <LandingPage />;
-  }
+  // NO front-door branch. The app IS the landing (ChatGPT's shape): an anonymous
+  // visitor gets the composer, not a brochure, and `LoginGate` — already mounted
+  // for every `!isAuthenticated` visitor — asks for a session at the moment they
+  // submit, which is the first moment one is actually needed.
+  //
+  // This used to `return <LandingPage/>` whenever `isAuthenticated || isGuest` was
+  // false, for EVERY route. Two independent failures then read as a design choice:
+  // a signed-in hanzo.id user is anonymous here on first paint (different
+  // registrable domains cannot share a cookie, and chat runs no `prompt=none`
+  // authorize), and the guest-token mint answers 429 once its per-IP limiter is
+  // spent. Either one alone downgraded the whole product to a marketing page and
+  // swallowed deep links like `/c/new?q=…&submit=true` — the `q`/`submit` params
+  // never reached AnswerEngine. A failure in an AUXILIARY token mint must never
+  // decide what product the visitor sees.
+  //
+  // LandingPage is not deleted: it is marketing, and marketing keeps a home at an
+  // explicit route the way chatgpt.com/pricing does. It is simply no longer what
+  // answers `/`.
 
   return (
     <SetConvoProvider>
