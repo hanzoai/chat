@@ -7,7 +7,7 @@ import logger from '~/config/winston';
  * Factory that returns the token methods bound to a store-aware `DataHandle`
  * (same seam as the migrated domains). `handle.models.Token` resolves to the
  * backend selected by `createModels()` + `applySqliteOverrides()` (mongoose
- * `Model`, SQLite `DocModel`, or `DualWriteModel`); every method speaks only the
+ * `Model` or SQLite `DocModel`); every method speaks only the
  * bounded Model API, never `new Token()` / `doc.save()`.
  */
 export function createTokenMethods(handle: DataHandle) {

@@ -14,10 +14,9 @@ import { DocModel, type CollectionSpec, type SqliteDatabase } from './DocModel';
 import { CHAT_COLLECTION_SPECS } from './collections';
 import { ObjectId } from './engine';
 
-export { DocModel, type CollectionSpec } from './DocModel';
+export { DocModel, type CollectionSpec, type SqliteDatabase } from './DocModel';
 export { CHAT_COLLECTION_SPECS } from './collections';
 export { ObjectId } from './engine';
-export { createDualWriteModel, DualWriteModel } from './DualWriteModel';
 export { attachMeili, backfillMeili, isMeiliEnabled } from './meili';
 
 export interface SqliteHandle {
@@ -68,6 +67,29 @@ export function openDatabase(dbPath?: string): SqliteDatabase {
   }
   db.exec('PRAGMA foreign_keys = ON');
   return db;
+}
+
+/**
+ * The one SQLite connection for this process. Every subsystem that persists to
+ * the embedded database shares it — the document store (`createModels`) and the
+ * Keyv cache (`@hanzochat/api`'s `KeyvSqlite`) — because two connections to one
+ * file are two writers racing for the same WAL lock for no benefit;
+ * better-sqlite3 is synchronous, so one handle serialises them for free.
+ *
+ * Callers that want isolation (every `*.sqlite.spec.ts`, the backfill scripts)
+ * pass their own `db`/`dbPath` to `createSqliteHandle` and never come here.
+ */
+let shared: SqliteDatabase | undefined;
+
+export function sharedDatabase(): SqliteDatabase {
+  shared ??= openDatabase();
+  return shared;
+}
+
+/** Closes the process-shared connection. Idempotent; the next call reopens. */
+export function closeSharedDatabase(): void {
+  shared?.close();
+  shared = undefined;
 }
 
 /**

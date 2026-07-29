@@ -36,8 +36,8 @@ export default function Root() {
   const { isAuthenticated, isGuest, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Guests get the chat UI without a full session. Capability-scoped hooks
-  // below stay gated on `isAuthenticated`, so guests never query agents/files/search.
+  // Guests get the chat UI without a full session. Capability-scoped hooks below
+  // stay gated on `isAuthenticated`, so guests never query agents/files/search.
   const showChat = isAuthenticated || isGuest;
 
   // Wait for the initial silent refresh before deciding to show landing vs chat
@@ -108,6 +108,26 @@ export default function Root() {
     );
   }
 
+  // LAST RESORT, not the front door. The fix for "hanzo.chat shows a brochure" is
+  // upstream of here — silent SSO adopts a hanzo.id session (utils/login.ts) and
+  // the guest mint is no longer rate-limited out — so `showChat` is now true for
+  // anyone who has any path to chat at all. This branch survives only for the
+  // visitor who has NONE, because `ChatRoute` renders `null` when it cannot chat:
+  // dropping the branch outright traded a brochure for a BLANK PANE in exactly
+  // the state that was already broken. Something must always paint.
+  //
+  // This used to `return <LandingPage/>` whenever `isAuthenticated || isGuest` was
+  // false, for EVERY route. Two independent failures then read as a design choice:
+  // a signed-in hanzo.id user is anonymous here on first paint (different
+  // registrable domains cannot share a cookie, and chat runs no `prompt=none`
+  // authorize), and the guest-token mint answers 429 once its per-IP limiter is
+  // spent. Either one alone downgraded the whole product to a marketing page and
+  // swallowed deep links like `/c/new?q=…&submit=true` — the `q`/`submit` params
+  // never reached AnswerEngine. A failure in an AUXILIARY token mint must never
+  // decide what product the visitor sees.
+  //
+  // LandingPage also keeps an explicit home at /welcome, the way chatgpt.com/pricing
+  // does, so marketing is reachable rather than only a failure state.
   if (!showChat) {
     return <LandingPage />;
   }

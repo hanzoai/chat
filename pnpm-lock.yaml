@@ -388,15 +388,15 @@ importers:
       '@hanzo/ai':
         specifier: ^0.3.0
         version: 0.3.0
-      '@hanzo/brand':
-        specifier: ^1.4.4
-        version: 1.4.4(react@18.3.1)
+      '@hanzo/design':
+        specifier: ^0.3.0
+        version: 0.3.0
       '@hanzo/event':
         specifier: ^0.3.3
         version: 0.3.3(react@18.3.1)
       '@hanzo/iam':
-        specifier: ^0.21.0
-        version: 0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.21.1
+        version: 0.21.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@18.3.1)
@@ -417,7 +417,7 @@ importers:
         version: link:../packages/data-provider
       '@hanzogui/shell':
         specifier: ^7.4.2
-        version: 7.4.2(@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 7.4.2(@hanzo/iam@0.21.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3903,14 +3903,8 @@ packages:
     resolution: {integrity: sha512-nHj5rgSu5WD1fttfWv65HQ3WG65iztLFrwjb5B5BKSVwLVt7ZSLbioOZ6Of7GnFRG4PxtD0Sy961NnEA2FkaYA==}
     engines: {node: '>=18'}
 
-  '@hanzo/brand@1.4.4':
-    resolution: {integrity: sha512-yD5Hej+6zMezavpN6SVszl+Yn6IM9JvF8M/aKmsalPK5LFnyvdNxxjKHfAnG6P7EvJSpSDpY1npZ+X+fnidnrw==}
-    hasBin: true
-    peerDependencies:
-      react: '>=18'
-    peerDependenciesMeta:
-      react:
-        optional: true
+  '@hanzo/design@0.3.0':
+    resolution: {integrity: sha512-shUf5kU/p5VYmb3P4s02HFAyCOS6Z/XyonAxFiU1hJiqSWBz5NJEXHAVQIiL2Hl2F2yEUrSw43EF+I/WIp7y1w==}
 
   '@hanzo/event@0.3.3':
     resolution: {integrity: sha512-faooSLA2UR4N8B0hOcSuQk3yi48Dahp5IMTrQn/WdKQc4JkKGx0lmdASp7os80ita48VQUNheqF6lpdXIj6ZYQ==}
@@ -3920,8 +3914,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/iam@0.21.0':
-    resolution: {integrity: sha512-VvnPXQqvyQQ0rwraaMUIRrc8N2eXMtUsXsT3hltstYmghv7F/03sfmus/lWvkShiVYHWzHkh8B/vno8VphgnTg==}
+  '@hanzo/iam@0.21.1':
+    resolution: {integrity: sha512-mjdC67CeShO0wp/HzbPOPg/K3TYOhaWJg+begWv67RpzBcYBicZRglSvfA+jD/tIuPMAiBTVGPs+P18S94Xy1g==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
@@ -17447,17 +17441,13 @@ snapshots:
 
   '@hanzo/ai@0.3.0': {}
 
-  '@hanzo/brand@1.4.4(react@18.3.1)':
-    dependencies:
-      '@hanzo/logo': 1.0.13(react@18.3.1)
-    optionalDependencies:
-      react: 18.3.1
+  '@hanzo/design@0.3.0': {}
 
   '@hanzo/event@0.3.3(react@18.3.1)':
     optionalDependencies:
       react: 18.3.1
 
-  '@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hanzo/iam@0.21.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
@@ -17562,9 +17552,9 @@ snapshots:
       - ws
       - zod
 
-  '@hanzogui/shell@7.4.2(@hanzo/iam@0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hanzogui/shell@7.4.2(@hanzo/iam@0.21.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@hanzo/iam': 0.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@hanzo/iam': 0.21.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 

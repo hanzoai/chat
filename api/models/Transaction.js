@@ -152,8 +152,8 @@ function calculateTokenValue(txn) {
 
 /**
  * Persists a transaction via the store-aware `Transaction` model (`~/db/models`),
- * which resolves to the SQLite DocModel / DualWriteModel under the CHAT_STORE_SQLITE
- * flip — where the mongoose-document constructor (`new Transaction()`) + `.save()`
+ * which resolves to the SQLite DocModel under CHAT_STORE_SQLITE
+ * — where the mongoose-document constructor (`new Transaction()`) + `.save()`
  * throws "Transaction is not a constructor". The provided calculator mutates the
  * working object with the derived fields (rate/tokenValue/rateDetail) BEFORE the
  * insert, then the non-schema calculator inputs (endpointTokenConfig/inputTokenCount)

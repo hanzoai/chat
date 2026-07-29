@@ -97,23 +97,24 @@ module.exports = {
           850: '#171717',
           900: '#0d0d0d',
         },
-        // Shared @hanzo/brand monochrome scale (from variables.css). Additive —
-        // chat's own `gray`/`mono` ramp is untouched; new shared chrome can use
-        // `hanzo-*` so the palette resolves to the ONE brand source of truth.
+        // The shared monochrome ladder, now @hanzo/design's --neutral-*. It was
+        // @hanzo/brand's --hanzo-mono-*: the same eleven values under a second
+        // name, so this is a rename, not a repaint. Additive — chat's own
+        // `gray`/`mono` ramp is untouched; new shared chrome uses `hanzo-*`.
         hanzo: {
           black: 'var(--hanzo-black)',
           white: 'var(--hanzo-white)',
-          50: 'var(--hanzo-mono-50)',
-          100: 'var(--hanzo-mono-100)',
-          200: 'var(--hanzo-mono-200)',
-          300: 'var(--hanzo-mono-300)',
-          400: 'var(--hanzo-mono-400)',
-          500: 'var(--hanzo-mono-500)',
-          600: 'var(--hanzo-mono-600)',
-          700: 'var(--hanzo-mono-700)',
-          800: 'var(--hanzo-mono-800)',
-          900: 'var(--hanzo-mono-900)',
-          950: 'var(--hanzo-mono-950)',
+          50: 'var(--neutral-50)',
+          100: 'var(--neutral-100)',
+          200: 'var(--neutral-200)',
+          300: 'var(--neutral-300)',
+          400: 'var(--neutral-400)',
+          500: 'var(--neutral-500)',
+          600: 'var(--neutral-600)',
+          700: 'var(--neutral-700)',
+          800: 'var(--neutral-800)',
+          900: 'var(--neutral-900)',
+          950: 'var(--neutral-950)',
         },
         green: mono,
         red: mono,
@@ -168,42 +169,43 @@ module.exports = {
         'border-xheavy': 'var(--border-xheavy)',
         'border-destructive': 'var(--border-destructive)',
         /* These are test styles */
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ['switch-unchecked']: 'hsl(var(--switch-unchecked))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        border: 'var(--border)',
+        input: 'var(--input)',
+        ['switch-unchecked']: 'var(--switch-unchecked)',
+        ring: 'var(--ring)',
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: 'var(--primary)',
+          foreground: 'var(--primary-foreground)',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: 'var(--secondary)',
+          foreground: 'var(--secondary-foreground)',
         },
+        /* One `destructive`, not two. The key was declared twice in this object;
+           the later literal won, so `--destructive` was unreachable and
+           `text-destructive-foreground` — used in four places — was a class with
+           no rule, which paints nothing and reports nothing. */
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: 'var(--destructive)',
+          foreground: 'var(--destructive-foreground)',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
+          DEFAULT: 'var(--muted)',
+          foreground: 'var(--muted-foreground)',
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover, var(--background)))',
-          foreground: 'hsl(var(--popover-foreground, var(--foreground)))',
-        },
-        destructive: {
-          DEFAULT: 'var(--text-destructive)',
+          DEFAULT: 'var(--popover, var(--background))',
+          foreground: 'var(--popover-foreground, var(--foreground))',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: 'var(--accent)',
+          foreground: 'var(--accent-foreground)',
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
+          DEFAULT: 'var(--card)',
+          foreground: 'var(--card-foreground)',
         },
       },
       borderRadius: {

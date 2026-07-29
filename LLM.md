@@ -46,7 +46,7 @@ npm run format           # Prettier
 ```
 api/                 # Express backend (port 3080)
   server/            # Entry point, routes, controllers, middleware
-  models/            # Mongoose models (MongoDB)
+  models/            # Model wrappers over the store (see "The store" below)
 client/              # React frontend (Vite)
   src/components/    # UI components
   src/routes/        # Client-side routing
@@ -69,7 +69,8 @@ packages/
 Key env vars:
 ```
 OPENAI_BASE_URL=http://llm.hanzo.svc.cluster.local:4000/v1  # Internal LLM gateway
-MONGO_URI=                  # MongoDB connection
+CHAT_SQLITE_PATH=           # Embedded SQLite store (prod: /var/lib/hanzo/chat/chat.db)
+CHAT_STORE_SQLITE=          # CSV of collections served from SQLite (prod: all 29)
 JWT_SECRET=                 # Auth token signing
 CREDS_KEY= CREDS_IV=        # Credential encryption
 ```
@@ -100,7 +101,8 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 - 2 replicas, port 3080
 - Ingress: `hanzo.chat` (primary) + `chat.hanzo.ai` (301 → hanzo.chat)
 - Probes: `/v1/chat/health`
-- Secret: `chat-secrets` (MONGO_URI, JWT_SECRET, CREDS_KEY/IV)
+- Secret: `chat-secrets` (JWT_SECRET, CREDS_KEY/IV)
+- Store: embedded SQLite on the `chat-app-db` PVC — no database service
 - CI: `docker-publish.yml` -> `hanzoai/chat:latest` on Docker Hub
 - Image: `hanzoai/chat:latest` (amd64 only)
 
@@ -224,7 +226,7 @@ agent builder, which is untouched.
   `refreshController`/`logoutController` read it). That keeps login, refresh AND
   logout on the local-JWT path byte-identical to a non-OpenID login; that flag
   SOLELY gates whether `/v1/chat/auth/refresh` performs the OIDC refresh-grant.
-  The ~1h id_token is used while valid; durable refresh (hanzo.id/Casdoor OIDC
+  The ~1h id_token is used while valid; durable refresh (hanzo.id OIDC
   refresh or an RFC-8693 token-exchange from the chat session) is a tracked
   FOLLOW-UP — the login-breaking refresh-grant is NOT enabled here.
 - Abuse limits (a run is a real billable completion): a per-user rate limiter
@@ -279,28 +281,63 @@ Verified by full call-graph + route-table trace; do NOT rip blind.
   `node server/index.js` and hits `api.hanzo.ai/v1` directly — NO local litellm
   sidecar. This is upstream merge residue; safe to delete in a dedicated sweep.
 
-### The ONE real parallel store (FLAG — needs a Go-backend home)
+### The store: SQLite, not Mongo
 
-Chat's Express backend owns, in **MongoDB** (`HanzoChat` DB), all of:
-`convos`, `messages`, `presets`, `prompts`/`promptGroups`, `users`, `balances`/
-`transactions`, `files`, `sessions` (refresh-token hashes), plus agents/assistants/
-memory/RBAC. Schemas: `packages/data-schemas/src/schema/*`. This is the shadow
-store that is NOT on the Go backend.
+**There is no MongoDB.** The cutover finished: `chat-docdb` is deleted from the
+cluster, `MONGO_URI` is unset, `connectDb()` logs `SQLite-only mode, skipping
+MongoDB connection` and returns null, and all 29 domains
+(`Conversation,Message,Preset,…,Balance,Transaction`) are served from one
+embedded SQLite file at `CHAT_SQLITE_PATH=/var/lib/hanzo/chat/chat.db` on the
+`chat-app-db` PVC. The seam is `CHAT_STORE_SQLITE` (prod sets all 29);
+`applySqliteOverrides` in `packages/data-schemas/src/models/index.ts` swaps the
+mongoose models for `DocModel`s. The `CHAT_STORE_DUALWRITE` mirror that carried
+the migration is **removed** — its purpose was keeping Mongo current as a
+rollback target, and there is no Mongo to roll back to.
 
-- The Go backend (`hanzoai/ai`, mounted at bare `/v1/*` in cloud) DOES have a
-  persistence home, but under **casibase names** (`/v1/get-chats`, `/v1/get-chat`,
-  `/v1/add-chat`, `/v1/get-messages`, `/v1/add-message`, `/v1/get-usages`) — a
-  different schema/shape than Chat's Mongo.
-- The canonical OpenAPI repo has `chat/openapi.yaml` describing the INTENDED
-  Chat-shaped REST surface (`/v1/chat/convos`, `/v1/chat/messages`,
-  `/v1/chat/presets`, `/v1/chat/balance`, `/v1/chat/auth/*`) — but the Go binary
-  **does not implement it yet**, and `ai/openapi.yaml` under-documents the real
-  casibase routes.
-- To truly kill the parallel store WITHOUT breaking live chat: the Go backend
-  (or Base) must implement `chat/openapi.yaml` (conversations/messages/presets),
-  then repoint chat's data layer at it behind a flag and dual-write during
-  cutover. Until then Mongo stays (ripping it = data loss + dead chat).
-  **Coordinate with the openapi agent** (canonical spec + SDK regen).
+Read this before deleting anything else Mongo-shaped:
+
+- **`express-mongo-sanitize` is NOT vestigial. Keep it.** The store speaks
+  Mongo-*shaped* queries: `stores/sqlite/engine.ts` interprets `$eq $ne $in
+  $nin $gt $gte $lt $lte $exists $regex $not $and $or $nor` in filters and
+  `$set $unset $inc $push $pull $addToSet` in updates. A `{"$ne": null}` that
+  reaches a filter is operator injection against SQLite exactly as it was
+  against Mongo. The guard outlived the database it is named for.
+- **mongoose is still a real dependency**, and removing it is a migration, not
+  a sweep. Every schema in `packages/data-schemas/src/schema/*` (34 files) is a
+  mongoose `Schema`; `createModels(mongoose)` builds mongoose models first and
+  `applySqliteOverrides` replaces them. `mongoose.Types.ObjectId` is the id
+  generator throughout.
+- **The mongoose path is still the repo default.** Nothing in this tree sets
+  `CHAT_STORE_SQLITE` — prod sets it in the operator App CR (`universe
+  infra/k8s/operator/crs/chat.yaml`). Unset, `createModels` returns pure
+  mongoose. Tests run that way.
+- **`mongoMeili` (`models/plugins/mongoMeili.ts`) is the mongoose path's search
+  driver**, superseded in prod by `stores/sqlite/meili.ts` (`attachMeili` wires
+  `onMutate` + `meiliSearch` onto the DocModels and does its own idempotent
+  `ensureIndex`). It is still applied to the convo/message schemas whenever
+  `MEILI_HOST`+`MEILI_MASTER_KEY` are set, so it runs a redundant index-ensure
+  at boot and logs `[mongoMeili] Error checking index …: fetch failed` when it
+  races the cloud shim. Harmless but noisy; it goes when mongoose goes.
+- **`keyvMongo` is gone; durable cache state is `durableCache` on SQLite.**
+  Two namespaces need to outlive the process — `CacheKeys.BANS` (the ban
+  record) and `CacheKeys.ENCODED_DOMAINS` (an action tool's domain; forgetting
+  it orphans the tool). Both went through `keyvMongo`, which threw
+  `Mongoose connection not ready` on first touch once `MONGO_URI` went unset.
+  They now go through `durableCache(namespace, ttl)`
+  (`packages/api/src/cache/cacheFactory.ts`) → `KeyvSqlite`
+  (`packages/api/src/cache/keyvSqlite.ts`) → a two-column `keyv` table on the
+  same `sharedDatabase()` connection the document store uses. Redis, when
+  configured, still wins — `durableCache` is `standardCache` with SQLite as the
+  fallback instead of process memory.
+  - `sharedDatabase()` / `closeSharedDatabase()` (`stores/sqlite/index.ts`) are
+    the ONE connection for the process. `createModels` builds its handle over
+    it rather than opening a second writer against the same WAL.
+  - `BAN_VIOLATIONS` is safe to switch on. `checkBan` also carries upstream
+    #12324's fixes, which the fork had dropped on the floor — it kept the tests
+    and lost the implementation, so the suite crashed on an unhandled rejection
+    and the middleware still coerced the ban record to a boolean
+    (`Number(true.expiresAt)` → `NaN` → a memo entry with no expiry, IP-keyed,
+    blocking whoever inherits that address).
 
 ### IAM-native auth (HIP-0111) — federated to hanzo.id, LIVE
 
@@ -391,3 +428,62 @@ All user-visible `Chat` / `chat.ai` references replaced with Hanzo equivalents:
 - JSDoc comments: Chat -> Hanzo Chat
 - Log messages: Chat -> Hanzo Chat
 - Helm chart URLs -> hanzo.ai/docs/chat/...
+
+## hanzo.chat front door — the app IS the landing (CTO direction, 2026-07-28)
+
+Target: ChatGPT's shape. A signed-out visitor lands in the **product** — composer
+centred, thin sidebar, `Log in` / `Sign up free` top-right — and marketing lives at
+sub-routes (`/pricing`, `/product`, `/models`) reachable from the sidebar, never as
+the entry point. Reference for the composer/sources/modes treatment is the Hanzo
+extension's search surface (`~/work/hanzo/extension`), not a new design.
+
+**Three defects, measured 2026-07-28, in the order they must be fixed:**
+
+1. **No silent SSO — this is the root one.** `hanzo.chat` and `hanzo.app` are
+   different registrable domains, so a session cookie can NEVER span them. The only
+   mechanism that makes a signed-in hanzo.id user already-signed-in here is a
+   `prompt=none` authorize on load. Chat has none: zero hits for
+   `prompt=none|silentAuth|checkSession` across `client/src` and `api/server`.
+   `silentRefresh` only refreshes chat's OWN local JWT — it cannot mint one. So a
+   real user with credits renders anonymous on first visit, every visit.
+   This is the generalisable fix: every Hanzo surface needs it, not just chat.
+
+2. **The landing swallows chat intent.** `routes/Root.tsx:41`
+   `showChat = isAuthenticated || isGuest`; `:111` returns `<LandingPage/>` for EVERY
+   route when both are false — including `/c/new?q=…&submit=true`, whose `q`/`submit`
+   params (`AnswerEngine.tsx: CHAT_PARAMS`) are then dropped. A deep link must reach
+   the chat regardless of auth state. Note the failure shape: a 429 on an AUXILIARY
+   token mint silently downgrades the whole product to a brochure.
+
+3. **The guest mint is rate-limited out.** `POST /v1/chat/auth/guest` → 429
+   "Too many guest sessions, try again after 60 minutes". `ALLOW_GUEST_CHAT=true` IS
+   live and `/v1/chat/config` advertises `allowGuestChat: true`, so guest-as-landing
+   is enabled and simply never reached. The limiter keys on `CF-Connecting-IP` with an
+   in-process MemoryStore at `replicas:1` — behind Cloudflare one IP is many people,
+   and the only reset is a pod restart. Raise/re-key `GUEST_TOKEN_MAX` / `GUEST_TOKEN_WINDOW`.
+
+**Then the design work**, which is small once the above lands:
+`components/Landing/LandingPage.tsx` stops being the front door. Its hero mock
+advertises the DEPRECATED `chat.hanzo.ai` (301s to hanzo.chat) and shows a CODING
+session (`zen5-coder`, "Refactor the auth module") — that is hanzo.app's story on the
+chat product. Marketing moves to sub-routes or hanzo.ai; the composer, source pills
+(@web/@news/@academic/@github/@reddit/@x), mode tabs (Search/News/Research/Deep) and
+model picker become the first paint. `e2e/specs/landing.spec.ts` does NOT pin the
+marketing page — it asserts `/` shows the nav and a composer textbox, i.e. it
+already describes the target and was failing against the brochure.
+
+**Landed 2026-07-28 (increments 1–3 of the above):**
+- `Root.tsx` no longer has a front-door branch. The chat shell answers every
+  route; `LoginGate` (already mounted for every `!isAuthenticated` visitor) asks
+  for a session at submit — the first moment one is needed.
+- `utils/login.ts#trySilentSso()` — one `prompt=none` attempt per tab via
+  `IAM#signinSilent()`, posting to the SAME `/v1/chat/auth/iam/session` bridge the
+  interactive callback uses. Wired into `AuthContext`'s no-local-session path
+  BEFORE the guest fallback, so a funded customer adopts their real session
+  instead of being handed a 2-message anonymous trial. 5 tests, negative-controlled.
+- `GUEST_TOKEN_MAX` default 20 → 120. Spend is unchanged: `guestMessageLimiter`
+  caps MESSAGES per real client IP (`GUEST_MESSAGE_MAX`, prod 2) and no amount of
+  token minting resets it. Two limiters, two concerns.
+- Marketing moved to `/welcome`, declared outside `<Root/>` so it keeps its own
+  full-page chrome. Its hero still advertises the deprecated `chat.hanzo.ai` and a
+  coding demo — content work, still outstanding.

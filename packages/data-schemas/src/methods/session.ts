@@ -21,7 +21,7 @@ export const DEFAULT_REFRESH_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 * 7;
  * Factory that returns the session methods bound to a store-aware `DataHandle`
  * (the same seam the 28 migrated domains use). `handle.models.Session` resolves
  * to whichever backend `createModels()` + `applySqliteOverrides()` selected — a
- * mongoose `Model`, a SQLite `DocModel`, or a `DualWriteModel` — so every method
+ * mongoose `Model` or a SQLite `DocModel` — so every method
  * here speaks ONLY the bounded Model API (`.create/.findOne/.updateOne/
  * .findByIdAndUpdate/.deleteOne/.deleteMany/.countDocuments`). It never uses the
  * mongoose-document constructor (`new Session()`) or `doc.save()`, which are

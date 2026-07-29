@@ -21,6 +21,11 @@ export default {
       },
     ],
   },
+  // `@hanzochat/agents` reaches `@langchain/mistralai` -> `@mistralai/mistralai`,
+  // which ships ESM only. Untransformed, `export *` is a SyntaxError and every
+  // suite whose import graph touches `~/utils` (the cache config among them)
+  // fails to LOAD — reported as zero tests, not as a failure. Transform them.
+  transformIgnorePatterns: ['/node_modules/(?!(@mistralai|@langchain)/)'],
   moduleNameMapper: {
     '^@src/(.*)$': '<rootDir>/src/$1',
     '~/(.*)': '<rootDir>/src/$1',
