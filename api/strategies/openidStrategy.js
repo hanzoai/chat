@@ -42,7 +42,7 @@ async function customFetch(url, options) {
     url = new URL(rewritten);
     urlStr = url.toString();
 
-    // Casdoor generates the OIDC discovery document based on the incoming Host header.
+    // IAM generates the OIDC discovery document from the incoming Host header.
     // When we rewrite to the internal URL, we must send the original public hostname
     // so the issuer in the response matches what openid-client expects (strict RFC check).
     const publicHost = new URL(process.env.OPENID_ISSUER).host;
