@@ -12,7 +12,7 @@ interface MCPCardActionsProps {
   canCancel: boolean;
   hasCustomUserVars: boolean;
   canEdit: boolean;
-  editButtonRef?: React.RefObject<HTMLDivElement>;
+  editButtonRef?: React.RefObject<HTMLDivElement | null>;
   onEditClick: (e: React.MouseEvent) => void;
   onConfigClick: (e: React.MouseEvent) => void;
   onInitialize: () => void;

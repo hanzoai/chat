@@ -15,7 +15,7 @@ export default function GroupSidePanel({
 }: {
   children?: React.ReactNode;
   className?: string;
-  closePanelRef?: React.RefObject<HTMLButtonElement>;
+  closePanelRef?: React.RefObject<HTMLButtonElement | null>;
   onClose?: () => void;
   isChatRoute?: boolean;
 }) {

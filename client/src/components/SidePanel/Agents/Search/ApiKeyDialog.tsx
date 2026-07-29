@@ -33,8 +33,8 @@ export default function ApiKeyDialog({
   isToolAuthenticated: boolean;
   register: UseFormRegister<SearchApiKeyFormData>;
   handleSubmit: UseFormHandleSubmit<SearchApiKeyFormData>;
-  triggerRef?: React.RefObject<HTMLInputElement | HTMLButtonElement>;
-  triggerRefs?: React.RefObject<HTMLInputElement | HTMLButtonElement>[];
+  triggerRef?: React.RefObject<HTMLInputElement | HTMLButtonElement | null>;
+  triggerRefs?: React.RefObject<HTMLInputElement | HTMLButtonElement | null>[];
 }) {
   const localize = useLocalize();
   const { data: config } = useGetStartupConfig();

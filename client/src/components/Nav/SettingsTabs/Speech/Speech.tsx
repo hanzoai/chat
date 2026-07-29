@@ -144,7 +144,7 @@ function Speech() {
     }
   }, [engineTTS, setEngineTTS]);
 
-  const contentRef = useRef(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(contentRef, () => confirmClear && setConfirmClear(false), []);
 
   return (

@@ -16,7 +16,7 @@ const invalidKeys = {
  * Utility function to determine if a command should trigger.
  */
 const shouldTriggerCommand = (
-  textAreaRef: React.RefObject<HTMLTextAreaElement>,
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>,
   commandChar: string,
 ) => {
   const text = textAreaRef.current?.value;
@@ -42,7 +42,7 @@ const useHandleKeyUp = ({
   setShowMentionPopover,
 }: {
   index: number;
-  textAreaRef: React.RefObject<HTMLTextAreaElement>;
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
   setShowPlusPopover: Setter<boolean>;
   setShowMentionPopover: Setter<boolean>;
 }) => {

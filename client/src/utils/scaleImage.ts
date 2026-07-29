@@ -5,7 +5,7 @@ export default function scaleImage({
 }: {
   originalWidth?: number;
   originalHeight?: number;
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const containerWidth = containerRef.current?.offsetWidth ?? 0;
 

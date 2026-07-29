@@ -52,7 +52,7 @@ jest.mock('~/store', () => {
   return {
     __esModule: true,
     default: {
-      search: atom({ key: 'test-conversations-search', default: { query: '' } }),
+      search: atom({ query: '' }),
     },
   };
 });

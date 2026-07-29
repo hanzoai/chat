@@ -35,7 +35,7 @@ export default function DialogImage({
     size?: string;
     [key: string]: unknown;
   };
-  triggerRef?: React.RefObject<HTMLButtonElement>;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
   /** When set, show a "Fix" action that attaches this image to the composer. */
   fixImage?: ConversationImage;
 }) {

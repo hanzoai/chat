@@ -10,7 +10,7 @@ import SharedLinks from './SharedLinks';
 import { useHasAccess } from '~/hooks';
 
 function Data() {
-  const dataTabRef = useRef(null);
+  const dataTabRef = useRef<HTMLDivElement>(null);
   const [confirmClearConvos, setConfirmClearConvos] = useState(false);
   useOnClickOutside(dataTabRef, () => confirmClearConvos && setConfirmClearConvos(false), []);
   const hasAccessToApiKeys = useHasAccess({

@@ -15,7 +15,7 @@ export const useLogoutUserMutation = (
   const queryClient = useQueryClient();
   const clearStates = useClearStates();
   const resetDefaultPreset = useResetAtom(store.defaultPreset);
-  const setQueriesEnabled = useSetAtom<boolean>(store.queriesEnabled);
+  const setQueriesEnabled = useSetAtom(store.queriesEnabled);
 
   return useMutation([MutationKeys.logoutUser], {
     mutationFn: () => dataService.logout(),
@@ -36,7 +36,7 @@ export const useLoginUserMutation = (
   const queryClient = useQueryClient();
   const clearStates = useClearStates();
   const resetDefaultPreset = useResetAtom(store.defaultPreset);
-  const setQueriesEnabled = useSetAtom<boolean>(store.queriesEnabled);
+  const setQueriesEnabled = useSetAtom(store.queriesEnabled);
   return useMutation([MutationKeys.loginUser], {
     mutationFn: (payload: t.TLoginUser) => dataService.login(payload),
     ...(options || {}),

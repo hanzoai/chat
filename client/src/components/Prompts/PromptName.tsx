@@ -8,7 +8,7 @@ type Props = {
 
 const PromptName: React.FC<Props> = ({ name, onSave }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const blurTimeoutRef = useRef<NodeJS.Timeout>();
+  const blurTimeoutRef = useRef<NodeJS.Timeout>(undefined);
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(name);
 

@@ -108,7 +108,7 @@ const injectAgentIntoAgentsMap = (queryClient: QueryClient, agent: any) => {
 export default function useQueryParams({
   textAreaRef,
 }: {
-  textAreaRef: React.RefObject<HTMLTextAreaElement>;
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
 }) {
   const maxAttempts = 50;
   const attemptsRef = useRef(0);

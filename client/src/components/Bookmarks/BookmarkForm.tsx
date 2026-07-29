@@ -13,7 +13,7 @@ type TBookmarkFormProps = {
   tags?: string[];
   bookmark?: TConversationTag;
   conversationId?: string;
-  formRef: React.RefObject<HTMLFormElement>;
+  formRef: React.RefObject<HTMLFormElement | null>;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   mutation: ReturnType<typeof useConversationTagMutation>;
 };

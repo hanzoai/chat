@@ -18,7 +18,7 @@ export const useAutoSave = ({
 }: {
   isSubmitting?: boolean;
   conversationId?: string | null;
-  textAreaRef?: React.RefObject<HTMLTextAreaElement>;
+  textAreaRef?: React.RefObject<HTMLTextAreaElement | null>;
   files: Map<string, ExtendedFile>;
   setFiles: Setter<Map<string, ExtendedFile>>;
 }) => {

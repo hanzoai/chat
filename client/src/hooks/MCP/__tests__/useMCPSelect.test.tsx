@@ -1,7 +1,6 @@
 import React from 'react';
-import { Provider, createStore } from 'jotai';
+import { Provider, createStore, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Constants, LocalStorageKeys } from '@hanzochat/data-provider';
 import { ephemeralAgentByConvoId } from '~/store';
 import { setTimestamp } from '~/utils/timestamps';
@@ -32,9 +31,7 @@ const createWrapper = (mcpServers: string[] = []) => {
   const servers = createMCPServers(mcpServers);
 
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <Provider>
-      <Provider store={store}>{children}</Provider>
-    </Provider>
+    <Provider store={store}>{children}</Provider>
   );
   return { Wrapper, servers };
 };
@@ -610,10 +607,13 @@ describe('useMCPSelect', () => {
         expect(resultA.current.mcpValues).toEqual(['server1']);
       });
 
-      // Hook B: new conversation WITHOUT storageContextKey (different environment)
+      // Hook B: new conversation WITHOUT storageContextKey (different environment).
+      // Its own store, so the only thing that can carry state across is the
+      // localStorage key — which is the isolation this test is about.
+      const { Wrapper: WrapperB } = createWrapper(['server1', 'server2']);
       const { result: resultB } = renderHook(
         () => useMCPSelect({ conversationId: null, servers }),
-        { wrapper: Wrapper },
+        { wrapper: WrapperB },
       );
 
       // Should NOT see server1 since it's a different atom (NEW_CONVO vs __defaults__)

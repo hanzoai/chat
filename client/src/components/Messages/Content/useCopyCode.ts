@@ -4,7 +4,7 @@ import copy from 'copy-to-clipboard';
 export default function useCopyCode(codeRef: React.RefObject<HTMLElement | null>) {
   const [isCopied, setIsCopied] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     return () => clearTimeout(timerRef.current);

@@ -597,7 +597,7 @@ const PromptForm = ({ promptId: promptIdProp }: { promptId?: string }) => {
             role="dialog"
             aria-modal="true"
             aria-label={localize('com_ui_versions')}
-            inert={!showSidePanel ? '' : undefined}
+            inert={!showSidePanel}
           >
             <div className="flex items-center justify-between px-4 py-2">
               <h2 className="text-sm font-semibold text-text-primary">

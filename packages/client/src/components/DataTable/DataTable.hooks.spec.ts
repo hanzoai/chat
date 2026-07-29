@@ -153,7 +153,7 @@ describe('DataTable Hooks', () => {
   });
 
   describe('useColumnStyles', () => {
-    let mockContainerRef: React.RefObject<HTMLDivElement>;
+    let mockContainerRef: React.RefObject<HTMLDivElement | null>;
     let mockContainer: HTMLDivElement;
 
     beforeEach(() => {
@@ -243,7 +243,7 @@ describe('DataTable Hooks', () => {
       ];
 
       const { result } = renderHook(() =>
-        useColumnStyles(columns, false, nullRef as React.RefObject<HTMLDivElement>),
+        useColumnStyles(columns, false, nullRef as React.RefObject<HTMLDivElement | null>),
       );
 
       expect(result.current).toEqual({});
@@ -251,7 +251,7 @@ describe('DataTable Hooks', () => {
   });
 
   describe('useKeyboardNavigation', () => {
-    let mockTableRef: React.RefObject<HTMLDivElement>;
+    let mockTableRef: React.RefObject<HTMLDivElement | null>;
     let mockTable: HTMLDivElement;
     let mockOnRowSelect: jest.Mock;
 

@@ -23,8 +23,8 @@ export default function Artifacts() {
   const { isMutating } = useMutationState();
   const { isSharedConvo } = useShareContext();
   const isMobile = useMediaQuery('(max-width: 868px)');
-  const editorRef = useRef<CodeEditorRef>();
-  const previewRef = useRef<SandpackPreviewRef>();
+  const editorRef = useRef<CodeEditorRef>(undefined);
+  const previewRef = useRef<SandpackPreviewRef>(undefined);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);

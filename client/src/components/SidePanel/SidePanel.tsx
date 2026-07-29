@@ -40,7 +40,7 @@ const SidePanel = ({
   setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   fullCollapse: boolean;
   setFullCollapse: React.Dispatch<React.SetStateAction<boolean>>;
-  panelRef: React.RefObject<ImperativePanelHandle>;
+  panelRef: React.RefObject<ImperativePanelHandle | null>;
   interfaceConfig: TInterfaceConfig;
 }) => {
   const localize = useLocalize();

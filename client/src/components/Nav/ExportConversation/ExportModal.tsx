@@ -30,7 +30,7 @@ export default function ExportModal({
   open: boolean;
   conversation: TConversation | null;
   onOpenChange: React.Dispatch<React.SetStateAction<boolean>>;
-  triggerRef?: React.RefObject<HTMLButtonElement>;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
   children?: React.ReactNode;
 }) {
   const localize = useLocalize();

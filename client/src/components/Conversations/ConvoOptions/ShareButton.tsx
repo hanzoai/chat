@@ -19,7 +19,7 @@ export default function ShareButton({
   conversationId: string;
   open: boolean;
   onOpenChange: React.Dispatch<React.SetStateAction<boolean>>;
-  triggerRef?: React.RefObject<HTMLButtonElement>;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
   children?: React.ReactNode;
 }) {
   const localize = useLocalize();

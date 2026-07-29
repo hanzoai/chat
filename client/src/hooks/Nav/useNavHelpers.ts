@@ -25,7 +25,8 @@ export function useCustomLink<T = HTMLAnchorElement>(
 
 export const usePreviousLocation = () => {
   const location = useLocation();
-  const previousLocationRef: React.MutableRefObject<Location<unknown> | undefined> = useRef();
+  const previousLocationRef: React.MutableRefObject<Location<unknown> | undefined> =
+    useRef(undefined);
 
   useEffect(() => {
     previousLocationRef.current = location.state?.prevLocation;

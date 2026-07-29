@@ -549,7 +549,10 @@ function FilesGroup({ files, messageId, conversationId, limit = 3 }: FilesGroupP
 function TabWithIcon({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 rounded-md px-3 py-1 text-sm transition-colors hover:bg-surface-tertiary hover:text-text-primary">
-      {React.cloneElement(icon as React.ReactElement, { size: 14, 'aria-hidden': true })}
+      {React.cloneElement(icon as React.ReactElement<{ size?: number; 'aria-hidden'?: boolean }>, {
+        size: 14,
+        'aria-hidden': true,
+      })}
       <span>{label}</span>
     </div>
   );

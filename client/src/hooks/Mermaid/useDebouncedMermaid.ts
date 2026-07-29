@@ -113,7 +113,7 @@ export const useDebouncedMermaid = ({
   const [shouldRender, setShouldRender] = useState(isInitiallyComplete);
   const [errorCount, setErrorCount] = useState(0);
   const [forceRender, setForceRender] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
   const prevKeyRef = useRef(key);
   const hasRenderedRef = useRef(isInitiallyComplete);
 

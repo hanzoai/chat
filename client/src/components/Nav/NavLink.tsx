@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import React, { FC, forwardRef } from 'react';
 import { cn } from '~/utils/';
 

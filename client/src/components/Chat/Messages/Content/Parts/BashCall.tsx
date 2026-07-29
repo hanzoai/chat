@@ -42,7 +42,7 @@ export default function BashCall({
   const outputHasError = useMemo(() => ERROR_PATTERNS.test(output), [output]);
 
   const [isCopied, setIsCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const handleCopy = useCallback(() => {

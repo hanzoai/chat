@@ -42,7 +42,7 @@ export const forceResize = (element: HTMLTextAreaElement | null) => {
 /**
  * Necessary undo event helper for edge cases where undoing pasted content leaves newlines filling the previous container height.
  */
-export const trimUndoneRange = (textAreaRef: React.RefObject<HTMLTextAreaElement>) => {
+export const trimUndoneRange = (textAreaRef: React.RefObject<HTMLTextAreaElement | null>) => {
   if (!textAreaRef.current) {
     return;
   }

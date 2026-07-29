@@ -2,7 +2,7 @@ import React from 'react';
 import { render, act, fireEvent } from '@testing-library/react';
 
 type ReactNode = React.ReactNode;
-type RefObject<T> = React.RefObject<T>;
+type RefObject<T> = React.RefObject<T | null>;
 
 type TestMessage = {
   messageId: string;
@@ -139,7 +139,7 @@ function buildDom(messages: TestMessage[]): {
 function renderNav(messages: TestMessage[]) {
   mockUseGetMessagesByConvoId.mockReturnValue({ data: messages });
   const { scrollable, content } = buildDom(messages);
-  const scrollableRef = { current: scrollable } as RefObject<HTMLDivElement>;
+  const scrollableRef = { current: scrollable } as RefObject<HTMLDivElement | null>;
   const result = render(<MessageNav scrollableRef={scrollableRef} />);
   act(() => {
     jest.advanceTimersByTime(250);
@@ -255,7 +255,7 @@ describe('MessageNav', () => {
         content.appendChild(div);
       }
       document.body.appendChild(scrollable);
-      const scrollableRef = { current: scrollable } as RefObject<HTMLDivElement>;
+      const scrollableRef = { current: scrollable } as RefObject<HTMLDivElement | null>;
       const { container } = render(<MessageNav scrollableRef={scrollableRef} />);
       act(() => {
         jest.advanceTimersByTime(250);
@@ -517,7 +517,7 @@ describe('MessageNav', () => {
       document.body.appendChild(scrollable);
 
       const { container } = render(
-        <MessageNav scrollableRef={{ current: scrollable } as RefObject<HTMLDivElement>} />,
+        <MessageNav scrollableRef={{ current: scrollable } as RefObject<HTMLDivElement | null>} />,
       );
       act(() => {
         jest.advanceTimersByTime(250);
@@ -556,7 +556,9 @@ describe('MessageNav', () => {
       mockUseGetMessagesByConvoId.mockReturnValue({ data: messagesA });
       const domA = buildDom(messagesA);
       const { container: navA } = render(
-        <MessageNav scrollableRef={{ current: domA.scrollable } as RefObject<HTMLDivElement>} />,
+        <MessageNav
+          scrollableRef={{ current: domA.scrollable } as RefObject<HTMLDivElement | null>}
+        />,
       );
       act(() => {
         jest.advanceTimersByTime(250);
@@ -565,7 +567,9 @@ describe('MessageNav', () => {
       mockUseGetMessagesByConvoId.mockReturnValue({ data: messagesB });
       const domB = buildDom(messagesB);
       const { container: navB } = render(
-        <MessageNav scrollableRef={{ current: domB.scrollable } as RefObject<HTMLDivElement>} />,
+        <MessageNav
+          scrollableRef={{ current: domB.scrollable } as RefObject<HTMLDivElement | null>}
+        />,
       );
       act(() => {
         jest.advanceTimersByTime(250);

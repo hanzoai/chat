@@ -46,7 +46,7 @@ function MultiSelectDropDown({
   optionValueKey = 'value',
 }: TMultiSelectDropDownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const excludeIds = ['select-plugin', 'plugins-label', 'selected-plugins'];
   useOnClickOutside(menuRef, () => setIsOpen(false), excludeIds);
 

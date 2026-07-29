@@ -6,7 +6,7 @@ export const EXPAND_TRANSITION =
 
 export default function useExpandCollapse(isExpanded: boolean): {
   style: CSSProperties;
-  ref: React.RefObject<HTMLDivElement>;
+  ref: React.RefObject<HTMLDivElement | null>;
 } {
   const ref = useRef<HTMLDivElement>(null);
 

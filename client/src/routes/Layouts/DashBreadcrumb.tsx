@@ -34,7 +34,7 @@ export default function DashBreadcrumb({
 }: {
   showToggle?: boolean;
   onToggle?: () => void;
-  openPanelRef?: React.RefObject<HTMLButtonElement>;
+  openPanelRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
   const location = useLocation();
   const localize = useLocalize();

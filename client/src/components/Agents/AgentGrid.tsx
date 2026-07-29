@@ -13,7 +13,7 @@ interface AgentGridProps {
   category: string;
   searchQuery: string;
   onSelectAgent: (agent: t.Agent) => void;
-  scrollElementRef?: React.RefObject<HTMLElement>;
+  scrollElementRef?: React.RefObject<HTMLElement | null>;
 }
 
 /**

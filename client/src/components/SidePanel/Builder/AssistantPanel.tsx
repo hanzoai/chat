@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { useState, useMemo } from 'react';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import { Spinner, useToastContext, SelectDropDown } from '@hanzochat/client';

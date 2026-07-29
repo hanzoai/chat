@@ -220,7 +220,9 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                             : 'bg-transparent text-text-secondary radix-state-active:bg-surface-tertiary radix-state-active:text-text-primary',
                         )}
                         value={value}
-                        ref={(el) => (tabRefs.current[value] = el)}
+                        ref={(el) => {
+                          tabRefs.current[value] = el;
+                        }}
                       >
                         {icon}
                         {localize(label)}

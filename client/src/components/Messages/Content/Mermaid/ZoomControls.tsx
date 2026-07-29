@@ -24,7 +24,7 @@ const ZoomControls: React.FC<ZoomControlsProps> = memo(
     const localize = useLocalize();
     const [isCopied, setIsCopied] = useState(false);
     const copyRef = useRef<HTMLButtonElement>(null);
-    const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const copyTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     useEffect(() => {
       return () => clearTimeout(copyTimerRef.current);

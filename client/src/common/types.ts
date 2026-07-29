@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { RefObject } from 'react';
 import { FileSources, EModelEndpoint, isEphemeralAgentId } from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
@@ -24,7 +25,7 @@ export type CodeBarProps = {
   plugin?: boolean;
   blockIndex?: number;
   allowExecution?: boolean;
-  codeRef: RefObject<HTMLElement>;
+  codeRef: RefObject<HTMLElement | null>;
 };
 
 export enum PromptsEditorMode {

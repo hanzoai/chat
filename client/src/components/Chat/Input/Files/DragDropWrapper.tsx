@@ -16,7 +16,12 @@ export default function DragDropWrapper({ children, className }: DragDropWrapper
   const isActive = canDrop && isOver;
 
   return (
-    <div ref={drop} className={cn('relative flex h-full w-full', className)}>
+    <div
+      ref={(node) => {
+        drop(node);
+      }}
+      className={cn('relative flex h-full w-full', className)}
+    >
       {children}
       {/** Always render overlay to avoid mount/unmount overhead */}
       <DragDropOverlay isActive={isActive} />

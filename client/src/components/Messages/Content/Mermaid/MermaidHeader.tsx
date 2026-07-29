@@ -13,7 +13,7 @@ interface MermaidHeaderProps {
   codeContent: string;
   showCode: boolean;
   showExpandButton?: boolean;
-  expandButtonRef?: React.RefObject<HTMLButtonElement>;
+  expandButtonRef?: React.RefObject<HTMLButtonElement | null>;
   onExpand?: () => void;
   onToggleCode: () => void;
 }
@@ -36,7 +36,7 @@ const MermaidHeader: React.FC<MermaidHeaderProps> = memo(
     const [isCopied, setIsCopied] = useState(false);
     const copyButtonRef = useRef<HTMLButtonElement>(null);
     const showCodeButtonRef = useRef<HTMLButtonElement>(null);
-    const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const copyTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     useEffect(() => {
       return () => clearTimeout(copyTimerRef.current);

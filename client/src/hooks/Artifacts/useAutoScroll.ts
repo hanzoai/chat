@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 
 interface UseAutoScrollProps {
-  ref: React.RefObject<HTMLElement>;
+  ref: React.RefObject<HTMLElement | null>;
   content: string;
   isSubmitting: boolean;
 }

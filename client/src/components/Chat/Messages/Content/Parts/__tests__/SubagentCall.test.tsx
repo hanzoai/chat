@@ -1,3 +1,5 @@
+import { useAtomCallback } from 'jotai/utils';
+import { useCallback } from 'react';
 import React from 'react';
 import { Provider } from 'jotai';
 import { render, screen, act, fireEvent, waitFor, within } from '@testing-library/react';
@@ -214,12 +216,10 @@ function renderWithState(args: {
 }) {
   const setter = { current: null as null | ((next: SubagentProgress | null) => void) };
   const SeedHelper = () => {
-    setter.current = useJotaiCallback(
-      ({ set }) =>
-        (next: SubagentProgress | null) => {
-          set(subagentProgressByToolCallId(args.toolCallId), next);
-        },
-      [],
+    setter.current = useAtomCallback(
+      useCallback((_get, set, next: SubagentProgress | null) => {
+        set(subagentProgressByToolCallId(args.toolCallId), next);
+      }, []),
     );
     return null;
   };

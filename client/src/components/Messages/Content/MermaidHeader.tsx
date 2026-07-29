@@ -10,7 +10,7 @@ interface MermaidHeaderProps {
   codeContent: string;
   showCode: boolean;
   showExpandButton?: boolean;
-  expandButtonRef?: React.RefObject<HTMLButtonElement>;
+  expandButtonRef?: React.RefObject<HTMLButtonElement | null>;
   onExpand?: () => void;
   onToggleCode: () => void;
 }

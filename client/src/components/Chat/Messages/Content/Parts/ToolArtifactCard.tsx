@@ -76,7 +76,7 @@ const ToolArtifactCard = memo(({ attachment, artifact }: ToolArtifactCardProps) 
   const [claim, setClaim] = useAtom(store.toolArtifactClaim(artifact.id));
   const isSelected = artifact.id === currentArtifactId;
   const isMyClaim = claim === claimKey;
-  /* Read+reset on mount only — `useJotaiCallback` avoids subscribing
+  /* Read+reset on mount only — `useAtomCallback` avoids subscribing
    * to the per-file_id flag (no re-renders when other files resolve).
    * The deferred-preview hook flips this to `true` on the pending→ready
    * edge; we consume it once and reset, so repeat mounts (panel close
