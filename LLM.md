@@ -231,9 +231,18 @@ agent builder, which is untouched.
   `refreshController`/`logoutController` read it). That keeps login, refresh AND
   logout on the local-JWT path byte-identical to a non-OpenID login; that flag
   SOLELY gates whether `/v1/chat/auth/refresh` performs the OIDC refresh-grant.
-  The ~1h id_token is used while valid; durable refresh (hanzo.id OIDC
-  refresh or an RFC-8693 token-exchange from the chat session) is a tracked
-  FOLLOW-UP — the login-breaking refresh-grant is NOT enabled here.
+  The ~1h id_token is used while valid, and it is now RENEWED when it is not:
+  `OPENID_SCOPE` requests `offline_access`, the credential lands in
+  `session.iamBearerRefresh` (its own field, so AuthController/LogoutController are
+  untouched), and `services/iamBearerRefresh.js` spends it once from
+  `resolveCredential` when the selector finds nothing forwardable. Before that,
+  an hour-old session got "Your Hanzo session needs refreshing" until the user
+  reloaded — a full re-auth that bought exactly one more hour.
+  The login-breaking refresh-grant is still NOT enabled: `OPENID_REUSE_TOKENS`
+  stays false, so `/v1/chat/auth/refresh` does not perform an OIDC refresh and
+  login/refresh/logout remain on the local-JWT path. The RFC-8693 token-exchange
+  alternative is therefore moot for the bearer; it stays available for any future
+  need to downscope.
 - Abuse limits (a run is a real billable completion): a per-user rate limiter
   (`cloudAgentLimiter`, `CLOUD_AGENT_USER_MAX`/`CLOUD_AGENT_WINDOW`) guards the
   whole `/cloud` router; the client caps input by UTF-8 **bytes** (128 KiB), caps
