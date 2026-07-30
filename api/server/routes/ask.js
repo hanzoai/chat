@@ -1,8 +1,8 @@
 const express = require('express');
 const { Readable, pipeline } = require('stream');
 const { logger } = require('@hanzochat/data-schemas');
-const { resolveTenantBearer, resolveActiveOrg } = require('@hanzochat/api');
-const { refreshIamBearer } = require('~/server/services/iamBearerRefresh');
+const { resolveActiveOrg } = require('@hanzochat/api');
+const { currentBearer } = require('~/server/services/iamBearerRefresh');
 const { requireGuestOrJwtAuth, guestMessageLimiter } = require('~/server/middleware');
 const { getGuestConfig } = require('~/server/services/guestConfig');
 const { upstreamMessage, needsSignIn, SIGNIN_REQUIRED } = require('./askMessage');
@@ -64,7 +64,6 @@ const UPSTREAM_TIMEOUT_MS = 120000;
 /** Cloud truncates at 2000; reject earlier so an oversized body never leaves chat. */
 const MAX_QUERY = 2000;
 
-
 /**
  * The status this route answers with for an upstream refusal. Only codes the
  * client can act on are passed through; anything else becomes 502. An upstream
@@ -75,7 +74,6 @@ const MAX_QUERY = 2000;
 function relayStatus(status) {
   return [401, 402, 403, 429].includes(status) ? status : 502;
 }
-
 
 /** Is this request an anonymous guest (shared key, shared balance)? */
 function isGuest(req) {
@@ -91,11 +89,9 @@ function cloudBaseUrl() {
  * The credential for the on-behalf-of call to cloud, or null when the caller has
  * none. Mirrors the completion path's precedence exactly.
  *
- * Renews ONCE before giving up. `resolveTenantBearer` is a pure selector and
- * returns null the moment the forwarded id_token passes its ~1h expiry, so without
- * this an hour-old session got refused and told to reload — see
- * routes/askMessage.js. The renewal is a no-op unless the login asked for
- * `offline_access`, and it touches only the bearer, never the browser session.
+ * Select-then-renew is `currentBearer` (services/iamBearerRefresh.js), the ONE
+ * composition both surfaces share — this route adds only what is its own: the guest
+ * key and the selected org.
  * @param {import('express').Request} req
  * @returns {Promise<{ bearer: string, org: string|null }|null>}
  */
@@ -104,13 +100,7 @@ async function resolveCredential(req) {
     const guestKey = process.env.GUEST_API_KEY || process.env.HANZO_API_KEY || '';
     return guestKey ? { bearer: guestKey, org: null } : null;
   }
-  let bearer = resolveTenantBearer(req);
-  if (!bearer && (await refreshIamBearer(req))) {
-    // Re-select rather than trusting the renewal's return: the selector is the one
-    // place that decides a token is forwardable (right principal, unexpired), and a
-    // renewed token that still fails it must be refused, not forwarded.
-    bearer = resolveTenantBearer(req);
-  }
+  const bearer = await currentBearer(req);
   return bearer ? { bearer, org: resolveActiveOrg(req) } : null;
 }
 

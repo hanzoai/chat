@@ -48,6 +48,35 @@ describe('Error message content', () => {
     expect(screen.getByText('com_error_unknown')).toBeInTheDocument();
   });
 
+  /**
+   * The defect this pins: an expiry read as a crash.
+   *
+   * The completion path threw a bare `new Error('Sign in with Hanzo to chat …')`, the
+   * controller flattened it to `{ error: <sentence> }`, and a body with no `code` and
+   * no `type` is exactly what the mapping below misses — so a one-hour bearer expiry
+   * rendered as "Something went wrong on our side" on every single message. The
+   * reason was known the whole way up; only its shape was unreadable. A refusal now
+   * carries a code, and the code reads as the refusal it actually is.
+   */
+  it('reads an expired bearer as an expiry, not as "something went wrong"', () => {
+    render(<Error text={JSON.stringify({ error: 'expired_bearer', code: 'expired_bearer' })} />);
+
+    expect(screen.getByText('com_error_expired_bearer')).toBeInTheDocument();
+    expect(screen.queryByText('com_error_unknown')).not.toBeInTheDocument();
+  });
+
+  /**
+   * And it must NOT read as "you are not signed in": this caller IS signed in, their
+   * forwarded credential merely aged out. Conflating the two is the mistake
+   * routes/askMessage.js documents — it tells a paying customer to sign in when they
+   * already are.
+   */
+  it('does not tell a signed-in customer to sign in when only the bearer expired', () => {
+    render(<Error text={JSON.stringify({ error: 'expired_bearer', code: 'expired_bearer' })} />);
+
+    expect(screen.queryByText('com_error_unauthorized')).not.toBeInTheDocument();
+  });
+
   it('does not echo an unmapped gateway 402 — the shape that reached production', () => {
     // No `type`, no `code`: exactly the body the login gate did not recognise.
     render(<Error text={JSON.stringify({ message: '402 a billable tenant is required (no anonymous usage)' })} />);

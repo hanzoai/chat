@@ -1613,6 +1613,16 @@ export enum ErrorTypes {
    */
   AUTH_FAILED = 'auth_failed',
   /**
+   * The caller's forwarded Hanzo IAM bearer is past its own expiry and could not
+   * be renewed, so cloud has no credential to bill the answer to.
+   *
+   * Deliberately NOT `auth_failed`, and deliberately not a 401: the session is
+   * REAL — `requireGuestOrJwtAuth` already admitted this caller — so the only
+   * honest reading is "your credential went stale", never "you are not signed in".
+   * Conflating the two tells a paying customer to sign in when they already are.
+   */
+  EXPIRED_BEARER = 'expired_bearer',
+  /**
    * Model refused to respond (content policy violation)
    */
   REFUSAL = 'refusal',

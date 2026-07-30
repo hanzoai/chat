@@ -23,6 +23,7 @@
  */
 
 const { refreshTokenGrant } = require('openid-client');
+const { resolveTenantBearer } = require('@hanzochat/api');
 const { logger } = require('~/config');
 
 /**
@@ -92,4 +93,30 @@ async function refreshIamBearer(req) {
   }
 }
 
-module.exports = { refreshIamBearer };
+/**
+ * The caller's forwardable bearer, renewing a stale one once. THE one composition.
+ *
+ * `resolveTenantBearer` is pure SELECTION — it answers "is there a forwardable token
+ * right now" and returns null the moment the id_token passes its ~1h expiry. Renewal
+ * is a separate concern, and braiding the two into each caller by hand is what let
+ * them drift: the answer engine composed them, the chat-completion path
+ * (custom/initialize.ts) selected only. So an hour into a valid session `/v1/chat/ask`
+ * kept answering while EVERY ordinary message failed — the refresh credential was
+ * sitting in the session, unspent, because the completion path had no code to spend it.
+ *
+ * Re-selects after the renewal rather than trusting its return: the selector is the
+ * one place that decides a token is forwardable (right principal, unexpired), and a
+ * renewed token that still fails it must be refused, not forwarded.
+ *
+ * @param {Object} req request carrying the express-session
+ * @returns {Promise<string|null>} a forwardable bearer, or null
+ */
+async function currentBearer(req) {
+  const selected = resolveTenantBearer(req);
+  if (selected) {
+    return selected;
+  }
+  return (await refreshIamBearer(req)) ? resolveTenantBearer(req) : null;
+}
+
+module.exports = { refreshIamBearer, currentBearer };

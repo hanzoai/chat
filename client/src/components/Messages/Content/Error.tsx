@@ -52,6 +52,7 @@ const errorMessages = {
     const provider = (alternateName[endpoint ?? ''] as string | undefined) ?? endpoint ?? 'unknown';
     return localize('com_error_missing_model', { 0: provider });
   },
+  [ErrorTypes.EXPIRED_BEARER]: 'com_error_expired_bearer',
   [ErrorTypes.MODELS_NOT_LOADED]: 'com_error_models_not_loaded',
   [ErrorTypes.ENDPOINT_MODELS_NOT_LOADED]: (json: TGenericError, localize: LocalizeFunction) => {
     const { info: endpoint } = json;

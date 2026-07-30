@@ -134,7 +134,27 @@ export async function initializeCustom({
         req as unknown as Parameters<typeof resolveTenantBearer>[0],
       );
       if (!bearer) {
-        throw new Error('Sign in with Hanzo to chat — your Hanzo account funds this request.');
+        /**
+         * A stale bearer carries a CODE, not just a sentence.
+         *
+         * This used to throw a bare `new Error('Sign in with Hanzo to chat …')`.
+         * The controller turns a throw into `{ error: <message> }`, and a body with
+         * no `code` and no `type` is EXACTLY the shape `Messages/Content/Error.tsx`
+         * cannot read — so it fell through to `com_error_unknown` and a plain
+         * one-hour expiry rendered as "Something went wrong on our side. Please try
+         * again in a moment." on every message. The reason was known the whole way
+         * up; only its shape was unreadable.
+         *
+         * It is also not a 401. `requireGuestOrJwtAuth` already admitted this
+         * caller, so they ARE signed in and their id_token merely aged out — the
+         * client answers 401 by minting a login gate, which would tell a paying
+         * customer to sign in when they already are (the distinction
+         * routes/askMessage.js draws, kept identical here).
+         */
+        throw Object.assign(new Error(ErrorTypes.EXPIRED_BEARER), {
+          code: ErrorTypes.EXPIRED_BEARER,
+          status: 403,
+        });
       }
       apiKey = bearer;
       const activeOrg = resolveActiveOrg(req as unknown as Parameters<typeof resolveActiveOrg>[0]);
