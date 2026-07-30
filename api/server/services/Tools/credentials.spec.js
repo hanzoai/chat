@@ -132,3 +132,33 @@ describe('loadAuthValues', () => {
     ).rejects.toThrow('No auth found');
   });
 });
+
+/**
+ * The `EnvVar.CODE_API_KEY` gap, pinned.
+ *
+ * `@hanzochat/agents@3.2.63` does not export CODE_API_KEY, so five call sites pass
+ * `[undefined]` here and this threw `Cannot read properties of undefined (reading
+ * 'split')` on every /v1/chat/agents/tools/execute_code/auth. The throw was caught
+ * and answered 200 {authenticated:false} — right answer, ERROR-level log, on every
+ * page load. Real errors get buried that way.
+ */
+describe('loadAuthValues — a field that is not a string', () => {
+  it('does not throw on an undefined field (the shipped EnvVar.CODE_API_KEY gap)', async () => {
+    await expect(loadAuthValues({ userId: 'user1', authFields: [undefined] })).resolves.toEqual({});
+  });
+
+  it('does not throw on null or empty fields', async () => {
+    await expect(loadAuthValues({ userId: 'user1', authFields: [null, ''] })).resolves.toEqual({});
+  });
+
+  it('still resolves the real fields beside an undefined one', async () => {
+    process.env.REAL_KEY = 'real-value';
+
+    const result = await loadAuthValues({
+      userId: 'user1',
+      authFields: [undefined, 'REAL_KEY'],
+    });
+
+    expect(result).toEqual({ REAL_KEY: 'real-value' });
+  });
+});
