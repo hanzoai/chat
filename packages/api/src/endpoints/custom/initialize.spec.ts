@@ -262,3 +262,59 @@ describe('initializeCustom – guest principal billing (shared capped key)', () 
     expect(mockGetOpenAIConfig).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * The refusal a signed-in caller gets when their forwarded bearer has gone stale.
+ *
+ * This is the shape half of tonight's defect. The throw used to be a bare
+ * `new Error('Sign in with Hanzo to chat …')`; the controller flattens a throw to
+ * `{ error: <message> }`, and a body with no `code` and no `type` is exactly what
+ * Messages/Content/Error.tsx cannot map — so a one-hour expiry rendered as
+ * "Something went wrong on our side. Please try again in a moment." on every
+ * message. What is asserted here is therefore not the wording but the CARRIER: a
+ * machine-readable code, and a status that does not raise a login gate.
+ */
+describe('initializeCustom – a stale forwarded bearer refuses with a CODE', () => {
+  const OPENID_BEARER_SENTINEL = '{{CHAT_OPENID_TOKEN}}';
+
+  /** A signed-in openid principal whose session carries no forwardable token. */
+  const staleParams = () => {
+    const params = createParams({
+      apiKey: OPENID_BEARER_SENTINEL,
+      baseURL: 'https://api.example.com/v1',
+    });
+    params.req.user = {
+      id: 'user_abc',
+      provider: 'openid',
+      openidId: 'sub-abc',
+    } as unknown as typeof params.req.user;
+    params.req.body = { model: 'zen5-flash' };
+    return params;
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('carries a machine-readable code, not only a human sentence', async () => {
+    await expect(initializeCustom(staleParams())).rejects.toMatchObject({
+      code: 'expired_bearer',
+    });
+    expect(mockGetOpenAIConfig).not.toHaveBeenCalled();
+  });
+
+  /**
+   * 403, never 401. The caller IS signed in — requireGuestOrJwtAuth already admitted
+   * them — and the client answers 401 by raising a login gate, which would tell a
+   * paying customer to sign in when they already are. Same distinction
+   * routes/askMessage.js draws.
+   */
+  it('refuses with 403 so the client does not raise a "not signed in" gate', async () => {
+    await expect(initializeCustom(staleParams())).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('spends no credential when it cannot resolve one', async () => {
+    await expect(initializeCustom(staleParams())).rejects.toBeDefined();
+    expect(mockGetOpenAIConfig).not.toHaveBeenCalled();
+  });
+});
