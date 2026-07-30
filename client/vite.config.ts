@@ -253,10 +253,12 @@ export default defineConfig(({ command }) => ({
             // Everything else falls into a generic vendor chunk.
             return 'vendor';
           }
-          // Create a separate chunk for all locale files under src/locales.
-          if (normalizedId.includes('/src/locales/')) {
-            return 'locales';
-          }
+          // Locales: NO manual chunk. i18n.ts statically bundles only `en` and
+          // lazy-imports the rest via import.meta.glob; forcing them all into
+          // one 'locales' chunk would weld the 40 lazy locales to the eagerly
+          // imported `en` module and drag 572KB gzip back into the entry graph.
+          // Left to Rollup, `en` folds into the entry and each other locale
+          // becomes its own on-demand chunk.
           // Let Rollup decide automatically for any other files.
           return null;
         },

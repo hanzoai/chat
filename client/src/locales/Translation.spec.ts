@@ -12,37 +12,37 @@ describe('i18next translation tests', () => {
     }
   });
 
-  it('should return the correct translation for a valid key in English', () => {
-    i18n.changeLanguage('en');
+  it('should return the correct translation for a valid key in English', async () => {
+    await i18n.changeLanguage('en');
     expect(i18n.t('com_ui_examples')).toBe(English.com_ui_examples);
   });
 
-  it('should return the correct translation for a valid key in French', () => {
-    i18n.changeLanguage('fr');
+  it('should return the correct translation for a valid key in French', async () => {
+    await i18n.changeLanguage('fr');
     expect(i18n.t('com_ui_examples')).toBe(French.com_ui_examples);
   });
 
-  it('should return the correct translation for a valid key in Spanish', () => {
-    i18n.changeLanguage('es');
+  it('should return the correct translation for a valid key in Spanish', async () => {
+    await i18n.changeLanguage('es');
     expect(i18n.t('com_ui_examples')).toBe(Spanish.com_ui_examples);
   });
 
-  it('should fallback to English for an invalid language code', () => {
+  it('should fallback to English for an invalid language code', async () => {
     // When an invalid language is provided, i18next should fallback to English
-    i18n.changeLanguage('invalid-code');
+    await i18n.changeLanguage('invalid-code');
     expect(i18n.t('com_ui_examples')).toBe(English.com_ui_examples);
   });
 
-  it('should return the key itself for an invalid key', () => {
-    i18n.changeLanguage('en');
+  it('should return the key itself for an invalid key', async () => {
+    await i18n.changeLanguage('en');
     expect(i18n.t('invalid-key' as TranslationKeys)).toBe('invalid-key'); // Returns the key itself
   });
 
-  it('should correctly format placeholders in the translation', () => {
-    i18n.changeLanguage('en');
+  it('should correctly format placeholders in the translation', async () => {
+    await i18n.changeLanguage('en');
     expect(i18n.t('com_endpoint_default_with_num', { 0: 'John' })).toBe('default: John');
 
-    i18n.changeLanguage('fr');
+    await i18n.changeLanguage('fr');
     expect(i18n.t('com_endpoint_default_with_num', { 0: 'Marie' })).toBe('par défaut : Marie');
   });
 });
