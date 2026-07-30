@@ -648,7 +648,10 @@ export class DocModel {
           foreignField: string;
           as: string;
         };
-        const modelName = from.charAt(0).toUpperCase() + from.slice(1).replace(/s$/, '');
+        // "entries" singularizes to "entry", not "entrie" — the naive s-strip
+        // turned 'aclentries' into 'Aclentrie' and the ACL migration joins threw.
+        const singular = from.endsWith('ies') ? `${from.slice(0, -3)}y` : from.replace(/s$/, '');
+        const modelName = singular.charAt(0).toUpperCase() + singular.slice(1);
         const target = this.resolver?.(modelName);
         if (!target) {
           // An unresolvable `from` used to yield [] for every document — a join
