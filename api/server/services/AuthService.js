@@ -426,6 +426,22 @@ const persistOpenIDTokensToSession = (req, tokenset, refreshToken) => {
     refreshToken,
     expiresAt: Date.now() + expiryInMilliseconds,
   };
+  // The bearer's OWN refresh credential, in its own field.
+  //
+  // It cannot go in `openidTokens.refreshToken` above: AuthController and
+  // LogoutController read THAT field, so writing it in the decoupled path would
+  // change refresh and logout for every REUSE-disabled login — the exact thing
+  // this function's contract promises it does not do.
+  //
+  // Kept because the forwarded bearer had no refresh at all. The id_token lives
+  // ~1h, `resolveTenantBearer` requires it unexpired, and with nothing to renew it
+  // an hour-old session got "Your Hanzo session needs refreshing" until the user
+  // reloaded and re-authenticated. Present only when the authorize request asked
+  // for `offline_access`; absent otherwise, and then the bearer behaves exactly as
+  // it did before.
+  if (tokenset.refresh_token) {
+    req.session.iamBearerRefresh = tokenset.refresh_token;
+  }
   return true;
 };
 
