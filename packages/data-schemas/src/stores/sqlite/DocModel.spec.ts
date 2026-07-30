@@ -509,6 +509,33 @@ describe('DocModel — aggregate fails loud on unsupported stages', () => {
     }
   });
 
+  it("$lookup singularizes an '-ies' collection name ('aclentries' -> AclEntry)", async () => {
+    // The naive s-strip made 'aclentries' -> 'Aclentrie', which resolves to no
+    // model even case-insensitively, so the agent/prompt permissions migration
+    // checks threw at every boot.
+    const h = createSqliteHandle(['Message', 'AclEntry']);
+    try {
+      const M = h.models.Message;
+      const A = h.models.AclEntry;
+      await A.create({ principalType: 'user', principalId: 'u1', resourceType: 'agent' });
+      await M.create({ messageId: 'm1', user: 'u1' });
+
+      const out = await M.aggregate([
+        {
+          $lookup: {
+            from: 'aclentries',
+            localField: 'user',
+            foreignField: 'principalId',
+            as: 'acl',
+          },
+        },
+      ]);
+      expect(out[0].acl).toHaveLength(1); // used to throw before reaching here
+    } finally {
+      h.close();
+    }
+  });
+
   it('$lookup THROWS when `from` resolves to no model at all', async () => {
     await Message.create({ messageId: 'm1', user: 'u1' });
     await expect(
