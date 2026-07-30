@@ -2,6 +2,7 @@ const express = require('express');
 const { Readable, pipeline } = require('stream');
 const { logger } = require('@hanzochat/data-schemas');
 const { resolveTenantBearer, resolveActiveOrg } = require('@hanzochat/api');
+const { refreshIamBearer } = require('~/server/services/iamBearerRefresh');
 const { requireGuestOrJwtAuth, guestMessageLimiter } = require('~/server/middleware');
 const { getGuestConfig } = require('~/server/services/guestConfig');
 const { upstreamMessage, needsSignIn, SIGNIN_REQUIRED } = require('./askMessage');
@@ -89,15 +90,27 @@ function cloudBaseUrl() {
 /**
  * The credential for the on-behalf-of call to cloud, or null when the caller has
  * none. Mirrors the completion path's precedence exactly.
+ *
+ * Renews ONCE before giving up. `resolveTenantBearer` is a pure selector and
+ * returns null the moment the forwarded id_token passes its ~1h expiry, so without
+ * this an hour-old session got refused and told to reload — see
+ * routes/askMessage.js. The renewal is a no-op unless the login asked for
+ * `offline_access`, and it touches only the bearer, never the browser session.
  * @param {import('express').Request} req
- * @returns {{ bearer: string, org: string|null }|null}
+ * @returns {Promise<{ bearer: string, org: string|null }|null>}
  */
-function resolveCredential(req) {
+async function resolveCredential(req) {
   if (isGuest(req)) {
     const guestKey = process.env.GUEST_API_KEY || process.env.HANZO_API_KEY || '';
     return guestKey ? { bearer: guestKey, org: null } : null;
   }
-  const bearer = resolveTenantBearer(req);
+  let bearer = resolveTenantBearer(req);
+  if (!bearer && (await refreshIamBearer(req))) {
+    // Re-select rather than trusting the renewal's return: the selector is the one
+    // place that decides a token is forwardable (right principal, unexpired), and a
+    // renewed token that still fails it must be refused, not forwarded.
+    bearer = resolveTenantBearer(req);
+  }
   return bearer ? { bearer, org: resolveActiveOrg(req) } : null;
 }
 
@@ -121,7 +134,7 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
     return res.status(400).json({ error: 'unknown mode' });
   }
 
-  const credential = resolveCredential(req);
+  const credential = await resolveCredential(req);
   if (!credential) {
     // Honest, actionable: the surface renders for everyone, but an answer is a
     // real metered cloud call and needs a real principal behind it.
