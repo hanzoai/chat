@@ -21,6 +21,25 @@
  * browser against hanzo.chat; `connect-src` already listed hanzo.id, which is why
  * this read as configured when it was not.
  *
+ * ⚠️ THIS DIRECTIVE IS NECESSARY AND NOT SUFFICIENT, and saying so here is the
+ * point — do not read it as "silent SSO works now". Framing is refused by BOTH
+ * ends, and only the relying-party end is fixable from this repo. Measured against
+ * live hanzo.id, including its `/login/oauth/authorize` (HTTP 200):
+ *     content-security-policy: frame-ancestors 'none'
+ *     x-frame-options: DENY
+ * So the IdP refuses to be framed by anyone, and `signinSilent()` stays blocked
+ * until hanzo.id itself changes — `frame-ancestors` must name the relying-party
+ * origins, and `X-Frame-Options: DENY` must be DROPPED rather than edited, because
+ * XFO has no allow-list (only DENY / SAMEORIGIN) and a stale XFO overrides the
+ * newer directive in browsers that honour it. That is a change to the shared
+ * identity provider's clickjacking posture for every surface, so it is an owner
+ * decision and deliberately not made here.
+ *
+ * The honest state, then: this end is correct and the flow is still blocked at the
+ * IdP. Chat does not depend on it for correctness — the bearer now renews
+ * server-side (services/iamBearerRefresh.js `currentBearer`), which is what
+ * actually keeps a signed-in session answering.
+ *
  * `frame-ancestors 'self'` (with `X-Frame-Options: SAMEORIGIN`) still refuses
  * framing by any other origin; same-origin is needed for the silent.mp3 audio
  * unlock iframe. Note the asymmetry is deliberate and is the whole security story
