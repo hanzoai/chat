@@ -24,7 +24,12 @@ jest.mock('~/config', () => ({
   logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-const { refreshIamBearer } = require('./iamBearerRefresh');
+const mockResolveTenantBearer = jest.fn();
+jest.mock('@hanzochat/api', () => ({
+  resolveTenantBearer: (...args) => mockResolveTenantBearer(...args),
+}));
+
+const { refreshIamBearer, currentBearer } = require('./iamBearerRefresh');
 
 const CONFIG = { serverMetadata: () => ({}) };
 
@@ -34,6 +39,11 @@ function reqWith(session) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // clearAllMocks does NOT drain a `mockReturnValueOnce` queue, and a leftover
+  // one-shot silently answers the NEXT test — which is how a select-only
+  // regression read as green here once. Reset the selector outright so each case
+  // states its own selection.
+  mockResolveTenantBearer.mockReset();
   mockGetOpenIdConfig.mockReturnValue(CONFIG);
 });
 
@@ -118,6 +128,52 @@ describe('refreshIamBearer', () => {
     const req = reqWith({ iamBearerRefresh: 'rt-1', openidTokens: {} });
 
     await expect(refreshIamBearer(req)).resolves.toBe(false);
+    expect(mockRefreshTokenGrant).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * `currentBearer` is select-then-renew, composed ONCE.
+ *
+ * The regression it pins is not a crash either: it is the two halves living apart.
+ * `/v1/chat/ask` composed them by hand and kept answering, while the chat-completion
+ * path selected only — so an hour into a valid session the refresh credential sat
+ * unspent in the session and EVERY ordinary message was refused. Both surfaces now
+ * go through this function, so a renewal that reaches one reaches the other.
+ */
+describe('currentBearer', () => {
+  it('returns the selected bearer and does NOT renew when one is already current', async () => {
+    mockResolveTenantBearer.mockReturnValue('current-id');
+    const req = reqWith({ iamBearerRefresh: 'rt-1' });
+
+    await expect(currentBearer(req)).resolves.toBe('current-id');
+    expect(mockRefreshTokenGrant).not.toHaveBeenCalled();
+  });
+
+  it('renews a stale bearer and returns the renewed one — the completion path bug', async () => {
+    // Stale on first selection, current after the renewal writes the session.
+    mockResolveTenantBearer.mockReturnValueOnce(null).mockReturnValueOnce('fresh-id');
+    mockRefreshTokenGrant.mockResolvedValue({ id_token: 'fresh-id' });
+    const req = reqWith({ iamBearerRefresh: 'rt-1', openidTokens: { idToken: 'stale' } });
+
+    await expect(currentBearer(req)).resolves.toBe('fresh-id');
+    expect(mockRefreshTokenGrant).toHaveBeenCalledWith(CONFIG, 'rt-1');
+  });
+
+  it('re-selects after renewal rather than trusting it, so an unforwardable token is refused', async () => {
+    // The renewal succeeds, but the selector still rejects what it produced (wrong
+    // principal, or already expired). That token must NOT be forwarded.
+    mockResolveTenantBearer.mockReturnValue(null);
+    mockRefreshTokenGrant.mockResolvedValue({ id_token: 'wrong-principal' });
+    const req = reqWith({ iamBearerRefresh: 'rt-1', openidTokens: {} });
+
+    await expect(currentBearer(req)).resolves.toBeNull();
+  });
+
+  it('is null and inert for a caller with no refresh credential (guest / local user)', async () => {
+    mockResolveTenantBearer.mockReturnValue(null);
+
+    await expect(currentBearer(reqWith({}))).resolves.toBeNull();
     expect(mockRefreshTokenGrant).not.toHaveBeenCalled();
   });
 });

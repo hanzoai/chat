@@ -417,7 +417,21 @@ const ResumableAgentController = async (req, res, next, initializeClient, addTit
   } catch (error) {
     logger.error('[ResumableAgentController] Initialization error:', error);
     if (!res.headersSent) {
-      res.status(500).json({ error: error.message || 'Failed to start generation' });
+      /**
+       * Preserve the status and the CODE the thrower chose.
+       *
+       * Flattening every failure to `500 { error: <message> }` erased the only
+       * machine-readable part of a refusal, and a body with no `code`/`type` is the
+       * one shape the client's error renderer cannot map — so a known reason (an
+       * expired forwarded bearer) surfaced as "Something went wrong on our side".
+       * A thrower that knows its status and code says so; everything else keeps the
+       * previous 500.
+       */
+      const body = { error: error.message || 'Failed to start generation' };
+      if (error.code) {
+        body.code = error.code;
+      }
+      res.status(error.status ?? 500).json(body);
     } else {
       // JSON already sent, emit error to stream so client can receive it
       await GenerationJobManager.emitError(streamId, error.message || 'Failed to start generation');
