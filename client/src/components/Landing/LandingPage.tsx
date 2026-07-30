@@ -258,26 +258,24 @@ export default function LandingPage() {
                     <div className="size-3 rounded-full bg-green-500" />
                   </div>
                   <span className="ml-2 text-xs" style={{ color: colors.mutedFg }}>
-                    chat.hanzo.ai
+                    hanzo.chat
                   </span>
                 </div>
                 <pre className="overflow-x-auto p-4 text-sm" style={{ fontFamily: "'Roboto Mono', 'Geist Mono', monospace" }}>
-                  <code>{`You: Refactor the auth module to use JWT tokens
+                  <code>{`You: Compare the three big open-source vector databases
+     for a 10M-embedding product search
 
-zen5-coder: I'll help you refactor the auth module.
+zen5: Searched the web — 21 sources. Short version:
 
-  Plan:
-  1. Replace session-based auth with JWT
-  2. Add token refresh endpoint
-  3. Update middleware to verify JWT
-  4. Write migration script
+  Qdrant    fastest filtered search, Rust core
+  Milvus    biggest scale, GPU index builds
+  pgvector  simplest ops if you already run Postgres
 
-  Let me implement this step by step...
+  At 10M vectors any of them fits in one node.
+  Start with pgvector; revisit past ~50M or when
+  filter-heavy queries dominate.
 
-  Created: src/auth/jwt.ts
-  Modified: src/middleware/auth.ts
-  Updated: 8 test files
-  All tests passing.`}</code>
+  Want the benchmark table or a migration checklist?`}</code>
                 </pre>
               </div>
             </div>

@@ -2,96 +2,52 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import your JSON translations
+// English is the fallback language and the source of truth for translation-key
+// TYPES (`@types/i18next.d.ts` and `useLocalize` both read `resources.en`), so
+// it stays bundled in the entry. Every other locale is a lazy chunk: eagerly
+// importing all 41 made the `locales` chunk 572KB gzip of entry-blocking JS,
+// ~98% of it in languages the visitor will never switch to.
 import translationEn from './en/translation.json';
-import translationAr from './ar/translation.json';
-import translationCa from './ca/translation.json';
-import translationCs from './cs/translation.json';
-import translationDa from './da/translation.json';
-import translationDe from './de/translation.json';
-import translationEs from './es/translation.json';
-import translationEt from './et/translation.json';
-import translationFa from './fa/translation.json';
-import translationFr from './fr/translation.json';
-import translationIt from './it/translation.json';
-import translationPl from './pl/translation.json';
-import translationPt_BR from './pt-BR/translation.json';
-import translationPt_PT from './pt-PT/translation.json';
-import translationRu from './ru/translation.json';
-import translationJa from './ja/translation.json';
-import translationKa from './ka/translation.json';
-import translationSv from './sv/translation.json';
-import translationKo from './ko/translation.json';
-import translationLt from './lt/translation.json';
-import translationLv from './lv/translation.json';
-import translationTh from './th/translation.json';
-import translationTr from './tr/translation.json';
-import translationUg from './ug/translation.json';
-import translationVi from './vi/translation.json';
-import translationNl from './nl/translation.json';
-import translationNn from './nn/translation.json';
-import translationId from './id/translation.json';
-import translationIs from './is/translation.json';
-import translationHe from './he/translation.json';
-import translationHu from './hu/translation.json';
-import translationHy from './hy/translation.json';
-import translationFi from './fi/translation.json';
-import translationZh_Hans from './zh-Hans/translation.json';
-import translationZh_Hant from './zh-Hant/translation.json';
-import translationSk from './sk/translation.json';
-import translationBo from './bo/translation.json';
-import translationUk from './uk/translation.json';
-import translationBs from './bs/translation.json';
-import translationNb from './nb/translation.json';
-import translationSl from './sl/translation.json';
+
+// One dynamic-import loader per locale directory (Vite code-splits each
+// translation.json; the network fetch happens only when i18next asks for that
+// language). The enumeration lives in `./localeLoaders` because it uses
+// `import.meta.glob` — Vite syntax jest maps to an fs-backed twin.
+import { localeLoaders } from './localeLoaders';
 
 export const defaultNS = 'translation';
 
 export const resources = {
   en: { translation: translationEn },
-  ar: { translation: translationAr },
-  bs: { translation: translationBs },
-  ca: { translation: translationCa },
-  cs: { translation: translationCs },
-  'zh-Hans': { translation: translationZh_Hans },
-  'zh-Hant': { translation: translationZh_Hant },
-  da: { translation: translationDa },
-  de: { translation: translationDe },
-  es: { translation: translationEs },
-  et: { translation: translationEt },
-  fa: { translation: translationFa },
-  fr: { translation: translationFr },
-  it: { translation: translationIt },
-  nb: { translation: translationNb },
-  pl: { translation: translationPl },
-  'pt-BR': { translation: translationPt_BR },
-  'pt-PT': { translation: translationPt_PT },
-  ru: { translation: translationRu },
-  ja: { translation: translationJa },
-  ka: { translation: translationKa },
-  sv: { translation: translationSv },
-  ko: { translation: translationKo },
-  lt: { translation: translationLt },
-  lv: { translation: translationLv },
-  th: { translation: translationTh },
-  tr: { translation: translationTr },
-  ug: { translation: translationUg },
-  vi: { translation: translationVi },
-  nl: { translation: translationNl },
-  nn: { translation: translationNn },
-  id: { translation: translationId },
-  is: { translation: translationIs },
-  he: { translation: translationHe },
-  hu: { translation: translationHu },
-  hy: { translation: translationHy },
-  fi: { translation: translationFi },
-  sk: { translation: translationSk },
-  bo: { translation: translationBo },
-  sl: { translation: translationSl },
-  uk: { translation: translationUk },
 } as const;
 
+const lazyBackend = {
+  type: 'backend' as const,
+  init() {
+    /* no-op */
+  },
+  read(
+    language: string,
+    _namespace: string,
+    callback: (err: unknown, data: Record<string, string> | null) => void,
+  ) {
+    const loader = language === 'en' ? undefined : localeLoaders[`./${language}/translation.json`];
+    if (!loader) {
+      // `en` is already bundled — never re-fetch it as a chunk.
+      // Unknown locale (e.g. a regional tag like en-US): report an empty
+      // bundle so lookup falls through i18next's fallback chain to `en`.
+      callback(null, {});
+      return;
+    }
+    loader().then(
+      (mod) => callback(null, mod.default),
+      (err) => callback(err, null),
+    );
+  },
+};
+
 i18n
+  .use(lazyBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -106,6 +62,10 @@ i18n
     debug: false,
     defaultNS,
     resources,
+    // `resources` above bundles ONLY `en`; this flag tells i18next to still
+    // consult the backend for everything else instead of assuming the bundle
+    // is complete.
+    partialBundledLanguages: true,
     interpolation: { escapeValue: false },
   });
 

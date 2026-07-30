@@ -1,4 +1,8 @@
-import { heicTo, isHeic } from 'heic-to';
+// `heic-to` bundles a WASM HEIF decoder — 667KB gzip, the second-largest chunk
+// in the app — and is only ever needed when a user attaches a .heic/.heif
+// file. Import it lazily so the chunk leaves the entry graph entirely; the
+// cost moves to the first HEIC upload, where a decode is happening anyway.
+const loadHeicTo = () => import('heic-to');
 
 /**
  * Check if a file is in HEIC format
@@ -7,6 +11,7 @@ import { heicTo, isHeic } from 'heic-to';
  */
 export const isHEICFile = async (file: File): Promise<boolean> => {
   try {
+    const { isHeic } = await loadHeicTo();
     return await isHeic(file);
   } catch (error) {
     console.warn('Error checking if file is HEIC:', error);
@@ -31,6 +36,7 @@ export const convertHEICToJPEG = async (
     // Report conversion start
     onProgress?.(0.3);
 
+    const { heicTo } = await loadHeicTo();
     const convertedBlob = await heicTo({
       blob: file,
       type: 'image/jpeg',

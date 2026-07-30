@@ -28,6 +28,11 @@ module.exports = {
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
       'jest-file-loader',
     '^test/(.*)$': '<rootDir>/test/$1',
+    // `src/locales/localeLoaders.ts` enumerates lazy locales via
+    // `import.meta.glob`, which babel-jest cannot parse. Map that ONE module
+    // (unique specifier — only i18n.ts imports it) to an fs-backed twin with
+    // the identical shape, so the real i18n module runs under tests.
+    '^\\./localeLoaders$': '<rootDir>/test/localeLoaders.node.ts',
     '^~/(.*)$': '<rootDir>/src/$1',
     '^@hanzochat/data-provider/react-query$':
       '<rootDir>/../node_modules/@hanzochat/data-provider/src/react-query',
