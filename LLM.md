@@ -540,3 +540,65 @@ header **does not paint on the default screen** — driving live hanzo.chat find
 `<header>` at all. Adopting the real one is a LAYOUT change: `HanzoAppHeader` is
 `position: sticky; height: 56`, so `Root.tsx`'s `calc(100dvh - ${bannerHeight}px)`
 must subtract it too or the composer falls off the bottom of the viewport.
+
+## Telemetry — ONE surface, `@hanzogui/telemetry`
+
+Client and server emit to the SAME front door: `POST {host}/v1/event`, body
+`{batch:[Event,…]}`, default host `https://api.hanzo.ai`. There is no second
+endpoint, no page tag, and no Sentry SDK anywhere in this repo.
+
+- **Client** — `client/src/Providers/AnalyticsProvider.tsx` is one
+  `<TelemetryProvider product="chat" path={pathname} getToken={…}>` plus a
+  four-line identity bridge. It replaced the hand-rolled
+  `<AnalyticsProvider>`+`<ObserveProvider>`+`consented()` trio; `@hanzo/observe`
+  is no longer a direct dependency (the provider lazy-imports it). Host and
+  ingest key are NOT named in code — `@hanzogui/telemetry`'s `env.ts` reads
+  `VITE_HANZO_API_URL` / `VITE_HANZO_INGEST_KEY`, and the default host IS the
+  door. `VITE_HANZO_ANALYTICS_HOST` was chat-local, set nowhere, and is gone.
+- **`getToken` keeps the `'session'` sentinel meaning anonymous** — cookie-session
+  auth carries no JWT, and sending the literal string would be sending garbage.
+- **`useAnalytics()` still works** in `useSSE`, `useChatFunctions` and
+  `ModelSelectorContext`: `TelemetryProvider` renders `@hanzo/event`'s
+  `AnalyticsProvider` internally with its own client. `@hanzo/event` stays a
+  direct dependency for `EVENTS` and that hook. One client, one stream.
+- **Server** — `api/server/services/EventClient.js`. It builds events with the
+  SAME `@hanzo/event` client the browser uses, over a Node transport that adds
+  exactly one field, `source:'server'`, and a 3s timeout. Two hooks, no more:
+  `app.use(errorTelemetry)` immediately before `ErrorController`
+  (`api/server/index.js`), and `captureServerError` at the top of the existing
+  `process.on('uncaughtException')`. Fail-soft throughout, and a complete no-op
+  without `HANZO_INGEST_KEY`.
+- **No `unhandledRejection` listener, deliberately.** Node raises an unhandled
+  rejection AS an uncaught exception whenever no listener is registered, so both
+  already arrive at the one hook. Adding a listener would split the hook in two
+  AND suppress the crash that currently restarts the pod. Verified on Node 20.20.2.
+
+### Two gaps, both upstream, neither invented around here
+
+- **chat has no Sentry project.** `@hanzo/event`'s `src/dsn.ts` `PRODUCT_DSN`
+  registry has `console`, `app` and `site` — no `chat` key — so `dsnForProduct`
+  returns undefined and the error PLANE is inert by construction. Chat's errors
+  are `type:'error'` rows in the event warehouse (`GET /v1/errors`) and reach
+  `sentry.hanzo.ai` not at all. The fix is to create the `hanzo-chat` project and
+  add its DSN to that registry; do NOT invent a DSN or add a Sentry SDK here.
+- **`TelemetryBoundary` reports React render errors only when given a `fallback`.**
+  Measured, both ways: with `fallback` → 1 error event; without → 0. Its doc says
+  it "reports and then re-throws", but the re-throw happens during the fallback
+  render, so React never commits the boundary and `componentDidCatch` never runs.
+  Chat passes no `fallback` on purpose — a telemetry provider must not decide what
+  a crashed app shows — so render errors go unreported until the package reports
+  from `getDerivedStateFromError` instead. Everything else is covered:
+  `window.onerror` and `unhandledrejection` both land on the wire (verified in a
+  real browser).
+
+### `@hanzogui/telemetry` cannot be `require()`d without a babel shim
+
+`env.ts` aliases a BARE `import.meta` (`const m = import.meta`) before reading
+`.env`. `babel-plugin-transform-vite-meta-env` and `babel-plugin-transform-import-meta`
+both match only the MEMBER form, so under jest the alias is a parse-time
+SyntaxError that takes the whole suite down — including any future test that
+renders a tree containing `AnalyticsProvider`.
+`client/test/babel-plugin-transform-import-meta-bare.cjs` rewrites the bare node
+to `({env: process.env})`, giving it the same semantics the member form already
+has under test. Vite is unaffected: `@vitejs/plugin-react` does not read
+`babel.config.cjs`, which exists for unit tests only.

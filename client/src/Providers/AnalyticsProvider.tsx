@@ -1,110 +1,65 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  AnalyticsProvider as CaptureProvider,
-  useAnalytics,
-  usePageview,
-} from '@hanzo/event/react';
-import { ObserveProvider } from '@hanzo/observe/react';
+import { TelemetryProvider, useTelemetry } from '@hanzogui/telemetry';
 import { useAuthContext } from '~/hooks/AuthContext';
 
-const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
-
 /**
- * Publishable ingest key (pk_…) — write-only, safe in the bundle. It resolves the
- * org server-side for requests that carry no bearer, which is how logged-out and
- * guest views (the landing IS the composer) reach the fail-closed door. Mint one
- * per org via POST /v1/ingest/keys. Unset → anonymous events are best-effort.
+ * Binds the visitor to the authenticated user. This is the ONE thing
+ * <TelemetryProvider> does not do for us: it owns pageviews, errors and
+ * interaction capture, but identity is the app's to assert. Uses the stable
+ * user id — never email/PII.
  */
-const INGEST_KEY = import.meta.env.VITE_HANZO_INGEST_KEY?.trim() || undefined;
-
-/**
- * Consent gate — an explicit browser opt-out (Global Privacy Control, then legacy
- * Do-Not-Track) suppresses pageviews, events AND errors. This is the whole consent
- * surface: the client sends a stable id, never email/PII.
- */
-function consented(): boolean {
-  if (typeof navigator === 'undefined') {
-    return true;
-  }
-  const nav = navigator as Navigator & {
-    globalPrivacyControl?: boolean;
-    doNotTrack?: string | null;
-  };
-  if (nav.globalPrivacyControl === true) {
-    return false;
-  }
-  const dnt = nav.doNotTrack;
-  return dnt !== '1' && dnt !== 'yes';
-}
-
-/**
- * Identifies the authenticated user and fires a pageview on every route change.
- * The provider fires the first pageview itself; this keeps subsequent SPA
- * navigations tracked. Identity uses the stable user id — never email/PII.
- */
-function AnalyticsBridge() {
-  const analytics = useAnalytics();
+function IdentityBridge() {
+  const telemetry = useTelemetry();
   const { user, isAuthenticated } = useAuthContext();
-  const { pathname } = useLocation();
-
-  usePageview(pathname);
 
   const userId = isAuthenticated ? user?.id : undefined;
   useEffect(() => {
-    if (userId != null && userId) {
-      analytics.identify(userId);
+    if (userId) {
+      telemetry.identify(userId);
     }
-  }, [analytics, userId]);
+  }, [telemetry, userId]);
 
   return null;
 }
 
 /**
- * The ONE telemetry client for Hanzo Chat: @hanzo/event → POST /v1/event, the
- * single front door Cloud fans out into the web (analytics), product (insights)
- * and error (sentry) lenses. There is no page tag — this client covers pageviews
- * and errors for logged-in, guest AND logged-out visitors alike. Mounted inside
- * AuthContextProvider so it can read the live JWT and the resolved user.
+ * The ONE telemetry surface for Hanzo Chat. Everything — pageviews, product
+ * events, exceptions, interaction capture — is POSTed to the ONE front door
+ * (POST api.hanzo.ai/v1/event) and lensed server-side; there is no page tag and
+ * no second client. Host and publishable ingest key resolve from the
+ * environment (VITE_HANZO_API_URL, VITE_HANZO_INGEST_KEY), so neither is named
+ * here: the default host IS the front door.
  *
- * <ObserveProvider> rides the SAME client (it defaults to the one from
- * CaptureProvider) and adds default-on interaction autocapture ($click/$input/
- * $change/$submit) over a semantic DOM hierarchy; input values are redacted by
- * default (PII-free). nav={false} because AnalyticsBridge already counts each
- * pageview exactly once — observe must not patch history and double-count.
- * `enabled` is the one consent gate, shared by the client and autocapture.
+ * Mounted inside AuthContextProvider so it can read the live JWT and the
+ * resolved user, and it covers logged-in, guest AND logged-out visitors alike.
+ *
+ * Consent is not our business either — the provider honors Global Privacy
+ * Control and Do-Not-Track itself, and a stored in-app choice outranks both.
+ * `path` hands it react-router's location so a SPA navigation is counted once,
+ * by the router, rather than by patching the History API.
  */
 export default function AnalyticsProvider({ children }: { children: ReactNode }) {
   const { token } = useAuthContext();
+  const { pathname } = useLocation();
 
-  // Read the live token at capture time without re-creating the config: the
+  // Read the live token at capture time without re-creating the client: the
   // 'session' sentinel (cookie-session auth, no JWT) is treated as anonymous.
   const tokenRef = useRef<string | undefined>(token);
   tokenRef.current = token;
 
-  const enabled = consented();
-
-  const config = useMemo(
-    () => ({
-      product: 'chat',
-      host: ANALYTICS_HOST,
-      ingestKey: INGEST_KEY,
-      enabled,
-      getToken: () => {
+  return (
+    <TelemetryProvider
+      product="chat"
+      path={pathname}
+      getToken={() => {
         const value = tokenRef.current;
         return value && value !== 'session' ? value : undefined;
-      },
-    }),
-    [enabled],
-  );
-
-  return (
-    <CaptureProvider config={config}>
-      <ObserveProvider nav={false} enabled={enabled}>
-        <AnalyticsBridge />
-        {children}
-      </ObserveProvider>
-    </CaptureProvider>
+      }}
+    >
+      <IdentityBridge />
+      {children}
+    </TelemetryProvider>
   );
 }

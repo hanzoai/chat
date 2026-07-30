@@ -21,6 +21,7 @@ const {
 } = require('@hanzochat/api');
 const { connectDb, indexSync } = require('~/db');
 const { contentSecurityPolicy } = require('./csp');
+const { captureServerError, errorTelemetry } = require('./services/EventClient');
 const initializeOAuthReconnectManager = require('./services/initializeOAuthReconnectManager');
 const createValidateImageRequest = require('./middleware/validateImageRequest');
 const { jwtLogin } = require('~/strategies');
@@ -216,6 +217,9 @@ const startServer = async () => {
      /v1/chat/skills) and its client queries are half-built; whoever finishes
      them mounts it here. */
 
+  /* Reports every error that reaches the app's boundary to the ONE front door,
+     then hands it straight on: ErrorController still decides the response. */
+  app.use(errorTelemetry);
   app.use(ErrorController);
 
   app.use((req, res) => {
@@ -263,7 +267,14 @@ const startServer = async () => {
 startServer();
 
 let messageCount = 0;
+/* The ONE process-level capture point. Node raises an unhandled rejection as an
+   uncaught exception whenever no `unhandledRejection` listener is registered —
+   and none is — so both arrive here, and a second listener would only split the
+   hook in two. Reported before the triage below, which returns early for the
+   known-benign cases. */
 process.on('uncaughtException', (err) => {
+  captureServerError(err, { handled: false, properties: { kind: 'uncaughtException' } });
+
   if (!err.message.includes('fetch failed')) {
     logger.error('There was an uncaught error:', err);
   }
