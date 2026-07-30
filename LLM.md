@@ -502,8 +502,19 @@ already describes the target and was failing against the brochure.
   caps MESSAGES per real client IP (`GUEST_MESSAGE_MAX`, prod 2) and no amount of
   token minting resets it. Two limiters, two concerns.
 - Marketing moved to `/welcome`, declared outside `<Root/>` so it keeps its own
-  full-page chrome. Its hero still advertises the deprecated `chat.hanzo.ai` and a
-  coding demo — content work, still outstanding.
+  full-page chrome. Its hero now says `hanzo.chat` and shows a chat/search
+  session (the coding demo was hanzo.app's story); verified live.
+- Entry graph diet (shipped sha-ba6c128): only `en` is bundled — it is the
+  fallback AND the source of translation-key types — and the other 40 locales
+  lazy-load per-language through `locales/localeLoaders.ts` (`import.meta.glob`;
+  jest maps that ONE module to `test/localeLoaders.node.ts`, an fs twin, so the
+  real i18n module runs under tests). `heic-to` (667KB gzip WASM) loads on first
+  .heic attach. The vite manualChunks `locales` rule is deleted — welding lazy
+  locales to the eager `en` module would drag all 572KB gzip back into the
+  entry. Measured live: entry transfer 3,364,175 → 2,168,217 compressed bytes
+  (-35.5%); guest composer visible 3.2s → 1.9s desktop, 2.5s → 1.9s at 390px.
+  `GUEST_TOKEN_MAX=120`/`GUEST_TOKEN_WINDOW=60` are now pinned in the universe
+  values file so a code-default change can never silently re-tighten the mint.
 
 ### Arrival gate (2026-07-28)
 
