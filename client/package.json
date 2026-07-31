@@ -44,7 +44,7 @@
     "@hanzo/voice": "0.1.3",
     "@hanzochat/client": "workspace:*",
     "@hanzochat/data-provider": "workspace:*",
-    "@hanzogui/shell": "^7.4.2",
+    "@hanzogui/shell": "^8.0.0",
     "@headlessui/react": "^2.1.2",
     "@hyperdx/browser": "^0.24.0",
     "@marsidev/react-turnstile": "^1.1.0",

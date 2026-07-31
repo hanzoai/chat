@@ -416,8 +416,8 @@ importers:
         specifier: workspace:*
         version: link:../packages/data-provider
       '@hanzogui/shell':
-        specifier: ^7.4.2
-        version: 7.4.2(@hanzo/iam@0.21.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^8.0.0
+        version: 8.0.0(@hanzo/iam@0.21.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3990,8 +3990,8 @@ packages:
       '@anthropic-ai/sandbox-runtime':
         optional: true
 
-  '@hanzogui/shell@7.4.2':
-    resolution: {integrity: sha512-Haig4FLJUAgNbHvYxgsX/Y4D+VZW9fzvYoYi6Z19ZKkYCXnFG6S0wQmwZhqFW5KCmlnwUV7jUSJw9vOdvqj7nw==}
+  '@hanzogui/shell@8.0.0':
+    resolution: {integrity: sha512-tzddq4F+y2fAvByIM47H4fVyt8C8ByWhdReC6nTA9BqMjAOojd34QJs7yC8JvUxcTlXOvg28eKNvmuAOiW6I/Q==}
     peerDependencies:
       '@hanzo/iam': ^0.13.1
       react: '*'
@@ -17799,7 +17799,7 @@ snapshots:
       - ws
       - zod
 
-  '@hanzogui/shell@7.4.2(@hanzo/iam@0.21.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@hanzogui/shell@8.0.0(@hanzo/iam@0.21.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@hanzo/iam': 0.21.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
