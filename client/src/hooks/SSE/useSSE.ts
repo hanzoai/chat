@@ -221,9 +221,43 @@ export default function useSSE(
       }
     });
 
+    /* One re-mint per stream, so a retry that comes back refused cannot loop. */
+    let bearerRetried = false;
+
     sse.addEventListener('error', async (e: MessageEvent) => {
-      /* @ts-ignore */
-      if (e.responseCode === 401) {
+      /* @ts-ignore sse.js attaches the HTTP status to the error event */
+      const responseCode = e.responseCode as number | undefined;
+
+      /**
+       * 403 is the completion path's EXPIRED_BEARER — not a permission problem.
+       * `requireGuestOrJwtAuth` already admitted this caller, so chat's OWN JWT is
+       * fine and only the forwarded IAM bearer aged out; the server says so
+       * deliberately, and says it as 403 precisely so this path can tell the two
+       * apart (packages/api/src/endpoints/custom/initialize.ts). Refreshing the
+       * local JWT would renew the wrong credential, so re-mint the tenant bearer
+       * directly and retry once.
+       *
+       * Without this branch the re-mint below was unreachable from the completion
+       * path: it only ever listened for 401, so the ONE status the server actually
+       * returns for a stale bearer fell through to `errorHandler` and printed
+       * "Your Hanzo session needs refreshing — reload the page and try again" to
+       * someone already signed in, an hour into a perfectly good session.
+       */
+      if (responseCode === 403 && !bearerRetried) {
+        bearerRetried = true;
+        const fresh = await refreshTenantBearer();
+        if (fresh != null && fresh !== '') {
+          sse.headers = {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${fresh}`,
+          };
+          request.dispatchTokenUpdatedEvent(fresh);
+          sse.stream();
+          return;
+        }
+      }
+
+      if (responseCode === 401) {
         /* token expired, refresh and retry */
         try {
           const refreshResponse = await request.refreshToken();
@@ -246,8 +280,9 @@ export default function useSSE(
           // whose IAM token merely aged out landed here and got the login gate.
           // hanzo.id still has the session, so re-mint silently and retry once
           // before concluding anyone needs to sign in.
-          const fresh = await refreshTenantBearer();
+          const fresh = bearerRetried ? '' : await refreshTenantBearer();
           if (fresh != null && fresh !== '') {
+            bearerRetried = true;
             sse.headers = {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${fresh}`,
@@ -267,11 +302,11 @@ export default function useSSE(
       console.log('error in server stream.');
       // A failed answer, not a crash: the funnel needs the drop counted, and
       // `responseCode` is what separates "we were rate-limited/out of credit"
-      // from "the model failed". A 401 that recovered above never reaches here.
+      // from "the model failed". A 401 or 403 that recovered above never reaches
+      // here, so what this counts is real loss rather than a renewable credential.
       analytics.capture(EVENTS.GENERATION_FAILED, {
         ...genProps(),
-        /* @ts-ignore sse.js attaches the HTTP status to the error event */
-        responseCode: (e as MessageEvent & { responseCode?: number }).responseCode,
+        responseCode,
       });
       (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
 
