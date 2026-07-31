@@ -89,6 +89,21 @@ function Balance() {
   });
   const balanceData = balanceQuery.data;
 
+  /**
+   * A read that FAILED is not a balance of zero, and it must not render as one.
+   *
+   * Every field below defaults to 0 out of `balanceData ?? {}`, so a 401/403 or a
+   * dropped request produced a confident "$0.00 — 0 tokens remaining" under
+   * "Available Balance": the same pixels a genuinely empty account shows. That is
+   * the one number a customer checks before topping up, and it was lying to
+   * exactly the people whose credential had lapsed. The initial fetch read the
+   * same way, so a funded account flashed broke on every open.
+   *
+   * `tokenCredits === 0` from a SUCCESSFUL read is still a real zero and still
+   * renders $0.00. Only the absence of an answer is drawn as absent.
+   */
+  const balanceUnknown = balanceData == null;
+
   const {
     tokenCredits = 0,
     autoRefillEnabled = false,
@@ -133,7 +148,7 @@ function Balance() {
               Available Balance
             </p>
             <p className="mt-1 text-2xl font-bold text-text-primary">
-              {formatUsd(usdBalance)}
+              {balanceUnknown ? '—' : formatUsd(usdBalance)}
             </p>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-surface-tertiary px-2.5 py-1">
@@ -146,55 +161,63 @@ function Balance() {
 
         {/* Quick token count */}
         <p className="mt-1 text-xs text-text-secondary">
-          {formatTokens(tokenCredits)} tokens remaining
+          {balanceUnknown
+            ? balanceQuery.isError
+              ? 'Balance unavailable — could not reach your account'
+              : 'Checking balance…'
+            : `${formatTokens(tokenCredits)} tokens remaining`}
         </p>
       </div>
 
-      {/* Session / period usage bars */}
-      <div className="space-y-4">
-        <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
-          <TrendingUp className="h-3.5 w-3.5" />
-          Usage
-        </h3>
+      {/* Session / period usage bars. Omitted while the balance is unknown: a
+          usage breakdown derived from a read that never landed is fiction, and
+          drawing an empty bar is the same lie as "$0.00" in a bigger font. */}
+      {!balanceUnknown && (
+        <div className="space-y-4">
+          <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+            <TrendingUp className="h-3.5 w-3.5" />
+            Usage
+          </h3>
 
-        {/* Current session */}
-        <UsageBar
-          label="Current session"
-          sublabel="Starts when a message is sent"
-          current={sessionUsed}
-          limit={Math.max(totalCreditsUsd, usdBalance, 10)}
-          color="bg-blue-500"
-        />
-
-        {/* Credit breakdown bars */}
-        {trialUsd > 0 && (
+          {/* Current session */}
           <UsageBar
-            label="Trial credit"
-            sublabel={formatUsd(trialUsd)}
-            current={Math.max(0, trialUsd - Math.min(sessionUsed, trialUsd))}
-            limit={trialUsd}
-            color="bg-emerald-500"
+            label="Current session"
+            sublabel="Starts when a message is sent"
+            current={sessionUsed}
+            limit={Math.max(totalCreditsUsd, usdBalance, 10)}
+            color="bg-blue-500"
           />
-        )}
 
-        {paidUsd > 0 && (
-          <UsageBar
-            label="Paid credit"
-            sublabel={formatUsd(paidUsd)}
-            current={paidUsd}
-            limit={paidUsd}
-            color="bg-violet-500"
-          />
-        )}
-      </div>
+          {/* Credit breakdown bars */}
+          {trialUsd > 0 && (
+            <UsageBar
+              label="Trial credit"
+              sublabel={formatUsd(trialUsd)}
+              current={Math.max(0, trialUsd - Math.min(sessionUsed, trialUsd))}
+              limit={trialUsd}
+              color="bg-emerald-500"
+            />
+          )}
+
+          {paidUsd > 0 && (
+            <UsageBar
+              label="Paid credit"
+              sublabel={formatUsd(paidUsd)}
+              current={paidUsd}
+              limit={paidUsd}
+              color="bg-violet-500"
+            />
+          )}
+        </div>
+      )}
 
       {/* Token credits detail */}
-      <TokenCreditsItem tokenCredits={tokenCredits} expiresAt={expiresAt} />
+      {!balanceUnknown && <TokenCreditsItem tokenCredits={tokenCredits} expiresAt={expiresAt} />}
 
       {/* Model access */}
       {allowedModels && allowedModels.length > 0 && allowedModels[0] !== '*' && (
         <div className="rounded-lg border border-border-light bg-surface-secondary p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary mb-2">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
             Available Models
           </p>
           <div className="flex flex-wrap gap-1">
