@@ -147,7 +147,7 @@ function CtaPair({ onSignIn }: { onSignIn: (e: React.MouseEvent) => void }) {
         <IconArrowRight />
       </a>
       <a
-        href="https://docs.hanzo.ai/chat"
+        href="https://docs.hanzo.ai/docs/chat"
         target="_blank"
         rel="noopener noreferrer"
         className={CTA}
