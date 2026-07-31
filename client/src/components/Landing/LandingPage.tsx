@@ -411,8 +411,13 @@ zen5: Searched the web — 21 sources. Short version:
           </p>
           <div className="mx-auto grid max-w-3xl gap-6 sm:grid-cols-3">
             {[
-              { name: 'Plus', price: '$20', blurb: 'For everyday chat', featured: false },
-              { name: 'Pro', price: '$100', blurb: 'For heavy daily use', featured: true },
+              // Names and prices are the commerce plan catalog's, which is what
+              // billing charges: pro $20, plus $100, max $200, and `pro` is the
+              // popular one. These two were swapped — this page sold Plus at $20
+              // and Pro at $100 — and every card links to hanzo.ai/pricing, where
+              // the visitor immediately read the opposite.
+              { name: 'Pro', price: '$20', blurb: 'For everyday chat', featured: true },
+              { name: 'Plus', price: '$100', blurb: 'For heavy daily use', featured: false },
               { name: 'Max', price: '$200', blurb: 'For power users & teams', featured: false },
             ].map(({ name, price, blurb, featured }) => (
               <a
