@@ -12,12 +12,17 @@ import { useAuthContext } from '~/hooks/AuthContext';
 const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
 
 /**
- * Publishable ingest key (pk_…) — write-only, safe in the bundle. It resolves the
+ * Publishable ingest key (pk-…) — write-only, safe in the bundle. It resolves the
  * org server-side for requests that carry no bearer, which is how logged-out and
  * guest views (the landing IS the composer) reach the fail-closed door. Mint one
- * per org via POST /v1/ingest/keys. Unset → anonymous events are best-effort.
+ * per org via POST /v1/keys with {"type":"publishable"}.
+ *
+ * Unset is NOT best-effort: cloud takes an unkeyed beacon down the anonymous lane,
+ * whose allowlist admits only pageview and error. Every track/identify/group is
+ * then dropped — and the caller still gets 200, so the loss is silent on both
+ * ends. The key is what buys full-capability ingest.
  */
-const INGEST_KEY = import.meta.env.VITE_HANZO_INGEST_KEY?.trim() || undefined;
+const INGEST_KEY = import.meta.env.VITE_EVENT_INGEST_KEY?.trim() || undefined;
 
 /**
  * Consent gate — an explicit browser opt-out (Global Privacy Control, then legacy
