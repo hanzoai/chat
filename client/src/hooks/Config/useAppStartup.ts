@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import TagManager from 'react-gtm-module';
 import { LocalStorageKeys } from '@hanzochat/data-provider';
-import type { TStartupConfig, TUser } from '@hanzochat/data-provider';
+import type { TStartupConfig } from '@hanzochat/data-provider';
 import { cleanupTimestampedStorage } from '~/utils/timestamps';
 import useSpeechSettingsInit from './useSpeechSettingsInit';
 import { useMCPToolsQuery, useMCPServersQuery } from '~/data-provider';
@@ -10,18 +10,24 @@ import store from '~/store';
 
 export default function useAppStartup({
   startupConfig,
-  user,
+  isAuthenticated,
 }: {
   startupConfig?: TStartupConfig;
-  user?: TUser;
+  /** A guest has a `user` too, and these routes refuse its bearer — so gate on the
+      real session, never on the presence of a user object. */
+  isAuthenticated: boolean;
 }) {
   const [defaultPreset, setDefaultPreset] = useAtom(store.defaultPreset);
 
-  useSpeechSettingsInit(!!user);
+  useSpeechSettingsInit(isAuthenticated);
   const { data: loadedServers, isLoading: serversLoading } = useMCPServersQuery();
 
   useMCPToolsQuery({
-    enabled: !serversLoading && !!loadedServers && Object.keys(loadedServers).length > 0 && !!user,
+    enabled:
+      !serversLoading &&
+      !!loadedServers &&
+      Object.keys(loadedServers).length > 0 &&
+      isAuthenticated,
   });
 
   /** Clean up old localStorage entries on startup */

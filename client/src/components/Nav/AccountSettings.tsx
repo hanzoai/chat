@@ -154,7 +154,7 @@ function AccountSettings() {
         // were written for ariakit's enter/leave lifecycle and set opacity:0.
         classNames={{
           trigger:
-            'flex h-auto w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt',
+            'flex min-h-11 w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt',
           item: 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-surface-hover',
         }}
       />

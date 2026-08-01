@@ -65,6 +65,8 @@ export const useGetRoutingDefaults = (
   config?: UseQueryOptions<t.TRoutingDefaultsResponse>,
 ): QueryObserverResult<t.TRoutingDefaultsResponse> => {
   const queriesEnabled = useAtomValue<boolean>(store.queriesEnabled);
+  /* Member-only route: it refuses a guest bearer, so asking as one only logs a 401. */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
   return useQuery<t.TRoutingDefaultsResponse>(
     [QueryKeys.routingDefaults],
     () => dataService.getRoutingDefaults(),
@@ -75,7 +77,7 @@ export const useGetRoutingDefaults = (
       refetchOnMount: false,
       staleTime: 5 * 60 * 1000,
       ...config,
-      enabled: (config?.enabled ?? true) === true && queriesEnabled,
+      enabled: (config?.enabled ?? true) === true && queriesEnabled && isAuthenticated,
     },
   );
 };
