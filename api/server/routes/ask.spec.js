@@ -1,31 +1,44 @@
 const { upstreamMessage, needsSignIn } = require('./askMessage');
 
 /**
- * A signed-in customer was told to "Sign in with Hanzo to search".
+ * WHICH REFUSAL GETS WHICH WORDS — and which earns the Sign in button.
  *
- * Chat forwards the caller's own IAM bearer to cloud, and isForwardableToken
- * requires it UNEXPIRED. The id_token lives ~1h and chat has no durable refresh,
- * so an hour into a perfectly valid session cloud starts refusing — and every
- * refusal was rendered with the same "you are not signed in" copy. For someone
- * already signed in that is both wrong and unactionable.
+ * This policy moved once, and the reason is worth keeping. It was written when chat
+ * had NO durable refresh: the forwarded id_token lived ~1h, so an hour into a valid
+ * session cloud started refusing, and telling that customer "you are not signed in"
+ * was both wrong and unactionable. The answer then was "your session needs
+ * refreshing — reload the page", because a reload really did re-authenticate from
+ * scratch.
+ *
+ * Durable refresh has since landed (services/iamBearerRefresh.js). Renewal now runs
+ * BEFORE any of these refusals — `currentBearer` on the way into this route and the
+ * agents router — and a refused renewal DELETES the refresh credential from the
+ * session. So a 401 that still reaches this policy is a session that has already
+ * failed to heal itself, and "reload the page" became advice that cannot work: the
+ * reload replays a session with nothing left to spend, forever.
+ *
+ * The invariant across both eras is the same — never give someone advice they cannot
+ * act on — and it now points the other way for a signed-in 401.
  */
 describe('upstreamMessage', () => {
-  it('asks an ANONYMOUS caller to sign in — the one case where that helps', () => {
+  it('asks an ANONYMOUS caller to sign in — they have no session at all', () => {
     expect(upstreamMessage(401, false)).toMatch(/Sign in with Hanzo/);
   });
 
-  it('never tells a SIGNED-IN caller to sign in, on 401 or 403', () => {
-    expect(upstreamMessage(401, true)).not.toMatch(/Sign in with Hanzo/);
-    expect(upstreamMessage(403, true)).not.toMatch(/Sign in with Hanzo/);
+  it('tells a SIGNED-IN caller their sign-in expired, because renewal already failed', () => {
+    expect(upstreamMessage(401, true)).toMatch(/sign in again/i);
   });
 
-  it('names the real cause for a signed-in caller: a stale credential', () => {
-    expect(upstreamMessage(401, true)).toMatch(/refreshing/i);
-    expect(upstreamMessage(403, true)).toMatch(/refreshing/i);
+  it('never tells anyone to RELOAD — the advice that could not work', () => {
+    for (const signedIn of [true, false]) {
+      expect(upstreamMessage(401, signedIn)).not.toMatch(/reload/i);
+      expect(upstreamMessage(403, signedIn)).not.toMatch(/reload/i);
+    }
   });
 
-  it('treats 403 as stale even for an anonymous caller — a 403 is never "no session"', () => {
-    expect(upstreamMessage(403, false)).not.toMatch(/Sign in with Hanzo/);
+  it('keeps 403 separate from 401: permission is not identity', () => {
+    expect(upstreamMessage(403, true)).toMatch(/not permitted/i);
+    expect(upstreamMessage(403, true)).not.toMatch(/sign in/i);
   });
 
   it('leaves the other refusals alone', () => {
@@ -36,17 +49,22 @@ describe('upstreamMessage', () => {
 });
 
 describe('needsSignIn — which refusal earns the Sign in button', () => {
-  it('is true only for an anonymous 401', () => {
+  it('is true for EVERY 401: the credential is gone and renewal has already failed', () => {
     expect(needsSignIn(401, false)).toBe(true);
+    expect(needsSignIn(401, true)).toBe(true);
   });
 
-  it('is FALSE for a signed-in caller — the bug that put a Sign in button in front of a customer', () => {
-    expect(needsSignIn(401, true)).toBe(false);
+  it('is false for a signed-in 403 — no sign-in grants a permission you lack', () => {
     expect(needsSignIn(403, true)).toBe(false);
+  });
+
+  it('is true for an anonymous 403 — signing in is what they are missing', () => {
+    expect(needsSignIn(403, false)).toBe(true);
   });
 
   it('is false for refusals signing in cannot fix', () => {
     expect(needsSignIn(402, false)).toBe(false);
     expect(needsSignIn(429, false)).toBe(false);
+    expect(needsSignIn(502, false)).toBe(false);
   });
 });
