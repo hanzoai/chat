@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, memo } from 'react';
+import { useAtomValue } from 'jotai';
 import { getEndpointField } from '@hanzochat/data-provider';
 import { useUserKeyQuery } from '@hanzochat/data-provider/react-query';
 import { ResizableHandleAlt, ResizablePanel, useMediaQuery } from '@hanzochat/client';
@@ -10,6 +11,7 @@ import { useGetEndpointsQuery } from '~/data-provider';
 import NavToggle from '~/components/Nav/NavToggle';
 import { useSidePanelContext } from '~/Providers';
 import { cn } from '~/utils';
+import store from '~/store';
 import Nav from './Nav';
 
 const defaultMinSize = 20;
@@ -51,7 +53,11 @@ const SidePanel = ({
 
   const isSmallScreen = useMediaQuery('(max-width: 767px)');
 
-  const { data: keyExpiry = { expiresAt: undefined } } = useUserKeyQuery(endpoint ?? '');
+  /* Member-only route: a guest bearer is refused, so asking as one only logs a 401. */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
+  const { data: keyExpiry = { expiresAt: undefined } } = useUserKeyQuery(endpoint ?? '', {
+    enabled: isAuthenticated,
+  });
 
   const defaultActive = useMemo(() => {
     const activePanel = localStorage.getItem('side:active-panel');

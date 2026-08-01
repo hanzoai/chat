@@ -23,7 +23,7 @@ import store from '~/store';
 
 export default function ChatRoute() {
   const { data: startupConfig } = useGetStartupConfig();
-  const { isAuthenticated, isGuest, user, roles } = useAuthRedirect();
+  const { isAuthenticated, isGuest, roles } = useAuthRedirect();
   // Anonymous guests (when ALLOW_GUEST_CHAT is on) get the full chat composer,
   // scoped server-side to the free preview model. They render the same view as
   // an authenticated user, minus the capability-gated queries below.
@@ -31,7 +31,7 @@ export default function ChatRoute() {
 
   const defaultTemporaryChat = useAtomValue(temporaryStore.defaultTemporaryChat);
   const setIsTemporary = useSetAtom(temporaryStore.isTemporary);
-  useAppStartup({ startupConfig, user });
+  useAppStartup({ startupConfig, isAuthenticated });
 
   const index = 0;
   const { conversationId = '' } = useParams();

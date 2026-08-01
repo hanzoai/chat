@@ -36,7 +36,7 @@ module.exports = {
   darkMode: ['class'],
   theme: {
     fontFamily: {
-      sans: ['Basel', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       mono: ['Geist Mono', 'ui-monospace', 'monospace'],
     },
     // fontFamily: {
