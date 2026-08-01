@@ -47,7 +47,20 @@ function consented(): boolean {
 /**
  * Identifies the authenticated user and fires a pageview on every route change.
  * The provider fires the first pageview itself; this keeps subsequent SPA
- * navigations tracked. Identity uses the stable user id — never email/PII.
+ * navigations tracked. Identity is the IAM subject — never email/PII.
+ *
+ * WHICH ID. `user.openidId` is the Hanzo IAM `sub`, the same value hanzo.ai and
+ * cloud.hanzo.ai identify this user by. It is deliberately NOT `user.id`, which is
+ * chat's own row id: keying on that splits one user into a separate identity per
+ * property, so cross-property funnels and retention silently measure nothing. A
+ * local (non-OIDC) dev account has no IAM identity and is correctly left
+ * unidentified rather than given a fabricated one.
+ *
+ * HISTORY SURVIVES SIGN-UP. Nothing here mints or resets an id. @hanzo/event stamps
+ * `anonymousId` from the `hz_anon_id` localStorage value on EVERY event, including
+ * this identify, and that value is minted once per browser and never cleared on
+ * login — so the identify arrives carrying the same anonymous id the visitor's
+ * pre-signup pageviews were filed under, and the two join.
  */
 function AnalyticsBridge() {
   const analytics = useAnalytics();
@@ -56,12 +69,12 @@ function AnalyticsBridge() {
 
   usePageview(pathname);
 
-  const userId = isAuthenticated ? user?.id : undefined;
+  const iamSubject = isAuthenticated ? user?.openidId : undefined;
   useEffect(() => {
-    if (userId != null && userId) {
-      analytics.identify(userId);
+    if (iamSubject) {
+      analytics.identify(iamSubject);
     }
-  }, [analytics, userId]);
+  }, [analytics, iamSubject]);
 
   return null;
 }
