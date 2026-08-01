@@ -36,7 +36,7 @@
     "@dicebear/core": "^9.2.2",
     "@hanzo/ai": "^0.3.0",
     "@hanzo/design": "^0.3.0",
-    "@hanzo/event": "^0.3.6",
+    "@hanzo/event": "^0.3.8",
     "@hanzo/iam": "^0.21.1",
     "@hanzo/logo": "^1.0.13",
     "@hanzo/observe": "^0.1.0",
