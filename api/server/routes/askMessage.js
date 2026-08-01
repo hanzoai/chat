@@ -15,18 +15,29 @@ const SIGNIN_REQUIRED = 'ASK_SIGNIN_REQUIRED';
  * @param {boolean} signedIn  the caller has a real session (not anonymous, not guest)
  */
 function upstreamMessage(status, signedIn) {
-  // 401 and 403 are NOT the same refusal, and conflating them told a signed-in
-  // customer to sign in. Chat forwards the caller's own IAM bearer and
-  // isForwardableToken requires it UNEXPIRED — the id_token lives ~1h with no
-  // durable refresh — so an hour into a valid session cloud starts refusing, and
-  // the only honest reading is "your credential went stale", never "you are not
-  // signed in". The client re-mints silently and retries once; this is what is
-  // left when even that fails.
+  // 401 and 403 are NOT the same refusal: one is "we do not know who you are any
+  // more", the other is "we know, and you may not". They get different words and,
+  // below, different actions.
   if (status === 401 && !signedIn) {
     return 'Sign in with Hanzo to search — your Hanzo account funds this request.';
   }
-  if (status === 401 || status === 403) {
-    return 'Your Hanzo session needs refreshing — reload the page and try again.';
+  // A 401 for a caller who still HOLDS a session means the forwarded IAM bearer is
+  // dead and could not be renewed — renewal already ran on the way in
+  // (services/iamBearerRefresh.js `currentBearer`, called by this route and by the
+  // agents router), and a refused renewal DELETES the refresh credential from the
+  // session. So nothing in the session can recover it and the only cure is a new
+  // sign-in.
+  //
+  // This used to say "reload the page and try again", from a time when there was no
+  // durable refresh and a reload genuinely re-authenticated from scratch. Once
+  // renewal landed, that sentence became advice that cannot work: reloading replays
+  // a session whose refresh credential has just been discarded, so the user reloads
+  // forever. The words follow the mechanism.
+  if (status === 401) {
+    return 'Your Hanzo sign-in has expired — sign in again to continue.';
+  }
+  if (status === 403) {
+    return 'Your Hanzo account is not permitted to run this request.';
   }
   if (status === 402) {
     return 'This search is not covered by your current balance.';
@@ -37,9 +48,22 @@ function upstreamMessage(status, signedIn) {
   return 'The answer engine is unavailable right now.';
 }
 
-/** Whether this refusal is one that signing in would actually resolve. */
+/**
+ * Whether this refusal is one that signing in would actually resolve — THE policy,
+ * and the only place it is decided. The route used to hand-roll this condition at
+ * each refusal while this function sat exported beside them, which is how the two
+ * spellings drifted apart.
+ *
+ * A 401 always earns the button: the credential is gone and renewal has already
+ * failed, whether or not a browser session remains. A 403 is about permission, so it
+ * earns the button only for a caller who has not signed in yet — signing in again
+ * cannot grant a permission the account does not have.
+ */
 function needsSignIn(status, signedIn) {
-  return (status === 401 || status === 403) && !signedIn;
+  if (status === 401) {
+    return true;
+  }
+  return status === 403 && !signedIn;
 }
 
 module.exports = { upstreamMessage, needsSignIn, SIGNIN_REQUIRED };
