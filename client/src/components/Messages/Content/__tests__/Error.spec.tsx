@@ -79,10 +79,56 @@ describe('Error message content', () => {
 
   it('does not echo an unmapped gateway 402 — the shape that reached production', () => {
     // No `type`, no `code`: exactly the body the login gate did not recognise.
-    render(<Error text={JSON.stringify({ message: '402 a billable tenant is required (no anonymous usage)' })} />);
+    render(
+      <Error
+        text={JSON.stringify({ message: '402 a billable tenant is required (no anonymous usage)' })}
+      />,
+    );
 
     expect(screen.queryByText(/billable tenant/)).not.toBeInTheDocument();
     expect(screen.queryByText(/402/)).not.toBeInTheDocument();
     expect(screen.getByText('com_error_unknown')).toBeInTheDocument();
+  });
+
+  /**
+   * A 402 is a PAYWALL. Measured live: a signed-in user on `enso` got
+   * `{"type":"error","error":"An error occurred while processing the request: 402
+   * invalid API key"}` stored for the thread, and this renderer said "Something
+   * went wrong on our side" to someone who was trying to give us money.
+   *
+   * `server/utils/refusal.js` now stores the code; these pin the render.
+   */
+  describe('a 402 renders as a paywall, not a failure', () => {
+    /** Exactly what `refusalText` produces for a bare gateway 402. */
+    const refusal = JSON.stringify({ error: '402 invalid API key', code: 'insufficient_quota' });
+
+    it('names the balance and offers the action that resolves it', () => {
+      render(<Error text={refusal} />);
+
+      expect(screen.getByText('com_error_insufficient_quota')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'com_error_add_credit' })).toHaveAttribute(
+        'href',
+        'https://billing.hanzo.ai',
+      );
+    });
+
+    it('is never the generic failure, and never echoes the upstream body', () => {
+      render(<Error text={refusal} />);
+
+      expect(screen.queryByText('com_error_unknown')).not.toBeInTheDocument();
+      expect(screen.queryByText(/invalid API key/)).not.toBeInTheDocument();
+    });
+
+    it('reads the code out of an OpenAI-shaped nested body too', () => {
+      render(
+        <Error
+          text={JSON.stringify({
+            error: { message: 'quota exceeded', code: 'insufficient_quota' },
+          })}
+        />,
+      );
+
+      expect(screen.getByText('com_error_insufficient_quota')).toBeInTheDocument();
+    });
   });
 });

@@ -46,6 +46,7 @@ const {
 } = require('@hanzochat/data-provider');
 const { spendTokens, spendStructuredTokens } = require('~/models/spendTokens');
 const { encodeAndFormat } = require('~/server/services/Files/images/encode');
+const { refusalText } = require('~/server/utils/refusal');
 const { createContextHandlers } = require('~/app/clients/prompts');
 const { getConvoFiles } = require('~/models/Conversation');
 const BaseClient = require('~/app/clients/BaseClient');
@@ -938,7 +939,17 @@ class AgentClient extends BaseClient {
         );
         this.contentParts.push({
           type: ContentTypes.ERROR,
-          [ContentTypes.ERROR]: `An error occurred while processing the request${err?.message ? `: ${err.message}` : ''}`,
+          /**
+           * The upstream STATUS and CODE survive into the stored part. Flattening
+           * them to prose is how a gateway 402 — a paywall, and the one failure
+           * the reader can fix — reached production as "Something went wrong on
+           * our side" (`server/utils/refusal.js`). An unnamed failure still keeps
+           * this sentence.
+           */
+          [ContentTypes.ERROR]: refusalText(
+            err,
+            `An error occurred while processing the request${err?.message ? `: ${err.message}` : ''}`,
+          ),
         });
       }
     } finally {

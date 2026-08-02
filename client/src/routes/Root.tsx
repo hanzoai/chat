@@ -58,11 +58,16 @@ export default function Root() {
   // chatgpt.com shape. Gated on authChecked so it never flashes over a session
   // that is still resolving, and `offerLogin` itself fires once per tab, so
   // dismissing it sticks for the visit.
+  //
+  // Also gated on `showChat`: an OFFER is for a visitor who has a product to keep
+  // using. A visitor whose guest mint was refused has none, and `acquireGuest`
+  // has already opened the gate with the reason — overwriting that with "Welcome
+  // back" would put the cheerful copy on the one visitor owed an explanation.
   useEffect(() => {
-    if (authChecked && !isAuthenticated) {
+    if (authChecked && !isAuthenticated && showChat) {
       offerLogin();
     }
-  }, [authChecked, isAuthenticated]);
+  }, [authChecked, isAuthenticated, showChat]);
 
   // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);
@@ -146,8 +151,20 @@ export default function Root() {
   // silently became marketing under someone who was reading their own thread.
   // Everywhere else the shell renders and LoginGate asks for a session, which is
   // the honest thing to do with a route that names something specific.
+  //
+  // The gate comes WITH it. Reaching here at all means something was refused —
+  // most often the guest mint's per-IP limiter — and a marketing page is not an
+  // answer to that. `acquireGuest` names the reason (`unavailable`) and the gate
+  // is the one component that says it; without it mounted here, the refusal was
+  // dispatched into an empty room and the visitor saw a site with no composer and
+  // no error.
   if (!showChat && location.pathname === '/') {
-    return <LandingPage />;
+    return (
+      <>
+        <LandingPage />
+        <LoginGate />
+      </>
+    );
   }
 
   return (
