@@ -86,11 +86,15 @@ const sendError = async (req, res, options, callback) => {
  * @param {Express.Response} res - The server response.
  * @param {Object} data - The data to be sent.
  * @param {string} [errorMessage] - The error message, if any.
+ * @param {number} [status] - The status the thrower chose; 500 when it knew none.
+ *   Answering every failure with 500 erases the only part of a refusal a client
+ *   can act on — the defect `controllers/agents/request.js` already fixed for the
+ *   agents path. A 402 is a paywall, not an outage.
  */
-const sendResponse = (req, res, data, errorMessage) => {
+const sendResponse = (req, res, data, errorMessage, status) => {
   if (!res.headersSent) {
     if (errorMessage) {
-      return res.status(500).json({ error: errorMessage });
+      return res.status(status ?? 500).json({ error: errorMessage });
     }
     return res.json(data);
   }

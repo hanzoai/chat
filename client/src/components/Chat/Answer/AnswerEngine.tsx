@@ -29,8 +29,10 @@ import ModeChips from './ModeChips';
  *
  * `?prompt=`/`?q=`/`?submit=` are read by useQueryParams and `?project=` seeds
  * the composer's default value — all of them inside ChatForm, which only mounts
- * in chat mode. Defaulting to search would leave those links prefilling a field
- * nobody rendered, so the link itself picks the mode.
+ * in chat mode. Chat is the default now, so this no longer decides the FIRST
+ * paint; it forces a visitor who has since switched to a web mode back into chat
+ * when a link like `/c/new?q=…&submit=true` is opened client-side, which would
+ * otherwise prefill a field nobody rendered.
  */
 const CHAT_PARAMS = ['prompt', 'q', 'submit', 'project'];
 
@@ -44,7 +46,16 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const [searchParams] = useSearchParams();
   const chatIntent = CHAT_PARAMS.some((k) => searchParams.has(k));
 
-  const [mode, setMode] = useState<SearchMode | 'chat'>(() => (chatIntent ? 'chat' : 'search'));
+  /**
+   * `chat` is the default because it is the mode that WORKS for the visitor who
+   * arrives with nothing. Chat is the guest-scoped preview (`ALLOW_GUEST_CHAT`,
+   * `GUEST_MODEL`) and, when even that is refused, its submit path opens the login
+   * gate — the one component built for a not-signed-in outcome. `search` relays to
+   * cloud `/v1/ask`, which needs a real principal: an anonymous visitor's FIRST
+   * message was a 401 rendered as an inline error, every time. It is also what the
+   * chips already say — `chat` is listed first, as the thing this product is.
+   */
+  const [mode, setMode] = useState<SearchMode | 'chat'>('chat');
 
   // Only ever forces INTO chat: useQueryParams consumes and clears the params
   // once ChatForm has them, and that must not bounce the user back out.
