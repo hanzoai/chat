@@ -22,6 +22,7 @@ import {
   useGetStartupConfig,
 } from '~/data-provider';
 import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
+import { requireLogin } from '~/utils/login';
 import useGuestAuth from './useGuestAuth';
 import useTimeout from './useTimeout';
 import store from '~/store';
@@ -150,8 +151,19 @@ const AuthContextProvider = ({
 
   const acquireGuest = useCallback(async (): Promise<boolean> => {
     const session = await acquireGuestToken();
-    if (!session || sessionRef.current === 'live') {
+    if (sessionRef.current === 'live') {
       /* A real session landed while the guest token was in flight — drop it. */
+      return false;
+    }
+    if (!session) {
+      /**
+       * The mint was REFUSED (per-IP quota, or guest chat off server-side). That
+       * leaves this visitor with no product at all, and it used to pass silently:
+       * `Root` fell through to the marketing page, so a 429 on an auxiliary token
+       * read as a site with no composer and no explanation. Say it, and offer the
+       * one thing that resolves it.
+       */
+      requireLogin('unavailable');
       return false;
     }
     setUser(session.user);

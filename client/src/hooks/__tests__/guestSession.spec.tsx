@@ -3,6 +3,7 @@ import { Provider } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContextProvider, useAuthContext } from '../AuthContext';
+import { LOGIN_REQUIRED } from '~/utils/login';
 
 /**
  * A guest is the FALLBACK identity for a visitor the session probe found to have
@@ -104,6 +105,56 @@ describe('guest is the fallback identity, never an overlay on a session', () => 
     await waitFor(() => expect(mockAcquireGuestToken).toHaveBeenCalled());
     await waitFor(() => expect(getByTestId('c').dataset.guest).toBe('true'));
     expect(mockSetTokenHeader).toHaveBeenLastCalledWith('guest-token');
+  });
+
+  /**
+   * A refused mint (429 on the per-IP limiter) used to pass in total silence:
+   * `Root` fell through to the marketing page, so the visitor got a site with no
+   * composer and no explanation. The refusal now opens the ONE gate built for a
+   * not-signed-in outcome, carrying the reason.
+   */
+  it('says so when the guest mint is refused, instead of failing silently', async () => {
+    mockAcquireGuestToken.mockResolvedValueOnce(null as never);
+    const reasons: string[] = [];
+    const listen = (e: Event) =>
+      reasons.push((e as CustomEvent<{ reason: string }>).detail?.reason);
+    window.addEventListener(LOGIN_REQUIRED, listen);
+
+    const { getByTestId } = renderProvider();
+    await act(async () => {
+      probe.onSuccess({});
+    });
+
+    await waitFor(() => expect(reasons).toContain('unavailable'));
+    expect(getByTestId('c').dataset.guest).toBe('false');
+    window.removeEventListener(LOGIN_REQUIRED, listen);
+  });
+
+  it('does not cry refusal when a real session simply won the race', async () => {
+    let releaseGuest: (value: unknown) => void = () => {};
+    mockAcquireGuestToken.mockImplementationOnce(
+      () => new Promise((resolve) => (releaseGuest = resolve)) as never,
+    );
+    const reasons: string[] = [];
+    const listen = (e: Event) =>
+      reasons.push((e as CustomEvent<{ reason: string }>).detail?.reason);
+    window.addEventListener(LOGIN_REQUIRED, listen);
+
+    const { getByTestId } = renderProvider();
+    await act(async () => {
+      probe.onSuccess({});
+    });
+    await waitFor(() => expect(mockAcquireGuestToken).toHaveBeenCalled());
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: 'chat-jwt' }));
+    });
+    await waitFor(() => expect(getByTestId('c').dataset.live).toBe('true'));
+    await act(async () => {
+      releaseGuest(null);
+    });
+
+    expect(reasons).not.toContain('unavailable');
+    window.removeEventListener(LOGIN_REQUIRED, listen);
   });
 
   it('drops a guest token that arrives after a real session', async () => {

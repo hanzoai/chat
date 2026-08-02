@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { OGDialog, OGDialogTemplate, Button } from '@hanzochat/client';
-import { LOGIN_REQUIRED, startHanzoLogin, type LoginReason } from '~/utils/login';
+import { LOGIN_REQUIRED, startHanzoLogin, takePendingLogin, type LoginReason } from '~/utils/login';
 import { useLocalize, type TranslationKeys } from '~/hooks';
 
 /** Copy per reason the gate opened. */
@@ -12,6 +12,13 @@ const copy: Record<LoginReason, { title: TranslationKeys; message: TranslationKe
   anonymous: {
     title: 'com_auth_login_anonymous_title',
     message: 'com_auth_login_anonymous_message',
+  },
+  // The signed-out preview itself was refused, so there is no anonymous product
+  // behind this gate to explain away. Saying so beats what used to happen: the
+  // marketing page rendered with no composer and no reason given.
+  unavailable: {
+    title: 'com_auth_login_unavailable_title',
+    message: 'com_auth_login_unavailable_message',
   },
   // Not a refusal. Nothing failed — this is the offer made on arrival, so its
   // copy sells the upgrade rather than explaining a denial, and its dismissal
@@ -32,11 +39,13 @@ const copy: Record<LoginReason, { title: TranslationKeys; message: TranslationKe
  * spent) or a `401` (not signed in).
  */
 export default function LoginGate() {
-  const [reason, setReason] = useState<LoginReason | null>(null);
+  /** A refusal that landed before this mounted is still news. Rendering it consumes it. */
+  const [reason, setReason] = useState<LoginReason | null>(takePendingLogin);
   const localize = useLocalize();
 
   useEffect(() => {
     const handler = (event: Event) => {
+      takePendingLogin();
       const detail = (event as CustomEvent<{ reason?: LoginReason }>).detail;
       setReason(detail?.reason ?? 'anonymous');
     };

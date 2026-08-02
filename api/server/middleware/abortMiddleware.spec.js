@@ -426,3 +426,52 @@ describe('abortMiddleware - spendCollectedUsage', () => {
     });
   });
 });
+
+/**
+ * The stored message is the only thing the reader ever sees, so it has to carry
+ * the machine-readable reason. This used to pass `error.message` through only
+ * when it happened to contain the substring `"type"`, dropping `error.status`
+ * and `error.code` on the floor — which is how a gateway 402 (a paywall) was
+ * stored as prose and rendered as "Something went wrong on our side".
+ */
+describe('abortMiddleware - handleAbortError carries the refusal', () => {
+  const { sendError } = require('~/server/middleware/error');
+  const { handleAbortError } = require('./abortMiddleware');
+
+  const req = { user: { id: 'u1' }, body: {} };
+  const res = {};
+  const data = { conversationId: 'c1', messageId: 'm1', parentMessageId: 'p1', sender: 'AI' };
+
+  const storedText = () => sendError.mock.calls[0][2].text;
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('stores a gateway 402 as the add-credit refusal, not as prose', async () => {
+    await handleAbortError(
+      res,
+      req,
+      Object.assign(new Error('402 invalid API key'), {
+        status: 402,
+      }),
+      data,
+    );
+
+    expect(JSON.parse(storedText())).toMatchObject({ code: 'insufficient_quota' });
+  });
+
+  it('still stores the generic sentence for a failure that names nothing', async () => {
+    await handleAbortError(res, req, new Error('upstream exploded'), data);
+
+    expect(storedText()).toBe(
+      'An error occurred while processing your request. Please contact the Admin.',
+    );
+  });
+
+  it('keeps an envelope a thrower already built', async () => {
+    const built = JSON.stringify({ type: 'no_user_key' });
+
+    await handleAbortError(res, req, new Error(built), data);
+
+    expect(storedText()).toBe(built);
+  });
+});
