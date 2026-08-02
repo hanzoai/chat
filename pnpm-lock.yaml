@@ -357,7 +357,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3))
+        version: 30.3.0(@types/node@25.5.0)(ts-node@10.9.2(@types/node@25.5.0)(typescript@5.9.3))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -403,6 +403,9 @@ importers:
       '@hanzo/observe':
         specifier: ^0.1.0
         version: 0.1.0(react@19.2.4)
+      '@hanzo/plans':
+        specifier: 1.4.12
+        version: 1.4.12
       '@hanzo/usage':
         specifier: ^0.1.6
         version: 0.1.6(react@19.2.4)
@@ -3960,6 +3963,9 @@ packages:
     peerDependenciesMeta:
       react:
         optional: true
+
+  '@hanzo/plans@1.4.12':
+    resolution: {integrity: sha512-jufyhOTaCyPAVUIb+kZuz42LvrDksSrkAev3gMoVSID2Dj4kOwpf9/rvxpUs2z1RhPwJjDH6cSeLHSzuTgqxvA==}
 
   '@hanzo/usage@0.1.6':
     resolution: {integrity: sha512-0gr4ZJ5qTH1hRt706uMciAevFPXG/08Xd5zbyZBlAi1o4k4EdKHTqLm/pRnbhv6jZbWTIOUtRQSysGyeJfOQMQ==}
@@ -17734,6 +17740,8 @@ snapshots:
       '@hanzo/event': 0.3.8(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
+
+  '@hanzo/plans@1.4.12': {}
 
   '@hanzo/usage@0.1.6(react@19.2.4)':
     optionalDependencies:
