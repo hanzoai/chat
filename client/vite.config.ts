@@ -7,6 +7,26 @@ import { compression } from 'vite-plugin-compression2';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { VitePWA } from 'vite-plugin-pwa';
 
+/**
+ * react-native-web's module-substitution convention: a `.web.*` sibling replaces
+ * the native module. Vite and esbuild each resolve with their own extension list
+ * and neither knows this convention, so BOTH have to be told — one list, read
+ * twice (resolve.extensions + optimizeDeps.esbuildOptions.resolveExtensions).
+ */
+const webFirstExtensions = [
+  '.web.tsx',
+  '.web.ts',
+  '.web.jsx',
+  '.web.js',
+  '.mjs',
+  '.js',
+  '.mts',
+  '.ts',
+  '.jsx',
+  '.tsx',
+  '.json',
+];
+
 // https://vitejs.dev/config/
 // When VITE_HANZO_API_URL is set, the frontend talks directly to the cloud gateway
 // and no local backend proxy is needed (static SPA mode).
@@ -301,26 +321,42 @@ export default defineConfig(({ command }) => ({
     // `react-native-svg` resolves to its Fabric (native) build and reaches for
     // `react-native-web/Libraries/Utilities/codegenNativeComponent`, which does
     // not exist. Listing `.web.*` first makes the web sibling win.
-    extensions: [
-      '.web.tsx',
-      '.web.ts',
-      '.web.jsx',
-      '.web.js',
-      '.mjs',
-      '.js',
-      '.mts',
-      '.ts',
-      '.jsx',
-      '.tsx',
-      '.json',
-    ],
+    extensions: webFirstExtensions,
   },
-  // Pre-bundle the compiled-ESM shell so the dev server resolves it cleanly.
   optimizeDeps: {
-    include: ['@hanzogui/shell'],
+    include: [
+      // Pre-bundle the compiled-ESM shell so the dev server resolves it cleanly.
+      '@hanzogui/shell',
+      // `@hanzo/gui` is excluded below, so nothing pre-bundles the react-native
+      // graph it pulls in. Two modules in it are CommonJS and are imported BY NAME:
+      // react-native-web's `@react-native/normalize-colors` (as `default`) and
+      // react-native-svg's PEG.js-generated `lib/extract/transform.js` (as `parse`).
+      // Vite's dev ESM pipeline cannot synthesise named exports from CJS, so the
+      // page dies on ONE pageerror ("does not provide an export named …"), React
+      // never mounts, and the whole app renders blank. `vite build` is unaffected —
+      // Rollup's commonjs plugin does the interop — so this is INVISIBLE to the
+      // build and fatal to `npm run frontend:dev`. Pre-bundling is the fix, and it
+      // only works together with the esbuildOptions below.
+      'react-native-web',
+      '@react-native/normalize-colors',
+      'react-native-svg',
+      // Reached only through the excluded `@hanzo/gui` (via @hanzogui/normalize-css-color).
+      // Plain CJS, no exports map, no `type` — served raw it throws
+      // `module is not defined` at load. Note this is `normalize-color`, SINGULAR;
+      // `normalize-colors` above is a different package and both are installed.
+      '@react-native/normalize-color',
+    ],
     // @hanzo/gui ships as source-shaped ESM across ~60 @hanzogui/* packages.
     // Pre-bundling it flattens that graph for the dev server.
     exclude: ['@hanzo/gui', '@hanzo/ui'],
+    esbuildOptions: {
+      // `resolve.extensions` above governs Vite/Rollup, NOT the esbuild dep
+      // optimizer — esbuild resolves with its own defaults. Without this the
+      // optimizer ignores the `.web.js` siblings, walks into react-native-svg's
+      // Fabric build, and fails on `codegenNativeComponent`. Both resolvers must
+      // agree, so they read the same list.
+      resolveExtensions: webFirstExtensions,
+    },
   },
 }));
 
