@@ -115,7 +115,6 @@ router.get('/', async function (req, res) {
       balance: clientBalanceConfig,
       sharedLinksEnabled,
       publicSharedLinksEnabled,
-      analyticsGtmId: process.env.ANALYTICS_GTM_ID,
       instanceProjectId: crypto.createHash('sha256').update(instanceProject._id.toString()).digest('hex').slice(0, 16),
       bundlerURL: process.env.SANDPACK_BUNDLER_URL,
       staticBundlerURL: process.env.SANDPACK_STATIC_BUNDLER_URL,

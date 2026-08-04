@@ -1,10 +1,9 @@
 import { useState, useId, useCallback, useMemo, useRef } from 'react';
 import { useAtomValue } from 'jotai';
 import * as Ariakit from '@ariakit/react';
-import { BookmarkPlusIcon } from 'lucide-react';
+import { Bookmark, BookmarkPlusIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Constants, QueryKeys } from '@hanzochat/data-provider';
-import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import { DropdownPopup, TooltipAnchor, Spinner, useToastContext } from '@hanzochat/client';
 import type { TConversationTag } from '@hanzochat/data-provider';
 import type { FC } from 'react';
@@ -130,9 +129,9 @@ const BookmarkMenu: FC = () => {
           label: tag.tag,
           hideOnClick: false,
           icon: isSelected ? (
-            <BookmarkFilledIcon className="size-4" />
+            <Bookmark className="size-4" fill="currentColor" />
           ) : (
-            <BookmarkIcon className="size-4" />
+            <Bookmark className="size-4" />
           ),
           onClick: () => handleSubmit(tag.tag),
           disabled: mutation.isLoading,
@@ -157,9 +156,9 @@ const BookmarkMenu: FC = () => {
       return <Spinner aria-label="Spinner" />;
     }
     if (hasBookmarks) {
-      return <BookmarkFilledIcon className="icon-lg" aria-hidden="true" />;
+      return <Bookmark className="icon-lg" aria-hidden="true" fill="currentColor" />;
     }
-    return <BookmarkIcon className="icon-lg" aria-hidden="true" />;
+    return <Bookmark className="icon-lg" aria-hidden="true" />;
   };
 
   return (

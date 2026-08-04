@@ -32,8 +32,6 @@ jest.mock('~/hooks', () => ({
   useLocalize: () => (key: string) => key,
 }));
 
-jest.mock('react-gtm-module', () => ({ initialize: jest.fn() }));
-
 import Footer from '../Footer';
 
 describe('Chat Footer', () => {

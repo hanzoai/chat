@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
-import TagManager from 'react-gtm-module';
 import { LocalStorageKeys } from '@hanzochat/data-provider';
 import type { TStartupConfig } from '@hanzochat/data-provider';
 import { cleanupTimestampedStorage } from '~/utils/timestamps';
@@ -69,13 +68,4 @@ export default function useAppStartup({
       spec: defaultSpec.name,
     });
   }, [defaultPreset, setDefaultPreset, startupConfig?.modelSpecs?.list]);
-
-  useEffect(() => {
-    if (startupConfig?.analyticsGtmId != null && typeof window.google_tag_manager === 'undefined') {
-      const tagManagerArgs = {
-        gtmId: startupConfig.analyticsGtmId,
-      };
-      TagManager.initialize(tagManagerArgs);
-    }
-  }, [startupConfig?.analyticsGtmId]);
 }

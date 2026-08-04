@@ -19,6 +19,14 @@
 @import '@hanzo/design/tokens/motion.css';
 @import '@hanzo/design/tokens/z.css';
 
+/* @hanzo/ui's own token layer — plain `:root`/`.dark` custom properties, no
+   Tailwind. The 8.x primitives (backed by @hanzo/gui) reference these names
+   directly (`var(--background)`, `var(--border)`, …); a host that does not
+   declare them renders them transparent. Imported AFTER @hanzo/design so the
+   shared design tokens stay the base and this only fills the names @hanzo/ui
+   adds. Chat's own overrides below still win — they come later in the file. */
+@import '@hanzo/ui/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

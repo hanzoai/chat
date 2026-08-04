@@ -174,8 +174,10 @@ export default function MCPTool({ serverInfo }: { serverInfo?: MCPServerInfo }) 
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                const checkbox = e.currentTarget as HTMLButtonElement;
-                                checkbox.click();
+                                // `.click()` is HTMLElement's, so no cast: the
+                                // 8.x checkbox is not the Radix <button> the old
+                                // `as HTMLButtonElement` assumed.
+                                e.currentTarget.click();
                               }
                             }}
                             tabIndex={isExpanded ? 0 : -1}
