@@ -61,6 +61,18 @@ COPY --chown=node:node . .
 # placeholder no longer exists — telemetry is the ONE @hanzo/event client.)
 ARG EVENT_INGEST_KEY
 ENV VITE_EVENT_INGEST_KEY=$EVENT_INGEST_KEY
+# Gated HERE because this is the one thing every builder passes through. A guard
+# in deploy.yml protects that lane only; hanzo.app shipped keyless from a second
+# lane while its repo already had a working KMS fetch.
+#
+# Fail closed. An empty key builds, serves and looks correct while cloud files
+# every pageview under $public, which this org cannot read, and ingest answers
+# 200 either way.
+RUN case "$EVENT_INGEST_KEY" in \
+      pk-*) : ;; \
+      '')   echo "EVENT_INGEST_KEY is empty - pass --build-arg EVENT_INGEST_KEY=<pk-...> (KMS deploy/EVENT_INGEST_KEY, env prod)" >&2; exit 1 ;; \
+      *)    echo "EVENT_INGEST_KEY is not a publishable key (expected a pk- prefix)" >&2; exit 1 ;; \
+    esac
 
 # Publishable event-ingest key (pk-live-…), inlined by Vite into the client bundle.
 # Deliberately has NO default: a wrong or absent key is not a degraded mode, it is
