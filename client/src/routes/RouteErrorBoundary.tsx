@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Button } from '@hanzochat/client';
 import { useRouteError } from 'react-router-dom';
+import { useAnalytics } from '@hanzo/event/react';
 import { useLocalize } from '~/hooks';
 import logger from '~/utils/logger';
 
@@ -72,6 +74,7 @@ const getBrowserInfo = async () => {
 
 export default function RouteErrorBoundary() {
   const localize = useLocalize();
+  const analytics = useAnalytics();
   const typedError = useRouteError() as {
     message?: string;
     stack?: string;
@@ -87,6 +90,37 @@ export default function RouteErrorBoundary() {
     statusText: typedError.statusText,
     data: typedError.data,
   };
+
+  /**
+   * Report the crash through the ONE telemetry client. This boundary is
+   * react-router's `errorElement`, which means it is the INNERMOST boundary
+   * around every route — it intercepts render errors before any React boundary
+   * above it, and React never surfaces them to window.onerror. Without this
+   * call, the screen the user is looking at would be the only record that
+   * anything broke.
+   *
+   * `handled:false` because nothing recovered; the route is dead and the user is
+   * staring at a stack trace. `useAnalytics` is null-guarded outside a provider,
+   * so a route rendered without one (or a test) is a no-op rather than a second
+   * crash inside the crash handler.
+   */
+  useEffect(() => {
+    const error =
+      typedError instanceof Error
+        ? typedError
+        : Object.assign(new Error(errorDetails.message), { stack: errorDetails.stack });
+
+    analytics.captureError(error, {
+      handled: false,
+      properties: {
+        route: true,
+        status: errorDetails.status,
+        statusText: errorDetails.statusText,
+        path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+      },
+    });
+    // Report exactly once per crash — the error identity is the dependency.
+  }, [analytics, typedError, errorDetails.message, errorDetails.stack, errorDetails.status, errorDetails.statusText]);
 
   const handleDownloadLogs = async () => {
     try {

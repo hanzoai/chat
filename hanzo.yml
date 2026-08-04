@@ -1,0 +1,27 @@
+# Native CI/CD — hanzo.chat
+#
+# What builds this image: a push to main on git.hanzo.ai. cloud's orchestrator
+# (apps/git/build_on_push.go) reads the `images:` block below and enqueues one
+# build per entry at platform.hanzo.ai/v1/runner, which builds, pushes to GHCR
+# and hands the tag to the operator. No GitHub Actions anywhere in that path.
+#
+# This file exists because the orchestrator looks for `images:` and this repo had
+# none — not in `.hanzo/workflows/*.yml`, not at the root. A repo with no native
+# pipeline is a deliberate no-op to the orchestrator, so pushes here produced no
+# build, no run and no error: the fix for the missing analytics ingest key landed
+# on main and simply never became an image.
+#
+# `.hanzo/workflows/deploy.yml` still describes the same build for the git-runner
+# lane, and the two agree on the one thing that matters — context `.`, root
+# Dockerfile, ghcr.io/hanzoai/chat — so whichever lane runs, the image is the
+# same. That is the transition the orchestrator documents: both work, they
+# converge, and the runner lane retires once this one is proven.
+#
+# The image TAG is not set here. `hanzoai/ci/.github/actions/imgver` derives the
+# semver from client/package.json against the registry floor, so the version is
+# computed once and never typed — a sha is not a release name.
+images:
+  - name: chat
+    context: .
+    dockerfile: Dockerfile
+    repo: ghcr.io/hanzoai/chat
