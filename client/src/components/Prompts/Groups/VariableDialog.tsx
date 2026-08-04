@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import type { TPromptGroup } from '@hanzochat/data-provider';
 import { OGDialog, OGDialogTitle, OGDialogContent } from '@hanzochat/client';
+import type { OGDialogProps } from '@hanzochat/client';
 import { detectVariables } from '~/utils';
 import VariableForm from './VariableForm';
 
-interface VariableDialogProps extends Omit<DialogPrimitive.DialogProps, 'onOpenChange'> {
+/** Props follow the dialog this actually renders (`OGDialog`), not the primitive behind it. */
+interface VariableDialogProps extends Omit<OGDialogProps, 'onOpenChange'> {
   onClose: () => void;
   group: TPromptGroup | null;
 }
