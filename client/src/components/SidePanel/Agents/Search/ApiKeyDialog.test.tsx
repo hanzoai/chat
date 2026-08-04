@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent } from '@testing-library/react';
+import { GuiTestProvider } from 'test/gui-provider';
 import ApiKeyDialog from './ApiKeyDialog';
 import { AuthType, SearchCategories, RerankerTypes } from '@hanzochat/data-provider';
 import { useGetStartupConfig } from '~/data-provider';
@@ -12,6 +13,10 @@ jest.mock('~/hooks', () => ({
 jest.mock('~/data-provider', () => ({
   useGetStartupConfig: jest.fn(),
 }));
+
+/** The dialog renders @hanzo/ui 8.x primitives, which throw `Missing theme.`
+ *  outside a provider — the same one App.jsx mounts around the real tree. */
+const render = (ui: React.ReactElement) => rtlRender(ui, { wrapper: GuiTestProvider });
 
 const mockRegister = (name: string) => ({
   onChange: jest.fn(),

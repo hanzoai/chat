@@ -22,6 +22,13 @@ type BaseCheckboxProps = Omit<
  * and the box is a `tabIndex={-1}`, `pointer-events-none` glyph. Requiring
  * `aria-hidden: true` (not merely permitting the absence of a name) keeps the
  * escape hatch honest — you can only take it by declaring the box invisible.
+ *
+ * That branch is `true`, not React's `Booleanish`, because the @hanzo/ui 8.x
+ * primitive types this prop as plain `boolean` — it is Tamagui-backed, not a DOM
+ * element. Writing `true | 'true'` here looks more permissive and is not: it
+ * intersects with the primitive's `boolean` down to `true` anyway, so the string
+ * form silently stayed a type error at the only call site that needs it. Pass
+ * `aria-hidden`, not `aria-hidden="true"`.
  */
 export type CheckboxProps =
   | (BaseCheckboxProps & {
@@ -35,7 +42,7 @@ export type CheckboxProps =
       'aria-hidden'?: never;
     })
   | (BaseCheckboxProps & {
-      'aria-hidden': true | 'true';
+      'aria-hidden': true;
       'aria-label'?: never;
       'aria-labelledby'?: never;
     });

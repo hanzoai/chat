@@ -1,5 +1,4 @@
 import React from 'react';
-import { Label } from '@hanzochat/client';
 import CategoryIcon from '~/components/Prompts/Groups/CategoryIcon';
 import { useLocalize } from '~/hooks';
 
@@ -38,13 +37,16 @@ export default function ListCard({
       <div className="flex w-full justify-between gap-2">
         <div className="flex flex-row gap-2">
           <CategoryIcon category={category} className="icon-md" aria-hidden="true" />
-          <Label
+          {/* A card title, not a form caption: it labels the card via
+              aria-labelledby and there is no control for a <label> to bind to.
+              `title` carries the full name when the visible text is clipped. */}
+          <span
             id={`card-title-${name}`}
             className="break-word select-none text-balance text-sm font-semibold text-text-primary"
             title={name}
           >
             {name}
-          </Label>
+          </span>
         </div>
         <div>{children}</div>
       </div>

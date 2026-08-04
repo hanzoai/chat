@@ -449,6 +449,61 @@ as "@hanzo/ui is banned" — it records why the *5.x shadcn* one went.
   `DropdownPopup` (Ariakit; `.popover-ui` is REAL CSS, not a scanned class
   string) remains the canonical anchored menu, 28 call sites.
 
+### Rules for writing against the 8.x primitives
+
+Three things bite every time and none of them announces itself:
+
+- **A primitive rendered outside `GuiProvider` throws `Missing theme.`** and the
+  stack points at the test's `render(...)`, not at the primitive. `App.jsx`
+  mounts the provider around the whole tree, so a component tested without it is
+  tested in a configuration that does not ship. `client/test/gui-provider.tsx`
+  exports the ONE `GuiTestProvider` — `layout-test-utils`' `renderWithProviders`
+  composes it, and a spec that builds its own wrapper or calls bare `render`
+  reaches for it directly. Do not inline another `<GuiProvider config={…}>`.
+- **The primitives are Tamagui-backed, not DOM elements, so their prop types are
+  not React's.** `aria-hidden` is plain `boolean` — NOT `Booleanish` — so
+  `aria-hidden="true"` is a type error and `aria-hidden` is correct. Likewise
+  they do not take an HTML `title`: a card heading that wants a native tooltip
+  is a `<span>`, not a `Label` (a `Label` with nothing to bind to was always
+  wrong; gui just made it fail loudly).
+- **`Checkbox` demands a name**, via `CheckboxProps`' union: exactly one of
+  `aria-label` / `aria-labelledby`, or `aria-hidden` for the decorative case
+  (`Prompts/buttons/AutoSendPrompt` — the Button owns the name and
+  `aria-pressed`, the box is a `tabIndex={-1}` glyph). The escape hatch requires
+  declaring the box invisible, so it cannot be used to skip labelling a real one.
+
+### TypeScript 7
+
+`client` typechecks on **`typescript@7.0.2`** — the native Go compiler, shipped
+under its own name. `@typescript/native-preview` (and its `tsgo` binary) was the
+preview channel for the same compiler and is REMOVED; the script is `tsc
+--noEmit` again. The swap is diagnostically a no-op, measured side by side on one
+tree rather than assumed — `tsgo` 7.0.0-dev.20260707.2 and `tsc` 7.0.2 both
+report **820**, in ~4.6s.
+
+The fleet-wide TS7 blocker does not apply here: `rollup-plugin-dts` crashes under
+TS7, but **there is no tsup in this repo** and `client/` is a Vite application
+that emits no declarations. The workspace LIBRARY packages keep `typescript ^5`
+because they DO emit `.d.ts` through rollup.
+
+### Baselines — read before you panic
+
+Both suites have been failing for a long time for reasons that predate any of
+this work, so an absolute count tells you nothing. Compare against the baseline:
+
+| | `origin/main` @ `498cb269` | after the 8.x convergence |
+|---|---|---|
+| Jest suites | 100 failed / 101 passed | **77 failed / 125 passed** |
+| Jest tests | 467 failed / 1661 passed (2128) | **515 failed / 1848 passed (2363)** |
+| `tsc --noEmit` (5.9.3) | 819 errors | **817 errors** |
+
+The convergence FIXED 23 suites and regressed none. Failed *tests* rose only
+because 235 more tests now execute — suites that used to die at import now run
+far enough to report their individual pre-existing failures. Those failures are
+one uniform shape: tests importing symbols the source never exported
+(`latestMessageFamily`, `resolveEndpointType`, `useFileHandling`,
+`updateFieldsInPlace`, …). The tests are ahead of the implementation.
+
 ### Getting off Tailwind — the measured size of the job
 
 Chat is the fleet's last Tailwind **v3** holdout (`tailwindcss ^3.4.1`). The
@@ -459,13 +514,24 @@ tree, not estimated:
 
 | | |
 |---|---|
-| Tailwind rules actually generated | **2,408** (157 KB minified) |
+| Tailwind rules actually generated | **2,414** (157 KB minified) |
 | Source files carrying Tailwind utilities | **838** |
 | Individual class-name instances | **25,340** |
 | Median utilities per file | 19 (densest: `Web/Sources.tsx`, 400) |
 
 Reproduce the count with the Tailwind CLI against `client/tailwind.config.cjs`
 plus a token scan of `client/src` + `packages/client/src`.
+
+**Re-measured after the 8.x convergence merge, and the answer did not move.**
+Converting eight primitives (Checkbox, Switch, Separator, Progress, Label,
+Accordion, Combobox, Select) onto `@hanzo/ui` did not shrink this: the rule count
+went 2,408 → 2,414 because main added markup faster than the primitives removed
+it. Every Tailwind dependency is still load-bearing, measured rather than
+assumed — `tailwindcss-radix` has 35 `radix-*` variant uses, `tailwindcss-animate`
+89 `animate-in`/`fade-in`/`zoom-*` uses, `tailwind-merge` backs `cn()` itself, and
+25 distinct `@radix-ui/*` packages are still imported directly across 38 files.
+So there is no subset of the footprint that can be deleted ahead of the markup.
+Removing Tailwind stays a whole-markup migration; it cannot be part-landed.
 
 The external blocker people assume exists does NOT: `@hanzogui/shell@8.0.3` is
 inline-styled for everything chat imports (see "One shell" above). Nothing
