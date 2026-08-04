@@ -19,12 +19,14 @@ export default function BrandCorner() {
   const localize = useLocalize();
 
   return (
-    <div className="flex items-center gap-0.5">
+    // The shared shell hard-codes a 34px trigger inline; min-* clamps it to the
+    // 44px pointer floor without touching the glyph or needing !important.
+    <div className="flex items-center gap-0.5 [&_[data-hanzo-shell]>button]:min-h-11 [&_[data-hanzo-shell]>button]:min-w-11">
       <a
         href="/"
         aria-label={localize('com_nav_home')}
         data-testid="brand-mark"
-        className="flex h-9 w-9 items-center justify-center rounded-xl text-text-primary hover:bg-surface-active-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-primary"
+        className="flex h-11 w-11 items-center justify-center rounded-xl text-text-primary hover:bg-surface-active-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-primary"
       >
         <HanzoMark size={18} />
       </a>

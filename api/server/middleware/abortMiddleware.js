@@ -11,6 +11,7 @@ const { spendTokens, spendStructuredTokens } = require('~/models/spendTokens');
 const { truncateText, smartTruncateText } = require('~/app/clients/prompts');
 const clearPendingReq = require('~/cache/clearPendingReq');
 const { sendError } = require('~/server/middleware/error');
+const { refusalText } = require('~/server/utils/refusal');
 const { saveMessage, getConvo } = require('~/models');
 const { abortRun } = require('./abortRun');
 
@@ -229,9 +230,18 @@ const handleAbortError = async (res, req, error, data) => {
     );
   }
 
-  let errorText = error?.message?.includes('"type"')
-    ? error.message
-    : 'An error occurred while processing your request. Please contact the Admin.';
+  /**
+   * The refusal keeps its STATUS and CODE. This used to pass a message through
+   * only when it happened to contain the substring `"type"` and otherwise throw
+   * the reason away, so an upstream 402 — a paywall — was stored as a sentence
+   * with nothing machine-readable in it and rendered as a generic failure.
+   * `server/utils/refusal.js` is the one place that decides what a failure is
+   * called; an unnamed one still gets the sentence below.
+   */
+  let errorText = refusalText(
+    error,
+    'An error occurred while processing your request. Please contact the Admin.',
+  );
 
   if (error?.type === ErrorTypes.INVALID_REQUEST) {
     errorText = `{"type":"${ErrorTypes.INVALID_REQUEST}"}`;

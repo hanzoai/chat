@@ -19,6 +19,12 @@ const GUEST_TOKEN_WINDOW = parsePositiveInt(process.env.GUEST_TOKEN_WINDOW, 60);
 // while `guestMessageLimiter` caps MESSAGES per real client IP at
 // GUEST_MESSAGE_MAX (prod: 2) and is not reset by minting a fresh token,
 // clearing cookies, or going incognito. Spend stays exactly where it was.
+//
+// The number is not the fix, though, and raising it again would not be either:
+// the client used to DISCARD a live guest bearer on every page load and mint a
+// fresh one, so this limiter was measuring page views instead of mint-spam. It
+// now reuses the token for its own lifetime (`hooks/useGuestAuth.ts`), which is
+// what makes 120 an anti-abuse ceiling rather than a browsing budget.
 const GUEST_TOKEN_MAX = parsePositiveInt(process.env.GUEST_TOKEN_MAX, 120);
 
 const windowMs = GUEST_TOKEN_WINDOW * 60 * 1000;

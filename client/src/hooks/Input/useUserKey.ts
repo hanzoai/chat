@@ -1,7 +1,9 @@
 import { useMemo, useCallback } from 'react';
+import { useAtomValue } from 'jotai';
 import { EModelEndpoint } from '@hanzochat/data-provider';
 import { useUserKeyQuery, useUpdateUserKeysMutation } from '@hanzochat/data-provider/react-query';
 import { useGetEndpointsQuery } from '~/data-provider';
+import store from '~/store';
 
 const useUserKey = (endpoint: string) => {
   const { data: endpointsConfig } = useGetEndpointsQuery();
@@ -15,7 +17,11 @@ const useUserKey = (endpoint: string) => {
   }
 
   const updateKey = useUpdateUserKeysMutation();
-  const checkUserKey = useUserKeyQuery(keyName);
+  /* Member-only route: a guest bearer is refused, so asking as one only logs a 401. */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
+  const checkUserKey = useUserKeyQuery(keyName, {
+    enabled: isAuthenticated,
+  });
 
   const getExpiry = useCallback(() => {
     if (checkUserKey.data) {

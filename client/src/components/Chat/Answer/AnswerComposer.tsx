@@ -21,7 +21,7 @@ const CATALOG_ENDPOINT = 'Hanzo';
 
 /** One trigger shape for both pickers. */
 const TRIGGER =
-  'flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover';
+  'flex min-h-11 items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover';
 
 export interface AnswerComposerProps {
   model: string;
@@ -130,7 +130,7 @@ export default function AnswerComposer({
               submit();
             }
           }}
-          className="max-h-[200px] w-full resize-none bg-transparent px-4 pt-3.5 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
+          className="max-h-[200px] min-h-11 w-full resize-none bg-transparent px-4 pt-3.5 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
         />
 
         <div className="flex items-center gap-1.5 px-2 pb-2 pt-1">
@@ -178,7 +178,7 @@ export default function AnswerComposer({
               aria-label={localize(isLoading ? 'com_answer_stop' : 'com_answer_send')}
               onClick={isLoading ? onStop : submit}
               disabled={!isLoading && !text.trim()}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-text-primary text-surface-primary transition-opacity disabled:opacity-30"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-text-primary text-surface-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
             >
               {isLoading ? (
                 <Square className="size-3.5 fill-current" aria-hidden="true" />

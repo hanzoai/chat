@@ -194,6 +194,19 @@ export type TBackupCode = {
 
 export type TUser = {
   id: string;
+  /**
+   * The Hanzo IAM subject (`sub`) — the SAME id hanzo.ai and cloud.hanzo.ai know this
+   * user by, and the only identifier that is stable ACROSS properties.
+   *
+   * `id` above is chat's own row id: it names the user's record in chat's store and
+   * nowhere else, so keying analytics on it splits one user into a separate identity
+   * per surface. Present only for OIDC logins (prod is OIDC-only); absent for a local
+   * dev account, which genuinely has no IAM identity.
+   *
+   * Already returned by GET /v1/chat/user (getUserController sends the whole document
+   * minus the credential fields) — this declaration only makes it visible to TypeScript.
+   */
+  openidId?: string;
   username: string;
   email: string;
   name: string;

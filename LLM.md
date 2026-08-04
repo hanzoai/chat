@@ -106,8 +106,15 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 - Probes: `/v1/chat/health`
 - Secret: `chat-secrets` (JWT_SECRET, CREDS_KEY/IV)
 - Store: embedded SQLite on the `chat-app-db` PVC — no database service
-- CI: `docker-publish.yml` -> `hanzoai/chat:latest` on Docker Hub
-- Image: `hanzoai/chat:latest` (amd64 only)
+- CI: `.hanzo/workflows/deploy.yml` on the `hanzo-build-linux-amd64` git-runners
+  → `ghcr.io/hanzoai/chat`. It BUILDS only; choosing which tag runs is a
+  reviewed change in `hanzoai/universe`. The `.github/workflows/*` files here
+  are upstream residue — no GitHub-visible runner carries our label, so they
+  never execute, and Docker Hub is not a destination.
+- Image: `ghcr.io/hanzoai/chat:<semver>` (linux/amd64). The semver is derived by
+  `hanzoai/ci/.github/actions/imgver@v1` from this repo's `package.json` against
+  the registry floor — never typed, never a sha. A `sha-<7>` tag is pushed
+  alongside for forensics and is NOT what universe pins.
 
 ## Docker Build Notes
 

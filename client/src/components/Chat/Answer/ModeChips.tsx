@@ -51,7 +51,7 @@ export default function ModeChips({
           aria-pressed={mode === m.id}
           onClick={() => setMode(m.id)}
           className={cn(
-            'shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors',
+            'inline-flex min-h-11 shrink-0 items-center rounded-full px-3 py-1.5 text-sm transition-colors',
             mode === m.id
               ? 'bg-text-primary font-medium text-surface-primary'
               : 'text-text-secondary hover:bg-surface-hover',

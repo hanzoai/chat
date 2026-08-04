@@ -1,31 +1,10 @@
 import React from 'react';
 import { Provider } from 'jotai';
 import { renderHook } from '@testing-library/react';
-import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
-import type { TUser } from '@hanzochat/data-provider';
 
-const mockUseHasAccess = jest.fn();
 const mockUseMCPServersQuery = jest.fn();
 const mockUseMCPToolsQuery = jest.fn();
-const mockInstallCloudFrontImageRetry = jest.fn(() => jest.fn());
-const mockGetTokenHeader = jest.fn();
-
-jest.mock('@hanzochat/client', () => ({
-  installCloudFrontImageRetry: (startupConfig: unknown, options: unknown) =>
-    mockInstallCloudFrontImageRetry(startupConfig, options),
-}));
-
-jest.mock('@hanzochat/data-provider', () => {
-  const actual = jest.requireActual('@hanzochat/data-provider');
-  return {
-    ...actual,
-    getTokenHeader: () => mockGetTokenHeader(),
-  };
-});
-
-jest.mock('~/hooks', () => ({
-  useHasAccess: (args: unknown) => mockUseHasAccess(args),
-}));
+const mockSpeechSettingsInit = jest.fn();
 
 jest.mock('~/data-provider', () => ({
   useMCPServersQuery: (config: unknown) => mockUseMCPServersQuery(config),
@@ -34,7 +13,7 @@ jest.mock('~/data-provider', () => ({
 
 jest.mock('../useSpeechSettingsInit', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: (isAuthenticated: boolean) => mockSpeechSettingsInit(isAuthenticated),
 }));
 
 jest.mock('~/utils/timestamps', () => ({
@@ -48,115 +27,83 @@ jest.mock('react-gtm-module', () => ({
 
 import useAppStartup from '../useAppStartup';
 
-const mockUser = {
-  id: 'user-123',
-  username: 'testuser',
-  email: 'test@example.com',
-  name: 'Test User',
-  avatar: '',
-  role: 'USER',
-  provider: 'local',
-  emailVerified: true,
-  createdAt: '2023-01-01T00:00:00.000Z',
-  updatedAt: '2023-01-01T00:00:00.000Z',
-} as TUser;
-
 const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Provider>{children}</Provider>
 );
 
-describe('useAppStartup — MCP permission gating', () => {
+const LOADED_SERVERS = { data: { 'test-server': { url: 'http://test' } }, isLoading: false };
+
+/**
+ * A GUEST holds a token and a user object but is NOT a member: the speech-config
+ * and MCP routes refuse its bearer with a 401. Gating on `!!user` therefore fired
+ * both on every anonymous load and logged a console error for each; the gate has
+ * to be the real session.
+ */
+describe('useAppStartup — member-only startup queries', () => {
   beforeEach(() => {
-    mockInstallCloudFrontImageRetry.mockClear();
+    jest.clearAllMocks();
     mockUseMCPServersQuery.mockReturnValue({ data: undefined, isLoading: false });
     mockUseMCPToolsQuery.mockReturnValue({ data: undefined, isLoading: false });
   });
 
-  it('checks the MCP_SERVERS.USE permission via useHasAccess', () => {
-    mockUseHasAccess.mockReturnValue(false);
-
-    renderHook(() => useAppStartup({ startupConfig: undefined, user: mockUser }), { wrapper });
-
-    expect(mockUseHasAccess).toHaveBeenCalledWith({
-      permissionType: PermissionTypes.MCP_SERVERS,
-      permission: Permissions.USE,
+  it('passes the real session flag to speech settings, not the presence of a user', () => {
+    renderHook(() => useAppStartup({ startupConfig: undefined, isAuthenticated: false }), {
+      wrapper,
     });
+    expect(mockSpeechSettingsInit).toHaveBeenCalledWith(false);
   });
 
-  it('suppresses all MCP queries when user lacks MCP_SERVERS.USE', () => {
-    mockUseHasAccess.mockReturnValue(false);
+  it('suppresses the tools query for a guest even when servers are loaded', () => {
+    mockUseMCPServersQuery.mockReturnValue(LOADED_SERVERS);
 
-    renderHook(() => useAppStartup({ startupConfig: undefined, user: mockUser }), { wrapper });
+    renderHook(() => useAppStartup({ startupConfig: undefined, isAuthenticated: false }), {
+      wrapper,
+    });
 
-    expect(mockUseMCPServersQuery).toHaveBeenCalledWith({ enabled: false });
     expect(mockUseMCPToolsQuery).toHaveBeenCalledWith({ enabled: false });
   });
 
-  it('enables servers query and tools query when permission granted, servers loaded, and user present', () => {
-    mockUseHasAccess.mockReturnValue(true);
-    mockUseMCPServersQuery.mockReturnValue({
-      data: { 'test-server': { url: 'http://test' } },
-      isLoading: false,
+  it('enables the tools query for a member once servers are loaded', () => {
+    mockUseMCPServersQuery.mockReturnValue(LOADED_SERVERS);
+
+    renderHook(() => useAppStartup({ startupConfig: undefined, isAuthenticated: true }), {
+      wrapper,
     });
 
-    renderHook(() => useAppStartup({ startupConfig: undefined, user: mockUser }), { wrapper });
-
-    expect(mockUseMCPServersQuery).toHaveBeenCalledWith({ enabled: true });
+    expect(mockSpeechSettingsInit).toHaveBeenCalledWith(true);
     expect(mockUseMCPToolsQuery).toHaveBeenCalledWith({ enabled: true });
   });
 
-  it('suppresses tools query when permission granted but user prop is undefined', () => {
-    mockUseHasAccess.mockReturnValue(true);
-    mockUseMCPServersQuery.mockReturnValue({
-      data: { 'test-server': { url: 'http://test' } },
-      isLoading: false,
-    });
-
-    renderHook(() => useAppStartup({ startupConfig: undefined, user: undefined }), { wrapper });
-
-    expect(mockUseMCPServersQuery).toHaveBeenCalledWith({ enabled: true });
-    expect(mockUseMCPToolsQuery).toHaveBeenCalledWith({ enabled: false });
-  });
-
-  it('suppresses tools query when permission granted but no servers loaded', () => {
-    mockUseHasAccess.mockReturnValue(true);
+  it('suppresses the tools query for a member with no servers loaded', () => {
     mockUseMCPServersQuery.mockReturnValue({ data: {}, isLoading: false });
 
-    renderHook(() => useAppStartup({ startupConfig: undefined, user: mockUser }), { wrapper });
+    renderHook(() => useAppStartup({ startupConfig: undefined, isAuthenticated: true }), {
+      wrapper,
+    });
 
-    expect(mockUseMCPServersQuery).toHaveBeenCalledWith({ enabled: true });
     expect(mockUseMCPToolsQuery).toHaveBeenCalledWith({ enabled: false });
   });
 
-  it('suppresses tools query while servers are still loading', () => {
-    mockUseHasAccess.mockReturnValue(true);
+  it('suppresses the tools query while servers are still loading', () => {
     mockUseMCPServersQuery.mockReturnValue({ data: undefined, isLoading: true });
 
-    renderHook(() => useAppStartup({ startupConfig: undefined, user: mockUser }), { wrapper });
+    renderHook(() => useAppStartup({ startupConfig: undefined, isAuthenticated: true }), {
+      wrapper,
+    });
 
     expect(mockUseMCPToolsQuery).toHaveBeenCalledWith({ enabled: false });
   });
 
-  it('installs CloudFront image retry from startup config', () => {
-    mockUseHasAccess.mockReturnValue(false);
-    const startupConfig = {
-      cloudFront: {
-        cookieRefresh: {
-          endpoint: '/v1/chat/auth/cloudfront/refresh',
-          domain: 'https://cdn.example.com',
-        },
-      },
-    } as never;
+  it('sets the document title from startup config', () => {
+    renderHook(
+      () =>
+        useAppStartup({
+          startupConfig: { appTitle: 'Hanzo Chat' } as never,
+          isAuthenticated: true,
+        }),
+      { wrapper },
+    );
 
-    renderHook(() => useAppStartup({ startupConfig, user: mockUser }), { wrapper });
-
-    expect(mockInstallCloudFrontImageRetry).toHaveBeenCalledWith(startupConfig, {
-      getAuthorizationHeader: expect.any(Function),
-    });
-    const [, options] = mockInstallCloudFrontImageRetry.mock.calls[0];
-    mockGetTokenHeader.mockReturnValue('Bearer app-token');
-
-    expect(options.getAuthorizationHeader()).toBe('Bearer app-token');
-    expect(mockGetTokenHeader).toHaveBeenCalledTimes(1);
+    expect(document.title).toBe('Hanzo Chat');
   });
 });

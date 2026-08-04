@@ -19,11 +19,12 @@ const buttonVariants = cva(
         // Monochrome primary CTA: adaptive white-on-dark / black-on-light (matches default).
         submit: 'bg-primary text-primary-foreground hover:bg-primary/90',
       },
+      // 44px is the pointer-target floor: the box grows, the glyph inside does not.
       size: {
-        default: 'h-10 px-4 py-2',
+        default: 'h-11 px-4 py-2',
         sm: 'h-9 rounded-lg px-3',
         lg: 'h-11 rounded-lg px-8',
-        icon: 'size-10',
+        icon: 'size-11',
       },
     },
     defaultVariants: {

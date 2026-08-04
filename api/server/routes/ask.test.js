@@ -93,13 +93,15 @@ describe('POST /v1/chat/ask', () => {
     mockResolveTenantBearer.mockReturnValue(null);
     const res = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
     expect(res.status).toBe(401);
-    // This caller HAS a session — only the forwarded IAM bearer went stale, and
-    // that credential lives ~1h with no durable refresh. `code` drives the
-    // client's "Sign in" button, so carrying it here would put that button in
-    // front of a signed-in customer, which is the refusal they cannot act on.
-    // They get the honest cause instead; the client re-mints and retries once.
-    expect(res.body.code).toBeUndefined();
-    expect(res.body.error).toMatch(/session needs refreshing/);
+    // This caller HAS a session, and reaching here means renewal ALREADY ran and
+    // failed (`currentBearer`), which deletes the refresh credential from the
+    // session. Nothing in that session can recover — so the honest answer is "sign
+    // in again", with the button that actually performs it. It previously said
+    // "reload the page", advice that could not work once durable refresh existed:
+    // a reload replays a session whose refresh credential was just discarded.
+    expect(res.body.code).toBe('ASK_SIGNIN_REQUIRED');
+    expect(res.body.error).toMatch(/sign in again/i);
+    expect(res.body.error).not.toMatch(/reload the page/i);
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
@@ -246,12 +248,14 @@ describe('POST /v1/chat/ask', () => {
     expect(noBearer.status).toBe(401);
     expect(noBearer.body.code).toBe('ASK_SIGNIN_REQUIRED');
 
-    // The same refusal for a caller who IS signed in must not carry it: their
-    // credential expired, they did not fail to have one.
+    // A caller who IS signed in carries it too, now that renewal runs first: their
+    // credential expired AND `currentBearer` could not renew it, which discards the
+    // refresh credential. Nothing in that session can recover, so signing in again
+    // is precisely what fixes it — and the button is the only way to offer that.
     mockUser = { id: 'u1', provider: 'openid', openidId: 'sub-1' };
     const staleBearer = await request(app()).post('/v1/chat/ask').send({ q: 'hi' });
     expect(staleBearer.status).toBe(401);
-    expect(staleBearer.body.code).toBeUndefined();
+    expect(staleBearer.body.code).toBe('ASK_SIGNIN_REQUIRED');
 
     mockUser = { id: 'guest_1', guest: true };
     process.env.GUEST_API_KEY = 'hk-guest';

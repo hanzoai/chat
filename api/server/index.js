@@ -29,6 +29,7 @@ const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
 const configureIamLogin = require('./iamLogin');
 const { getAppConfig } = require('./services/Config');
+const { resolveAllowedOrigin } = require('./utils/allowedOrigins');
 const staticCache = require('./utils/staticCache');
 const noIndex = require('./middleware/noIndex');
 const { seedDatabase } = require('~/models');
@@ -120,14 +121,9 @@ const startServer = async () => {
 
   app.use(mongoSanitize());
 
-  // CORS: restrict to known origins instead of wildcard.
-  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || process.env.DOMAIN_CLIENT || '')
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-  const hanzoOriginRe =
-    /^https:\/\/([a-z0-9-]+\.)?(hanzo\.(ai|chat|bot|id|team|app|build)|lux\.(chat|network|id)|zoo\.(ngo|network))$/;
-
+  // CORS: an exact list of first-party origins, from configuration.
+  // `server/utils/allowedOrigins` is the one place that decides, and it explains
+  // why this may never be a subdomain pattern.
   app.use(
     cors({
       origin: (origin, cb) => {
@@ -135,13 +131,7 @@ const startServer = async () => {
         if (!origin) {
           return cb(null, true);
         }
-        if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
-          return cb(null, origin);
-        }
-        if (hanzoOriginRe.test(origin)) {
-          return cb(null, origin);
-        }
-        return cb(null, false);
+        return cb(null, resolveAllowedOrigin(origin) ?? false);
       },
       credentials: true,
     }),

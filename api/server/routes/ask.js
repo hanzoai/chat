@@ -127,14 +127,14 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
   const credential = await resolveCredential(req);
   if (!credential) {
     // Honest, actionable: the surface renders for everyone, but an answer is a
-    // real metered cloud call and needs a real principal behind it.
-    // SIGNIN_REQUIRED drives the client's "Sign in" button, so it must be sent
-    // ONLY to a caller who actually has no session. A signed-in user whose
-    // forwarded IAM bearer merely expired gets an honest refresh message and no
-    // button — telling them to sign in is both wrong and unactionable.
+    // real metered cloud call and needs a real principal behind it. SIGNIN_REQUIRED
+    // drives the client's "Sign in" button; needsSignIn is the ONE place that
+    // decides who earns it. Reaching here means resolveCredential found no bearer
+    // AND `currentBearer` could not renew one, so a signed-in caller's session is
+    // spent too — the button is the only thing that helps either of them.
     const signedIn = req.user != null && !isGuest(req);
     const body = { error: upstreamMessage(401, signedIn) };
-    if (!signedIn) {
+    if (needsSignIn(401, signedIn)) {
       body.code = SIGNIN_REQUIRED;
     }
     return res.status(401).json(body);
@@ -228,7 +228,7 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
     const status = relayStatus(cloudRes.status);
     const signedIn = req.user != null && !isGuest(req);
     const body = { error: upstreamMessage(status, signedIn) };
-    if ((status === 401 || status === 403) && !signedIn) {
+    if (needsSignIn(status, signedIn)) {
       body.code = SIGNIN_REQUIRED;
     }
     return res.status(status).json(body);

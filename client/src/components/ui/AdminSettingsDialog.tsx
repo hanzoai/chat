@@ -240,7 +240,7 @@ const AdminSettingsDialog: React.FC<AdminSettingsDialogProps> = ({
                             <span>{localize('com_ui_admin_access_warning')}</span>
                             {'\n'}
                             <a
-                              href="https://docs.hanzo.ai/chat"
+                              href="https://docs.hanzo.ai/docs/chat"
                               target="_blank"
                               rel="noreferrer"
                               className="text-blue-500 underline"

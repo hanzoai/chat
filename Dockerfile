@@ -44,14 +44,23 @@ RUN \
 
 COPY --chown=node:node . .
 
-# Bake the Umami analytics website id into the Vite build so the index.html
-# %VITE_ANALYTICS_SITE_ID% placeholder is substituted at build time. Vite's HTML
-# env replacement (loadEnv, envPrefix includes VITE_) picks this up from process.env.
-# Without it the tracker POSTs a literal "%VITE_ANALYTICS_SITE_ID%" as the website
-# id and analytics.hanzo.ai/api/send answers 400. Public site identifier (it appears
-# in the served HTML), safe to default here; override with --build-arg if needed.
-ARG VITE_ANALYTICS_SITE_ID=2f72b944-f1f8-4d2d-8f6c-26063bde0d1a
-ENV VITE_ANALYTICS_SITE_ID=$VITE_ANALYTICS_SITE_ID
+# Bake the publishable ingest key into the client bundle. Build-time by necessity:
+# Vite inlines import.meta.env at build, so a value delivered at runtime cannot
+# reach an already-compiled bundle.
+#
+# Without it every beacon reaches cloud unkeyed, takes the anonymous lane, and has
+# its track/identify/group dropped — answered 200, so nothing surfaces the loss.
+#
+# EVENT_INGEST_KEY is the name in KMS and on the --build-arg; VITE_ is added here
+# because Vite's envPrefix is what makes a var inlinable. The prefix is a property
+# of this build, so it is applied in this build file and the secret store keeps the
+# ONE plain name. No default: a credential is supplied or it is absent, never
+# hardcoded. Absent → the anonymous lane, same as before.
+#
+# (This slot previously carried a Umami VITE_ANALYTICS_SITE_ID whose index.html
+# placeholder no longer exists — telemetry is the ONE @hanzo/event client.)
+ARG EVENT_INGEST_KEY
+ENV VITE_EVENT_INGEST_KEY=$EVENT_INGEST_KEY
 
 # `&&`, not `;`. With `;` the RUN exits with the status of the LAST command, so a
 # failed `pnpm run frontend` was masked by a successful `pnpm store prune` and the

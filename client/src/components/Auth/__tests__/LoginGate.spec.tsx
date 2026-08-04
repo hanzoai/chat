@@ -11,11 +11,14 @@ jest.mock('~/utils/login', () => ({
   startHanzoLogin: () => mockStartHanzoLogin(),
 }));
 
-import { LOGIN_REQUIRED, requireLogin } from '~/utils/login';
+import { LOGIN_REQUIRED, requireLogin, takePendingLogin } from '~/utils/login';
 import LoginGate from '../LoginGate';
 
 describe('LoginGate', () => {
-  beforeEach(() => mockStartHanzoLogin.mockClear());
+  beforeEach(() => {
+    mockStartHanzoLogin.mockClear();
+    takePendingLogin();
+  });
 
   it('stays closed until a request is refused', () => {
     render(<LoginGate />);
@@ -49,6 +52,38 @@ describe('LoginGate', () => {
     });
 
     expect(screen.getByText('com_auth_login_anonymous_title')).toBeInTheDocument();
+  });
+
+  it('explains a refused guest mint rather than leaving the visitor guessing', () => {
+    render(<LoginGate />);
+
+    act(() => requireLogin('unavailable'));
+
+    expect(screen.getByText('com_auth_login_unavailable_title')).toBeInTheDocument();
+    expect(screen.getByText('com_auth_login_unavailable_message')).toBeInTheDocument();
+  });
+
+  /**
+   * Auth resolves before the shell paints — a refused mint answers while `Root` is
+   * still showing its spinner — so a refusal dispatched then reached no listener
+   * at all and the visitor got a composer-less page with no error.
+   */
+  it('shows a refusal that landed before it mounted', () => {
+    act(() => requireLogin('unavailable'));
+
+    render(<LoginGate />);
+
+    expect(screen.getByText('com_auth_login_unavailable_title')).toBeInTheDocument();
+  });
+
+  it('does not re-open a dismissed gate when it remounts', () => {
+    act(() => requireLogin('unavailable'));
+    const { unmount } = render(<LoginGate />);
+    unmount();
+
+    render(<LoginGate />);
+
+    expect(screen.queryByText('com_auth_login_unavailable_title')).not.toBeInTheDocument();
   });
 
   it('starts the Hanzo IAM login from the gate button', async () => {

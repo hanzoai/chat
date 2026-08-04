@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { HanzoHeader, HanzoPreFooterCTA, HanzoFooter } from '@hanzogui/shell';
+import { useLandingPlans } from '~/utils/plans';
 import { getHanzoIamSdk } from '~/utils/iam';
 
 /* ------------------------------------------------------------------ */
@@ -147,7 +148,7 @@ function CtaPair({ onSignIn }: { onSignIn: (e: React.MouseEvent) => void }) {
         <IconArrowRight />
       </a>
       <a
-        href="https://docs.hanzo.ai/chat"
+        href="https://docs.hanzo.ai/docs/chat"
         target="_blank"
         rel="noopener noreferrer"
         className={CTA}
@@ -170,6 +171,9 @@ function CtaPair({ onSignIn }: { onSignIn: (e: React.MouseEvent) => void }) {
 /* ------------------------------------------------------------------ */
 
 export default function LandingPage() {
+  // The plans the strip below advertises, from the catalog rather than restated.
+  const landingPlans = useLandingPlans();
+
   // Login is the @hanzo/iam redirect-PKCE flow.
   const handleLoginClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -409,12 +413,17 @@ zen5: Searched the web — 21 sources. Short version:
             Shared AI usage across chat, the app builder, and the API — plus
             pay-as-you-go beyond your plan.
           </p>
-          <div className="mx-auto grid max-w-3xl gap-6 sm:grid-cols-3">
-            {[
-              { name: 'Plus', price: '$20', blurb: 'For everyday chat', featured: false },
-              { name: 'Pro', price: '$100', blurb: 'For heavy daily use', featured: true },
-              { name: 'Max', price: '$200', blurb: 'For power users & teams', featured: false },
-            ].map(({ name, price, blurb, featured }) => (
+          {/* Read from the catalog, never restated. Three literals lived here —
+              Pro $20, Plus $100, Max $200 — and by the time anyone looked all
+              three were wrong: Pro is $49, Max is $99, and Plus was retired.
+              Every card links to hanzo.ai/pricing, so a visitor read one price
+              here and a different one the moment they clicked. */}
+          {/* Responsive, not a fixed column count: an inline gridTemplateColumns
+              would put four cards side by side on a phone. The ladder grew from
+              three tiers to four, so the old sm:grid-cols-3 no longer fits either
+              — the fourth would wrap alone underneath. */}
+          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {landingPlans.map(({ name, price, blurb, featured }) => (
               <a
                 key={name}
                 href="https://hanzo.ai/pricing"

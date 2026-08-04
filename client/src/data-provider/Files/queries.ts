@@ -41,6 +41,9 @@ export const useGetAgentFiles = <TData = t.TFile[]>(
 export const useGetFileConfig = <TData = t.FileConfig>(
   config?: UseQueryOptions<t.FileConfig, unknown, TData>,
 ): QueryObserverResult<TData, unknown> => {
+  /* Member-only route: it refuses a guest bearer, so asking as one only logs a 401.
+     Every caller already falls back to defaultFileConfig when this has no data. */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
   return useQuery<t.FileConfig, unknown, TData>(
     [QueryKeys.fileConfig],
     () => dataService.getFileConfig(),
@@ -49,6 +52,7 @@ export const useGetFileConfig = <TData = t.FileConfig>(
       refetchOnReconnect: false,
       refetchOnMount: false,
       ...config,
+      enabled: (config?.enabled ?? true) === true && isAuthenticated,
     },
   );
 };

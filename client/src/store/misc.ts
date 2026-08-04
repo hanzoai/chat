@@ -41,6 +41,14 @@ const conversationAttachmentsSelector = atomFamily((conversationId: string | und
 
 const queriesEnabled = atom<boolean>(true);
 
+/**
+ * Whether this visitor holds a real signed-in session. A GUEST does not: it has a
+ * token and a user object, but the member-only routes refuse its bearer. Mirrored
+ * here by AuthContext so a query hook can gate on it without importing the context
+ * (which imports the data-provider that defines those hooks).
+ */
+const isAuthenticated = atom<boolean>(false);
+
 const isEditingBadges = atom<boolean>(false);
 
 const chatBadges = atomWithLocalStorage<Pick<BadgeItem, 'id'>[]>('chatBadges', [
@@ -55,6 +63,7 @@ export default {
   messageAttachmentsMap,
   conversationAttachmentsSelector,
   queriesEnabled,
+  isAuthenticated,
   isEditingBadges,
   chatBadges,
 };

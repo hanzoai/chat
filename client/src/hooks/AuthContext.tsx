@@ -9,7 +9,7 @@ import {
   createContext,
 } from 'react';
 import { debounce } from 'lodash';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { useNavigate } from 'react-router-dom';
 import { setTokenHeader, SystemRoles } from '@hanzochat/data-provider';
 import type * as t from '@hanzochat/data-provider';
@@ -22,7 +22,7 @@ import {
   useGetStartupConfig,
 } from '~/data-provider';
 import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
-import { trySilentSso } from '~/utils/login';
+import { requireLogin } from '~/utils/login';
 import useGuestAuth from './useGuestAuth';
 import useTimeout from './useTimeout';
 import store from '~/store';
@@ -41,6 +41,8 @@ const AuthContextProvider = ({
   const [error, setError] = useState<string | undefined>(undefined);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isGuest, setIsGuest] = useState<boolean>(false);
+  const setAuthenticatedAtom = useSetAtom(store.isAuthenticated);
+  useEffect(() => setAuthenticatedAtom(isAuthenticated), [isAuthenticated, setAuthenticatedAtom]);
   const logoutRedirectRef = useRef<string | undefined>(undefined);
 
   /**
@@ -149,8 +151,19 @@ const AuthContextProvider = ({
 
   const acquireGuest = useCallback(async (): Promise<boolean> => {
     const session = await acquireGuestToken();
-    if (!session || sessionRef.current === 'live') {
+    if (sessionRef.current === 'live') {
       /* A real session landed while the guest token was in flight — drop it. */
+      return false;
+    }
+    if (!session) {
+      /**
+       * The mint was REFUSED (per-IP quota, or guest chat off server-side). That
+       * leaves this visitor with no product at all, and it used to pass silently:
+       * `Root` fell through to the marketing page, so a 429 on an auxiliary token
+       * read as a site with no composer and no explanation. Say it, and offer the
+       * one thing that resolves it.
+       */
+      requireLogin('unavailable');
       return false;
     }
     setUser(session.user);
@@ -175,28 +188,19 @@ const AuthContextProvider = ({
   guestFallbackRef.current = () => {
     sessionRef.current = 'none';
 
-    // No LOCAL session — which is not the same as no session. Ask the shared
-    // issuer first: a user signed in at hanzo.id (from hanzo.app, the console,
-    // anywhere) should arrive here already signed in, and only an OIDC
-    // `prompt=none` can carry that across registrable domains. This runs BEFORE
-    // the guest fallback on purpose — adopting a real session with real credits
-    // always beats minting an anonymous one, and the reverse order would have
-    // handed a funded customer a 2-message trial.
-    void trySilentSso().then((adopted) => {
-      if (adopted != null && adopted !== '') {
-        // The token-updated event drives setUserContext; nothing more to do.
-        return;
-      }
-      if (startupConfig?.allowGuestChat === true) {
-        void acquireGuest().then((ok) => {
-          if (!ok) {
-            setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
-          }
-        });
-        return;
-      }
-      setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
-    });
+    // No session to adopt from hanzo.id: it serves `frame-ancestors 'none'`, so a
+    // hidden-iframe `prompt=none` authorize can never load, and no cookie spans
+    // two registrable domains. Signing in is the interactive redirect, and only
+    // that. Until then this visitor is a guest.
+    if (startupConfig?.allowGuestChat === true) {
+      void acquireGuest().then((ok) => {
+        if (!ok) {
+          setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
+        }
+      });
+      return;
+    }
+    setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
   };
 
   const silentRefresh = useCallback(() => {
