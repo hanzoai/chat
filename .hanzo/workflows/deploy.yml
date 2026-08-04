@@ -64,9 +64,22 @@ jobs:
       # pipeline builds. This repo builds bespoke (it is not on the reusable), so
       # the fetch is spelled out here.
       #
-      # Absence is ANNOUNCED, not swallowed: it is the exact silent degradation
-      # this key exists to fix. Non-fatal on purpose — a KMS hiccup must not block
-      # shipping the product — but it lands as a red annotation on the run.
+      # ABSENCE IS FATAL, and it says which call failed.
+      #
+      # This step used to end each guard with `exit 0`, on the reasoning that a KMS
+      # hiccup must not block shipping the product. It never behaved that way: the
+      # runner invokes `run:` under `bash -e`, so the first curl that returns >= 400
+      # aborted the step before any guard could print. That is exactly what run 7 —
+      # the commit that added the key — did: it died as `exitcode '22'`, curl's
+      # "HTTP >= 400", with no message naming which of the two calls failed, and the
+      # release was simply missing while main looked fixed.
+      #
+      # So the guards now RUN (each curl is rescued so the check, not the abort,
+      # decides) and each one FAILS THE BUILD with a reason. Fail-closed is the
+      # honest policy for this credential: an unkeyed bundle is not a degraded
+      # build, it is a build whose telemetry is filed under the reserved `$public`
+      # tenant that our own org cannot read — while ingest answers 200 and every
+      # dashboard reads zero. A missing image is loud; a keyless one is not.
       - name: Fetch the ingest key from KMS
         id: ingest
         env:
@@ -76,15 +89,15 @@ jobs:
         run: |
           set -uo pipefail
           if [ -z "${KMS_CLIENT_ID:-}" ] || [ -z "${KMS_CLIENT_SECRET:-}" ]; then
-            echo "::error::KMS credentials absent — shipping a bundle with no ingest key; every track/identify/group it emits will be dropped"
-            exit 0
+            echo "::error::KMS credentials absent (KMS_CLIENT_ID/KMS_CLIENT_SECRET) — refusing to ship a bundle with no ingest key"
+            exit 1
           fi
-          TOKEN=$(curl -sf "$KMS_ENDPOINT/v1/kms/auth/login" \
+          TOKEN=$(curl -sS -m 30 "$KMS_ENDPOINT/v1/kms/auth/login" \
             -H 'Content-Type: application/json' \
             -d "{\"clientId\":\"$KMS_CLIENT_ID\",\"clientSecret\":\"$KMS_CLIENT_SECRET\"}" \
-            | jq -r '.accessToken // empty')
+            2>/dev/null | jq -r '.accessToken // empty' || true)
           if [ -z "$TOKEN" ]; then
-            echo "::error::KMS login failed — shipping a bundle with no ingest key"; exit 0
+            echo "::error::KMS login failed at $KMS_ENDPOINT/v1/kms/auth/login — refusing to ship a bundle with no ingest key"; exit 1
           fi
           # KMS is embedded in hanzoai/cloud now (HIP-0106): the org comes from the
           # TOKEN, not the url, and the body is flat {"name","env","value"}. The old
@@ -92,10 +105,10 @@ jobs:
           # `curl -sf` turns that into "" -- indistinguishable from a missing secret.
           # Worse, the standalone instance still holds a STALE key that cloud rejects
           # at ingest with 403, so reading the old host ships a key that cannot write.
-          V=$(curl -sf "$KMS_ENDPOINT/v1/kms/secrets/deploy/EVENT_INGEST_KEY?env=prod" \
-            -H "Authorization: Bearer $TOKEN" | jq -r '.value // empty')
+          V=$(curl -sS -m 30 "$KMS_ENDPOINT/v1/kms/secrets/deploy/EVENT_INGEST_KEY?env=prod" \
+            -H "Authorization: Bearer $TOKEN" 2>/dev/null | jq -r '.value // empty' || true)
           if [ -z "$V" ]; then
-            echo "::error::EVENT_INGEST_KEY absent from KMS (hanzo/deploy env=prod) — shipping a bundle with no ingest key"; exit 0
+            echo "::error::EVENT_INGEST_KEY absent from KMS (path deploy, env prod) — refusing to ship a bundle with no ingest key"; exit 1
           fi
           echo "::add-mask::$V"
           echo "key=$V" >> "$GITHUB_OUTPUT"

@@ -2,11 +2,26 @@
 # default branch and enqueues one build per entry at platform.hanzo.ai/v1/runner.
 # No `images:` anywhere in a repo means the orchestrator skips it silently.
 #
-# Matches .hanzo/workflows/deploy.yml on context, dockerfile and repo, so either
-# lane produces the same image. Tag is derived by hanzoai/ci imgver from
-# client/package.json, never set here.
+# What builds this image TODAY is `.hanzo/workflows/deploy.yml`, run by the forge
+# on the git-runner fleet — it produced 1.0.52 … 1.0.58. Nothing has read the
+# block below: no `sha-<sha7>-amd64-chat` tag exists at ghcr for any commit here.
+#
+# The two lanes match on context, dockerfile and repo — and NOT on the one input
+# that decides whether this product is measurable. build_on_push's enqueue body
+# carries no build-arg field, so a build it drives cannot receive
+# EVENT_INGEST_KEY and would ship the unkeyed bundle three releases went into
+# fixing. `build_secrets` is the shared hanzoai/ci reusable's contract (each name
+# is read from KMS and passed as `--build-arg <name>=<value>`); build_on_push does
+# not implement it yet, so this block is a declaration of intent, not a second way
+# to build. Tag is derived by hanzoai/ci imgver from client/package.json, never
+# set here.
 images:
   - name: chat
     context: .
     dockerfile: Dockerfile
     repo: ghcr.io/hanzoai/chat
+    # KMS path `deploy`, env `prod`. The KMS name IS the build-arg name — one
+    # name, one home — and the Dockerfile adds Vite's VITE_ prefix, because the
+    # prefix is a property of this build and not of the secret.
+    build_secrets:
+      - EVENT_INGEST_KEY
