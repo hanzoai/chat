@@ -376,10 +376,14 @@ Chat used to carry TWO cross-app headers: `@hanzogui/shell`'s on the landing and
 `@hanzo/ui/navigation`'s in the app. The second was resolved with `require()`
 inside a try/catch — `require` does not exist in a Vite ESM browser bundle, so
 the catch swallowed the ReferenceError and the component returned `null` for
-every signed-in and guest visitor. **`@hanzo/ui` (the shadcn library) is retired
-and is gone from chat**: `Nav/HanzoHeader.tsx` and `Nav/NetworkWallet.tsx` are
-deleted, the dependency is out of `client/package.json`, and the two dead
+every signed-in and guest visitor. The shadcn-era `@hanzo/ui` was retired then:
+`Nav/HanzoHeader.tsx` and `Nav/NetworkWallet.tsx` are deleted and the two dead
 `node_modules/@hanzo/ui/dist/**` globs are out of `tailwind.config.cjs`.
+
+**`@hanzo/ui` is back at 8.0.39, and it is a different library under the same
+name.** 8.x is not shadcn and carries no Radix: its primitives are backed by
+`@hanzo/gui` (Tamagui) and it ships its own CSS. Do not read the paragraph above
+as "@hanzo/ui is banned" — it records why the *5.x shadcn* one went.
 
 - **Shell chrome** = `@hanzogui/shell` only (HanzoHeader / HanzoAppHeader /
   HanzoFooter / HanzoPreFooterCTA / MeetHanzoMenu / HanzoAppLauncher). It is
@@ -393,25 +397,85 @@ deleted, the dependency is out of `client/package.json`, and the two dead
   close it — it is `position: sticky`, `height: 56`, so `Root.tsx`'s
   `calc(100dvh - bannerHeight)` must subtract it too or the composer falls off
   the bottom. That is a layout change, not a sweep.
-- **Tailwind must scan the shell.** A distributed library that paints itself
-  with utility class names (`bg-[#0e0e13]`, `z-[101]`, `border-white/[0.06]`)
-  renders transparent and unstacked in a host that never scans it. 45 of the
-  147 class names in `@hanzogui/shell/dist` had no rule in chat's stylesheet;
-  `tailwind.config.cjs` now includes `../node_modules/@hanzogui/shell/dist/**`.
+- **Tailwind no longer scans the shell — that was a 7.x fact.** Under 7.x the
+  shell painted itself with utility class names (`bg-[#0e0e13]`, `z-[101]`,
+  `border-white/[0.06]`) and renders transparent in a host that never scans it,
+  so `tailwind.config.cjs` carried a
+  `../node_modules/@hanzogui/shell/dist/**` glob. Under **8.0.3 that is no
+  longer true for anything chat imports**: `HanzoHeader`, `HanzoFooter`,
+  `HanzoPreFooterCTA`, `HanzoAppLauncher` and `HanzoMark` contain ZERO className
+  literals — they are 100% inline-styled — and none of them pull in a
+  Tailwind-bearing module transitively. The only components still carrying
+  utility classes are the **Tenant\*** authenticated chrome (`TenantHeader`,
+  `TenantMark`, `TenantCommandPalette`, `UserOrgDropdown`, `AppSwitcher`), which
+  chat does not import. The glob was emitting 33 rules for classes chat never
+  renders — measured, and confirmed that chat's own source references none of
+  them — so it is deleted. **Restore it the moment chat adopts `TenantHeader`.**
 - **Accent.** `@hanzo/brand` ships violet `--hanzo-accent: #8b5cf6` as the shared
   Hanzo accent and the shell reads it via `var(--hanzo-accent, #ffffff)`, which
   put a violet "New chat" CTA beside a white "Get Started Free" CTA in one frame.
   `style.css` overrides `--hanzo-accent` (and hover/muted/soft/rgb) to white —
   the mechanism `@hanzo/brand` documents for a host that does not take violet.
   Chat is monochrome; nothing in chat's own source reads the token.
-- **`@hanzo/gui`** = a **Tamagui** fork (Next.js 15 / React 19, RN-web). The
-  react version is no longer the obstacle — the client is on react 19.2.4, so
-  `@hanzo/ui@8.0.28` and `@hanzo/gui@7.3.1` can be installed. What remains is
-  that gui is Tamagui/RN-web against a Vite client, which is a rewrite, not an
-  install; the convergence target inside chat is `@hanzochat/client`'s own
-  primitives —
+- **`@hanzo/gui` IS installed and DOES build under Vite.** This entry used to
+  say Tamagui/RN-web against a Vite client "is a rewrite, not an install." That
+  was wrong, and it was wrong for a knowable reason: nobody had run the build.
+  `@hanzo/gui@8.0.1` + `@hanzo/ui@8.0.39` now bundle in this app (2518 modules,
+  clean) and `GuiProvider` is mounted in `App.jsx`. Three resolver facts make it
+  work, and each is a real defect rather than a preference:
+  1. alias `react-native` → `react-native-web`. Prefix-safe: @rollup/plugin-alias
+     matches the exact specifier or `react-native/…` only, so `react-native-svg`
+     and `react-native-web` still resolve to themselves.
+  2. `.web.*` FIRST in `resolve.extensions`. This is react-native-web's
+     substitution convention and Vite does not implement it. Without it
+     `react-native-svg` resolves to its Fabric build, which imports
+     `react-native-web/Libraries/Utilities/codegenNativeComponent` — a path that
+     does not exist.
+  3. `react-native-svg` must be installed at all: `@hanzogui/lucide-icons-2@8.0.0`
+     imports it from the file its own `browser` export condition points at while
+     declaring it in neither `dependencies` nor `peerDependencies`. That is a
+     packaging bug in the icon package.
+  `@hanzo/ui@8.0.39` is the correct post-Tailwind substrate: its gui backend
+  contains **zero** className literals and it ships its own `theme.css` +
+  `styles/hanzo-motion.css`. It is NOT the retired shadcn/Radix library of the
+  same name — 8.x has no Radix dependency at all.
   `DropdownPopup` (Ariakit; `.popover-ui` is REAL CSS, not a scanned class
-  string) is the canonical anchored menu, 28 call sites.
+  string) remains the canonical anchored menu, 28 call sites.
+
+### Getting off Tailwind — the measured size of the job
+
+Chat is the fleet's last Tailwind **v3** holdout (`tailwindcss ^3.4.1`). The
+substrate to land on already exists and is proven here: `@hanzo/ui@8.0.39`'s gui
+backend has ZERO className literals and ships `theme.css` + `styles/hanzo-motion.css`,
+so the target is real. What is NOT small is chat's own markup. Measured on this
+tree, not estimated:
+
+| | |
+|---|---|
+| Tailwind rules actually generated | **2,408** (157 KB minified) |
+| Source files carrying Tailwind utilities | **838** |
+| Individual class-name instances | **25,340** |
+| Median utilities per file | 19 (densest: `Web/Sources.tsx`, 400) |
+
+Reproduce the count with the Tailwind CLI against `client/tailwind.config.cjs`
+plus a token scan of `client/src` + `packages/client/src`.
+
+The external blocker people assume exists does NOT: `@hanzogui/shell@8.0.3` is
+inline-styled for everything chat imports (see "One shell" above). Nothing
+outside chat's own markup forces Tailwind to stay.
+
+So this is a bounded but genuinely large mechanical migration — 838 files — and
+it CANNOT be faked by freezing Tailwind's generated output into a committed
+stylesheet. That would smuggle 2,408 unowned rules into the repo and silently
+break the next class anyone writes. Convert markup to `@hanzo/ui` components and
+plain CSS, file by file, or leave it on Tailwind honestly.
+
+Full footprint to delete when the markup is done: `client/tailwind.config.cjs`,
+`client/postcss.config.cjs`, and the deps `tailwindcss`, `tailwindcss-animate`,
+`tailwindcss-radix`, `tailwind-merge`, `autoprefixer`, `postcss-preset-env`
+(client) + `tailwind-merge` (packages/client peer) + `prettier-plugin-tailwindcss`
+(root). Note `tailwindcss-radix` supplies the `radix-state-*` / `radix-disabled`
+variants and therefore dies WITH Radix, not before it.
 
 ### Config filename caveat
 

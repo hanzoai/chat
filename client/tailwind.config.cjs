@@ -27,10 +27,18 @@ module.exports = {
     './src/**/*.{js,jsx,ts,tsx}',
     // Include component library files
     '../packages/client/src/**/*.{js,jsx,ts,tsx}',
-    // The shared Hanzo shell. Scanned so any surface it paints with utility
-    // class names gets a real CSS rule: a library that ships `bg-*`/`z-*`
-    // strings renders transparent and unstacked in a host that never scans it.
-    '../node_modules/@hanzogui/shell/dist/**/*.js',
+    // NOTE: @hanzogui/shell is deliberately NOT scanned. Under 7.x the shell
+    // painted itself with utility class names, so a host that did not scan it
+    // rendered it transparent — hence the glob that used to sit here. Under
+    // 8.0.3 the five components chat imports (HanzoHeader, HanzoFooter,
+    // HanzoPreFooterCTA, HanzoAppLauncher, HanzoMark) are 100% inline-styled
+    // and contain ZERO className literals; verified against the installed
+    // package, not the changelog. The only Tailwind-bearing components left in
+    // the shell are the Tenant* authenticated chrome (TenantHeader, TenantMark,
+    // TenantCommandPalette, UserOrgDropdown, AppSwitcher), which chat does not
+    // import and which HanzoHeader does not pull in transitively. Scanning them
+    // only emitted 33 rules for classes nothing here renders. If chat ever
+    // adopts TenantHeader, this glob comes back.
   ],
   // darkMode: 'class',
   darkMode: ['class'],
