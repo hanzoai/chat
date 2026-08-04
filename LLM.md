@@ -449,6 +449,34 @@ as "@hanzo/ui is banned" — it records why the *5.x shadcn* one went.
   `DropdownPopup` (Ariakit; `.popover-ui` is REAL CSS, not a scanned class
   string) remains the canonical anchored menu, 28 call sites.
 
+### The dev server needs four CJS modules pre-bundled — and two resolvers to agree
+
+Adopting gui broke `npm run frontend:dev` and nothing said so. The dev server
+started clean, served 200s, and rendered a **blank page**: one `pageerror`
+("does not provide an export named 'default'") killed the module graph before
+React mounted. `vite build` was unaffected the whole time — Rollup's commonjs
+plugin does the interop that Vite's dev ESM pipeline cannot — so the breakage was
+invisible to the gate everyone was checking. If you change gui/react-native
+resolution, LOAD THE PAGE; the build passing means nothing here.
+
+The gui graph reaches four CommonJS modules that are imported **by name**, which
+is the one thing dev-mode ESM cannot synthesise from CJS:
+
+- `react-native-web` and `@react-native/normalize-colors` (imported as `default`)
+- `react-native-svg` — `lib/extract/transform.js` is PEG.js output, imported as `{ parse }`
+- `@react-native/normalize-color` — **singular**, a different package from the
+  plural one above; both are installed. Reached via `@hanzogui/normalize-css-color`,
+  and as plain CJS with no exports map it throws `module is not defined`.
+
+All four are in `optimizeDeps.include`. That alone is not enough: pre-bundling
+`react-native-svg` fails with `Cannot read file: …/codegenNativeComponent` because
+**esbuild's dep optimizer does not read `resolve.extensions`** — it resolves with
+its own defaults, ignores the `.web.js` siblings, and walks into the Fabric
+(native) build. Vite/Rollup and esbuild must be told the same thing, so the
+web-first extension list is defined ONCE as `webFirstExtensions` and read twice:
+`resolve.extensions` and `optimizeDeps.esbuildOptions.resolveExtensions`. Change
+one without the other and dev breaks again.
+
 ### Rules for writing against the 8.x primitives
 
 Three things bite every time and none of them announces itself:
@@ -471,6 +499,39 @@ Three things bite every time and none of them announces itself:
   (`Prompts/buttons/AutoSendPrompt` — the Button owns the name and
   `aria-pressed`, the box is a `tabIndex={-1}` glyph). The escape hatch requires
   declaring the box invisible, so it cannot be used to skip labelling a real one.
+- **A bare text child is DROPPED — silently, at runtime.** gui components are
+  react-native primitives, so text must sit inside an element. Measured in
+  Chromium against a real dev server: `<TabsContent>content a</TabsContent>`
+  computes to `height: 0`, `visible: false`, and logs `Unexpected text node …
+  cannot be a child of a <TabsContent>` to the console — nowhere else. Wrap the
+  text (`<span>`) and it paints. This is the sharpest edge of "gui ignores what
+  it does not recognise": the build is green, the element is in the DOM, the
+  content is invisible. Every `<TabsTrigger>Label</TabsTrigger>` in chat's markup
+  is this shape, so a naive Tabs conversion produces empty tabs.
+
+### Verifying a gui rewrite — the build cannot tell you
+
+A green `vite build` proves gui *compiled*, never that it *painted*: unknown
+props are ignored and bare text is dropped, both without an error. The only
+honest check is computed style in a real browser. The loop that works here:
+`npx vite --port <p>` in `client/`, drive it with Playwright, and read
+`getComputedStyle` + `boundingBox` on the element you rewrote — `height: 0` or
+`visible: false` on something that should have size is the failure signature.
+
+Measured this way, against `@hanzo/ui@8.0.39`:
+
+| | |
+|---|---|
+| `PopoverContent` | **paints** — self-portals, `bg rgb(20,20,20)`, 1px border, 8px radius, 16px padding, positions against the trigger |
+| `Tabs` switching | **works** — inactive panel unmounts, same semantics as Radix's default |
+| `TabsContent` + bare text | **invisible** — `height: 0` (see above) |
+| generated ids | `_r_f_-trigger-b`, **NOT** `radix-*` |
+
+That last row is a live blocker, not trivia: `client/src/mobile.css:389-405`
+selects the artifact preview panel with `[aria-labelledby^="radix-"][id^="radix-"]`.
+Those four scrollbar rules match nothing the moment Tabs stops being Radix, and
+nothing fails — the scrollbars just quietly go back to default. Grep for
+`radix-` in CSS before converting Tabs.
 
 ### TypeScript 7
 
@@ -529,9 +590,43 @@ went 2,408 → 2,414 because main added markup faster than the primitives remove
 it. Every Tailwind dependency is still load-bearing, measured rather than
 assumed — `tailwindcss-radix` has 35 `radix-*` variant uses, `tailwindcss-animate`
 89 `animate-in`/`fade-in`/`zoom-*` uses, `tailwind-merge` backs `cn()` itself, and
-25 distinct `@radix-ui/*` packages are still imported directly across 38 files.
+Radix is still imported directly across the tree.
 So there is no subset of the footprint that can be deleted ahead of the markup.
 Removing Tailwind stays a whole-markup migration; it cannot be part-landed.
+
+**The Radix surface is 13 packages across 35 files — NOT the "25 packages / 38
+files" this file used to claim.** The old number was a miscount: 25 of those
+strings live in `client/src/utils/artifacts.ts`, which is the **Sandpack
+dependency manifest** — the versions shipped INTO the artifact preview sandbox so
+AI-generated React can `import` Radix. It is data, not an import, and deleting it
+breaks artifact rendering rather than removing a dependency. Leave it alone and
+do not count it.
+
+Of the 35, two are already gone (`Prompts/{dialogs,Groups}/VariableDialog` imported
+`DialogPrimitive.DialogProps` for a type and rendered no Radix at all; they now
+extend `OGDialogProps`, exported from `OriginalDialog` — the props of the dialog
+they actually render). The rest, by weight: **popover 10 files, dialog 5, tabs 5,
+accordion 3, toast 2, slot 2, select 2**, then one each for dropdown-menu,
+radio-group, alert-dialog, hover-card, slider, collapsible.
+
+Ordering constraints that are not obvious and will bite:
+1. `packages/client/src/components/Button.tsx` (`Slot`) migrates **last** — every
+   `<Trigger asChild><Button/></Trigger>` chain depends on it forwarding `data-state`.
+2. Two Popovers are split ACROSS files and must convert as pairs:
+   `Chat/Input/HeaderOptions` (Root+Anchor) ↔ `Chat/Input/OptionsPopover` (Portal+Content),
+   and `SidePanel/Builder/AssistantAvatar` (Root+Trigger) ↔ `SidePanel/Builder/Images` (Portal+Content).
+3. The Toast is split across PACKAGES: Provider+Viewport in `client/src/App.jsx`,
+   Root+Description in `packages/client/src/components/Toast.tsx`.
+4. `SidePanel/Builder/ActionsAuth`'s checked radio has **no CSS state hook** — the
+   dot is `RadioGroup.Indicator`'s conditional mount. Render it unconditionally and
+   every radio reads as checked.
+5. `OriginalDialog`'s `onEscapeKeyDown` is a WCAG tooltip-dismissal handler that
+   cancels Escape while focus is in a menu/listbox/combobox. Any replacement must
+   expose a cancellable escape with the same timing.
+6. Radix CSS custom properties are consumed by real rules:
+   `--radix-accordion-content-height` drives the `animate-accordion-*` keyframes in
+   `client/tailwind.config.cjs`, and `--radix-select-trigger-{height,width}` size the
+   Select/Combobox popper. They die with Radix and need replacements written first.
 
 The external blocker people assume exists does NOT: `@hanzogui/shell@8.0.3` is
 inline-styled for everything chat imports (see "One shell" above). Nothing
