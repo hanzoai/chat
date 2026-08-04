@@ -1,5 +1,4 @@
 import React, { useId } from 'react';
-import { Label } from '@hanzochat/client';
 import CategoryIcon from '../utils/CategoryIcon';
 import { useLocalize } from '~/hooks';
 
@@ -41,13 +40,16 @@ export default function ListCard({
       <div className="flex w-full justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-row items-center gap-2 overflow-hidden">
           <CategoryIcon category={category} className="icon-md shrink-0" aria-hidden="true" />
-          <Label
+          {/* A card title, not a form caption: there is no control for a
+              <label> to bind to. `title` carries the full name, which `truncate`
+              would otherwise clip with no way to read it. */}
+          <span
             id={titleId}
             className="min-w-0 select-none truncate text-sm font-semibold text-text-primary"
             title={name}
           >
             {name}
-          </Label>
+          </span>
           {icon}
         </div>
         <div className="relative z-10">{children}</div>

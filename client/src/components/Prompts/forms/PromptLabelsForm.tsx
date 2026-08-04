@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import { Input } from '@hanzochat/client';
-import { Cross1Icon } from '@radix-ui/react-icons';
 import type { TPrompt } from '@hanzochat/data-provider';
 import { useUpdatePromptLabels } from '~/data-provider';
 import { useLocalize } from '~/hooks';
@@ -62,7 +62,7 @@ const PromptLabelsForm = ({ selectedPrompt }: { selectedPrompt?: TPrompt }) => {
                 className="cursor-pointer"
                 aria-label={`${localize('com_ui_delete')} ${label}`}
               >
-                <Cross1Icon aria-hidden="true" />
+                <X aria-hidden="true" className="h-4 w-4" />
               </button>
             </span>
           ))

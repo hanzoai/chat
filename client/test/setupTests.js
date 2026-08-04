@@ -94,3 +94,23 @@ jest.mock('react-i18next', () => {
     },
   };
 });
+
+// ── @hanzo/gui under jest ────────────────────────────────────────────────────
+// `@hanzo/ui` 8.x primitives are backed by @hanzo/gui, which refuses to render
+// outside a GuiProvider ("Missing hanzogui config", then "Missing theme").
+//
+// Importing the shared config runs `createGui` as a side effect and registers it
+// globally — the SAME config App.jsx uses, so tests and production agree on one
+// scale instead of drifting against a test-only theme. This clears the first
+// error for every suite.
+//
+// It does NOT clear the second. A test that renders a ported primitive must also
+// wrap it in `<GuiProvider config={guiConfig} defaultTheme="dark">` itself; see
+// src/__tests__/guiPrimitives.spec.tsx for the shape.
+//
+// Making that wrapper the global default for RTL's `render` was tried and
+// REJECTED on evidence: it regressed 8 previously-passing suites (SmartLoader,
+// MemoryInfo, UIResourceCarousel, FileRow, SkillsCommand, FavoritesList,
+// MCPUIResourceCarousel, SkillPills). Wrap per test until those 8 are
+// understood — do not re-add a global wrapper without re-measuring.
+require('@hanzo/ui/gui-config');

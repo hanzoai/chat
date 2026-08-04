@@ -5,7 +5,7 @@ import { cn } from '~/utils';
 
 const DialogDepthContext = React.createContext(0);
 
-interface OGDialogProps extends DialogPrimitive.DialogProps {
+export interface OGDialogProps extends DialogPrimitive.DialogProps {
   triggerRef?: React.RefObject<HTMLButtonElement | HTMLInputElement | HTMLDivElement | null>;
   triggerRefs?: React.RefObject<HTMLButtonElement | HTMLInputElement | HTMLDivElement | null>[];
 }

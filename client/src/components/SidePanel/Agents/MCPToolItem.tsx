@@ -70,8 +70,9 @@ export default function MCPToolItem({
           e.stopPropagation();
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            const checkbox = e.currentTarget as HTMLButtonElement;
-            checkbox.click();
+            // `.click()` is HTMLElement's, so no cast: the 8.x checkbox is not
+            // the Radix <button> the old `as HTMLButtonElement` assumed.
+            e.currentTarget.click();
           }
         }}
         onClick={(e) => e.stopPropagation()}

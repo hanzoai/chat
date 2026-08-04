@@ -82,4 +82,4 @@ packages/      data-provider · data-schemas · api · client · agents · mcp
 
 ## License
 
-MIT. MIT licensed. See [LICENSE](./LICENSE) for the full attribution.
+MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
