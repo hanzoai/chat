@@ -21,9 +21,6 @@ RUN pip install --upgrade pip && \
 # Copy the current directory contents into the container at /app
 COPY . .
 
-# Build Admin UI
-RUN chmod +x docker/build_admin_ui.sh && ./docker/build_admin_ui.sh
-
 # Build the package
 RUN rm -rf dist/* && python -m build
 
@@ -40,9 +37,6 @@ RUN pip wheel --no-cache-dir --wheel-dir=/wheels/ -r requirements.txt
 RUN pip uninstall jwt -y
 RUN pip uninstall PyJWT -y
 RUN pip install PyJWT==2.9.0 --no-cache-dir
-
-# Build Admin UI
-RUN chmod +x docker/build_admin_ui.sh && ./docker/build_admin_ui.sh
 
 # Runtime stage
 FROM $LITELLM_RUNTIME_IMAGE AS runtime

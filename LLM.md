@@ -547,3 +547,64 @@ header **does not paint on the default screen** — driving live hanzo.chat find
 `<header>` at all. Adopting the real one is a LAYOUT change: `HanzoAppHeader` is
 `position: sticky; height: 56`, so `Root.tsx`'s `calc(100dvh - ${bannerHeight}px)`
 must subtract it too or the composer falls off the bottom of the viewport.
+
+## No enterprise tier — the EE carve-out is gone, and it stays gone
+
+Hanzo ships exactly zero "enterprise edition" code. The rule is a licensing
+one, not a taste one: an `enterprise/` carve-out inside a fork is code under a
+commercial licence we do not hold. We cannot sell it and we cannot relicense
+it, so carrying it is pure liability with no upside. If a route ever needs a
+capability that upstream happened to put behind their paywall, the answer is to
+write the minimum as original Hanzo code in the normal tree — never to copy
+upstream's file to a new path.
+
+The LiteLLM `enterprise/` source package was already gone from this repo before
+this pass (deleted in `4aee55defe`, "Remove erroneously commited code"). Worth
+knowing how that was confirmed rather than assumed, because a deletion and a
+rename look identical from a file listing: every blob hash under `enterprise/`
+at `4aee55defe^` was joined against every blob at `origin/main`, and the only
+survivor was `e69de29bb2d1…`, git's empty-file blob. Nothing was quietly
+relocated; the tree really is absent.
+
+What this pass removed was the residue that outlived it. `tests/enterprise/`
+(6 files) tested a package that no longer exists, and two more files under
+`tests/logging_callback_tests/` — `test_generic_api_callback.py` and
+`test_pagerduty_alerting.py` — imported `litellm_enterprise.enterprise_callbacks.*`
+for the same reason. None of it ran: neither `litellm` nor `litellm_enterprise`
+is importable here and neither directory exists on disk, so the whole tree was
+dead weight that merely looked like coverage. `tests/code_coverage_tests/check_unsafe_enterprise_import.py`
+went too — it was a CI guard whose only job was policing how the carve-out got
+imported, scanning a `./litellm` directory this repo does not have. A guard for
+a thing that does not exist is not a safety net.
+
+`docker/build_admin_ui.sh` was the same shape in the build: it short-circuited
+unless `enterprise/enterprise_ui/enterprise_colors.json` was present, which is
+to say it existed to swap in the paid UI theme and did nothing otherwise. It
+was invoked twice each from `docker/Dockerfile`, `Dockerfile.database`, and
+`Dockerfile.non_root`; those six `RUN` lines went with it. Note this is not the
+image CI builds — the workflows build root `./Dockerfile` — so the blast radius
+was small, but dead commercial gating in a Dockerfile is still commercial
+gating.
+
+`docker/Dockerfile.custom_ui` was deliberately left alone. It references the
+same absent `ui/litellm-dashboard`, so it is equally dead, but it is dead
+LiteLLM cruft rather than an enterprise gate — nothing in it keys off a licence
+or a paid tier. Removing it is general dead-code cleanup and belongs to a
+different change.
+
+`LICENSE` carried the carve-out as its first bullet, pointing at
+`enterprise/LICENSE`. Dropping that bullet stranded the sibling line ("Content
+outside of the above mentioned directories…"), which then referred to nothing,
+so the two-bullet preamble collapsed to a single accurate sentence: this
+software is MIT. Both upstream copyright lines and the full MIT text are
+untouched — the point was to delete a claim we cannot honour, not to launder
+attribution.
+
+Two `enterprise` mentions were left in place on purpose, because matching the
+word is not the same as finding a carve-out. `chat.example.yaml` notes that
+Tavily's `safe_search` is enterprise-only, which is a fact about a third-party
+API's tiers. `.env.example` configures GitHub Enterprise Server base URLs,
+which is a deployment target. Neither gates our code. What did get edited was
+`.env.hanzo-iam.example`, where SSO providers were annotated "(requires Hanzo
+Router Enterprise)" — that is a paywall marker on our own surface, and the env
+vars work regardless, so the annotation was the only thing removed.

@@ -21,9 +21,6 @@ RUN pip install --upgrade pip && \
 # Copy the current directory contents into the container at /app
 COPY . .
 
-# Build Admin UI
-RUN chmod +x docker/build_admin_ui.sh && ./docker/build_admin_ui.sh
-
 # Build the package
 RUN rm -rf dist/* && python -m build
 
@@ -61,9 +58,6 @@ RUN pip install *.whl /wheels/* --no-index --find-links=/wheels/ && rm -f *.whl 
 RUN pip uninstall jwt -y
 RUN pip uninstall PyJWT -y
 RUN pip install PyJWT==2.9.0 --no-cache-dir
-
-# Build Admin UI
-RUN chmod +x docker/build_admin_ui.sh && ./docker/build_admin_ui.sh
 
 # Generate prisma client
 RUN prisma generate
