@@ -10,19 +10,34 @@ type BaseCheckboxProps = Omit<
 };
 
 /**
- * A checkbox must be NAMED — that union is the one thing this wrapper adds over
- * the primitive. Exactly one of `aria-label` / `aria-labelledby` is required at
- * compile time, so an unlabelled checkbox cannot reach a screen reader as an
- * anonymous control.
+ * A checkbox that assistive tech can SEE must be NAMED — that union is the one
+ * thing this wrapper adds over the primitive: exactly one of `aria-label` /
+ * `aria-labelledby`, enforced at compile time, so it cannot reach a screen
+ * reader as an anonymous control.
+ *
+ * The third branch is the decorative case and it is not a loophole. A checkbox
+ * rendered `aria-hidden` is not in the accessibility tree at all, so demanding a
+ * name for it is asking for a label nothing will ever read. AutoSendPrompt is
+ * the real instance: the surrounding Button carries the label and `aria-pressed`
+ * and the box is a `tabIndex={-1}`, `pointer-events-none` glyph. Requiring
+ * `aria-hidden: true` (not merely permitting the absence of a name) keeps the
+ * escape hatch honest — you can only take it by declaring the box invisible.
  */
 export type CheckboxProps =
   | (BaseCheckboxProps & {
       'aria-label': string;
       'aria-labelledby'?: never;
+      'aria-hidden'?: never;
     })
   | (BaseCheckboxProps & {
       'aria-labelledby': string;
       'aria-label'?: never;
+      'aria-hidden'?: never;
+    })
+  | (BaseCheckboxProps & {
+      'aria-hidden': true | 'true';
+      'aria-label'?: never;
+      'aria-labelledby'?: never;
     });
 
 /**
