@@ -1,9 +1,8 @@
 import { useState, useId, useMemo } from 'react';
 import * as Menu from '@ariakit/react/menu';
 import { Column } from '@tanstack/react-table';
-import { ListFilter, FilterX } from 'lucide-react';
 import { DropdownPopup, TooltipAnchor } from '@hanzochat/client';
-import { ArrowDownIcon, ArrowUpIcon, CaretSortIcon } from '@radix-ui/react-icons';
+import { ListFilter, FilterX, ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import type { MenuItemProps } from '~/common';
 import { useLocalize, TranslationKeys } from '~/hooks';
 import { cn } from '~/utils';
@@ -33,12 +32,12 @@ export function SortFilterHeader<TData, TValue>({
       {
         label: localize('com_ui_ascending'),
         onClick: () => column.toggleSorting(false),
-        icon: <ArrowUpIcon className="icon-sm text-text-secondary" />,
+        icon: <ArrowUp className="icon-sm text-text-secondary" />,
       },
       {
         label: localize('com_ui_descending'),
         onClick: () => column.toggleSorting(true),
-        icon: <ArrowDownIcon className="icon-sm text-text-secondary" />,
+        icon: <ArrowDown className="icon-sm text-text-secondary" />,
       },
     ];
 
@@ -118,12 +117,12 @@ export function SortFilterHeader<TData, TValue>({
                 {(() => {
                   const sortState = column.getIsSorted();
                   if (sortState === 'desc') {
-                    return <ArrowDownIcon className="icon-sm" />;
+                    return <ArrowDown className="icon-sm" />;
                   }
                   if (sortState === 'asc') {
-                    return <ArrowUpIcon className="icon-sm" />;
+                    return <ArrowUp className="icon-sm" />;
                   }
-                  return <CaretSortIcon className="icon-sm" />;
+                  return <ChevronsUpDown className="icon-sm" />;
                 })()}
               </Menu.MenuButton>
             }

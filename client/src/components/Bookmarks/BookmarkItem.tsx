@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { Bookmark } from 'lucide-react';
 import { Spinner } from '@hanzochat/client';
 import { MenuItem } from '@headlessui/react';
-import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import type { FC } from 'react';
 
 type MenuItemProps = {
@@ -40,10 +40,10 @@ const BookmarkItem: FC<MenuItemProps> = ({ tag, selected, handleSubmit, icon, ..
     }
 
     if (selected) {
-      return <BookmarkFilledIcon aria-hidden="true" className="size-4" />;
+      return <Bookmark aria-hidden="true" className="size-4" fill="currentColor" />;
     }
 
-    return <BookmarkIcon aria-hidden="true" className="size-4" />;
+    return <Bookmark aria-hidden="true" className="size-4" />;
   };
 
   return (
