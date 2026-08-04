@@ -12,12 +12,17 @@ import { useAuthContext } from '~/hooks/AuthContext';
 const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
 
 /**
- * Publishable ingest key (pk_…) — write-only, safe in the bundle. It resolves the
+ * Publishable ingest key (pk-…) — write-only, safe in the bundle. It resolves the
  * org server-side for requests that carry no bearer, which is how logged-out and
  * guest views (the landing IS the composer) reach the fail-closed door. Mint one
- * per org via POST /v1/ingest/keys. Unset → anonymous events are best-effort.
+ * per org via POST /v1/keys with {"type":"publishable"}.
+ *
+ * Unset is NOT best-effort: cloud takes an unkeyed beacon down the anonymous lane,
+ * whose allowlist admits only pageview and error. Every track/identify/group is
+ * then dropped — and the caller still gets 200, so the loss is silent on both
+ * ends. The key is what buys full-capability ingest.
  */
-const INGEST_KEY = import.meta.env.VITE_HANZO_INGEST_KEY?.trim() || undefined;
+const INGEST_KEY = import.meta.env.VITE_EVENT_INGEST_KEY?.trim() || undefined;
 
 /**
  * Consent gate — an explicit browser opt-out (Global Privacy Control, then legacy
@@ -42,7 +47,20 @@ function consented(): boolean {
 /**
  * Identifies the authenticated user and fires a pageview on every route change.
  * The provider fires the first pageview itself; this keeps subsequent SPA
- * navigations tracked. Identity uses the stable user id — never email/PII.
+ * navigations tracked. Identity is the IAM subject — never email/PII.
+ *
+ * WHICH ID. `user.openidId` is the Hanzo IAM `sub`, the same value hanzo.ai and
+ * cloud.hanzo.ai identify this user by. It is deliberately NOT `user.id`, which is
+ * chat's own row id: keying on that splits one user into a separate identity per
+ * property, so cross-property funnels and retention silently measure nothing. A
+ * local (non-OIDC) dev account has no IAM identity and is correctly left
+ * unidentified rather than given a fabricated one.
+ *
+ * HISTORY SURVIVES SIGN-UP. Nothing here mints or resets an id. @hanzo/event stamps
+ * `anonymousId` from the `hz_anon_id` localStorage value on EVERY event, including
+ * this identify, and that value is minted once per browser and never cleared on
+ * login — so the identify arrives carrying the same anonymous id the visitor's
+ * pre-signup pageviews were filed under, and the two join.
  */
 function AnalyticsBridge() {
   const analytics = useAnalytics();
@@ -51,12 +69,12 @@ function AnalyticsBridge() {
 
   usePageview(pathname);
 
-  const userId = isAuthenticated ? user?.id : undefined;
+  const iamSubject = isAuthenticated ? user?.openidId : undefined;
   useEffect(() => {
-    if (userId != null && userId) {
-      analytics.identify(userId);
+    if (iamSubject) {
+      analytics.identify(iamSubject);
     }
-  }, [analytics, userId]);
+  }, [analytics, iamSubject]);
 
   return null;
 }

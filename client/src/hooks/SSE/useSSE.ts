@@ -18,7 +18,7 @@ import type { TResData } from '~/common';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
-import { requireLogin, refreshTenantBearer } from '~/utils/login';
+import { requireLogin } from '~/utils/login';
 import store from '~/store';
 
 const clearDraft = (conversationId?: string | null) => {
@@ -222,8 +222,10 @@ export default function useSSE(
     });
 
     sse.addEventListener('error', async (e: MessageEvent) => {
-      /* @ts-ignore */
-      if (e.responseCode === 401) {
+      /* @ts-ignore sse.js attaches the HTTP status to the error event */
+      const responseCode = e.responseCode as number | undefined;
+
+      if (responseCode === 401) {
         /* token expired, refresh and retry */
         try {
           const refreshResponse = await request.refreshToken();
@@ -240,22 +242,6 @@ export default function useSSE(
           sse.stream();
           return;
         } catch (error) {
-          // The local refresh renews CHAT's own JWT. It does NOT renew the IAM
-          // bearer chat forwards to cloud on the caller's behalf — that one is
-          // separate, lives ~1h, and has no durable refresh, so a signed-in user
-          // whose IAM token merely aged out landed here and got the login gate.
-          // hanzo.id still has the session, so re-mint silently and retry once
-          // before concluding anyone needs to sign in.
-          const fresh = await refreshTenantBearer();
-          if (fresh != null && fresh !== '') {
-            sse.headers = {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${fresh}`,
-            };
-            request.dispatchTokenUpdatedEvent(fresh);
-            sse.stream();
-            return;
-          }
           /* nothing left to refresh: the visitor really is not signed in */
           console.log(error);
           requireLogin('anonymous');
@@ -267,11 +253,11 @@ export default function useSSE(
       console.log('error in server stream.');
       // A failed answer, not a crash: the funnel needs the drop counted, and
       // `responseCode` is what separates "we were rate-limited/out of credit"
-      // from "the model failed". A 401 that recovered above never reaches here.
+      // from "the model failed". A 401 or 403 that recovered above never reaches
+      // here, so what this counts is real loss rather than a renewable credential.
       analytics.capture(EVENTS.GENERATION_FAILED, {
         ...genProps(),
-        /* @ts-ignore sse.js attaches the HTTP status to the error event */
-        responseCode: (e as MessageEvent & { responseCode?: number }).responseCode,
+        responseCode,
       });
       (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
 

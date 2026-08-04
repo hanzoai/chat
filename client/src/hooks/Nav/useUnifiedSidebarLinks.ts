@@ -33,7 +33,11 @@ export default function useUnifiedSidebarLinks() {
     [endpointsConfig, endpoint],
   );
 
-  const { data: keyExpiry = { expiresAt: undefined } } = useUserKeyQuery(endpoint ?? '');
+  /* Member-only route: a guest bearer is refused, so asking as one only logs a 401. */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
+  const { data: keyExpiry = { expiresAt: undefined } } = useUserKeyQuery(endpoint ?? '', {
+    enabled: isAuthenticated,
+  });
 
   const keyProvided = useMemo(
     () => (userProvidesKey ? !!(keyExpiry.expiresAt ?? '') : true),

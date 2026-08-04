@@ -1,6 +1,8 @@
+import { useAtomValue } from 'jotai';
 import { useQuery, UseQueryOptions, QueryObserverResult } from '@tanstack/react-query';
 import { QueryKeys, dataService } from '@hanzochat/data-provider';
 import type * as t from '@hanzochat/data-provider';
+import store from '~/store';
 
 /**
  * Hook for fetching all accessible MCP servers with permission metadata
@@ -8,6 +10,8 @@ import type * as t from '@hanzochat/data-provider';
 export const useMCPServersQuery = <TData = t.MCPServersListResponse>(
   config?: UseQueryOptions<t.MCPServersListResponse, unknown, TData>,
 ): QueryObserverResult<TData> => {
+  /* Member-only route: it refuses a guest bearer, so asking as one only logs a 401. */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
   return useQuery<t.MCPServersListResponse, unknown, TData>(
     [QueryKeys.mcpServers],
     () => dataService.getMCPServers(),
@@ -18,6 +22,7 @@ export const useMCPServersQuery = <TData = t.MCPServersListResponse>(
       refetchOnMount: true,
       retry: false,
       ...config,
+      enabled: (config?.enabled ?? true) === true && isAuthenticated,
     },
   );
 };

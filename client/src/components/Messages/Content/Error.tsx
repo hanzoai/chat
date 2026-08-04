@@ -88,8 +88,31 @@ const errorMessages = {
   },
   invalid_api_key:
     'Invalid API key. Please check your API key and try again. You can do this by clicking on the model logo in the left corner of the textbox and selecting "Set Token" for the current selected endpoint. Thank you for your understanding.',
-  insufficient_quota:
-    'We apologize for any inconvenience caused. The default API key has reached its limit. To continue using this service, please set up your own API key. You can do this by clicking on the model logo in the left corner of the textbox and selecting "Set Token" for the current selected endpoint. Thank you for your understanding.',
+  /**
+   * A PAYWALL, not a failure. The gateway answers a request it cannot bill with
+   * 402, and `server/utils/refusal.js` names that `insufficient_quota` — the same
+   * name `hanzoGatewayFetch` already gives a spent balance. The one thing that
+   * resolves it is credit, so the render is an action, not an apology.
+   *
+   * It used to read "the default API key has reached its limit … set up your own
+   * API key", which is upstream's advice for a self-hosted key. There is no key to
+   * set on hanzo.chat; the money lives at billing.hanzo.ai.
+   */
+  insufficient_quota: (_json: unknown, localize: LocalizeFunction) => (
+    <>
+      {localize('com_error_insufficient_quota')}
+      <br />
+      <br />
+      <a
+        href="https://billing.hanzo.ai"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-hanzo-red underline"
+      >
+        {localize('com_error_add_credit')}
+      </a>
+    </>
+  ),
   concurrent: (json: TConcurrent) => {
     const { limit } = json;
     const plural = limit > 1 ? 's' : '';
@@ -230,7 +253,13 @@ const Error = ({ text }: { text: string }) => {
   if (isUnauthorized(json) || isUnauthorized(json?.message) || isUnauthorized(json?.error)) {
     return localize('com_error_unauthorized');
   }
-  const errorKey = json.code || json.type;
+  /**
+   * The code, wherever the producer put it. An OpenAI-shaped body nests it under
+   * `error` (`{error:{code,type}}`), and reading only the top level is how a
+   * gateway 402 arrived carrying its reason and still rendered as
+   * `com_error_unknown`.
+   */
+  const errorKey = json.code || json.type || json.error?.code || json.error?.type;
   const keyExists = errorKey && errorMessages[errorKey];
 
   if (keyExists && typeof errorMessages[errorKey] === 'function') {

@@ -29,7 +29,7 @@ export default function MobileNav({
           navVisible ? localize('com_nav_close_sidebar') : localize('com_nav_open_sidebar')
         }
         aria-live="polite"
-        className="m-1 inline-flex size-10 items-center justify-center rounded-full hover:bg-surface-active-alt"
+        className="m-1 inline-flex size-11 items-center justify-center rounded-full hover:bg-surface-active-alt"
         onClick={() =>
           setNavVisible((prev) => {
             localStorage.setItem('navVisible', JSON.stringify(!prev));
@@ -56,13 +56,16 @@ export default function MobileNav({
           />
         </svg>
       </button>
-      <h1 className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm font-normal">
+      {/* A label for the open conversation, not the page subject — the composer
+          prompt is the h1. Heading-shaped chrome here would both duplicate it and
+          land ahead of it in reading order. */}
+      <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm font-normal">
         {title ?? localize('com_ui_new_chat')}
-      </h1>
+      </div>
       <button
         type="button"
         aria-label={localize('com_ui_new_chat')}
-        className="m-1 inline-flex size-10 items-center justify-center rounded-full hover:bg-surface-active-alt"
+        className="m-1 inline-flex size-11 items-center justify-center rounded-full hover:bg-surface-active-alt"
         onClick={() => {
           clearMessagesCache(queryClient, conversation?.conversationId);
           queryClient.invalidateQueries([QueryKeys.messages]);

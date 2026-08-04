@@ -1,5 +1,5 @@
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { useToastContext } from '@hanzochat/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Constants, QueryKeys, MCPOptions, ResourceType } from '@hanzochat/data-provider';
@@ -15,6 +15,7 @@ import { useLocalize, useMCPSelect, useMCPConnectionStatus } from '~/hooks';
 import { useGetStartupConfig, useMCPServersQuery } from '~/data-provider';
 import { mcpServerInitStatesAtom, getServerInitState } from '~/store/mcp';
 import type { MCPServerInitState } from '~/store/mcp';
+import store from '~/store';
 
 export interface MCPServerDefinition {
   serverName: string;
@@ -39,8 +40,12 @@ export function useMCPServerManager({
 
   const { data: loadedServers, isLoading } = useMCPServersQuery();
 
-  // Fetch effective permissions for all MCP servers
-  const { data: permissionsMap } = useGetAllEffectivePermissionsQuery(ResourceType.MCPSERVER);
+  // Fetch effective permissions for all MCP servers. Member-only, like the server
+  // list above: a guest bearer is refused, and there are no servers to permit anyway.
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
+  const { data: permissionsMap } = useGetAllEffectivePermissionsQuery(ResourceType.MCPSERVER, {
+    enabled: isAuthenticated,
+  });
 
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [selectedToolForConfig, setSelectedToolForConfig] = useState<TPlugin | null>(null);
