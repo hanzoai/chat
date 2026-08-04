@@ -41,8 +41,6 @@ export * from './skills';
    Publishing the whole subtree would also publish sharp (a native binary) and
    the CloudFront SDKs, which this package does not otherwise carry. */
 export * from './storage/metadata';
-/* RUM */
-export * from './rum/proxy';
 /* Tools */
 export * from './tools';
 /* web search */

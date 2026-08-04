@@ -1,0 +1,12 @@
+# Native CI/CD. cloud/apps/git/build_on_push.go reads `images:` on a push to the
+# default branch and enqueues one build per entry at platform.hanzo.ai/v1/runner.
+# No `images:` anywhere in a repo means the orchestrator skips it silently.
+#
+# Matches .hanzo/workflows/deploy.yml on context, dockerfile and repo, so either
+# lane produces the same image. Tag is derived by hanzoai/ci imgver from
+# client/package.json, never set here.
+images:
+  - name: chat
+    context: .
+    dockerfile: Dockerfile
+    repo: ghcr.io/hanzoai/chat

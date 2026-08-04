@@ -72,7 +72,7 @@ jobs:
         env:
           KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
           KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
-          KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://kms.hanzo.ai' }}
+          KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://api.hanzo.ai' }}
         run: |
           set -uo pipefail
           if [ -z "${KMS_CLIENT_ID:-}" ] || [ -z "${KMS_CLIENT_SECRET:-}" ]; then
@@ -86,8 +86,14 @@ jobs:
           if [ -z "$TOKEN" ]; then
             echo "::error::KMS login failed — shipping a bundle with no ingest key"; exit 0
           fi
-          V=$(curl -sf "$KMS_ENDPOINT/v1/kms/orgs/hanzo/secrets/deploy/EVENT_INGEST_KEY?env=prod" \
-            -H "Authorization: Bearer $TOKEN" | jq -r '.secret.value // empty')
+          # KMS is embedded in hanzoai/cloud now (HIP-0106): the org comes from the
+          # TOKEN, not the url, and the body is flat {"name","env","value"}. The old
+          # /v1/kms/orgs/<org>/... + .secret.value pair 404s and selects nothing, and
+          # `curl -sf` turns that into "" -- indistinguishable from a missing secret.
+          # Worse, the standalone instance still holds a STALE key that cloud rejects
+          # at ingest with 403, so reading the old host ships a key that cannot write.
+          V=$(curl -sf "$KMS_ENDPOINT/v1/kms/secrets/deploy/EVENT_INGEST_KEY?env=prod" \
+            -H "Authorization: Bearer $TOKEN" | jq -r '.value // empty')
           if [ -z "$V" ]; then
             echo "::error::EVENT_INGEST_KEY absent from KMS (hanzo/deploy env=prod) — shipping a bundle with no ingest key"; exit 0
           fi

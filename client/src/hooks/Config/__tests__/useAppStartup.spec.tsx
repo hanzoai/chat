@@ -20,11 +20,6 @@ jest.mock('~/utils/timestamps', () => ({
   cleanupTimestampedStorage: jest.fn(),
 }));
 
-jest.mock('react-gtm-module', () => ({
-  __esModule: true,
-  default: { initialize: jest.fn() },
-}));
-
 import useAppStartup from '../useAppStartup';
 
 const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
