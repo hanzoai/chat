@@ -1,12 +1,16 @@
 import * as React from 'react';
-import * as SwitchPrimitives from '@radix-ui/react-switch';
+import { Switch as GuiSwitch } from '@hanzo/ui/primitives/Switch';
 import { cn } from '~/utils';
 
 type BaseSwitchProps = Omit<
-  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>,
+  React.ComponentProps<typeof GuiSwitch>,
   'aria-label' | 'aria-labelledby'
 >;
 
+/**
+ * Like Checkbox: a switch must be NAMED, and requiring exactly one of
+ * `aria-label` / `aria-labelledby` at compile time is what this wrapper is for.
+ */
 type SwitchProps =
   | (BaseSwitchProps & {
       'aria-label': string;
@@ -17,24 +21,17 @@ type SwitchProps =
       'aria-label'?: never;
     });
 
-const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, SwitchProps>(
-  ({ className, ...props }, ref) => (
-    <SwitchPrimitives.Root
-      className={cn(
-        'peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-switch-unchecked',
-        className,
-      )}
-      {...props}
-      ref={ref}
-    >
-      <SwitchPrimitives.Thumb
-        className={cn(
-          'pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
-        )}
-      />
-    </SwitchPrimitives.Root>
-  ),
+/**
+ * @hanzo/ui paints the 36x20 track, the 16px thumb, the checked/unchecked
+ * colours and the 44px touch floor, and it moves the thumb itself — so the old
+ * wrapper's track geometry, `data-[state=*]` colour rules and the manual
+ * `translate-x-5` thumb transform are all gone with it.
+ *
+ * `peer` stays for the same reason as on Checkbox: sibling labels use
+ * `peer-disabled:*`, which only resolves against an element declaring `peer`.
+ */
+const Switch = ({ className, ...props }: SwitchProps) => (
+  <GuiSwitch {...props} className={cn('peer', className)} />
 );
-Switch.displayName = SwitchPrimitives.Root.displayName;
 
 export { Switch };
