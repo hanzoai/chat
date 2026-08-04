@@ -84,8 +84,12 @@ RUN case "$EVENT_INGEST_KEY" in \
 # read nothing), so shipping it in a bundle is the documented use. It is still a
 # credential: it comes from KMS (org `hanzo`, path `deploy`, name EVENT_INGEST_KEY,
 # env `prod`) and is passed with --build-arg by CI. Never commit a value here.
-ARG VITE_EVENT_INGEST_KEY=
-ENV VITE_EVENT_INGEST_KEY=$VITE_EVENT_INGEST_KEY
+#
+# The ARG/ENV pair that used to sit here RE-DECLARED VITE_EVENT_INGEST_KEY with an
+# empty default and immediately assigned it over the value set above, so the key
+# resolved, passed its gate, and was then blanked before Vite ever inlined it.
+# That is how 1.0.58 published an empty bundle from a fully green run. The value
+# is set ONCE, from EVENT_INGEST_KEY, above.
 
 # `&&`, not `;`. With `;` the RUN exits with the status of the LAST command, so a
 # failed `pnpm run frontend` was masked by a successful `pnpm store prune` and the
@@ -94,6 +98,14 @@ ENV VITE_EVENT_INGEST_KEY=$VITE_EVENT_INGEST_KEY
 RUN \
     # React client build with configurable memory
     NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}" pnpm run frontend && \
+    # Did Vite actually INLINE it? A key that is present in the environment and
+    # absent from the bundle is indistinguishable from success everywhere except
+    # the warehouse, where the traffic just stops being attributable. 1.0.58 was
+    # exactly that: every step green, the key blanked by a shadowing ARG, and the
+    # bundle empty. Assert on the bytes that ship, which is the only place the
+    # claim is true or false.
+    { grep -rqF "$VITE_EVENT_INGEST_KEY" client/dist || \
+      { echo "ERROR: the ingest key is not in client/dist - hanzo.chat would ship unattributed" >&2; exit 1; }; } && \
     pnpm store prune
 
 # Boot gate — see scripts/check-barrel.cjs. Runs against the dist that was just
