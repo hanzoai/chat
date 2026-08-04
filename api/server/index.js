@@ -219,6 +219,25 @@ const startServer = async () => {
   app.use(ErrorController);
 
   app.use((req, res) => {
+    /* A request that names a FILE and reached this far is a file we do not have.
+       Answering it with the SPA shell is what turns one missing asset into a
+       permanently blank page: index.html declares 27 `<script type="module">`
+       tags, we serve `Content-Type: text/html` for a `.js` URL, and under
+       `X-Content-Type-Options: nosniff` the browser refuses the module ("Expected
+       a JavaScript-or-Wasm module script but the server responded with a MIME
+       type of text/html"). React never mounts, so #loading-container stays and
+       the page is black. Worse, the shell arrives as a 200, so the Workbox
+       service worker precaches it under the asset's URL with `revision: null` —
+       cache-first and never revalidated — and no ordinary reload can recover;
+       only a hard reload or unregistering the worker clears it.
+       A 404 is both the honest answer and an unswallowable one. Extensionless
+       paths are SPA routes and still get the shell. */
+    const ext = path.extname(req.path).toLowerCase();
+    if (ext && ext !== '.html') {
+      res.status(404).type('txt').send('Not Found');
+      return;
+    }
+
     res.set({
       'Cache-Control': process.env.INDEX_CACHE_CONTROL || 'no-cache, no-store, must-revalidate',
       Pragma: process.env.INDEX_PRAGMA || 'no-cache',
