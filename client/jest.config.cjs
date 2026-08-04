@@ -46,8 +46,14 @@ module.exports = {
     // See the file header for why it is in the graph at all.
     '^react-native-svg$': '<rootDir>/test/react-native-svg.stub.js',
     '^~/(.*)$': '<rootDir>/src/$1',
+    // Map straight at the workspace SOURCE, not at a node_modules path. pnpm's
+    // hoisted linker puts the workspace link in client/node_modules, not the repo
+    // root, so '<rootDir>/../node_modules/@hanzochat/data-provider' does not exist
+    // after a clean install and every suite importing this specifier failed to
+    // resolve. The source path is the same file either way and does not depend on
+    // how the linker happened to lay node_modules out.
     '^@hanzochat/data-provider/react-query$':
-      '<rootDir>/../node_modules/@hanzochat/data-provider/src/react-query',
+      '<rootDir>/../packages/data-provider/src/react-query',
   },
   restoreMocks: true,
   testResultsProcessor: 'jest-junit',

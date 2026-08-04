@@ -62,6 +62,19 @@ COPY --chown=node:node . .
 ARG EVENT_INGEST_KEY
 ENV VITE_EVENT_INGEST_KEY=$EVENT_INGEST_KEY
 
+# Publishable event-ingest key (pk-live-…), inlined by Vite into the client bundle.
+# Deliberately has NO default: a wrong or absent key is not a degraded mode, it is
+# the anonymous lane — every row filed under the `$public` tenant and every identify
+# dropped with a 200 receipt. Leaving it empty keeps that failure honest and visible
+# rather than silently pinning the fleet to some other org's partition.
+#
+# Publishable and write-only by design (it authorizes a write into ONE org and can
+# read nothing), so shipping it in a bundle is the documented use. It is still a
+# credential: it comes from KMS (org `hanzo`, path `deploy`, name EVENT_INGEST_KEY,
+# env `prod`) and is passed with --build-arg by CI. Never commit a value here.
+ARG VITE_EVENT_INGEST_KEY=
+ENV VITE_EVENT_INGEST_KEY=$VITE_EVENT_INGEST_KEY
+
 # `&&`, not `;`. With `;` the RUN exits with the status of the LAST command, so a
 # failed `pnpm run frontend` was masked by a successful `pnpm store prune` and the
 # build went green with no dist — which is how an image that cannot boot reached
