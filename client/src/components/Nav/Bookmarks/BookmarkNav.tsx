@@ -1,8 +1,7 @@
 import { useState, useId, useMemo, useCallback } from 'react';
 import * as Ariakit from '@ariakit/react';
-import { CrossCircledIcon } from '@radix-ui/react-icons';
+import { Bookmark, CircleX } from 'lucide-react';
 import { DropdownPopup, TooltipAnchor } from '@hanzochat/client';
-import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import type * as t from '~/common';
 import type { FC } from 'react';
 import { useGetConversationTags } from '~/data-provider';
@@ -54,7 +53,7 @@ const BookmarkNav: FC<BookmarkNavProps> = ({ tags, setTags }: BookmarkNavProps) 
       {
         id: 'clear-all',
         label: localize('com_ui_clear_all'),
-        icon: <CrossCircledIcon className="size-4" />,
+        icon: <CircleX className="size-4" />,
         hideOnClick: false,
         onClick: handleClear,
       },
@@ -75,9 +74,9 @@ const BookmarkNav: FC<BookmarkNavProps> = ({ tags, setTags }: BookmarkNavProps) 
           label: bookmark.tag,
           hideOnClick: false,
           icon: isSelected ? (
-            <BookmarkFilledIcon className="size-4" />
+            <Bookmark className="size-4" fill="currentColor" />
           ) : (
-            <BookmarkIcon className="size-4" />
+            <Bookmark className="size-4" />
           ),
           onClick: () => handleTagClick(bookmark.tag),
           ariaChecked: isSelected,
@@ -116,9 +115,13 @@ const BookmarkNav: FC<BookmarkNavProps> = ({ tags, setTags }: BookmarkNavProps) 
               data-testid="bookmark-menu"
             >
               {tags.length > 0 ? (
-                <BookmarkFilledIcon aria-hidden="true" className="icon-lg text-text-primary" />
+                <Bookmark
+                  aria-hidden="true"
+                  className="icon-lg text-text-primary"
+                  fill="currentColor"
+                />
               ) : (
-                <BookmarkIcon aria-hidden="true" className="icon-lg text-text-primary" />
+                <Bookmark aria-hidden="true" className="icon-lg text-text-primary" />
               )}
             </Ariakit.MenuButton>
           }

@@ -1,7 +1,6 @@
 import { startTransition } from 'react';
-import { Search as SearchIcon } from 'lucide-react';
 import * as RadixSelect from '@radix-ui/react-select';
-import { CheckIcon, ChevronDownIcon } from '@radix-ui/react-icons';
+import { Check, ChevronDown, Search as SearchIcon } from 'lucide-react';
 import {
   Combobox,
   ComboboxItem,
@@ -86,7 +85,7 @@ export default function ComboboxComponent({
         >
           <SelectValue placeholder={selectPlaceholder}>
             <div className="assistant-item flex items-center justify-center overflow-hidden rounded-full">
-              {SelectIcon ? SelectIcon : <ChevronDownIcon />}
+              {SelectIcon ? SelectIcon : <ChevronDown className="h-4 w-4" />}
             </div>
             <span
               className={cn('ml-2', isCollapsed ? 'hidden' : '')}
@@ -151,7 +150,7 @@ export default function ComboboxComponent({
                     >
                       <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
                         <RadixSelect.ItemIndicator>
-                          <CheckIcon className="h-4 w-4" />
+                          <Check className="h-4 w-4" />
                         </RadixSelect.ItemIndicator>
                       </span>
                       <RadixSelect.ItemText>

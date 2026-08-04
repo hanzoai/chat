@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import { Input } from '@hanzochat/client';
-import { Cross1Icon } from '@radix-ui/react-icons';
 import type { TPrompt } from '@hanzochat/data-provider';
 import { useUpdatePromptLabels } from '~/data-provider';
 
@@ -45,7 +45,7 @@ const PromptForm = ({ selectedPrompt }: { selectedPrompt?: TPrompt }) => {
               key={index}
             >
               {label}
-              <Cross1Icon
+              <X
                 onClick={() => {
                   const newLabels = labels.filter((l) => l !== label);
                   setLabels(newLabels);
@@ -54,7 +54,7 @@ const PromptForm = ({ selectedPrompt }: { selectedPrompt?: TPrompt }) => {
                     payload: { labels: newLabels },
                   });
                 }}
-                className="cursor-pointer"
+                className="h-4 w-4 cursor-pointer"
               />
             </label>
           ))
