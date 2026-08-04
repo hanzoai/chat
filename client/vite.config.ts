@@ -289,11 +289,38 @@ export default defineConfig(({ command }) => ({
       '~': path.join(__dirname, 'src/'),
       $fonts: path.resolve(__dirname, 'public/fonts'),
       'micromark-extension-math': 'micromark-extension-llm-math',
+      // @hanzo/ui's primitives are backed by @hanzo/gui, which is authored
+      // against the react-native API. On web that API IS react-native-web.
+      // Prefix-safe: @rollup/plugin-alias only matches `react-native` exactly
+      // or `react-native/…`, so `react-native-svg` and `react-native-web`
+      // resolve to themselves.
+      'react-native': 'react-native-web',
     },
+    // react-native-web's convention is a `.web.*` sibling that replaces the
+    // native module. Vite has no built-in knowledge of it, so without this
+    // `react-native-svg` resolves to its Fabric (native) build and reaches for
+    // `react-native-web/Libraries/Utilities/codegenNativeComponent`, which does
+    // not exist. Listing `.web.*` first makes the web sibling win.
+    extensions: [
+      '.web.tsx',
+      '.web.ts',
+      '.web.jsx',
+      '.web.js',
+      '.mjs',
+      '.js',
+      '.mts',
+      '.ts',
+      '.jsx',
+      '.tsx',
+      '.json',
+    ],
   },
   // Pre-bundle the compiled-ESM shell so the dev server resolves it cleanly.
   optimizeDeps: {
     include: ['@hanzogui/shell'],
+    // @hanzo/gui ships as source-shaped ESM across ~60 @hanzogui/* packages.
+    // Pre-bundling it flattens that graph for the dev server.
+    exclude: ['@hanzo/gui', '@hanzo/ui'],
   },
 }));
 
