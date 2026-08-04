@@ -186,6 +186,13 @@
     "@opentelemetry/sdk-trace-base": "^2.5.1"
   },
   "pnpm": {
+    "packageExtensions": {
+      "@hanzogui/static": {
+        "dependencies": {
+          "typescript": "^5.9.3"
+        }
+      }
+    },
     "onlyBuiltDependencies": [
       "sharp",
       "protobufjs",

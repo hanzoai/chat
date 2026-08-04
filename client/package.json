@@ -130,6 +130,7 @@
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.22.15",
+    "@hanzogui/vite-plugin": "8.0.1",
     "@tanstack/react-query-devtools": "^4.29.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^5.16.5",
