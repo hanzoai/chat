@@ -103,6 +103,34 @@ describe('Server Configuration', () => {
     }
   });
 
+  it('404s a missing asset instead of answering it with the SPA shell', async () => {
+    /* A hashed bundle that does not exist must not come back as 200 text/html.
+       index.html declares its scripts as `type="module"`, and under nosniff a
+       module served as text/html is refused outright — so the shell-for-asset
+       answer blanks the page. It also arrives as a 200, which is cacheable: the
+       Workbox precache stores it under the asset URL with `revision: null` and
+       never revalidates, wedging that browser until a hard reload. */
+    for (const missing of [
+      '/assets/index.DEADBEEF.js',
+      '/assets/vendor.NOPE1234.js',
+      '/assets/index.MISSING1.css',
+      '/manifest.webmanifest',
+    ]) {
+      const response = await request(app).get(missing);
+      expect(response.status).toBe(404);
+      expect(response.headers['content-type']).not.toMatch(/text\/html/);
+    }
+  });
+
+  it('still serves the SPA shell for extensionless client routes', async () => {
+    /* The 404 above keys on a file extension, so deep links must be unaffected. */
+    for (const route of ['/c/new', '/login', '/search']) {
+      const response = await request(app).get(route);
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toMatch(/text\/html/);
+    }
+  });
+
   it('redirects stored image paths into the namespace', async () => {
     const response = await request(app).get('/images/65cfb246f7ecadb8b1e8036c/x.png');
     expect(response.status).toBe(301);
