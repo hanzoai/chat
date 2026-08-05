@@ -8,10 +8,15 @@ import { cn } from '~/utils';
 /**
  * ONE link style for every footer link (main content, privacy, terms).
  *
+ * No underline. A rule of underlined links across the bottom of every screen is
+ * a second horizontal line competing with the composer above it; the link says
+ * it is a link by lifting to the foreground colour under the pointer, which is
+ * how the rest of the product spells the same thing.
+ *
  * `pointer-events-auto` re-arms the links against the strip's
  * `pointer-events-none` — see the note on the container below.
  */
-const LINK = 'pointer-events-auto text-text-secondary underline';
+const LINK = 'pointer-events-auto text-text-secondary hover:text-text-primary';
 
 export default function Footer({ className }: { className?: string }) {
   const { data: config } = useGetStartupConfig();
@@ -47,12 +52,7 @@ export default function Footer({ className }: { className?: string }) {
         components={{
           a: ({ node: _n, href, children, ...otherProps }) => {
             return (
-              <a
-                className={LINK}
-                href={href}
-                rel="noreferrer"
-                {...otherProps}
-              >
+              <a className={LINK} href={href} rel="noreferrer" {...otherProps}>
                 {children}
               </a>
             );
