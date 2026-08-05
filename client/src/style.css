@@ -2851,32 +2851,18 @@ html {
     conic-gradient(from var(--hz-angle), var(--hz-spectrum));
 }
 
-.popover-ui {
-  display: flex;
-  max-height: min(var(--popover-available-height, 1700px), 1700px);
-  flex-direction: column;
-  overflow: auto;
-  overscroll-behavior: contain;
-  border-radius: 0.7rem;
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--border-light);
-  background-color: var(--surface-primary);
-  padding: 0.5rem;
-  color: var(--text-primary);
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-  transform-origin: top;
-  opacity: 0;
-  transition-property: opacity, scale, translate;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-  scale: 0.95;
-  translate: 0 -0.5rem;
-  margin-top: 4px;
-  margin-right: -2px;
-}
+/* `.popover-ui` and `.select-item` are declared ONCE, in
+   `packages/client/src/components/Dropdown.css`, beside the only two components
+   that wear them — `Dropdown` and `DropdownPopup`, both of which import that
+   sheet. A second copy lived here and lost every cascade it entered: the radius
+   the product actually painted was always the other file's 1rem, never this
+   one's 0.7rem. That is the failure mode worth naming — a rule you can edit
+   without effect reads as owned, so both copies get maintained and only one is
+   ever seen.
+
+   `.popover-animate` stays here: chat's own Feedback and Fork wear it and
+   neither imports Dropdown.css. Each rule lives with the components that use
+   it, and only there. */
 
 .popover-animate {
   opacity: 0;
@@ -2890,52 +2876,8 @@ html {
   transform: scale(1) translateY(0);
 }
 
-/* `outline: var(--bg-surface-hover)` — a tailwind CLASS name written as a custom
-   property, so the token was never defined and these popovers had no keyboard
-   focus indicator at all. Caught by e2e/specs/tokens.spec.ts. --ring is the
-   system's focus colour and clears 3:1 in both themes. */
-.popover-ui:focus-visible,
-.popover-ui[data-focus-visible] {
-  outline: 2px solid var(--ring);
-  outline-offset: -1px;
-}
-
-.popover-ui:where(.dark, .dark *) {
-  background-color: var(--surface-secondary);
-  color: var(--text-secondary);
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.25),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-
-.select-item {
-  display: flex;
-  cursor: pointer;
-  scroll-margin: 0.5rem;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  outline: none !important;
-}
-
-.select-item[aria-disabled='true'] {
-  opacity: 0.5;
-}
-
-.select-item[data-active-item] {
-  background-color: var(--surface-hover);
-  color: var(--text-primary);
-}
-
 .account-settings-popover .select-item[data-active-item] {
   box-shadow: 0 0 0 2px var(--ring);
-}
-
-.popover-ui[data-enter] {
-  opacity: 1;
-  scale: 1;
-  translate: 0;
 }
 
 .animate-popover-top,
