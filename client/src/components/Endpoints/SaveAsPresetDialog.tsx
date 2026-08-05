@@ -83,7 +83,7 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
         }
         selection={{
           selectHandler: submitPreset,
-          selectClasses: 'bg-primary hover:bg-primary/90 text-primary-foreground',
+          selectClasses: 'bg-primary hover:bg-primary-hover text-primary-foreground',
           selectText: localize('com_ui_save'),
         }}
       />

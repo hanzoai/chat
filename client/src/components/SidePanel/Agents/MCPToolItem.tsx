@@ -35,7 +35,7 @@ function getToolItemStyle(isDeferred: boolean, isProgrammatic: boolean): string 
   if (isProgrammatic) {
     return 'border-violet-500/50 bg-violet-500/5 hover:bg-violet-500/10';
   }
-  return 'border-token-border-light hover:bg-token-surface-secondary';
+  return 'border-token-border-light hover:bg-surface-secondary';
 }
 
 export default function MCPToolItem({

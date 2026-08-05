@@ -25,7 +25,7 @@ export default function ActionCallback({ action_id }: { action_id?: string }) {
     <div className="mb-1.5 flex flex-col space-y-2">
       <label className="font-semibold">{localize('com_ui_callback_url')}</label>
       <div className="relative flex items-center">
-        <div className="border-token-border-medium bg-token-surface-primary hover:border-token-border-hover flex h-10 w-full rounded-lg border">
+        <div className="border-token-border-medium bg-token-surface-primary hover:border-border-heavy flex h-10 w-full rounded-lg border">
           <div className="flex-1 overflow-hidden">
             <div className="relative w-full">
               <input

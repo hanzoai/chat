@@ -1,12 +1,17 @@
+import { useAtomValue } from 'jotai';
 import { useQuery } from '@tanstack/react-query';
 import { Constants, QueryKeys, dataService } from '@hanzochat/data-provider';
 import type { QueryObserverResult, UseQueryOptions } from '@tanstack/react-query';
 import type t from '@hanzochat/data-provider';
+import store from '~/store';
 
 export const useVerifyAgentToolAuth = (
   params: t.VerifyToolAuthParams,
   config?: UseQueryOptions<t.VerifyToolAuthResponse>,
 ): QueryObserverResult<t.VerifyToolAuthResponse> => {
+  /* Member-only route: it refuses a guest bearer, so asking as one only logs a 401
+     (three on every anonymous boot — code interpreter, then web search). */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
   return useQuery<t.VerifyToolAuthResponse>(
     [QueryKeys.toolAuth, params.toolId],
     () => dataService.getVerifyAgentToolAuth(params),
@@ -15,6 +20,7 @@ export const useVerifyAgentToolAuth = (
       refetchOnReconnect: false,
       refetchOnMount: false,
       ...config,
+      enabled: (config?.enabled ?? true) === true && isAuthenticated,
     },
   );
 };
