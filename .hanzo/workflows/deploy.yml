@@ -92,10 +92,10 @@ jobs:
           # `curl -sf` turns that into "" -- indistinguishable from a missing secret.
           # Worse, the standalone instance still holds a STALE key that cloud rejects
           # at ingest with 403, so reading the old host ships a key that cannot write.
-          V=$(curl -sf "$KMS_ENDPOINT/v1/kms/secrets/deploy/EVENT_INGEST_KEY?env=prod" \
+          V=$(curl -sf "$KMS_ENDPOINT/v1/kms/secrets/deploy/PUBLISHABLE_KEY?env=prod" \
             -H "Authorization: Bearer $TOKEN" | jq -r '.value // empty')
           if [ -z "$V" ]; then
-            echo "::error::EVENT_INGEST_KEY absent from KMS (hanzo/deploy env=prod) — shipping a bundle with no ingest key"; exit 0
+            echo "::error::PUBLISHABLE_KEY absent from KMS (hanzo/deploy env=prod) — shipping a bundle with no ingest key"; exit 0
           fi
           echo "::add-mask::$V"
           echo "key=$V" >> "$GITHUB_OUTPUT"
@@ -112,7 +112,7 @@ jobs:
             ghcr.io/hanzoai/chat:${{ steps.ver.outputs.version }}
             ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }}
           build-args: |
-            EVENT_INGEST_KEY=${{ steps.ingest.outputs.key }}
+            PUBLISHABLE_KEY=${{ steps.ingest.outputs.key }}
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GH_PAT }}
 
