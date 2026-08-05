@@ -32,6 +32,7 @@ import store from '~/store';
 
 const BookmarkNav = lazy(() => import('./Bookmarks/BookmarkNav'));
 const AccountSettings = lazy(() => import('./AccountSettings'));
+const Visitor = lazy(() => import('./Visitor'));
 
 export const NAV_WIDTH = {
   MOBILE: 320,
@@ -250,8 +251,11 @@ const Nav = memo(
               />
             </div>
           </div>
+          {/* One foot, two states. The account block belongs to a session; the
+              visitor block belongs to everyone else, and they are exclusive so
+              the corner never shows an account menu with no account behind it. */}
           <Suspense fallback={<Skeleton className="mt-1 h-12 w-full rounded-xl" />}>
-            <AccountSettings />
+            {isAuthenticated ? <AccountSettings /> : <Visitor />}
           </Suspense>
         </nav>
       </div>
