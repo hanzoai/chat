@@ -42,7 +42,7 @@
     "@hanzo/logo": "^1.0.13",
     "@hanzo/observe": "^0.1.0",
     "@hanzo/plans": "1.4.12",
-    "@hanzo/ui": "^8.0.42",
+    "@hanzo/ui": "^8.0.48",
     "@hanzo/usage": "^0.1.6",
     "@hanzo/voice": "0.1.3",
     "@hanzochat/client": "workspace:*",

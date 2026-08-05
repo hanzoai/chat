@@ -27,6 +27,19 @@
    adds. Chat's own overrides below still win — they come later in the file. */
 @import '@hanzo/ui/theme.css';
 
+/* The dark-glass material and its elevation ladder, named EXPLICITLY rather than
+   taken from theme.css. theme.css does inline this slice — at 8.0.48 and above.
+   At 8.0.42, which is what a plain install resolved, `./glass.css` is not even
+   an export, and the difference is invisible: every `data-slot` below still
+   parses, the page still renders, and nothing is behind any of them. A menu with
+   no material is a menu you read the page through, and it reaches production
+   looking like a build that worked.
+
+   So the import is spelled out and the floor is `^8.0.48` — the version that
+   first shipped the module. One line that fails loudly at build time if the
+   dependency ever slips back under it, instead of a silently unstyled product. */
+@import '@hanzo/ui/glass.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
