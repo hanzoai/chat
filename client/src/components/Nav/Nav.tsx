@@ -153,14 +153,11 @@ const Nav = memo(
       }
     }, [isSmallScreen, toggleNavVisible]);
 
-    useEffect(() => {
-      if (isSmallScreen) {
-        const savedNavVisible = localStorage.getItem('navVisible');
-        if (savedNavVisible === null) {
-          toggleNavVisible();
-        }
-      }
-    }, [isSmallScreen, toggleNavVisible]);
+    // No auto-toggle effect here: the first-visit default (closed on a phone,
+    // open on desktop) is Root's initial state. An effect correcting it after
+    // mount raced its own localStorage write — its guard read `null`, re-ran
+    // when `toggleNavVisible`'s identity changed, and toggled the drawer back
+    // open before the first write committed.
 
     useEffect(() => {
       refetch();

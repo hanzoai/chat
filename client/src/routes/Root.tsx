@@ -29,9 +29,19 @@ import ProjectBanner from '~/components/Chat/ProjectBanner';
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
   const [bannerHeight, setBannerHeight] = useState(0);
+  // The drawer's first-visit default is decided HERE, once, from the viewport:
+  // canvas on desktop, chrome on a phone. It used to default `true` everywhere
+  // and let an effect in Nav toggle phones closed after mount — an open→closed
+  // flash at best, and at worst the effect re-ran before the first toggle's
+  // localStorage write landed and toggled BACK, leaving a fresh phone with the
+  // drawer open over the pushed-aside chat. A default is not a choice, so
+  // nothing is written to localStorage until the user actually toggles.
   const [navVisible, setNavVisible] = useState(() => {
     const savedNavVisible = localStorage.getItem('navVisible');
-    return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
+    if (savedNavVisible !== null) {
+      return JSON.parse(savedNavVisible);
+    }
+    return !window.matchMedia('(max-width: 768px)').matches;
   });
 
   const { isAuthenticated, isGuest, logout, token } = useAuthContext();
