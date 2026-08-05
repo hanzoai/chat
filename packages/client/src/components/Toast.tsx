@@ -5,16 +5,20 @@ import { useToast } from '~/hooks';
 export function Toast() {
   const { toast, onOpenChange } = useToast();
   const severityClassName = {
-    /* Going up by 100 units in terms of darkness (eg bg-green-500 to bg-green-600) for
-     * bg colors produces colors that are too visually dissimilar to Chat's standard color palette.
-     * These colors were derived by adjusting the values in the HSV color space using CCA
-     * until the 4.5:1 contrast ratio threshold was met against white text while maintaining
-     * a relatively recognizable color scheme for toasts without compromising accessibility.
-     * */
-    [NotificationSeverity.INFO]: 'border-gray-500 bg-gray-500',
-    [NotificationSeverity.SUCCESS]: 'border-[#02855E] bg-[#02855E]',
-    [NotificationSeverity.WARNING]: 'border-[#C75209] bg-[#C75209]',
-    [NotificationSeverity.ERROR]: 'border-[#E02F1F] bg-[#E02F1F]',
+    /* A toast is floating chrome, so it is made of the same material as every
+     * other floating surface and says which kind it is with a LEFT EDGE rather
+     * than by flooding the whole panel with a hue. These four were the only
+     * saturated fills left in the product — a green, an orange and a red slab
+     * that arrived over a monochrome page — and severity survives the change
+     * because the edge still carries it.
+     *
+     * Only the error keeps a colour, because red is the one signal a reader must
+     * not have to parse text to notice; it is `--border-destructive`, the token
+     * the rest of the app already refuses in. */
+    [NotificationSeverity.INFO]: 'glass elevation-2 border-l-4 border-l-border-heavy',
+    [NotificationSeverity.SUCCESS]: 'glass elevation-2 border-l-4 border-l-text-primary',
+    [NotificationSeverity.WARNING]: 'glass elevation-2 border-l-4 border-l-text-secondary',
+    [NotificationSeverity.ERROR]: 'glass elevation-2 border-l-4 border-l-border-destructive',
   };
 
   return (
@@ -29,7 +33,7 @@ export function Toast() {
     >
       <div className="w-full p-1 text-center md:w-auto md:text-justify">
         <div
-          className={`alert-root pointer-events-auto inline-flex flex-row gap-2 rounded-md border px-3 py-2 font-bold text-white ${
+          className={`alert-root pointer-events-auto inline-flex flex-row gap-2 rounded-md border border-border-medium px-3 py-2 font-medium text-text-primary ${
             severityClassName[toast.severity]
           }`}
         >
