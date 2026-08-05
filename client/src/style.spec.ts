@@ -126,6 +126,82 @@ describe('the look, ratcheted', () => {
   });
 });
 
+/**
+ * The composer is ONE surface with ONE boundary.
+ *
+ * These are laws, not budgets — each names a rule that must exist, because each
+ * replaced a second box the eye read as a bug. A count would be the wrong shape:
+ * there is no acceptable number of extra rings around the composer.
+ */
+describe('the composer, one surface', () => {
+  const css = read(path.join(CLIENT, 'style.css'));
+
+  /** The declarations of the rule whose selector list ends with `selector`. */
+  const block = (selector: string): string => {
+    const i = css.indexOf(`${selector} {`);
+    if (i < 0) {
+      return '';
+    }
+    const open = css.indexOf('{', i);
+    const close = css.indexOf('}', open);
+    return css.slice(open + 1, close);
+  };
+
+  /**
+   * `@hanzo/design` gives every bare control a resting edge. A control that
+   * FILLS a rounded shell has no edge of its own — the shell is the boundary —
+   * and without this the composer draws an 8px box inside its own 24px curve.
+   */
+  it('gives a control inside a field no edge of its own', () => {
+    const decl = block('.field :is(textarea, input)');
+    expect(decl).toMatch(/border:\s*0/);
+    expect(decl).toMatch(/border-radius:\s*0/);
+  });
+
+  /**
+   * The prism IS the composer's edge, so `.field`'s ring does not paint a second
+   * one over it. Focusing the composer used to turn the lit sweep into a flat
+   * white rectangle.
+   */
+  it('never rings the composer in white', () => {
+    expect(block('.dark .hz-composer .field:has(:is(textarea, input):focus-visible)')).toMatch(
+      /outline:\s*none/,
+    );
+  });
+
+  /**
+   * …and killing that ring is only legitimate because something else says where
+   * focus is. The prism brightens instead — measured at 3.32:1 against its ground
+   * at the dimmest stop, clearing WCAG 1.4.11's 3:1 for a focus indicator.
+   */
+  it('makes the prism the focus indicator instead', () => {
+    expect(block('.hz-composer:focus-within::before')).toMatch(/conic-gradient/);
+    expect(block('.hz-composer:focus-within::after')).toMatch(/opacity/);
+  });
+
+  /**
+   * The OTHER shells keep theirs. `.field` is worn by six popovers and the answer
+   * composer, none of which has a prism, so removing the ring wholesale — the
+   * tempting one-line version of the fix above — silently strips the focus
+   * indicator from every one of them.
+   */
+  it('leaves the ring on every shell that has no prism', () => {
+    expect(block('.dark .field:has(:is(textarea, input):focus-visible)')).toMatch(/outline-color/);
+  });
+
+  /**
+   * Focus is CSS's job. React held an `isTextAreaFocused` state whose only
+   * purpose was to mirror focus back into the DOM for one selector to read.
+   *
+   * Matches the two ways the attribute would be USED — `data-focused=` in TSX,
+   * `[data-focused]` in a selector — rather than the word, so the comment in
+   * style.css explaining why it is gone does not trip its own rule.
+   */
+  it('does not mirror focus into an attribute for CSS to read', () => {
+    expect(hits(/data-focused[=\]]/g)).toEqual([]);
+  });
+});
+
 describe('the material', () => {
   const css = read(path.join(CLIENT, 'style.css'));
 

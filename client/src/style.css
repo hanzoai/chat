@@ -372,8 +372,13 @@
 
 /* Focus says so with LIGHT. It used to say so with `shadow-lg`, and a black
    drop on a near-black page is a state with no picture — the same reason the
-   elevation ladder above buys its depth from the lit edge. */
-.hz-composer[data-focused]::after {
+   elevation ladder above buys its depth from the lit edge.
+
+   `:focus-within` and not a `data-focused` attribute: React held a
+   `isTextAreaFocused` state whose only job was to mirror focus back into the DOM
+   for this one selector to read. CSS already knows. One mechanism, and a
+   re-render per focus and blur goes with it. */
+.hz-composer:focus-within::after {
   opacity: 0.85;
 }
 
@@ -2789,6 +2794,61 @@ html {
 
 .field :is(textarea, input):focus-visible {
   outline: none;
+}
+
+/*
+  …and the shell owns its control's EDGE for the same reason it owns the ring.
+
+  `@hanzo/design` gives every bare control a resting edge —
+  `:where(input, select, textarea) { border: 1px solid var(--border-control);
+  border-radius: var(--radius-md) }`. That is right for a field standing on its
+  own and wrong for one that FILLS a shell: the 8px box lands inside the shell's
+  24px curve and the composer reads as two boxes, an outline around "Ask
+  anything" floating inside the prism ring.
+
+  Four shells had already noticed and each written `border-0` on its own control
+  (Mention, PromptsCommand, AgentsCommand, SkillsCommand) — the same rule stated
+  four times, and not stated by the two that needed it most. It belongs here,
+  once, next to the ring it is the other half of: inside a `.field`, the shell is
+  the boundary and the control has none.
+*/
+.field :is(textarea, input) {
+  border: 0;
+  border-radius: 0;
+}
+
+/*
+  The composer's boundary is the prism, so it draws no second one.
+
+  `.field`'s ring is right for every OTHER shell — a popover, the answer
+  composer — which has no ring of its own. The chat composer already wears one:
+  `.hz-composer`'s conic sweep IS its edge. Both fired on the same focus and the
+  white 2px outline painted straight over the sweep, which is why focusing the
+  composer turned a lit gradient into a flat white rectangle.
+
+  One event, one indicator. The prism brightens instead — and it has to be
+  BRIGHT enough to BE the indicator, not merely different. Three passes of the
+  same gradient composite its stops from ~.45 to ~.83 alpha; sampled off the
+  rendered page at 126 points around the ring, the worst pair measures 3.32:1
+  against the ground beside it, clearing WCAG 1.4.11's 3:1. Two passes reach
+  only 2.8 — the ground here is not black, the ::after glow lights it, so this
+  number has to be measured rather than computed off the stop list. Same stops,
+  same hue, one declaration of `--hz-spectrum`: an alpha lift, not a repaint.
+
+  `:focus-within`, not the `:has()` above: the composer is one control surface
+  and its attach/mic/send buttons keep their own `:focus-visible` ring on their
+  own bounds, so the shell lighting up never costs you which button you are on.
+*/
+.hz-composer .field:has(:is(textarea, input):focus-visible),
+.dark .hz-composer .field:has(:is(textarea, input):focus-visible) {
+  outline: none;
+}
+
+.hz-composer:focus-within::before {
+  background:
+    conic-gradient(from var(--hz-angle), var(--hz-spectrum)),
+    conic-gradient(from var(--hz-angle), var(--hz-spectrum)),
+    conic-gradient(from var(--hz-angle), var(--hz-spectrum));
 }
 
 .popover-ui {
