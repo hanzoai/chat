@@ -113,6 +113,28 @@ describe('the look, ratcheted', () => {
   });
 
   /**
+   * Type comes from ONE ramp. `@hanzo/ui/gui-config` defines six sizes
+   * (11/13/14/15/17/21/26) and every `@hanzo/gui` component reads them by
+   * token. Tailwind's `text-*` scale is a SEVENTH through fifteenth opinion,
+   * in px, that no token can follow — so each utility is a size the ramp
+   * cannot move.
+   *
+   * `text-base` is the sharp end: it is 16px, and 16px is the base
+   * gui-config deliberately retired ("$5 collapses onto 15 to retire the 16px
+   * base"). Every one of these call sites puts it back.
+   *
+   * A budget, not a ban: 1235 of them is not a mass edit anyone should make in
+   * one commit, and the number falling is the migration.
+   */
+  it('does not grow the number of Tailwind font sizes fighting the ramp', () => {
+    atMost(
+      1235,
+      hits(/\btext-(?:xs|sm|base|lg|xl|2xl|3xl|4xl|5xl)\b/g),
+      'Tailwind fontSize utilities',
+    );
+  });
+
+  /**
    * The composer ring is the ONE prism, and it is the ONE conic gradient. A
    * second one anywhere means a second exemption was granted.
    */
@@ -268,4 +290,33 @@ describe('the material', () => {
     );
   });
 
+  /**
+   * The material reaches a surface two ways: a `data-slot` glass.css already
+   * styles, or the bare `glass` class for chrome no slot names — HoverCard and
+   * Toast take the second route and say so in a comment.
+   *
+   * These five take NEITHER, so every menu the product opens from them is one
+   * you read the page through. They are Ariakit and Headless UI popovers, not
+   * Radix, which is why no slot fits: the fix is the `glass` class, and it is
+   * held back from this change only because the five carry 57 call sites
+   * between them and a material change wants its own visual pass.
+   *
+   * Two of them (`DropdownPopup`, `Dropdown`) paint `.popover-ui`, an OPAQUE
+   * `--surface-primary` fill — and that class is declared TWICE, in
+   * `client/src/style.css` and in `packages/client/src/components/Dropdown.css`.
+   * One material, two owners: whichever is edited, the other holds still. Fold
+   * them into one before adding glass, or the fix lands in half the app.
+   *
+   * The list only shrinks. Deleting a name here is the migration; adding one is
+   * a new unglassed surface and this test is the review comment.
+   */
+  it.each(['DropdownPopup', 'Dropdown', 'SelectDropDown', 'ControlCombobox', 'InputCombobox'])(
+    '%s is still unglassed — remove it from this list when it is fixed, never add to it',
+    (file) => {
+      const src = read(path.join(SHARED, 'components', `${file}.tsx`));
+      expect(/data-slot="(?:dialog|dropdown-menu|popover|select|tooltip)-|\bglass\b/.test(src)).toBe(
+        false,
+      );
+    },
+  );
 });
