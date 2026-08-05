@@ -19,7 +19,7 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
   return (
     <div
       data-collapsed={isCollapsed}
-      className="bg-token-sidebar-surface-primary hide-scrollbar group flex-shrink-0 overflow-x-hidden"
+      className="bg-surface-primary-alt hide-scrollbar group flex-shrink-0 overflow-x-hidden"
     >
       <div className="h-full">
         <div className="flex h-full min-h-0 flex-col">
@@ -90,7 +90,7 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
                           </AccordionPrimitive.Trigger>
                         </AccordionPrimitive.Header>
 
-                        <AccordionContent className="bg-token-sidebar-surface-primary w-full text-text-primary">
+                        <AccordionContent className="bg-surface-primary-alt w-full text-text-primary">
                           {link.Component && <link.Component />}
                         </AccordionContent>
                       </AccordionItem>

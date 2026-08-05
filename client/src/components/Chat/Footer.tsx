@@ -71,7 +71,9 @@ export default function Footer({ className }: { className?: string }) {
   );
 
   return (
-    <div className="w-full">
+    /* pb-[env(...)]: 0 in a browser tab; in an installed PWA (viewport-fit=cover)
+       it keeps the composer clear of the iPhone home indicator. */
+    <div className="w-full pb-[env(safe-area-inset-bottom)]">
       {/*
         The strip lays out IN FLOW and occupies its own height.
 

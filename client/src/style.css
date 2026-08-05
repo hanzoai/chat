@@ -335,6 +335,12 @@
   background-color: var(--surface-secondary);
 }
 
+/* The shim family above had secondary but not primary, so the agent-builder
+   field boxes carried a class with no rule and rendered transparent. */
+.bg-token-surface-primary {
+  background-color: var(--surface-primary);
+}
+
 @media (max-width: 640px) {
   .no-gradient-sm {
     background: none !important;

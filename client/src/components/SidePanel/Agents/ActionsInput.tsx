@@ -224,7 +224,7 @@ export default function ActionsInput({
           </div>
           */}
         </div>
-        <div className="field border-token-border-medium bg-token-surface-primary hover:border-token-border-hover mb-4 w-full overflow-hidden rounded-lg border ring-0">
+        <div className="field border-token-border-medium bg-token-surface-primary hover:border-border-heavy mb-4 w-full overflow-hidden rounded-lg border ring-0">
           <div className="relative">
             <textarea
               id="schemaInput"
@@ -262,7 +262,7 @@ export default function ActionsInput({
             {localize('com_ui_privacy_policy_url')}
           </label>
         </div>
-        <div className="border-token-border-medium bg-token-surface-primary hover:border-token-border-hover flex h-9 w-full rounded-lg border">
+        <div className="border-token-border-medium bg-token-surface-primary hover:border-border-heavy flex h-9 w-full rounded-lg border">
           <input
             type="text"
             placeholder="https://api.example-weather-app.com/privacy"
@@ -274,7 +274,7 @@ export default function ActionsInput({
         <button
           disabled={!functions || !functions.length}
           onClick={saveAction}
-          className="focus:shadow-outline mt-1 flex min-w-[100px] items-center justify-center rounded bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-0 disabled:opacity-50"
+          className="focus:shadow-outline mt-1 flex min-w-[100px] items-center justify-center rounded bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary-hover focus:outline-none focus:ring-0 disabled:opacity-50"
           type="button"
         >
           {getButtonContent()}

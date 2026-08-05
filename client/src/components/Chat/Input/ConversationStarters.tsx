@@ -128,7 +128,7 @@ const ConversationStarters = () => {
           onClick={() => send(text)}
           disabled={isSubmitting}
           title={label}
-          className="max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+          className="min-h-11 max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
         >
           {label}
         </button>
@@ -137,7 +137,7 @@ const ConversationStarters = () => {
         <button
           onClick={openBuilder}
           title={localize('com_ui_build_app')}
-          className="inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-dashed border-border-medium bg-transparent px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-heavy hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none"
+          className="inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full border border-dashed border-border-medium bg-transparent px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-heavy hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none"
         >
           <AppWindow className="icon-sm" aria-hidden="true" />
           {localize('com_ui_build_app')}

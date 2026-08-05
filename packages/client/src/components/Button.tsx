@@ -8,7 +8,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default: 'bg-primary text-primary-foreground hover:bg-primary-hover',
         destructive:
           'bg-surface-destructive text-destructive-foreground hover:bg-surface-destructive-hover',
         outline:
@@ -17,7 +17,7 @@ const buttonVariants = cva(
         ghost: 'hover:bg-surface-hover hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
         // Monochrome primary CTA: adaptive white-on-dark / black-on-light (matches default).
-        submit: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        submit: 'bg-primary text-primary-foreground hover:bg-primary-hover',
       },
       // 44px is the pointer-target floor: the box grows, the glyph inside does not.
       size: {
