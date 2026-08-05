@@ -104,7 +104,7 @@ describe('the look, ratcheted', () => {
       const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
       return Math.max(r, g, b) - Math.min(r, g, b) > 12;
     });
-    atMost(326, found, 'hardcoded colours');
+    atMost(315, found, 'hardcoded colours');
   });
 
   /** Nothing in the product shouts. */

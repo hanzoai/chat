@@ -265,6 +265,7 @@
 
    Restating the rules here would be a second copy of a value that has one
    home, and it would hold still the day design moves the theme. */
+
 /* ── The composer ring — the ONE prism on any Hanzo surface ──────────────────
    A slow-drifting conic ring plus a soft glow on the chat composer, ~10s loop.
    The composer is where you talk to Hanzo, so it is the thing that should look
@@ -707,23 +708,6 @@ select {
 
 .hidden {
   display: none;
-}
-
-.creative-tab {
-  /* background: linear-gradient(90deg, #904887 10.79%, #8B257E 87.08%); */
-  background: linear-gradient(90deg, #904887 10.79%, #8b257e 87.08%);
-}
-
-.fast-tab {
-  background: linear-gradient(90deg, #2870ea 10.79%, #1b4aef 87.08%);
-}
-
-.balanced-tab {
-  background: linear-gradient(90deg, #d7871a 10.79%, #9f6005 87.08%);
-}
-
-.precise-tab {
-  background: linear-gradient(90deg, #006880 10.79%, #005366 87.08%);
 }
 
 p > small {
@@ -1172,7 +1156,10 @@ pre {
   --tw-prose-body: #424242;
   --tw-prose-headings: #111827;
   --tw-prose-lead: #4b5563;
-  --tw-prose-links: #0066cc;
+  /* A link in body copy is already marked by its underline; colouring it as
+     well is a second signal, and blue is the one hue the product does not
+     otherwise own. The foreground token carries it in both themes. */
+  --tw-prose-links: var(--text-primary);
   --tw-prose-bold: #111827;
   --tw-prose-counters: #6b7280;
   --tw-prose-bullets: #d1d5db;
@@ -1188,7 +1175,7 @@ pre {
   --tw-prose-invert-body: #d1d5db;
   --tw-prose-invert-headings: #fff;
   --tw-prose-invert-lead: #9ca3af;
-  --tw-prose-invert-links: #fff;
+  --tw-prose-invert-links: var(--text-primary);
   --tw-prose-invert-bold: #fff;
   --tw-prose-invert-counters: #9ca3af;
   --tw-prose-invert-bullets: #4b5563;
@@ -2039,10 +2026,6 @@ html {
 }
 .markdown tbody tr:last-child td:last-child {
   border-bottom-right-radius: 0.75rem;
-}
-.markdown a {
-  text-decoration-line: underline;
-  text-underline-offset: 2px;
 }
 .conversation-item-time:before {
   content: attr(data-time);
