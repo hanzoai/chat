@@ -22,7 +22,7 @@ const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api
  * then dropped — and the caller still gets 200, so the loss is silent on both
  * ends. The key is what buys full-capability ingest.
  */
-const INGEST_KEY = import.meta.env.VITE_EVENT_INGEST_KEY?.trim() || undefined;
+const INGEST_KEY = import.meta.env.VITE_PUBLISHABLE_KEY?.trim() || undefined;
 
 /**
  * Consent gate — an explicit browser opt-out (Global Privacy Control, then legacy
