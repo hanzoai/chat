@@ -12,7 +12,7 @@ import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
 import BrandCorner from '~/components/Nav/BrandCorner';
-import { useHasAccess } from '~/hooks';
+import { useHasAccess, useAuthContext } from '~/hooks';
 import { cn } from '~/utils';
 
 const defaultInterface = getConfigDefaults().interface;
@@ -20,6 +20,7 @@ const defaultInterface = getConfigDefaults().interface;
 export default function Header() {
   const { data: startupConfig } = useGetStartupConfig();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
+  const { isAuthenticated } = useAuthContext();
 
   const interfaceConfig = useMemo(
     () => startupConfig?.interface ?? defaultInterface,
@@ -62,7 +63,12 @@ export default function Header() {
               </motion.div>
             )}
           </AnimatePresence>
-          {!(navVisible && isSmallScreen) && (
+          {/* The model belongs to a viewer who can change it. A guest is pinned to
+              the one guest model server-side (`enforceGuestScope`), so a picker
+              there offers a choice the API refuses — it read as chrome stating a
+              model name at someone who has no say in it. Signed in, it is the
+              left edge's whole point and stays. */}
+          {isAuthenticated && !(navVisible && isSmallScreen) && (
             <div
               className={cn(
                 'flex items-center gap-2',

@@ -13,6 +13,7 @@ import Header from './Header';
 
 let mockSmallScreen = false;
 let mockNavVisible = true;
+let mockAuthenticated = true;
 
 jest.mock('@hanzochat/client', () => ({
   useMediaQuery: () => mockSmallScreen,
@@ -39,7 +40,10 @@ jest.mock('~/data-provider', () => ({
   }),
 }));
 
-jest.mock('~/hooks', () => ({ useHasAccess: () => true }));
+jest.mock('~/hooks', () => ({
+  useHasAccess: () => true,
+  useAuthContext: () => ({ isAuthenticated: mockAuthenticated }),
+}));
 jest.mock('~/utils', () => ({ cn: (...c: unknown[]) => c.filter(Boolean).join(' ') }));
 
 // A function DECLARATION, not a const: the factories below run while `./Header`
@@ -71,6 +75,7 @@ describe.each([
   beforeEach(() => {
     mockSmallScreen = small;
     mockNavVisible = navVisible;
+    mockAuthenticated = true;
     render(<Header />);
   });
 
@@ -94,5 +99,28 @@ describe.each([
       .getByTestId('model')
       .compareDocumentPosition(screen.getByTestId('header-actions'));
     expect(after & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
+/**
+ * A guest is pinned to the one guest model by `enforceGuestScope`, so naming it
+ * in the header states a fact the visitor cannot act on, beside a control that
+ * would be refused if they did. The signed-in cases above still assert it is
+ * there — this is the one state where it must not be.
+ */
+describe('the header signed out', () => {
+  beforeEach(() => {
+    mockSmallScreen = false;
+    mockNavVisible = true;
+    mockAuthenticated = false;
+    render(<Header />);
+  });
+
+  it('names no model', () => {
+    expect(screen.queryByTestId('model')).not.toBeInTheDocument();
+  });
+
+  it('still carries the actions that act on the view', () => {
+    expect(screen.getByTestId('header-actions')).toBeInTheDocument();
   });
 });
