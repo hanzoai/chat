@@ -173,31 +173,35 @@ const Nav = memo(
       fetchNextPage();
     }, [isFetchingNextPage, computedHasNextPage, fetchNextPage]);
 
-    const subHeaders = useMemo(
-      () => (
-        <>
-          {search.enabled === null && <SearchBarSkeleton />}
-          {search.enabled === true && <SearchBar isSmallScreen={isSmallScreen} />}
-        </>
-      ),
-      [search.enabled, isSmallScreen],
-    );
-
-    const headerButtons = useMemo(
-      () => (
-        <>
+    /**
+     * Search and the tag filter, on one row above the list they both filter.
+     *
+     * The tag filter used to sit in the icon strip, between the app switcher and
+     * the compose button, where it read as app chrome rather than as a control
+     * for the conversations underneath it. It cannot join the other bookmark
+     * control at the top right of the view: that one tags the OPEN conversation,
+     * this one filters THIS list, and its selection is this component's state —
+     * two bookmark buttons in one corner would be the duplication, not the fix.
+     */
+    const subHeaders = useMemo(() => {
+      const searching = search.enabled === null || search.enabled === true;
+      if (!searching && !hasAccessToBookmarks) {
+        return null;
+      }
+      return (
+        <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1">
+            {search.enabled === null && <SearchBarSkeleton />}
+            {search.enabled === true && <SearchBar isSmallScreen={isSmallScreen} />}
+          </div>
           {hasAccessToBookmarks && (
-            <>
-              <div className="mt-1.5" />
-              <Suspense fallback={null}>
-                <BookmarkNav tags={tags} setTags={setTags} />
-              </Suspense>
-            </>
+            <Suspense fallback={null}>
+              <BookmarkNav tags={tags} setTags={setTags} />
+            </Suspense>
           )}
-        </>
-      ),
-      [hasAccessToBookmarks, tags],
-    );
+        </div>
+      );
+    }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags]);
 
     const [isSearchLoading, setIsSearchLoading] = useState(
       !!search.query && (search.isTyping || isLoading || isFetching),
@@ -230,7 +234,6 @@ const Nav = memo(
             <MemoNewChat
               subHeaders={subHeaders}
               toggleNav={toggleNavVisible}
-              headerButtons={headerButtons}
               isSmallScreen={isSmallScreen}
             />
             <div className="flex min-h-0 flex-grow flex-col overflow-hidden">

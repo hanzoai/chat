@@ -407,15 +407,33 @@ as "@hanzo/ui is banned" — it records why the *5.x shadcn* one went.
 - **Shell chrome** = `@hanzogui/shell` only (HanzoHeader / HanzoAppHeader /
   HanzoFooter / HanzoPreFooterCTA / MeetHanzoMenu / HanzoAppLauncher). It is
   self-contained — inline styles + `theme.ts` tokens — so it drops into Vite
-  with no provider. **The product still has NO cross-app nav.** `Chat/Header.tsx`
-  mounts `HanzoAppLauncher`, but that header does not paint on the default
-  screen: driving live hanzo.chat as a guest finds no `<header>`, no
-  `absolute top-0 h-14` div, and the string "Meet Hanzo" nowhere in the body.
-  Deleting the dead header removed the second implementation; it did not close
-  the gap. `HanzoAppHeader` is the shell's signed-in header and is the way to
-  close it — it is `position: sticky`, `height: 56`, so `Root.tsx`'s
-  `calc(100dvh - bannerHeight)` must subtract it too or the composer falls off
-  the bottom. That is a layout change, not a sweep.
+  with no provider. **Cross-app nav ships, and chat owns none of it.**
+  `Nav/BrandCorner.tsx` is the whole of chat's side: the mark plus
+  `HanzoAppLauncher`, mounted in the sidebar's first row and — only while the
+  sidebar is collapsed — in `Chat/Header.tsx`, so the corner is never empty and
+  never carries two marks. Do not hand-roll a drawer beside it; the tile list is
+  `HANZO_APPS`, owned upstream.
+- **The launcher panel is portalled, from `@hanzogui/shell@8.1.1` on.** Before
+  that it was `position: absolute`, and chat mounts it inside the sidebar's
+  `overflow-hidden` scroll column (`Nav.tsx`, `flex flex-1 flex-col
+  overflow-hidden`) — so the third column of tiles was clipped mid-tile and
+  Search / Platform / Admin rendered as one letter each on the live site.
+  `position: fixed` would NOT have fixed it either: `.nav` carries a
+  `transform`, which makes it the containing block for fixed descendants too.
+  The panel now leaves the stacking context entirely. **Do not "fix" clipping
+  here by loosening that column's overflow** — it is what makes the
+  conversation list scroll, and the defect belonged to the shared component.
+- **Two controls say "bookmark", and they are not the same control.**
+  `Chat/Menus/BookmarkMenu` tags the OPEN conversation and lives with the other
+  view actions at the right end of `Chat/Header.tsx` (`data-testid=
+  "header-actions"`, with presets, share and temporary chat — one copy each, at
+  every width; they used to be written twice under opposite `isSmallScreen`
+  conditions and sat at opposite ends of the same header). `Nav/Bookmarks/
+  BookmarkNav` FILTERS the conversation list, its selection is `Nav.tsx`'s own
+  `tags` state, and it sits on the search row above that list. Neither belongs
+  in the icon strip, and merging them into one corner would put two bookmark
+  buttons side by side. The strip is the mark, the launcher, compose and the
+  collapse toggle — nothing else. `Chat/Header.spec.tsx` holds that line.
 - **Tailwind no longer scans the shell — that was a 7.x fact.** Under 7.x the
   shell painted itself with utility class names (`bg-[#0e0e13]`, `z-[101]`,
   `border-white/[0.06]`) and renders transparent in a host that never scans it,
@@ -806,8 +824,8 @@ Owner wants: Hanzo mark top-left, search + sidebar toggle to the RIGHT of the
 sidebar, and a ChatGPT-style model/agent dropdown where `ChatGPT ⌄` sits.
 
 `@hanzogui/shell` already ships `HanzoAppHeader` (the signed-in header carrying
-the mark). Chat mounts only `HanzoAppLauncher` in `Chat/Header.tsx`, and that
-header **does not paint on the default screen** — driving live hanzo.chat finds no
-`<header>` at all. Adopting the real one is a LAYOUT change: `HanzoAppHeader` is
+the mark). Chat mounts `HanzoAppLauncher` via `Nav/BrandCorner.tsx` — in the
+sidebar's first row, and in `Chat/Header.tsx` only once the sidebar collapses.
+Adopting the full header is still a LAYOUT change: `HanzoAppHeader` is
 `position: sticky; height: 56`, so `Root.tsx`'s `calc(100dvh - ${bannerHeight}px)`
 must subtract it too or the composer falls off the bottom of the viewport.
