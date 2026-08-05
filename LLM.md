@@ -101,7 +101,13 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 
 ## K8s Deployment
 
-- 2 replicas, port 3080
+- **1 replica, `strategy: Recreate`**, port 3080 — and both halves are forced,
+  not chosen. The store below is an in-process SQLite writer on a
+  ReadWriteOnce claim, so a second pod is either an unmountable volume or two
+  processes racing read-modify-write updates and dropping `Balance` /
+  `Transaction` writes with no error. Every release is therefore a ~3min
+  outage; the fix is a networked store handle behind `CollectionSpec`, never a
+  replica bump. Full reasoning: `charts/app/values/hanzo/chat.yaml` in universe.
 - Ingress: `hanzo.chat` (primary) + `chat.hanzo.ai` (301 → hanzo.chat)
 - Probes: `/v1/chat/health`
 - Secret: `chat-secrets` (JWT_SECRET, CREDS_KEY/IV)
