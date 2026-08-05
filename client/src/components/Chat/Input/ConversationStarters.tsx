@@ -9,7 +9,7 @@ import {
   useAssistantsMapContext,
 } from '~/Providers';
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
-import { getIconEndpoint, getEntity, openAppBuilder } from '~/utils';
+import { cn, getIconEndpoint, getEntity, openAppBuilder } from '~/utils';
 import { useAuthContext, useSubmitMessage, useLocalize } from '~/hooks';
 
 /** `label` is the chip caption; `text` is the message that gets sent. */
@@ -35,7 +35,7 @@ const DEFAULT_STARTERS: Starter[] = [
 
 const ConversationStarters = () => {
   const localize = useLocalize();
-  const { user } = useAuthContext();
+  const { user, isAuthenticated } = useAuthContext();
   const { conversation, isSubmitting } = useChatContext();
   const agentsMap = useAgentsMapContext();
   const assistantMap = useAssistantsMapContext();
@@ -128,7 +128,15 @@ const ConversationStarters = () => {
           onClick={() => send(text)}
           disabled={isSubmitting}
           title={label}
-          className="min-h-11 max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+          className={cn(
+            'min-h-11 max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
+            // A phone fits two of these per row, so five of them are three rows of
+            // suggestions stacked under the one control an arriving visitor came
+            // to use. The first is an example; the rest were a menu. Signed in
+            // the screen belongs to someone who has already chosen to be here,
+            // and the full set is useful again.
+            index > 0 && !isAuthenticated && 'max-sm:hidden',
+          )}
         >
           {label}
         </button>
@@ -137,7 +145,10 @@ const ConversationStarters = () => {
         <button
           onClick={openBuilder}
           title={localize('com_ui_build_app')}
-          className="inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full border border-dashed border-border-medium bg-transparent px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-heavy hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none"
+          className={cn(
+            'inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full border border-dashed border-border-medium bg-transparent px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-heavy hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
+            !isAuthenticated && 'max-sm:hidden',
+          )}
         >
           <AppWindow className="icon-sm" aria-hidden="true" />
           {localize('com_ui_build_app')}
