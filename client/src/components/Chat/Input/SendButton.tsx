@@ -23,7 +23,12 @@ const SubmitButton = React.memo(
             id="send-button"
             disabled={props.disabled}
             className={cn(
-              'rounded-full bg-text-primary p-1.5 text-text-primary outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
+              // The raised pushbutton, same as every other primary control. It
+              // was `bg-text-primary` — a white disc, the brightest object on
+              // the page, sitting inside the one surface that already says
+              // "type here" with the prism ring. hanzo.app's composer sends
+              // from a dark button for exactly this reason.
+              'rounded-full border border-surface-submit-hover bg-surface-submit p-1.5 text-white outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
             )}
             data-testid="send-button"
             type="submit"
