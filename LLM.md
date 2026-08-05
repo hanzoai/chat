@@ -539,6 +539,47 @@ Three things bite every time and none of them announces itself:
   content is invisible. Every `<TabsTrigger>Label</TabsTrigger>` in chat's markup
   is this shape, so a naive Tabs conversion produces empty tabs.
 
+### `@hanzo/ui/product` does not import here, and the version is capped at 8.0.51
+
+Chat consumes exactly three things from `@hanzo/ui`: `gui-config`, `theme.css`
+and `glass.css`. **No component.** That is not an oversight — the components
+worth taking (`SecretInput`, `CopyButton`, `EmptyState`, `UserMenu`,
+`Pagination`, `StatusTag`) all live behind the `./product` barrel, and the
+barrel is unreachable in BOTH of chat's toolchains. Measured at 8.0.59:
+
+- **jest** — `product/index.cjs` → `ComboBox` → `instrument` →
+  `@hanzogui/telemetry`, which is ESM-only (no `require` condition) and uses
+  `import.meta` in `dist/env.js`. `babel.config.cjs` DOES carry
+  `babel-plugin-transform-import-meta`, but it is a root config rooted at
+  `client/`, and telemetry resolves to `chat/node_modules/` — outside that root,
+  so the plugin never runs on it. `SyntaxError: Cannot use 'import.meta'
+  outside a module`. Predates 8.1.0; telemetry 8.0.0 has the same line.
+- **vite** — `product/ThemeToggleNext.js` imports `@hanzogui/next-theme`, whose
+  `NextThemeProvider` imports `next/script`. Chat is Vite; there is no Next.
+  Uninstalled it resolves to a `__vite-optional-peer-dep:` stub and rollup fails
+  on `"useThemeSetting" is not exported`; installed it drags `next/script` in.
+
+`./product/*` is NOT a wildcard in the exports map (only `./product`,
+`./product/social`, `./product/social/api`), so deep-importing one component
+past the barrel is blocked too. `./primitives/*` IS a wildcard and works — that
+is why `Progress.tsx` and `Separator.tsx` are one-line re-exports and nothing
+else is.
+
+**The fix belongs upstream, not here.** Add `./product/*` to the exports map, or
+move `ThemeToggleNext` off the barrel. Working around it in chat means aliasing
+`next/script` to a stub and re-rooting babel — two gates to import a button.
+
+**Separately, the version ceiling is 8.0.51.** 8.0.52 re-bases three theme
+rungs onto CSS custom properties with modern slash-alpha fallbacks —
+`$borderColor`/`$color12`/`$outlineColor` become `var(--border, rgb(255 255 255
+/ .10))` and friends. That is correct in a browser and is a real WCAG 2.4.11
+fix for the focus ring. jsdom's CSS parser cannot parse it, so the whole gui
+theme block is rejected and every `@hanzo/ui` primitive throws `Missing theme.`
+— `src/__tests__/guiPrimitives.spec.tsx`, the suite that exists to prove the
+harness can render primitives at all, goes red. Every version ≥8.0.52 has it,
+so pinning 8.0.57/58 does NOT dodge it. A bump was measured to 8.0.59 and
+reverted: it unlocks no component (see above) and costs that gate.
+
 ### Verifying a gui rewrite — the build cannot tell you
 
 A green `vite build` proves gui *compiled*, never that it *painted*: unknown
