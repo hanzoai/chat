@@ -74,7 +74,7 @@ describe('the look, ratcheted', () => {
    */
   it('does not grow the number of white fills', () => {
     atMost(
-      72,
+      64,
       hits(/\b(?:dark:)?bg-white\b(?!\/)|\bbg-\[#(?:f|F)[0-9a-fA-F]{5}\]|\bbg-text-primary\b/g),
       'white fills',
     );
@@ -87,7 +87,7 @@ describe('the look, ratcheted', () => {
    * every dialog ended up asking its one question from a white slab.
    */
   it('does not grow the number of controls filled with the brand colour', () => {
-    atMost(7, hits(/\bbg-primary\b/g), 'bg-primary fills');
+    atMost(3, hits(/\bbg-primary\b/g), 'bg-primary fills');
   });
 
   /**
@@ -241,14 +241,19 @@ describe('the material', () => {
    * is a menu you read the page through — and it fails silently, because
    * nothing in the markup looks wrong.
    */
+  /**
+   * `AlertDialog` and `Select` used to be listed here and are not files any
+   * more. Neither had a single consumer — `Select` was reachable only from
+   * `Combobox`, which nothing imported either — so the material they named was
+   * painted onto surfaces that never rendered. A slot on a deleted file is a
+   * row that passes forever while proving nothing, which is worse than no row:
+   * it reads as coverage.
+   */
   it.each([
     ['OriginalDialog', 'dialog-content'],
     ['OriginalDialog', 'dialog-overlay'],
     ['Dialog', 'dialog-content'],
     ['Dialog', 'dialog-overlay'],
-    ['AlertDialog', 'dialog-content'],
-    ['AlertDialog', 'dialog-overlay'],
-    ['Select', 'select-content'],
     ['DropdownMenu', 'dropdown-menu-content'],
     ['DropdownMenu', 'dropdown-menu-sub-content'],
   ])('%s names its %s slot', (file, slot) => {
