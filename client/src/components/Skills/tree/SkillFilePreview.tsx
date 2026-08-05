@@ -37,7 +37,7 @@ export default function SkillFilePreview({ skillId, nodeId, fileName }: SkillFil
           )}
           <span className="truncate text-sm font-medium text-text-primary">{fileName}</span>
           {ext && (
-            <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+            <span className="rounded bg-surface-tertiary px-1.5 py-0.5 text-[11px] font-medium tracking-wide text-text-tertiary">
               {ext}
             </span>
           )}
