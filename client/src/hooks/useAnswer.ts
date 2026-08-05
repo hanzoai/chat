@@ -6,7 +6,7 @@ import useLocalize from '~/hooks/useLocalize';
 
 /**
  * The answer engine, client side. Streams a grounded answer from chat's own
- * `/v1/chat/ask` relay, which attaches the tenant credential and pipes Hanzo
+ * `/v1/chat/ask` relay, which attaches the org credential and pipes Hanzo
  * Cloud's `/v1/ask` envelope through unchanged.
  *
  * The frames ARE the `@hanzo/ai` SearchEvent union — `status | sources | text |
