@@ -106,11 +106,23 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 - Probes: `/v1/chat/health`
 - Secret: `chat-secrets` (JWT_SECRET, CREDS_KEY/IV)
 - Store: embedded SQLite on the `chat-app-db` PVC — no database service
-- CI: `.hanzo/workflows/deploy.yml` on the `hanzo-build-linux-amd64` git-runners
-  → `ghcr.io/hanzoai/chat`. It BUILDS only; choosing which tag runs is a
-  reviewed change in `hanzoai/universe`. The `.github/workflows/*` files here
-  are upstream residue — no GitHub-visible runner carries our label, so they
-  never execute, and Docker Hub is not a destination.
+- CI: two workflows on the `hanzo-build-linux-amd64` git-runners, and they do
+  different jobs. `.hanzo/workflows/deploy.yml` BUILDS `ghcr.io/hanzoai/chat`
+  and is the only thing that does; choosing which tag runs is a reviewed change
+  in `hanzoai/universe`. `.hanzo/workflows/cicd.yml` imports `hanzoai/ci` and
+  runs the `test:` gates in the root `hanzo.yml` — the repo had no gate of any
+  kind before it, on main or on a pull request.
+  Read `hanzo.yml` before adding a gate: it records why no jest suite is in it
+  (all five are red on main) and what each gate costs.
+  `hanzo.yml` declares NO `images:`, deliberately — that is what keeps deploy.yml
+  the single builder, and two lanes pushing one tag is how hanzoai/app served
+  bytes its version did not name.
+  `.github/workflows/` is down to `workflow-sanity.yml` and cannot run: no
+  GitHub-visible runner carries our labels, and on the forge `.hanzo/workflows`
+  wins so `.github/workflows` never executes at all. Docker Hub is not a
+  destination. Anything calling `hanzoai/.github` is dead on arrival from here —
+  that repo is private and this one is public, so GitHub refuses to resolve the
+  reusable and the run fails in 0s having created zero jobs.
 - Image: `ghcr.io/hanzoai/chat:<semver>` (linux/amd64). The semver is derived by
   `hanzoai/ci/.github/actions/imgver@v1` from this repo's `package.json` against
   the registry floor — never typed, never a sha. A `sha-<7>` tag is pushed
@@ -564,6 +576,33 @@ far enough to report their individual pre-existing failures. Those failures are
 one uniform shape: tests importing symbols the source never exported
 (`latestMessageFamily`, `resolveEndpointType`, `useFileHandling`,
 `updateFieldsInPlace`, …). The tests are ahead of the implementation.
+
+The other four suites had never been counted. Measured on `cb653548`, node 22,
+pnpm 10.27.0, one full run each — this is what `hanzo.yml` means when it says no
+jest suite is gated:
+
+| | failed / total |
+|---|---|
+| `api` | 403 / 2737 |
+| `packages/api` | 711 / 4644 |
+| `packages/data-schemas` | 246 / 1489 |
+| `packages/data-provider` | 227 / 985 |
+
+`pnpm lint` is a fifth casualty and not a code-quality one: ESLint 9 loads
+`@typescript-eslint/typescript-estree`, which dies against the TS7 native
+compiler with `Cannot read properties of undefined (reading 'Cjs')` before it
+reads a single file.
+
+Not every one of these is "tests ahead of implementation" — one is a live
+product bug wearing that costume. Merge `49dc4f7bf6` (a LibreChat sync) dropped
+`PERMISSION_TYPE_INTERFACE_FIELDS`, `INTERFACE_PERMISSION_FIELDS` and
+`PERMISSION_SUB_KEYS` out of `packages/data-provider/src/permissions.ts` while
+`packages/api/src/admin/config.ts` and `packages/data-schemas/src/app/resolution.ts`
+kept importing them, so the admin config surface calls `.has()` on `undefined`
+in production — `upsertConfigOverrides` and `deleteConfigField` both throw.
+Restoring those 49 lines from `e77b03ab6d` takes `resolution.spec.ts` to 26/26
+and `admin/config.handler.spec.ts` to 54/54. Measured, not estimated; unfixed,
+because a product repair is not a CI commit.
 
 ### Getting off Tailwind — the measured size of the job
 
