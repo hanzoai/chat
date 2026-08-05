@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from 'react';
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@hanzochat/client';
+import { Button, OGDialog, OGDialogContent, OGDialogHeader, OGDialogTitle, Input } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -15,17 +15,17 @@ const UploadFileModal = ({ open, onOpenChange }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
+    <OGDialog open={open} onOpenChange={onOpenChange}>
+      <OGDialogContent
         className={cn(
           'w-11/12 overflow-x-auto p-3 shadow-2xl dark:bg-gray-700 dark:text-white lg:w-2/3 xl:w-2/5',
         )}
       >
-        <DialogHeader>
-          <DialogTitle className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200">
+        <OGDialogHeader>
+          <OGDialogTitle className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200">
             Upoad a File
-          </DialogTitle>
-        </DialogHeader>
+          </OGDialogTitle>
+        </OGDialogHeader>
         <div className="flex w-full flex-col p-0 sm:p-6 sm:pb-0 sm:pt-4">
           <div className="flex w-full flex-row">
             <div className="hidden w-1/5 sm:block">
@@ -79,8 +79,8 @@ const UploadFileModal = ({ open, onOpenChange }) => {
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </OGDialogContent>
+    </OGDialog>
   );
 };
 
