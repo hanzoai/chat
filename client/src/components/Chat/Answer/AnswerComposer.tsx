@@ -178,7 +178,7 @@ export default function AnswerComposer({
               aria-label={localize(isLoading ? 'com_answer_stop' : 'com_answer_send')}
               onClick={isLoading ? onStop : submit}
               disabled={!isLoading && !text.trim()}
-              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-text-primary text-surface-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-surface-submit-hover bg-surface-submit text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
             >
               {isLoading ? (
                 <Square className="size-3.5 fill-current" aria-hidden="true" />

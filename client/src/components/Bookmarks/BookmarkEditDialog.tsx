@@ -103,10 +103,10 @@ const BookmarkEditDialog = ({
           />
         }
         buttons={
-          // No text-white override here. variant="submit" is `bg-primary
-          // text-primary-foreground` — it PAIRS its own foreground with its own
-          // background. Forcing white on top gave white-on-white: a solid button
-          // with an invisible label, on the only control in the dialog that does
+          // No colour override here. variant="submit" PAIRS its own foreground
+          // with its own background, so naming either half at a call site is how
+          // they drift apart: forcing white on top of what was then a white fill
+          // gave an invisible label on the only control in the dialog that does
           // anything. The same override was on both Memory dialogs.
           <Button
             variant="submit"

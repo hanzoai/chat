@@ -52,8 +52,12 @@ export default function ModeChips({
           onClick={() => setMode(m.id)}
           className={cn(
             'inline-flex min-h-11 shrink-0 items-center rounded-full px-3 py-1.5 text-sm transition-colors',
+            // Selected is a step UP the surface ladder with a full-strength
+            // label — not a white lozenge. The white one read as the loudest
+            // thing on the page while only saying which of three modes you were
+            // already in.
             mode === m.id
-              ? 'bg-text-primary font-medium text-surface-primary'
+              ? 'bg-surface-active font-medium text-text-primary'
               : 'text-text-secondary hover:bg-surface-hover',
           )}
         >

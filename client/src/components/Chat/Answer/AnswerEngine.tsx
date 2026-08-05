@@ -166,7 +166,7 @@ function ErrorNotice({ message, needsSignIn }: { message: string; needsSignIn: b
       {needsSignIn && (
         <a
           href="/login"
-          className="mt-3 inline-flex items-center rounded-full bg-text-primary px-4 py-2 text-sm font-medium text-surface-primary"
+          className="mt-3 inline-flex items-center rounded-full border border-surface-submit-hover bg-surface-submit px-4 py-2 text-sm font-medium text-white"
         >
           {localize('com_answer_sign_in')}
         </a>
