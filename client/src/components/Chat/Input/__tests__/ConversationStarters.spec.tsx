@@ -14,10 +14,11 @@ import { render, screen } from '@testing-library/react';
 const mockSubmitMessage = jest.fn();
 const mockSubmitPrompt = jest.fn();
 const mockChatContext = { conversation: { endpoint: 'openAI' }, isSubmitting: false };
+let mockAuthenticated = true;
 
 jest.mock('~/hooks', () => ({
   useLocalize: () => (key: string) => key,
-  useAuthContext: () => ({ user: { name: 'Tester' } }),
+  useAuthContext: () => ({ user: { name: 'Tester' }, isAuthenticated: mockAuthenticated }),
   useSubmitMessage: () => ({
     submitMessage: mockSubmitMessage,
     submitPrompt: mockSubmitPrompt,
@@ -39,6 +40,7 @@ jest.mock('~/data-provider', () => ({
 }));
 
 jest.mock('~/utils', () => ({
+  cn: (...c: unknown[]) => c.filter(Boolean).join(' '),
   getIconEndpoint: () => 'openAI',
   getEntity: () => ({ entity: undefined, isAgent: false }),
   openAppBuilder: jest.fn(),
@@ -50,6 +52,7 @@ describe('ConversationStarters', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockChatContext.isSubmitting = false;
+    mockAuthenticated = true;
   });
 
   it('SENDS the starter text on click, through the typed-message submit path', async () => {
@@ -86,5 +89,34 @@ describe('ConversationStarters', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Explain' }));
 
     expect(mockSubmitMessage).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The arrival screen on a phone offers ONE example, not a menu: five chips wrap
+   * to three rows directly under the composer the visitor came to use.
+   *
+   * Asserted on the class, because the rule is a media query and jsdom resolves
+   * no CSS — what is checkable here is that the component asks for the right
+   * behaviour at the right width, and only when signed out.
+   */
+  const hidesOnPhone = (name: string) =>
+    screen.getByRole('button', { name }).className.includes('max-sm:hidden');
+
+  it('offers one example chip on a phone when signed out', () => {
+    mockAuthenticated = false;
+    render(<ConversationStarters />);
+
+    expect(hidesOnPhone('Summarize')).toBe(false);
+    for (const label of ['Write code', 'Explain', 'Brainstorm', 'com_ui_build_app']) {
+      expect(hidesOnPhone(label)).toBe(true);
+    }
+  });
+
+  it('keeps every chip at every width once signed in', () => {
+    render(<ConversationStarters />);
+
+    for (const label of ['Summarize', 'Write code', 'Explain', 'Brainstorm', 'com_ui_build_app']) {
+      expect(hidesOnPhone(label)).toBe(false);
+    }
   });
 });

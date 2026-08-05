@@ -8,6 +8,17 @@ import { cn } from '~/utils';
  * rendered. `chat` hands the input to the normal conversation flow; the rest
  * ground the question on the live web.
  *
+ * Text, not chips. The selected mode used to be a filled lozenge, which made the
+ * loudest object on the landing a label saying which of three modes you were
+ * already in — above a composer that is the actual subject of the screen. It is
+ * a switch between four words; it should read as four words. Selected is the
+ * foreground colour plus a hairline under the label, unselected is the secondary
+ * colour, and neither carries a fill or a border.
+ *
+ * The weight does NOT change with selection: `font-medium` on the active label
+ * re-measures the text and shoves its neighbours sideways every time you switch.
+ * Colour and the rule underneath carry the state without moving anything.
+ *
  * Mobile-first: the row scrolls horizontally at 390px rather than wrapping.
  */
 
@@ -32,7 +43,7 @@ const MODES = [
  */
 const GUEST_MODES = new Set<string>(['chat', 'search', 'news']);
 
-export default function ModeChips({
+export default function Modes({
   mode,
   setMode,
 }: {
@@ -43,25 +54,25 @@ export default function ModeChips({
   const { isGuest } = useAuthContext();
 
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {MODES.filter((m) => !isGuest || GUEST_MODES.has(m.id)).map((m) => (
         <button
           key={m.id}
           type="button"
           aria-pressed={mode === m.id}
           onClick={() => setMode(m.id)}
-          className={cn(
-            'inline-flex min-h-11 shrink-0 items-center rounded-full px-3 py-1.5 text-sm transition-colors',
-            // Selected is a step UP the surface ladder with a full-strength
-            // label — not a white lozenge. The white one read as the loudest
-            // thing on the page while only saying which of three modes you were
-            // already in.
-            mode === m.id
-              ? 'bg-surface-active font-medium text-text-primary'
-              : 'text-text-secondary hover:bg-surface-hover',
-          )}
+          className="group inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
         >
-          {localize(m.key)}
+          <span
+            className={cn(
+              'border-b py-0.5 transition-colors',
+              mode === m.id
+                ? 'border-text-primary text-text-primary'
+                : 'border-transparent text-text-secondary group-hover:text-text-primary',
+            )}
+          >
+            {localize(m.key)}
+          </span>
         </button>
       ))}
     </div>

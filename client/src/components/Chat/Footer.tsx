@@ -96,7 +96,11 @@ export default function Footer({ className }: { className?: string }) {
       <div
         className={cn(
           className ??
-            'hidden w-full items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]',
+            // Visible at every width. It was `hidden … sm:flex`, so the privacy
+            // policy and the terms — the two links a visitor is entitled to
+            // reach before they type anything — existed only on a desktop. They
+            // are one line of 12px text; a phone can afford them.
+            'flex w-full flex-wrap items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary md:px-[60px]',
           'pointer-events-none',
         )}
         role="contentinfo"

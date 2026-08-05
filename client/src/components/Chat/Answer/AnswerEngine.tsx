@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { SearchMode } from '@hanzo/ai';
-import { useLocalize } from '~/hooks';
+import { useLocalize, useAuthContext } from '~/hooks';
 import useAnswer from '~/hooks/useAnswer';
+import { cn } from '~/utils';
 import ChatForm from '~/components/Chat/Input/ChatForm';
 import ConversationStarters from '~/components/Chat/Input/ConversationStarters';
 import AnswerComposer from './AnswerComposer';
 import AnswerView from './AnswerView';
-import ModeChips from './ModeChips';
+import Modes from './Modes';
 
 /**
  * The answer engine — hanzo.chat's default surface.
@@ -39,6 +40,7 @@ const CHAT_PARAMS = ['prompt', 'q', 'submit', 'project'];
 export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const localize = useLocalize();
   const answer = useAnswer();
+  const { isAuthenticated } = useAuthContext();
 
   // Read through react-router, the same source useQueryParams reads, so a
   // client-side navigation to a chat link switches modes too — a one-time read of
@@ -113,7 +115,11 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
           {answer.error && <ErrorNotice message={answer.error} needsSignIn={answer.needsSignIn} />}
         </div>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-end pb-6 sm:justify-center">
+        // Centred at every width. It used to sit at the bottom of its column on a
+        // phone (`justify-end`), which parked the line directly on top of the
+        // composer under a screen and a half of empty black — the greeting read
+        // as a caption for the input rather than as the page's opening.
+        <div className="flex flex-1 flex-col items-center justify-center pb-6">
           <h1 className="text-balance px-2 text-center text-3xl font-medium tracking-tight text-text-primary sm:text-4xl">
             {localize('com_ui_landing_title')}
           </h1>
@@ -121,8 +127,12 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
       )}
 
       <div className="shrink-0 pb-3 pt-2">
-        <div className="mb-2 px-1">
-          <ModeChips mode={mode} setMode={changeMode} />
+        {/* The mode row is the one thing on the arrival screen that is about the
+            product rather than the visitor's question, and a phone has no room to
+            spend on it before they have asked anything. It returns the moment
+            there is a session — and at every width above a phone. */}
+        <div className={cn('mb-2 px-1', !isAuthenticated && 'max-sm:hidden')}>
+          <Modes mode={mode} setMode={changeMode} />
         </div>
 
         {isChat ? (
