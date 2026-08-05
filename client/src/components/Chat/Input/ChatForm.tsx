@@ -53,7 +53,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [, setIsScrollable] = useState(false);
   const [visualRowCount, setVisualRowCount] = useState(1);
-  const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
   const [backupBadges, setBackupBadges] = useState<Pick<BadgeItem, 'id'>[]>([]);
   /** True from the moment the mic opens until it closes. */
   const [voiceLive, setVoiceLive] = useState(false);
@@ -286,7 +285,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
               painted OUTSIDE the panel's edge and the panel clips its own
               overflow. See style.css. */}
           <div
-            data-focused={isTextAreaFocused || undefined}
             className={cn(
               'hz-composer w-full rounded-t-3xl sm:rounded-3xl',
               isTemporary && 'opacity-90',
@@ -348,11 +346,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                       tabIndex={0}
                       data-testid="text-input"
                       rows={1}
-                      onFocus={() => {
-                        handleFocusOrClick();
-                        setIsTextAreaFocused(true);
-                      }}
-                      onBlur={setIsTextAreaFocused.bind(null, false)}
+                      onFocus={handleFocusOrClick}
                       aria-label={localize('com_ui_message_input')}
                       onClick={handleFocusOrClick}
                       style={{ height: isLanding ? 56 : 44, overflowY: 'auto' }}
