@@ -46,11 +46,13 @@ export default function Header() {
           {/* The brand corner appears here ONLY while the sidebar is collapsed,
               because that is the only time this header owns the app's top-left
               corner — with the sidebar open the mark lives in its first row.
-              One component, one corner, never two marks on screen. */}
+              One component, one corner, never two marks on screen. Below md the
+              corner is not this header's either way: the phone bar (MobileNav)
+              carries the mark and the menu, so this cluster is desktop chrome. */}
           <AnimatePresence initial={false}>
             {!navVisible && (
               <motion.div
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 max-md:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
