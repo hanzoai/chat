@@ -1,0 +1,28 @@
+name: CI/CD
+
+# The whole pipeline is hanzoai/ci; this file is triggers and an import. All real
+# config — the test gates — is the root hanzo.yml beside it.
+#
+# `.hanzo/workflows`, and the `.hanzo` path of the reusable, because THIS is the
+# forge that runs it. git.hanzo.ai's runner fleet is the only pool serving
+# `hanzo-build-linux-amd64`; github.com has zero self-hosted runners, so the same
+# file under .github/workflows would queue forever and never go green.
+#
+# This is the first CI this repo has ever had. deploy.yml beside it keeps
+# building the image and remains the only builder.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cicd:
+    uses: hanzoai/ci/.hanzo/workflows/build.yml@v1
+    secrets: inherit
