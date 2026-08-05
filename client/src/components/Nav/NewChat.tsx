@@ -14,13 +14,11 @@ export default function NewChat({
   toggleNav,
   subHeaders,
   isSmallScreen,
-  headerButtons,
 }: {
   index?: number;
   toggleNav: () => void;
   isSmallScreen?: boolean;
   subHeaders?: React.ReactNode;
-  headerButtons?: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
   /** Note: this component needs an explicit index passed if using more than one */
@@ -61,9 +59,9 @@ export default function NewChat({
             that used to sit here — the toggle now closes the sidebar from the
             sidebar's own right edge, which is the side it collapses toward. */}
         <BrandCorner />
+        {/* Compose and the collapse toggle, and nothing else. Everything that
+            acts on the open conversation lives at the top right of the view. */}
         <div className="flex items-center gap-0.5">
-          {headerButtons}
-
           <TooltipAnchor
             description={localize('com_ui_new_chat')}
             render={

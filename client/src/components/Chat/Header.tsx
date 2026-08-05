@@ -71,30 +71,22 @@ export default function Header() {
               )}
             >
               <ModelSelector startupConfig={startupConfig} />
-              {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
-              {hasAccessToBookmarks === true && <BookmarkMenu />}
               {hasAccessToMultiConvo === true && <AddMultiConvo />}
-              {isSmallScreen && (
-                <>
-                  <ExportAndShareMenu
-                    isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
-                  />
-                  <TemporaryChat />
-                </>
-              )}
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {!isSmallScreen && (
-            <>
-              <ExportAndShareMenu
-                isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
-              />
-              <TemporaryChat />
-            </>
-          )}
+        {/* The right end of the header is where every control that acts on THIS
+            view lives — presets, bookmarks, share, temporary. They used to be
+            split by width, the same two components written twice under opposite
+            conditions, with presets and bookmarks crowding the left edge beside
+            the mark and the model. One end, one copy, every width: the left edge
+            is the app's identity and the model it is talking to, nothing else. */}
+        <div className="flex items-center gap-2" data-testid="header-actions">
+          {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
+          {hasAccessToBookmarks === true && <BookmarkMenu />}
+          <ExportAndShareMenu isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false} />
+          <TemporaryChat />
         </div>
       </div>
       {/* Empty div for spacing */}
