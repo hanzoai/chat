@@ -128,26 +128,32 @@ const SidePanel = ({
 
   return (
     <>
-      <div
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-        className="relative flex w-px items-center justify-center"
-      >
-        <NavToggle
-          navVisible={!isCollapsed}
-          isHovering={isHovering}
-          onToggle={toggleNavVisible}
-          setIsHovering={setIsHovering}
-          className={cn(
-            'fixed top-1/2',
-            (isCollapsed && (minSize === 0 || collapsedSize === 0)) || fullCollapse
-              ? 'mr-9'
-              : 'mr-16',
-          )}
-          translateX={false}
-          side="right"
-        />
-      </div>
+      {/* The chevron is hover-revealed (opacity 0 at rest), so on a touch width
+          it is an invisible control — and `fixed` inside the translated content
+          column, it leaves the viewport whenever the drawer opens (x=670 at
+          390px). A control nobody can see or reach is not rendered at all. */}
+      {!isSmallScreen && (
+        <div
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          className="relative flex w-px items-center justify-center"
+        >
+          <NavToggle
+            navVisible={!isCollapsed}
+            isHovering={isHovering}
+            onToggle={toggleNavVisible}
+            setIsHovering={setIsHovering}
+            className={cn(
+              'fixed top-1/2',
+              (isCollapsed && (minSize === 0 || collapsedSize === 0)) || fullCollapse
+                ? 'mr-9'
+                : 'mr-16',
+            )}
+            translateX={false}
+            side="right"
+          />
+        </div>
+      )}
       {(!isCollapsed || minSize > 0) && !isSmallScreen && !fullCollapse && (
         <ResizableHandleAlt withHandle className="bg-transparent text-text-primary" />
       )}
