@@ -130,16 +130,33 @@ describe('the material', () => {
   const css = read(path.join(CLIENT, 'style.css'));
 
   /**
-   * The material has ONE home, and it is not this repo. `@hanzo/ui/theme.css`
-   * inlines `@hanzo/ui/glass.css` — the sheet hanzo.app and the console paint
-   * from — so chat imports it rather than restating it. A restatement here
-   * would be a second copy of a value with one owner, and it would hold still
-   * the day design moved the theme underneath it.
+   * The material has ONE home, and it is not this repo: `@hanzo/ui/glass.css`,
+   * the sheet hanzo.app and the console paint from. Chat imports it rather than
+   * restating it — a restatement would be a second copy of a value with one
+   * owner, and it would hold still the day design moved the theme underneath it.
    */
   it('imports the material rather than restating it', () => {
-    expect(css).toContain("@import '@hanzo/ui/theme.css';");
+    expect(css).toContain("@import '@hanzo/ui/glass.css';");
     expect(css).not.toMatch(/backdrop-filter:\s*blur\(20px\)/);
     expect(css).not.toMatch(/\.elevation-[123]\s*[,{]/);
+  });
+
+  /**
+   * And the import has to RESOLVE to something. This is the test that was
+   * missing, and its absence shipped: the previous version asserted only that
+   * style.css names an import, which stayed true while the installed
+   * `@hanzo/ui` slipped to 8.0.42 — a version with no `./glass.css` export at
+   * all. Every `data-slot` below still parsed, the build still succeeded, and
+   * not one floating surface had any material behind it.
+   *
+   * An import is a claim about another package. Check the package.
+   */
+  it('resolves the material to a package that actually ships it', () => {
+    const glass = path.join(CLIENT, '../../node_modules/@hanzo/ui/dist/glass.css');
+    expect(fs.existsSync(glass)).toBe(true);
+    const sheet = fs.readFileSync(glass, 'utf8');
+    expect(sheet).toMatch(/backdrop-filter:\s*blur\(20px\)\s*saturate\(1\.8\)/);
+    expect(sheet).toMatch(/--edge-highlight/);
   });
 
   /**
