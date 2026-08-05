@@ -74,7 +74,7 @@ describe('the look, ratcheted', () => {
    */
   it('does not grow the number of white fills', () => {
     atMost(
-      64,
+      62,
       hits(/\b(?:dark:)?bg-white\b(?!\/)|\bbg-\[#(?:f|F)[0-9a-fA-F]{5}\]|\bbg-text-primary\b/g),
       'white fills',
     );
@@ -242,18 +242,24 @@ describe('the material', () => {
    * nothing in the markup looks wrong.
    */
   /**
-   * `AlertDialog` and `Select` used to be listed here and are not files any
-   * more. Neither had a single consumer — `Select` was reachable only from
-   * `Combobox`, which nothing imported either — so the material they named was
-   * painted onto surfaces that never rendered. A slot on a deleted file is a
-   * row that passes forever while proving nothing, which is worse than no row:
-   * it reads as coverage.
+   * Four rows used to sit here — `AlertDialog`, `Select` and the legacy
+   * `Dialog` — and none of them is a file any more.
+   *
+   * `AlertDialog` and `Select` had no consumer at all (`Select` was reachable
+   * only from `Combobox`, which nothing imported), so the material they named
+   * was painted onto surfaces that never rendered. `Dialog` was the older of
+   * two Radix dialog stacks; its four call sites moved to `OriginalDialog`,
+   * which is the one that computes nested z-index and honours Escape inside a
+   * menu. One stack, so one row.
+   *
+   * A slot on a deleted file is a row that passes forever while proving
+   * nothing, which is worse than no row: it reads as coverage. The rule itself
+   * is unchanged for every surface that DOES float — add a row back the day a
+   * component does.
    */
   it.each([
     ['OriginalDialog', 'dialog-content'],
     ['OriginalDialog', 'dialog-overlay'],
-    ['Dialog', 'dialog-content'],
-    ['Dialog', 'dialog-overlay'],
     ['DropdownMenu', 'dropdown-menu-content'],
     ['DropdownMenu', 'dropdown-menu-sub-content'],
   ])('%s names its %s slot', (file, slot) => {
@@ -261,4 +267,5 @@ describe('the material', () => {
       `data-slot="${slot}"`,
     );
   });
+
 });

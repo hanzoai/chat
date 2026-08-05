@@ -1,8 +1,8 @@
 import {
-  Dialog,
-  DialogTrigger,
+  OGDialog,
+  OGDialogTrigger,
   Label,
-  DialogTemplate,
+  OGDialogTemplate,
   useToastContext,
   TrashIcon,
 } from '@hanzochat/client';
@@ -85,8 +85,8 @@ export default function ContextButton({
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <OGDialog>
+      <OGDialogTrigger asChild>
         <button
           className={cn(
             'btn btn-neutral border-token-border-light relative h-9 rounded-lg font-medium',
@@ -98,8 +98,8 @@ export default function ContextButton({
             <TrashIcon />
           </div>
         </button>
-      </DialogTrigger>
-      <DialogTemplate
+      </OGDialogTrigger>
+      <OGDialogTemplate
         title={localize('com_ui_delete_assistant')}
         className="max-w-[450px]"
         main={
@@ -120,6 +120,6 @@ export default function ContextButton({
           selectText: localize('com_ui_delete'),
         }}
       />
-    </Dialog>
+    </OGDialog>
   );
 }

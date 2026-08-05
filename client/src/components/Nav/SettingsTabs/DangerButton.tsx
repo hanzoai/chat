@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { CheckIcon } from 'lucide-react';
-import { Spinner, DialogButton, InfoHoverCard, ESide } from '@hanzochat/client';
+import { Spinner, Button, InfoHoverCard, ESide } from '@hanzochat/client';
 import type { TDangerButtonProps } from '~/common';
 import type { ForwardedRef } from 'react';
 import { useLocalize } from '~/hooks';
@@ -39,12 +39,19 @@ const DangerButton = (props: TDangerButtonProps, ref: ForwardedRef<HTMLButtonEle
           {infoDescriptionCode && <InfoHoverCard side={ESide.Bottom} text={infoDescriptionCode} />}
         </div>
       )}
-      <DialogButton
+      {/* Was `DialogButton`, the legacy dialog stack's one button. Its whole
+          palette — border, fill, label, hover — was overridden by the red below
+          at this, its only call site, so the wrapper contributed nothing but the
+          layout and focus classes restated here. */}
+      <Button
         id={id}
         ref={ref}
+        variant="outline"
         disabled={disabled}
         onClick={onClick}
         className={cn(
+          'mt-2 inline-flex h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0',
+          'focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-gray-400 dark:focus:ring-offset-gray-900',
           'btn relative border-none bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-700',
           className,
         )}
@@ -67,7 +74,7 @@ const DangerButton = (props: TDangerButtonProps, ref: ForwardedRef<HTMLButtonEle
             {renderMutation(localize(actionTextCode))}
           </div>
         )}
-      </DialogButton>
+      </Button>
     </div>
   );
 };
