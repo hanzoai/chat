@@ -65,6 +65,13 @@ export default function LoginGate() {
         title={localize(title)}
         className="max-w-md"
         main={<div className="text-sm text-text-secondary">{localize(message)}</div>}
+        /* The template volunteers a Cancel button unless told not to, and it
+           renders BESIDE whatever `buttons` say. That handed every reason below
+           a dismissal — including the refusals, which is the one thing the
+           comment there rules out — and on the arrival gate it put two controls
+           for one idea side by side, "Cancel" next to "Stay logged out", with
+           the redundant one taking focus first. This gate names its own exits. */
+        showCancelButton={false}
         buttons={
           <>
             {/* Dismissal is only offered for the arrival gate. A refusal has
