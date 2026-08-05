@@ -406,8 +406,8 @@ importers:
         specifier: ^1.0.13
         version: 1.0.13(react@19.2.4)
       '@hanzo/observe':
-        specifier: ^0.1.0
-        version: 0.1.0(react@19.2.4)
+        specifier: ^0.1.6
+        version: 0.1.6(react@19.2.4)
       '@hanzo/plans':
         specifier: 1.4.12
         version: 1.4.12
@@ -3611,8 +3611,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/observe@0.1.0':
-    resolution: {integrity: sha512-VWfMz4F6gexchEaEjK9btxcTOVhWk8km64TN69hWLa1jWB4uTL9VdTj3cWZRDl/OP1lS8YcjpLdSI1q+C7fymg==}
+  '@hanzo/observe@0.1.6':
+    resolution: {integrity: sha512-+OQIexe0cToCngxl4lP9iUvk5Y9k++K6XuB0y+1yWI4Smn21vcZj//ZGr6patVYqwA3L2s0PBLDDkWigCluyFg==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
@@ -17270,7 +17270,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.4
 
-  '@hanzo/observe@0.1.0(react@19.2.4)':
+  '@hanzo/observe@0.1.6(react@19.2.4)':
     dependencies:
       '@hanzo/event': 0.3.9(react@19.2.4)
     optionalDependencies:
@@ -18393,7 +18393,7 @@ snapshots:
   '@hanzogui/telemetry@8.0.0(react@19.2.4)':
     dependencies:
       '@hanzo/event': 0.3.9(react@19.2.4)
-      '@hanzo/observe': 0.1.0(react@19.2.4)
+      '@hanzo/observe': 0.1.6(react@19.2.4)
       react: 19.2.4
 
   '@hanzogui/text@8.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
@@ -20845,9 +20845,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-color@2.1.0': {}
 

@@ -40,7 +40,7 @@
     "@hanzo/gui": "^8.0.1",
     "@hanzo/iam": "^0.21.1",
     "@hanzo/logo": "^1.0.13",
-    "@hanzo/observe": "^0.1.0",
+    "@hanzo/observe": "^0.1.6",
     "@hanzo/plans": "1.4.12",
     "@hanzo/ui": "^8.0.48",
     "@hanzo/usage": "^0.1.6",
