@@ -415,10 +415,13 @@ as "@hanzo/ui is banned" — it records why the *5.x shadcn* one went.
   self-contained — inline styles + `theme.ts` tokens — so it drops into Vite
   with no provider. **Cross-app nav ships, and chat owns none of it.**
   `Nav/BrandCorner.tsx` is the whole of chat's side: the mark plus
-  `HanzoAppLauncher`, mounted in the sidebar's first row and — only while the
-  sidebar is collapsed — in `Chat/Header.tsx`, so the corner is never empty and
-  never carries two marks. Do not hand-roll a drawer beside it; the tile list is
-  `HANZO_APPS`, owned upstream.
+  `HanzoAppLauncher`, mounted in the sidebar's first row, in the phone bar
+  (`Nav/MobileNav.tsx`, which owns the corner below md — `Chat/Header.tsx`'s
+  cluster is `max-md:hidden`), and — only while the sidebar is collapsed — in
+  `Chat/Header.tsx`, so the corner is never empty and never carries two marks
+  on one width. The mark ALWAYS means "switcher": on the phone the drawer opens
+  from the hamburger beside it, never from the mark. Do not hand-roll a drawer
+  beside it; the tile list is `HANZO_APPS`, owned upstream.
 - **The launcher panel is portalled, from `@hanzogui/shell@8.1.1` on.** Before
   that it was `position: absolute`, and chat mounts it inside the sidebar's
   `overflow-hidden` scroll column (`Nav.tsx`, `flex flex-1 flex-col

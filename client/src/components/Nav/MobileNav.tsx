@@ -1,26 +1,28 @@
 import React, { useCallback } from 'react';
 import { useAtomValue } from 'jotai';
-import { HanzoMark } from '@hanzogui/shell';
 import { QueryKeys } from '@hanzochat/data-provider';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Dispatch, SetStateAction } from 'react';
 import { useLocalize, useNewConvo, useAuthContext } from '~/hooks';
 import { startHanzoLogin } from '~/utils/login';
 import { clearMessagesCache } from '~/utils';
+import BrandCorner from './BrandCorner';
 import store from '~/store';
 
 /**
- * The phone's top bar.
+ * The phone's top bar, and on this width the owner of the app's top-left corner.
  *
- * Signed in it is the conversation's bar: menu, the open conversation's title,
- * compose. Signed out there is no conversation and no history to title, so it is
- * the arrival bar instead — the mark on the left, the two ways in on the right,
- * and nothing between them. A phone showing "New Chat" over an empty thread to a
- * visitor who has not started one was chrome describing itself.
+ * Two controls anchor the left in BOTH auth states, because they mean the same
+ * thing in both: the menu button opens the drawer (chats, settings, help, the
+ * account or the offer), and the mark IS the app switcher — the same
+ * `BrandCorner` that owns the corner on desktop, one tap from anywhere. The mark
+ * used to double as the drawer toggle when signed out, which left the switcher
+ * reachable only through the drawer and gave the one glyph everybody reads as
+ * "Hanzo" a meaning it has nowhere else.
  *
- * The mark IS the menu button on this width. It is the same corner the sidebar's
- * `BrandCorner` owns on desktop, and the launcher it opens there is one tap
- * further in — one glyph, one corner, whichever container currently holds it.
+ * Signed in, the middle is the open conversation's title and the right is
+ * compose. Signed out there is no conversation to title, so the right is the two
+ * ways in.
  */
 
 const TAP = 'm-1 inline-flex size-11 items-center justify-center rounded-full hover:bg-surface-active-alt';
@@ -54,16 +56,17 @@ export default function MobileNav({
 
   return (
     <div className="sticky top-0 z-10 flex min-h-[40px] items-center justify-between bg-presentation pl-1 pt-[env(safe-area-inset-top)] dark:text-white md:hidden">
-      <button
-        type="button"
-        data-testid="mobile-header-new-chat-button"
-        aria-label={menuLabel}
-        aria-live="polite"
-        className={TAP}
-        onClick={toggleNav}
-      >
-        <span className="sr-only">{menuLabel}</span>
-        {isAuthenticated ? (
+      <div className="flex items-center">
+        <button
+          type="button"
+          data-testid="mobile-menu-button"
+          aria-label={menuLabel}
+          aria-live="polite"
+          aria-expanded={navVisible}
+          aria-controls="chat-history-nav"
+          className={TAP}
+          onClick={toggleNav}
+        >
           <svg
             width="24"
             height="24"
@@ -80,10 +83,9 @@ export default function MobileNav({
               fill="currentColor"
             />
           </svg>
-        ) : (
-          <HanzoMark size={18} />
-        )}
-      </button>
+        </button>
+        <BrandCorner />
+      </div>
 
       {isAuthenticated ? (
         <>

@@ -35,7 +35,11 @@ function ChatView({ index = 0 }: { index?: number }) {
 
   const fileMap = useFileMapContext();
 
-  const { data: messagesTree = null, isLoading } = useGetMessagesByConvoId(conversationId ?? '', {
+  const {
+    data: messagesTree = null,
+    isLoading,
+    isInitialLoading,
+  } = useGetMessagesByConvoId(conversationId ?? '', {
     select: useCallback(
       (data: TMessage[]) => {
         const dataTree = buildTree({ messages: data, fileMap });
@@ -89,7 +93,11 @@ function ChatView({ index = 0 }: { index?: number }) {
   // conversation exists this branch is gone and the thread renders as always.
   const chatColumn = (
     <div className="relative flex h-full w-full flex-col">
-      {!isLoading && <Header />}
+      {/* `isInitialLoading`, not `isLoading`: the messages query is DISABLED for
+          a guest (no fileMap), and a disabled query reports `isLoading` forever —
+          which meant a signed-out visitor never got a header at all: no sidebar
+          toggle, no brand corner, no way back once the drawer was closed. */}
+      {!isInitialLoading && <Header />}
       {isLandingPage ? (
         <>
           <div className="flex min-h-0 flex-1 flex-col">

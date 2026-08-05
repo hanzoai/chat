@@ -2,16 +2,18 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 /**
- * The phone's top bar is two different bars.
+ * The phone's top bar owns the app's top-left corner on this width.
  *
- * Signed in it belongs to the open conversation — menu, title, compose. Signed
- * out there is no conversation to title and no history to open, so it is the
- * arrival bar: the mark, and the two ways in. It used to render the signed-in
- * one to everybody, which put "New Chat" above an empty thread for a visitor who
- * had not started one, and offered a compose button for a list they do not have.
+ * Both auth states anchor the left with the same two controls, because they mean
+ * the same thing in both: the menu button opens the drawer, and the mark is the
+ * app switcher — the same `BrandCorner` as everywhere else, one tap from
+ * anywhere. The mark used to BE the drawer toggle when signed out, which left
+ * the switcher reachable only through the drawer (its only button sat off-canvas
+ * at x=-310 on a 390px viewport) and gave the brand glyph a second meaning.
  *
- * This is the pair the headless browser cannot reach — signing in needs a real
- * hanzo.id session — so the signed-in half is asserted here.
+ * Signed in the bar adds the conversation title and compose; signed out it adds
+ * the two ways in. The signed-in half is asserted here because the headless
+ * browser cannot reach it — signing in needs a real hanzo.id session.
  */
 
 let mockAuthenticated = false;
@@ -20,6 +22,17 @@ const mockNewConversation = jest.fn();
 
 jest.mock('@hanzogui/shell', () => ({
   HanzoMark: () => <div data-testid="mark" />,
+  HanzoAppLauncher: ({
+    label,
+    trigger,
+  }: {
+    label: string;
+    trigger: () => React.ReactNode;
+  }) => (
+    <button type="button" aria-label={label}>
+      {trigger()}
+    </button>
+  ),
 }));
 
 jest.mock('~/hooks', () => ({
@@ -48,17 +61,27 @@ describe('the phone bar, signed out', () => {
     mount();
   });
 
-  it('is the mark and the two ways in, and nothing else', () => {
-    expect(screen.getByTestId('mark')).toBeInTheDocument();
+  it('is the menu, the mark and the two ways in, and nothing else', () => {
+    expect(screen.getByRole('button', { name: 'com_nav_open_sidebar' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'com_nav_hanzo_apps' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'com_nav_log_in' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'com_auth_sign_up' })).toBeInTheDocument();
     expect(screen.queryByText('A thread')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'com_ui_new_chat' })).not.toBeInTheDocument();
   });
 
-  it('opens the menu from the mark', () => {
+  it('makes the mark the switcher, not the drawer toggle', () => {
+    const launcher = screen.getByRole('button', { name: 'com_nav_hanzo_apps' });
+    expect(launcher).toContainElement(screen.getByTestId('mark'));
+    expect(screen.getByRole('button', { name: 'com_nav_open_sidebar' })).not.toContainElement(
+      screen.getByTestId('mark'),
+    );
+  });
+
+  it('names the drawer it controls', () => {
     const menu = screen.getByRole('button', { name: 'com_nav_open_sidebar' });
-    expect(menu).toContainElement(screen.getByTestId('mark'));
+    expect(menu).toHaveAttribute('aria-controls', 'chat-history-nav');
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
   });
 
   /**
@@ -85,7 +108,9 @@ describe('the phone bar, signed in', () => {
     mount();
   });
 
-  it('titles the open conversation and offers compose', () => {
+  it('keeps the same corner and adds the conversation', () => {
+    expect(screen.getByRole('button', { name: 'com_nav_open_sidebar' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'com_nav_hanzo_apps' })).toBeInTheDocument();
     expect(screen.getByText('A thread')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'com_ui_new_chat' })).toBeInTheDocument();
   });
@@ -93,6 +118,5 @@ describe('the phone bar, signed in', () => {
   it('drops the arrival controls', () => {
     expect(screen.queryByRole('button', { name: 'com_nav_log_in' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'com_auth_sign_up' })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('mark')).not.toBeInTheDocument();
   });
 });
