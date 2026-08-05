@@ -22,7 +22,7 @@ export default function FileListItem2({
       onClick={() => {
         navigate('file_id_abcdef');
       }}
-      className="w-100 mt-2 flex h-fit cursor-pointer flex-row rounded-md border border-0 bg-white p-4 transition duration-300 ease-in-out hover:bg-slate-200"
+      className="w-100 mt-2 flex h-fit cursor-pointer flex-row rounded-md border border-0 bg-surface-primary p-4 transition duration-300 ease-in-out hover:bg-surface-hover"
     >
       <div className="flex w-10/12 flex-col justify-around md:flex-row">
         <div className="flex w-2/5 flex-row">
@@ -37,7 +37,7 @@ export default function FileListItem2({
               return (
                 <span
                   key={index}
-                  className="ml-2 mt-1 flex flex-row items-center rounded-full bg-[#f5f5f5] px-2 text-xs"
+                  className="ml-2 mt-1 flex flex-row items-center rounded-full bg-surface-tertiary px-2 text-xs"
                 >
                   <PlusIcon className="h-3 w-3" />
                   &nbsp;
@@ -60,11 +60,11 @@ export default function FileListItem2({
         </div>
       </div>
       <div className="mr-0 flex w-2/12 flex-col items-center justify-evenly sm:mr-4 md:flex-row">
-        <Button className="w-min content-center bg-transparent text-gray-500 hover:bg-slate-200">
+        <Button className="w-min content-center bg-transparent text-gray-500 hover:bg-surface-hover">
           <DotsIcon className="text-grey-100" />
         </Button>
         <Button
-          className="w-min bg-transparent text-[#666666] hover:bg-slate-200"
+          className="w-min bg-transparent text-[#666666] hover:bg-surface-hover"
           onClick={() => deleteFile(file._id)}
         >
           <TrashIcon className="" />

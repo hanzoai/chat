@@ -33,7 +33,7 @@ const UploadFileModal = ({ open, onOpenChange }) => {
             </div>
             <div className="flex w-full flex-col text-center sm:w-4/5 sm:text-left">
               <div className="italic">Please upload square file, size less than 100KB</div>
-              <div className="mt-4 flex w-full flex-row items-center bg-[#f9f9f9] p-2">
+              <div className="mt-4 flex w-full flex-row items-center bg-surface-secondary p-2">
                 <div className="w-1/2 sm:w-1/3">
                   <Button>Choose File</Button>
                 </div>
@@ -61,7 +61,7 @@ const UploadFileModal = ({ open, onOpenChange }) => {
             </div>
             <div className="flex w-full flex-row justify-evenly sm:w-1/3">
               <Button
-                className="mr-3 w-full rounded-md border border-black bg-white p-0 text-black hover:bg-white"
+                className="mr-3 w-full rounded-md border border-border-medium bg-transparent p-0 text-text-primary hover:bg-surface-hover"
                 onClick={() => {
                   onOpenChange(false);
                 }}

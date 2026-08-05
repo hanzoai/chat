@@ -35,12 +35,12 @@ export default function OAuthError() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-8">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
+    <div className="flex min-h-dvh items-center justify-center bg-surface-primary p-8">
+      <div className="elevation-1 w-full max-w-md rounded-lg border border-border-light bg-surface-secondary p-8 text-center">
         <div className="mb-4 flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-tertiary">
             <svg
-              className="h-6 w-6 text-red-600"
+              className="h-6 w-6 text-text-destructive"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -55,13 +55,13 @@ export default function OAuthError() {
             </svg>
           </div>
         </div>
-        <h1 className="mb-4 text-3xl font-bold text-gray-900">
+        <h1 className="mb-4 text-3xl font-bold text-text-primary">
           {localize('com_ui_oauth_error_title') || 'Authentication Failed'}
         </h1>
-        <p className="mb-6 text-sm text-gray-600">{getErrorMessage(error)}</p>
+        <p className="mb-6 text-sm text-text-secondary">{getErrorMessage(error)}</p>
         <button
           onClick={() => window.close()}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="rounded-md border border-surface-submit-hover bg-surface-submit px-4 py-2 text-sm font-medium text-white hover:bg-surface-submit-hover focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           aria-label={localize('com_ui_close_window') || 'Close Window'}
         >
           {localize('com_ui_close_window') || 'Close Window'}
