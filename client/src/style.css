@@ -174,9 +174,9 @@
      triplet is strictly worse than an undefined token, because an undefined token
      at least takes the fallback. Real colours, one type, fleet-wide.
      --chart-1..5 went with them: declared as channels, read nowhere. */
-  --destructive: var(--state-error);          /* the system's red, not a literal */
+  --destructive: var(--state-error); /* the system's red, not a literal */
   --destructive-foreground: var(--pure-white);
-  --switch-unchecked: var(--neutral-500);     /* 4.74:1 on white, 4.43:1 on black */
+  --switch-unchecked: var(--neutral-500); /* 4.74:1 on white, 4.43:1 on black */
 
   /* Which theme is live is the HOST's fact, so the host declares it. It used to
      arrive from @hanzo/brand's stylesheet; @hanzo/design declares no
@@ -209,8 +209,14 @@
   --surface-tertiary: var(--gray-850);
   --surface-tertiary-alt: var(--gray-850);
   --surface-dialog: var(--gray-925);
-  --surface-submit: var(--green-700);
-  --surface-submit-hover: var(--green-800);
+  /* The raised pushbutton, and the rung above it. On a dark page a control
+     lifts by getting LIGHTER under the pointer; this pair ran the other way
+     (#2f2f2f resting, #212121 on hover), so the one loud control on every
+     dialog receded when you reached for it. The hover rung doubles as the
+     button's hairline, which is what makes it read as raised rather than as
+     another patch of surface. */
+  --surface-submit: var(--gray-700);
+  --surface-submit-hover: var(--gray-600);
   --surface-destructive: var(--red-800);
   --surface-destructive-hover: var(--red-900);
   --surface-chat: var(--gray-975);
@@ -247,6 +253,121 @@
   --border-medium: rgba(217, 217, 227, 0.15);
   --border-heavy: rgba(217, 217, 227, 0.2);
   --border-xheavy: rgba(217, 217, 227, 0.25);
+}
+
+/* The dark-glass material and its three-rung ladder are NOT stated here. They
+   arrive with `@hanzo/ui/theme.css` above, which inlines `@hanzo/ui/glass.css`
+   — the same sheet hanzo.app and the console paint from, guarded by that
+   package's own tests. Chat's job is only to say WHICH surfaces are floating
+   chrome, and it says it the way the sheet reads: `data-slot` on each Radix
+   content primitive (see packages/client/src/components), or the bare `glass`
+   class for chrome no slot names. A surface is glass because of what it IS.
+
+   Restating the rules here would be a second copy of a value that has one
+   home, and it would hold still the day design moves the theme. */
+/* ── The composer ring — the ONE prism on any Hanzo surface ──────────────────
+   A slow-drifting conic ring plus a soft glow on the chat composer, ~10s loop.
+   The composer is where you talk to Hanzo, so it is the thing that should look
+   alive — and it earns that with MOTION and LIGHT rather than with hue. Every
+   other pixel of chrome stays monochrome; there is no second exemption, and the
+   two attempts to grant one (a violet ring, then a full-wheel rainbow) each made
+   the surface wearing it the only colour in the product.
+
+   Same sweep, same 10s, same structure as hanzo.app's composer: one look across
+   the two surfaces you can type into. The stops are declared once here and read
+   by both the ring and the glow — duplicated, they drift on the first palette
+   change and nobody notices which half moved.
+
+   Structure: `.hz-composer` is a 1.5px-padded host carrying the conic ring
+   (::before, fills the box) and the blurred glow (::after, extends past it);
+   its direct child is the opaque composer panel, which sits above both and
+   covers the centre, so only the ring's 1.5px lip shows. `@property` is what
+   lets the conic angle animate at all; where it is unsupported the ring is
+   simply static, which is a fine second-best.
+
+   Reduced motion holds a frame — still lit, no drift. */
+@property --hz-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+  /* One sweep, closing on the stop it opened with: a conic gradient whose first
+     and last stop differ shows a hard seam. Apple-Intelligence iridescence —
+     blue -> violet -> pink -> amber and home again — held at low alpha so it
+     glows instead of shouting. */
+  --hz-spectrum:
+    rgba(8, 148, 255, 0.45), rgba(201, 89, 221, 0.48), rgba(255, 46, 84, 0.4),
+    rgba(255, 144, 4, 0.4), rgba(8, 148, 255, 0.45);
+}
+
+@keyframes hzComposerSpin {
+  to {
+    --hz-angle: 360deg;
+  }
+}
+
+@keyframes hzComposerGlow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.hz-composer {
+  position: relative;
+  isolation: isolate;
+  padding: 1.5px;
+}
+
+.hz-composer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
+  animation: hzComposerSpin 10s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hz-composer::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
+  filter: blur(28px);
+  opacity: 0.5;
+  z-index: -1;
+  pointer-events: none;
+  animation:
+    hzComposerSpin 10s linear infinite,
+    hzComposerGlow 10s ease-in-out infinite;
+}
+
+/* The opaque composer panel sits above the ring and the glow. */
+.hz-composer > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Focus says so with LIGHT. It used to say so with `shadow-lg`, and a black
+   drop on a near-black page is a state with no picture — the same reason the
+   elevation ladder above buys its depth from the lit edge. */
+.hz-composer[data-focused]::after {
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hz-composer::before,
+  .hz-composer::after {
+    animation: none;
+  }
 }
 
 .text-token-text-primary {
@@ -522,8 +643,12 @@ select {
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
   padding-right: 2.5rem;
-  background-color: #fff;
-  border-color: #8e8ea0;
+  /* Was #fff on a bare element selector, so every native <select> in the product
+     was a white slab in the dark theme. The ladder follows the theme; the
+     literals never could. */
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
   border-radius: 0;
   border-width: 1px;
   font-size: 1rem;
@@ -1240,14 +1365,7 @@ pre {
 code,
 pre {
   font-family:
-    'Geist Mono',
-    'Roboto Mono',
-    ui-monospace,
-    'SF Mono',
-    Menlo,
-    Monaco,
-    Consolas,
-    monospace !important;
+    'Geist Mono', 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace !important;
 }
 code.language-text,
 code.language-txt,
@@ -1407,12 +1525,19 @@ button {
   opacity: 0.5;
 }
 .btn-primary {
-  /* Monochrome primary: adaptive white-on-dark / black-on-light (matches send button). */
-  background-color: var(--primary);
-  color: var(--primary-foreground);
+  /* The same raised pushbutton the `Button` component paints, spelled in the
+     other language eleven call sites here happen to speak. It read
+     `var(--primary)`, which is design's brand foreground — near-white in both
+     themes — so every panel's Save button was a white slab. `--surface-submit`
+     is dark in both themes, so the label is light in both and needs no branch.
+     `.btn` already reserves a 1px transparent border, so the hairline that
+     makes it read as raised costs no layout. */
+  background-color: var(--surface-submit);
+  border-color: var(--surface-submit-hover);
+  color: var(--white);
 }
 .btn-primary:hover {
-  background-color: color-mix(in srgb, var(--primary) 90%, transparent);
+  background-color: var(--surface-submit-hover);
 }
 .btn-primary:focus {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width)
@@ -1748,8 +1873,10 @@ html {
   --tw-shadow: 0 0 transparent;
   -webkit-appearance: none;
   appearance: none;
-  background-color: #fff;
-  border-color: #8e8ea0;
+  /* Same fix as the bare `select` above: theme-following ground, not a literal. */
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
   border-radius: 0;
   border-width: 1px;
   font-size: 1rem;
@@ -2997,5 +3124,5 @@ html {
 }
 
 .sharepoint-picker-bg {
-  background-color: #f5f5f5;
+  background-color: var(--surface-secondary);
 }
