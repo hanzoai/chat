@@ -74,7 +74,7 @@ describe('the look, ratcheted', () => {
    */
   it('does not grow the number of white fills', () => {
     atMost(
-      62,
+      61,
       hits(/\b(?:dark:)?bg-white\b(?!\/)|\bbg-\[#(?:f|F)[0-9a-fA-F]{5}\]|\bbg-text-primary\b/g),
       'white fills',
     );
@@ -295,28 +295,41 @@ describe('the material', () => {
    * styles, or the bare `glass` class for chrome no slot names — HoverCard and
    * Toast take the second route and say so in a comment.
    *
-   * These five take NEITHER, so every menu the product opens from them is one
-   * you read the page through. They are Ariakit and Headless UI popovers, not
-   * Radix, which is why no slot fits: the fix is the `glass` class, and it is
-   * held back from this change only because the five carry 57 call sites
-   * between them and a material change wants its own visual pass.
+   * These five took NEITHER, and the list they sat on has now run to zero. They
+   * are Ariakit and Headless UI popovers, not Radix, so no slot fits and the fix
+   * was the `glass` class on all five. It was held back once because they carry
+   * 57 call sites between them and a material change wants its own visual pass;
+   * that pass measured every one of them open, at 390/834/1444.
    *
-   * Two of them (`DropdownPopup`, `Dropdown`) paint `.popover-ui`, an OPAQUE
-   * `--surface-primary` fill — and that class is declared TWICE, in
-   * `client/src/style.css` and in `packages/client/src/components/Dropdown.css`.
-   * One material, two owners: whichever is edited, the other holds still. Fold
-   * them into one before adding glass, or the fix lands in half the app.
+   * The blocker named here before the fix was real and had to go first:
+   * `.popover-ui` was declared TWICE, in `client/src/style.css` and in
+   * `packages/client/src/components/Dropdown.css`, and only the second ever won
+   * a cascade. It is now declared once, beside the two components that wear it.
    *
-   * The list only shrinks. Deleting a name here is the migration; adding one is
-   * a new unglassed surface and this test is the review comment.
+   * A ratchet whose list empties should not be deleted — that just returns the
+   * surface to nobody watching it. It inverts: the same five files, asserted to
+   * KEEP the material. `glass` is what the browser needs to blur the page behind
+   * the menu, and `elevation-2` is the shadow that separates it from the page.
+   * A menu that loses either is a menu you read the page through again.
    */
   it.each(['DropdownPopup', 'Dropdown', 'SelectDropDown', 'ControlCombobox', 'InputCombobox'])(
-    '%s is still unglassed — remove it from this list when it is fixed, never add to it',
+    '%s keeps the glass material — it took a visual pass to earn, do not drop it',
     (file) => {
       const src = read(path.join(SHARED, 'components', `${file}.tsx`));
-      expect(/data-slot="(?:dialog|dropdown-menu|popover|select|tooltip)-|\bglass\b/.test(src)).toBe(
-        false,
-      );
+      expect(src).toMatch(/\bglass\b/);
+      expect(src).toMatch(/\belevation-2\b/);
     },
   );
+
+  /**
+   * The fallback is the other half of the material. glass.css only paints inside
+   * `@supports (backdrop-filter: …)`, so `.popover-ui`'s own opaque fill is what
+   * a browser that cannot blur renders — deleting it as "dead" would leave those
+   * menus transparent over live text.
+   */
+  it('keeps an opaque fallback under the glass, in exactly one file', () => {
+    const dropdownCss = read(path.join(SHARED, 'components', 'Dropdown.css'));
+    expect(dropdownCss).toMatch(/\.popover-ui\s*\{[^}]*background-color:\s*var\(--surface-primary\)/);
+    expect(read(path.join(CLIENT, 'style.css'))).not.toMatch(/^\.popover-ui[\s,{]/m);
+  });
 });
