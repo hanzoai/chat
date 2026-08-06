@@ -239,19 +239,27 @@ const Nav = memo(
               toggleNav={toggleNavVisible}
               isSmallScreen={isSmallScreen}
             />
-            <div className="flex min-h-0 flex-grow flex-col overflow-hidden">
-              <Conversations
-                conversations={conversations}
-                moveToTop={moveToTop}
-                toggleNav={itemToggleNav}
-                containerRef={conversationsRef}
-                loadMoreConversations={loadMoreConversations}
-                isLoading={isFetchingNextPage || showLoading || isLoading}
-                isSearchLoading={isSearchLoading}
-                isChatsExpanded={isChatsExpanded}
-                setIsChatsExpanded={setIsChatsExpanded}
-              />
-            </div>
+            {/* The chat-history list is for someone who HAS history. A
+                signed-out visitor never fetches any (the query is gated on the
+                session), so for them with nothing yet it is an empty "Chats"
+                header framing a void — the sidebar should just be New + the
+                sign-up offer. Show the list once there is a session, or the
+                moment a guest turn actually produces a conversation. */}
+            {(isAuthenticated || conversations.length > 0) && (
+              <div className="flex min-h-0 flex-grow flex-col overflow-hidden">
+                <Conversations
+                  conversations={conversations}
+                  moveToTop={moveToTop}
+                  toggleNav={itemToggleNav}
+                  containerRef={conversationsRef}
+                  loadMoreConversations={loadMoreConversations}
+                  isLoading={isFetchingNextPage || showLoading || isLoading}
+                  isSearchLoading={isSearchLoading}
+                  isChatsExpanded={isChatsExpanded}
+                  setIsChatsExpanded={setIsChatsExpanded}
+                />
+              </div>
+            )}
           </div>
           {/* One foot, two states. The account block belongs to a session; the
               visitor block belongs to everyone else, and they are exclusive so

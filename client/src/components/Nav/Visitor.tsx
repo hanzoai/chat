@@ -56,19 +56,26 @@ export default function Visitor() {
       )}
 
       {/* The offer, at the bottom-left corner the account block occupies once it
-          is taken up. Primary is the raised pushbutton every other decisive
-          action in the product uses; sign-up sits under it as text, because a
-          second filled control would make the corner argue with itself. */}
+          is taken up. Sign-up leads — a visitor's most likely next step is to
+          make an account, so it is the raised primary on TOP; log in sits under
+          it, quieter, for the returning user who already knows to look. Both are
+          hanzo.id; chat implements no account creation of its own. */}
       <div className="mt-2 flex flex-col gap-1">
-        <Button variant="submit" className="w-full" onClick={startHanzoLogin}>
-          {localize('com_nav_log_in')}
-        </Button>
+        {/* Sign-up leads and is a real navigation (hanzo.id's app-scoped form),
+            so it stays an anchor — right-click-open, crawlable — wearing the
+            primary pushbutton look directly (the submit variant's tokens) rather
+            than through asChild, which the resolved Button does not honor in
+            every context. Log in triggers the OAuth redirect in JS, so it is a
+            real button; outline keeps it the quieter second path underneath. */}
         <a
-          className="flex min-h-11 w-full items-center justify-center rounded-xl text-sm text-text-secondary transition-colors hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
           href="https://hanzo.id/signup/hanzo-chat"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-submit-hover bg-surface-submit px-2 text-sm font-medium text-white transition-colors hover:bg-surface-submit-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
         >
           {localize('com_auth_sign_up')}
         </a>
+        <Button variant="outline" className="w-full" onClick={startHanzoLogin}>
+          {localize('com_nav_log_in')}
+        </Button>
       </div>
 
       {showSettings && <Settings open={showSettings} onOpenChange={setShowSettings} />}
