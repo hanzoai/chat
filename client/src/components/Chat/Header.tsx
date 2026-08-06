@@ -1,10 +1,11 @@
+import { useRef } from 'react';
 import { TooltipAnchor, Button } from '@hanzochat/client';
 import { useOutletContext } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HanzoMark } from '@hanzogui/shell';
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { ContextType } from '~/common';
-import { HeaderNewChat, OpenSidebar } from './Menus';
+import { HeaderNewChat } from './Menus';
 import CanvasToggle from './Menus/CanvasToggle';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
@@ -22,6 +23,25 @@ export default function Header() {
     permission: Permissions.USE,
   });
 
+  // Hover-intent open: moving onto the brand corner while the sidebar is
+  // collapsed slides it open after a short delay, so a cursor passing through
+  // the corner on its way elsewhere does not fling the whole nav open. The
+  // click still opens it instantly; this only adds the hover affordance the
+  // corner used to hint at with a second (space-reserving) toggle button.
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openOnHover = () => {
+    if (navVisible) {
+      return;
+    }
+    hoverTimer.current = setTimeout(() => setNavVisible(true), 160);
+  };
+  const cancelHover = () => {
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+  };
+
   return (
     <div className="via-presentation/70 md:from-presentation/80 md:via-presentation/50 2xl:from-presentation/0 absolute top-0 z-10 flex h-14 w-full items-center justify-between bg-gradient-to-b from-presentation to-transparent p-2 font-semibold text-text-primary 2xl:via-transparent">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
@@ -35,19 +55,21 @@ export default function Header() {
           <AnimatePresence initial={false}>
             {!navVisible && (
               <motion.div
-                className="group flex items-center gap-2 max-md:hidden"
+                className="group flex items-center gap-1 max-md:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
                 key="header-buttons"
+                onMouseEnter={openOnHover}
+                onMouseLeave={cancelHover}
               >
-                {/* Collapsed, the mark IS the way back in: clicking it opens the
-                    sidebar, on the same button ground as its siblings. Its
-                    app-switcher self lives in the sidebar's first row, reached
-                    the moment it opens — one mark, never two. The expand toggle
-                    would be a second control for the same idea, so it waits for
-                    a hover rather than sitting there in duplicate. */}
+                {/* Collapsed, the mark IS the way back in — hover the corner to
+                    slide the sidebar open, or click to open it now. It sits
+                    directly beside New (gap-1, no reserved space between them):
+                    the old opacity-0 expand toggle wedged an invisible button in
+                    that slot, so the corner read as a broken gap. One mark, one
+                    corner, no ghost control. */}
                 <TooltipAnchor
                   description={localize('com_nav_open_sidebar')}
                   render={
@@ -64,10 +86,6 @@ export default function Header() {
                       </span>
                     </Button>
                   }
-                />
-                <OpenSidebar
-                  setNavVisible={setNavVisible}
-                  className="opacity-0 transition-opacity duration-150 focus-visible:opacity-100 group-hover:opacity-100 max-md:hidden"
                 />
                 <HeaderNewChat />
               </motion.div>
