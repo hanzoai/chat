@@ -73,6 +73,7 @@ jest.mock('./Menus/Endpoints/ModelSelector', () => ({
 jest.mock('./Menus/BookmarkMenu', () => ({ __esModule: true, default: mockMarker('bookmarks') }));
 jest.mock('./ExportAndShareMenu', () => ({ __esModule: true, default: mockMarker('share') }));
 jest.mock('./TemporaryChat', () => ({ TemporaryChat: mockMarker('temporary') }));
+jest.mock('./PanelControls', () => ({ __esModule: true, default: mockMarker('panel-controls') }));
 jest.mock('~/components/Nav/BrandCorner', () => ({
   __esModule: true,
   default: mockMarker('brand'),
@@ -112,5 +113,13 @@ describe.each([
   it('names no model and offers no preset', () => {
     expect(screen.queryByTestId('model')).not.toBeInTheDocument();
     expect(screen.queryByTestId('presets')).not.toBeInTheDocument();
+  });
+
+  // The window controls (width, companions, right panel) are chrome for the
+  // WINDOW, not for the conversation, so they sit after every conversation
+  // action — last thing at the right end, the way a title bar reads.
+  it('puts the window controls last in the action group', () => {
+    const actions = screen.getByTestId('header-actions');
+    expect(within(actions).getByTestId('panel-controls')).toBe(actions.lastElementChild);
   });
 });

@@ -15,6 +15,9 @@ interface DropdownProps {
   itemClassName?: string;
   sameWidth?: boolean;
   anchor?: { x: string; y: string };
+  /** Which corner the popup hangs from. Ariakit reads this off the STORE, not
+   *  off `<Menu>` — passing it to the element is silently ignored. */
+  placement?: Ariakit.MenuStoreProps['placement'];
   gutter?: number;
   modal?: boolean;
   portal?: boolean;
@@ -28,7 +31,7 @@ interface DropdownProps {
 
 type MenuProps = Omit<
   DropdownProps,
-  'trigger' | 'isOpen' | 'setIsOpen' | 'focusLoop' | 'mountByState'
+  'trigger' | 'isOpen' | 'setIsOpen' | 'focusLoop' | 'mountByState' | 'placement'
 > &
   Ariakit.MenuProps;
 
@@ -38,9 +41,10 @@ const DropdownPopup: React.FC<DropdownProps> = ({
   setIsOpen,
   focusLoop,
   mountByState,
+  placement,
   ...props
 }) => {
-  const menu = Ariakit.useMenuStore({ open: isOpen, setOpen: setIsOpen, focusLoop });
+  const menu = Ariakit.useMenuStore({ open: isOpen, setOpen: setIsOpen, focusLoop, placement });
   if (mountByState) {
     return (
       <Ariakit.MenuProvider store={menu}>
@@ -168,10 +172,11 @@ const Menu: React.FC<MenuProps> = ({
                 </span>
               )}
               {item.label}
+              {/* The whole shortcut, as the caller wrote it. This used to print
+                  a hardcoded `⌘` before the value, which cannot express `⌥⌘S`
+                  and is wrong on every non-Apple keyboard. */}
               {item.kbd != null && (
-                <kbd className="ml-auto hidden font-sans text-xs text-black/50 group-hover:inline group-focus:inline dark:text-white/50">
-                  ⌘{item.kbd}
-                </kbd>
+                <kbd className="ml-auto font-sans text-xs text-text-secondary">{item.kbd}</kbd>
               )}
             </Ariakit.MenuItem>
           );

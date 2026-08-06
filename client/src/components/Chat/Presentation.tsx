@@ -8,6 +8,7 @@ import BackdropMenu from '~/components/Chat/BackdropMenu';
 import { EditorProvider, SidePanelProvider, ArtifactsProvider } from '~/Providers';
 import Artifacts from '~/components/Artifacts/Artifacts';
 import { SidePanelGroup } from '~/components/SidePanel';
+import { BottomBarGroup } from '~/components/Chat/BottomBar';
 import { useSetFilesToDelete } from '~/hooks';
 import { savedLayout } from '~/utils';
 import store from '~/store';
@@ -89,9 +90,11 @@ export default function Presentation({ children }: { children: React.ReactNode }
               defaultCollapsed={defaultCollapsed}
               artifacts={artifactsElement}
             >
-              <main className="flex h-full flex-col overflow-y-auto" role="main">
-                {children}
-              </main>
+              <BottomBarGroup>
+                <main className="flex h-full flex-col overflow-y-auto" role="main">
+                  {children}
+                </main>
+              </BottomBarGroup>
             </SidePanelGroup>
           </SidePanelProvider>
         </div>
