@@ -23,7 +23,7 @@ import { useAtom } from 'jotai';
 import { v4 } from 'uuid';
 import { Dropdown, InfoHoverCard, ESide, useToastContext } from '@hanzochat/client';
 import type { Backdrop, Link, Source } from '~/utils/backdrop';
-import { merge, link, playable, web } from '~/utils/backdrop';
+import { merge, link, playable, picture, web } from '~/utils/backdrop';
 import { useUploadFileMutation } from '~/data-provider';
 import ToggleSwitch from '../ToggleSwitch';
 import { useLocalize } from '~/hooks';
@@ -126,7 +126,10 @@ export default function BackdropSettings() {
   const upload = useUploadFileMutation({
     onSuccess: (file) => {
       setUploading(false);
-      set({ source: 'photo', photo: new URL(file.filepath, window.location.origin).href });
+      // The path as served, not resolved against this origin: the app answers
+      // to several brands' domains and a stored absolute origin is wrong on all
+      // but the one it was saved from. `picture` normalises it.
+      set({ source: 'photo', photo: file.filepath });
     },
     onError: () => {
       setUploading(false);
@@ -223,9 +226,16 @@ export default function BackdropSettings() {
           <Url
             label={localize('com_nav_backdrop_photo_url')}
             value={config.photo}
-            placeholder="https://…"
-            onCommit={(value) => set({ photo: value })}
+            placeholder="/images/…"
+            onCommit={(value) =>
+              picture(value)
+                ? set({ photo: value })
+                : showToast({ message: localize('com_nav_backdrop_photo_refused'), status: 'error' })
+            }
           />
+          <p className="text-xs text-text-secondary">
+            {localize('com_nav_backdrop_photo_note')}
+          </p>
         </div>
       )}
 
