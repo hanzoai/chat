@@ -36,6 +36,13 @@ const toggleSwitchConfigs = [
     key: 'showBackdrop',
   },
   {
+    stateAtom: store.showDock,
+    localizationKey: 'com_nav_show_dock' as const,
+    switchId: 'showDock',
+    hoverCardText: 'com_nav_info_show_dock' as const,
+    key: 'showDock',
+  },
+  {
     stateAtom: store.showCode,
     localizationKey: 'com_nav_show_code' as const,
     switchId: 'showCode',

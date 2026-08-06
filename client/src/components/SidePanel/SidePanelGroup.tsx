@@ -6,6 +6,7 @@ import { ResizablePanel, ResizablePanelGroup, useMediaQuery } from '@hanzochat/c
 import type { ImperativePanelHandle } from 'react-resizable-panels';
 import { useGetStartupConfig } from '~/data-provider';
 import ArtifactsPanel from './ArtifactsPanel';
+import Dock from '~/components/Chat/Dock/Dock';
 import { normalizeLayout, cn } from '~/utils';
 import SidePanel from './SidePanel';
 import store from '~/store';
@@ -46,6 +47,7 @@ const SidePanelGroup = memo(
 
     const isSmallScreen = useMediaQuery('(max-width: 767px)');
     const hideSidePanel = useAtomValue(store.hideSidePanel);
+    const showDock = useAtomValue(store.showDock);
 
     const calculateLayout = useCallback(() => {
       if (artifacts == null) {
@@ -128,6 +130,15 @@ const SidePanelGroup = memo(
               shouldRender={shouldRenderArtifacts}
               onRenderChange={setShouldRenderArtifacts}
             />
+          )}
+
+          {/* The dock is a sibling of the artifacts panel, not a layer over the
+              chat: one group owns the horizontal split, so chat, artifacts and
+              dock resize against each other and one saved layout describes the
+              row. Desktop only — 320px of cards on a phone is the whole screen,
+              the same reasoning that steps the left nav aside below `sm`. */}
+          {!isSmallScreen && showDock && (
+            <Dock defaultSize={30} minSizeMain={minSizeMain} />
           )}
 
           {!hideSidePanel && interfaceConfig.sidePanel === true && (
