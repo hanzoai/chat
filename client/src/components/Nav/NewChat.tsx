@@ -129,10 +129,12 @@ export default function NewChat({
         {collapsed === true ? (
           compose
         ) : (
-          /* Compose and the collapse toggle, and nothing else. Everything that
-             acts on the open conversation lives at the top right of the view. */
+          /* Expanded, the sidebar head is the mark and the collapse toggle,
+             nothing else (owner call). Compose moved OUT to the view header,
+             right of the sidebar — it acts on the open conversation, which is
+             where those controls live. The collapsed RAIL keeps compose, since
+             the rail has no header beside it to hold one. */
           <div className="flex items-center gap-0.5">
-            {compose}
             <TooltipAnchor
               description={localize('com_nav_close_sidebar')}
               render={

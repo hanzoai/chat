@@ -1,4 +1,5 @@
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
+import { HeaderNewChat } from './Menus';
 import CanvasToggle from './Menus/CanvasToggle';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
@@ -19,10 +20,11 @@ export default function Header() {
     <div className="via-presentation/70 md:from-presentation/80 md:via-presentation/50 2xl:from-presentation/0 absolute top-0 z-10 flex h-14 w-full items-center justify-between bg-gradient-to-b from-presentation to-transparent p-2 font-semibold text-text-primary 2xl:via-transparent">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center">
-          {/* No model pill and no multi-convo control on the left edge (owner
-              call): the model is enso by default and the picker was chrome
-              stating a name at the arrival screen. Model choice lives in
-              Settings; the left edge is the mark and nothing else. */}
+          {/* New chat lives here now — right of the sidebar, with the controls
+              that act on the open conversation — so the sidebar head is just
+              the mark and the collapse toggle. No model pill (enso by default;
+              model choice is in Settings). */}
+          <HeaderNewChat />
         </div>
 
         {/* The right end of the header is where every control that acts on THIS
