@@ -1,18 +1,16 @@
 const { logger } = require('@hanzochat/data-schemas');
-const {
-  EnvVar,
-  Calculator,
-  createSearchTool,
-  createCodeExecutionTool,
-} = require('@hanzochat/agents');
+const { Calculator, createSearchTool } = require('@hanzochat/agents');
 const {
   checkAccess,
   createSafeUser,
+  sandboxBaseUrl,
   mcpToolPattern,
   loadWebSearchAuth,
+  tenantBearerOrThrow,
   buildImageToolContext,
   buildWebSearchContext,
   resolveTenantBearer,
+  createCodeExecutionTool,
   OPENID_BEARER_SENTINEL,
 } = require('@hanzochat/api');
 const { getMCPServersRegistry } = require('~/config');
@@ -283,28 +281,20 @@ const loadTools = async ({
   for (const tool of tools) {
     if (tool === Tools.execute_code) {
       requestedTools[tool] = async () => {
-        const authValues = await loadAuthValues({
-          userId: user,
-          authFields: [EnvVar.CODE_API_KEY],
+        /* The credential is the caller's, resolved once here and handed to both
+         * the file priming and the tool. `tenantBearerOrThrow` refuses rather
+         * than falling back: a run with no tenant is a run nobody can be billed
+         * for, which is precisely the state the old shared service key left every
+         * execution in. */
+        const token = tenantBearerOrThrow(options.req);
+        const { files, toolContext } = await primeCodeFiles({
+          ...options,
+          agentId: agent?.id,
         });
-        const codeApiKey = authValues[EnvVar.CODE_API_KEY];
-        const { files, toolContext } = await primeCodeFiles(
-          {
-            ...options,
-            agentId: agent?.id,
-          },
-          codeApiKey,
-        );
         if (toolContext) {
           toolContextMap[tool] = toolContext;
         }
-        const CodeExecutionTool = createCodeExecutionTool({
-          user_id: user,
-          files,
-          ...authValues,
-        });
-        CodeExecutionTool.apiKey = codeApiKey;
-        return CodeExecutionTool;
+        return createCodeExecutionTool({ baseUrl: sandboxBaseUrl(), token, files });
       };
       continue;
     } else if (tool === Tools.file_search) {

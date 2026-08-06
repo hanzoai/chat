@@ -32,8 +32,8 @@ const baseEnv = {
   ...getLocalE2EEnv(),
   CONFIG_PATH: configPath,
   DEPLOYMENT_SKILLS_DIR: deploymentSkillsPath,
-  /** Loaded in-process by `@librechat/api`'s `createRun` to swap in a fake model. */
-  LIBRECHAT_TEST_RUN_HOOK: fakeModelHookPath,
+  /** Loaded in-process by `@hanzochat/api`'s `createRun` to swap in a fake model. */
+  CHAT_TEST_RUN_HOOK: fakeModelHookPath,
   ...vanillaOverrides,
 };
 
@@ -46,7 +46,7 @@ const preservedCredentialEnvKeys = new Set([
 
 /**
  * The custom endpoints in the template point at an unreachable baseURL; the fake
- * model injected via `LIBRECHAT_TEST_RUN_HOOK` overrides the run before any
+ * model injected via `CHAT_TEST_RUN_HOOK` overrides the run before any
  * request is made, so no real (or mock HTTP) provider is contacted.
  */
 function writeRuntimeMockConfig() {

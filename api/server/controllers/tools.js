@@ -1,5 +1,4 @@
 const { nanoid } = require('nanoid');
-const { EnvVar } = require('@hanzochat/agents');
 const { logger } = require('@hanzochat/data-schemas');
 const { checkAccess, loadWebSearchAuth } = require('@hanzochat/api');
 const {
@@ -17,8 +16,19 @@ const { loadTools } = require('~/app/clients/tools/util');
 const { getRoleByName } = require('~/models/Role');
 const { getMessage } = require('~/models/Message');
 
+/**
+ * The credentials a directly-callable tool needs FROM THE USER, and the set of
+ * tools that can be called at all.
+ *
+ * `execute_code` needs none: the sandbox runs under the caller's own Hanzo IAM
+ * bearer, which the request already carries because `requireJwtAuth` let it
+ * through. There is nothing to type into a key dialog and nothing to store — an
+ * empty list says exactly that, where the old `[EnvVar.CODE_API_KEY]` claimed a
+ * per-user key existed for a shared service key that no user ever held (and that
+ * the agents package never even defined an enum member for).
+ */
 const fieldsMap = {
-  [Tools.execute_code]: [EnvVar.CODE_API_KEY],
+  [Tools.execute_code]: [],
 };
 
 const toolAccessPermType = {
@@ -70,6 +80,13 @@ const verifyToolAuth = async (req, res) => {
     const authFields = fieldsMap[toolId];
     if (!authFields) {
       res.status(404).json({ message: 'Tool not found' });
+      return;
+    }
+    /* No user-held credential to check means nothing to ask the credential store,
+     * and asking it anyway is what put a key-entry dialog in front of a tool that
+     * has no key. */
+    if (authFields.length === 0) {
+      res.status(200).json({ authenticated: true, message: AuthType.SYSTEM_DEFINED });
       return;
     }
     let result;

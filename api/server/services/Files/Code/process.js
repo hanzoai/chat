@@ -1,9 +1,12 @@
 const path = require('path');
 const { v4 } = require('uuid');
-const axios = require('axios');
 const { logger } = require('@hanzochat/data-schemas');
-const { getCodeBaseURL } = require('@hanzochat/agents');
-const { logAxiosError, getBasePath } = require('@hanzochat/api');
+const {
+  getBasePath,
+  logAxiosError,
+  sandboxIsLive,
+  sandboxForRequest,
+} = require('@hanzochat/api');
 const {
   Tools,
   megabyte,
@@ -60,9 +63,8 @@ const createDownloadFallback = ({
  * Process code execution output files - downloads and saves both images and non-image files.
  * All files are saved to local storage with fileIdentifier metadata for code env re-upload.
  * @param {ServerRequest} params.req - The Express request object.
- * @param {string} params.id - The file ID from the code environment.
+ * @param {string} params.id - The artifact's name in the sandbox.
  * @param {string} params.name - The filename.
- * @param {string} params.apiKey - The code execution API key.
  * @param {string} params.toolCallId - The tool call ID that generated the file.
  * @param {string} params.session_id - The code execution session ID.
  * @param {string} params.conversationId - The current conversation ID.
@@ -73,7 +75,6 @@ const processCodeOutput = async ({
   req,
   id,
   name,
-  apiKey,
   toolCallId,
   conversationId,
   messageId,
@@ -81,7 +82,6 @@ const processCodeOutput = async ({
 }) => {
   const appConfig = req.config;
   const currentDate = new Date();
-  const baseURL = getCodeBaseURL();
   const fileExt = path.extname(name).toLowerCase();
   const isImage = fileExt && imageExtRegex.test(name);
 
@@ -94,18 +94,17 @@ const processCodeOutput = async ({
 
   try {
     const formattedDate = currentDate.toISOString();
-    const response = await axios({
-      method: 'get',
-      url: `${baseURL}/download/${session_id}/${id}`,
-      responseType: 'arraybuffer',
-      headers: {
-        'User-Agent': 'HanzoChat/1.0',
-        'X-API-Key': apiKey,
-      },
-      timeout: 15000,
-    });
-
-    const buffer = Buffer.from(response.data, 'binary');
+    /* Read the artifact out of the sandbox that produced it, under the caller's
+     * own bearer. `sandboxForRequest` resumes `session_id` when its lease is still
+     * good; a different id back means the lease is gone and the bytes with it. */
+    const sandbox = await sandboxForRequest(req, session_id);
+    if (sandbox.id !== session_id) {
+      throw new Error(`code environment session ${session_id} has expired`);
+    }
+    const buffer = await sandbox.readBuffer(id);
+    if (buffer == null) {
+      throw new Error(`no such artifact in session ${session_id}: ${id}`);
+    }
 
     // Enforce file size limit
     if (buffer.length > fileSizeLimit) {
@@ -247,58 +246,23 @@ const processCodeOutput = async ({
   }
 };
 
-function checkIfActive(dateString) {
-  const givenDate = new Date(dateString);
-  const currentDate = new Date();
-  const timeDifference = currentDate - givenDate;
-  const hoursPassed = timeDifference / (1000 * 60 * 60);
-  return hoursPassed < 23;
-}
-
 /**
- * Retrieves the `lastModified` time string for a specified file from Code Execution Server.
+ * Is the sandbox that holds this file still leased?
  *
- * @param {Object} params - The parameters object.
- * @param {string} params.fileIdentifier - The identifier for the file (e.g., "session_id/fileId").
- * @param {string} params.apiKey - The API key for authentication.
+ * ONE question, where there used to be two that only together answered it — a
+ * `lastModified` fetched from a file listing and a 23-hour freshness rule applied
+ * to it. Both were proxies for "can I still read this?", and a sandbox answers
+ * that directly: the lease is either running or it is not. A dead session's files
+ * are gone whatever their timestamps say, and a live one's are there.
  *
- * @returns {Promise<string|null>}
- *          A promise that resolves to the `lastModified` time string of the file if successful, or null if there is an
- *          error in initialization or fetching the info.
+ * @param {string} fileIdentifier - `"<sandbox id>/<name>"`.
+ * @param {ServerRequest} req
+ * @returns {Promise<boolean>}
  */
-async function getSessionInfo(fileIdentifier, apiKey) {
-  try {
-    const baseURL = getCodeBaseURL();
-    const [path, queryString] = fileIdentifier.split('?');
-    const session_id = path.split('/')[0];
-
-    let queryParams = {};
-    if (queryString) {
-      queryParams = Object.fromEntries(new URLSearchParams(queryString).entries());
-    }
-
-    const response = await axios({
-      method: 'get',
-      url: `${baseURL}/files/${session_id}`,
-      params: {
-        detail: 'summary',
-        ...queryParams,
-      },
-      headers: {
-        'User-Agent': 'HanzoChat/1.0',
-        'X-API-Key': apiKey,
-      },
-      timeout: 5000,
-    });
-
-    return response.data.find((file) => file.name.startsWith(path))?.lastModified;
-  } catch (error) {
-    logAxiosError({
-      message: `Error fetching session info: ${error.message}`,
-      error,
-    });
-    return null;
-  }
+async function sessionIsLive(fileIdentifier, req) {
+  const [pathPart] = String(fileIdentifier ?? '').split('?');
+  const session_id = pathPart.split('/')[0];
+  return session_id ? sandboxIsLive(req, session_id) : false;
 }
 
 /**
@@ -307,13 +271,12 @@ async function getSessionInfo(fileIdentifier, apiKey) {
  * @param {ServerRequest} options.req
  * @param {Agent['tool_resources']} options.tool_resources
  * @param {string} [options.agentId] - The agent ID for file access control
- * @param {string} apiKey
  * @returns {Promise<{
  * files: Array<{ id: string; session_id: string; name: string }>,
  * toolContext: string,
  * }>}
  */
-const primeFiles = async (options, apiKey) => {
+const primeFiles = async (options) => {
   const { tool_resources, req, agentId } = options;
   const file_ids = tool_resources?.[EToolResources.execute_code]?.file_ids ?? [];
   const agentResourceIds = new Set(file_ids);
@@ -394,7 +357,6 @@ const primeFiles = async (options, apiKey) => {
             stream,
             filename: file.filename,
             entity_id: queryParams.entity_id,
-            apiKey,
           });
 
           // Preserve existing metadata when adding fileIdentifier
@@ -416,13 +378,8 @@ const primeFiles = async (options, apiKey) => {
           );
         }
       };
-      const uploadTime = await getSessionInfo(file.metadata.fileIdentifier, apiKey);
-      if (!uploadTime) {
-        logger.warn(`Failed to get upload time for file ${id} in session ${session_id}`);
-        await reuploadFile();
-        continue;
-      }
-      if (!checkIfActive(uploadTime)) {
+      if (!(await sessionIsLive(file.metadata.fileIdentifier, options.req))) {
+        logger.debug(`[primeFiles] session ${session_id} is no longer leased; re-uploading ${id}`);
         await reuploadFile();
         continue;
       }
@@ -436,5 +393,6 @@ const primeFiles = async (options, apiKey) => {
 
 module.exports = {
   primeFiles,
+  sessionIsLive,
   processCodeOutput,
 };

@@ -1,6 +1,6 @@
 const { nanoid } = require('nanoid');
 const { logger } = require('@hanzochat/data-schemas');
-const { Constants, EnvVar, GraphEvents, ToolEndHandler } = require('@hanzochat/agents');
+const { Constants, GraphEvents, ToolEndHandler } = require('@hanzochat/agents');
 const { Tools, StepTypes, FileContext, ErrorTypes } = require('@hanzochat/data-provider');
 const {
   sendEvent,
@@ -433,15 +433,10 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
       const { id, name } = file;
       artifactPromises.push(
         (async () => {
-          const result = await loadAuthValues({
-            userId: req.user.id,
-            authFields: [EnvVar.CODE_API_KEY],
-          });
           const fileMetadata = await processCodeOutput({
             req,
             id,
             name,
-            apiKey: result[EnvVar.CODE_API_KEY],
             messageId: metadata.run_id,
             toolCallId: output.tool_call_id,
             conversationId: metadata.thread_id,
@@ -641,15 +636,10 @@ function createResponsesToolEndCallback({ req, res, tracker, artifactPromises })
       const { id, name } = file;
       artifactPromises.push(
         (async () => {
-          const result = await loadAuthValues({
-            userId: req.user.id,
-            authFields: [EnvVar.CODE_API_KEY],
-          });
           const fileMetadata = await processCodeOutput({
             req,
             id,
             name,
-            apiKey: result[EnvVar.CODE_API_KEY],
             messageId: metadata.run_id,
             toolCallId: output.tool_call_id,
             conversationId: metadata.thread_id,
