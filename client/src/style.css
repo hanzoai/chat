@@ -395,11 +395,18 @@
 .hz-composer::after {
   content: '';
   position: absolute;
-  inset: -12px;
-  padding: 12px;
-  border-radius: inherit;
+  inset: -8px;
+  padding: 8px;
+  /* Concentric with the box, NOT `inherit`. The halo lives 8px outside the
+     composer, so a 24px (inherit) corner on this larger box curves too tight and
+     reads as a second, mismatched rounding just outside the panel — the "border
+     round is slightly off". `1.5rem + 8px` makes the halo's outer arc parallel
+     to the composer's, and its inner hole (outer − padding) lands back on 24px.
+     Tighter too: an 8px spread with a 20px blur hugs the box instead of the old
+     12px/28px wash. */
+  border-radius: calc(1.5rem + 8px);
   background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
-  filter: blur(28px);
+  filter: blur(20px);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
