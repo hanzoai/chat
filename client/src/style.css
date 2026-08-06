@@ -293,11 +293,14 @@
    change and nobody notices which half moved.
 
    Structure: `.hz-composer` is a 1.5px-padded host carrying the conic ring
-   (::before, fills the box) and the blurred glow (::after, extends past it);
-   its direct child is the opaque composer panel, which sits above both and
-   covers the centre, so only the ring's 1.5px lip shows. `@property` is what
-   lets the conic angle animate at all; where it is unsupported the ring is
-   simply static, which is a fine second-best.
+   (::before) and the blurred glow (::after, extends past it); its direct child
+   is the composer panel. Both pseudo-elements are MASKED to exclude the panel's
+   own footprint, so the ring is a lip and the glow is a halo — neither paints
+   behind the panel, and the panel is free to be glass. They used to be filled
+   discs that an opaque panel covered, which made the panel's opacity
+   load-bearing for the ring's shape. `@property` is what lets the conic angle
+   animate at all; where it is unsupported the ring is simply static, which is a
+   fine second-best.
 
    Reduced motion holds a frame — still lit, no drift. */
 @property --hz-angle {
@@ -370,22 +373,45 @@
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
   mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
+  /* After the standard shorthand: WebKit aliases `mask` onto `-webkit-mask`, so
+     declaring this first lets the shorthand reset it to `source-over` — which
+     is the filled disc again, on exactly the browsers too old to have
+     `mask-composite` at all. */
+  -webkit-mask-composite: xor;
   z-index: 0;
   pointer-events: none;
 }
 
+/* The glow is a HALO, and it is masked for the same reason the ring is: it sat
+   under the panel, which was fine only while the panel was opaque. Through
+   glass — amplified by that material's own `saturate(1.8)` — a spinning conic
+   under the input tinted it, and on a light page 28% of a saturated sweep read
+   through a white panel as a pastel wash. The composer's own footprint is
+   excluded, so the glow lights the air around the box and nothing behind it. */
 .hz-composer::after {
   content: '';
   position: absolute;
   inset: -12px;
+  padding: 12px;
   border-radius: inherit;
   background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
   filter: blur(28px);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* Repeated AFTER the standard shorthand: WebKit aliases `mask` onto
+     `-webkit-mask`, so the shorthand resets this back to `source-over` and the
+     mask degrades to a plain cover — the filled disc again, on Safari older
+     than 15.4, which is also where `mask-composite` does not exist. */
+  -webkit-mask-composite: xor;
   opacity: 0.5;
   z-index: -1;
   pointer-events: none;
@@ -394,7 +420,7 @@
     hzComposerGlow 10s ease-in-out infinite;
 }
 
-/* The opaque composer panel sits above the ring and the glow. */
+/* The composer panel sits above the ring and the glow. */
 .hz-composer > * {
   position: relative;
   z-index: 1;
@@ -2850,11 +2876,12 @@ html {
 /*
   The composer's boundary is the prism, so it draws no second one.
 
-  `.field`'s ring is right for every OTHER shell — a popover, the answer
-  composer — which has no ring of its own. The chat composer already wears one:
-  `.hz-composer`'s conic sweep IS its edge. Both fired on the same focus and the
-  white 2px outline painted straight over the sweep, which is why focusing the
-  composer turned a lit gradient into a flat white rectangle.
+  `.field`'s ring is right for every OTHER shell — a popover — which has no ring
+  of its own. A composer already wears one: `.hz-composer`'s conic sweep IS its
+  edge, and since both composers now share that shell, both are indicated by the
+  sweep. Both fired on the same focus and the white 2px outline painted straight
+  over it, which is why focusing the composer turned a lit gradient into a flat
+  white rectangle.
 
   One event, one indicator. The prism brightens instead — and it has to be
   BRIGHT enough to BE the indicator, not merely different. Three passes of the

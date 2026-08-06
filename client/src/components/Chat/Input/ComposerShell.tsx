@@ -25,6 +25,14 @@ export interface ComposerShellProps {
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   /** A temporary chat says so with its edge, the one exemption from the ring. */
   temporary?: boolean;
+  /**
+   * Docked composers meet the bottom of the viewport on a phone, so they round
+   * only their top corners; a floating one rounds all four. The chat composer
+   * docks (`sm:mb-10`, no mobile margin), the answer composer floats above
+   * 12px of padding — square bottom corners with a prism tracing them is the
+   * shape you get from imposing one geometry on both.
+   */
+  docked?: boolean;
 }
 
 export default function ComposerShell({
@@ -32,20 +40,29 @@ export default function ComposerShell({
   className,
   onClick,
   temporary = false,
+  docked = false,
 }: ComposerShellProps) {
+  const radius = docked ? 'rounded-t-3xl sm:rounded-3xl' : 'rounded-3xl';
   return (
-    <div className={cn('hz-composer w-full rounded-t-3xl sm:rounded-3xl', temporary && 'opacity-90')}>
+    <div className={cn('hz-composer w-full', radius, temporary && 'opacity-90')}>
       <div
         onClick={onClick}
         className={cn(
           // `field` draws the keyboard focus ring HERE, at this shell's radius —
           // otherwise the global `.dark :focus-visible` paints a square one
           // around the bare textarea inside the curve. See style.css.
-          'field relative flex w-full flex-grow flex-col overflow-hidden rounded-t-3xl border text-text-primary transition-all duration-200 sm:rounded-3xl',
-          // The ring IS this panel's edge, so the panel does not draw a second
-          // one over it — a hairline on top of the sweep reads as a grey ring
-          // with colour leaking out from behind.
-          temporary ? 'border-violet-800/60 bg-violet-950/10' : 'glass border-transparent',
+          'field relative flex w-full flex-grow flex-col overflow-hidden border text-text-primary transition-all duration-200',
+          radius,
+          // `glass` carries its material only inside `@supports (backdrop-filter)`,
+          // and its fill is `!important`, so the token underneath is a no-op
+          // wherever the blur is live and the whole background wherever it is
+          // not. Drop it and a browser that cannot blur gets a composer with no
+          // background at all — text floating on the video. `elevation-2` is the
+          // pair glass expects: the sheet ships no shadow of its own, and on a
+          // light page a 72%-white panel with no edge has none.
+          temporary
+            ? 'border-violet-800/60 bg-violet-950/10'
+            : 'glass elevation-2 border-transparent bg-surface-chat',
           className,
         )}
       >
