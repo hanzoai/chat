@@ -12,6 +12,7 @@ import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } fro
 import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
 import Presentation from './Presentation';
+import SelectionAsk from './SelectionAsk';
 import ChatForm from './Input/ChatForm';
 import AnswerEngine from './Answer/AnswerEngine';
 import Header from './Header';
@@ -112,6 +113,10 @@ function ChatView({ index = 0 }: { index?: number }) {
             <ChatForm index={index} />
             <Footer />
           </div>
+          {/* Highlight text in a reply → ask about just that, folded back into
+              this thread. One overlay for the whole conversation; it reads the
+              live selection, so it only acts on the words under the cursor. */}
+          <SelectionAsk />
         </div>
       )}
     </div>
