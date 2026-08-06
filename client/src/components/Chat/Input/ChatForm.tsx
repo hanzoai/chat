@@ -35,6 +35,7 @@ import TextareaHeader from './TextareaHeader';
 import PromptsCommand from './PromptsCommand';
 import AgentsCommand from './AgentsCommand';
 import Mic from './Mic';
+import CreateMenu from './CreateMenu';
 import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
 import SendButton from './SendButton';
@@ -395,6 +396,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
                   <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
                 </div>
+                <CreateMenu />
                 <BadgeRow
                   showEphemeralBadges={
                     !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
