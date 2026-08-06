@@ -46,12 +46,28 @@ const SidePanelGroup = memo(
     const [shouldRenderArtifacts, setShouldRenderArtifacts] = useState(artifacts != null);
 
     const isSmallScreen = useMediaQuery('(max-width: 767px)');
+    // The dock needs room for BOTH panes, which is a higher bar than 'not a
+    // phone'. At 1024 a 30% dock left the conversation 357px — narrower than
+    // the 390px phone layout the messages are designed for, with the starter
+    // chips wrapping to two rows. Below this the dock is not shown at all
+    // rather than shown badly.
+    const hasRoomForDock = useMediaQuery('(min-width: 1280px)');
     const hideSidePanel = useAtomValue(store.hideSidePanel);
     const showDock = useAtomValue(store.showDock);
 
     const calculateLayout = useCallback(() => {
       if (artifacts == null) {
-        const navSize = defaultLayout.length === 2 ? defaultLayout[1] : defaultLayout[2];
+        // The nav is the LAST size in the saved layout, because it is the last
+        // panel (SidePanel is order 4, above every sibling). Reading it by a
+        // fixed index — `length === 2 ? [1] : [2]` — assumed the only thing that
+        // could sit between the messages and the nav was the artifacts panel.
+        // Once the dock could too, index 2 was the DOCK, so the nav rail was
+        // seeded with the dock's 30% and grew on every reload: 50px -> 272px ->
+        // 352px, and it SURVIVED turning the dock off, because by then the
+        // poisoned width had been saved as the nav's own. It also slipped the
+        // `layout[last] <= 40` guard, since 30 is a legal nav width — the value
+        // was plausible, it just belonged to another panel.
+        const navSize = defaultLayout[defaultLayout.length - 1];
         return [100 - navSize, navSize];
       } else {
         const navSize = 0;
@@ -135,9 +151,9 @@ const SidePanelGroup = memo(
           {/* The dock is a sibling of the artifacts panel, not a layer over the
               chat: one group owns the horizontal split, so chat, artifacts and
               dock resize against each other and one saved layout describes the
-              row. Desktop only — 320px of cards on a phone is the whole screen,
-              the same reasoning that steps the left nav aside below `sm`. */}
-          {!isSmallScreen && showDock && (
+              row. Wide screens only (see hasRoomForDock) — a dock that leaves
+              the conversation narrower than a phone is worse than no dock. */}
+          {hasRoomForDock && showDock && (
             <Dock defaultSize={30} minSizeMain={minSizeMain} />
           )}
 

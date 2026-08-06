@@ -160,7 +160,16 @@ const SidePanel = ({
       <ResizablePanel
         tagName="nav"
         id="controls-nav"
-        order={hasArtifacts ? 3 : 2}
+        // ALWAYS LAST, and fixed rather than conditional. Panels are laid out in
+        // `order`, and the saved layout is an array of sizes in that same order,
+        // so "the nav is the last element" is the contract SidePanelGroup reads
+        // sizes back through. Expressing it as `hasArtifacts ? 3 : 2` made that
+        // contract depend on WHICH other panels happened to be mounted: add a
+        // third panel (the dock, order 3) with the artifacts panel closed and
+        // the nav sorts to the MIDDLE, so the restore read the dock's width as
+        // the nav's and the rail grew every reload. A constant above every other
+        // panel cannot be overtaken by a panel added later.
+        order={4}
         aria-label={localize('com_ui_controls')}
         role="navigation"
         collapsedSize={collapsedSize}
