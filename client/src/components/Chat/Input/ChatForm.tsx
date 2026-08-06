@@ -32,7 +32,6 @@ import {
   openAppBuilder,
 } from '~/utils';
 import TextareaHeader from './TextareaHeader';
-import BuildAppButton from './BuildAppButton';
 import PromptsCommand from './PromptsCommand';
 import AgentsCommand from './AgentsCommand';
 import Mic from './Mic';
@@ -397,7 +396,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
                   <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
                 </div>
-                <BuildAppButton />
                 <BadgeRow
                   showEphemeralBadges={
                     !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)

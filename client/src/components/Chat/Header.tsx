@@ -1,43 +1,25 @@
-import { useMemo } from 'react';
-import { useMediaQuery } from '@hanzochat/client';
+import { TooltipAnchor, Button } from '@hanzochat/client';
 import { useOutletContext } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getConfigDefaults, PermissionTypes, Permissions } from '@hanzochat/data-provider';
+import { HanzoMark } from '@hanzogui/shell';
+import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { ContextType } from '~/common';
-import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
-import ModelSelector from './Menus/Endpoints/ModelSelector';
+import { HeaderNewChat, OpenSidebar } from './Menus';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
-import AddMultiConvo from './AddMultiConvo';
-import BrandCorner from '~/components/Nav/BrandCorner';
-import { useHasAccess, useAuthContext } from '~/hooks';
-import { cn } from '~/utils';
-
-const defaultInterface = getConfigDefaults().interface;
+import { useHasAccess, useLocalize } from '~/hooks';
 
 export default function Header() {
+  const localize = useLocalize();
   const { data: startupConfig } = useGetStartupConfig();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
-  const { isAuthenticated } = useAuthContext();
-
-  const interfaceConfig = useMemo(
-    () => startupConfig?.interface ?? defaultInterface,
-    [startupConfig],
-  );
 
   const hasAccessToBookmarks = useHasAccess({
     permissionType: PermissionTypes.BOOKMARKS,
     permission: Permissions.USE,
   });
-
-  const hasAccessToMultiConvo = useHasAccess({
-    permissionType: PermissionTypes.MULTI_CONVO,
-    permission: Permissions.USE,
-  });
-
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   return (
     <div className="via-presentation/70 md:from-presentation/80 md:via-presentation/50 2xl:from-presentation/0 absolute top-0 z-10 flex h-14 w-full items-center justify-between bg-gradient-to-b from-presentation to-transparent p-2 font-semibold text-text-primary 2xl:via-transparent">
@@ -52,36 +34,48 @@ export default function Header() {
           <AnimatePresence initial={false}>
             {!navVisible && (
               <motion.div
-                className="flex items-center gap-2 max-md:hidden"
+                className="group flex items-center gap-2 max-md:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
                 key="header-buttons"
               >
-                <BrandCorner />
-                <OpenSidebar setNavVisible={setNavVisible} className="max-md:hidden" />
+                {/* Collapsed, the mark IS the way back in: clicking it opens the
+                    sidebar, on the same button ground as its siblings. Its
+                    app-switcher self lives in the sidebar's first row, reached
+                    the moment it opens — one mark, never two. The expand toggle
+                    would be a second control for the same idea, so it waits for
+                    a hover rather than sitting there in duplicate. */}
+                <TooltipAnchor
+                  description={localize('com_nav_open_sidebar')}
+                  render={
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      aria-label={localize('com_nav_open_sidebar')}
+                      aria-controls="chat-history-nav"
+                      className="rounded-xl bg-presentation duration-0 hover:bg-surface-active-alt"
+                      onClick={() => setNavVisible(true)}
+                    >
+                      <span className="flex items-center justify-center text-text-primary">
+                        <HanzoMark size={18} />
+                      </span>
+                    </Button>
+                  }
+                />
+                <OpenSidebar
+                  setNavVisible={setNavVisible}
+                  className="opacity-0 transition-opacity duration-150 focus-visible:opacity-100 group-hover:opacity-100 max-md:hidden"
+                />
                 <HeaderNewChat />
               </motion.div>
             )}
           </AnimatePresence>
-          {/* The model belongs to a viewer who can change it. A guest is pinned to
-              the one guest model server-side (`enforceGuestScope`), so a picker
-              there offers a choice the API refuses — it read as chrome stating a
-              model name at someone who has no say in it. Signed in, it is the
-              left edge's whole point and stays. */}
-          {isAuthenticated && !(navVisible && isSmallScreen) && (
-            <div
-              className={cn(
-                'flex items-center gap-2',
-                !isSmallScreen ? 'transition-all duration-200 ease-in-out' : '',
-                !navVisible && !isSmallScreen ? 'pl-2' : '',
-              )}
-            >
-              <ModelSelector startupConfig={startupConfig} />
-              {hasAccessToMultiConvo === true && <AddMultiConvo />}
-            </div>
-          )}
+          {/* No model pill and no multi-convo control on the left edge (owner
+              call): the model is enso by default and the picker was chrome
+              stating a name at the arrival screen. Model choice lives in
+              Settings; the left edge is the mark and nothing else. */}
         </div>
 
         {/* The right end of the header is where every control that acts on THIS
@@ -91,7 +85,6 @@ export default function Header() {
             the mark and the model. One end, one copy, every width: the left edge
             is the app's identity and the model it is talking to, nothing else. */}
         <div className="flex items-center gap-2" data-testid="header-actions">
-          {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
           {hasAccessToBookmarks === true && <BookmarkMenu />}
           <ExportAndShareMenu isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false} />
           <TemporaryChat />
