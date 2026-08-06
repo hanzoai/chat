@@ -1,6 +1,5 @@
 const fs = require('fs').promises;
 const express = require('express');
-const { EnvVar } = require('@hanzochat/agents');
 const { logger } = require('@hanzochat/data-schemas');
 const {
   Time,
@@ -20,6 +19,7 @@ const {
   processDeleteRequest,
   processAgentFileUpload,
 } = require('~/server/services/Files/process');
+const { SANDBOX_ID_RE, ARTIFACT_NAME_RE } = require('@hanzochat/api');
 const { fileAccess } = require('~/server/middleware/accessResources/fileAccess');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { getOpenAIClient } = require('~/server/controllers/assistants/helpers');
@@ -258,10 +258,6 @@ router.delete('/', async (req, res) => {
   }
 });
 
-function isValidID(str) {
-  return /^[A-Za-z0-9_-]{21}$/.test(str);
-}
-
 router.get('/code/download/:session_id/:fileId', async (req, res) => {
   try {
     const { session_id, fileId } = req.params;
@@ -272,7 +268,11 @@ router.get('/code/download/:session_id/:fileId', async (req, res) => {
       return res.status(400).send('Bad request');
     }
 
-    if (!isValidID(session_id) || !isValidID(fileId)) {
+    /* A sandbox id (`m_` + 12 random bytes, hex) and an artifact's flat name.
+     * Both arrive from the URL and both are about to be used as one, so both are
+     * checked against the grammars cloud actually mints — not the nanoid shape
+     * the retired code service used, which no sandbox id or filename matches. */
+    if (!SANDBOX_ID_RE.test(session_id) || !ARTIFACT_NAME_RE.test(fileId)) {
       logger.debug(`${logPrefix} invalid session_id or fileId`);
       return res.status(400).send('Bad request');
     }
@@ -285,14 +285,7 @@ router.get('/code/download/:session_id/:fileId', async (req, res) => {
       return res.status(501).send('Not Implemented');
     }
 
-    const result = await loadAuthValues({ userId: req.user.id, authFields: [EnvVar.CODE_API_KEY] });
-
-    /** @type {AxiosResponse<ReadableStream> | undefined} */
-    const response = await getDownloadStream(
-      `${session_id}/${fileId}`,
-      result[EnvVar.CODE_API_KEY],
-      req,
-    );
+    const response = await getDownloadStream(`${session_id}/${fileId}`, req);
     res.set(response.headers);
     response.data.pipe(res);
   } catch (error) {

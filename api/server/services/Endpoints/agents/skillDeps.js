@@ -1,10 +1,4 @@
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
-const { batchUploadCodeEnvFiles } = require('~/server/services/Files/Code/crud');
-const {
-  getSessionInfo,
-  checkIfActive,
-  readSandboxFile,
-} = require('~/server/services/Files/Code/process');
 const { enrichWithSkillConfigurable } = require('@hanzochat/api');
 const db = require('~/models');
 
@@ -64,21 +58,19 @@ const skillToolDeps = {
   getSkillByName: db.getSkillByName,
   listSkillFiles: db.listSkillFiles,
   getStrategyFunctions,
-  batchUploadCodeEnvFiles,
-  getSessionInfo,
-  checkIfActive,
   updateSkillFileCodeEnvIds: db.updateSkillFileCodeEnvIds,
   getSkillFileByPath: db.getSkillFileByPath,
   updateSkillFileContent: db.updateSkillFileContent,
-  /**
-   * `read_file` falls back to a sandbox `cat` for `/mnt/data/...` paths
-   * and for `{firstSegment}/...` paths whose first segment isn't a known
-   * skill name. The handler routes through this when the agent has code
-   * execution enabled; the codeapi base URL comes from
-   * `CHAT_CODE_BASEURL` and the sandbox session id is forwarded by
-   * the agents-side `ToolNode` via `tc.codeSessionContext`.
-   */
-  readSandboxFile,
+  /* `batchUploadCodeEnvFiles`, `getSessionInfo`, `checkIfActive` and
+   * `readSandboxFile` used to be listed here and NONE of them existed: three were
+   * never exported by the modules they were destructured from and the fourth had a
+   * different signature than `primeSkillFiles` declares. They were `undefined` in
+   * this bag on every request. Listing a dependency that is not there is worse than
+   * not listing it — `primeSkillFiles` treats the optional ones as "skip the
+   * check", which is what it already did, and the required one throws at the point
+   * of use instead of at wiring time. Skill FILES therefore do not reach the code
+   * environment; skill bodies are unaffected. That is the honest state, and it is
+   * a separate piece of work from this one. */
 };
 
 function getSkillToolDeps() {

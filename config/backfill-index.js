@@ -19,11 +19,11 @@
  */
 const path = require('path');
 // The built package. The pnpm workspace does not hoist a bare
-// `@librechat/data-schemas` symlink to the app root (where this script runs via
+// `@hanzochat/data-schemas` symlink to the app root (where this script runs via
 // `node config/backfill-index.js`), so fall back to the workspace path.
 function loadDataSchemas() {
   try {
-    return require('@librechat/data-schemas');
+    return require('@hanzochat/data-schemas');
   } catch {
     return require(path.resolve(__dirname, '../packages/data-schemas'));
   }

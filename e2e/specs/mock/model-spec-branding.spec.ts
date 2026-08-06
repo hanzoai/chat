@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { getPrimaryE2EUser } from '../../setup/users.mock';
 import { NEW_CHAT_PATH, selectModelSpec } from './helpers';
 
-/** Spec with `showOnLanding: true` and an HTML `description` in e2e/config/librechat.e2e.yaml. */
+/** Spec with `showOnLanding: true` and an HTML `description` in e2e/config/chat.e2e.yaml. */
 const BRANDED_SPEC = {
   label: 'E2E Branded',
   descriptionText: 'Branded answers',
