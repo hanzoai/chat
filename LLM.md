@@ -912,6 +912,23 @@ path, each at its own layer. Do not undo any of them singly:
   Adopting a principal also invalidates all queries, because bootstrap
   queries that 401'd pre-token had burned their retries into a terminal
   error state nothing else re-ran.
+- The DECISIVE one: `setUserContext` is a lodash `debounce(50)`, so a
+  refresh failure QUEUES its unauth write — and a local guest mint outruns
+  the timer, so the queued `setTokenHeader(undefined)` landed 50ms AFTER
+  adoption armed the header, deterministically, on every load. Guest sends
+  left with `Authorization: NONE` while a valid bearer sat in
+  sessionStorage. `acquireGuest` now calls `setUserContext.cancel()` before
+  arming. If sends ever 401 while bootstrap calls carry the bearer, look
+  for a new writer racing this debounce before suspecting the server.
+- Defense in depth for module duplication: `@hanzochat/data-provider` is
+  bundled at least twice (root + `./react-query` entrypoints each inline
+  the request layer), so axios `defaults` set through one copy are
+  invisible to the other. The client deduplicates axios
+  (`resolve.dedupe: ['axios']` in vite.config.ts) AND `setTokenHeader`
+  mirrors the bearer to `window.__hanzoBearer`, which a request
+  interceptor in EVERY copy injects when Authorization is absent. Use
+  `window`, not `globalThis` — the node-polyfill plugin shims `globalThis`
+  inside bundled modules and writes land on the shim.
 
 The PWA service worker is a SELF-DESTROYER (`selfDestroying: true` in
 `client/vite.config.ts`): an online AI chat gains nothing from a precache

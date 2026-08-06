@@ -168,6 +168,12 @@ const AuthContextProvider = ({
       requireLogin('unavailable');
       return false;
     }
+    // setUserContext is DEBOUNCED (50ms). A refresh failure queues its unauth
+    // write — which ends in setTokenHeader(undefined) — and a local guest
+    // mint outruns that timer, so the erase used to land AFTER this adoption
+    // and every send left tokenless while the composer stayed up. Adopting a
+    // principal cancels whatever unauth write is still pending.
+    setUserContext.cancel();
     setUser(session.user);
     setToken(session.token);
     setTokenHeader(session.token);
