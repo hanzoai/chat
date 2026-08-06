@@ -418,8 +418,8 @@ importers:
         specifier: ^0.1.6
         version: 0.1.6(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(@hanzogui/lucide-icons-2@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@hanzo/voice':
-        specifier: 0.1.4
-        version: 0.1.4(react@19.2.4)
+        specifier: 0.1.5
+        version: 0.1.5(react@19.2.4)
       '@hanzochat/client':
         specifier: workspace:*
         version: link:../packages/client
@@ -3678,8 +3678,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/voice@0.1.4':
-    resolution: {integrity: sha512-GikeiIjsWwrtAy+ytw0x//bkrbV0XyBKTuxkksafbzgZPgD/u8Juz0siqclksUdM3XCbolEl1tyDW10fc4wifQ==}
+  '@hanzo/voice@0.1.5':
+    resolution: {integrity: sha512-FhJZyTAUzESSQ6OMbCFw5OP2IfREFCABgI/1dciU8T7R6Bch2MaCLNG4SsdwUtmioDZA655JN3XHJgM9SP8jOA==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=18'
@@ -17307,7 +17307,7 @@ snapshots:
       '@hanzogui/lucide-icons-2': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
 
-  '@hanzo/voice@0.1.4(react@19.2.4)':
+  '@hanzo/voice@0.1.5(react@19.2.4)':
     dependencies:
       react: 19.2.4
 
@@ -20845,7 +20845,9 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
 
   '@react-native/normalize-color@2.1.0': {}
 
