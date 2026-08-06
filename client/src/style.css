@@ -350,13 +350,31 @@
   padding: 1.5px;
 }
 
+/* The ring DRAWS A RING. It used to draw a filled disc and rely on the panel
+   above it being opaque to cover the middle — which made the panel's opacity
+   load-bearing for something that was never about the panel. The moment the
+   composer became glass, the whole spectrum washed up through it.
+
+   `padding` here is the ring's own thickness, and the two-layer mask keeps the
+   paint outside that padding: `content-box` is the hole, the full box is the
+   plate, and `exclude` leaves the lip. So the ring is a rim by construction and
+   the panel is free to be any material at all. */
 .hz-composer::before {
   content: '';
   position: absolute;
   inset: 0;
+  padding: 1.5px;
   border-radius: inherit;
   background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
   animation: hzComposerSpin 10s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
   z-index: 0;
   pointer-events: none;
 }
