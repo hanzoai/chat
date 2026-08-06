@@ -104,8 +104,16 @@ RUN \
     # exactly that: every step green, the key blanked by a shadowing ARG, and the
     # bundle empty. Assert on the bytes that ship, which is the only place the
     # claim is true or false.
-    { grep -rqF "$VITE_PUBLISHABLE_KEY" client/dist || \
-      { echo "ERROR: the ingest key is not in client/dist - hanzo.chat would ship unattributed" >&2; exit 1; }; } && \
+    #
+    # The emptiness check is not redundant, it is the ONLY one that fires in the
+    # common case. `grep -F ""` matches every line, so an ABSENT key satisfied the
+    # search below and this gate passed every keyless build it exists to stop —
+    # and absent is the usual shape, because the KMS fetch in deploy.yml `exit 0`s
+    # on missing credentials and hands an empty --build-arg down. So the gate held
+    # only for a key that was present and not inlined, and waved through the one
+    # where there was no key at all.
+    { { [ -n "$VITE_PUBLISHABLE_KEY" ] && grep -rqF "$VITE_PUBLISHABLE_KEY" client/dist; } || \
+      { echo "ERROR: no ingest key in client/dist - hanzo.chat would ship unattributed and every track/identify/group would be dropped at 200" >&2; exit 1; }; } && \
     pnpm store prune
 
 # Boot gate — see scripts/check-barrel.cjs. Runs against the dist that was just
