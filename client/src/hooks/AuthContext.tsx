@@ -193,6 +193,13 @@ const AuthContextProvider = ({
    */
   const guestFallbackRef = useRef<() => void>(() => {});
   guestFallbackRef.current = () => {
+    // A principal already landed (guest or real) — a straggler refresh must
+    // not run the fallback: its unauth branch resets the token header that
+    // the adopted session just installed, and the next send goes out
+    // tokenless while the composer still renders.
+    if (isGuest || isAuthenticated) {
+      return;
+    }
     sessionRef.current = 'none';
 
     // No session to adopt from hanzo.id: it serves `frame-ancestors 'none'`, so a
@@ -210,12 +217,23 @@ const AuthContextProvider = ({
     setUserContext({ token: undefined, isAuthenticated: false, user: undefined });
   };
 
+  /** One probe at a time: the effect below refires on every auth-state change
+   *  while signed out, and parallel refreshes mean parallel fallbacks — the
+   *  stragglers land after the guest has adopted and undo it. */
+  const refreshBusyRef = useRef(false);
   const silentRefresh = useCallback(() => {
     if (authConfig?.test === true) {
       console.log('Test mode. Skipping silent refresh.');
       return;
     }
+    if (refreshBusyRef.current) {
+      return;
+    }
+    refreshBusyRef.current = true;
     refreshToken.mutate(undefined, {
+      onSettled: () => {
+        refreshBusyRef.current = false;
+      },
       onSuccess: (data: t.TRefreshTokenResponse | undefined) => {
         const { user, token = '' } = data ?? {};
         if (token) {
