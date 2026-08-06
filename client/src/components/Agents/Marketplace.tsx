@@ -199,7 +199,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
 
   const handleNewChat = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-      window.open('/c/new', '_blank');
+      window.open('/', '_blank');
       return;
     }
     clearMessagesCache(queryClient, conversation?.conversationId);
@@ -225,7 +225,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
     let timeoutId: ReturnType<typeof setTimeout>;
     if (!hasAccessToMarketplace) {
       timeoutId = setTimeout(() => {
-        navigate('/c/new');
+        navigate('/');
       }, 1000);
     }
     return () => {

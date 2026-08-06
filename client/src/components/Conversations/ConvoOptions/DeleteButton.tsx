@@ -53,7 +53,7 @@ export function DeleteConversationDialog({
       setShowDeleteDialog(false);
       if (currentConvoId === conversationId || currentConvoId === 'new') {
         newConversation();
-        navigate('/c/new', { replace: true });
+        navigate('/', { replace: true });
       }
       setMenuOpen?.(false);
       retainView();

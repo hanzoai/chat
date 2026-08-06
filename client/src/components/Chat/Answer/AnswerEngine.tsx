@@ -144,8 +144,11 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
           rows above the composer are identical in every mode, so the composer
           lands in the same place and the surplus falls below it, where there is
           nothing to move. `min-h` rather than `h` so a wrapped starter row can
-          still grow rather than overflow. */}
-      <div className="min-h-[260px] shrink-0 pb-3 pt-2">
+          still grow rather than overflow — and the floor has to clear chat
+          mode's TALLEST natural height, not its height at one width: at 768 and
+          1024 the starter row wraps, 260 stopped binding, and the drift came
+          back at 6px. */}
+      <div className="min-h-[280px] shrink-0 pb-3 pt-2">
         {/* The mode row is the one thing on the arrival screen that is about the
             product rather than the visitor's question, and a phone has no room to
             spend on it before they have asked anything. It returns the moment

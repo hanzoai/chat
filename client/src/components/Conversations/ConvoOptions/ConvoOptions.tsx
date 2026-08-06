@@ -63,7 +63,7 @@ function ConvoOptions({
     onSuccess: () => {
       if (currentConvoId === conversationId || currentConvoId === 'new') {
         newConversation();
-        navigate('/c/new', { replace: true });
+        navigate('/', { replace: true });
       }
       retainView();
       showToast({
@@ -149,7 +149,7 @@ function ConvoOptions({
             }, 10000);
             if (currentConvoId === convoId || currentConvoId === 'new') {
               newConversation();
-              navigate('/c/new', { replace: true });
+              navigate('/', { replace: true });
             }
             retainView();
             setIsPopoverActive(false);

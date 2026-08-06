@@ -10,7 +10,7 @@ export default function BackToChat({ className }: { className?: string }) {
   const clickHandler = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.button === 0 && !(event.ctrlKey || event.metaKey)) {
       event.preventDefault();
-      navigate('/c/new');
+      navigate('/');
     }
   };
   return (

@@ -43,7 +43,7 @@ export default function OAuthCallback() {
      */
     const answered = new URLSearchParams(window.location.search).get('error');
     if (meansNoSession(answered)) {
-      navigate('/c/new', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
 
@@ -75,7 +75,7 @@ export default function OAuthCallback() {
          */
         request.dispatchTokenUpdatedEvent(token);
 
-        navigate('/c/new', { replace: true });
+        navigate('/', { replace: true });
       } catch (err) {
         console.error('IAM session bridge failed:', err);
         navigate('/login?error=auth_failed', { replace: true });
