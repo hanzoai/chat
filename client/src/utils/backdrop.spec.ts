@@ -39,6 +39,14 @@ describe('web', () => {
     expect(web(undefined)).toBe('');
     expect(web(42)).toBe('');
   });
+
+  it('refuses a URL past any real length', () => {
+    // localStorage is ONE quota shared with every other setting, so a pasted
+    // megabyte is not this feature's problem alone — the next unrelated write
+    // is the one that fails.
+    expect(web(`https://example.com/${'a'.repeat(2100)}.png`)).toBe('');
+    expect(web(`https://example.com/${'a'.repeat(2000)}.png`)).not.toBe('');
+  });
 });
 
 describe('provider', () => {
@@ -102,6 +110,16 @@ describe('channel', () => {
 
   it('is empty for a non-twitch link', () => {
     expect(channel('https://www.netflix.com/watch/1').name).toBe('');
+  });
+
+  it('refuses a clip rather than quietly playing the channel instead', () => {
+    // The clip embed is a different host with a different parameter. Falling
+    // back to the channel would put a live stream on the canvas in place of the
+    // few seconds that were asked for — the wrong thing, and not obviously so.
+    expect(channel('https://www.twitch.tv/monstercat/clip/GloriousSlug').name).toBe('');
+    expect(playable({ url: 'https://www.twitch.tv/x/clip/GloriousSlug', provider: 'twitch' })).toBe(
+      false,
+    );
   });
 });
 
@@ -198,6 +216,22 @@ describe('merge', () => {
     expect(merge(base, 'off')).toEqual(base);
     expect(merge(base, {})).toEqual(base);
   });
+
+  it('survives a stored shape nothing in this release ever wrote', () => {
+    // What comes back out of localStorage is not what we put in: an older
+    // release wrote a different shape, and anything with access to this origin
+    // can write any shape at all. `Scene` calls .filter on the playlist, so a
+    // playlist that is not a list is a blank page, not a missing backdrop.
+    expect(merge(base, { playlist: 'https://youtu.be/6lZ3CookYNg' }).playlist).toEqual([]);
+    expect(merge(base, { playlist: [null, 7, {}, []] }).playlist).toEqual([]);
+    expect(merge(base, { source: null, loop: 'yes', photo: 42 })).toEqual(base);
+    expect(merge(base, [])).toEqual(base);
+  });
+
+  it('keeps the playlist to a length that fits beside every other setting', () => {
+    const many = Array.from({ length: 500 }, (_, at) => `https://youtu.be/${'a'.repeat(10)}${at % 10}`);
+    expect(merge(base, { playlist: many }).playlist.length).toBeLessThanOrEqual(64);
+  });
 });
 
 describe('command', () => {
@@ -205,6 +239,20 @@ describe('command', () => {
     expect(command('what is the weather', base)).toBeNull();
     expect(command('/background', base)).toBeNull();
     expect(command('/backgrounder off', base)).toBeNull();
+  });
+
+  it('is two words exactly, not any word that starts with them', () => {
+    // A word boundary is not enough: `/background-image` clears one, and a
+    // question about CSS would have quietly become a command.
+    expect(command('/background-image photo https://example.com/a.png', base)).toBeNull();
+    expect(command('/bg-off off', base)).toBeNull();
+    expect(command('/background: photo https://example.com/a.png', base)).toBeNull();
+  });
+
+  it('degrades a malformed line to a message rather than to a crash', () => {
+    ['/bg', '/bg ', '/bg photo', '/bg add', '/bg video', '/bg loop', '/bg wat x'].forEach((line) =>
+      expect(command(line, base)).toBeNull(),
+    );
   });
 
   it('turns the backdrop off', () => {

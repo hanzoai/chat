@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 import { SettingsViews, LocalStorageKeys } from '@hanzochat/data-provider';
 import { atomWithLocalStorage, readStorage } from '~/store/utils';
+import { merge } from '~/utils/backdrop';
 import type { TOptionSettings } from '~/common';
 import type { Backdrop } from '~/utils/backdrop';
 
@@ -27,8 +28,19 @@ const DEFAULT_BACKDROP: Backdrop = {
  * constant motion behind the text, and neither is something to impose on
  * someone who just wants to read their thread. `source: 'off'` is the whole
  * off switch; there is no second flag beside it. See utils/backdrop.
+ *
+ * `merge` guards the way OUT of storage as well as the way in, so the same one
+ * rule decides what the canvas may paint whether the value was just typed or
+ * was read back after a reload. Without it every promise `merge` makes — the
+ * photo is an http(s) URL, the playlist is a list of links — would hold only
+ * until the page refreshed, and a stored shape from an older release (or from
+ * anything else that can write this origin's localStorage) would arrive
+ * unexamined at an `<img src>` and at a `.filter` that would throw on it and
+ * take the whole conversation down with it.
  */
-const backdrop = atomWithLocalStorage<Backdrop>('backdrop', DEFAULT_BACKDROP);
+const backdrop = atomWithLocalStorage<Backdrop>('backdrop', DEFAULT_BACKDROP, (stored) =>
+  merge(DEFAULT_BACKDROP, stored),
+);
 
 // Static atoms without localStorage
 const staticAtoms = {

@@ -30,6 +30,19 @@ import store from '~/store';
 
 const ORIGIN = 'https://www.youtube.com';
 
+/**
+ * Send the origin, never the path.
+ *
+ * The address of a conversation is `/c/<id>`, and a `Referer` carrying it would
+ * hand that id to YouTube, to Twitch, and to whatever host serves a photo
+ * somebody pasted — on every load, to a party with no reason to know which
+ * thread is open. Origin alone is all these embeds need: Twitch checks the
+ * `parent` parameter and YouTube the `origin` one, both passed deliberately.
+ * Chrome's default already stops at the origin; Safari and older engines do
+ * not, which is why this is stated rather than assumed.
+ */
+const REFERRER = 'strict-origin-when-cross-origin';
+
 /** How long the adaptive ramp is given before anything is revealed: quality
  *  cannot be forced (embeds have ignored every quality API since 2019), so the
  *  low-res opening plays out hidden. */
@@ -113,6 +126,7 @@ function Video({ src, onEnd }: { src: string; onEnd?: () => void }) {
       title=""
       tabIndex={-1}
       allow="autoplay; encrypted-media"
+      referrerPolicy={REFERRER}
       className="absolute left-1/2 top-1/2"
       onLoad={start}
       style={{ ...COVER, ...fade(playing && ramped) }}
@@ -147,6 +161,7 @@ function Stream({ src, onEnd }: { src: string; onEnd?: () => void }) {
       title=""
       tabIndex={-1}
       allow="autoplay; encrypted-media"
+      referrerPolicy={REFERRER}
       className="absolute left-1/2 top-1/2"
       onLoad={() => setLoaded(true)}
       style={{ ...COVER, ...fade(loaded) }}
@@ -162,6 +177,7 @@ function Photo({ url }: { url: string }) {
     <img
       src={url}
       alt=""
+      referrerPolicy={REFERRER}
       className="absolute inset-0 h-full w-full object-cover"
       style={{ maxWidth: 'none', maxHeight: 'none', ...fade(loaded) }}
       onLoad={() => setLoaded(true)}
@@ -181,8 +197,18 @@ function Entry({ entry, onEnd }: { entry: Link; onEnd: () => void }) {
   if (entry.provider === 'twitch') {
     return <Stream src={twitch(entry.url, window.location.hostname)} onEnd={onEnd} />;
   }
-  // No loop on a single entry: the list, not the video, decides what repeats.
-  return <Video src={youtube([videoId(entry.url)], false, window.location.origin)} onEnd={onEnd} />;
+  if (entry.provider === 'youtube') {
+    // No loop on a single entry: the list, not the video, decides what repeats.
+    return (
+      <Video src={youtube([videoId(entry.url)], false, window.location.origin)} onEnd={onEnd} />
+    );
+  }
+  // Named, not defaulted. Callers filter by `playable` before they get here, so
+  // this branch should be unreachable — but a dispatch whose LAST case is a
+  // fall-through hands every future provider to whichever player happens to be
+  // written last, and here that would ask YouTube to embed a netflix.com link.
+  // A player has to be chosen on purpose; nothing else gets one.
+  return null;
 }
 
 /** The list, one entry at a time: a video hands over when it ends, a stream

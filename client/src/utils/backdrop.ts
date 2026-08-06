@@ -52,12 +52,26 @@ export interface Backdrop {
 export const DWELL = 5 * 60 * 1000;
 
 /**
+ * The longest URL we will keep. Browsers stopped being the limit long ago; the
+ * limit that matters is localStorage, one quota shared by every preference this
+ * app stores. A URL is a string a visitor can paste, so without a ceiling one
+ * pasted megabyte can fill that quota and the NEXT write of any unrelated
+ * setting is the one that throws. 2048 is the length every server and proxy has
+ * accepted since forever, and far past any real link.
+ */
+const LONGEST = 2048;
+
+/** The longest playlist. Same quota, same reasoning: `add` is a loop a visitor
+ *  can run, so it needs an end. Well past any list anyone watches. */
+const MOST = 64;
+
+/**
  * The URL if it is one we are willing to load, else ''. Anything that is not
- * http(s) — `javascript:`, `data:` — is refused here, at the boundary, so no
- * caller downstream has to remember to check.
+ * http(s) — `javascript:`, `data:`, `blob:` — is refused here, at the boundary,
+ * so no caller downstream has to remember to check.
  */
 export function web(value: unknown): string {
-  if (typeof value !== 'string' || value.trim() === '') {
+  if (typeof value !== 'string' || value.trim() === '' || value.length > LONGEST) {
     return '';
   }
   try {
@@ -121,11 +135,20 @@ export function videoId(value: string): string {
 /**
  * What to ask the Twitch player for: a live `channel`, or a recorded `video`.
  * Empty `name` means the URL names neither.
+ *
+ * A CLIP names neither. `twitch.tv/<channel>/clip/<slug>` is a few seconds
+ * somebody cut out, and the player this builds cannot ask for one — the clip
+ * embed is a different host with a different parameter. Falling back to the
+ * channel would put a LIVE STREAM on the canvas in place of the clip that was
+ * asked for: not the thing, and not obviously not the thing. So a clip is
+ * unplayable, and the settings list says so with a link out, exactly as it does
+ * for Netflix. Refusing what we cannot serve beats serving something else.
  */
 export function channel(value: string): { key: 'channel' | 'video'; name: string } {
+  const none = { key: 'channel', name: '' } as const;
   const url = web(value);
   if (!url || provider(url) !== 'twitch') {
-    return { key: 'channel', name: '' };
+    return none;
   }
   const parsed = new URL(url);
   const parts = parsed.pathname.split('/').filter(Boolean);
@@ -135,6 +158,9 @@ export function channel(value: string): { key: 'channel' | 'video'; name: string
   }
   if (parts[0] === 'videos' && parts[1]) {
     return { key: 'video', name: parts[1] };
+  }
+  if (parts.includes('clip')) {
+    return none;
   }
   return { key: 'channel', name: parts[0] ?? '' };
 }
@@ -210,11 +236,14 @@ const SOURCES: Source[] = ['off', 'photo', 'video', 'playlist'];
 /**
  * Fold an untrusted description of a backdrop onto the current one.
  *
- * This is the ONE write path, and it is deliberately total: anything it cannot
- * make sense of is dropped and the current value kept, so no caller can push
- * the atom into a shape the canvas has to defend against later. It is also the
- * contract a `set_backdrop` tool would be validated against — see the note in
- * hooks/Messages/useSubmitMessage.
+ * This is the ONE gate, and it is deliberately total: anything it cannot make
+ * sense of is dropped and the current value kept, so no caller can push the atom
+ * into a shape the canvas has to defend against later. Everything that reaches
+ * the atom comes through here — the settings panel, the `hanzo-setting` card a
+ * model can propose (Chat/Messages/Content/Adjust), and the read back out of
+ * localStorage on the next load (store/settings), which matters because the
+ * bytes in storage are not ours and a rule enforced only on the way in lasts
+ * exactly until the page is refreshed.
  */
 export function merge(current: Backdrop, change: unknown): Backdrop {
   if (typeof change !== 'object' || change === null) {
@@ -244,12 +273,18 @@ export function merge(current: Backdrop, change: unknown): Backdrop {
       .map((entry) =>
         link(typeof entry === 'string' ? entry : String((entry as Link | null)?.url ?? '')),
       )
-      .filter((entry): entry is Link => entry !== null);
+      .filter((entry): entry is Link => entry !== null)
+      .slice(0, MOST);
   }
   return next;
 }
 
-const VERB = /^\/(?:background|bg)\b/i;
+/**
+ * `/background` or `/bg`, and then a space or the end of the line — not merely
+ * a word boundary, which `/background-image …` also satisfies. A command is one
+ * of exactly two words; anything else is a message and is sent as one.
+ */
+const VERB = /^\/(?:background|bg)(?:\s|$)/i;
 
 /**
  * Read a `/background` (or `/bg`) line typed into the composer.
@@ -287,9 +322,11 @@ export function command(input: string, current: Backdrop): Backdrop | null {
     case 'video':
       return videoId(argument) ? { ...current, source: 'video', video: argument.trim() } : null;
     case 'add': {
+      // Through `merge` so the list has ONE keeper of its length, rather than a
+      // second append here that forgets what the first one enforces.
       const entry = link(argument);
       return entry && playable(entry)
-        ? { ...current, source: 'playlist', playlist: [...current.playlist, entry] }
+        ? merge(current, { source: 'playlist', playlist: [...current.playlist, entry] })
         : null;
     }
     case 'loop': {
