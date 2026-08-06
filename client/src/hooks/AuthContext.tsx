@@ -24,6 +24,7 @@ import {
 } from '~/data-provider';
 import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
 import { requireLogin } from '~/utils/login';
+import { exchanging, probeSession } from '~/utils/sso';
 import useGuestAuth from './useGuestAuth';
 import useTimeout from './useTimeout';
 import store from '~/store';
@@ -197,8 +198,8 @@ const AuthContextProvider = ({
    * exists and guest chat is enabled, acquire a guest token; otherwise let the
    * root route show the landing/login gate.
    */
-  const guestFallbackRef = useRef<() => void>(() => {});
-  guestFallbackRef.current = () => {
+  const guestFallbackRef = useRef<() => Promise<void>>(async () => {});
+  guestFallbackRef.current = async () => {
     // A principal already landed (guest or real) — a straggler refresh must
     // not run the fallback: its unauth branch resets the token header that
     // the adopted session just installed, and the next send goes out
@@ -206,12 +207,43 @@ const AuthContextProvider = ({
     if (isGuest || isAuthenticated) {
       return;
     }
+
+    // The callback route is redeeming a code as we speak, and it wraps this
+    // provider, so the ordinary signed-out path runs on top of it. Stand down: a
+    // guest minted here spends the per-IP budget on somebody who is one round
+    // trip from being signed in, and then races their real session into the
+    // bargain. Rare before the probe existed; now every anonymous visitor passes
+    // through that route exactly once.
+    if (exchanging()) {
+      return;
+    }
+
+    // This app has no session of its own. hanzo.id may still know this browser:
+    // somebody who signed in at console.hanzo.ai or hanzo.app IS signed in, and
+    // chat was the one surface that never asked — so it showed them "Log in" and
+    // served them a 2-message anonymous trial while their credits sat unspent.
+    //
+    // Ask, silently, once per visit. This is a TOP-LEVEL navigation, which is
+    // what makes it work: the SameSite=Lax session cookie rides a document
+    // navigation, and `prompt=none` means the issuer answers from that session
+    // or answers `login_required` — it renders nothing either way, so the
+    // anonymous preview below survives for a visitor who really is a stranger.
+    //
+    // The earlier attempt at this used `IAM#signinSilent()`, a hidden iframe. It
+    // could never have worked — Lax withholds the cookie from a cross-site
+    // SUBRESOURCE, the edge answers X-Frame-Options: DENY, and the issuer refuses
+    // on Sec-Fetch-Dest besides. Its removal took the correct conclusion with it.
+    if (await probeSession()) {
+      // The document is navigating to the issuer. Do not mint a guest on the way
+      // out: it spends the per-IP mint budget on a page that is already gone, and
+      // the session about to land supersedes it anyway.
+      return;
+    }
+
+    // Settled: no session here and none at the issuer. Recorded only now, because
+    // the effect below starts a guest the moment it reads 'none'.
     sessionRef.current = 'none';
 
-    // No session to adopt from hanzo.id: it serves `frame-ancestors 'none'`, so a
-    // hidden-iframe `prompt=none` authorize can never load, and no cookie spans
-    // two registrable domains. Signing in is the interactive redirect, and only
-    // that. Until then this visitor is a guest.
     if (startupConfig?.allowGuestChat === true) {
       void acquireGuest().then((ok) => {
         if (!ok) {
@@ -253,7 +285,7 @@ const AuthContextProvider = ({
           if (authConfig?.test === true) {
             return;
           }
-          guestFallbackRef.current();
+          void guestFallbackRef.current();
         }
       },
       onError: (error) => {
@@ -261,7 +293,7 @@ const AuthContextProvider = ({
         if (authConfig?.test === true) {
           return;
         }
-        guestFallbackRef.current();
+        void guestFallbackRef.current();
       },
     });
   }, []);
