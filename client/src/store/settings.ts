@@ -44,6 +44,13 @@ const localStorageAtoms = {
   modularChat: atomWithLocalStorage('modularChat', true),
   LaTeXParsing: atomWithLocalStorage('LaTeXParsing', true),
   showFooter: atomWithLocalStorage('showFooter', true),
+  /**
+   * The canvas's ambient backdrop. Scenery, so it is the visitor's call: it
+   * costs a third-party embed and constant motion behind the text, and neither
+   * is something to impose on someone who just wants to read their thread.
+   * Default on — it is the product's first impression.
+   */
+  showBackdrop: atomWithLocalStorage('showBackdrop', true),
 
   // Commands settings
   atCommand: atomWithLocalStorage('atCommand', true),
