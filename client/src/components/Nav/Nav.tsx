@@ -27,6 +27,7 @@ import { useConversationsInfiniteQuery, useTitleGeneration } from '~/data-provid
 import { Conversations } from '~/components/Conversations';
 import SearchBar from './SearchBar';
 import NewChat from './NewChat';
+import Rail from './Rail';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -172,7 +173,8 @@ const Nav = memo(
     }, [isFetchingNextPage, computedHasNextPage, fetchNextPage]);
 
     /**
-     * Search and the tag filter, on one row above the list they both filter.
+     * The destination rows (Rail), then search and the tag filter on one row
+     * above the list they both filter.
      *
      * The tag filter used to sit in the icon strip, between the app switcher and
      * the compose button, where it read as app chrome rather than as a control
@@ -183,23 +185,25 @@ const Nav = memo(
      */
     const subHeaders = useMemo(() => {
       const searching = search.enabled === null || search.enabled === true;
-      if (!searching && !hasAccessToBookmarks) {
-        return null;
-      }
       return (
-        <div className="flex items-center gap-1">
-          <div className="min-w-0 flex-1">
-            {search.enabled === null && <SearchBarSkeleton />}
-            {search.enabled === true && <SearchBar isSmallScreen={isSmallScreen} />}
-          </div>
-          {hasAccessToBookmarks && (
-            <Suspense fallback={null}>
-              <BookmarkNav tags={tags} setTags={setTags} />
-            </Suspense>
+        <>
+          <Rail toggleNav={itemToggleNav} />
+          {(searching || hasAccessToBookmarks) && (
+            <div className="flex items-center gap-1">
+              <div className="min-w-0 flex-1">
+                {search.enabled === null && <SearchBarSkeleton />}
+                {search.enabled === true && <SearchBar isSmallScreen={isSmallScreen} />}
+              </div>
+              {hasAccessToBookmarks && (
+                <Suspense fallback={null}>
+                  <BookmarkNav tags={tags} setTags={setTags} />
+                </Suspense>
+              )}
+            </div>
           )}
-        </div>
+        </>
       );
-    }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags]);
+    }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags, itemToggleNav]);
 
     const [isSearchLoading, setIsSearchLoading] = useState(
       !!search.query && (search.isTyping || isLoading || isFetching),
