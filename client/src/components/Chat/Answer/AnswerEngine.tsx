@@ -100,7 +100,13 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
   );
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-3 sm:px-4">
+    {/* The column tracks the composer's OWN width law (ChatForm: md:max-w-3xl
+        xl:max-w-4xl) so the box is the same size here as in a live thread. A
+        bare max-w-3xl here silently narrowed it, and sending the first message
+        — which swaps this landing for the docked ChatForm — snapped it 128px
+        wider. The greeting and mode tabs are centered, so the extra room on a
+        wide screen costs them nothing. */}
+    <div className="mx-auto flex h-full w-full flex-col px-3 sm:px-4 md:max-w-3xl xl:max-w-4xl">
       {hasResult && !isChat ? (
         <div className="min-h-0 flex-1 overflow-y-auto pt-4">
           <AnswerView
