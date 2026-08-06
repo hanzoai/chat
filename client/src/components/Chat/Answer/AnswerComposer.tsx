@@ -137,7 +137,7 @@ export default function AnswerComposer({
         <div className="flex items-center gap-1.5 px-2 pb-2 pt-1">
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <DropdownPopup
-              portal={false}
+              portal={true}
               isOpen={sourcesOpen}
               setIsOpen={setSourcesOpen}
               menuId={sourcesMenuId}
@@ -156,7 +156,7 @@ export default function AnswerComposer({
             />
 
             <DropdownPopup
-              portal={false}
+              portal={true}
               isOpen={modelOpen}
               setIsOpen={setModelOpen}
               menuId={modelMenuId}

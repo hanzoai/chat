@@ -35,7 +35,13 @@ const contentSecurityPolicy = [
   // auto-load a third-party src (MarkdownComponents.tsx `autoLoadable`) — this
   // is the backstop under it, so a future renderer that forgets still cannot
   // beacon.
-  "img-src 'self' data: blob: https://s3.hanzo.ai https://s3-api.hanzo.ai",
+  // The file store answers on a PER-BUCKET host — an uploaded image comes back
+  // from `chat-files.s3-api.hanzo.ai`, not from the bare API host — so naming
+  // only the apex silently blocked every image a user had uploaded. The wildcard
+  // covers the bucket subdomains and nothing else: it is one registrable domain
+  // we own, not a bare scheme, so the exfiltration channel described above stays
+  // shut.
+  "img-src 'self' data: blob: https://s3.hanzo.ai https://s3-api.hanzo.ai https://*.s3-api.hanzo.ai",
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
   "connect-src 'self' https://hanzo.id https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com",

@@ -74,14 +74,8 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   const { requiresKey } = useRequiresKey();
   const methods = useChatFormContext();
-  const {
-    files,
-    setFiles,
-    conversation,
-    isSubmitting,
-    filesLoading,
-    newConversation,
-  } = useChatContext();
+  const { files, setFiles, conversation, isSubmitting, filesLoading, newConversation } =
+    useChatContext();
   const {
     generateConversation,
     conversation: addedConvo,
@@ -303,110 +297,109 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
           <ComposerShell
             onClick={handleContainerClick}
             temporary={isTemporary}
+            docked
             className="flex-grow pb-4 sm:pb-0"
           >
-              <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
-              {/* WIP */}
-              <EditBadges
-                isEditingChatBadges={isEditingBadges}
-                handleCancelBadges={handleCancelBadges}
-                handleSaveBadges={handleSaveBadges}
-                setBadges={setBadges}
-              />
-              <FileFormChat conversation={conversation} />
-              {endpoint && (
-                <div className={cn('flex', isRTL ? 'flex-row-reverse' : 'flex-row')}>
-                  <div
-                    className="relative flex-1"
-                    style={
-                      isCollapsed
-                        ? {
-                            WebkitMaskImage:
-                              'linear-gradient(to bottom, black 60%, transparent 90%)',
-                            maskImage: 'linear-gradient(to bottom, black 60%, transparent 90%)',
-                          }
-                        : undefined
-                    }
-                  >
-                    <TextareaAutosize
-                      {...registerProps}
-                      ref={(e) => {
-                        ref(e);
-                        (
-                          textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>
-                        ).current = e;
-                      }}
-                      disabled={disableInputs || isNotAppendable}
-                      onPaste={handlePaste}
-                      onKeyDown={handleKeyDown}
-                      onKeyUp={handleKeyUp}
-                      onCompositionStart={handleCompositionStart}
-                      onCompositionEnd={handleCompositionEnd}
-                      id={mainTextareaId}
-                      tabIndex={0}
-                      data-testid="text-input"
-                      rows={1}
-                      onFocus={handleFocusOrClick}
-                      aria-label={localize('com_ui_message_input')}
-                      onClick={handleFocusOrClick}
-                      style={{ height: isLanding ? 56 : 44, overflowY: 'auto' }}
-                      className={cn(
-                        baseClasses,
-                        removeFocusRings,
-                        'scrollbar-hover transition-[max-height] duration-200 disabled:cursor-not-allowed',
-                        isLanding && 'text-base md:text-lg',
-                      )}
-                    />
-                  </div>
-                  <div className="flex flex-col items-start justify-start pr-2.5 pt-1.5">
-                    <CollapseChat
-                      isCollapsed={isCollapsed}
-                      isScrollable={isMoreThanThreeRows}
-                      setIsCollapsed={setIsCollapsed}
-                    />
-                  </div>
-                </div>
-              )}
-              <div
-                className={cn(
-                  'composer-actions flex gap-2 pb-2',
-                  isRTL ? 'flex-row-reverse' : 'flex-row',
-                )}
-              >
-                <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
-                  <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
-                </div>
-                <CreateMenu />
-                <BadgeRow
-                  showEphemeralBadges={
-                    !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
+            <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
+            {/* WIP */}
+            <EditBadges
+              isEditingChatBadges={isEditingBadges}
+              handleCancelBadges={handleCancelBadges}
+              handleSaveBadges={handleSaveBadges}
+              setBadges={setBadges}
+            />
+            <FileFormChat conversation={conversation} />
+            {endpoint && (
+              <div className={cn('flex', isRTL ? 'flex-row-reverse' : 'flex-row')}>
+                <div
+                  className="relative flex-1"
+                  style={
+                    isCollapsed
+                      ? {
+                          WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 90%)',
+                          maskImage: 'linear-gradient(to bottom, black 60%, transparent 90%)',
+                        }
+                      : undefined
                   }
-                  isSubmitting={isSubmitting}
-                  conversationId={conversationId}
-                  specName={conversation?.spec}
-                  onChange={setBadges}
-                  isInChat={
-                    Array.isArray(conversation?.messages) && conversation.messages.length >= 1
-                  }
-                />
-                <div className="mx-auto flex" />
-                {SpeechToText && <Mic disabled={disableInputs || isNotAppendable} />}
-                <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
-                  {/* No stop circle (owner call): the send arrow holds its seat,
-                      disabled while the reply streams; the mic carries the
-                      voice state in its own color. */}
-                  {endpoint && (
-                    <SendButton
-                      ref={submitButtonRef}
-                      control={methods.control}
-                      disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
-                    />
-                  )}
+                >
+                  <TextareaAutosize
+                    {...registerProps}
+                    ref={(e) => {
+                      ref(e);
+                      (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current =
+                        e;
+                    }}
+                    disabled={disableInputs || isNotAppendable}
+                    onPaste={handlePaste}
+                    onKeyDown={handleKeyDown}
+                    onKeyUp={handleKeyUp}
+                    onCompositionStart={handleCompositionStart}
+                    onCompositionEnd={handleCompositionEnd}
+                    id={mainTextareaId}
+                    tabIndex={0}
+                    data-testid="text-input"
+                    rows={1}
+                    onFocus={handleFocusOrClick}
+                    aria-label={localize('com_ui_message_input')}
+                    onClick={handleFocusOrClick}
+                    style={{ height: isLanding ? 56 : 44, overflowY: 'auto' }}
+                    className={cn(
+                      baseClasses,
+                      removeFocusRings,
+                      'scrollbar-hover transition-[max-height] duration-200 disabled:cursor-not-allowed',
+                      isLanding && 'text-base md:text-lg',
+                    )}
+                  />
+                </div>
+                <div className="flex flex-col items-start justify-start pr-2.5 pt-1.5">
+                  <CollapseChat
+                    isCollapsed={isCollapsed}
+                    isScrollable={isMoreThanThreeRows}
+                    setIsCollapsed={setIsCollapsed}
+                  />
                 </div>
               </div>
-              {/* While a spoken conversation is live the mic reads the reply, so
+            )}
+            <div
+              className={cn(
+                'composer-actions flex gap-2 pb-2',
+                isRTL ? 'flex-row-reverse' : 'flex-row',
+              )}
+            >
+              <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
+                <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
+              </div>
+              <CreateMenu />
+              <BadgeRow
+                showEphemeralBadges={
+                  !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
+                }
+                isSubmitting={isSubmitting}
+                conversationId={conversationId}
+                specName={conversation?.spec}
+                onChange={setBadges}
+                isInChat={
+                  Array.isArray(conversation?.messages) && conversation.messages.length >= 1
+                }
+              />
+              <div className="mx-auto flex" />
+              {SpeechToText && <Mic disabled={disableInputs || isNotAppendable} />}
+              <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
+                {/* No stop circle (owner call): the send arrow holds its seat,
+                      disabled while the reply streams; the mic carries the
+                      voice state in its own color. */}
+                {endpoint && (
+                  <SendButton
+                    ref={submitButtonRef}
+                    control={methods.control}
+                    disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
+                  />
+                )}
+              </div>
+            </div>
+            {/* While a spoken conversation is live the mic reads the reply, so
                 the automatic-playback stream stands down — one voice at a time. */}
-              {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
+            {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
           </ComposerShell>
         </div>
       </div>
