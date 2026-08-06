@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
-import { AppWindow } from 'lucide-react';
+import { AppWindow, ArrowRight } from 'lucide-react';
 import { EModelEndpoint, Constants, replaceSpecialVars } from '@hanzochat/data-provider';
 import {
   useChatContext,
@@ -121,7 +121,8 @@ const ConversationStarters = () => {
   }
 
   return (
-    <div className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2 px-4">
+    <>
+      <div className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2 px-4">
       {starters.slice(0, Constants.MAX_CONVO_STARTERS).map(({ label, text }, index) => (
         <button
           key={index}
@@ -157,7 +158,26 @@ const ConversationStarters = () => {
           {localize('com_ui_build_app')}
         </button>
       )}
-    </div>
+      </div>
+      {/* The funnel's endpoint: the chips above seed a conversation, this
+          seeds an APP. A text-forward action line, not a fifth pill, so it
+          reads as the one thing to do next; same builder handoff as the
+          "Build an app" chip, carrying the composer's current text along. */}
+      {isDefault && (
+        <div className="mt-3 flex justify-center px-4">
+          <button
+            onClick={openBuilder}
+            className="group flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
+          >
+            {localize('com_ui_ship_first_app')}
+            <ArrowRight
+              className="size-4 transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      )}
+    </>
   );
 };
 
