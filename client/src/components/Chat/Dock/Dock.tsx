@@ -33,7 +33,14 @@ const Dock = memo(function Dock({ defaultSize, minSizeMain }: DockProps) {
         order={3}
         id="dock-panel"
       >
-        <div className="h-full min-w-[320px] overflow-y-auto p-2">
+        {/* No min-width. A floor wider than the panel does not widen the panel —
+            it renders content PAST the panel edge, where it is clipped and
+            unreachable: `min-w-[320px]` inside a 221px panel put 91px of every
+            card outside it at 768, and the column never scrolled to reach it
+            because the overflow was at the panel boundary, not this div
+            (scrollWidth === clientWidth). Cards size to the panel; the panel's
+            own minSize is what keeps it usable. */}
+        <div className="h-full overflow-y-auto p-2">
           <div className="flex flex-col gap-2">
             {DOCK_CARDS.map((card) => (
               <section
@@ -64,10 +71,22 @@ const Dock = memo(function Dock({ defaultSize, minSizeMain }: DockProps) {
                   //
                   // What stays withheld is what actually protects the page:
                   // no allow-top-navigation, so a card cannot redirect the tab
-                  // out from under a conversation.
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+                  // out from under a conversation — and no allow-popups, which
+                  // neither card needs and which frame-src does NOT govern, so
+                  // a popup is the one window a compromised card could open at
+                  // an origin the allowlist would otherwise have refused.
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
                   allow="autoplay; encrypted-media"
                   loading="lazy"
+                  // A frame that never loads — blocked by CSP, offline, taken
+                  // down — paints its default document, which is WHITE, and a
+                  // white slab in a dark column reads as a broken card rather
+                  // than an absent one. `color-scheme: dark` makes the browser
+                  // render that blank document dark, so a card that cannot load
+                  // is quiet instead of loud. The backdrop already had this
+                  // care (it stays invisible unless the player reports playing);
+                  // the card did not inherit it.
+                  style={{ colorScheme: 'dark' }}
                   className={
                     card.aspect === 'video'
                       ? 'block aspect-video w-full border-0'
