@@ -415,23 +415,61 @@ as "@hanzo/ui is banned" — it records why the *5.x shadcn* one went.
   self-contained — inline styles + `theme.ts` tokens — so it drops into Vite
   with no provider. **Cross-app nav ships, and chat owns none of it.**
   `Nav/BrandCorner.tsx` is the whole of chat's side: the mark plus
-  `HanzoAppLauncher`, mounted in the sidebar's first row, in the phone bar
-  (`Nav/MobileNav.tsx`, which owns the corner below md — `Chat/Header.tsx`'s
-  cluster is `max-md:hidden`), and — only while the sidebar is collapsed — in
-  `Chat/Header.tsx`, so the corner is never empty and never carries two marks
-  on one width. The mark ALWAYS means "switcher": on the phone the drawer opens
-  from the hamburger beside it, never from the mark. Do not hand-roll a drawer
-  beside it; the tile list is `HANZO_APPS`, owned upstream.
+  `HanzoAppLauncher`, mounted in the sidebar's first row and in the phone bar
+  (`Nav/MobileNav.tsx`, which owns the corner below md). It is no longer mounted
+  in `Chat/Header.tsx` — the header's collapsed-only cluster is gone, because
+  the sidebar no longer leaves the screen when it collapses (see "The collapsed
+  sidebar is a rail"), so the corner is never empty and never carries two marks
+  on one width.
+
+  The mark means "switcher" everywhere the sidebar has room for it, which is
+  every width below md and the open sidebar's first row. IN THE 56px RAIL IT
+  MEANS "EXPAND": a rail whose only affordance opens a nine-tile app grid gives
+  the visitor no way back to their own sidebar. That is hanzo.app's arrangement
+  too. On the phone the drawer opens from the hamburger beside the mark, never
+  from the mark. Do not hand-roll a drawer beside it; the tile list is
+  `HANZO_APPS`, owned upstream.
 - **The launcher panel is portalled, from `@hanzogui/shell@8.1.1` on.** Before
   that it was `position: absolute`, and chat mounts it inside the sidebar's
   `overflow-hidden` scroll column (`Nav.tsx`, `flex flex-1 flex-col
   overflow-hidden`) — so the third column of tiles was clipped mid-tile and
   Search / Platform / Admin rendered as one letter each on the live site.
-  `position: fixed` would NOT have fixed it either: `.nav` carries a
-  `transform`, which makes it the containing block for fixed descendants too.
-  The panel now leaves the stacking context entirely. **Do not "fix" clipping
+  `position: fixed` would NOT have fixed it either: `.nav` carried a
+  `transform` at the time, which makes an element the containing block for its
+  fixed descendants too. (That transform is gone now — collapsing animates
+  WIDTH, not translate — but the panel portals regardless, which is what makes
+  it robust to exactly this kind of change. Re-measured after the rail landed:
+  nine tiles, none clipped.) The panel leaves the stacking context entirely. **Do not "fix" clipping
   here by loosening that column's overflow** — it is what makes the
   conversation list scroll, and the defect belonged to the shared component.
+### The collapsed sidebar is a rail
+
+Collapsing animates the sidebar's WIDTH between `NAV_WIDTH.SIDEBAR` and
+`NAV_WIDTH.RAIL` (56). It does NOT translate the panel off screen, and it does
+not unmount it. That is the model console's `DashboardShell` and hanzo.app
+already share, and it is load-bearing rather than cosmetic:
+
+- **Keep the column and the stacking is free.** While collapse slid the sidebar
+  away there was nothing left in the corner, so the mark and compose had to be
+  re-homed into `Chat/Header.tsx`'s horizontal strip — which is the ONLY reason
+  "new chat" ever sat to the RIGHT of the mark. Do not "fix" corner layout by
+  moving controls into the header again; that is the symptom, not the cure.
+- **Collapse is EXPLICIT and remembered** (`localStorage.navVisible`, one key).
+  No hover-to-expand, no pin — hanzo.app marks both props `@deprecated`. A rail
+  that widens because a pointer crossed it moves the page out from under
+  whatever the pointer was reaching for. A 160ms hover-intent open lived in the
+  header and is gone.
+- **There is no rail below `md`.** `collapsed = !isSmallScreen && !navVisible`,
+  so the phone keeps the drawer it always had, byte-identical.
+- **The rail carries the mark, compose and the icon rows only.** The
+  conversation list and the account foot do not render at 56px — the list is
+  additionally gated on having history, so both conditions apply.
+
+Verified in Chromium, not by reading: rail `w:56` vs open `w:260`; mark at
+`y:8` and compose at `y:54` on the SAME `x` (a column, not a row); the state
+survives a reload in both directions; the composer reflows by exactly
+`(260-56)/2` rather than anything being hidden.
+
 - **Two controls say "bookmark", and they are not the same control.**
   `Chat/Menus/BookmarkMenu` tags the OPEN conversation and lives with the other
   view actions at the right end of `Chat/Header.tsx` (`data-testid=
