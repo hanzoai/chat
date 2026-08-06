@@ -9,6 +9,7 @@ import { EditorProvider, SidePanelProvider, ArtifactsProvider } from '~/Provider
 import Artifacts from '~/components/Artifacts/Artifacts';
 import { SidePanelGroup } from '~/components/SidePanel';
 import { useSetFilesToDelete } from '~/hooks';
+import { savedLayout } from '~/utils';
 import store from '~/store';
 
 export default function Presentation({ children }: { children: React.ReactNode }) {
@@ -48,10 +49,7 @@ export default function Presentation({ children }: { children: React.ReactNode }
     mutateAsync({ files });
   }, [mutateAsync]);
 
-  const defaultLayout = useMemo(() => {
-    const resizableLayout = localStorage.getItem('react-resizable-panels:layout');
-    return typeof resizableLayout === 'string' ? JSON.parse(resizableLayout) : undefined;
-  }, []);
+  const defaultLayout = useMemo(savedLayout, []);
   const defaultCollapsed = useMemo(() => {
     const collapsedPanels = localStorage.getItem('react-resizable-panels:collapsed');
     return typeof collapsedPanels === 'string' ? JSON.parse(collapsedPanels) : true;
