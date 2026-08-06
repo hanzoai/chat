@@ -4,6 +4,7 @@ import OAuthCallback from '~/components/Auth/OAuthCallback';
 import { MarketplaceProvider } from '~/components/Agents/MarketplaceContext';
 import AgentMarketplace from '~/components/Agents/Marketplace';
 import { OAuthSuccess, OAuthError } from '~/components/OAuth';
+import { ChatsAndTasks } from '~/components/Chats';
 import { AuthContextProvider } from '~/hooks/AuthContext';
 import { AnalyticsProvider } from '~/Providers';
 import RouteErrorBoundary from './RouteErrorBoundary';
@@ -131,6 +132,10 @@ export const router = createBrowserRouter(
             {
               path: 'search',
               element: <Search />,
+            },
+            {
+              path: 'chats',
+              element: <ChatsAndTasks />,
             },
             {
               path: 'agents',
