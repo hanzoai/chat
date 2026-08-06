@@ -118,7 +118,7 @@ export default function Message(props: TMessageProps) {
             <div
               className={cn(
                 'relative flex flex-col',
-                hasParallelContent ? 'w-full' : 'w-11/12',
+                hasParallelContent ? 'w-full' : 'w-11/12 max-md:w-full',
                 isCreatedByUser ? 'user-turn' : 'agent-turn',
               )}
             >
@@ -127,7 +127,7 @@ export default function Message(props: TMessageProps) {
                   {name}
                 </h2>
               )}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 max-md:-ml-9">
                 <div className="flex max-w-full flex-grow flex-col gap-0">
                   <ContentParts
                     edit={edit}
