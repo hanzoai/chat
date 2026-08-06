@@ -322,6 +322,14 @@
   }
 }
 
+/* The chat Backdrop's reveal: the ambient video fades in only after
+   YouTube's adaptive ramp has reached full quality (see Backdrop.tsx). */
+@keyframes backdrop-reveal {
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes hzComposerGlow {
   0%,
   100% {
