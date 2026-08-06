@@ -103,10 +103,13 @@ const SidePanelGroup = memo(
 
     return (
       <>
+        {/* No background on the group: the canvas is painted once, by
+            Presentation's wrapper — an opaque sheet here sits ABOVE the
+            Backdrop layer and was exactly what hid the ambient video. */}
         <ResizablePanelGroup
           direction="horizontal"
           onLayout={(sizes) => throttledSaveLayout(sizes)}
-          className="relative h-full w-full flex-1 overflow-auto bg-presentation"
+          className="relative h-full w-full flex-1 overflow-auto"
         >
           <ResizablePanel
             defaultSize={currentLayout[0]}
