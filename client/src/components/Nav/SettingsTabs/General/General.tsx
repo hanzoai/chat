@@ -150,6 +150,29 @@ export const LangSelector = ({
   );
 };
 
+export const SignatureInput = () => {
+  const localize = useLocalize();
+  const [signature, setSignature] = useAtom(store.signature);
+  const labelId = 'signature-input-label';
+
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div id={labelId} className="shrink-0">
+        {localize('com_nav_signature')}
+      </div>
+      <input
+        aria-labelledby={labelId}
+        data-testid="signature-input"
+        value={signature}
+        maxLength={80}
+        onChange={(e) => setSignature(e.target.value)}
+        placeholder={localize('com_nav_signature_placeholder')}
+        className="w-full max-w-[260px] rounded-md border border-border-light bg-surface-secondary px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-xheavy"
+      />
+    </div>
+  );
+};
+
 function General() {
   const { theme, setTheme } = useContext(ThemeContext);
 
@@ -185,6 +208,9 @@ function General() {
       </div>
       <div className="pb-3">
         <LangSelector langcode={langcode} onChange={changeLang} />
+      </div>
+      <div className="pb-3">
+        <SignatureInput />
       </div>
       {toggleSwitchConfigs.map((config) => (
         <div key={config.key} className="pb-3">

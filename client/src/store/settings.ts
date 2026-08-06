@@ -45,6 +45,13 @@ const localStorageAtoms = {
   LaTeXParsing: atomWithLocalStorage('LaTeXParsing', true),
   showFooter: atomWithLocalStorage('showFooter', true),
   /**
+   * A personal sign-off under the account row in the sidebar foot — the
+   * visitor's own line, not identity data, so it lives with the rest of the
+   * nav's cosmetics in this browser. Empty means absent: the foot never
+   * reserves space for silence.
+   */
+  signature: atomWithLocalStorage('signature', ''),
+  /**
    * The canvas's ambient backdrop. Scenery, so it is the visitor's call: it
    * costs a third-party embed and constant motion behind the text, and neither
    * is something to impose on someone who just wants to read their thread.
