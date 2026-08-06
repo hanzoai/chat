@@ -130,7 +130,9 @@ const ConversationStarters = () => {
           disabled={isSubmitting}
           title={label}
           className={cn(
-            'min-h-11 max-w-full truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
+            // `glass` — the same material as the composer above, so the chips
+            // read as one family with the input instead of flat pills.
+            'glass min-h-11 max-w-full truncate rounded-full px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:bg-surface-active-alt hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
             // A phone fits two of these per row, so five of them are three rows of
             // suggestions stacked under the one control an arriving visitor came
             // to use. The first is an example; the rest were a menu. Signed in
@@ -150,7 +152,7 @@ const ConversationStarters = () => {
           // so the row reads as one set. It keeps its icon to stay legible as
           // the one that leaves for the builder.
           className={cn(
-            'inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
+            'glass inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:bg-surface-active-alt hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
             !isAuthenticated && 'max-sm:hidden',
           )}
         >
