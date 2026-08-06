@@ -61,7 +61,7 @@ export default function Adjust({ content }: { content: string }) {
   const [pickedVoice, setPickedVoice] = useState<string | null>(null);
 
   if (!proposal) {
-    return <code className="text-sm text-text-secondary">{content}</code>;
+    return <code className="text-sm text-gray-600 dark:text-gray-300">{content}</code>;
   }
 
   const apply = () => {
@@ -78,28 +78,28 @@ export default function Adjust({ content }: { content: string }) {
   };
 
   return (
-    <span className="not-prose my-2 flex flex-col gap-2 rounded-xl border border-border-light bg-surface-primary-alt p-3 text-sm">
-      <span className="font-medium text-text-primary">{localize('com_ui_adjust_title')}</span>
+    <span className="not-prose my-2 flex flex-col gap-2 rounded-xl border border-gray-300 bg-white p-3 text-sm text-gray-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-100">
+      <span className="font-medium">{localize('com_ui_adjust_title')}</span>
       {proposal.video != null && (
-        <span className="text-text-secondary">
+        <span className="text-gray-600 dark:text-gray-300">
           {localize('com_ui_adjust_backdrop')}{' '}
           {/* The id, not the pasted string: what the player will actually be
               asked for is what the viewer is being asked to agree to. */}
-          <code className="text-text-primary">{videoId(proposal.video)}</code>
+          <code className="font-mono">{videoId(proposal.video)}</code>
         </span>
       )}
       {proposal.video == null && proposal.source != null && (
-        <span className="text-text-secondary">
+        <span className="text-gray-600 dark:text-gray-300">
           {proposal.source === 'off'
             ? localize('com_ui_adjust_backdrop_off')
             : localize('com_ui_adjust_backdrop_on')}
         </span>
       )}
       {proposal.voice != null && (
-        <label className="flex items-center gap-2 text-text-secondary">
+        <label className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
           {localize('com_ui_adjust_voice')}
           <select
-            className="rounded-md border border-border-light bg-surface-primary px-2 py-1 text-text-primary"
+            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100"
             value={pickedVoice ?? proposal.voice}
             onChange={(e) => setPickedVoice(e.target.value)}
           >

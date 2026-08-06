@@ -123,10 +123,15 @@ export default function Mic({
         // stop affordance, said in color where a tooltip would be too late.
         'flex size-9 items-center justify-center rounded-full p-1 text-white transition-colors',
         'hover:bg-surface-hover disabled:opacity-40',
+        // Arbitrary hex, not text-red-500/green-400: tailwind.config maps the
+        // whole red AND green scales onto the monochrome ramp (this is a
+        // white-label monochrome build), so those classes render GREY. The
+        // brand red and the flash green have to be stated literally, matching
+        // the hzMicFlash keyframe.
         'data-[state=listening]:animate-[hzMicFlash_1.1s_ease-in-out_infinite]',
-        'data-[state=listening]:hover:animate-none data-[state=listening]:hover:text-red-500',
+        'data-[state=listening]:hover:animate-none data-[state=listening]:hover:text-[#fd4444]',
         'data-[state=speaking]:animate-pulse motion-reduce:animate-none',
-        'motion-reduce:data-[state=listening]:text-green-400',
+        'motion-reduce:data-[state=listening]:text-[#4ade80]',
         '[&_svg]:size-5',
       )}
     />
