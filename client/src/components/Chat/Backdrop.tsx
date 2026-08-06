@@ -14,13 +14,24 @@ import { useEffect, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import store from '~/store';
 
-const VIDEO = '6lZ3CookYNg';
+/** The 11-character video id, from a bare id or any YouTube URL shape
+ *  (watch?v=, youtu.be/, embed/, shorts/, live/). Unparseable input falls
+ *  back to the aquarium rather than to a broken player. */
+export function video(chosen: string): string {
+  const said = (chosen || '').trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(said)) {
+    return said;
+  }
+  const m =
+    /(?:youtu\.be\/|[?&]v=|\/(?:embed|shorts|live)\/)([A-Za-z0-9_-]{11})/.exec(said);
+  return m?.[1] ?? '6lZ3CookYNg';
+}
 
-const SRC =
+const src = (id: string) =>
   // www.youtube.com, not youtube-nocookie: the nocookie host answers embeds
   // with "video player configuration error" (153) in current Chrome.
-  `https://www.youtube.com/embed/${VIDEO}` +
-  `?autoplay=1&mute=1&controls=0&loop=1&playlist=${VIDEO}` +
+  `https://www.youtube.com/embed/${id}` +
+  `?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}` +
   '&rel=0&playsinline=1&disablekb=1&fs=0&iv_load_policy=3&vq=hd1080' +
   `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
 
@@ -50,6 +61,8 @@ function start(e: React.SyntheticEvent<HTMLIFrameElement>) {
 
 export default function Backdrop() {
   const showBackdrop = useAtomValue(store.showBackdrop);
+  const chosen = useAtomValue(store.backdropVideo);
+  const id = video(chosen);
   // Revealed only once the player REPORTS footage rolling (playerState 1,
   // via the listening handshake in start). A video YouTube refuses — taken
   // down, region-blocked, embed throttled — never reports playing, so the
@@ -60,6 +73,13 @@ export default function Backdrop() {
   // forced (embeds ignore every quality API since 2019), so the low-res
   // opening plays out hidden.
   const [ramped, setRamped] = useState(false);
+  // A swapped video starts the ramp over.
+  useEffect(() => {
+    setPlaying(false);
+    setRamped(false);
+    const ramp = setTimeout(() => setRamped(true), 4000);
+    return () => clearTimeout(ramp);
+  }, [id]);
   useEffect(() => {
     const hear = (e: MessageEvent) => {
       if (e.origin !== 'https://www.youtube.com') {
@@ -74,11 +94,7 @@ export default function Backdrop() {
       }
     };
     window.addEventListener('message', hear);
-    const ramp = setTimeout(() => setRamped(true), 4000);
-    return () => {
-      window.removeEventListener('message', hear);
-      clearTimeout(ramp);
-    };
+    return () => window.removeEventListener('message', hear);
   }, []);
   // Off means ABSENT, not hidden: the embed is a third-party iframe that
   // autoplays video, so leaving it mounted at opacity 0 would keep streaming
@@ -89,7 +105,8 @@ export default function Backdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
       <iframe
-        src={SRC}
+        key={id}
+        src={src(id)}
         title=""
         tabIndex={-1}
         allow="autoplay; encrypted-media"

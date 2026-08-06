@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useToastContext } from '@hanzochat/client';
 import { PermissionTypes, Permissions, apiBaseUrl } from '@hanzochat/data-provider';
 import MermaidErrorBoundary from '~/components/Messages/Content/MermaidErrorBoundary';
+import Adjust from '~/components/Chat/Messages/Content/Adjust';
 import CodeBlock from '~/components/Messages/Content/CodeBlock';
 import Mermaid from '~/components/Messages/Content/Mermaid';
 import useHasAccess from '~/hooks/Roles/useHasAccess';
@@ -23,14 +24,16 @@ export const code: React.ElementType = memo(({ className, children }: TCodeProps
     permissionType: PermissionTypes.RUN_CODE,
     permission: Permissions.USE,
   });
-  const match = /language-(\w+)/.exec(className ?? '');
+  // [\w-]+, not \w+: fence tags carry hyphens (hanzo-setting).
+  const match = /language-([\w-]+)/.exec(className ?? '');
   const lang = match && match[1];
   const isMath = lang === 'math';
   const isMermaid = lang === 'mermaid';
+  const isSetting = lang === 'hanzo-setting';
   const isSingleLine = typeof children === 'string' && children.split('\n').length === 1;
 
   const { getNextIndex, resetCounter } = useCodeBlockContext();
-  const blockIndex = useRef(getNextIndex(isMath || isMermaid || isSingleLine)).current;
+  const blockIndex = useRef(getNextIndex(isMath || isMermaid || isSetting || isSingleLine)).current;
 
   useEffect(() => {
     resetCounter();
@@ -38,6 +41,8 @@ export const code: React.ElementType = memo(({ className, children }: TCodeProps
 
   if (isMath) {
     return <>{children}</>;
+  } else if (isSetting) {
+    return <Adjust content={typeof children === 'string' ? children : String(children)} />;
   } else if (isMermaid) {
     const content = typeof children === 'string' ? children : String(children);
     return (
@@ -64,11 +69,13 @@ export const code: React.ElementType = memo(({ className, children }: TCodeProps
 });
 
 export const codeNoExecution: React.ElementType = memo(({ className, children }: TCodeProps) => {
-  const match = /language-(\w+)/.exec(className ?? '');
+  const match = /language-([\w-]+)/.exec(className ?? '');
   const lang = match && match[1];
 
   if (lang === 'math') {
     return children;
+  } else if (lang === 'hanzo-setting') {
+    return <Adjust content={typeof children === 'string' ? children : String(children)} />;
   } else if (lang === 'mermaid') {
     const content = typeof children === 'string' ? children : String(children);
     return <Mermaid>{content}</Mermaid>;

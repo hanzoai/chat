@@ -51,6 +51,16 @@ const localStorageAtoms = {
    * Default on — it is the product's first impression.
    */
   showBackdrop: atomWithLocalStorage('showBackdrop', true),
+  /** Which footage the backdrop plays — a YouTube video id or URL. The
+   *  aquarium by default; changeable from Settings or by asking the chat. */
+  backdropVideo: atomWithLocalStorage('backdropVideo', '6lZ3CookYNg'),
+  /**
+   * The dock: a column beside the conversation holding embedded surfaces
+   * (a live feed, a world widget, an app preview). Default OFF — it is a
+   * second thing competing for the width the messages need, so it is opt-in
+   * rather than something a first-time visitor has to dismiss.
+   */
+  showDock: atomWithLocalStorage('showDock', false),
 
   // Commands settings
   atCommand: atomWithLocalStorage('atCommand', true),
