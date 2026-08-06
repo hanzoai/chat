@@ -833,14 +833,13 @@ extension's search surface (`~/work/hanzo/extension`), not a new design.
 
 **Three defects, measured 2026-07-28, in the order they must be fixed:**
 
-1. **No silent SSO — this is the root one.** `hanzo.chat` and `hanzo.app` are
-   different registrable domains, so a session cookie can NEVER span them. The only
-   mechanism that makes a signed-in hanzo.id user already-signed-in here is a
-   `prompt=none` authorize on load. Chat has none: zero hits for
-   `prompt=none|silentAuth|checkSession` across `client/src` and `api/server`.
-   `silentRefresh` only refreshes chat's OWN local JWT — it cannot mint one. So a
-   real user with credits renders anonymous on first visit, every visit.
-   This is the generalisable fix: every Hanzo surface needs it, not just chat.
+1. **No silent SSO — this is the root one. FIXED 2026-08-06, see below.**
+   `hanzo.chat` and `hanzo.app` are different registrable domains, so a session
+   cookie can NEVER span them. The only mechanism that makes a signed-in hanzo.id
+   user already-signed-in here is a `prompt=none` authorize on load. Chat had
+   none, so a real user with credits rendered anonymous on first visit, every
+   visit. `silentRefresh` only refreshes chat's OWN local JWT — it cannot mint one.
+   This was the generalisable fix: every Hanzo surface needs it, not just chat.
 
 2. **The landing swallows chat intent.** `routes/Root.tsx:41`
    `showChat = isAuthenticated || isGuest`; `:111` returns `<LandingPage/>` for EVERY
@@ -871,10 +870,10 @@ already describes the target and was failing against the brochure.
   route; `LoginGate` (already mounted for every `!isAuthenticated` visitor) asks
   for a session at submit — the first moment one is needed.
 - `utils/login.ts#trySilentSso()` — one `prompt=none` attempt per tab via
-  `IAM#signinSilent()`, posting to the SAME `/v1/chat/auth/iam/session` bridge the
-  interactive callback uses. Wired into `AuthContext`'s no-local-session path
-  BEFORE the guest fallback, so a funded customer adopts their real session
-  instead of being handed a 2-message anonymous trial. 5 tests, negative-controlled.
+  `IAM#signinSilent()`. **Reverted; it could never have worked, and what replaced
+  it is `utils/sso.ts` — see "Silent SSO" below.** `signinSilent` is a hidden
+  IFRAME, and an iframe is a cross-site SUBRESOURCE: SameSite=Lax withholds the
+  session cookie, so the issuer saw an anonymous request every time.
 - `GUEST_TOKEN_MAX` default 20 → 120. Spend is unchanged: `guestMessageLimiter`
   caps MESSAGES per real client IP (`GUEST_MESSAGE_MAX`, prod 2) and no amount of
   token minting resets it. Two limiters, two concerns.
@@ -892,6 +891,60 @@ already describes the target and was failing against the brochure.
   (-35.5%); guest composer visible 3.2s → 1.9s desktop, 2.5s → 1.9s at 390px.
   `GUEST_TOKEN_MAX=120`/`GUEST_TOKEN_WINDOW=60` are now pinned in the universe
   values file so a code-default change can never silently re-tighten the mint.
+
+### Silent SSO — one session, every Hanzo surface (2026-08-06)
+
+Sign in once at hanzo.id — or at console.hanzo.ai, or hanzo.app — and chat finds
+you. `client/src/utils/sso.ts` asks the issuer, once per visit, whether this
+browser already has a session, and `AuthContext`'s signed-out path spends that
+question before it falls back to a guest.
+
+**The mechanism is a TOP-LEVEL REDIRECT, and nothing else can work.** No cookie
+spans `hanzo.ai` / `hanzo.chat` / `hanzo.app` — different registrable domains. It
+does not need to: the IAM session is `SameSite=Lax`, and Lax IS presented on a
+top-level cross-site GET navigation. So navigating the document to
+`/v1/iam/oauth/authorize?…&prompt=none` carries the cookie, and the issuer
+answers from the session alone. `prompt=none` means it renders NOTHING either
+way — a code, or `error=login_required` — which is what keeps the anonymous guest
+preview intact for a visitor who really is a stranger.
+
+The server half was already built, tested and deployed: `hanzoai/iam`
+`internal/oidc/prompt.go` (`silentGrant`), advertised at
+`hanzo.id/.well-known/openid-configuration` as
+`prompt_values_supported: [none, login, select_account]`. Chat was simply the one
+surface that never asked. Measured against production with a real Chromium:
+
+    Sec-Fetch-Dest: document  ->  302 …/auth/callback?error=login_required
+    Sec-Fetch-Dest: iframe    ->  302 …?error=interaction_required
+
+**Do not rebuild the iframe.** `IAM#signinSilent()` still exists in the SDK and is
+a trap here: an iframe is a cross-site SUBRESOURCE, so Lax withholds the cookie;
+the edge answers `X-Frame-Options: DENY`; and `silentGrant` refuses on
+`Sec-Fetch-Dest` besides. The only thing that would make it work is
+`SameSite=None`, which IAM refuses deliberately. The earlier `trySilentSso()` was
+exactly this and was reverted — but the revert took the *correct* conclusion with
+it, leaving a comment in `AuthContext` asserting that only an interactive
+redirect could ever sign anyone in. That was wrong for eight days.
+
+**The bound is the whole safety story.** This navigates the document away on
+boot; unbounded, that is not a bug, it is hanzo.chat being unreachable. So the
+attempt is recorded in `sessionStorage` BEFORE the navigation (a probe that never
+returns is still spent), the probe declines entirely when storage is unavailable
+to bound it with, and it stays off `/auth/callback` and `/login`, which own
+authorize round-trips of their own. `sessionStorage` not `localStorage`: "is
+anyone signed in?" is a question whose answer changes, so pinning the first
+answer forever would merely defer this bug. Cost is one redirect per visit, then
+it self-heals. `client/src/utils/__tests__/sso.spec.ts` holds all of it.
+
+`meansNoSession` is the other half: `OAuthCallback` reads `login_required` and
+its siblings as an ANSWER and returns the visitor to `/c/new`, not to
+`/login?error=auth_failed`. Treating it as a broken login would put a login
+screen in front of every first-time visitor — precisely the guest experience the
+probe exists to preserve. `access_denied` and friends still reach the error path.
+
+`exchanging()` keeps the guest fallback off the callback route while a code is
+being redeemed. That race predates this work but was rare; now every anonymous
+visitor passes through that route exactly once, so it had to close with it.
 
 ### Arrival gate — REMOVED (2026-08-05, owner call)
 
