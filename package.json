@@ -204,7 +204,8 @@
       "@ariakit/react": "0.4.29",
       "zod-to-json-schema": "3.24.6",
       "@modelcontextprotocol/sdk": "1.22.0",
-      "zod@3.24.4": "3.25.76"
+      "zod@3.24.4": "3.25.76",
+      "@hanzogui/web": "8.1.1"
     }
   }
 }
