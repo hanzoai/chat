@@ -14,10 +14,28 @@ const VIDEO = '6lZ3CookYNg';
 
 const SRC =
   // www.youtube.com, not youtube-nocookie: the nocookie host answers embeds
-  // with "video player configuration error" in current Chrome.
+  // with "video player configuration error" (153) in current Chrome.
   `https://www.youtube.com/embed/${VIDEO}` +
   `?autoplay=1&mute=1&controls=0&loop=1&playlist=${VIDEO}` +
-  '&rel=0&playsinline=1&disablekb=1&fs=0&iv_load_policy=3';
+  '&rel=0&playsinline=1&disablekb=1&fs=0&iv_load_policy=3' +
+  `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+
+/** Ask the player to start, through its API. Muted playback started by script
+ *  is always allowed, and the API path sidesteps the viewability heuristic
+ *  that can leave the autoplay param unhonored for a player sitting under the
+ *  app's content layer. Repeated because the player ignores commands sent
+ *  before its own scripts finish booting. */
+function start(e: React.SyntheticEvent<HTMLIFrameElement>) {
+  const frame = e.currentTarget;
+  const kick = () =>
+    frame.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+      'https://www.youtube.com',
+    );
+  kick();
+  setTimeout(kick, 1500);
+  setTimeout(kick, 4000);
+}
 
 export default function Backdrop() {
   return (
@@ -28,6 +46,7 @@ export default function Backdrop() {
         tabIndex={-1}
         allow="autoplay; encrypted-media"
         className="absolute left-1/2 top-1/2"
+        onLoad={start}
         style={{
           width: 'max(177.78vh, 100vw)',
           height: 'max(56.25vw, 100vh)',
