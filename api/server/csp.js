@@ -35,7 +35,15 @@ const contentSecurityPolicy = [
   // 'self' keeps the same-origin silent.mp3 audio-unlock iframe; the YouTube
   // origin is the Backdrop player and nothing else (www.youtube.com, not
   // nocookie — that host answers embeds with a configuration error).
-  "frame-src 'self' https://www.youtube.com",
+  //
+  // world.hanzo.ai is the dock's widget card (components/Chat/Dock). Every
+  // origin here is enumerated on purpose rather than widened to *.hanzo.ai:
+  // frame-src decides what may be rendered INSIDE this page, so a wildcard
+  // would let any future subdomain — including one nobody reviewed — frame
+  // itself over the conversation. A card whose origin is missing renders an
+  // EMPTY frame and logs nothing useful, so cards.spec.ts asserts every card's
+  // origin appears here.
+  "frame-src 'self' https://www.youtube.com https://world.hanzo.ai",
   "frame-ancestors 'self'",
 ].join('; ');
 
