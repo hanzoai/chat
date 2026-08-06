@@ -259,7 +259,7 @@ const Nav = memo(
                 moment a guest turn actually produces a conversation.
 
                 And never in the rail: 56px of column cannot hold a title. */}
-            {!collapsed && (isAuthenticated || conversations.length > 0) && (
+            {!collapsed && conversations.length > 0 && (
               <div className="flex min-h-0 flex-grow flex-col overflow-hidden">
                 <Conversations
                   conversations={conversations}
