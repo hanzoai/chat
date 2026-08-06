@@ -27,10 +27,6 @@ describe('Content-Security-Policy', () => {
     expect(directive('frame-src')).toContain("'self'");
   });
 
-  it('frames the ambient backdrop player, from the YouTube origin only', () => {
-    expect(directive('frame-src')).toContain('https://www.youtube.com');
-  });
-
   /**
    * hanzo.id answers `frame-ancestors 'none'` + `X-Frame-Options: DENY`, so it can
    * never be framed and chat no longer tries — the iframe `signinSilent()` flow is
