@@ -37,7 +37,6 @@ import AgentsCommand from './AgentsCommand';
 import Mic from './Mic';
 import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
-import StopButton from './StopButton';
 import SendButton from './SendButton';
 import EditBadges from './EditBadges';
 import BadgeRow from './BadgeRow';
@@ -66,7 +65,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   const [badges, setBadges] = useAtom(store.chatBadges);
   const [isEditingBadges, setIsEditingBadges] = useAtom(store.isEditingBadges);
-  const [showStopButton, setShowStopButton] = useAtom(store.showStopButtonByIndex(index));
   const [showPlusPopover, setShowPlusPopover] = useAtom(store.showPlusPopoverFamily(index));
   const [showMentionPopover, setShowMentionPopover] = useAtom(
     store.showMentionPopoverFamily(index),
@@ -82,7 +80,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     isSubmitting,
     filesLoading,
     newConversation,
-    handleStopGenerating,
   } = useChatContext();
   const {
     generateConversation,
@@ -400,16 +397,15 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   />
                 )}
                 <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
-                  {isSubmitting && showStopButton ? (
-                    <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />
-                  ) : (
-                    endpoint && (
-                      <SendButton
-                        ref={submitButtonRef}
-                        control={methods.control}
-                        disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
-                      />
-                    )
+                  {/* No stop circle (owner call): the send arrow holds its seat,
+                      disabled while the reply streams; the mic carries the
+                      voice state in its own color. */}
+                  {endpoint && (
+                    <SendButton
+                      ref={submitButtonRef}
+                      control={methods.control}
+                      disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
+                    />
                   )}
                 </div>
               </div>

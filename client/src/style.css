@@ -322,6 +322,18 @@
   }
 }
 
+/* The composer mic while a spoken conversation is live (see Chat/Input/Mic.tsx):
+   the glyph itself flashes white–green; hover overrides it to solid red. */
+@keyframes hzMicFlash {
+  0%,
+  100% {
+    color: #fff;
+  }
+  50% {
+    color: #4ade80;
+  }
+}
+
 @keyframes hzComposerGlow {
   0%,
   100% {
