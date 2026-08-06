@@ -5,6 +5,7 @@ import { HanzoMark } from '@hanzogui/shell';
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { ContextType } from '~/common';
 import { HeaderNewChat, OpenSidebar } from './Menus';
+import CanvasToggle from './Menus/CanvasToggle';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
@@ -88,6 +89,9 @@ export default function Header() {
           {hasAccessToBookmarks === true && <BookmarkMenu />}
           <ExportAndShareMenu isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false} />
           <TemporaryChat />
+          {/* The right edge's mirror of the left sidebar button: it opens the
+              canvas (the artifacts panel). Shows only when there is one. */}
+          <CanvasToggle />
         </div>
       </div>
       {/* Empty div for spacing */}
