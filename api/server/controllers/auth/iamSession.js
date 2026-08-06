@@ -71,6 +71,11 @@ async function reconcileUser(claims) {
     claimStr(claims.username) ||
     (email ? email.split('@')[0] : openidId);
   const name = fullNameFromClaims(claims);
+  // The profile photo. hanzo.id issues it as the `picture` claim; stored as-is
+  // so the account menu can render it (resolveIdentity reads `avatar`). A
+  // manually-set avatar (`manual=true`) is the user's own choice and is never
+  // overwritten by the one from the token.
+  const avatar = claimStr(claims.picture);
   const organization =
     claimStr(claims.owner) || claimStr(claims.organization) || claimStr(claims.org) || '';
   const project = claimStr(claims.project) || '';
@@ -93,6 +98,9 @@ async function reconcileUser(claims) {
     if (groups.length) {
       update.groups = groups;
     }
+    if (avatar && !found.avatar?.includes('manual=true') && avatar !== found.avatar) {
+      update.avatar = avatar;
+    }
     if (!found.role) {
       update.role = SystemRoles.USER;
     }
@@ -111,6 +119,7 @@ async function reconcileUser(claims) {
       email: email || '',
       emailVerified: claims.email_verified === true,
       name,
+      avatar,
       idOnTheSource: claimStr(claims.oid),
       organization,
       project,

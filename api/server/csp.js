@@ -41,7 +41,12 @@ const contentSecurityPolicy = [
   // covers the bucket subdomains and nothing else: it is one registrable domain
   // we own, not a bare scheme, so the exfiltration channel described above stays
   // shut.
-  "img-src 'self' data: blob: https://s3.hanzo.ai https://s3-api.hanzo.ai https://*.s3-api.hanzo.ai",
+  // hanzo.id serves the account's profile photo (the `picture` claim the IAM
+  // login stores as the user's avatar); the account menu renders it as a plain
+  // <img>. Safe to allow: it is our own IdP (one registrable domain we own,
+  // not a scheme), and the markdown image renderer still auto-loads ONLY
+  // same-origin, so this cannot become a beacon in message content.
+  "img-src 'self' data: blob: https://hanzo.id https://s3.hanzo.ai https://s3-api.hanzo.ai https://*.s3-api.hanzo.ai",
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
   "connect-src 'self' https://hanzo.id https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com",
