@@ -21,6 +21,7 @@ import { Nav, MobileNav, NAV_WIDTH } from '~/components/Nav';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
+import Backdrop from '~/components/Chat/Backdrop';
 import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
@@ -180,9 +181,19 @@ export default function Root() {
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
+                  {/* The backdrop paints behind the WHOLE app — sidebar included.
+                      It used to mount inside Presentation, which put it BESIDE
+                      the sidebar rather than under it, so the sidebar's glass
+                      had nothing to show through and read as an opaque panel.
+                      The scene composites on its own layer (a YouTube iframe),
+                      so the content column below carries an explicit z-10 —
+                      z-auto loses to a composited layer in a real (headed)
+                      browser even though DOM order suggests otherwise; the
+                      sidebar holds its own place (`.nav` is z-110). */}
+                  <Backdrop />
                   <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
                   <div
-                    className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden"
+                    className="relative z-10 flex h-full max-w-full flex-1 flex-col overflow-hidden"
                     style={
                       isSmallScreen
                         ? {
