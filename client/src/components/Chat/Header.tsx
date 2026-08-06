@@ -5,6 +5,7 @@ import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
+import PanelControls from './PanelControls';
 import { useHasAccess, useLocalize } from '~/hooks';
 
 export default function Header() {
@@ -40,6 +41,11 @@ export default function Header() {
           {/* The right edge's mirror of the left sidebar button: it opens the
               canvas (the artifacts panel). Shows only when there is one. */}
           <CanvasToggle />
+          {/* The window controls (width, companions, right panel) are chrome for
+              the WINDOW, not for the conversation, so they sit after every
+              conversation action — last thing at the right end, the way a title
+              bar reads. */}
+          <PanelControls />
         </div>
       </div>
       {/* Empty div for spacing */}

@@ -10,11 +10,10 @@ import store from '~/store';
  * Preview — a page held beside the conversation, in a frame that cannot reach
  * chat.
  *
- * It is a TAB OF THE EXISTING right-hand panel, not a panel of its own: it
- * resizes, collapses and hides with everything else there, and the settings
- * toggle that hides the right-most side panel hides this too. A second panel
- * would need its own width, its own collapse state and its own hide switch,
- * and the reader would have two right-hand columns to reason about.
+ * It is the body of ONE BOTTOM-BAR TAB, not a panel of its own: it resizes with
+ * the bar, closes with the bar, and its URL is keyed by the tab id so two tabs
+ * are two pages. A panel of its own would need its own size, its own open state
+ * and its own toggle, and the reader would have a third movable column.
  *
  * THE SANDBOX IS THE POINT. `allow-scripts` without `allow-same-origin` gives
  * the framed document an OPAQUE origin: scripts run, so a real page renders,
@@ -26,9 +25,9 @@ import store from '~/store';
  * replace hanzo.chat in the tab. `referrerPolicy="no-referrer"` keeps the
  * conversation's URL from travelling to whatever is being previewed.
  */
-export default function Preview() {
+export default function Preview({ tabId }: { tabId: string }) {
   const localize = useLocalize();
-  const [url, setUrl] = useAtom(store.preview);
+  const [url, setUrl] = useAtom(store.preview(tabId));
   const [draft, setDraft] = useState(url);
   /** Bumped to remount the frame — a same-src reload is not a prop change. */
   const [generation, setGeneration] = useState(0);
@@ -50,7 +49,7 @@ export default function Preview() {
   }, [setUrl]);
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <div className="flex h-full flex-col gap-2 p-2">
       <form onSubmit={open} className="flex items-center gap-1">
         <input
           type="text"
@@ -111,9 +110,9 @@ export default function Preview() {
         </a>
       )}
 
-      {/* An explicit height, because the panel body is an accordion that sizes
-          to its content — `flex-1` inside it resolves to nothing. */}
-      <div className="h-[60vh] overflow-hidden rounded-xl border border-border-light bg-surface-primary">
+      {/* `min-h-0` so the frame shrinks with the bar instead of pushing the URL
+          row off the top — a flex child's default min-height is its content. */}
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border-light bg-surface-primary">
         {src !== null ? (
           <iframe
             key={`${src}#${generation}`}

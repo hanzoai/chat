@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo, memo } from 'react';
-import { useAtomValue } from 'jotai';
+import { useState, useCallback, useEffect, useMemo, memo } from 'react';
+import { useAtom, useAtomValue } from 'jotai';
 import { getEndpointField } from '@hanzochat/data-provider';
 import { useUserKeyQuery } from '@hanzochat/data-provider/react-query';
 import { ResizableHandleAlt, ResizablePanel, useMediaQuery } from '@hanzochat/client';
@@ -78,6 +78,23 @@ const SidePanel = ({
     [keyExpiry.expiresAt, userProvidesKey],
   );
 
+  /**
+   * `store.sidePanelOpen` is the truth about whether this panel is open, and
+   * these two drive the imperative panel to match it. It used to live in this
+   * subtree's React state, so the only controls that could reach it were the
+   * ones rendered inside it.
+   */
+  const [sidePanelOpen, setSidePanelOpen] = useAtom(store.sidePanelOpen);
+
+  const showPanel = useCallback(() => {
+    setIsCollapsed(false);
+    setMinSize(defaultMinSize);
+    setCollapsedSize(navCollapsedSize);
+    setFullCollapse(false);
+    localStorage.setItem('fullPanelCollapse', 'false');
+    panelRef.current?.expand();
+  }, [panelRef, setMinSize, setIsCollapsed, setFullCollapse, setCollapsedSize, navCollapsedSize]);
+
   const hidePanel = useCallback(() => {
     setIsCollapsed(true);
     setCollapsedSize(0);
@@ -87,9 +104,24 @@ const SidePanel = ({
     panelRef.current?.collapse();
   }, [panelRef, setMinSize, setIsCollapsed, setFullCollapse, setCollapsedSize]);
 
+  /* A small screen collapses the panel unconditionally (SidePanelGroup), so
+     reconciling there would fight it and reopen a panel that covers the chat. */
+  useEffect(() => {
+    if (isSmallScreen) {
+      return;
+    }
+    if (sidePanelOpen) {
+      showPanel();
+    } else {
+      hidePanel();
+    }
+  }, [sidePanelOpen, isSmallScreen, showPanel, hidePanel]);
+
+  const closePanel = useCallback(() => setSidePanelOpen(false), [setSidePanelOpen]);
+
   const Links = useSideNavLinks({
     endpoint,
-    hidePanel,
+    hidePanel: closePanel,
     keyProvided,
     endpointType,
     interfaceConfig,
@@ -100,31 +132,8 @@ const SidePanel = ({
     if (newUser) {
       setNewUser(false);
     }
-    setIsCollapsed((prev: boolean) => {
-      if (prev) {
-        setMinSize(defaultMinSize);
-        setCollapsedSize(navCollapsedSize);
-        setFullCollapse(false);
-        localStorage.setItem('fullPanelCollapse', 'false');
-      }
-      return !prev;
-    });
-    if (!isCollapsed) {
-      panelRef.current?.collapse();
-    } else {
-      panelRef.current?.expand();
-    }
-  }, [
-    newUser,
-    panelRef,
-    setNewUser,
-    setMinSize,
-    isCollapsed,
-    setIsCollapsed,
-    setFullCollapse,
-    setCollapsedSize,
-    navCollapsedSize,
-  ]);
+    setSidePanelOpen((prev) => !prev);
+  }, [newUser, setNewUser, setSidePanelOpen]);
 
   return (
     <>

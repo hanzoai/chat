@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import throttle from 'lodash/throttle';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { getConfigDefaults } from '@hanzochat/data-provider';
 import { ResizablePanel, ResizablePanelGroup, useMediaQuery } from '@hanzochat/client';
 import type { ImperativePanelHandle } from 'react-resizable-panels';
@@ -54,6 +54,7 @@ const SidePanelGroup = memo(
     const hasRoomForDock = useMediaQuery('(min-width: 1280px)');
     const hideSidePanel = useAtomValue(store.hideSidePanel);
     const showDock = useAtomValue(store.showDock);
+    const setSidePanelOpen = useSetAtom(store.sidePanelOpen);
 
     const calculateLayout = useCallback(() => {
       if (artifacts == null) {
@@ -107,17 +108,8 @@ const SidePanelGroup = memo(
 
     const minSizeMain = useMemo(() => (artifacts != null ? 15 : 30), [artifacts]);
 
-    /** Memoized close button handler to prevent re-creating it */
-    const handleClosePanel = useCallback(() => {
-      setIsCollapsed(() => {
-        localStorage.setItem('fullPanelCollapse', 'true');
-        setFullCollapse(true);
-        setCollapsedSize(0);
-        setMinSize(0);
-        return false;
-      });
-      panelRef.current?.collapse();
-    }, []);
+    /** The backdrop closes the panel the same way every other control does. */
+    const handleClosePanel = useCallback(() => setSidePanelOpen(false), [setSidePanelOpen]);
 
     return (
       <>

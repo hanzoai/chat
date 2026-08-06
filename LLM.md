@@ -1041,3 +1041,101 @@ sidebar's first row, and in `Chat/Header.tsx` only once the sidebar collapses.
 Adopting the full header is still a LAYOUT change: `HanzoAppHeader` is
 `position: sticky; height: 56`, so `Root.tsx`'s `calc(100dvh - ${bannerHeight}px)`
 must subtract it too or the composer falls off the bottom of the viewport.
+
+### Window chrome — one atom per panel (`store/panels.ts`)
+
+Three movable panels are toggled from the header, so each one's open state is a
+persisted atom in `client/src/store/panels.ts` and NOTHING else: `sidePanelOpen`,
+`bottomBarOpen` (+ `bottomBarTabs`, `bottomBarActiveTab`, `bottomBarSize`). Two
+write-only atoms, `openBottomBarTab` and `closeBottomBarTab`, are the one way a
+bar tab is created or destroyed — the companions menu, ⌘T and the strip's `+` all
+go through `openBottomBarTab`.
+
+**`Dock` and `BottomBar` are two different features and must never share a name.**
+`Chat/Dock` is a COLUMN of embedded iframe cards BESIDE the conversation — a
+sibling in the same horizontal `ResizablePanelGroup` as the artifacts panel, fed
+by the fixed `Chat/Dock/cards.ts` catalog, switched by `store.showDock` in
+Settings. `Chat/BottomBar` is a horizontal split of the chat column holding a tab
+strip of pages the reader opens themselves, one persisted URL per tab. Different
+axis, different data, different switch. If two things in this tree are both
+called "dock", one of them is wrong.
+
+- **Right**: `store.sidePanelOpen`. `SidePanel.tsx` reconciles the imperative
+  `react-resizable-panels` handle to it in ONE effect (skipped on small screens,
+  where `SidePanelGroup` collapses unconditionally and would fight it). Before
+  this the open state was React state inside that subtree, which is exactly why
+  nothing outside it — including the header — could toggle the panel. Note the
+  visible consequence: the panel is now open or closed, not open / 50px rail /
+  hidden, so the default (`false`) hides the rail and the header button is how it
+  comes back.
+- **Bottom**: `Chat/BottomBar/BottomBar.tsx`. `BottomBarGroup` wraps the chat
+  column in a vertical `ResizablePanelGroup` (mounted at all times, so toggling
+  the bar never remounts the conversation) and `Chat/Presentation.tsx` mounts it
+  around `<main>`. `minSize` on the chat panel is what keeps the composer on
+  screen — the bar takes height from the column, it never floats over it.
+  **Put no className on that chat-column `ResizablePanel`**: making it a flex row
+  shrink-to-fits `<main>` to its content (measured: 626px inside a 1439px column,
+  which bunches the header controls left). Measured after: 1179/1179.
+- **Left**: `navVisible` in `routes/Root.tsx`, toggled by `Nav/NewChat.tsx` — NOT
+  by `Chat/Menus/OpenSidebar`, which the chat view does not mount (the rail keeps
+  its own toggle, and `Chat/Header.spec.tsx` holds the header's left edge empty).
+  `OpenSidebar` still serves Marketplace / PromptForm / CreatePromptForm and now
+  takes an optional `navVisible` so it can state which way it toggles; those three
+  omit it and get the open wording, which is the state they mount it in.
+
+`Chat/PanelControls.tsx` is the cluster at the right end of `header-actions`:
+full-width (`store.maximizeChatSpace`), the companions menu, and the right panel.
+It also owns the shortcuts — a `document` keydown listener in an effect, the only
+shortcut mechanism this repo has — and they test `e.code`, not `e.key`, because
+Option+S on macOS types `ß`. **It does not use `PanelRight`**: the neighbouring
+`Chat/Menus/CanvasToggle` already carries that glyph for the ARTIFACTS panel, and
+two buttons in one row wearing one glyph name neither. The control panel gets
+`SlidersHorizontal`, which is what it calls itself (`aria-label` = Controls).
+
+Bar tabs frame pages through `SidePanel/Preview/Panel` — the sandboxed frame that
+was written and mounted nowhere. Its URL is `store.preview(tabId)`, an
+`atomFamily` of persisted atoms, so two tabs are two pages; `closeBottomBarTab`
+RESETs the tab's atom AND `preview.remove(id)`s it, so a long session cannot silt
+localStorage up with dead tabs (measured: the key is gone, not `""`).
+
+`DropdownPopup` (packages/client) had two defects, and one of them had a live
+call site: `placement` was never forwarded, and Ariakit reads placement off the
+STORE — passing it to `<Menu>` is silently ignored. `SidePanel/Agents/Images.tsx`
+was already passing `placement="bottom"`, which type-errored (TS2322) and did
+nothing; forwarding it to `useMenuStore` fixes both. The other, `kbd`, printed a
+hardcoded `⌘` in front of the caller's string and only on hover — it cannot
+express `⌥⌘S` and is wrong on every non-Apple keyboard. `kbd` has zero other call
+sites; `placement` had that one.
+
+**Measured in real Chromium at 1440×900**, signed in: menu `role=menu` with 2
+`menuitem`s at 44.0px, right edge 1381 vs button 1379 (left-aligned would be
+−166), Escape unmounts it and returns `aria-expanded=false`; right panel 0 → 352
+→ 0; bar tabs 1 →2 via `+` →3 via ⌘T →2 via a tab's ×; drag 315.3 → 475.0px and
+the floor holds at 135.7px (15.1% of a 900px column); composer bottom 415.7 vs
+bar top 584.7 and still clear at the floor; `scrollWidth === clientWidth` at 1440
+and at 390; bar, tab count and height all survive a reload; the side `Dock` still
+renders its card and resizes 427.4 → 592.1px beside it.
+
+**Two upstream defects were measured on clean `origin/main` and are NOT from this
+work** — do not attribute them to the chrome:
+
+- **The sidebar toggle does not collapse the sidebar live.** Clicking it writes
+  `navVisible=false` to localStorage, but `main` stays at x=260 and the rail never
+  appears until a RELOAD, which reads the flag in `Root.tsx`'s initial `useState`.
+  Identical before and after this change; the bug is between `Nav.tsx`'s
+  `toggleNavVisible` (a `startTransition` around Root's setter) and the render.
+- **`maximizeChatSpace` cannot widen the empty landing.** The control works —
+  `aria-pressed` flips, the value persists, and the composer's own cap goes
+  `max-width: 896px → 100%` — but `Chat/Answer/AnswerEngine.tsx` wraps it in a
+  hardcoded `xl:max-w-4xl` column, so 100% resolves to the same 896px. The atom
+  does reach the message column (`MessageRender`, `ContentRender`,
+  `MessageParts`); it is the landing that is capped upstream.
+
+**Verifying this locally is not a `curl`.** There is no local login route in this
+fork (IAM OIDC or guest, nothing else). Mint a principal instead: with
+`CHAT_STORE_SQLITE` set and `MONGO_URI` unset, run `registerUser` + `setAuthTokens`
+from `api/server/services/AuthService` in a short script BEFORE starting the
+server (both write the same SQLite file and the store is an in-process writer),
+then hand Playwright the returned `refreshToken` cookie. Also pre-set
+`sessionStorage['hanzo.sso.probed'] = '1'` in an init script, or the signed-out
+SSO probe navigates the document to hanzo.id mid-run.
