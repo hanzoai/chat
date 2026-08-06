@@ -63,12 +63,14 @@ export default function Modes({
           onClick={() => setMode(m.id)}
           className="group inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
         >
+          {/* No underline (owner call): the selected mode is carried by colour
+              alone. */}
           <span
             className={cn(
-              'border-b py-0.5 transition-colors',
+              'py-0.5 transition-colors',
               mode === m.id
-                ? 'border-text-primary text-text-primary'
-                : 'border-transparent text-text-secondary group-hover:text-text-primary',
+                ? 'text-text-primary'
+                : 'text-text-secondary group-hover:text-text-primary',
             )}
           >
             {localize(m.key)}

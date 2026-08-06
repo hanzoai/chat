@@ -145,8 +145,11 @@ const ConversationStarters = () => {
         <button
           onClick={openBuilder}
           title={localize('com_ui_build_app')}
+          // Same chip as its siblings — solid glass, not a dashed outline —
+          // so the row reads as one set. It keeps its icon to stay legible as
+          // the one that leaves for the builder.
           className={cn(
-            'inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full border border-dashed border-border-medium bg-transparent px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-heavy hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
+            'inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full border border-border-light bg-surface-primary-alt px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:border-border-medium hover:bg-surface-tertiary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
             !isAuthenticated && 'max-sm:hidden',
           )}
         >
