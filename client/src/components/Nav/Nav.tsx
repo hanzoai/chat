@@ -298,7 +298,7 @@ const Nav = memo(
           <div
             data-testid="nav"
             className={cn(
-              'nav fixed left-0 top-0 z-[110] h-full bg-surface-primary-alt',
+              'nav fixed left-0 top-0 z-[110] h-full glass bg-surface-primary-alt',
               navVisible && 'active',
             )}
             style={{
@@ -326,7 +326,7 @@ const Nav = memo(
       >
         <div
           data-testid="nav"
-          className="nav active h-full bg-surface-primary-alt"
+          className="nav active h-full glass bg-surface-primary-alt"
           style={{ width }}
         >
           {sidebarContent}
