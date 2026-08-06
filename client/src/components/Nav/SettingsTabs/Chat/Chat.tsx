@@ -29,6 +29,13 @@ const toggleSwitchConfigs = [
     key: 'showThinking',
   },
   {
+    stateAtom: store.showBackdrop,
+    localizationKey: 'com_nav_show_backdrop' as const,
+    switchId: 'showBackdrop',
+    hoverCardText: 'com_nav_info_show_backdrop' as const,
+    key: 'showBackdrop',
+  },
+  {
     stateAtom: store.showCode,
     localizationKey: 'com_nav_show_code' as const,
     switchId: 'showCode',

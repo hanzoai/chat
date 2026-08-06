@@ -10,6 +10,10 @@
  * strips YouTube reserves at the top and bottom of the player land offscreen.
  * The scrim keeps text legible over bright footage.
  */
+import { useEffect, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import store from '~/store';
+
 const VIDEO = '6lZ3CookYNg';
 
 const SRC =
@@ -27,16 +31,17 @@ const SRC =
  *  before its own scripts finish booting. */
 function start(e: React.SyntheticEvent<HTMLIFrameElement>) {
   const frame = e.currentTarget;
-  const send = (func: string, args: unknown[]) =>
-    frame.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args }),
-      'https://www.youtube.com',
-    );
+  const post = (msg: object) =>
+    frame.contentWindow?.postMessage(JSON.stringify(msg), 'https://www.youtube.com');
   const kick = () => {
+    // The listening handshake makes the player report state back — the reveal
+    // below waits for a real "playing" signal, so a refused or unavailable
+    // video keeps the backdrop invisible instead of showing an error card.
+    post({ event: 'listening', id: 'backdrop', channel: 'widget' });
     // The size-based auto-picker lands on hd1080 anyway (the box is far
     // larger than the viewport); the suggestion just skips the low first rung.
-    send('setPlaybackQuality', ['hd1080']);
-    send('playVideo', []);
+    post({ event: 'command', func: 'setPlaybackQuality', args: ['hd1080'] });
+    post({ event: 'command', func: 'playVideo', args: [] });
   };
   kick();
   setTimeout(kick, 1500);
@@ -44,6 +49,43 @@ function start(e: React.SyntheticEvent<HTMLIFrameElement>) {
 }
 
 export default function Backdrop() {
+  const showBackdrop = useAtomValue(store.showBackdrop);
+  // Revealed only once the player REPORTS footage rolling (playerState 1,
+  // via the listening handshake in start). A video YouTube refuses — taken
+  // down, region-blocked, embed throttled — never reports playing, so the
+  // backdrop stays invisible instead of showing YouTube's error card
+  // through the canvas.
+  const [playing, setPlaying] = useState(false);
+  // And never before the adaptive ramp has had its seconds: quality can't be
+  // forced (embeds ignore every quality API since 2019), so the low-res
+  // opening plays out hidden.
+  const [ramped, setRamped] = useState(false);
+  useEffect(() => {
+    const hear = (e: MessageEvent) => {
+      if (e.origin !== 'https://www.youtube.com') {
+        return;
+      }
+      try {
+        if (JSON.parse(e.data)?.info?.playerState === 1) {
+          setPlaying(true);
+        }
+      } catch {
+        /* not the player */
+      }
+    };
+    window.addEventListener('message', hear);
+    const ramp = setTimeout(() => setRamped(true), 4000);
+    return () => {
+      window.removeEventListener('message', hear);
+      clearTimeout(ramp);
+    };
+  }, []);
+  // Off means ABSENT, not hidden: the embed is a third-party iframe that
+  // autoplays video, so leaving it mounted at opacity 0 would keep streaming
+  // behind a setting that says it is off.
+  if (!showBackdrop) {
+    return null;
+  }
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
       <iframe
@@ -54,11 +96,8 @@ export default function Backdrop() {
         className="absolute left-1/2 top-1/2"
         onLoad={start}
         style={{
-          // Revealed only after YouTube's adaptive ramp has stepped up —
-          // quality can't be forced (embeds ignore every quality API since
-          // 2019), so the low-res first seconds play out hidden instead.
-          opacity: 0,
-          animation: 'backdrop-reveal 1.2s ease 4s forwards',
+          opacity: playing && ramped ? 1 : 0,
+          transition: 'opacity 1.2s ease',
           width: 'max(177.78vh, 100vw)',
           height: 'max(56.25vw, 100vh)',
           // The app styles iframes with max-width: 100%, which silently clamps
