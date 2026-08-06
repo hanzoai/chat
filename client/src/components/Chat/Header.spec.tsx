@@ -2,18 +2,25 @@ import { render, screen, within } from '@testing-library/react';
 import Header from './Header';
 
 /**
- * Where the header's controls sit.
+ * What the chat header carries, and what it must NOT.
  *
- * The left edge of the app is its identity and the model it is talking to. Every
- * control that acts on the OPEN conversation belongs at the right end, and there
- * is one copy of each at every width — share and temporary-chat used to be
- * written twice under opposite `isSmallScreen` conditions, which is how they
- * drifted to opposite ends of the same header.
+ * Every control that acts on the OPEN conversation belongs at the right end,
+ * and there is one copy of each at every width — share and temporary-chat used
+ * to be written twice under opposite `isSmallScreen` conditions, which is how
+ * they drifted to opposite ends of the same header.
+ *
+ * The left edge is empty, and that is the contract this file exists to hold.
+ * The mark, compose and the sidebar toggle appeared here while the sidebar was
+ * collapsed, because collapsing slid the sidebar off screen and left its corner
+ * empty. Collapsed it is now a rail that keeps them, so a copy here would be a
+ * second set of the same three controls — the duplication the strip was
+ * invented to avoid. The mocks below stay wired to the modules that would
+ * render them, so re-adding any one of them fails these tests rather than
+ * quietly restoring the duplicate.
  */
 
 let mockSmallScreen = false;
 let mockNavVisible = true;
-let mockAuthenticated = true;
 
 jest.mock('@hanzochat/client', () => ({
   useMediaQuery: () => mockSmallScreen,
@@ -42,7 +49,8 @@ jest.mock('~/data-provider', () => ({
 
 jest.mock('~/hooks', () => ({
   useHasAccess: () => true,
-  useAuthContext: () => ({ isAuthenticated: mockAuthenticated }),
+  useLocalize: () => (key: string) => key,
+  useAuthContext: () => ({ isAuthenticated: true }),
 }));
 jest.mock('~/utils', () => ({ cn: (...c: unknown[]) => c.filter(Boolean).join(' ') }));
 
@@ -58,69 +66,51 @@ jest.mock('./Menus', () => ({
   HeaderNewChat: mockMarker('header-new-chat'),
   OpenSidebar: mockMarker('open-sidebar'),
 }));
-jest.mock('./Menus/Endpoints/ModelSelector', () => ({ __esModule: true, default: mockMarker('model') }));
+jest.mock('./Menus/Endpoints/ModelSelector', () => ({
+  __esModule: true,
+  default: mockMarker('model'),
+}));
 jest.mock('./Menus/BookmarkMenu', () => ({ __esModule: true, default: mockMarker('bookmarks') }));
 jest.mock('./ExportAndShareMenu', () => ({ __esModule: true, default: mockMarker('share') }));
 jest.mock('./TemporaryChat', () => ({ TemporaryChat: mockMarker('temporary') }));
-jest.mock('./AddMultiConvo', () => ({ __esModule: true, default: mockMarker('multi-convo') }));
-jest.mock('~/components/Nav/BrandCorner', () => ({ __esModule: true, default: mockMarker('brand') }));
+jest.mock('~/components/Nav/BrandCorner', () => ({
+  __esModule: true,
+  default: mockMarker('brand'),
+}));
 
-// The two states the header is actually read in. A phone with the sidebar OPEN
-// is the list, not the conversation, and hides the left group entirely — so it
-// would prove nothing about where the model sits.
+// The header must read the same in every sidebar state — collapsed is the one
+// the duplicate strip lived in, and the mocked outlet context is what puts the
+// component in it, so a `navVisible`-conditional cluster coming back fails here.
+// A phone with the sidebar OPEN is the list, not the conversation, so it would
+// prove nothing about this header.
 describe.each([
   ['desktop, sidebar open', false, true],
+  ['desktop, sidebar collapsed', false, false],
   ['phone, sidebar closed', true, false],
 ])('the header on %s', (_name, small, navVisible) => {
   beforeEach(() => {
     mockSmallScreen = small;
     mockNavVisible = navVisible;
-    mockAuthenticated = true;
     render(<Header />);
   });
 
-  it('puts presets and bookmarks at the right end, not beside the model', () => {
+  it('keeps bookmarks, share and temporary chat at the right end, in one copy', () => {
     const actions = screen.getByTestId('header-actions');
-    expect(within(actions).getByTestId('presets')).toBeInTheDocument();
     expect(within(actions).getByTestId('bookmarks')).toBeInTheDocument();
-    expect(actions).not.toContainElement(screen.getByTestId('model'));
-  });
-
-  it('keeps share and temporary chat with them, in one copy', () => {
-    const actions = screen.getByTestId('header-actions');
     expect(within(actions).getByTestId('share')).toBeInTheDocument();
     expect(within(actions).getByTestId('temporary')).toBeInTheDocument();
     expect(screen.getAllByTestId('share')).toHaveLength(1);
     expect(screen.getAllByTestId('temporary')).toHaveLength(1);
   });
 
-  it('orders the model before every action', () => {
-    const after = screen
-      .getByTestId('model')
-      .compareDocumentPosition(screen.getByTestId('header-actions'));
-    expect(after & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-});
-
-/**
- * A guest is pinned to the one guest model by `enforceGuestScope`, so naming it
- * in the header states a fact the visitor cannot act on, beside a control that
- * would be refused if they did. The signed-in cases above still assert it is
- * there — this is the one state where it must not be.
- */
-describe('the header signed out', () => {
-  beforeEach(() => {
-    mockSmallScreen = false;
-    mockNavVisible = true;
-    mockAuthenticated = false;
-    render(<Header />);
+  it('leaves the mark, compose and the sidebar toggle to the sidebar', () => {
+    expect(screen.queryByTestId('brand')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('header-new-chat')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('open-sidebar')).not.toBeInTheDocument();
   });
 
-  it('names no model', () => {
+  it('names no model and offers no preset', () => {
     expect(screen.queryByTestId('model')).not.toBeInTheDocument();
-  });
-
-  it('still carries the actions that act on the view', () => {
-    expect(screen.getByTestId('header-actions')).toBeInTheDocument();
+    expect(screen.queryByTestId('presets')).not.toBeInTheDocument();
   });
 });
