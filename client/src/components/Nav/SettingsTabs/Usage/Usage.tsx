@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { Switch } from '@hanzochat/client';
+import { balanceOn } from '@hanzochat/data-provider';
 import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3, Sparkles } from 'lucide-react';
 import { useGetStartupConfig, useGetUserUsage, useGetRoutingDefaults } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
@@ -124,7 +125,7 @@ function Usage() {
   const { data: startupConfig } = useGetStartupConfig();
 
   const usageQuery = useGetUserUsage({
-    enabled: !!isAuthenticated && !!startupConfig?.balance?.enabled,
+    enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
   const usage = usageQuery.data;
 

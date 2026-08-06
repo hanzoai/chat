@@ -8,6 +8,7 @@ import {
   type UserMenuItem,
 } from '@hanzo/iam/react';
 import { LinkIcon, GearIcon, ThemeContext, isDark } from '@hanzochat/client';
+import { balanceOn } from '@hanzochat/data-provider';
 import { MyFilesModal } from '~/components/Chat/Input/Files/MyFilesModal';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
@@ -31,7 +32,7 @@ function AccountSettings() {
   const { user, isAuthenticated, logout } = useAuthContext();
   const { data: startupConfig } = useGetStartupConfig();
   const balanceQuery = useGetUserBalance({
-    enabled: !!isAuthenticated && startupConfig?.balance?.enabled,
+    enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
@@ -120,7 +121,7 @@ function AccountSettings() {
     ? new Date(balanceQuery.data.expiresAt) < new Date()
     : false;
   const balance =
-    startupConfig?.balance?.enabled === true && credits != null
+    balanceOn(startupConfig) && credits != null
       ? {
           amountUsd: expired ? 0 : Number(credits) / 1000000,
           label: localize('com_nav_balance'),

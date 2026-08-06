@@ -5,6 +5,7 @@ import { useSetAtom } from 'jotai';
 import {
   request,
   Constants,
+  balanceOn,
   /* @ts-ignore */
   createPayload,
   LocalStorageKeys,
@@ -89,7 +90,7 @@ export default function useSSE(
 
   const { data: startupConfig } = useGetStartupConfig();
   const balanceQuery = useGetUserBalance({
-    enabled: !!isAuthenticated && startupConfig?.balance?.enabled,
+    enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export default function useSSE(
           setIsSubmitting(false);
           setShowStopButton(false);
         }
-        (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
+        balanceOn(startupConfig) && balanceQuery.refetch();
         console.log('final', data);
         return;
       } else if (data.created != null) {
@@ -259,7 +260,7 @@ export default function useSSE(
         ...genProps(),
         responseCode,
       });
-      (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
+      balanceOn(startupConfig) && balanceQuery.refetch();
 
       let data: TResData | undefined = undefined;
       try {

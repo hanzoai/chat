@@ -401,8 +401,8 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4)
       '@hanzo/iam':
-        specifier: ^0.21.1
-        version: 0.21.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^0.21.8
+        version: 0.21.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@19.2.4)
@@ -3597,8 +3597,8 @@ packages:
     peerDependencies:
       react: '>=19'
 
-  '@hanzo/iam@0.21.1':
-    resolution: {integrity: sha512-mjdC67CeShO0wp/HzbPOPg/K3TYOhaWJg+begWv67RpzBcYBicZRglSvfA+jD/tIuPMAiBTVGPs+P18S94Xy1g==}
+  '@hanzo/iam@0.21.8':
+    resolution: {integrity: sha512-iumPA4chkxcoVZeoZTrLUFmxUwuZbGdM8Fy8J/mP+EvEHPZIrffNTH4Q2sCp0WClR9wKSQMOhkfVMyZ9VNZ2gw==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
@@ -17874,7 +17874,7 @@ snapshots:
       - react-dom
       - react-native
 
-  '@hanzo/iam@0.21.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@hanzo/iam@0.21.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
