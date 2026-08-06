@@ -20,13 +20,6 @@ const copy: Record<LoginReason, { title: TranslationKeys; message: TranslationKe
     title: 'com_auth_login_unavailable_title',
     message: 'com_auth_login_unavailable_message',
   },
-  // Not a refusal. Nothing failed — this is the offer made on arrival, so its
-  // copy sells the upgrade rather than explaining a denial, and its dismissal
-  // ("keep going signed out") is a real path, not a dead end.
-  welcome: {
-    title: 'com_auth_login_welcome_title',
-    message: 'com_auth_login_welcome_message',
-  },
 };
 
 /**
@@ -66,26 +59,14 @@ export default function LoginGate() {
         className="max-w-md"
         main={<div className="text-sm text-text-secondary">{localize(message)}</div>}
         /* The template volunteers a Cancel button unless told not to, and it
-           renders BESIDE whatever `buttons` say. That handed every reason below
-           a dismissal — including the refusals, which is the one thing the
-           comment there rules out — and on the arrival gate it put two controls
-           for one idea side by side, "Cancel" next to "Stay logged out", with
-           the redundant one taking focus first. This gate names its own exits. */
+           renders BESIDE whatever `buttons` say. Every reason here is a refusal
+           with nothing behind it to go back to, so this gate names its own one
+           exit and declines the volunteered dismissal. */
         showCancelButton={false}
         buttons={
-          <>
-            {/* Dismissal is only offered for the arrival gate. A refusal has
-                nothing behind it to go back to, so closing it there would just
-                return the visitor to the thing that already failed. */}
-            {reason === 'welcome' && (
-              <Button variant="outline" onClick={() => setReason(null)}>
-                {localize('com_auth_login_stay_logged_out')}
-              </Button>
-            )}
-            <Button variant="submit" onClick={handleLogin}>
-              {localize('com_auth_login_button')}
-            </Button>
-          </>
+          <Button variant="submit" onClick={handleLogin}>
+            {localize('com_auth_login_button')}
+          </Button>
         }
       />
     </OGDialog>

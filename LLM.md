@@ -855,18 +855,15 @@ already describes the target and was failing against the brochure.
   `GUEST_TOKEN_MAX=120`/`GUEST_TOKEN_WINDOW=60` are now pinned in the universe
   values file so a code-default change can never silently re-tighten the mint.
 
-### Arrival gate (2026-07-28)
+### Arrival gate — REMOVED (2026-08-05, owner call)
 
-The signed-out default is now chatgpt.com's shape: the app renders and a
-DISMISSIBLE login modal sits over it. `LoginGate` gained a third reason,
-`welcome`, and `Root` fires `offerLogin()` once `authChecked && !isAuthenticated`.
-
-`welcome` is deliberately not like `limit`/`anonymous`. Those are REFUSALS —
-something was denied and the gate explains it, so it offers no dismissal (there
-is nothing behind it but the thing that just failed). `welcome` is an OFFER: no
-request failed, so it carries "Stay logged out" and `offerLogin` fires once per
-tab, meaning a dismissal sticks for the visit. Gating a product we deliberately
-let people use signed out would undo the front-door fix directly above.
+The arrival OFFER is gone: no login modal on load. `LoginGate` opens only for a
+REFUSAL (`limit`, `anonymous`, `unavailable`) — something was denied and the
+gate explains it, so it still offers no dismissal. The `welcome` reason,
+`offerLogin()`, the `hanzo.login.welcomed` session flag and the welcome/stay-
+logged-out strings are deleted, not parked. The standing invitation is the
+sidebar foot's Log in / Sign up (`Nav/Visitor.tsx`). Do not reintroduce an
+unprompted modal over the signed-out product.
 
 ### Header restructure — NOT done, and it is not a tweak
 

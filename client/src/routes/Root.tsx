@@ -23,7 +23,6 @@ import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
 import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
-import { offerLogin } from '~/utils/login';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 
 export default function Root() {
@@ -64,20 +63,10 @@ export default function Root() {
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const location = useLocation();
 
-  // Offer the account on ARRIVAL, not only after something is refused — the
-  // chatgpt.com shape. Gated on authChecked so it never flashes over a session
-  // that is still resolving, and `offerLogin` itself fires once per tab, so
-  // dismissing it sticks for the visit.
-  //
-  // Also gated on `showChat`: an OFFER is for a visitor who has a product to keep
-  // using. A visitor whose guest mint was refused has none, and `acquireGuest`
-  // has already opened the gate with the reason — overwriting that with "Welcome
-  // back" would put the cheerful copy on the one visitor owed an explanation.
-  useEffect(() => {
-    if (authChecked && !isAuthenticated && showChat) {
-      offerLogin();
-    }
-  }, [authChecked, isAuthenticated, showChat]);
+  // No offer on arrival. The gate opens only for a REFUSAL (quota spent, session
+  // lapsed, preview unavailable) — a signed-out visitor lands in the product and
+  // stays uninterrupted until something is actually denied. The sidebar foot's
+  // Log in / Sign up carries the standing invitation.
 
   // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);
