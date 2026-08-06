@@ -22,6 +22,10 @@
  * plays if — and only if — the viewer is already signed in to that provider in
  * this browser, because the embed rides their own cookies. Collecting those
  * credentials ourselves is not a feature we are missing; it is one we refuse.
+ *
+ * A PHOTO IS OURS, and that rule is `picture` rather than `web` — an image is
+ * fetched with no click and no script, and a stored one is fetched again on
+ * every visit. See the note there.
  */
 
 /** Who serves a link. `other` means "we cannot play this", not "unknown". */
@@ -89,6 +93,55 @@ const host = (url: string): string => {
     return '';
   }
 };
+
+/**
+ * The image hosts `img-src` in api/server/csp.js names besides this page's own
+ * origin. Kept in step by backdrop.spec, which reads the real policy file.
+ */
+const PICTURES = ['s3.hanzo.ai', 's3-api.hanzo.ai'];
+
+/** Any absolute URL resolves against this, so a relative path can be told from
+ *  one that only looks relative. Never fetched; it is a ruler, not a place. */
+const HERE = 'https://backdrop.invalid';
+
+/**
+ * The image the backdrop may paint, else ''.
+ *
+ * Narrower than `web` on purpose, and this is the one rule in the file that is
+ * not about what plays. An `<img>` fires a GET the moment it renders, with no
+ * click and no script, and this one is stored — so it refires on every load
+ * afterwards, reporting the viewer's address to whoever owns the host, forever.
+ * That is the same beacon the markdown renderer refuses (MarkdownComponents
+ * `autoLoadable`) and the same one `img-src` stopped allowing when it dropped
+ * the bare `https:` scheme. A background is not the hole left in that door.
+ *
+ * So a photo is ours: a path on this origin — kept RELATIVE, because the app is
+ * served under several brands' domains and a stored absolute origin would be
+ * wrong on all but one — or a file we serve from the store. A URL the policy
+ * would refuse is dropped here instead, where it can be answered honestly: a
+ * blocked image never fires `load`, so allowing it would mean a blank canvas
+ * and nothing anywhere saying why.
+ *
+ * Backslashes are why this parses rather than matches: `/\evil.example/x.png`
+ * looks like a path and resolves to a different host.
+ */
+export function picture(value: unknown): string {
+  if (typeof value !== 'string' || value.trim() === '' || value.length > LONGEST) {
+    return '';
+  }
+  try {
+    const url = new URL(value.trim(), HERE);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return '';
+    }
+    if (url.origin === HERE) {
+      return url.pathname + url.search;
+    }
+    return PICTURES.includes(host(url.href)) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
 
 /** Who serves this link, decided by host alone. */
 export function provider(url: string): Provider {
@@ -258,7 +311,7 @@ export function merge(current: Backdrop, change: unknown): Backdrop {
   if (typeof given.loop === 'boolean') {
     next.loop = given.loop;
   }
-  const photo = web(given.photo);
+  const photo = picture(given.photo);
   if (photo) {
     next.photo = photo;
   }
@@ -316,7 +369,7 @@ export function command(input: string, current: Backdrop): Backdrop | null {
     case 'off':
       return { ...current, source: 'off' };
     case 'photo': {
-      const url = web(argument);
+      const url = picture(argument);
       return url ? { ...current, source: 'photo', photo: url } : null;
     }
     case 'video':

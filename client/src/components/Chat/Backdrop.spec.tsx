@@ -51,19 +51,26 @@ describe('Backdrop', () => {
 
   describe('photo', () => {
     it('covers the canvas with the image', () => {
-      const { container } = paint({ source: 'photo', photo: 'https://example.com/reef.jpg' });
+      const { container } = paint({ source: 'photo', photo: '/images/reef.jpg' });
       const image = container.querySelector('img');
-      expect(image).toHaveAttribute('src', 'https://example.com/reef.jpg');
+      expect(image).toHaveAttribute('src', '/images/reef.jpg');
       expect(image).toHaveClass('object-cover');
     });
 
     it('stays invisible until the image has decoded', () => {
-      const { container } = paint({ source: 'photo', photo: 'https://example.com/reef.jpg' });
+      const { container } = paint({ source: 'photo', photo: '/images/reef.jpg' });
       expect(container.querySelector('img')).toHaveStyle({ opacity: '0' });
     });
 
     it('renders no image when none is set', () => {
       const { container } = paint({ source: 'photo', photo: '' });
+      expect(container.querySelector('img')).toBeNull();
+    });
+
+    it('never points at a host the policy would refuse', () => {
+      // Read back through `merge` on mount, so a stored beacon is dropped
+      // before an <img> exists to fire it.
+      const { container } = paint({ source: 'photo', photo: 'https://attacker.example/p?d=x' });
       expect(container.querySelector('img')).toBeNull();
     });
   });
@@ -195,7 +202,7 @@ describe('Backdrop', () => {
     });
 
     it('sends an image host the same, and no more', () => {
-      const { container } = paint({ source: 'photo', photo: 'https://example.com/reef.jpg' });
+      const { container } = paint({ source: 'photo', photo: '/images/reef.jpg' });
       expect(container.querySelector('img')).toHaveAttribute(
         'referrerpolicy',
         'strict-origin-when-cross-origin',

@@ -1,5 +1,8 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import {
   web,
+  picture,
   provider,
   videoId,
   channel,
@@ -46,6 +49,58 @@ describe('web', () => {
     // is the one that fails.
     expect(web(`https://example.com/${'a'.repeat(2100)}.png`)).toBe('');
     expect(web(`https://example.com/${'a'.repeat(2000)}.png`)).not.toBe('');
+  });
+});
+
+describe('picture', () => {
+  it('keeps a path on this origin, and keeps it relative', () => {
+    // Relative because the app answers to several brands' domains: an absolute
+    // origin stored today is the wrong origin on every other one.
+    expect(picture('/images/reef.jpg')).toBe('/images/reef.jpg');
+    expect(picture('/images/reef.jpg?v=2')).toBe('/images/reef.jpg?v=2');
+    expect(picture('https://chat.hanzo.ai/images/reef.jpg')).toBe('');
+  });
+
+  it('keeps a file we serve from the store', () => {
+    expect(picture('https://s3.hanzo.ai/a/reef.jpg')).toBe('https://s3.hanzo.ai/a/reef.jpg');
+    expect(picture('https://s3-api.hanzo.ai/a/reef.jpg')).toBe('https://s3-api.hanzo.ai/a/reef.jpg');
+  });
+
+  it('refuses an image from anywhere else — a stored <img> is a beacon', () => {
+    expect(picture('https://unsplash.example/reef.jpg')).toBe('');
+    expect(picture('https://attacker.example/p?d=secret')).toBe('');
+    expect(picture('http://localhost:9/x.png')).toBe('');
+  });
+
+  it('is not fooled by something that only looks like a path', () => {
+    // `//host` and `/\host` both resolve to a DIFFERENT origin. This is why
+    // the rule parses the value instead of matching a leading slash.
+    expect(picture('//attacker.example/x.png')).toBe('');
+    expect(picture('/\\attacker.example/x.png')).toBe('');
+    expect(picture('/\\\\attacker.example/x.png')).toBe('');
+  });
+
+  it('refuses a scheme that is not the web, and nonsense', () => {
+    expect(picture('javascript:alert(1)')).toBe('');
+    expect(picture('data:image/png;base64,AAAA')).toBe('');
+    expect(picture('blob:https://chat.hanzo.ai/abc')).toBe('');
+    expect(picture('')).toBe('');
+    expect(picture(undefined)).toBe('');
+    expect(picture(42)).toBe('');
+  });
+
+  it('names only hosts the served policy allows', () => {
+    // A photo `img-src` refuses does not fail loudly: the <img> never fires
+    // `load`, so the canvas simply stays blank. Read the real policy so this
+    // list and that one cannot drift apart.
+    const csp = readFileSync(join(__dirname, '../../../api/server/csp.js'), 'utf8');
+    const imgSrc = csp.split('\n').find((line) => line.includes('"img-src')) ?? '';
+    expect(imgSrc).toContain('img-src');
+    ['https://s3.hanzo.ai', 'https://s3-api.hanzo.ai'].forEach((allowed) =>
+      expect(imgSrc).toContain(allowed),
+    );
+    // The bare scheme is the beacon channel; it must stay closed.
+    expect(imgSrc.split(' ')).not.toContain('https:');
   });
 });
 
@@ -191,6 +246,11 @@ describe('merge', () => {
     expect(merge(base, { photo: 'javascript:alert(1)' }).photo).toBe('');
   });
 
+  it('refuses a photo from a host the policy will not load', () => {
+    expect(merge(base, { photo: 'https://attacker.example/p?d=secret' }).photo).toBe('');
+    expect(merge(base, { photo: '/images/reef.jpg' }).photo).toBe('/images/reef.jpg');
+  });
+
   it('refuses a video that is not a youtube video', () => {
     expect(merge(base, { video: 'https://www.netflix.com/watch/80100172' }).video).toBe(base.video);
   });
@@ -262,8 +322,8 @@ describe('command', () => {
   });
 
   it('sets a photo', () => {
-    const next = command('/bg photo https://example.com/reef.jpg', base);
-    expect(next).toMatchObject({ source: 'photo', photo: 'https://example.com/reef.jpg' });
+    const next = command('/bg photo /images/reef.jpg', base);
+    expect(next).toMatchObject({ source: 'photo', photo: '/images/reef.jpg' });
   });
 
   it('sets a video', () => {
@@ -297,6 +357,10 @@ describe('command', () => {
 
   it('refuses a photo that is not a web URL', () => {
     expect(command('/bg photo javascript:alert(1)', base)).toBeNull();
+  });
+
+  it('refuses a photo from a host the policy will not load', () => {
+    expect(command('/bg photo https://attacker.example/p?d=secret', base)).toBeNull();
   });
 
   it('refuses a video that is not a youtube video', () => {

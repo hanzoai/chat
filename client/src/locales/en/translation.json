@@ -650,6 +650,8 @@
   "com_nav_backdrop_upload": "Upload image",
   "com_nav_backdrop_uploading": "Uploading\u2026",
   "com_nav_backdrop_photo_url": "Image URL",
+  "com_nav_backdrop_photo_note": "Upload a picture, or paste the address of one already stored here. An image from somewhere else is not loaded \u2014 a background refetches on every visit, and that would tell its host every time you opened the app.",
+  "com_nav_backdrop_photo_refused": "That image is not one we serve. Upload it instead.",
   "com_nav_backdrop_video_url": "YouTube URL",
   "com_nav_backdrop_add": "Add",
   "com_nav_backdrop_remove": "Remove",

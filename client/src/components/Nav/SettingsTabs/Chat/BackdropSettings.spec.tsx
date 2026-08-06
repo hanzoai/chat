@@ -10,6 +10,12 @@ jest.mock('~/data-provider', () => ({
   useUploadFileMutation: () => ({ mutate: jest.fn() }),
 }));
 
+const mockShowToast = jest.fn();
+jest.mock('@hanzochat/client', () => ({
+  ...jest.requireActual('@hanzochat/client'),
+  useToastContext: () => ({ showToast: mockShowToast }),
+}));
+
 const config = (over: Partial<Config> = {}): Config => ({
   source: 'off',
   photo: '',
@@ -53,12 +59,12 @@ describe('BackdropSettings', () => {
     expect(read().source).toBe('photo');
   });
 
-  it('writes a pasted image URL', () => {
+  it('writes a pasted image address we serve', () => {
     const { read } = open({ source: 'photo' });
     const field = screen.getByLabelText('Image URL');
-    fireEvent.change(field, { target: { value: 'https://example.com/reef.jpg' } });
+    fireEvent.change(field, { target: { value: '/images/reef.jpg' } });
     fireEvent.blur(field);
-    expect(read().photo).toBe('https://example.com/reef.jpg');
+    expect(read().photo).toBe('/images/reef.jpg');
   });
 
   it('refuses an image URL that is not a web address', () => {
@@ -67,6 +73,19 @@ describe('BackdropSettings', () => {
     fireEvent.change(field, { target: { value: 'javascript:alert(1)' } });
     fireEvent.blur(field);
     expect(read().photo).toBe('');
+  });
+
+  it('says so out loud when an image from elsewhere is refused', () => {
+    // Silence here would be a blank canvas: an image the policy blocks never
+    // fires `load`, so nothing would say why the background did not change.
+    const { read } = open({ source: 'photo' });
+    const field = screen.getByLabelText('Image URL');
+    fireEvent.change(field, { target: { value: 'https://attacker.example/p?d=secret' } });
+    fireEvent.blur(field);
+    expect(read().photo).toBe('');
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'error' }),
+    );
   });
 
   it('writes a pasted YouTube URL', () => {
