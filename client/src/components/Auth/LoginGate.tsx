@@ -53,7 +53,10 @@ export default function LoginGate() {
   const { title, message } = copy[reason ?? 'anonymous'];
 
   return (
-    <OGDialog open={reason !== null} onOpenChange={(open) => !open && setReason(null)}>
+    // Escape and overlay clicks are ignored, deliberately: this gate renders a
+    // REFUSAL (the request already failed), so "dismissing" it would leave the
+    // visitor on a product that cannot answer them, with no explanation.
+    <OGDialog open={reason !== null} onOpenChange={() => {}}>
       <OGDialogTemplate
         title={localize(title)}
         className="max-w-md"
