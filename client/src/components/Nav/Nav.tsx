@@ -197,7 +197,9 @@ const Nav = memo(
       const searching = search.enabled === null || search.enabled === true;
       return (
         <>
-          <Rail toggleNav={itemToggleNav} collapsed={collapsed} />
+          {/* Search sits directly under the mark — a filter for everything below
+              it, reachable with ⌘/Ctrl-K — the shape hanzo.app uses. It leads;
+              the destinations follow. */}
           {!collapsed && (searching || hasAccessToBookmarks) && (
             <div className="flex items-center gap-1">
               <div className="min-w-0 flex-1">
@@ -211,9 +213,28 @@ const Nav = memo(
               )}
             </div>
           )}
+          <Rail toggleNav={itemToggleNav} collapsed={collapsed} />
         </>
       );
     }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags, itemToggleNav, collapsed]);
+
+    // ⌘/Ctrl-K focuses the sidebar search — the palette shortcut, without a
+    // palette: search already filters the list live, so the key just puts the
+    // cursor in it. Ignored while typing in another field so it never steals a
+    // keystroke meant for the composer.
+    useEffect(() => {
+      const onKey = (e: KeyboardEvent) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          const el = document.getElementById('nav-search-input');
+          if (el) {
+            e.preventDefault();
+            (el as HTMLInputElement).focus();
+          }
+        }
+      };
+      document.addEventListener('keydown', onKey);
+      return () => document.removeEventListener('keydown', onKey);
+    }, []);
 
     const [isSearchLoading, setIsSearchLoading] = useState(
       !!search.query && (search.isTyping || isLoading || isFetching),
