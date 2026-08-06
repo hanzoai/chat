@@ -129,6 +129,20 @@ function isGuestSession(): boolean {
   }
 }
 
+// Every axios this module copy sees arms itself from the page-global bearer
+// (set by setTokenHeader). Belt to the defaults' braces: whichever bundled
+// copy of this module dispatches a request, the session header rides along.
+if (typeof window !== 'undefined') {
+  axios.interceptors.request.use((config) => {
+    // `window`, not `globalThis` — see headers-helpers.ts.
+    const bearer = (window as unknown as { __hanzoBearer?: string }).__hanzoBearer;
+    if (bearer && config.headers?.Authorization == null) {
+      config.headers.Authorization = 'Bearer ' + bearer;
+    }
+    return config;
+  });
+}
+
 // Auto-retry on 401 (access token expired): refresh once, then replay.
 if (typeof window !== 'undefined') {
   axios.interceptors.response.use(

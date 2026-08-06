@@ -322,6 +322,14 @@ export default defineConfig(({ command }) => ({
     chunkSizeWarningLimit: 1500,
   },
   resolve: {
+    // One axios for the whole page, no matter how many module copies import
+    // it. The data-provider ships two entrypoints that each inline their own
+    // copy of the request layer; without dedupe the bundle carries two axios
+    // instances, setTokenHeader writes defaults on one, and any request that
+    // fires through the other goes out with NO Authorization — measured as
+    // the guest send 401ing seconds after a bootstrap call carried the
+    // bearer fine.
+    dedupe: ['axios'],
     alias: {
       '~': path.join(__dirname, 'src/'),
       $fonts: path.resolve(__dirname, 'public/fonts'),
