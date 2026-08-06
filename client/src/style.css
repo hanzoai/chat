@@ -376,14 +376,55 @@
   pointer-events: none;
 }
 
-/* The composer panel sits above the ring. */
+/* The glow is a HALO, masked like the ring so it lights the air around the box
+   and nothing behind it. The LOUD version of this — 0.5 resting, pulsing to
+   0.85 — was killed on purpose ("kill the composer glow halo"): over the
+   animated backdrop it read as a purple wash. This is the deliberately-subtle
+   replacement: a fifth of the alpha, a tighter spread, and no opacity pulse —
+   only the same slow spin the ring already runs, so the two stay in phase. */
+.hz-composer::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  padding: 6px;
+  /* Concentric with the box, NOT `inherit`: the halo lives 6px outside the
+     composer, so an inherited 24px corner on this larger box curves too tight
+     and reads as a second, mismatched rounding just outside the panel. */
+  border-radius: calc(1.5rem + 6px);
+  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
+  filter: blur(16px);
+  opacity: 0.22;
+  animation: hzComposerSpin 10s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* After the standard shorthand: WebKit aliases `mask` onto `-webkit-mask`, so
+     declaring this first lets the shorthand reset it to `source-over` — which
+     is the filled disc again, on exactly the browsers too old to have
+     `mask-composite` at all. */
+  -webkit-mask-composite: xor;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Focus lifts the glow — still well shy of where the old halo RESTED. */
+.hz-composer:focus-within::after {
+  opacity: 0.4;
+}
+
+/* The composer panel sits above the ring and the glow. */
 .hz-composer > * {
   position: relative;
   z-index: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hz-composer::before {
+  .hz-composer::before,
+  .hz-composer::after {
     animation: none;
   }
 }
@@ -2829,10 +2870,11 @@ html {
   One event, one indicator. The prism brightens instead — and it has to be
   BRIGHT enough to BE the indicator, not merely different. Three passes of the
   same gradient composite its stops from ~.45 to ~.83 alpha — an alpha lift on
-  one hue, not a repaint. The lit ring now sits on the bare glass-over-video
-  ground (no halo behind it any more), which is darker than the glow-lit ground
-  it cleared WCAG 1.4.11's 3:1 against before, so contrast only improved; sample
-  it off the rendered page rather than the stop list if the spectrum ever moves.
+  one hue, not a repaint. The ground beside the ring carries only the subtle
+  ::after glow (0.22 resting, 0.4 focused) — far dimmer than the 0.85-at-focus
+  halo the 3.32:1 was originally measured over, so the WCAG 1.4.11 margin
+  holds; sample it off the rendered page rather than the stop list if the
+  spectrum ever moves.
 
   `:focus-within`, not the `:has()` above: the composer is one control surface
   and its attach/mic/send buttons keep their own `:focus-visible` ring on their
