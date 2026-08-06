@@ -65,7 +65,18 @@ module.exports = {
     // primitive died on `Cannot use import statement outside a module` — from
     // inside node_modules, where the stack points at the test's import line and
     // not at the real cause.
-    '\\.[mc]?[jt]sx?$': 'babel-jest',
+    // `configFile` is NOT redundant with having a babel.config.cjs beside this
+    // one. Babel only applies a ROOT config to files under its root, and every
+    // Hanzo package resolves to `chat/node_modules/` — a level ABOVE this
+    // client/ root. So babel-jest transformed those files with NO config at
+    // all: the `babel-plugin-transform-import-meta` listed right there never
+    // ran on them, and `@hanzogui/telemetry/dist/esm/env.mjs` died on
+    // `Cannot use 'import.meta' outside a module`. That single unparsed file is
+    // what made `@hanzo/ui/product` unimportable and pinned this app three
+    // minor versions behind the rest of the fleet — the ceiling was blamed on
+    // jsdom's CSS parser, which (measured) parses the modern syntax fine.
+    // Naming the config forces it onto every transformed file, wherever it lives.
+    '\\.[mc]?[jt]sx?$': ['babel-jest', { configFile: require.resolve('./babel.config.cjs') }],
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
       'jest-file-loader',
   },
