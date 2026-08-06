@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useVoice, type Speech } from '@hanzo/voice';
 import { dataService } from '@hanzochat/data-provider';
-import { TooltipAnchor } from '@hanzochat/client';
+import { TooltipAnchor, useToastContext } from '@hanzochat/client';
 
 import { useChatFormContext } from '~/Providers';
 import { useGetAudioSettings, useLocalize } from '~/hooks';
+import { NotificationSeverity } from '~/common';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -24,7 +25,11 @@ import store from '~/store';
  */
 
 /** How many bars the waveform holds. The newest level enters on the right. */
-const BARS = 28;
+const BARS = 48;
+
+/** A dictation shorter than this that heard nothing is just a misclick; past
+ *  it, silence means the browser's speech engine produced no words at all. */
+const SILENT_MS = 2000;
 
 export default function Mic({
   disabled,
@@ -36,6 +41,7 @@ export default function Mic({
   onRecordingChange?: (open: boolean) => void;
 }) {
   const localize = useLocalize();
+  const { showToast } = useToastContext();
   const { setValue, getValues } = useChatFormContext();
   const { speechToTextEndpoint } = useGetAudioSettings();
   const chosenVoice = useAtomValue(store.voice);
@@ -70,12 +76,20 @@ export default function Mic({
   const [bars, setBars] = useState<number[]>(samples.current);
   const [elapsed, setElapsed] = useState(0);
 
+  // Whether the engine returned a single word this session. Brave records
+  // audio happily but ships its speech engine disabled, so a dictation can run
+  // for minutes and insert nothing — with no error from anywhere. The close
+  // handler below names that instead of letting it pass as a mystery.
+  const spoken = useRef(false);
+  const openedAt = useRef(0);
+
   const voice = useVoice({
     speech,
     onLevel: (value) => {
       samples.current = [...samples.current.slice(1), value];
     },
     onPartial: (heard) => {
+      spoken.current = true;
       if (kept.current === null) {
         kept.current = (getValues('text') || '').trim();
       }
@@ -84,6 +98,7 @@ export default function Mic({
     onUtterance: (said) => {
       // Commit it: the composer already shows it, and folding it into `kept`
       // means the next partial appends rather than replacing this sentence.
+      spoken.current = true;
       kept.current = join(said);
       setValue('text', kept.current, { shouldValidate: true });
     },
@@ -96,19 +111,39 @@ export default function Mic({
 
   useEffect(() => {
     if (!voice.open) {
+      // Ended without one word, after a real attempt (a shorter run is a
+      // misclick). The recording worked; the transcription never did.
+      if (
+        openedAt.current > 0 &&
+        !spoken.current &&
+        performance.now() - openedAt.current >= SILENT_MS
+      ) {
+        showToast({
+          message: localize('com_ui_dictation_nothing'),
+          severity: NotificationSeverity.WARNING,
+        });
+      }
+      openedAt.current = 0;
       kept.current = null;
       samples.current = new Array(BARS).fill(0);
       setBars(samples.current);
       setElapsed(0);
       return;
     }
-    const start = performance.now();
+    spoken.current = false;
+    openedAt.current = performance.now();
     const draw = setInterval(() => setBars([...samples.current]), 60);
-    const clock = setInterval(() => setElapsed(Math.floor((performance.now() - start) / 1000)), 250);
+    const clock = setInterval(
+      () => setElapsed(Math.floor((performance.now() - openedAt.current) / 1000)),
+      250,
+    );
     return () => {
       clearInterval(draw);
       clearInterval(clock);
     };
+    // `showToast` (context) and `localize` are not identity-stable; listing
+    // them would re-run this effect mid-dictation and reset the clock.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voice.open]);
 
   if (voice.open) {
@@ -117,11 +152,16 @@ export default function Mic({
     return (
       // Dictation takes the WHOLE row: `flex-1` grows the recorder across the
       // composer so the waveform spans the full width instead of a thumbnail
-      // crammed by the send button. The bars distribute edge-to-edge
-      // (`justify-between`) and stand tall enough (up to 34px, min 4) to read as
-      // sound rather than a row of dots.
+      // crammed by the send button. The bars pack at a fixed 3px rhythm and
+      // center in that room — spread edge-to-edge (`justify-between`) they
+      // drifted apart on a wide screen and read as a row of dots, not sound.
+      // A phone is the other way: the packed row is wider than the space, so
+      // it clips symmetrically at the edges instead of overflowing.
       <div className="flex flex-1 items-center gap-3 pr-1" aria-label={localize('com_ui_dictating')}>
-        <div className="flex h-9 flex-1 items-center justify-between gap-[2px]" aria-hidden="true">
+        <div
+          className="flex h-9 flex-1 items-center justify-center gap-[3px] overflow-hidden"
+          aria-hidden="true"
+        >
           {bars.map((v, i) => (
             <span
               key={i}
@@ -140,7 +180,9 @@ export default function Mic({
               onClick={voice.toggle}
               className="flex size-9 items-center justify-center rounded-full text-white transition-colors hover:bg-surface-hover"
             >
-              <span className="block size-3.5 rounded-[3px] bg-[#fd4444]" />
+              {/* White, not red: stopping dictation keeps the text — it is not
+                  a destructive act, and red was the one warm pixel in the row. */}
+              <span className="block size-3.5 rounded-[3px] bg-white" />
             </button>
           }
         />
