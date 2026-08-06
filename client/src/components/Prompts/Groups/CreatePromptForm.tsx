@@ -49,7 +49,7 @@ const CreatePromptForm = ({
     let timeoutId: ReturnType<typeof setTimeout>;
     if (!hasAccess) {
       timeoutId = setTimeout(() => {
-        navigate('/c/new');
+        navigate('/');
       }, 1000);
     }
     return () => {

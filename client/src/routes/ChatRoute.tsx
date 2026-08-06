@@ -35,7 +35,9 @@ export default function ChatRoute() {
   useAppStartup({ startupConfig, isAuthenticated });
 
   const index = 0;
-  const { conversationId = '' } = useParams();
+  // `/` carries no param and IS a new conversation, so that is the default
+  // rather than the empty string — every branch below keys off NEW_CONVO.
+  const { conversationId = Constants.NEW_CONVO } = useParams();
   useIdChangeEffect(conversationId);
   const { hasSetConversation, conversation } = store.useCreateConversationAtom(index);
   const { newConversation } = useNewConvo();

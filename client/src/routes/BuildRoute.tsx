@@ -20,5 +20,5 @@ export default function BuildRoute() {
     }
   }, [prompt]);
 
-  return <Navigate to="/c/new" replace />;
+  return <Navigate to="/" replace />;
 }

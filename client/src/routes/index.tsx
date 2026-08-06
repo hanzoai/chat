@@ -1,10 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom';
-import {
-  Login,
-  VerifyEmail,
-  ApiErrorWatcher,
-  TwoFactorScreen,
-} from '~/components/Auth';
+import { Login, VerifyEmail, ApiErrorWatcher, TwoFactorScreen } from '~/components/Auth';
 import OAuthCallback from '~/components/Auth/OAuthCallback';
 import { MarketplaceProvider } from '~/components/Agents/MarketplaceContext';
 import AgentMarketplace from '~/components/Agents/Marketplace';
@@ -31,12 +26,17 @@ const AuthLayout = () => (
   </AuthContextProvider>
 );
 
-// Landing redirect that PRESERVES the query string, so a cross-surface deep link
-// to `/?project=<slug>` reaches `/c/new?project=<slug>` (React Router's plain
-// <Navigate> drops the search) — one canonical destination for either entry URL.
-const NewChatRedirect = () => {
+// `/` IS the new chat, so the redirect runs the other way now. There were two
+// URLs for one screen and the shorter one was the impostor: every entry bounced
+// to `/c/new`, which then had to be special-cased as a conversation id that is
+// not a conversation. One canonical URL, and `/c/new` folds onto it.
+//
+// The query string is carried by hand because React Router's plain <Navigate>
+// drops it, and a cross-surface deep link like `/c/new?q=…&submit=true` has to
+// survive the fold.
+const NewChatCanonical = () => {
   const { search } = useLocation();
-  return <Navigate to={{ pathname: '/c/new', search }} replace={true} />;
+  return <Navigate to={{ pathname: '/', search }} replace={true} />;
 };
 
 const baseEl = document.querySelector('base');
@@ -115,7 +115,14 @@ export const router = createBrowserRouter(
           children: [
             {
               index: true,
-              element: <NewChatRedirect />,
+              element: <ChatRoute />,
+            },
+            {
+              // Declared BEFORE the dynamic sibling so a static segment wins:
+              // `new` was never a conversation id, it was a sentinel meaning
+              // "no conversation yet", which is what `/` already says.
+              path: 'c/new',
+              element: <NewChatCanonical />,
             },
             {
               path: 'c/:conversationId?',

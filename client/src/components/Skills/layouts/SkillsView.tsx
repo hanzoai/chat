@@ -44,7 +44,7 @@ export default function SkillsView() {
   }
 
   if (!hasAccess) {
-    return <Navigate to="/c/new" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (isCreate && !hasCreateAccess) {
