@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { render, screen } from '@testing-library/react';
 import { Provider, createStore } from 'jotai';
 import type { Backdrop as Config } from '~/utils/backdrop';
@@ -32,6 +34,11 @@ const frames = (container: HTMLElement) =>
   Array.from(container.querySelectorAll('iframe')).map((frame) => frame.getAttribute('src') ?? '');
 
 const layer = (container: HTMLElement) => container.querySelector('[aria-hidden="true"]');
+
+/** The two origins `api/server/csp.js` names in `frame-src`, and the only two a
+ *  player may ever be pointed at. */
+const YOUTUBE = 'https://www.youtube.com/embed/';
+const TWITCH = 'https://player.twitch.tv/';
 
 describe('Backdrop', () => {
   describe('off', () => {
@@ -84,9 +91,17 @@ describe('Backdrop', () => {
       expect(container.querySelector('iframe')).toHaveStyle({ opacity: '0' });
     });
 
-    it('embeds nothing for a link that is not a youtube video', () => {
-      const { container } = paint({ source: 'video', video: 'https://www.netflix.com/watch/80100172' });
-      expect(frames(container)).toEqual([]);
+    it('never frames a link that is not a youtube video', () => {
+      // The configuration is read back through `merge` on every mount, so a
+      // video slot holding something else does not reach the canvas at all: it
+      // is refused and the known-good default plays instead. What must never
+      // happen is the foreign origin appearing in a frame, at any opacity.
+      const { container } = paint({
+        source: 'video',
+        video: 'https://www.netflix.com/watch/80100172',
+      });
+      expect(frames(container).join(' ')).not.toContain('netflix');
+      frames(container).forEach((src) => expect(src.startsWith(YOUTUBE)).toBe(true));
     });
   });
 
@@ -151,6 +166,96 @@ describe('Backdrop', () => {
         ],
       });
       expect(frames(container)).toEqual([]);
+    });
+
+    it('gives an unplayable entry no player rather than the last one written', () => {
+      // A provider with no player of its own must not fall through to whichever
+      // branch happens to be last. Reached here by claiming a provider the entry
+      // does not have, which is the shape a stale stored list would arrive in.
+      const { container } = paint({
+        source: 'playlist',
+        playlist: [
+          { url: 'https://www.netflix.com/watch/80100172', provider: 'other' },
+          { url: 'https://twitch.tv/monstercat', provider: 'twitch' },
+        ],
+      });
+      const srcs = frames(container);
+      expect(srcs.join(' ')).not.toContain('netflix');
+      expect(srcs[0]).toContain('https://player.twitch.tv/?channel=monstercat');
+    });
+  });
+
+  describe('what it tells a third party', () => {
+    it('sends a player the origin and never the conversation it sits behind', () => {
+      const { container } = paint({ source: 'video', video: 'https://youtu.be/6lZ3CookYNg' });
+      expect(container.querySelector('iframe')).toHaveAttribute(
+        'referrerpolicy',
+        'strict-origin-when-cross-origin',
+      );
+    });
+
+    it('sends an image host the same, and no more', () => {
+      const { container } = paint({ source: 'photo', photo: 'https://example.com/reef.jpg' });
+      expect(container.querySelector('img')).toHaveAttribute(
+        'referrerpolicy',
+        'strict-origin-when-cross-origin',
+      );
+    });
+
+    it('asks a player for autoplay and playback and for no capability beyond', () => {
+      const { container } = paint({ source: 'video', video: 'https://youtu.be/6lZ3CookYNg' });
+      const allow = container.querySelector('iframe')?.getAttribute('allow') ?? '';
+      expect(allow).toBe('autoplay; encrypted-media');
+      ['camera', 'microphone', 'geolocation', 'payment', 'display-capture'].forEach((power) =>
+        expect(allow).not.toContain(power),
+      );
+    });
+  });
+
+  describe('what it will point a frame at', () => {
+    /** Every configuration below is one nobody should be able to talk the canvas
+     *  into framing. None of them is reachable through the UI; all of them are
+     *  reachable by writing this origin's localStorage. */
+    const hostile: Partial<Config>[] = [
+      { source: 'video', video: 'https://evil.example/watch?v=6lZ3CookYNg' },
+      { source: 'video', video: 'javascript:alert(1)' },
+      { source: 'video', video: 'https://youtube.com.evil.example/watch?v=6lZ3CookYNg' },
+      { source: 'playlist', playlist: [{ url: 'https://evil.example/x', provider: 'youtube' }] },
+      {
+        source: 'playlist',
+        playlist: [{ url: 'https://www.netflix.com/watch/80100172', provider: 'twitch' }],
+      },
+      {
+        source: 'playlist',
+        playlist: [{ url: 'https://clips.twitch.tv/GloriousSlug', provider: 'twitch' }],
+      },
+    ];
+
+    it.each(hostile.map((over, at) => [at, over]))(
+      'frames only youtube or twitch, whatever configuration %i asks for',
+      (_at, over) => {
+        const { container } = paint(over as Partial<Config>);
+        frames(container).forEach((src) =>
+          expect(src.startsWith(YOUTUBE) || src.startsWith(TWITCH)).toBe(true),
+        );
+      },
+    );
+
+    it('names origins the served policy actually allows', () => {
+      // A player pointed at an origin `frame-src` omits renders an EMPTY frame
+      // and logs nothing useful, and a policy that allowed more than these two
+      // would make the promise in the settings copy — that Netflix cannot play
+      // here — false in the browser while still true in the UI. Read from the
+      // real policy file so the two cannot drift apart. Same reasoning, and same
+      // shape, as Chat/Dock/cards.spec.ts.
+      const csp = readFileSync(join(__dirname, '../../../../api/server/csp.js'), 'utf8');
+      const frameSrc = csp.split('\n').find((line) => line.includes('"frame-src')) ?? '';
+      expect(frameSrc).toContain('frame-src');
+      expect(frameSrc).toContain('https://www.youtube.com');
+      expect(frameSrc).toContain('https://player.twitch.tv');
+      // No wildcard may stand in for naming an origin.
+      expect(frameSrc).not.toMatch(/frame-src[^;"]*\*/);
+      expect(frameSrc).not.toContain('netflix');
     });
   });
 

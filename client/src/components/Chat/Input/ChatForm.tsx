@@ -1,7 +1,7 @@
 import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
 import { TextareaAutosize } from '@hanzochat/client';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from '@hanzochat/data-provider';
 import {
   useChatContext,
@@ -20,6 +20,7 @@ import {
   useFocusChatEffect,
 } from '~/hooks';
 import { useRunCloudAgent } from '~/hooks/Agents';
+import { command as backdrop } from '~/utils/backdrop';
 import { mainTextareaId, BadgeItem } from '~/common';
 import AttachFileChat from './Files/AttachFileChat';
 import FileFormChat from './Files/FileFormChat';
@@ -146,11 +147,15 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   const { submitMessage, submitPrompt } = useSubmitMessage();
   const runCloudAgent = useRunCloudAgent();
+  // Read and write without subscribing: the composer must not re-render every
+  // time the backdrop changes.
+  const atoms = useStore();
 
   /**
-   * Submit handler that intercepts the `/agent <name> [prompt]` command and
-   * dispatches it through the single cloud-agent run path; everything else is a
-   * normal chat message. This is the ONE place the command is turned into a run.
+   * Submit handler for text TYPED INTO THIS COMPOSER. It intercepts the slash
+   * commands — `/build`, `/agent <name> [prompt]`, `/background` — and turns
+   * each into its one action; everything else is a normal chat message. This is
+   * the ONE place each of those commands is read.
    */
   const onSubmit = useCallback(
     (data?: { text: string }) => {
@@ -169,9 +174,28 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
         void runCloudAgent(command.name, command.prompt);
         return;
       }
+      /**
+       * `/background` (and `/bg`) never reach the model.
+       *
+       * It is read HERE, with the other commands, because this callback runs on
+       * text the viewer typed into this composer and on nothing else. The send
+       * it delegates to is reached by three other things — a conversation
+       * starter an agent wrote, a prompt somebody shared, a `?prompt=` in a link
+       * — and a command read there would let any of them redress a stranger's
+       * chat, and point an `<img>` at a host of their choosing, from a link.
+       *
+       * A line that names nothing usable comes back null and is SENT, so the
+       * viewer sees for themselves that nothing was applied.
+       */
+      const next = backdrop(text, atoms.get(store.backdrop));
+      if (next) {
+        methods.reset();
+        atoms.set(store.backdrop, next);
+        return;
+      }
       submitMessage(data);
     },
-    [methods, runCloudAgent, submitMessage, setShowAgentsPopover],
+    [methods, runCloudAgent, submitMessage, setShowAgentsPopover, atoms],
   );
 
   const handleKeyUp = useHandleKeyUp({
