@@ -916,6 +916,8 @@
   "com_ui_by_author": "by {{0}}",
   "com_ui_callback_url": "Callback URL",
   "com_ui_cancel": "Cancel",
+  "com_ui_canvas_hide": "Hide canvas",
+  "com_ui_canvas_show": "Show canvas",
   "com_ui_cancelled": "Cancelled",
   "com_ui_category": "Category",
   "com_ui_change_version": "Change Version",
