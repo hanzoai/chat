@@ -145,7 +145,10 @@ const loadEphemeralAgent = async ({ req, spec, endpoint, model_parameters: _m })
     }
   }
 
-  const instructions = req.body.promptPrefix;
+  // The app guide rides in front of whatever the conversation set: an
+  // ephemeral agent is the product's own voice, so it knows the product.
+  const { GUIDE } = require('~/server/services/guide');
+  const instructions = [GUIDE, req.body.promptPrefix].filter(Boolean).join('\n\n');
 
   // Get endpoint config for modelDisplayLabel fallback
   const appConfig = req.config;
