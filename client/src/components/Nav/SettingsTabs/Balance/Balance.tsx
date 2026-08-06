@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { ExternalLink, CreditCard, TrendingUp, Zap, ArrowUpRight } from 'lucide-react';
+import { balanceOn } from '@hanzochat/data-provider';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
 import TokenCreditsItem from './TokenCreditsItem';
@@ -85,7 +86,7 @@ function Balance() {
   const { data: startupConfig } = useGetStartupConfig();
 
   const balanceQuery = useGetUserBalance({
-    enabled: !!isAuthenticated && !!startupConfig?.balance?.enabled,
+    enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
   const balanceData = balanceQuery.data;
 
