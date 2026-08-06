@@ -43,16 +43,17 @@
     left: 0;
     top: 0;
     bottom: 0;
-    /* Cap the dimmed scrim at the drawer width (420px) instead of stretching
-       edge-to-edge. On a tablet the drawer never fills the viewport, so a
-       full-width scrim would dim the still-visible content beside it. */
-    right: auto;
+    /* No dim, and no cap. A tinted scrim capped at 420px — wider than the
+       320px drawer — showed a hard-edged dark band right of the drawer that
+       ended abruptly, reading as an extra shadow. The drawer is opaque and
+       stands on its own, so this is now a full-width, INVISIBLE click-catcher:
+       nothing to see beside the drawer, and tapping the chat still closes it. */
+    right: 0;
     width: 100%;
-    max-width: 420px;
-    background-color: rgba(7, 7, 7, 0.4);
+    background-color: transparent;
     padding-top: 12px;
     opacity: 0;
-    transition: all 0.5s;
+    transition: opacity 0.2s;
     pointer-events: none;
   }
 
