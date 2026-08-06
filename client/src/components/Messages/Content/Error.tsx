@@ -149,14 +149,14 @@ const errorMessages = {
       );
     }
 
-    // Commerce insufficient balance — new users claim the $5 starter credit,
-    // spent-out users add funds. Both live at billing.hanzo.ai.
+    // Commerce insufficient balance. There is NO starter credit — that offer is
+    // retired (billing requires a payment method and a plan), so this must never
+    // advertise free money it cannot grant. Add funds or pick a plan, both at
+    // billing.hanzo.ai.
     if (reason === 'commerce_insufficient') {
       return (
         <>
-          {
-            'You have no Hanzo Cloud balance. Claim your $5 starter credit (or add funds) to start chatting.'
-          }
+          {'You have no Hanzo Cloud balance. Add funds or choose a plan to start chatting.'}
           <br />
           <br />
           <a
@@ -165,7 +165,7 @@ const errorMessages = {
             rel="noopener noreferrer"
             className="text-hanzo-red underline"
           >
-            Claim your $5 credit at billing.hanzo.ai
+            Add funds at billing.hanzo.ai
           </a>
         </>
       );
