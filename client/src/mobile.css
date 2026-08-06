@@ -68,6 +68,11 @@
 
   .nav.active {
     position: fixed;
+    /* A soft drop-shadow off the drawer's right edge — the separation the flat
+       scrim band was standing in for, done as a shadow should be: it fades
+       smoothly into the backdrop instead of ending on a hard line, and it
+       rides the drawer rather than sitting beside it. */
+    box-shadow: 8px 0 32px -8px rgba(0, 0, 0, 0.55);
   }
 }
 
