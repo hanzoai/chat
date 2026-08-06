@@ -17,7 +17,7 @@ const SRC =
   // with "video player configuration error" (153) in current Chrome.
   `https://www.youtube.com/embed/${VIDEO}` +
   `?autoplay=1&mute=1&controls=0&loop=1&playlist=${VIDEO}` +
-  '&rel=0&playsinline=1&disablekb=1&fs=0&iv_load_policy=3' +
+  '&rel=0&playsinline=1&disablekb=1&fs=0&iv_load_policy=3&vq=hd1080' +
   `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
 
 /** Ask the player to start, through its API. Muted playback started by script
@@ -27,11 +27,17 @@ const SRC =
  *  before its own scripts finish booting. */
 function start(e: React.SyntheticEvent<HTMLIFrameElement>) {
   const frame = e.currentTarget;
-  const kick = () =>
+  const send = (func: string, args: unknown[]) =>
     frame.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+      JSON.stringify({ event: 'command', func, args }),
       'https://www.youtube.com',
     );
+  const kick = () => {
+    // The size-based auto-picker lands on hd1080 anyway (the box is far
+    // larger than the viewport); the suggestion just skips the low first rung.
+    send('setPlaybackQuality', ['hd1080']);
+    send('playVideo', []);
+  };
   kick();
   setTimeout(kick, 1500);
   setTimeout(kick, 4000);
@@ -48,8 +54,18 @@ export default function Backdrop() {
         className="absolute left-1/2 top-1/2"
         onLoad={start}
         style={{
+          // Revealed only after YouTube's adaptive ramp has stepped up —
+          // quality can't be forced (embeds ignore every quality API since
+          // 2019), so the low-res first seconds play out hidden instead.
+          opacity: 0,
+          animation: 'backdrop-reveal 1.2s ease 4s forwards',
           width: 'max(177.78vh, 100vw)',
           height: 'max(56.25vw, 100vh)',
+          // The app styles iframes with max-width: 100%, which silently clamps
+          // the cover formula to the container and letterboxes the video on
+          // narrow screens. This box is deliberately larger than its container.
+          maxWidth: 'none',
+          maxHeight: 'none',
           transform: 'translate(-50%, -50%) scale(1.4)',
           border: 0,
         }}
