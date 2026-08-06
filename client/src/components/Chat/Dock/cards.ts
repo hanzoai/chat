@@ -33,11 +33,11 @@ export const DOCK_CARDS: DockCard[] = [
     src: 'https://www.youtube.com/embed/6lZ3CookYNg?autoplay=1&mute=1&controls=0&loop=1&playlist=6lZ3CookYNg&rel=0&playsinline=1',
     aspect: 'video',
   },
-  {
-    id: 'world',
-    label: 'World',
-    note: 'Live global intelligence — the panels from world.hanzo.ai.',
-    src: 'https://world.hanzo.ai/',
-    aspect: 'tall',
-  },
+  // world.hanzo.ai is HELD until it boots inside a partitioned cross-site
+  // frame: it stores to IndexedDB, which third-party-storage partitioning
+  // denies by default (Brave/Safari/Firefox-ETP/Chrome-incognito), so the
+  // card rendered a permanent black box — the frame's own console throws
+  // "The user denied permission to access the database." Origin-in-frame-src
+  // is not the same as "it paints"; re-add it as a link-out card, or once the
+  // embed survives partitioned storage.
 ];
