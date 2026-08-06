@@ -80,6 +80,9 @@ export default function Mic({
 
   const voice = useVoice({
     speech,
+    // The reading voice, for the browser leg; the platform leg carries it in
+    // the request instead (see `speak` above).
+    voice: chosenVoice ?? undefined,
     onPartial: (heard) => {
       if (kept.current === null) kept.current = (getValues('text') || '').trim();
       setValue('text', join(heard), { shouldValidate: true });
@@ -115,10 +118,15 @@ export default function Mic({
       voice={voice}
       disabled={disabled}
       className={cn(
-        'flex size-9 items-center justify-center rounded-full p-1 text-text-secondary transition-colors',
+        // Off: a static white mic. Listening: the mic itself carries the state,
+        // flashing white–green; the cursor over it turns it solid red — the
+        // stop affordance, said in color where a tooltip would be too late.
+        'flex size-9 items-center justify-center rounded-full p-1 text-white transition-colors',
         'hover:bg-surface-hover disabled:opacity-40',
-        'data-[state=listening]:text-text-primary data-[state=speaking]:text-text-primary',
-        'data-[state=speaking]:animate-pulse motion-reduce:data-[state=speaking]:animate-none',
+        'data-[state=listening]:animate-[hzMicFlash_1.1s_ease-in-out_infinite]',
+        'data-[state=listening]:hover:animate-none data-[state=listening]:hover:text-red-500',
+        'data-[state=speaking]:animate-pulse motion-reduce:animate-none',
+        'motion-reduce:data-[state=listening]:text-green-400',
         '[&_svg]:size-5',
       )}
     />
