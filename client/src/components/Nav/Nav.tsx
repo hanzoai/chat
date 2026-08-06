@@ -26,6 +26,7 @@ import {
 import { useConversationsInfiniteQuery, useTitleGeneration } from '~/data-provider';
 import { Conversations } from '~/components/Conversations';
 import SearchBar from './SearchBar';
+import Signature from './Signature';
 import NewChat from './NewChat';
 import Rail from './Rail';
 import { cn } from '~/utils';
@@ -258,6 +259,7 @@ const Nav = memo(
           <Suspense fallback={<Skeleton className="mt-1 h-12 w-full rounded-xl" />}>
             {isAuthenticated ? <AccountSettings /> : <Visitor />}
           </Suspense>
+          <Signature />
         </nav>
       </div>
     );

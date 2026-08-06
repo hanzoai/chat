@@ -638,6 +638,8 @@
   "com_nav_show_code": "Always show code when using code interpreter",
   "com_nav_show_thinking": "Open Thinking Dropdowns by Default",
   "com_nav_show_backdrop": "Ambient backdrop",
+  "com_nav_signature": "Signature",
+  "com_nav_signature_placeholder": "A line to sign off with",
   "com_nav_show_dock": "Side dock",
   "com_nav_info_show_dock": "Pin live feeds, widgets and app previews in a resizable column beside the conversation.",
   "com_nav_info_show_backdrop": "Play ambient video behind the chat canvas. Turn it off for a plain background \u2014 when off the video is not loaded at all.",
