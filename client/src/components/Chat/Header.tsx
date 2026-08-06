@@ -68,10 +68,17 @@ export default function Header() {
                   setNavVisible={setNavVisible}
                   className="opacity-0 transition-opacity duration-150 focus-visible:opacity-100 group-hover:opacity-100 max-md:hidden"
                 />
-                <HeaderNewChat />
               </motion.div>
             )}
           </AnimatePresence>
+          {/* Compose sits OUTSIDE the collapsed-only cluster, so it is in the same
+              place at every sidebar state: just right of the pane's edge, never
+              inside the pane. It used to be written twice — once in the sidebar's
+              first row and once here — so opening the sidebar moved the button and
+              closing it moved it back, and the two copies did not even agree on
+              what they did (the sidebar's navigated to /c/new, this one resets the
+              conversation in place). One button, one behaviour, one location. */}
+          <HeaderNewChat />
           {/* No model pill and no multi-convo control on the left edge (owner
               call): the model is enso by default and the picker was chrome
               stating a name at the arrival screen. Model choice lives in

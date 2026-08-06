@@ -234,11 +234,7 @@ const Nav = memo(
           aria-hidden={!navVisible}
         >
           <div className="flex flex-1 flex-col overflow-hidden" ref={outerContainerRef}>
-            <MemoNewChat
-              subHeaders={subHeaders}
-              toggleNav={toggleNavVisible}
-              isSmallScreen={isSmallScreen}
-            />
+            <MemoNewChat subHeaders={subHeaders} toggleNav={toggleNavVisible} />
             <div className="flex min-h-0 flex-grow flex-col overflow-hidden">
               <Conversations
                 conversations={conversations}
@@ -272,7 +268,7 @@ const Nav = memo(
           <div
             data-testid="nav"
             className={cn(
-              'nav fixed left-0 top-0 z-[110] h-full bg-surface-primary-alt',
+              'nav glass fixed left-0 top-0 z-[110] h-full',
               navVisible && 'active',
             )}
             style={{
@@ -296,7 +292,7 @@ const Nav = memo(
       >
         <motion.div
           data-testid="nav"
-          className={cn('nav h-full bg-surface-primary-alt', navVisible && 'active')}
+          className={cn('nav glass h-full', navVisible && 'active')}
           style={{ width: sidebarWidth }}
           initial={false}
           animate={{

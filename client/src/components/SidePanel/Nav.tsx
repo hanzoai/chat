@@ -17,16 +17,16 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
   const getVariant = (link: NavLink) => (link.id === active ? 'default' : 'ghost');
 
   return (
-    /* `h-full` is what makes the fill a SURFACE. Without it this div sized to
-       its icons — 160px — while the panel under it is `bg-background`, so the
-       collapsed rail painted a near-black cap on a lighter column with a hard
-       seam between them, and the left sidebar (the same
-       `surface-primary-alt`, full height) had no twin on the right. Every
-       descendant already asks for `h-full`; none of them could resolve it,
-       because this element never had a height to resolve against. */
+    /* `h-full` is what makes this a full-height column rather than one sized to
+       its icons — 160px — which used to leave a hard seam where the rail's fill
+       stopped. The fill itself now belongs to the panel above (which wears the
+       canonical `glass`), because an opaque fill HERE paints over that material
+       and the ambient backdrop cannot read through: a translucent parent with an
+       opaque child is just an opaque sidebar with extra steps. Height still has
+       to resolve here, since every descendant asks for `h-full`. */
     <div
       data-collapsed={isCollapsed}
-      className="bg-surface-primary-alt hide-scrollbar group h-full flex-shrink-0 overflow-x-hidden"
+      className="hide-scrollbar group h-full flex-shrink-0 overflow-x-hidden"
     >
       <div className="h-full">
         <div className="flex h-full min-h-0 flex-col">
@@ -105,7 +105,7 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
                           </AccordionPrimitive.Trigger>
                         </AccordionPrimitive.Header>
 
-                        <AccordionContent className="bg-surface-primary-alt w-full text-text-primary">
+                        <AccordionContent className="w-full text-text-primary">
                           {link.Component && <link.Component />}
                         </AccordionContent>
                       </AccordionItem>
