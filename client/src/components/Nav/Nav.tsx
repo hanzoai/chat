@@ -10,7 +10,6 @@ import {
   startTransition,
 } from 'react';
 import { useAtomValue } from 'jotai';
-import { motion } from 'framer-motion';
 import { Skeleton, useMediaQuery } from '@hanzochat/client';
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
@@ -39,6 +38,8 @@ const Visitor = lazy(() => import('./Visitor'));
 export const NAV_WIDTH = {
   MOBILE: 320,
   DESKTOP: 260,
+  /** The collapsed rail — icon-only, and still on screen. */
+  RAIL: 56,
 } as const;
 
 const SearchBarSkeleton = memo(() => (
@@ -82,6 +83,14 @@ const Nav = memo(
     useTitleGeneration(isAuthenticated);
 
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
+    /**
+     * Collapsed, the sidebar is a narrow RAIL that stays on screen — the model
+     * `hanzo.app` and the console share — not a panel translated off it. The
+     * column keeps its stack, which is why compose sits BELOW the mark there.
+     * Below md there is no rail: the sidebar is a drawer and collapse is a
+     * desktop affordance.
+     */
+    const collapsed = !isSmallScreen && !navVisible;
     const [newUser, setNewUser] = useLocalStorage('newUser', true);
     const [isChatsExpanded, setIsChatsExpanded] = useLocalStorage('chatsExpanded', true);
     const [showLoading, setShowLoading] = useState(false);
@@ -188,8 +197,8 @@ const Nav = memo(
       const searching = search.enabled === null || search.enabled === true;
       return (
         <>
-          <Rail toggleNav={itemToggleNav} />
-          {(searching || hasAccessToBookmarks) && (
+          <Rail toggleNav={itemToggleNav} collapsed={collapsed} />
+          {!collapsed && (searching || hasAccessToBookmarks) && (
             <div className="flex items-center gap-1">
               <div className="min-w-0 flex-1">
                 {search.enabled === null && <SearchBarSkeleton />}
@@ -204,7 +213,7 @@ const Nav = memo(
           )}
         </>
       );
-    }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags, itemToggleNav]);
+    }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags, itemToggleNav, collapsed]);
 
     const [isSearchLoading, setIsSearchLoading] = useState(
       !!search.query && (search.isTyping || isLoading || isFetching),
@@ -221,31 +230,36 @@ const Nav = memo(
     }, [search.query, search.isTyping, isLoading, isFetching]);
 
     // Always render sidebar to avoid mount/unmount costs
-    // Use transform for GPU-accelerated animation (no layout thrashing)
     const sidebarWidth = isSmallScreen ? NAV_WIDTH.MOBILE : NAV_WIDTH.DESKTOP;
 
-    // Sidebar content (shared between mobile and desktop)
+    // One content tree, two widths. Collapsed it keeps the head (mark, compose)
+    // and the destinations, and drops what a 56px column cannot say: the list,
+    // the search row, and the account foot — every one of them one click away
+    // behind the mark.
     const sidebarContent = (
       <div className="flex h-full flex-col">
         <nav
           id="chat-history-nav"
           aria-label={localize('com_ui_chat_history')}
           className="flex h-full flex-col px-2 pb-3.5"
-          aria-hidden={!navVisible}
+          aria-hidden={isSmallScreen && !navVisible}
         >
           <div className="flex flex-1 flex-col overflow-hidden" ref={outerContainerRef}>
             <MemoNewChat
               subHeaders={subHeaders}
               toggleNav={toggleNavVisible}
               isSmallScreen={isSmallScreen}
+              collapsed={collapsed}
             />
             {/* The chat-history list is for someone who HAS history. A
                 signed-out visitor never fetches any (the query is gated on the
                 session), so for them with nothing yet it is an empty "Chats"
                 header framing a void — the sidebar should just be New + the
                 sign-up offer. Show the list once there is a session, or the
-                moment a guest turn actually produces a conversation. */}
-            {(isAuthenticated || conversations.length > 0) && (
+                moment a guest turn actually produces a conversation.
+
+                And never in the rail: 56px of column cannot hold a title. */}
+            {!collapsed && (isAuthenticated || conversations.length > 0) && (
               <div className="flex min-h-0 flex-grow flex-col overflow-hidden">
                 <Conversations
                   conversations={conversations}
@@ -264,10 +278,14 @@ const Nav = memo(
           {/* One foot, two states. The account block belongs to a session; the
               visitor block belongs to everyone else, and they are exclusive so
               the corner never shows an account menu with no account behind it. */}
-          <Suspense fallback={<Skeleton className="mt-1 h-12 w-full rounded-xl" />}>
-            {isAuthenticated ? <AccountSettings /> : <Visitor />}
-          </Suspense>
-          <Signature />
+          {!collapsed && (
+            <>
+              <Suspense fallback={<Skeleton className="mt-1 h-12 w-full rounded-xl" />}>
+                {isAuthenticated ? <AccountSettings /> : <Visitor />}
+              </Suspense>
+              <Signature />
+            </>
+          )}
         </nav>
       </div>
     );
@@ -296,24 +314,23 @@ const Nav = memo(
       );
     }
 
-    // Desktop: Inline sidebar with width transition
+    // Desktop: the sidebar is ALWAYS on screen — the full column, or the rail.
+    // Only its width moves. `active` is unconditional here because it is what
+    // `.nav` reads as "in flow and visible" (mobile.css); the state that used
+    // to drop it was the state that translated the whole panel away.
+    const width = navVisible ? sidebarWidth : NAV_WIDTH.RAIL;
     return (
       <div
         className="flex-shrink-0 overflow-hidden"
-        style={{ width: navVisible ? sidebarWidth : 0, transition: 'width 0.2s ease-out' }}
+        style={{ width, transition: 'width 0.2s ease-out' }}
       >
-        <motion.div
+        <div
           data-testid="nav"
-          className={cn('nav h-full bg-surface-primary-alt', navVisible && 'active')}
-          style={{ width: sidebarWidth }}
-          initial={false}
-          animate={{
-            x: navVisible ? 0 : -sidebarWidth,
-          }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="nav active h-full bg-surface-primary-alt"
+          style={{ width }}
         >
           {sidebarContent}
-        </motion.div>
+        </div>
       </div>
     );
   },
