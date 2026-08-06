@@ -1,139 +1,166 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { Voice, useVoice, type Speech } from '@hanzo/voice';
+import { useVoice, type Speech } from '@hanzo/voice';
 import { dataService } from '@hanzochat/data-provider';
-import { useToastContext } from '@hanzochat/client';
+import { TooltipAnchor } from '@hanzochat/client';
 
 import { useChatFormContext } from '~/Providers';
 import { useGetAudioSettings, useLocalize } from '~/hooks';
-import { getLatestText, cn } from '~/utils';
+import { cn } from '~/utils';
 import store from '~/store';
 
 /**
- * The composer's microphone — one click starts a conversation, the next ends it.
+ * The composer's microphone — DICTATION, not a spoken conversation.
  *
- * The machine is `@hanzo/voice`, the same one hanzo.app's builder uses: the
- * transcript streams into this composer as it is heard, each pause is sent
- * through `ask` (the composer's own submit path, never a second one), the reply
- * is read back, and speaking over the reply stops it and starts the next turn.
+ * One click opens the mic and shows a live waveform of what it is hearing; the
+ * transcript streams into the composer as you speak and STAYS there. A second
+ * click (the stop square) ends it and leaves the text in the box for you to
+ * read and send yourself. Nothing is auto-sent and no reply is read back —
+ * this is a way of typing with your voice, which is what a composer mic is for.
  *
- * Speech itself is whatever `speech:` in chat.yaml points at — the platform's
- * `/v1/audio/*` — reached through the routes this server already has. With no
- * `speech:` configured the browser's own recogniser and voice stand in, which
- * is exactly what happened before this control existed.
+ * The machine is still `@hanzo/voice` (shared with hanzo.app): its `onLevel`
+ * drives the waveform, its partials fill the composer, and each settled
+ * utterance is committed so the next one appends after it instead of replacing.
  */
-export default function Mic({
-  disabled,
-  ask,
-  isSubmitting,
-  index = 0,
-  onLive,
-}: {
-  disabled: boolean;
-  ask: (data: { text: string }) => void;
-  isSubmitting: boolean;
-  index?: number;
-  /** Reported up so the composer can leave the reply to this control. */
-  onLive?: (live: boolean) => void;
-}) {
-  const localize = useLocalize();
-  const { showToast } = useToastContext();
-  const { setValue, getValues, reset } = useChatFormContext();
-  const { speechToTextEndpoint, textToSpeechEndpoint } = useGetAudioSettings();
-  const chosenVoice = useAtomValue(store.voice);
-  const latestMessage = useAtomValue(store.latestMessageFamily(index));
 
-  // Configured speech goes through this server's own speech routes; anything
-  // unconfigured is simply absent, and the browser leg covers it.
+/** How many bars the waveform holds. The newest level enters on the right. */
+const BARS = 28;
+
+export default function Mic({ disabled }: { disabled: boolean }) {
+  const localize = useLocalize();
+  const { setValue, getValues } = useChatFormContext();
+  const { speechToTextEndpoint } = useGetAudioSettings();
+  const chosenVoice = useAtomValue(store.voice);
+
   const speech = useMemo<Speech | undefined>(() => {
-    const configured: Partial<Speech> = {};
-    if (speechToTextEndpoint === 'external') {
-      configured.transcribe = async (audio) => {
+    if (speechToTextEndpoint !== 'external') {
+      return undefined;
+    }
+    return {
+      transcribe: async (audio) => {
         const form = new FormData();
         form.append('audio', audio, 'turn.webm');
         const { text } = await dataService.speechToText(form);
         return text ?? '';
-      };
-    }
-    if (textToSpeechEndpoint === 'external') {
-      configured.speak = async (text) => {
-        const form = new FormData();
-        form.append('input', text);
-        form.append('voice', chosenVoice ?? '');
-        const audio = await dataService.textToSpeech(form);
-        return new Blob([audio], { type: 'audio/mpeg' });
-      };
-    }
-    return configured.transcribe || configured.speak ? (configured as Speech) : undefined;
-  }, [speechToTextEndpoint, textToSpeechEndpoint, chosenVoice]);
+      },
+    };
+  }, [speechToTextEndpoint]);
 
-  // Whatever was already typed is kept: the transcript is appended to it, and
-  // the turn that gets sent is the whole line, exactly as if it had been typed.
+  // The text that was already in the composer, plus every settled utterance so
+  // far. Live partials are appended to THIS, so a pause never rewrites what was
+  // already dictated.
   const kept = useRef<string | null>(null);
   const join = useCallback((heard: string) => {
     const before = kept.current;
     return before ? `${before} ${heard}` : heard;
   }, []);
 
-  const submitting = useRef(isSubmitting);
-  submitting.current = isSubmitting;
+  // The waveform samples live in a ref (onLevel fires ~60/s) and are flushed to
+  // state on an interval, so the mic draws at a cheap ~16fps instead of
+  // re-rendering the whole composer on every animation frame.
+  const samples = useRef<number[]>(new Array(BARS).fill(0));
+  const [bars, setBars] = useState<number[]>(samples.current);
+  const [elapsed, setElapsed] = useState(0);
 
   const voice = useVoice({
     speech,
-    // The reading voice, for the browser leg; the platform leg carries it in
-    // the request instead (see `speak` above).
-    voice: chosenVoice ?? undefined,
+    onLevel: (value) => {
+      samples.current = [...samples.current.slice(1), value];
+    },
     onPartial: (heard) => {
-      if (kept.current === null) kept.current = (getValues('text') || '').trim();
+      if (kept.current === null) {
+        kept.current = (getValues('text') || '').trim();
+      }
       setValue('text', join(heard), { shouldValidate: true });
     },
     onUtterance: (said) => {
-      const turn = join(said);
-      kept.current = null;
-      if (submitting.current) {
-        showToast({ message: localize('com_ui_speech_while_submitting'), status: 'error' });
-        return;
-      }
-      ask({ text: turn });
-      reset({ text: '' });
+      // Commit it: the composer already shows it, and folding it into `kept`
+      // means the next partial appends rather than replacing this sentence.
+      kept.current = join(said);
+      setValue('text', kept.current, { shouldValidate: true });
     },
   });
 
-  useEffect(() => onLive?.(voice.open), [voice.open, onLive]);
-
-  // Read the settled reply back. `say` is a no-op outside a conversation, so a
-  // typed turn stays silent without anyone here asking whether it was spoken.
-  const read = useRef<string | null>(null);
   useEffect(() => {
-    if (isSubmitting || !latestMessage || latestMessage.isCreatedByUser) return;
-    const text = getLatestText(latestMessage);
-    const id = latestMessage.messageId;
-    if (!text || !id || read.current === id) return;
-    read.current = id;
-    void voice.say(text);
-  }, [isSubmitting, latestMessage, voice]);
+    if (!voice.open) {
+      kept.current = null;
+      samples.current = new Array(BARS).fill(0);
+      setBars(samples.current);
+      setElapsed(0);
+      return;
+    }
+    const start = performance.now();
+    const draw = setInterval(() => setBars([...samples.current]), 60);
+    const clock = setInterval(() => setElapsed(Math.floor((performance.now() - start) / 1000)), 250);
+    return () => {
+      clearInterval(draw);
+      clearInterval(clock);
+    };
+  }, [voice.open]);
+
+  if (voice.open) {
+    const mm = String(Math.floor(elapsed / 60)).padStart(1, '0');
+    const ss = String(elapsed % 60).padStart(2, '0');
+    return (
+      <div className="flex items-center gap-2 pr-1" aria-label={localize('com_ui_dictating')}>
+        <div className="flex h-9 items-center gap-[2px]" aria-hidden="true">
+          {bars.map((v, i) => (
+            <span
+              key={i}
+              className="w-[2px] rounded-full bg-white"
+              style={{ height: `${Math.max(3, Math.round(v * 28))}px`, opacity: 0.5 + v * 0.5 }}
+            />
+          ))}
+        </div>
+        <span className="tabular-nums text-xs text-text-secondary">{`${mm}:${ss}`}</span>
+        <TooltipAnchor
+          description={localize('com_ui_dictation_stop')}
+          render={
+            <button
+              type="button"
+              aria-label={localize('com_ui_dictation_stop')}
+              onClick={voice.toggle}
+              className="flex size-9 items-center justify-center rounded-full text-white transition-colors hover:bg-surface-hover"
+            >
+              <span className="block size-3.5 rounded-[3px] bg-[#fd4444]" />
+            </button>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
-    <Voice
-      voice={voice}
-      disabled={disabled}
-      className={cn(
-        // Off: a static white mic. Listening: the mic itself carries the state,
-        // flashing white–green; the cursor over it turns it solid red — the
-        // stop affordance, said in color where a tooltip would be too late.
-        'flex size-9 items-center justify-center rounded-full p-1 text-white transition-colors',
-        'hover:bg-surface-hover disabled:opacity-40',
-        // Arbitrary hex, not text-red-500/green-400: tailwind.config maps the
-        // whole red AND green scales onto the monochrome ramp (this is a
-        // white-label monochrome build), so those classes render GREY. The
-        // brand red and the flash green have to be stated literally, matching
-        // the hzMicFlash keyframe.
-        'data-[state=listening]:animate-[hzMicFlash_1.1s_ease-in-out_infinite]',
-        'data-[state=listening]:hover:animate-none data-[state=listening]:hover:text-[#fd4444]',
-        'data-[state=speaking]:animate-pulse motion-reduce:animate-none',
-        'motion-reduce:data-[state=listening]:text-[#4ade80]',
-        '[&_svg]:size-5',
-      )}
+    <TooltipAnchor
+      description={voice.reason ?? localize('com_ui_dictate')}
+      render={
+        <button
+          type="button"
+          aria-label={voice.reason ?? localize('com_ui_dictate')}
+          disabled={disabled || !!voice.blocked}
+          onClick={voice.toggle}
+          className={cn(
+            'flex size-9 items-center justify-center rounded-full p-1 text-white transition-colors',
+            'hover:bg-surface-hover disabled:opacity-40 [&_svg]:size-5',
+          )}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="1em"
+            height="1em"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <path d="M12 19v3" />
+          </svg>
+        </button>
+      }
     />
   );
 }

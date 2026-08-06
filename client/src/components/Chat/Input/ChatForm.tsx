@@ -54,7 +54,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const [visualRowCount, setVisualRowCount] = useState(1);
   const [backupBadges, setBackupBadges] = useState<Pick<BadgeItem, 'id'>[]>([]);
   /** True from the moment the mic opens until it closes. */
-  const [voiceLive, setVoiceLive] = useState(false);
 
   const SpeechToText = useAtomValue(store.speechToText);
   const TextToSpeech = useAtomValue(store.textToSpeech);
@@ -409,15 +408,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   }
                 />
                 <div className="mx-auto flex" />
-                {SpeechToText && (
-                  <Mic
-                    ask={submitMessage}
-                    index={index}
-                    disabled={disableInputs || isNotAppendable}
-                    isSubmitting={isSubmitting}
-                    onLive={setVoiceLive}
-                  />
-                )}
+                {SpeechToText && <Mic disabled={disableInputs || isNotAppendable} />}
                 <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
                   {/* No stop circle (owner call): the send arrow holds its seat,
                       disabled while the reply streams; the mic carries the
@@ -433,7 +424,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
               </div>
               {/* While a spoken conversation is live the mic reads the reply, so
                 the automatic-playback stream stands down — one voice at a time. */}
-              {TextToSpeech && automaticPlayback && !voiceLive && <StreamAudio index={index} />}
+              {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
             </div>
           </div>
         </div>
