@@ -73,33 +73,48 @@ jobs:
           KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
           KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
           KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://api.hanzo.ai' }}
+        # NOT the default shell. The runner invokes `bash --noprofile --norc -e -o
+        # pipefail`, and `set` only ADDS options — a script cannot take `-e` back
+        # off. So every careful `exit 0` below was unreachable: `curl -sf` answers
+        # non-zero on any non-2xx, `-e` killed the step at the first one, and the
+        # run showed a bare red X 0.19s in with not one word of why. Every
+        # diagnostic this step exists to print was dead code.
+        shell: bash --noprofile --norc {0}
         run: |
           set -uo pipefail
           if [ -z "${KMS_CLIENT_ID:-}" ] || [ -z "${KMS_CLIENT_SECRET:-}" ]; then
             echo "::error::KMS credentials absent — shipping a bundle with no ingest key; every track/identify/group it emits will be dropped"
             exit 0
           fi
-          TOKEN=$(curl -sf "$KMS_ENDPOINT/v1/kms/auth/login" \
+          # Status and body separately, so a failure can SAY which one it was.
+          # `curl -sf` collapses 401, 404 and a network drop into one empty string,
+          # which is how "login failed" and "secret absent" became the same
+          # non-event.
+          login=$(curl -s -w '\n%{http_code}' "$KMS_ENDPOINT/v1/kms/auth/login" \
             -H 'Content-Type: application/json' \
-            -d "{\"clientId\":\"$KMS_CLIENT_ID\",\"clientSecret\":\"$KMS_CLIENT_SECRET\"}" \
-            | jq -r '.accessToken // empty')
+            -d "{\"clientId\":\"$KMS_CLIENT_ID\",\"clientSecret\":\"$KMS_CLIENT_SECRET\"}")
+          code=$(printf '%s' "$login" | tail -n1)
+          TOKEN=$(printf '%s' "$login" | sed '$d' | jq -r '.accessToken // empty')
           if [ -z "$TOKEN" ]; then
-            echo "::error::KMS login failed — shipping a bundle with no ingest key"; exit 0
+            echo "::error::KMS login answered $code — the CI credentials no longer authenticate. Bundle ships with no ingest key."
+            exit 0
           fi
           # KMS is embedded in hanzoai/cloud now (HIP-0106): the org comes from the
           # TOKEN, not the url, and the body is flat {"name","env","value"}. The old
-          # /v1/kms/orgs/<org>/... + .secret.value pair 404s and selects nothing, and
-          # `curl -sf` turns that into "" -- indistinguishable from a missing secret.
-          # Worse, the standalone instance still holds a STALE key that cloud rejects
-          # at ingest with 403, so reading the old host ships a key that cannot write.
-          V=$(curl -sf "$KMS_ENDPOINT/v1/kms/secrets/deploy/PUBLISHABLE_KEY?env=prod" \
-            -H "Authorization: Bearer $TOKEN" | jq -r '.value // empty')
+          # /v1/kms/orgs/<org>/... + .secret.value pair 404s and selects nothing.
+          # The key lives at hanzo / env=prod / path=deploy / PUBLISHABLE_KEY, and
+          # that address is load-bearing: a key stored anywhere else is never read.
+          get=$(curl -s -w '\n%{http_code}' "$KMS_ENDPOINT/v1/kms/secrets/deploy/PUBLISHABLE_KEY?env=prod" \
+            -H "Authorization: Bearer $TOKEN")
+          code=$(printf '%s' "$get" | tail -n1)
+          V=$(printf '%s' "$get" | sed '$d' | jq -r '.value // empty')
           if [ -z "$V" ]; then
-            echo "::error::PUBLISHABLE_KEY absent from KMS (hanzo/deploy env=prod) — shipping a bundle with no ingest key"; exit 0
+            echo "::error::PUBLISHABLE_KEY read answered $code (hanzo/deploy env=prod) — shipping a bundle with no ingest key"
+            exit 0
           fi
           echo "::add-mask::$V"
           echo "key=$V" >> "$GITHUB_OUTPUT"
-          echo "ingest key resolved (${#V} chars)"
+          echo "ingest key resolved ($code, ${#V} chars)"
 
       - uses: docker/build-push-action@v6
         with:
