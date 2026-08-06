@@ -19,8 +19,8 @@
  *
  * `frame-ancestors 'self'` (with `X-Frame-Options: SAMEORIGIN`) refuses framing by
  * any other origin; same-origin is needed for the silent.mp3 audio unlock iframe.
- * Both framing directives are now closed to every third party: nothing may embed
- * US, and we embed nobody.
+ * Nothing may embed US. We embed exactly one third party: the muted ambient
+ * backdrop player (components/Chat/Backdrop.tsx), served from youtube-nocookie.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -32,8 +32,10 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
   "connect-src 'self' https://hanzo.id https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com",
-  // 'self' keeps the same-origin silent.mp3 audio-unlock iframe. Nothing else.
-  "frame-src 'self'",
+  // 'self' keeps the same-origin silent.mp3 audio-unlock iframe; the YouTube
+  // origin is the Backdrop player and nothing else (www.youtube.com, not
+  // nocookie — that host answers embeds with a configuration error).
+  "frame-src 'self' https://www.youtube.com",
   "frame-ancestors 'self'",
 ].join('; ');
 
