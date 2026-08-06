@@ -287,9 +287,11 @@ export type TAgentApiKeyListResponse = {
   keys: TAgentApiKeyListItem[];
 };
 
+/** Conversation metadata edits. At least one editable field must be present. */
 export type TUpdateConversationRequest = {
   conversationId: string;
-  title: string;
+  title?: string;
+  isPinned?: boolean;
 };
 
 export type TUpdateConversationResponse = TConversation;

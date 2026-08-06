@@ -27,6 +27,13 @@ interface DropdownProps {
   mountByState?: boolean;
   unmountOnHide?: boolean;
   finalFocus?: React.RefObject<HTMLElement | null>;
+  /**
+   * Anchors the menu to an arbitrary rect instead of its trigger. This is what
+   * makes the SAME menu serve a right-click: the caller returns the pointer
+   * position and Ariakit positions against it. Return null to fall back to the
+   * trigger, so one menu covers both openings.
+   */
+  getAnchorRect?: () => { x: number; y: number; width?: number; height?: number } | null;
 }
 
 type MenuProps = Omit<
@@ -75,6 +82,7 @@ const Menu: React.FC<MenuProps> = ({
   finalFocus,
   unmountOnHide,
   preserveTabOrder,
+  getAnchorRect,
   ...props
 }) => {
   const menuStore = Ariakit.useMenuStore();
@@ -89,6 +97,7 @@ const Menu: React.FC<MenuProps> = ({
       finalFocus={finalFocus}
       unmountOnHide={unmountOnHide}
       preserveTabOrder={preserveTabOrder}
+      getAnchorRect={getAnchorRect}
       className={cn('popover-ui glass elevation-2 z-40', className)}
       {...props}
     >
@@ -186,7 +195,9 @@ const Menu: React.FC<MenuProps> = ({
                   `--text-tertiary`, the rung below it, does not (measured
                   2.8:1). */}
               {item.kbd != null && (
-                <kbd className="ml-auto font-sans text-xs text-text-secondary-alt">{item.kbd}</kbd>
+                <kbd className="ml-auto font-sans text-xs text-text-secondary-alt" aria-hidden="true">
+                  {item.kbd}
+                </kbd>
               )}
             </Ariakit.MenuItem>
           );

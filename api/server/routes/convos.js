@@ -199,35 +199,44 @@ router.post('/archive', validateConvoAccess, async (req, res) => {
 const MAX_CONVO_TITLE_LENGTH = 1024;
 
 /**
- * Updates a conversation's title.
+ * Updates a conversation's own metadata: its title, its pinned state, or both.
  * @route POST /update
  * @param {string} req.body.arg.conversationId - The conversation ID to update.
- * @param {string} req.body.arg.title - The new title for the conversation.
+ * @param {string} [req.body.arg.title] - The new title for the conversation.
+ * @param {boolean} [req.body.arg.isPinned] - Whether the conversation is pinned.
  * @returns {object} 201 - The updated conversation object.
  */
 router.post('/update', validateConvoAccess, async (req, res) => {
-  const { conversationId, title } = req.body?.arg ?? {};
+  const { conversationId, title, isPinned } = req.body?.arg ?? {};
 
   if (!conversationId) {
     return res.status(400).json({ error: 'conversationId is required' });
   }
 
-  if (title === undefined) {
-    return res.status(400).json({ error: 'title is required' });
+  if (title === undefined && isPinned === undefined) {
+    return res.status(400).json({ error: 'title or isPinned is required' });
   }
 
-  if (typeof title !== 'string') {
+  if (title !== undefined && typeof title !== 'string') {
     return res.status(400).json({ error: 'title must be a string' });
   }
 
-  const sanitizedTitle = title.trim().slice(0, MAX_CONVO_TITLE_LENGTH);
+  if (isPinned !== undefined && typeof isPinned !== 'boolean') {
+    return res.status(400).json({ error: 'isPinned must be a boolean' });
+  }
+
+  const update = { conversationId };
+  if (title !== undefined) {
+    update.title = title.trim().slice(0, MAX_CONVO_TITLE_LENGTH);
+  }
+  if (isPinned !== undefined) {
+    update.isPinned = isPinned;
+  }
 
   try {
-    const dbResponse = await saveConvo(
-      req,
-      { conversationId, title: sanitizedTitle },
-      { context: `POST /v1/chat/convos/update ${conversationId}` },
-    );
+    const dbResponse = await saveConvo(req, update, {
+      context: `POST /v1/chat/convos/update ${conversationId}`,
+    });
     res.status(201).json(dbResponse);
   } catch (error) {
     logger.error('Error updating conversation', error);

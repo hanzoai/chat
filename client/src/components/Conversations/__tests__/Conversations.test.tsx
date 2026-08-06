@@ -2,6 +2,7 @@ import React, { createRef } from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'jotai';
+import { MemoryRouter } from 'react-router-dom';
 import type { CellMeasurerCache, List } from 'react-virtualized';
 
 let mockCapturedCache: CellMeasurerCache | null = null;
@@ -109,20 +110,27 @@ describe('Conversations – favorites CellMeasurerCache key invalidation', () =>
     mockShowMarketplace = true;
   });
 
+  /**
+   * The sidebar list only ever renders inside the router — its Chats header
+   * links to the "Chats and tasks" pane — so the harness supplies one. Without
+   * it `useNavigate()` throws before any assertion runs.
+   */
   const Wrapper = () => (
-    <Provider>
-      <Conversations
-        conversations={[]}
-        moveToTop={jest.fn()}
-        toggleNav={jest.fn()}
-        containerRef={containerRef}
-        loadMoreConversations={jest.fn()}
-        isLoading={false}
-        isSearchLoading={false}
-        isChatsExpanded={true}
-        setIsChatsExpanded={jest.fn()}
-      />
-    </Provider>
+    <MemoryRouter>
+      <Provider>
+        <Conversations
+          conversations={[]}
+          moveToTop={jest.fn()}
+          toggleNav={jest.fn()}
+          containerRef={containerRef}
+          loadMoreConversations={jest.fn()}
+          isLoading={false}
+          isSearchLoading={false}
+          isChatsExpanded={true}
+          setIsChatsExpanded={jest.fn()}
+        />
+      </Provider>
+    </MemoryRouter>
   );
 
   it('should invalidate the cached favorites height when favorites count changes', () => {
