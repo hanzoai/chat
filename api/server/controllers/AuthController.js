@@ -73,7 +73,9 @@ const refreshController = async (req, res) => {
     const refreshToken = req.session?.openidTokens?.refreshToken || parsedCookies.refreshToken;
 
     if (!refreshToken) {
-      return res.status(200).json({ message: 'Refresh token not provided' });
+      // 401, not 200: a refusal that answers 200 reads as "session exists" to
+      // every caller, and the client then never falls back to the guest mint.
+      return res.status(401).json({ message: 'Refresh token not provided' });
     }
 
     try {
@@ -136,7 +138,8 @@ const refreshController = async (req, res) => {
   /** For non-OpenID users, read refresh token from cookies */
   const refreshToken = parsedCookies.refreshToken;
   if (!refreshToken) {
-    return res.status(200).json({ message: 'Refresh token not provided' });
+    // 401, not 200 — same contract as the OpenID branch above.
+    return res.status(401).json({ message: 'Refresh token not provided' });
   }
 
   try {

@@ -146,6 +146,15 @@ if (typeof window !== 'undefined') {
       if (originalRequest.url?.includes('/v1/chat/auth/logout') === true) {
         return Promise.reject(error);
       }
+      // A 401 from the refresh endpoint IS the refresh failing — terminal,
+      // like 2fa and logout above. Routing it through the retry machinery
+      // issues a second refresh whose own 401 queues behind `isRefreshing`,
+      // which only clears when that second call settles: a deadlock that
+      // strands every caller and the auth state machine with it. Reject so
+      // the AuthContext mutation's onError takes the guest/login fallback.
+      if (originalRequest.url?.includes('auth/refresh') === true) {
+        return Promise.reject(error);
+      }
 
       if (error.response.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
@@ -165,13 +174,9 @@ if (typeof window !== 'undefined') {
         isRefreshing = true;
 
         try {
-          const response = await refreshToken(
-            // Edge case: avoid a blank screen if the initial 401 is itself a refresh request.
-            // Match on 'auth/refresh', not the pre-namespace 'api/auth/refresh': the
-            // endpoint moved to /v1/chat/auth/refresh (api-endpoints.ts), so the old
-            // literal could never match and this guard silently stopped guarding.
-            originalRequest.url?.includes('auth/refresh') === true ? true : false,
-          );
+          // Refresh originals never reach here (rejected above), so this call
+          // is always on behalf of some other 401'd request.
+          const response = await refreshToken(false);
 
           const token = response?.token ?? '';
 

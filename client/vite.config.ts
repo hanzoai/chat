@@ -91,34 +91,22 @@ export default defineConfig(({ command }) => ({
     react(),
     nodePolyfills(),
     VitePWA({
-      injectRegister: 'auto', // 'auto' | 'manual' | 'disabled'
-      registerType: 'autoUpdate', // 'prompt' | 'autoUpdate'
+      injectRegister: 'auto',
+      // The worker self-destructs, by decision, not accident. This is an
+      // online AI chat: a precache worker only ever serves the PREVIOUS
+      // build's shell after a deploy (black page, missing lazy chunks, 401s
+      // until the user clears it by hand — observed on every release). The
+      // generated sw.js now replaces any installed worker on its next visit,
+      // clears its caches and unregisters. Deleting the file instead would
+      // strand installed workers forever: the SPA catch-all answers /sw.js
+      // with HTML, which is a failed update, not a 404. The manifest below
+      // keeps the app installable.
+      selfDestroying: true,
       devOptions: {
-        enabled: false, // disable service worker registration in development mode
+        enabled: false,
       },
       useCredentials: true,
       includeManifestIcons: false,
-      workbox: {
-        globPatterns: [
-          '**/*.{js,css,html}',
-          'assets/favicon*.png',
-          'assets/icon-*.png',
-          'assets/apple-touch-icon*.png',
-          'assets/maskable-icon.png',
-          'manifest.webmanifest',
-        ],
-        // Do NOT exclude index.html: vite-plugin-pwa's default navigateFallback
-        // is 'index.html', so the generated SW binds a navigation handler via
-        // createHandlerBoundToURL('index.html'). If it isn't precached, that
-        // throws "non-precached-url: index.html", the service worker breaks, and
-        // users are stranded on a stale shell after each deploy (they see
-        // /v1/chat/* 401s until they manually clear the SW). Precaching it — with
-        // registerType:'autoUpdate' above — keeps the SPA nav fallback valid and
-        // self-updates on every release.
-        globIgnores: ['images/**/*', '**/*.map'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        navigateFallbackDenylist: [/^\/v1\//, /^\/images\//],
-      },
       includeAssets: [],
       manifest: {
         name: 'Hanzo Chat',

@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { debounce } from 'lodash';
 import { useAtom, useSetAtom } from 'jotai';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { setTokenHeader, SystemRoles } from '@hanzochat/data-provider';
 import type * as t from '@hanzochat/data-provider';
@@ -136,6 +137,7 @@ const AuthContextProvider = ({
     },
   });
   const refreshToken = useRefreshTokenMutation();
+  const queryClient = useQueryClient();
 
   const logout = useCallback(
     (redirect?: string) => {
@@ -171,8 +173,13 @@ const AuthContextProvider = ({
     setTokenHeader(session.token);
     setIsGuest(true);
     setIsAuthenticated(false);
+    // Bootstrap queries (models, endpoints, convos) that fired before this
+    // bearer existed have burned their retries into a terminal error state,
+    // and nothing else re-runs them — the chat pane would stay empty with a
+    // valid session in hand. Adopting a principal refetches the world.
+    await queryClient.invalidateQueries();
     return true;
-  }, [acquireGuestToken, setUser]);
+  }, [acquireGuestToken, setUser, queryClient]);
 
   const login = (data: t.TLoginUser) => {
     loginUser.mutate(data);
