@@ -26,7 +26,15 @@ import store from '~/store';
 /** How many bars the waveform holds. The newest level enters on the right. */
 const BARS = 28;
 
-export default function Mic({ disabled }: { disabled: boolean }) {
+export default function Mic({
+  disabled,
+  onRecordingChange,
+}: {
+  disabled: boolean;
+  /** Told when dictation opens/closes so the composer row can clear itself and
+   *  give the waveform the full width. */
+  onRecordingChange?: (open: boolean) => void;
+}) {
   const localize = useLocalize();
   const { setValue, getValues } = useChatFormContext();
   const { speechToTextEndpoint } = useGetAudioSettings();
@@ -81,6 +89,11 @@ export default function Mic({ disabled }: { disabled: boolean }) {
     },
   });
 
+  // Let the composer row know, so it can hand the recorder the full width.
+  useEffect(() => {
+    onRecordingChange?.(voice.open);
+  }, [voice.open, onRecordingChange]);
+
   useEffect(() => {
     if (!voice.open) {
       kept.current = null;
@@ -102,13 +115,18 @@ export default function Mic({ disabled }: { disabled: boolean }) {
     const mm = String(Math.floor(elapsed / 60)).padStart(1, '0');
     const ss = String(elapsed % 60).padStart(2, '0');
     return (
-      <div className="flex items-center gap-2 pr-1" aria-label={localize('com_ui_dictating')}>
-        <div className="flex h-9 items-center gap-[2px]" aria-hidden="true">
+      // Dictation takes the WHOLE row: `flex-1` grows the recorder across the
+      // composer so the waveform spans the full width instead of a thumbnail
+      // crammed by the send button. The bars distribute edge-to-edge
+      // (`justify-between`) and stand tall enough (up to 34px, min 4) to read as
+      // sound rather than a row of dots.
+      <div className="flex flex-1 items-center gap-3 pr-1" aria-label={localize('com_ui_dictating')}>
+        <div className="flex h-9 flex-1 items-center justify-between gap-[2px]" aria-hidden="true">
           {bars.map((v, i) => (
             <span
               key={i}
-              className="w-[2px] rounded-full bg-white"
-              style={{ height: `${Math.max(3, Math.round(v * 28))}px`, opacity: 0.5 + v * 0.5 }}
+              className="w-[3px] shrink-0 rounded-full bg-white"
+              style={{ height: `${Math.max(4, Math.round(v * 34))}px`, opacity: 0.45 + v * 0.55 }}
             />
           ))}
         </div>

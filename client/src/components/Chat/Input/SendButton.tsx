@@ -28,13 +28,18 @@ const SubmitButton = React.memo(
               // the page, sitting inside the one surface that already says
               // "type here" with the prism ring. hanzo.app's composer sends
               // from a dark button for exactly this reason.
-              'rounded-full border border-surface-submit-hover bg-surface-submit p-1.5 text-white outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
+              //
+              // `size-9` + a 20px glyph is the composer's ONE control size — the
+              // mic, attach and every other icon button measure exactly this. It
+              // was a 24px glyph in loose padding, a filled disc visibly larger
+              // than its ghost siblings; matched, the row reads as one set.
+              'flex size-9 items-center justify-center rounded-full border border-surface-submit-hover bg-surface-submit text-white outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
             )}
             data-testid="send-button"
             type="submit"
           >
             <span className="" data-state="closed">
-              <SendIcon size={24} />
+              <SendIcon size={20} />
             </span>
           </button>
         }

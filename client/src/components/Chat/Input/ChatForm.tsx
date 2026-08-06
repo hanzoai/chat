@@ -55,6 +55,10 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const [, setIsScrollable] = useState(false);
   const [visualRowCount, setVisualRowCount] = useState(1);
   const [backupBadges, setBackupBadges] = useState<Pick<BadgeItem, 'id'>[]>([]);
+  // While dictation is live the recorder takes the whole action row, so the
+  // attach/create/badge cluster and its spacer step aside — the waveform reads
+  // full width instead of a thumbnail wedged against the send button.
+  const [recording, setRecording] = useState(false);
   /** True from the moment the mic opens until it closes. */
 
   const SpeechToText = useAtomValue(store.speechToText);
@@ -366,24 +370,34 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 isRTL ? 'flex-row-reverse' : 'flex-row',
               )}
             >
-              <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
-                <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
-              </div>
-              <CreateMenu />
-              <BadgeRow
-                showEphemeralBadges={
-                  !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
-                }
-                isSubmitting={isSubmitting}
-                conversationId={conversationId}
-                specName={conversation?.spec}
-                onChange={setBadges}
-                isInChat={
-                  Array.isArray(conversation?.messages) && conversation.messages.length >= 1
-                }
-              />
-              <div className="mx-auto flex" />
-              {SpeechToText && <Mic disabled={disableInputs || isNotAppendable} />}
+              {/* Hidden while dictating so the waveform owns the full row. */}
+              {!recording && (
+                <>
+                  <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
+                    <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
+                  </div>
+                  <CreateMenu />
+                  <BadgeRow
+                    showEphemeralBadges={
+                      !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
+                    }
+                    isSubmitting={isSubmitting}
+                    conversationId={conversationId}
+                    specName={conversation?.spec}
+                    onChange={setBadges}
+                    isInChat={
+                      Array.isArray(conversation?.messages) && conversation.messages.length >= 1
+                    }
+                  />
+                  <div className="mx-auto flex" />
+                </>
+              )}
+              {SpeechToText && (
+                <Mic
+                  disabled={disableInputs || isNotAppendable}
+                  onRecordingChange={setRecording}
+                />
+              )}
               <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
                 {/* No stop circle (owner call): the send arrow holds its seat,
                       disabled while the reply streams; the mic carries the
