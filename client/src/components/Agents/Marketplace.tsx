@@ -13,7 +13,7 @@ import MarketplaceAdminSettings from './MarketplaceAdminSettings';
 import { SidePanelProvider, useChatContext } from '~/Providers';
 import { SidePanelGroup } from '~/components/SidePanel';
 import { OpenSidebar } from '~/components/Chat/Menus';
-import { cn, clearMessagesCache } from '~/utils';
+import { cn, clearMessagesCache, savedLayout } from '~/utils';
 import CategoryTabs from './CategoryTabs';
 import SearchBar from './SearchBar';
 import AgentGrid from './AgentGrid';
@@ -208,10 +208,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
   };
 
   // Layout configuration for SidePanelGroup
-  const defaultLayout = useMemo(() => {
-    const resizableLayout = localStorage.getItem('react-resizable-panels:layout');
-    return typeof resizableLayout === 'string' ? JSON.parse(resizableLayout) : undefined;
-  }, []);
+  const defaultLayout = useMemo(savedLayout, []);
 
   const defaultCollapsed = useMemo(() => {
     const collapsedPanels = localStorage.getItem('react-resizable-panels:collapsed');
