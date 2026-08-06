@@ -859,11 +859,68 @@ already describes the target and was failing against the brochure.
 
 The arrival OFFER is gone: no login modal on load. `LoginGate` opens only for a
 REFUSAL (`limit`, `anonymous`, `unavailable`) — something was denied and the
-gate explains it, so it still offers no dismissal. The `welcome` reason,
-`offerLogin()`, the `hanzo.login.welcomed` session flag and the welcome/stay-
-logged-out strings are deleted, not parked. The standing invitation is the
-sidebar foot's Log in / Sign up (`Nav/Visitor.tsx`). Do not reintroduce an
-unprompted modal over the signed-out product.
+gate explains it, so it still offers no dismissal (`onOpenChange` ignores
+close requests: Escape and overlay clicks included, deliberately). The
+`welcome` reason, `offerLogin()`, the `hanzo.login.welcomed` session flag and
+the welcome/stay-logged-out strings are deleted, not parked. The standing
+invitation is the sidebar foot's Log in / Sign up (`Nav/Visitor.tsx`). Do not
+reintroduce an unprompted modal over the signed-out product.
+
+### Ambient backdrop (2026-08-05)
+
+The chat canvas plays a muted, looping YouTube embed behind everything
+(`Chat/Backdrop.tsx`, mounted first in `Presentation`; content sits in an
+explicit `z-10` wrapper because a cross-origin iframe composites above z-auto
+siblings). Facts that took a day to learn, kept here so they stay learned:
+
+- Host is `www.youtube.com` — the nocookie host answers embeds with
+  "video player configuration error" (153). CSP `frame-src` allows exactly
+  that origin (`api/server/csp.js`, pinned by `csp.spec.js`).
+- Cover math is `width: max(177.78vh, 100vw); height: max(56.25vw, 100vh)`
+  + center-translate + 1.4 overscan, with inline `maxWidth/maxHeight: none`
+  because the app's global `iframe { max-width: 100% }` otherwise clamps it
+  into a letterbox on phones.
+- The reveal is gated on PROOF of playback, not a timer: the listening
+  handshake makes the player report state, and the iframe stays `opacity: 0`
+  until `playerState === 1` AND the ~4s adaptive-ramp window has passed
+  (quality cannot be forced; embeds ignore every quality API). A video
+  YouTube refuses never reveals — clean canvas, not an error card. Verified
+  by aborting `*.youtube.com` at the network layer.
+- `showBackdrop` (Settings → Chat, default on) unmounts the embed entirely —
+  off means the third-party stream stops, not `opacity: 0`.
+- `ResizablePanelGroup` in `SidePanelGroup.tsx` must NOT paint
+  `bg-presentation`; that opaque sheet sits above the backdrop and was
+  exactly what hid it.
+
+### Signed-out boot is deterministic (2026-08-05)
+
+The anonymous cold start used to be a coin flip; three fixes made it one
+path, each at its own layer. Do not undo any of them singly:
+
+- `/v1/chat/auth/refresh` with no cookie answers **401**, not
+  `200 {message}` — a refusal wearing a success status made the client
+  believe a session existed, so it never minted a guest.
+- A 401 from `auth/refresh` is TERMINAL in the axios interceptor
+  (`data-provider/src/request.ts`), like 2fa and logout: retrying the
+  refresh through its own interceptor queues the retry behind
+  `isRefreshing` and deadlocks every queued caller.
+- `AuthContext`: `silentRefresh` is single-flight (`refreshBusyRef`), and
+  the guest fallback no-ops once ANY principal has landed — a straggler
+  refresh completing after guest adoption used to run the unauth branch,
+  which resets the global token header (`setTokenHeader(undefined)`) while
+  the composer stayed mounted: the next send went out tokenless and 401'd.
+  Adopting a principal also invalidates all queries, because bootstrap
+  queries that 401'd pre-token had burned their retries into a terminal
+  error state nothing else re-ran.
+
+The PWA service worker is a SELF-DESTROYER (`selfDestroying: true` in
+`client/vite.config.ts`): an online AI chat gains nothing from a precache
+that serves the previous build's shell after every deploy (black page,
+missing lazy chunks — observed repeatedly). Installed workers unregister
+and purge on their next visit; the manifest keeps installability. Do not
+resurrect the workbox worker; if `/sw.js` ever stops being served, old
+workers strand forever (the SPA catch-all answers it with HTML, which is a
+failed update, not the 404 that would unregister them).
 
 ### Header restructure — NOT done, and it is not a tweak
 
