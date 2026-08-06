@@ -5,6 +5,7 @@ import type { ExtendedFile } from '~/common';
 import { useDeleteFilesMutation } from '~/data-provider';
 import DragDropWrapper from '~/components/Chat/Input/Files/DragDropWrapper';
 import Backdrop from '~/components/Chat/Backdrop';
+import BackdropMenu from '~/components/Chat/BackdropMenu';
 import { EditorProvider, SidePanelProvider, ArtifactsProvider } from '~/Providers';
 import Artifacts from '~/components/Artifacts/Artifacts';
 import { SidePanelGroup } from '~/components/SidePanel';
@@ -78,21 +79,25 @@ export default function Presentation({ children }: { children: React.ReactNode }
       <Backdrop />
       {/* The iframe below composites on its own layer, so the content must
           hold an explicit position in the stack — z-auto loses to it in a
-          real (headed) browser even though DOM order suggests otherwise. */}
-      <div className="relative z-10 flex w-full grow">
-        <SidePanelProvider>
-          <SidePanelGroup
-            defaultLayout={defaultLayout}
-            fullPanelCollapse={fullCollapse}
-            defaultCollapsed={defaultCollapsed}
-            artifacts={artifactsElement}
-          >
-            <main className="flex h-full flex-col overflow-y-auto" role="main">
-              {children}
-            </main>
-          </SidePanelGroup>
-        </SidePanelProvider>
-      </div>
+          real (headed) browser even though DOM order suggests otherwise.
+          BackdropMenu adds a right-click menu over the empty canvas to change
+          the background; it wraps the content so the handler sees the clicks. */}
+      <BackdropMenu>
+        <div className="relative z-10 flex w-full grow">
+          <SidePanelProvider>
+            <SidePanelGroup
+              defaultLayout={defaultLayout}
+              fullPanelCollapse={fullCollapse}
+              defaultCollapsed={defaultCollapsed}
+              artifacts={artifactsElement}
+            >
+              <main className="flex h-full flex-col overflow-y-auto" role="main">
+                {children}
+              </main>
+            </SidePanelGroup>
+          </SidePanelProvider>
+        </div>
+      </BackdropMenu>
     </DragDropWrapper>
   );
 }
