@@ -1,28 +1,42 @@
 import { useMemo, useState } from 'react';
 import { useSetAtom } from 'jotai';
-import { video } from '~/components/Chat/Backdrop';
+import { merge, videoId } from '~/utils/backdrop';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 /**
  * A `hanzo-setting` fence, rendered as the card it promises.
  *
- * The model PROPOSES a change ({backdropVideo, showBackdrop, voice} — the
- * contract lives in api/server/services/guide.js); nothing here runs until the
- * user presses Apply. Voice proposals show the browser's real voice list,
- * because the model can only guess at names the browser never told it.
+ * The model PROPOSES a change ({backdrop, voice} — the contract lives in
+ * api/server/services/guide.js); nothing here runs until the user presses
+ * Apply. Voice proposals show the browser's real voice list, because the model
+ * can only guess at names the browser never told it.
+ *
+ * WHAT A PROPOSAL MAY ASK FOR IS DELIBERATELY NARROWER THAN WHAT THE VIEWER CAN
+ * SET. A fence is model output, and model output can be dictated by a web page
+ * it read or a file it was handed — so it may only turn the backdrop off or
+ * name a YouTube video. It may NOT set a photo: an arbitrary image URL is a
+ * beacon that would fetch from a stranger's host on every page load thereafter,
+ * and nothing about "change my background" requires the model to choose the
+ * host. Photos come from the viewer's own upload or their own typed URL.
+ *
+ * Even inside that narrow window nothing is believed: the fields are handed to
+ * `merge` (utils/backdrop), the one validated write path, which drops anything
+ * it cannot make sense of and keeps the current value.
  */
-type Proposal = { backdropVideo?: string; showBackdrop?: boolean; voice?: string };
+type Proposal = { source?: 'off' | 'video'; video?: string; voice?: string };
 
 function parse(content: string): Proposal | null {
   try {
     const raw = JSON.parse(content) as Record<string, unknown>;
+    const backdrop = (raw.backdrop ?? {}) as Record<string, unknown>;
     const p: Proposal = {};
-    if (typeof raw.backdropVideo === 'string') {
-      p.backdropVideo = raw.backdropVideo;
+    if (backdrop.source === 'off' || backdrop.source === 'video') {
+      p.source = backdrop.source;
     }
-    if (typeof raw.showBackdrop === 'boolean') {
-      p.showBackdrop = raw.showBackdrop;
+    if (typeof backdrop.video === 'string' && videoId(backdrop.video)) {
+      p.video = backdrop.video;
+      p.source = 'video';
     }
     if (typeof raw.voice === 'string') {
       p.voice = raw.voice;
@@ -35,8 +49,7 @@ function parse(content: string): Proposal | null {
 
 export default function Adjust({ content }: { content: string }) {
   const localize = useLocalize();
-  const setVideo = useSetAtom(store.backdropVideo);
-  const setShow = useSetAtom(store.showBackdrop);
+  const setBackdrop = useSetAtom(store.backdrop);
   const setVoice = useSetAtom(store.voice);
   const [done, setDone] = useState(false);
 
@@ -52,12 +65,10 @@ export default function Adjust({ content }: { content: string }) {
   }
 
   const apply = () => {
-    if (proposal.backdropVideo != null) {
-      setVideo(video(proposal.backdropVideo));
-      setShow(true);
-    }
-    if (proposal.showBackdrop != null) {
-      setShow(proposal.showBackdrop);
+    if (proposal.source != null) {
+      setBackdrop((current) =>
+        merge(current, { source: proposal.source, video: proposal.video }),
+      );
     }
     if (proposal.voice != null) {
       const name = pickedVoice ?? proposal.voice;
@@ -69,17 +80,19 @@ export default function Adjust({ content }: { content: string }) {
   return (
     <span className="not-prose my-2 flex flex-col gap-2 rounded-xl border border-border-light bg-surface-primary-alt p-3 text-sm">
       <span className="font-medium text-text-primary">{localize('com_ui_adjust_title')}</span>
-      {proposal.backdropVideo != null && (
+      {proposal.video != null && (
         <span className="text-text-secondary">
           {localize('com_ui_adjust_backdrop')}{' '}
-          <code className="text-text-primary">{video(proposal.backdropVideo)}</code>
+          {/* The id, not the pasted string: what the player will actually be
+              asked for is what the viewer is being asked to agree to. */}
+          <code className="text-text-primary">{videoId(proposal.video)}</code>
         </span>
       )}
-      {proposal.showBackdrop != null && (
+      {proposal.video == null && proposal.source != null && (
         <span className="text-text-secondary">
-          {proposal.showBackdrop
-            ? localize('com_ui_adjust_backdrop_on')
-            : localize('com_ui_adjust_backdrop_off')}
+          {proposal.source === 'off'
+            ? localize('com_ui_adjust_backdrop_off')
+            : localize('com_ui_adjust_backdrop_on')}
         </span>
       )}
       {proposal.voice != null && (

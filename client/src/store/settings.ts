@@ -1,7 +1,34 @@
 import { atom } from 'jotai';
 import { SettingsViews, LocalStorageKeys } from '@hanzochat/data-provider';
-import { atomWithLocalStorage } from '~/store/utils';
+import { atomWithLocalStorage, readStorage } from '~/store/utils';
 import type { TOptionSettings } from '~/common';
+import type { Backdrop } from '~/utils/backdrop';
+
+/**
+ * What the canvas paints when nobody has chosen anything: the reef, looping.
+ *
+ * Seeded from the two settings this one replaces, so an upgrade keeps what the
+ * visitor already chose. `showBackdrop` was how someone said "no third-party
+ * embed, no motion behind my text" and must not be quietly overruled, so anyone
+ * who turned it off starts at `off`; `backdropVideo` held their footage, as a
+ * bare id or a URL, and `videoId` reads both.
+ */
+const DEFAULT_BACKDROP: Backdrop = {
+  source: readStorage('showBackdrop', true) ? 'video' : 'off',
+  photo: '',
+  video: readStorage('backdropVideo', 'https://www.youtube.com/watch?v=6lZ3CookYNg'),
+  playlist: [],
+  loop: true,
+};
+
+/**
+ * The canvas's ambient backdrop — what it shows, and whether it shows at all.
+ * Scenery, so it is the visitor's call: it costs a third-party embed and
+ * constant motion behind the text, and neither is something to impose on
+ * someone who just wants to read their thread. `source: 'off'` is the whole
+ * off switch; there is no second flag beside it. See utils/backdrop.
+ */
+const backdrop = atomWithLocalStorage<Backdrop>('backdrop', DEFAULT_BACKDROP);
 
 // Static atoms without localStorage
 const staticAtoms = {
@@ -44,6 +71,16 @@ const localStorageAtoms = {
   modularChat: atomWithLocalStorage('modularChat', true),
   LaTeXParsing: atomWithLocalStorage('LaTeXParsing', true),
   showFooter: atomWithLocalStorage('showFooter', true),
+  backdrop,
+  /**
+   * A lens onto `backdrop.loop`, not a second home for it: the toggle in
+   * settings takes a boolean atom, and this gives it one that reads and writes
+   * straight through to the single stored configuration.
+   */
+  backdropLoop: atom(
+    (get) => get(backdrop).loop,
+    (get, set, loop: boolean) => set(backdrop, { ...get(backdrop), loop }),
+  ),
   /**
    * A personal sign-off under the account row in the sidebar foot — the
    * visitor's own line, not identity data, so it lives with the rest of the
@@ -51,16 +88,6 @@ const localStorageAtoms = {
    * reserves space for silence.
    */
   signature: atomWithLocalStorage('signature', ''),
-  /**
-   * The canvas's ambient backdrop. Scenery, so it is the visitor's call: it
-   * costs a third-party embed and constant motion behind the text, and neither
-   * is something to impose on someone who just wants to read their thread.
-   * Default on — it is the product's first impression.
-   */
-  showBackdrop: atomWithLocalStorage('showBackdrop', true),
-  /** Which footage the backdrop plays — a YouTube video id or URL. The
-   *  aquarium by default; changeable from Settings or by asking the chat. */
-  backdropVideo: atomWithLocalStorage('backdropVideo', '6lZ3CookYNg'),
   /**
    * The dock: a column beside the conversation holding embedded surfaces
    * (a live feed, a world widget, an app preview). Default OFF — it is a

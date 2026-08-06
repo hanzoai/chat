@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { showThinkingAtom } from '~/store/showThinking';
+import BackdropSettings from './BackdropSettings';
 import FontSizeSelector from './FontSizeSelector';
 import { ForkSettings } from './ForkSettings';
 import ChatDirection from './ChatDirection';
@@ -27,13 +28,6 @@ const toggleSwitchConfigs = [
     switchId: 'showThinking',
     hoverCardText: undefined,
     key: 'showThinking',
-  },
-  {
-    stateAtom: store.showBackdrop,
-    localizationKey: 'com_nav_show_backdrop' as const,
-    switchId: 'showBackdrop',
-    hoverCardText: 'com_nav_info_show_backdrop' as const,
-    key: 'showBackdrop',
   },
   {
     stateAtom: store.showDock,
@@ -101,6 +95,9 @@ function Chat() {
       </div>
       <div className="pb-3">
         <ChatDirection />
+      </div>
+      <div className="pb-3">
+        <BackdropSettings />
       </div>
       {toggleSwitchConfigs.map((config) => (
         <div key={config.key} className="pb-3">

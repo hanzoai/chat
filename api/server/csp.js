@@ -19,8 +19,7 @@
  *
  * `frame-ancestors 'self'` (with `X-Frame-Options: SAMEORIGIN`) refuses framing by
  * any other origin; same-origin is needed for the silent.mp3 audio unlock iframe.
- * Nothing may embed US. We embed exactly one third party: the muted ambient
- * backdrop player (components/Chat/Backdrop.tsx), served from youtube-nocookie.
+ * Nothing may embed US. What WE embed is enumerated in `frame-src` below.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -40,9 +39,13 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
   "connect-src 'self' https://hanzo.id https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com",
-  // 'self' keeps the same-origin silent.mp3 audio-unlock iframe; the YouTube
-  // origin is the Backdrop player and nothing else (www.youtube.com, not
-  // nocookie — that host answers embeds with a configuration error).
+  // 'self' keeps the same-origin silent.mp3 audio-unlock iframe.
+  //
+  // www.youtube.com and player.twitch.tv are the only players the backdrop can
+  // embed (components/Chat/Backdrop.tsx) — youtube, not nocookie, because that
+  // host answers embeds with a configuration error. This list is what makes
+  // "Netflix cannot play here" true in the browser and not merely in the UI
+  // copy: an origin not named here cannot be framed whatever anyone configures.
   //
   // world.hanzo.ai is the dock's widget card (components/Chat/Dock). Every
   // origin here is enumerated on purpose rather than widened to *.hanzo.ai:
@@ -51,7 +54,7 @@ const contentSecurityPolicy = [
   // itself over the conversation. A card whose origin is missing renders an
   // EMPTY frame and logs nothing useful, so cards.spec.ts asserts every card's
   // origin appears here.
-  "frame-src 'self' https://www.youtube.com https://world.hanzo.ai",
+  "frame-src 'self' https://www.youtube.com https://player.twitch.tv https://world.hanzo.ai",
   "frame-ancestors 'self'",
 ].join('; ');
 
