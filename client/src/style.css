@@ -337,16 +337,6 @@
   }
 }
 
-@keyframes hzComposerGlow {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
 .hz-composer {
   position: relative;
   isolation: isolate;
@@ -386,68 +376,14 @@
   pointer-events: none;
 }
 
-/* The glow is a HALO, and it is masked for the same reason the ring is: it sat
-   under the panel, which was fine only while the panel was opaque. Through
-   glass — amplified by that material's own `saturate(1.8)` — a spinning conic
-   under the input tinted it, and on a light page 28% of a saturated sweep read
-   through a white panel as a pastel wash. The composer's own footprint is
-   excluded, so the glow lights the air around the box and nothing behind it. */
-.hz-composer::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  padding: 8px;
-  /* Concentric with the box, NOT `inherit`. The halo lives 8px outside the
-     composer, so a 24px (inherit) corner on this larger box curves too tight and
-     reads as a second, mismatched rounding just outside the panel — the "border
-     round is slightly off". `1.5rem + 8px` makes the halo's outer arc parallel
-     to the composer's, and its inner hole (outer − padding) lands back on 24px.
-     Tighter too: an 8px spread with a 20px blur hugs the box instead of the old
-     12px/28px wash. */
-  border-radius: calc(1.5rem + 8px);
-  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
-  filter: blur(20px);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  /* Repeated AFTER the standard shorthand: WebKit aliases `mask` onto
-     `-webkit-mask`, so the shorthand resets this back to `source-over` and the
-     mask degrades to a plain cover — the filled disc again, on Safari older
-     than 15.4, which is also where `mask-composite` does not exist. */
-  -webkit-mask-composite: xor;
-  opacity: 0.5;
-  z-index: -1;
-  pointer-events: none;
-  animation:
-    hzComposerSpin 10s linear infinite,
-    hzComposerGlow 10s ease-in-out infinite;
-}
-
-/* The composer panel sits above the ring and the glow. */
+/* The composer panel sits above the ring. */
 .hz-composer > * {
   position: relative;
   z-index: 1;
 }
 
-/* Focus says so with LIGHT. It used to say so with `shadow-lg`, and a black
-   drop on a near-black page is a state with no picture — the same reason the
-   elevation ladder above buys its depth from the lit edge.
-
-   `:focus-within` and not a `data-focused` attribute: React held a
-   `isTextAreaFocused` state whose only job was to mirror focus back into the DOM
-   for this one selector to read. CSS already knows. One mechanism, and a
-   re-render per focus and blur goes with it. */
-.hz-composer:focus-within::after {
-  opacity: 0.85;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hz-composer::before,
-  .hz-composer::after {
+  .hz-composer::before {
     animation: none;
   }
 }
@@ -2892,12 +2828,11 @@ html {
 
   One event, one indicator. The prism brightens instead — and it has to be
   BRIGHT enough to BE the indicator, not merely different. Three passes of the
-  same gradient composite its stops from ~.45 to ~.83 alpha; sampled off the
-  rendered page at 126 points around the ring, the worst pair measures 3.32:1
-  against the ground beside it, clearing WCAG 1.4.11's 3:1. Two passes reach
-  only 2.8 — the ground here is not black, the ::after glow lights it, so this
-  number has to be measured rather than computed off the stop list. Same stops,
-  same hue, one declaration of `--hz-spectrum`: an alpha lift, not a repaint.
+  same gradient composite its stops from ~.45 to ~.83 alpha — an alpha lift on
+  one hue, not a repaint. The lit ring now sits on the bare glass-over-video
+  ground (no halo behind it any more), which is darker than the glow-lit ground
+  it cleared WCAG 1.4.11's 3:1 against before, so contrast only improved; sample
+  it off the rendered page rather than the stop list if the spectrum ever moves.
 
   `:focus-within`, not the `:has()` above: the composer is one control surface
   and its attach/mic/send buttons keep their own `:focus-visible` ring on their
