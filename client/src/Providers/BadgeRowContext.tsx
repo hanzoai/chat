@@ -6,7 +6,6 @@ import {
   useMCPServerManager,
   useSearchApiKeyForm,
   useGetAgentsConfig,
-  useCodeApiKeyForm,
   useToolToggle,
 } from '~/hooks';
 import { getTimestampedValue } from '~/utils/timestamps';
@@ -21,7 +20,6 @@ interface BadgeRowContextType {
   artifacts: ReturnType<typeof useToolToggle>;
   fileSearch: ReturnType<typeof useToolToggle>;
   codeInterpreter: ReturnType<typeof useToolToggle>;
-  codeApiKeyForm: ReturnType<typeof useCodeApiKeyForm>;
   searchApiKeyForm: ReturnType<typeof useSearchApiKeyForm>;
   mcpServerManager: ReturnType<typeof useMCPServerManager>;
 }
@@ -192,14 +190,12 @@ export default function BadgeRowProvider({
     }
   }, [storageSuffix, specName, isSubmitting, setEphemeralAgent]);
 
-  /** CodeInterpreter hooks */
-  const codeApiKeyForm = useCodeApiKeyForm({});
-  const { setIsDialogOpen: setCodeDialogOpen } = codeApiKeyForm;
-
+  /* Code interpreter has NO key dialog: the sandbox runs under the signed-in
+   * user's own IAM bearer, so there is no per-user credential to collect and
+   * `setIsDialogOpen` is left unset — the toggle simply toggles. */
   const codeInterpreter = useToolToggle({
     conversationId,
     storageContextKey,
-    setIsDialogOpen: setCodeDialogOpen,
     toolKey: Tools.execute_code,
     localStorageKey: LocalStorageKeys.LAST_CODE_TOGGLE_,
     authConfig: {
@@ -251,7 +247,6 @@ export default function BadgeRowProvider({
     agentsConfig,
     conversationId,
     storageContextKey,
-    codeApiKeyForm,
     codeInterpreter,
     searchApiKeyForm,
     mcpServerManager,

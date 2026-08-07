@@ -1,6 +1,4 @@
-import { useRef } from 'react';
-import { KeyRoundIcon } from 'lucide-react';
-import { AuthType, AgentCapabilities } from '@hanzochat/data-provider';
+import { AgentCapabilities } from '@hanzochat/data-provider';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import {
   Checkbox,
@@ -11,44 +9,28 @@ import {
   HoverCardTrigger,
 } from '@hanzochat/client';
 import type { AgentForm } from '~/common';
-import { useLocalize, useCodeApiKeyForm } from '~/hooks';
-import ApiKeyDialog from './ApiKeyDialog';
+import { useLocalize } from '~/hooks';
 import { ESide } from '~/common';
 import { cn } from '~/utils';
 
-export default function Action({ authType = '', isToolAuthenticated = false }) {
+/**
+ * The agent builder's "Run code" capability.
+ *
+ * It is a plain checkbox now. It used to be a checkbox plus a key button plus a
+ * dialog, and a third state where an unchecked box opened the dialog instead of
+ * checking itself — all of that existed to collect a per-user code-interpreter
+ * API key. A sandbox runs under the signed-in user's own IAM bearer, so there is
+ * no key, and `isToolAuthenticated` is now true for every signed-in caller.
+ */
+export default function Action({ isToolAuthenticated = false }) {
   const localize = useLocalize();
   const methods = useFormContext<AgentForm>();
   const { control, setValue } = methods;
-  const apiKeyButtonRef = useRef<HTMLButtonElement>(null);
-  const {
-    onSubmit,
-    isDialogOpen,
-    setIsDialogOpen,
-    handleRevokeApiKey,
-    methods: keyFormMethods,
-  } = useCodeApiKeyForm({
-    onSubmit: () => {
-      setValue(AgentCapabilities.execute_code, true, { shouldDirty: true });
-      setTimeout(() => apiKeyButtonRef.current?.focus(), 100);
-    },
-    onRevoke: () => {
-      setValue(AgentCapabilities.execute_code, false, { shouldDirty: true });
-      setTimeout(() => apiKeyButtonRef.current?.focus(), 100);
-    },
-  });
 
   const runCodeIsEnabled = useWatch({ control, name: AgentCapabilities.execute_code });
-  const isUserProvided = authType === AuthType.USER_PROVIDED;
 
   const handleCheckboxChange = (checked: boolean) => {
-    if (isToolAuthenticated) {
-      setValue(AgentCapabilities.execute_code, checked, { shouldDirty: true });
-    } else if (runCodeIsEnabled) {
-      setValue(AgentCapabilities.execute_code, false, { shouldDirty: true });
-    } else {
-      setIsDialogOpen(true);
-    }
+    setValue(AgentCapabilities.execute_code, checked, { shouldDirty: true });
   };
 
   return (
@@ -82,18 +64,6 @@ export default function Action({ authType = '', isToolAuthenticated = false }) {
             {localize('com_ui_run_code')}
           </label>
           <div className="ml-2 flex gap-2">
-            {isUserProvided && (
-              <button
-                ref={apiKeyButtonRef}
-                type="button"
-                onClick={() => setIsDialogOpen(true)}
-                aria-label={localize('com_ui_add_code_interpreter_api_key')}
-                aria-haspopup="dialog"
-                aria-expanded={isDialogOpen}
-              >
-                <KeyRoundIcon className="h-5 w-5 text-text-primary" aria-hidden="true" />
-              </button>
-            )}
             <HoverCardTrigger asChild>
               <button
                 type="button"
@@ -115,17 +85,6 @@ export default function Action({ authType = '', isToolAuthenticated = false }) {
           </HoverCardPortal>
         </div>
       </HoverCard>
-      <ApiKeyDialog
-        isOpen={isDialogOpen}
-        onSubmit={onSubmit}
-        onRevoke={handleRevokeApiKey}
-        onOpenChange={setIsDialogOpen}
-        register={keyFormMethods.register}
-        isToolAuthenticated={isToolAuthenticated}
-        handleSubmit={keyFormMethods.handleSubmit}
-        isUserProvided={authType === AuthType.USER_PROVIDED}
-        triggerRef={apiKeyButtonRef}
-      />
     </>
   );
 }

@@ -30,7 +30,7 @@ export default function CodeForm({
         </div>
       </div>
       <div className="flex flex-col items-start gap-2">
-        <Action authType={data?.message} isToolAuthenticated={data?.authenticated} />
+        <Action isToolAuthenticated={data?.authenticated} />
         <Files agent_id={agent_id} files={files} />
       </div>
     </div>
