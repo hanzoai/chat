@@ -22,6 +22,25 @@
 # no lint, no typecheck, so hanzo.chat has shipped ungated for 97 builds.
 
 test:
+  # The declared version must never be BEHIND what ships. deploy.yml commits the
+  # number in the same commit it tags, so the steady state is equality; this gate
+  # is what proves the write-back landed, and it runs on every push AND every PR
+  # (deploy.yml fires on main pushes only, so a PR would otherwise never see it).
+  #
+  # Without it the drift is invisible by construction: imgver reads package.json
+  # as a FLOOR, so a stale number breaks no build, fails no test and changes no
+  # image — it just loses to the registry, every time, forever. It reached 1.0.77
+  # against a published 1.0.113 that way.
+  #
+  # Test gates get no GH_PAT from the reusable, so the registry half degrades to
+  # git tags alone — which deploy.yml now keeps complete, and which the script
+  # announces on stderr rather than silently skipping.
+  - name: version-drift
+    run: |
+      set -e
+      git fetch --tags --force --quiet || true
+      scripts/version.sh check
+
   # The build the image itself runs, run before there is an image. `pnpm run
   # frontend` is verbatim the Dockerfile's own build line — four workspace
   # packages, then the client bundle — so a break here is a break there, reached
