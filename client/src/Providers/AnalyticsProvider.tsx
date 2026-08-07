@@ -107,11 +107,21 @@ export default function AnalyticsProvider({ children }: { children: ReactNode })
     () => ({
       product: 'chat',
       host: ANALYTICS_HOST,
-      ingestKey: INGEST_KEY,
       enabled,
+      // Signed in -> the visitor's OWN IAM token, so cloud attributes the event to
+      // their org and user. Signed out -> the publishable key, which is admission
+      // for anonymous traffic and nothing more.
+      //
+      // The key is supplied HERE and never as `ingestKey`. The SDK resolves the
+      // credential as `ingestKey ?? token`, so passing it there makes the key win
+      // even for a signed-in user — their events get filed under the key's org
+      // instead of their own, and this `getToken` becomes unreachable. Feeding it
+      // through the resolver inverts that to `token ?? key`, which is the order
+      // the product wants: one credential per state, the token whenever there is
+      // one.
       getToken: () => {
         const value = tokenRef.current;
-        return value && value !== 'session' ? value : undefined;
+        return value && value !== 'session' ? value : INGEST_KEY;
       },
     }),
     [enabled],
