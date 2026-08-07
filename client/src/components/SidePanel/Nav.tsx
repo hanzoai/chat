@@ -26,7 +26,7 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
        because this element never had a height to resolve against. */
     <div
       data-collapsed={isCollapsed}
-      className="bg-surface-primary-alt hide-scrollbar group h-full flex-shrink-0 overflow-x-hidden"
+      className="glass bg-surface-primary-alt hide-scrollbar group h-full flex-shrink-0 overflow-x-hidden"
     >
       <div className="h-full">
         <div className="flex h-full min-h-0 flex-col">
