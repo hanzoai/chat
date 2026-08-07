@@ -50,16 +50,43 @@ const WEB_MODES = new Set(['search', 'news', 'research', 'deep']);
  */
 const GUEST_MODES = new Set(['search', 'news']);
 
-/** Upper bound on grounding sources. Cloud clamps per mode; chat clamps too, so
- *  an unbounded number never becomes a spend multiplier on the shared key. */
-const MAX_SOURCES = 16;
+/**
+ * Upper bound on grounding sources. Cloud is the authority on what each mode may
+ * gather (apps/answer/mode.go) and clamps to it; this is only the guard that an
+ * UNBOUNDED number never leaves chat and becomes a spend multiplier on the shared
+ * key. So it is sized to the widest mode cloud offers — research, at 32 — and
+ * never to a number below it: at 16 this clamp silently HALVED the one mode whose
+ * whole value is breadth, and it did so before cloud ever saw the request, so
+ * cloud's own budget could not correct it. One ceiling, not a copy of cloud's
+ * per-mode table, because a copy is a thing that drifts.
+ */
+const MAX_SOURCES = 32;
 
 /** `@source` hints cloud honors; everything else is dropped upstream anyway. */
 const SOURCE_HINTS = new Set(['news', 'academic', 'github', 'reddit', 'x']);
 
-/** Ceiling on a single relayed answer. Cloud bounds its own loop at 90s; this is
- *  chat's own deadline so a stalled upstream cannot pin a socket open forever. */
-const UPSTREAM_TIMEOUT_MS = 120000;
+/**
+ * Ceiling on a single relayed answer — a BACKSTOP against an upstream that never
+ * finishes, not a second opinion on how long an answer may take. Cloud bounds each
+ * mode itself (apps/answer/mode.go: 90s for search/news, 300s for research), so
+ * this only has to sit above the LONGEST of them; below it, chat becomes the thing
+ * that kills the answer.
+ *
+ * It was 120s against a comment claiming cloud stopped at 90s. That was true of
+ * search and news and never of research, which iterates its survey over six rounds
+ * and is allowed 300s. A measured research answer — six rounds, 30 searches, 14
+ * pages read, 32 sources — took 74s, so the old ceiling was not a wide margin over
+ * research, it was under half of research's budget and a heavier question crossed
+ * it. The user then saw a stream that started, delivered sources and part of a
+ * report, and stopped mid-sentence: the failure looks like a broken product and
+ * bills like a complete answer, because cloud has already done and charged for the
+ * work when chat hangs up.
+ *
+ * 330s is 300s plus the headroom for cloud to write its terminal frame. Sizing it
+ * to the deepest mode costs the fast modes nothing — cloud returns to them at 90s,
+ * so this deadline is never what ends a search.
+ */
+const UPSTREAM_TIMEOUT_MS = 330000;
 
 /** Cloud truncates at 2000; reject earlier so an oversized body never leaves chat. */
 const MAX_QUERY = 2000;
