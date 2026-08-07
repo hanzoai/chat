@@ -3,7 +3,7 @@ import { useAtom } from 'jotai';
 import { useOutletContext } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { TooltipAnchor, Button, NewChatIcon, useMediaQuery } from '@hanzochat/client';
+import { TooltipAnchor, Button, NewChatIcon, useIsSmallScreen } from '@hanzochat/client';
 import { PermissionTypes, Permissions, QueryKeys } from '@hanzochat/data-provider';
 import type t from '@hanzochat/data-provider';
 import type { ContextType } from '~/common';
@@ -38,7 +38,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
   const [searchParams, setSearchParams] = useSearchParams();
   const { conversation, newConversation } = useChatContext();
 
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
   const [hideSidePanel, setHideSidePanel] = useAtom(store.hideSidePanel);
 

@@ -26,7 +26,7 @@ import {
   TrashIcon,
   FilterInput,
   TableHeader,
-  useMediaQuery,
+  useIsSmallScreen,
 } from '@hanzochat/client';
 import type { TFile } from '@hanzochat/data-provider';
 import { ColumnVisibilityDropdown } from './ColumnVisibilityDropdown';
@@ -63,7 +63,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
 
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 

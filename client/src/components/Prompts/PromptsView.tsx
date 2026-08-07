@@ -6,14 +6,14 @@ import DashBreadcrumb from '~/routes/Layouts/DashBreadcrumb';
 import GroupSidePanel from './Groups/GroupSidePanel';
 import { useHasAccess, useLocalize } from '~/hooks';
 import { PromptGroupsProvider } from '~/Providers';
-import { useMediaQuery } from '@hanzochat/client';
+import { useIsSmallScreen } from '@hanzochat/client';
 import { cn } from '~/utils';
 
 export default function PromptsView() {
   const params = useParams();
   const navigate = useNavigate();
   const isDetailView = useMemo(() => !!(params.promptId || params['*'] === 'new'), [params]);
-  const isSmallerScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallerScreen = useIsSmallScreen();
   const [panelVisible, setPanelVisible] = useState(!isSmallerScreen);
   const openPanelRef = useRef<HTMLButtonElement>(null);
   const closePanelRef = useRef<HTMLButtonElement>(null);

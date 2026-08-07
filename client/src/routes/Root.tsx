@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useMediaQuery } from '@hanzochat/client';
+import { useIsSmallScreen, SMALL_SCREEN_QUERY } from '@hanzochat/client';
 import type { ContextType } from '~/common';
 import {
   useSearchEnabled,
@@ -41,7 +41,7 @@ export default function Root() {
     if (savedNavVisible !== null) {
       return JSON.parse(savedNavVisible);
     }
-    return !window.matchMedia('(max-width: 768px)').matches;
+    return !window.matchMedia(SMALL_SCREEN_QUERY).matches;
   });
 
   const { isAuthenticated, isGuest, logout, token } = useAuthContext();
@@ -61,7 +61,7 @@ export default function Root() {
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, token]);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const location = useLocation();
 
   // No offer on arrival. The gate opens only for a REFUSAL (quota spent, session

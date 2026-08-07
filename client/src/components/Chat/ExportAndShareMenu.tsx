@@ -2,7 +2,7 @@ import { useState, useId, useRef } from 'react';
 import { useAtomValue } from 'jotai';
 import * as Ariakit from '@ariakit/react';
 import { Upload, Share2 } from 'lucide-react';
-import { DropdownPopup, TooltipAnchor, useMediaQuery } from '@hanzochat/client';
+import { DropdownPopup, TooltipAnchor, useIsSmallScreen } from '@hanzochat/client';
 import type * as t from '~/common';
 import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
 import { ShareButton } from '~/components/Conversations/ConvoOptions';
@@ -22,7 +22,7 @@ export default function ExportAndShareMenu({
   const menuId = useId();
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const conversation = useAtomValue(store.conversationByIndex(0));
 
   const exportable =

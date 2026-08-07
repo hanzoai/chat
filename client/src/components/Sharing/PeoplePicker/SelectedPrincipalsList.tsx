@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, useMediaQuery } from '@hanzochat/client';
+import { Button, useIsSmallScreen } from '@hanzochat/client';
 import { Users, X, ExternalLink } from 'lucide-react';
 import { ResourceType } from '@hanzochat/data-provider';
 import type { TPrincipal, AccessRoleIds } from '@hanzochat/data-provider';
@@ -23,7 +23,7 @@ export default function SelectedPrincipalsList({
   resourceType = ResourceType.AGENT,
 }: SelectedPrincipalsListProps) {
   const localize = useLocalize();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsSmallScreen();
 
   const getPrincipalDisplayInfo = (principal: TPrincipal) => {
     const displayName = principal.name || localize('com_ui_unknown');
