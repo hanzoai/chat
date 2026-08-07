@@ -32,7 +32,12 @@
   scale: 0.95;
   translate: 0 -0.5rem;
   margin-top: 4px;
-  margin-right: -2px;
+  /* NO `margin-right: -2px`. It read as a nudge and behaved as a misalignment:
+     Ariakit's positioner is a shrink-to-fit wrapper, so a negative right margin
+     makes the WRAPPER 2px narrower than this element, and floating-ui aligns the
+     wrapper's edge to the trigger's. The menu therefore hung 2px past the button
+     it belongs to (measured: menu right 1381 vs trigger right 1379; 1379/1379
+     with the margin gone). `margin-top` above is a real 4px gap and stays. */
 }
 
 /* `outline: var(--bg-surface-hover)` — a tailwind CLASS name written as a custom

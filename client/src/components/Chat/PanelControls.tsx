@@ -55,15 +55,18 @@ export default function PanelControls() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [toggleSideChat, newBottomBarTab]);
 
+  /**
+   * The companions this menu can open, and ONLY those.
+   *
+   * A "Side chat" row used to head this list, and it was button 3 written a
+   * second time — same `toggleSideChat`, same `sidePanelOpen` atom, same
+   * `SlidersHorizontal` glyph, twice on one screen at two weights. A menu row is
+   * a place to reach something the row beside it cannot; a row that duplicates
+   * its own neighbour teaches the reader that one of them does something else,
+   * and then costs them the click that proves it does not.
+   */
   const items: MenuItemProps[] = useMemo(
     () => [
-      {
-        id: 'companion-side-chat',
-        label: localize('com_ui_side_chat'),
-        icon: <SlidersHorizontal className="size-4" />,
-        kbd: '⌥⌘S',
-        onClick: toggleSideChat,
-      },
       {
         id: 'companion-browser',
         label: localize('com_ui_browser'),
@@ -72,7 +75,7 @@ export default function PanelControls() {
         onClick: newBottomBarTab,
       },
     ],
-    [localize, toggleSideChat, newBottomBarTab],
+    [localize, newBottomBarTab],
   );
 
   const maximizeLabel = localize('com_nav_maximize_chat_space');
@@ -121,8 +124,16 @@ export default function PanelControls() {
                 id="companions-menu-button"
                 data-testid="companions-menu"
                 aria-label={localize('com_ui_companions')}
+                /* `size-11` and the ring classes are `Button`'s `size="icon"`
+                   and its base, restated because Ariakit owns this element.
+                   They are not decoration: at `size-10` this was the one box in
+                   the cluster under the 44px pointer floor (44/40/44 across a
+                   row of three), and with no focus classes it fell back to the
+                   UA outline — so one row of three painted two different focus
+                   indicators. */
                 className={cn(
-                  'inline-flex size-10 flex-shrink-0 items-center justify-center border border-border-light text-text-primary',
+                  'inline-flex size-11 flex-shrink-0 items-center justify-center border border-border-light text-text-primary',
+                  'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   buttonClass,
                   bottomBarOpen && 'bg-surface-active-alt',
                 )}
