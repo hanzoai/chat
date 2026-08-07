@@ -32,7 +32,7 @@ const ConvoLink: React.FC<ConvoLinkProps> = ({
     >
       {children}
       <div
-        className="relative flex-1 grow overflow-hidden whitespace-nowrap"
+        className="fade-tail relative flex-1 grow overflow-hidden whitespace-nowrap"
         style={{ textOverflow: 'clip' }}
         onDoubleClick={(e) => {
           if (isSmallScreen) {
@@ -46,15 +46,6 @@ const ConvoLink: React.FC<ConvoLinkProps> = ({
       >
         {title || localize('com_ui_untitled')}
       </div>
-      <div
-        className={cn(
-          'pointer-events-none absolute bottom-0.5 right-0.5 top-0.5 w-20 rounded-r-md bg-gradient-to-l',
-          isActiveConvo || isPopoverActive
-            ? 'from-surface-active-alt'
-            : 'from-surface-primary-alt from-0% to-transparent group-hover:from-surface-active-alt group-hover:from-40%',
-        )}
-        aria-hidden="true"
-      />
     </div>
   );
 };

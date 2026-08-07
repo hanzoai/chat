@@ -3165,3 +3165,20 @@ html {
 .sharepoint-picker-bg {
   background-color: var(--surface-secondary);
 }
+
+/* ── Fading a label's trailing edge ─────────────────────────────────────────
+   A MASK, not a painted gradient. The conversation rows used to fade long
+   titles by stacking an 80px strip of `--surface-primary-alt` over the row's
+   right end — the rail's own colour, painted back on top of the rail. That
+   works only while the rail is opaque and that colour is the truth. The moment
+   the rail became glass the strip stopped matching what was behind it and
+   became what it had always literally been: a solid box on every row, at rest,
+   which is what "the sidebar is a stack of boxes" was.
+
+   Masking fades the TEXT instead of painting over it, so it owes nothing to the
+   ground and is correct on all of them — light, dark, photo, video. One rule,
+   no colour, no hover variant to keep in sync with the row's own hover. */
+.fade-tail {
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 2rem);
+  mask-image: linear-gradient(to left, transparent 0, #000 2rem);
+}
