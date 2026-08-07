@@ -7,6 +7,7 @@ import {
   usePageview,
 } from '@hanzo/event/react';
 import { ObserveProvider } from '@hanzo/observe/react';
+import { setTelemetry } from '@hanzo/ui/telemetry';
 import { useAuthContext } from '~/hooks/AuthContext';
 
 const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
@@ -68,6 +69,28 @@ function AnalyticsBridge() {
   const { pathname } = useLocation();
 
   usePageview(pathname);
+
+  // The shared components emit through an AMBIENT client, not this one. Left
+  // unregistered that ambient client is a SECOND client with no credential, and
+  // it was posting the same $pageview this one does — three refused requests per
+  // load, answered 401, while the keyed request beside them succeeded. Installing
+  // this client as the ambient one collapses the two into a single keyed stream,
+  // which is what the rest of the estate does (hanzoai/console src/lib/event.ts).
+  useEffect(() => {
+    setTelemetry({
+      enabled: true,
+      product: 'chat',
+      client: analytics,
+      track: (event, properties, commerce) => analytics.capture(event, properties, commerce),
+      pageview: (path, properties) => analytics.pageview(path, properties),
+      identify: (personId, traits) => analytics.identify(personId, traits),
+      group: (groupId, traits) => analytics.group(groupId, traits),
+      captureError: (err, context) => analytics.captureError(err, context),
+      captureException: (err, context) => analytics.captureError(err, context),
+      setCohort: (patch) => analytics.setCohort(patch),
+      flush: () => analytics.flush(),
+    });
+  }, [analytics]);
 
   const iamSubject = isAuthenticated ? user?.openidId : undefined;
   useEffect(() => {
