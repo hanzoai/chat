@@ -1,4 +1,3 @@
-import { startTransition } from 'react';
 import { PanelLeft } from 'lucide-react';
 import { TooltipAnchor, Button } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
@@ -33,14 +32,8 @@ export default function OpenSidebar({
   const label = localize(navVisible ? 'com_nav_close_sidebar' : 'com_nav_open_sidebar');
 
   const handleClick = () => {
-    // Use startTransition to mark this as a non-urgent update
-    // This prevents blocking the main thread during the cascade of re-renders
-    startTransition(() => {
-      setNavVisible((prev) => {
-        localStorage.setItem('navVisible', JSON.stringify(!prev));
-        return !prev;
-      });
-    });
+    // Urgent, and persisted by the atom — see Nav.toggleNavVisible.
+    setNavVisible((prev) => !prev);
     // Delay focus until after the sidebar animation completes (200ms)
     setTimeout(() => {
       document.getElementById(CLOSE_SIDEBAR_ID)?.focus();
