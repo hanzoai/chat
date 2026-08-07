@@ -29,10 +29,12 @@ const keys = require('./keys');
 const user = require('./user');
 const mcp = require('./mcp');
 const ask = require('./ask');
+const runs = require('./runs');
 
 module.exports = {
   mcp,
   ask,
+  runs,
   auth,
   adminAuth,
   keys,
