@@ -6,6 +6,7 @@ const {
   sandboxBaseUrl,
   mcpToolPattern,
   loadWebSearchAuth,
+  resolveActiveOrg,
   tenantBearerOrThrow,
   buildImageToolContext,
   buildWebSearchContext,
@@ -43,6 +44,7 @@ const { createFileSearchTool, primeFiles: primeSearchFiles } = require('./fileSe
 const { getUserPluginAuthValue } = require('~/server/services/PluginService');
 const { createMCPTool, createMCPTools } = require('~/server/services/MCP');
 const { loadAuthValues } = require('~/server/services/Tools/credentials');
+const { createWatch } = require('~/server/services/Tools/watch');
 const { getMCPServerTools } = require('~/server/services/Config');
 const { getRoleByName } = require('~/models/Role');
 
@@ -294,7 +296,24 @@ const loadTools = async ({
         if (toolContext) {
           toolContextMap[tool] = toolContext;
         }
-        return createCodeExecutionTool({ baseUrl: sandboxBaseUrl(), token, files });
+        /* Running code is the product's most expensive act and, until now, its
+         * most silent one: the command's output reached the browser only when
+         * the command was over. `watch` opens a session for the run, tells the
+         * browser where to tail it, and hands the tool the session the sandbox
+         * narrates into. `res` and the resumable stream id are read the same way
+         * the MCP tools read them, a few lines down. */
+        return createCodeExecutionTool({
+          baseUrl: sandboxBaseUrl(),
+          token,
+          files,
+          watch: createWatch({
+            res: options.res,
+            streamId: options.req?._resumableStreamId || null,
+            baseUrl: sandboxBaseUrl(),
+            token,
+            org: resolveActiveOrg(options.req),
+          }),
+        });
       };
       continue;
     } else if (tool === Tools.file_search) {

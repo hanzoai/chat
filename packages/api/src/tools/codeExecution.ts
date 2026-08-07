@@ -228,6 +228,22 @@ export interface CodeExecutionToolParams {
   files?: CodeEnvFile[];
   /** Bound the lease this tool takes. */
   ttlSec?: number;
+  /**
+   * Make this run watchable, given the sandbox it just leased.
+   *
+   * INJECTED, because reaching a browser is the server's concern and this
+   * package has no Express in it — the same shape web search's search-results
+   * callback already arrives in. It opens a session for the run, tells the
+   * browser where to watch, and answers the session to narrate into plus the
+   * way to close it. Absent, or answering an empty session, the command runs
+   * exactly as it did before and nobody watches. Watching is how a run is READ,
+   * never how it is run.
+   */
+  watch?: (
+    sandbox: string,
+    toolCall: unknown,
+    title?: string,
+  ) => Promise<{ session: string; done: (status: string) => Promise<void> }>;
 }
 
 /**
@@ -286,6 +302,8 @@ export function createCodeExecutionTool(params: CodeExecutionToolParams): Dynami
       }
 
       const w = scratchDir();
+      /** The run's session, once there is one. Closed on every path below. */
+      let run: { session: string; done: (status: string) => Promise<void> } | null = null;
       try {
         const info = await leaseExecSandbox({
           baseUrl: params.baseUrl,
@@ -295,9 +313,15 @@ export function createCodeExecutionTool(params: CodeExecutionToolParams): Dynami
         });
         const sandbox = new Sandbox(params.baseUrl, info.id, params.token);
 
+        // BEFORE the command, because a person watching needs the address while
+        // there is still something to watch. The command then narrates into that
+        // session as it runs, instead of arriving whole when it is over.
+        run = params.watch ? await params.watch(info.id, config?.toolCall, code) : null;
+
         const raw = await sandbox.exec(script(lang, args ?? [], w), {
           stdin: code,
           timeoutSec: 120,
+          ...(run?.session ? { session: run.session } : {}),
         });
         const result = unframe(raw.stdout);
         if (!result) {
@@ -333,12 +357,16 @@ export function createCodeExecutionTool(params: CodeExecutionToolParams): Dynami
           ? { session_id: info.id, files }
           : { session_id: info.id };
 
+        await run?.done(result.rc === 0 ? 'done' : 'error');
         return [output + summarize(files), artifact];
       } catch (error) {
         /* A refused or broken sandbox is reported as a failed tool call with the
          * status intact, because "you are not signed in" and "your code raised"
          * lead the model to different next moves. */
         const err = error as SandboxError | Error;
+        // A row left `running` forever is a fleet view that lies, so the session
+        // is closed on the failing path too.
+        await run?.done('error');
         const status = err instanceof SandboxError ? ` (HTTP ${err.status})` : '';
         throw new Error(`Execution error${status}:\n\n${err.message ?? String(error)}`);
       }

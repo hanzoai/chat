@@ -6,14 +6,19 @@
  * of the one hanzo.app already proved (`lib/agent/sandbox.ts`) — same three verbs,
  * same error discipline, same reason for each.
  *
- *     chat server  ──Bearer(user)──▶  cloud /v1/sandboxes/:id/{exec,fs}
+ *     chat server  ──Bearer(user)──▶  cloud /v1/sandboxes/{run,:id/fs}
  *                                     └──▶  kube exec into the pod (gVisor, uid 1000)
  *
- * THREE VERBS and no more. `POST /:id/exec` runs a command; `GET /:id/fs?path=`
- * reads a file or lists a directory; `POST /:id/fs?path=` writes one, the file as
- * the raw body. A recursive listing is `find` and a grep is `grep` — a second
+ * THREE VERBS and no more. `POST /run` runs a command; `GET /:id/fs?path=` reads
+ * a file or lists a directory; `POST /:id/fs?path=` writes one, the file as the
+ * raw body. A recursive listing is `find` and a grep is `grep` — a second
  * endpoint for either would be a second way to ask a question the sandbox already
  * answers.
+ *
+ * Running is the one verb addressed at the COLLECTION rather than at a sandbox,
+ * so its id travels in the body. That is not an inconsistency to tidy away: it is
+ * the only op that takes a SESSION to narrate into, and narration is the whole
+ * difference between watching a command work and staring at a spinner.
  *
  * # The credential is the USER's, and that is the whole point
  *
@@ -179,7 +184,9 @@ export async function leaseExecSandbox(opts: {
 
 /** A leased sandbox, addressed. */
 export class Sandbox {
+  /** `…/sandboxes` — the collection. `mine` addresses this one within it. */
   private readonly base: string;
+  private readonly mine: string;
   private readonly timeoutMs: number;
 
   constructor(
@@ -188,7 +195,8 @@ export class Sandbox {
     private readonly token: string,
     timeoutMs = DEFAULT_TIMEOUT_MS,
   ) {
-    this.base = `${baseUrl.replace(/\/+$/, '')}/sandboxes/${encodeURIComponent(id)}`;
+    this.base = `${baseUrl.replace(/\/+$/, '')}/sandboxes`;
+    this.mine = `/${encodeURIComponent(id)}`;
     this.timeoutMs = timeoutMs;
   }
 
@@ -252,10 +260,26 @@ export class Sandbox {
    * distinction is cloud's and it is kept here, so the model can tell "your code
    * raised" from "the sandbox is broken" and debug the right one.
    */
-  async exec(command: string, opts: { stdin?: string; timeoutSec?: number } = {}): Promise<ExecResult> {
+  async exec(
+    command: string,
+    opts: { stdin?: string; timeoutSec?: number; session?: string } = {},
+  ): Promise<ExecResult> {
     const timeoutSec = opts.timeoutSec ?? 120;
-    const res = await this.call('POST', '/exec', {
-      body: { command, stdin: opts.stdin ?? '', timeoutSec },
+    // `run`, not `:id/exec`. They run the same command through the same code
+    // path and exactly one of them carries a SESSION: `/:id/exec` has no field
+    // for one, so a command sent there is silent for its whole life however many
+    // people are watching. Named, the sandbox appends the command's output to
+    // that session's live log as the program produces it. `run` is also the op
+    // the fleet publishes to agents (`run_in_sandbox`), so a person driving a
+    // sandbox from chat and an agent driving one for a build share ONE address.
+    const res = await this.call('POST', '/run', {
+      body: {
+        id: this.id,
+        command,
+        stdin: opts.stdin ?? '',
+        timeoutSec,
+        ...(opts.session ? { session: opts.session } : {}),
+      },
       timeoutMs: (timeoutSec + 15) * 1000,
     });
     const out = (await res.json()) as Partial<ExecResult>;
@@ -271,7 +295,7 @@ export class Sandbox {
   /** `null` means the sandbox answered 404 — the path is not there. It never
    *  means the sandbox failed to answer; that throws. */
   async read(path: string): Promise<string | null> {
-    const res = await this.call('GET', '/fs', { query: { path }, allow: [404] });
+    const res = await this.call('GET', `${this.mine}/fs`, { query: { path }, allow: [404] });
     if (res.status === 404) {
       await res.body?.cancel().catch(() => {});
       return null;
@@ -281,7 +305,7 @@ export class Sandbox {
 
   /** The raw bytes, for a file that is not text — a plot, a parquet, a PDF. */
   async readBuffer(path: string): Promise<Buffer | null> {
-    const res = await this.call('GET', '/fs', { query: { path }, allow: [404] });
+    const res = await this.call('GET', `${this.mine}/fs`, { query: { path }, allow: [404] });
     if (res.status === 404) {
       await res.body?.cancel().catch(() => {});
       return null;
@@ -290,7 +314,7 @@ export class Sandbox {
   }
 
   async write(path: string, content: string | Buffer): Promise<void> {
-    await this.call('POST', '/fs', { query: { path }, raw: content });
+    await this.call('POST', `${this.mine}/fs`, { query: { path }, raw: content });
   }
 }
 
