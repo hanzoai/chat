@@ -15,16 +15,18 @@
  * that door everything is the shipping code: `useRunLog`'s reader and decoder,
  * `Part.tsx`'s routing, `ExecuteCode`, and the Stop control's own request.
  *
- * WHERE THE DATA COMES FROM. The real store. `npm run e2e:seed` writes a
+ * WHERE THE DATA COMES FROM. The real store. `npm run e2e:live` seeds a
  * conversation whose assistant message carries a tool call with `progress < 1`,
- * no output, and a `run` — which is exactly the state the server puts on the
- * wire mid-command. So the component tree renders from the same shape it will
- * see in production, read back through the real API.
+ * no output, and a `run` — exactly the state the server puts on the wire just
+ * before a command starts — and mints the session, because this fork has no
+ * local login route. So the component tree renders the same shape it will see
+ * in production, read back through the real API.
  *
- * RUN IT (see the header of e2e/specs/README or the commands below):
- *   backend  BACKEND_PORT/PORT=3081 npm run backend:dev
- *   frontend BACKEND_PORT=3081 PORT=3091 npm run frontend:dev
- *   E2E_REFRESH=<cookie> npx playwright test e2e/specs/live-run.spec.ts
+ * RUN IT:
+ *   PORT=3081 npm run backend:dev
+ *   BACKEND_PORT=3081 PORT=3091 npm run frontend:dev
+ *   E2E_REFRESH=$(npm run -s e2e:live | cut -d= -f2-) \
+ *     npx playwright test --config=e2e/playwright.config.live.ts
  */
 
 import { test, expect, type Page } from '@playwright/test';
