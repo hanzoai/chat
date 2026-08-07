@@ -1092,11 +1092,44 @@ Option+S on macOS types `ß`. **It does not use `PanelRight`**: the neighbouring
 two buttons in one row wearing one glyph name neither. The control panel gets
 `SlidersHorizontal`, which is what it calls itself (`aria-label` = Controls).
 
+The companions menu lists ONE companion, the Browser, and that is not an
+oversight. It used to open with a "Side chat" row that was the cluster's third
+button written a second time — same `toggleSideChat`, same `sidePanelOpen` atom,
+same `SlidersHorizontal` glyph, on screen twice at two weights. The row is gone
+rather than re-pointed: the only other companion surface that exists is
+`Chat/Dock` (`store.showDock`, a Settings switch), and giving it a header
+affordance is a product decision, not a defect repair. **Cost of the removal,
+recorded honestly: ⌥⌘S is no longer written down anywhere in the chrome.** The
+shortcut still works — `PanelControls`' keydown effect is untouched — but that
+menu row was its only label. If the menu ever gains a second real companion, that
+is where the chord goes back.
+
 Bar tabs frame pages through `SidePanel/Preview/Panel` — the sandboxed frame that
 was written and mounted nowhere. Its URL is `store.preview(tabId)`, an
 `atomFamily` of persisted atoms, so two tabs are two pages; `closeBottomBarTab`
 RESETs the tab's atom AND `preview.remove(id)`s it, so a long session cannot silt
 localStorage up with dead tabs (measured: the key is gone, not `""`).
+
+**The Browser tab can frame almost nothing, and it now SAYS so.** `frame-src`
+(`api/server/csp.js`) names three origins; a reader who types `example.com` is
+refused, and the browser's refusal is silent — the frame loads `about:blank`,
+keeps its full box (measured 1161×179.3) and logs only to devtools. `Panel.tsx`
+listens for the `securitypolicyviolation` the directive fires and renders an
+explicit state instead: the sentence, and the URL as a new-tab link. Two things
+about that detection are measured facts, not preferences:
+- **The sandbox makes every other test impossible.** `allow-scripts` without
+  `allow-same-origin` gives EVERY frame an opaque origin, so a loaded page and a
+  refused one are byte-identical from the embedder (`contentDocument` null, every
+  property a SecurityError). Timing does not separate them either — a refusal
+  lands in ~3ms, a same-origin page in ~5ms. `blockedURI` is exact; nothing else
+  available here is.
+- **`useLayoutEffect`, not `useEffect`.** The event is dispatched in a task
+  shortly after the frame is inserted: a listener attached synchronously, in a
+  microtask, or in a `setTimeout(0)` all catch it; one attached after two rAFs
+  does not. A layout effect runs inside the commit that inserts the frame.
+The policy itself was NOT widened — that is a security decision and the tradeoff
+is written at `csp.js` where it would be taken. `Panel.spec.tsx` holds the
+behaviour, including that another origin's violation must not blank this frame.
 
 `DropdownPopup` (packages/client) had two defects, and one of them had a live
 call site: `placement` was never forwarded, and Ariakit reads placement off the
@@ -1107,14 +1140,49 @@ hardcoded `⌘` in front of the caller's string and only on hover — it cannot
 express `⌥⌘S` and is wrong on every non-Apple keyboard. `kbd` has zero other call
 sites; `placement` had that one.
 
-**Measured in real Chromium at 1440×900**, signed in: menu `role=menu` with 2
-`menuitem`s at 44.0px, right edge 1381 vs button 1379 (left-aligned would be
-−166), Escape unmounts it and returns `aria-expanded=false`; right panel 0 → 352
-→ 0; bar tabs 1 →2 via `+` →3 via ⌘T →2 via a tab's ×; drag 315.3 → 475.0px and
-the floor holds at 135.7px (15.1% of a 900px column); composer bottom 415.7 vs
-bar top 584.7 and still clear at the floor; `scrollWidth === clientWidth` at 1440
-and at 390; bar, tab count and height all survive a reload; the side `Dock` still
-renders its card and resizes 427.4 → 592.1px beside it.
+Three more, all measured rather than reviewed, and all now fixed:
+- **`.popover-ui { margin-right: -2px }` was a misalignment, not a nudge.**
+  Ariakit's positioner is a shrink-to-fit wrapper, so a negative right margin
+  makes the wrapper 2px narrower than the menu and floating-ui aligns the
+  WRAPPER to the trigger — every popover in the app hung 2px past the control it
+  belongs to (menu right 1381 vs trigger right 1379; 1379/1379 with it gone).
+  `margin-top: 4px` beside it is a real gap and stays.
+- **`mr-2` on the icon span stacked on the row's own `gap-2`**, putting 16px
+  between a glyph and its label — twice the row's rhythm. Dropped; the row's gap
+  is the one mechanism, so the gap is 8px. Two call sites existed ONLY to cancel
+  it (`iconClassName="mr-0"` in ToolsDropdown and AttachFileMenu) and went with
+  it.
+- **The `kbd` was `text-text-secondary`, one rung under the label**: 205 vs 236
+  on a surface that paints rgb(14,14,14), a 13% step that read as a second label.
+  It is `text-text-secondary-alt` now — 12.14:1 → 6.58:1 against the label's
+  16.34:1, measured off painted pixels. `--text-tertiary`, the next rung down,
+  is NOT usable here: it resolves to `#595959`, which is 2.76:1 and fails AA.
+
+**Measured in real Chromium at 1440×900**, signed in: the cluster is three 44×44
+boxes (1283/1335/1387) carrying ONE focus indicator between them — the Ariakit
+trigger is hand-rolled, so it restates `size-11` and the ring classes or it falls
+back to the UA outline; menu `role=menu` with 1 `menuitem` at 44.0px, right edge
+1379 = trigger right 1379; Escape unmounts it and returns `aria-expanded=false`;
+right panel 0 → 352 → 0; bar tabs 1 →2 via `+` →3 via ⌘T →2 via a tab's ×; drag
+315.3 → 475.0px and the floor holds at 135.7px (15.1% of a 900px column);
+composer bottom 415.7 vs bar top 584.7 and still clear at the floor;
+`scrollWidth === clientWidth` at 1440 and at 390; bar, tab count and height all
+survive a reload; the side `Dock` still renders its card and resizes 427.4 →
+592.1px beside it.
+
+**The bar strip's height is a budget, and every control in it is bled into that
+budget rather than allowed to grow it.** The strip is 41px (32px content +
+`py-1` + a 1px rule) and the composer sits directly above, so a taller strip
+costs conversation. So: the `+` and the panel `×` are `size-10 -my-1` — 40×40
+boxes whose margin box is 32, i.e. the largest square that fits the strip's
+padding edge to edge; and a tab's `×` is `size-6 -mx-0.5`, 24×24 giving back the
+4px so the tab measures the same 111.1px it did at 20×20. 44 is unreachable here
+without overhanging the drag handle. Verified that it does NOT: `elementFromPoint`
+returns the resize handle at all six probes across the seam — on the rule, above
+and below it, in open strip AND directly over the `+` — and a drag started 3px
+above the rule resizes the bar (435 → 372.1px), which the old 4px grab area could
+not reach. The seam also paints ONE rule now, not two: the bar panel's `border-t`
+duplicated the handle's own hairline.
 
 **Two upstream defects were measured on clean `origin/main` and are NOT from this
 work** — do not attribute them to the chrome:

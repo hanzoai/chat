@@ -64,11 +64,15 @@ const BottomBarTab = memo(function BottomBarTab({ id, active }: { id: string; ac
         <Globe className="size-4 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </button>
+      {/* `-mx-0.5` is a BLEED, not spacing: the box grew 20 → 24 so the pointer
+          has something to hit, and the negative margin gives back the 4px so
+          the tab is the same width it was. The 2px it overhangs on each side
+          land inside the tab's own `gap-1` and `pr-1`, never outside its box. */}
       <button
         type="button"
         onClick={() => closeTab(id)}
         aria-label={localize('com_ui_close_var', { 0: label })}
-        className="flex size-5 shrink-0 items-center justify-center rounded text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+        className="-mx-0.5 flex size-6 shrink-0 items-center justify-center rounded text-text-secondary hover:bg-surface-hover hover:text-text-primary"
       >
         <X className="size-3.5" aria-hidden="true" />
       </button>
@@ -84,13 +88,17 @@ const BottomBar = memo(function BottomBar() {
   const setOpen = useSetAtom(store.bottomBarOpen);
   const openTab = useSetAtom(store.openBottomBarTab);
 
+  /* No `border-t` on the panel: the seam is the resize handle's own 1px rule,
+     and this painted a second one directly under it — two stacked hairlines
+     reading as one thick, blurry edge. One seam, one rule, and it belongs to
+     the thing you can grab. */
   return (
     <ResizablePanel
       id="bottom-bar"
       order={2}
       defaultSize={size}
       minSize={MIN_BAR}
-      className="flex min-h-0 flex-col border-t border-border-light bg-surface-primary-alt"
+      className="flex min-h-0 flex-col bg-surface-primary-alt"
     >
       <div
         role="tablist"
@@ -100,12 +108,17 @@ const BottomBar = memo(function BottomBar() {
         {tabs.map((id) => (
           <BottomBarTab key={id} id={id} active={id === active} />
         ))}
+        {/* 40px, bled back into the strip's own `py-1`, so the pointer target
+            grows from 28 while the strip's height does not: the box now spans
+            the strip's padding edge to edge, which is the largest square that
+            fits without pushing the conversation up. It cannot reach 44 without
+            overhanging the drag handle above and stealing the grab. */}
         <button
           type="button"
           onClick={() => openTab()}
           data-testid="bottom-bar-new-tab"
           aria-label={localize('com_ui_bottom_bar_new_tab')}
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+          className="-my-1 flex size-10 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary"
         >
           <Plus className="size-4" aria-hidden="true" />
         </button>
@@ -117,7 +130,7 @@ const BottomBar = memo(function BottomBar() {
           aria-label={localize('com_ui_bottom_bar_close')}
           aria-expanded={true}
           aria-controls="bottom-bar"
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+          className="-my-1 flex size-10 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary"
         >
           <X className="size-4" aria-hidden="true" />
         </button>

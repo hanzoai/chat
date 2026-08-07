@@ -336,7 +336,6 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
       unmountOnHide={true}
       trigger={menuTrigger}
       items={dropdownItems}
-      iconClassName="mr-0"
     />
   );
 };

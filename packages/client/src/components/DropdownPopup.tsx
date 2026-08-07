@@ -118,7 +118,7 @@ const Menu: React.FC<MenuProps> = ({
                 >
                   <span className="flex items-center gap-2">
                     {item.icon != null && (
-                      <span className={cn('mr-2 size-4', iconClassName)} aria-hidden="true">
+                      <span className={cn('size-4', iconClassName)} aria-hidden="true">
                         {item.icon}
                       </span>
                     )}
@@ -166,17 +166,27 @@ const Menu: React.FC<MenuProps> = ({
                 menu?.hide();
               }}
             >
+              {/* No `mr-2`: the row is already a `gap-2` flex line, so the
+                  margin stacked on top of the gap and put 16px between a glyph
+                  and its own label — twice the distance the row spends on
+                  anything else. One mechanism, and it is the row's. */}
               {item.icon != null && (
-                <span className={cn('mr-2 size-4', iconClassName)} aria-hidden="true">
+                <span className={cn('size-4', iconClassName)} aria-hidden="true">
                   {item.icon}
                 </span>
               )}
               {item.label}
               {/* The whole shortcut, as the caller wrote it. This used to print
                   a hardcoded `⌘` before the value, which cannot express `⌥⌘S`
-                  and is wrong on every non-Apple keyboard. */}
+                  and is wrong on every non-Apple keyboard.
+                  `text-text-secondary` was one rung under the label and read as
+                  a second label: 205 vs 236 on a near-black surface is a 13%
+                  step. `--text-secondary-alt` is the next rung the token layer
+                  actually publishes and still clears WCAG AA on this surface —
+                  `--text-tertiary`, the rung below it, does not (measured
+                  2.8:1). */}
               {item.kbd != null && (
-                <kbd className="ml-auto font-sans text-xs text-text-secondary">{item.kbd}</kbd>
+                <kbd className="ml-auto font-sans text-xs text-text-secondary-alt">{item.kbd}</kbd>
               )}
             </Ariakit.MenuItem>
           );

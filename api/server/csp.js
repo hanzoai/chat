@@ -65,6 +65,22 @@ const contentSecurityPolicy = [
   // itself over the conversation. A card whose origin is missing renders an
   // EMPTY frame and logs nothing useful, so cards.spec.ts asserts every card's
   // origin appears here.
+  //
+  // THE TRADEOFF THIS LINE OWNS, stated so it can be decided rather than drifted
+  // into: the bottom bar's Browser tab frames a URL the READER types, and this
+  // list refuses every origin but the three above. So the feature, as policy
+  // stands, can browse essentially nothing — a reader who types example.com is
+  // refused. That is a security decision, not a UI one, and it is deliberately
+  // NOT taken here: widening `frame-src` to `https:` would let any origin be
+  // framed over the conversation, and a widened list cannot be un-widened once
+  // cards and readers depend on it. What was fixed instead is the SILENCE — the
+  // refusal now renders an explicit state naming the origin, with a link that
+  // opens it in a new tab (`SidePanel/Preview/Panel.tsx`, which listens for the
+  // `securitypolicyviolation` this directive fires). Deciding to widen means
+  // deciding what a framed third-party page may do next to a conversation:
+  // clickjacking over the composer, and every reader's typed URL becoming a
+  // load this origin performs. Take that decision explicitly, or leave the tab
+  // honest about its limits.
   "frame-src 'self' https://www.youtube.com https://player.twitch.tv https://world.hanzo.ai",
   "frame-ancestors 'self'",
 ].join('; ');

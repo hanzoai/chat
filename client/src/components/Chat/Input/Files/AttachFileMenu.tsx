@@ -286,7 +286,6 @@ const AttachFileMenu = ({
           unmountOnHide={true}
           trigger={menuTrigger}
           items={dropdownItems}
-          iconClassName="mr-0"
         />
       </FileUpload>
       <SharePointPickerDialog
