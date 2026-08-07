@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useIsSmallScreen, SMALL_SCREEN_QUERY } from '@hanzochat/client';
+import { useIsSmallScreen } from '@hanzochat/client';
+import { useAtom } from 'jotai';
 import type { ContextType } from '~/common';
 import {
   useSearchEnabled,
@@ -17,7 +18,7 @@ import {
   FileMapContext,
 } from '~/Providers';
 import { useUserTermsQuery, useGetStartupConfig } from '~/data-provider';
-import { Nav, MobileNav, NAV_WIDTH } from '~/components/Nav';
+import { Nav, MobileNav } from '~/components/Nav';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
@@ -25,24 +26,15 @@ import Backdrop from '~/components/Chat/Backdrop';
 import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
+import store from '~/store';
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
   const [bannerHeight, setBannerHeight] = useState(0);
-  // The drawer's first-visit default is decided HERE, once, from the viewport:
-  // canvas on desktop, chrome on a phone. It used to default `true` everywhere
-  // and let an effect in Nav toggle phones closed after mount — an open→closed
-  // flash at best, and at worst the effect re-ran before the first toggle's
-  // localStorage write landed and toggled BACK, leaving a fresh phone with the
-  // drawer open over the pushed-aside chat. A default is not a choice, so
-  // nothing is written to localStorage until the user actually toggles.
-  const [navVisible, setNavVisible] = useState(() => {
-    const savedNavVisible = localStorage.getItem('navVisible');
-    if (savedNavVisible !== null) {
-      return JSON.parse(savedNavVisible);
-    }
-    return !window.matchMedia(SMALL_SCREEN_QUERY).matches;
-  });
+  // One value, owned by the atom — which also owns its first-visit default
+  // (canvas on desktop, chrome on a phone) and its persistence. Root reads it
+  // like any other consumer instead of being the place it lives.
+  const [navVisible, setNavVisible] = useAtom(store.navVisible);
 
   const { isAuthenticated, isGuest, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
@@ -192,19 +184,14 @@ export default function Root() {
                       sidebar holds its own place (`.nav` is z-110). */}
                   <Backdrop />
                   <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
-                  <div
-                    className="relative z-10 flex h-full max-w-full flex-1 flex-col overflow-hidden"
-                    style={
-                      isSmallScreen
-                        ? {
-                            transform: navVisible
-                              ? `translateX(${NAV_WIDTH.MOBILE}px)`
-                              : 'translateX(0)',
-                            transition: 'transform 0.2s ease-out',
-                          }
-                        : undefined
-                    }
-                  >
+                  {/* The rail OVERLAYS on a phone — `.nav` is `position: fixed`
+                      at z-110 — so the content underneath must not also be
+                      pushed aside. Doing both drew one boolean twice: the
+                      drawer covered the page AND slid it 320px right, which put
+                      the hero at x=332 of a 390px viewport with `scrollWidth`
+                      still 390. Clipped, not scrollable, so the text was simply
+                      gone. A drawer that overlays is the whole treatment. */}
+                  <div className="relative z-10 flex h-full max-w-full flex-1 flex-col overflow-hidden">
                     <MobileNav navVisible={navVisible} setNavVisible={setNavVisible} />
                     <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
                   </div>

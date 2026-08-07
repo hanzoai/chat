@@ -41,14 +41,7 @@ export default function MobileNav({
   const conversation = useAtomValue(store.conversationByIndex(0));
   const { title = 'New Chat' } = conversation || {};
 
-  const toggleNav = useCallback(
-    () =>
-      setNavVisible((prev) => {
-        localStorage.setItem('navVisible', JSON.stringify(!prev));
-        return !prev;
-      }),
-    [setNavVisible],
-  );
+  const toggleNav = useCallback(() => setNavVisible((prev) => !prev), [setNavVisible]);
 
   const menuLabel = navVisible
     ? localize('com_nav_close_sidebar')

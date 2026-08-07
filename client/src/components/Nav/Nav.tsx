@@ -7,7 +7,6 @@ import {
   lazy,
   Suspense,
   useRef,
-  startTransition,
 } from 'react';
 import { useAtomValue } from 'jotai';
 import { Skeleton, useIsSmallScreen } from '@hanzochat/client';
@@ -144,18 +143,23 @@ const Nav = memo(
       return data ? data.pages.flatMap((page) => page.conversations) : [];
     }, [data]);
 
+    /* NOT a transition. Opening the drawer used to work and closing it never
+       did, from any path — the rail's own button, the scrim, Escape — and the
+       asymmetry was the giveaway: open ran through MobileNav's plain setter,
+       every close ran through this one, which was wrapped in
+       `startTransition`. A transition is interruptible by design, and the
+       signed-in sidebar suspends constantly (conversations, account,
+       bookmarks), so the close was repeatedly restarted and never committed.
+       Signed out there is nothing to suspend, which is why it looked fine in
+       any check that did not log in.
+
+       A control the user just pressed is urgent by definition. Persistence
+       lives in the atom now, so this only flips the value. */
     const toggleNavVisible = useCallback(() => {
-      // Use startTransition to mark this as a non-urgent update
-      // This prevents blocking the main thread during the cascade of re-renders
-      startTransition(() => {
-        setNavVisible((prev: boolean) => {
-          localStorage.setItem('navVisible', JSON.stringify(!prev));
-          return !prev;
-        });
-        if (newUser) {
-          setNewUser(false);
-        }
-      });
+      setNavVisible((prev: boolean) => !prev);
+      if (newUser) {
+        setNewUser(false);
+      }
     }, [newUser, setNavVisible, setNewUser]);
 
     const itemToggleNav = useCallback(() => {
@@ -269,7 +273,6 @@ const Nav = memo(
             <MemoNewChat
               subHeaders={subHeaders}
               toggleNav={toggleNavVisible}
-              isSmallScreen={isSmallScreen}
               collapsed={collapsed}
             />
             {/* The chat-history list is for someone who HAS history. A
