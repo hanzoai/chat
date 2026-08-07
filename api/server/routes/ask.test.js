@@ -219,11 +219,42 @@ describe('POST /v1/chat/ask', () => {
     mockOk();
 
     await request(app()).post('/v1/chat/ask').send({ q: 'hi', maxSources: 100000 });
-    expect(JSON.parse(global.fetch.mock.calls[0][1].body).maxSources).toBe(16);
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).maxSources).toBe(32);
 
     global.fetch.mockClear();
     await request(app()).post('/v1/chat/ask').send({ q: 'hi', maxSources: -5 });
     expect(JSON.parse(global.fetch.mock.calls[0][1].body).maxSources).toBe(1);
+  });
+
+  // The ceiling is a guard against an unbounded number, not a budget — cloud's
+  // per-mode budget is the budget. Pinned at research's 32 because a lower number
+  // here is applied BEFORE cloud sees the request, so cloud cannot restore what
+  // chat has already taken away: at 16 the deepest mode was silently halved.
+  it('does not clamp research below the breadth cloud grants it', async () => {
+    mockOk();
+
+    await request(app())
+      .post('/v1/chat/ask')
+      .send({ q: 'hi', mode: 'research', maxSources: 32 });
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).maxSources).toBe(32);
+  });
+
+  // The deadline here is a backstop against an upstream that never finishes, so it
+  // has to sit ABOVE the longest answer cloud will legitimately produce — research
+  // iterates its survey for up to 300s (apps/answer/mode.go). It regressed once by
+  // a COMMENT drifting ("cloud bounds its own loop at 90s", true only of the fast
+  // modes) while the number stayed at 120s, which is why the bound is asserted here
+  // and not just described: chat aborted a live research stream mid-report, and the
+  // user paid for work cloud had already finished.
+  it('waits longer than cloud will spend on the deepest mode', async () => {
+    mockOk();
+    const timeout = jest.spyOn(AbortSignal, 'timeout');
+
+    await request(app()).post('/v1/chat/ask').send({ q: 'hi', mode: 'research' });
+
+    expect(timeout).toHaveBeenCalled();
+    expect(Math.max(...timeout.mock.calls.map(([ms]) => ms))).toBeGreaterThan(300000);
+    timeout.mockRestore();
   });
 
   it('forwards only a well-formed language tag', async () => {
