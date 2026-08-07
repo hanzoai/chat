@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { useAtomValue } from 'jotai';
 import { useParams } from 'react-router-dom';
 import { Constants } from '@hanzochat/data-provider';
-import { useMediaQuery } from '@hanzochat/client';
+import { useIsSmallScreen } from '@hanzochat/client';
 import type { TConversation } from '@hanzochat/data-provider';
 import EndpointIcon from '~/components/Endpoints/EndpointIcon';
 import { useNavigateToConvo, useLocalize, useShiftKey, useConvoRename } from '~/hooks';
@@ -32,7 +32,7 @@ export default function Conversation({
   const { data: endpointsConfig } = useGetEndpointsQuery();
   const currentConvoId = useMemo(() => params.conversationId, [params.conversationId]);
   const activeConvos = useAtomValue(store.allConversationsSelector);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const isShiftHeld = useShiftKey();
   const { conversationId, title = '', tags, isPinned = false } = conversation;
 

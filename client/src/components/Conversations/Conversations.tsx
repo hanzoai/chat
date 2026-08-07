@@ -3,7 +3,7 @@ import throttle from 'lodash/throttle';
 import { ChevronDown, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAtomValue } from 'jotai';
-import { Spinner, useMediaQuery } from '@hanzochat/client';
+import { Spinner, useIsSmallScreen } from '@hanzochat/client';
 import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import type { TConversation } from '@hanzochat/data-provider';
 import { useLocalize, TranslationKeys, useFavorites, useShowMarketplace } from '~/hooks';
@@ -186,7 +186,7 @@ const Conversations: FC<ConversationsProps> = ({
   const localize = useLocalize();
   const search = useAtomValue(store.search);
   const { favorites, isLoading: isFavoritesLoading } = useFavorites();
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const convoHeight = isSmallScreen ? 44 : 34;
   const showAgentMarketplace = useShowMarketplace();
 

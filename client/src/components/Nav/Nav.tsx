@@ -10,7 +10,7 @@ import {
   startTransition,
 } from 'react';
 import { useAtomValue } from 'jotai';
-import { Skeleton, useMediaQuery } from '@hanzochat/client';
+import { Skeleton, useIsSmallScreen } from '@hanzochat/client';
 import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
 import type { ConversationListResponse } from '@hanzochat/data-provider';
@@ -82,7 +82,7 @@ const Nav = memo(
     const { isAuthenticated } = useAuthContext();
     useTitleGeneration(isAuthenticated);
 
-    const isSmallScreen = useMediaQuery('(max-width: 768px)');
+    const isSmallScreen = useIsSmallScreen();
     /**
      * Collapsed, the sidebar is a narrow RAIL that stays on screen — the model
      * `hanzo.app` and the console share — not a panel translated off it. The

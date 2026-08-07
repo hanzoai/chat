@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MenuButton } from '@ariakit/react';
 import { History, Check } from 'lucide-react';
-import { DropdownPopup, TooltipAnchor, Button, useMediaQuery } from '@hanzochat/client';
+import { DropdownPopup, TooltipAnchor, Button, useIsSmallScreen } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 
 interface ArtifactVersionProps {
@@ -17,7 +17,7 @@ export default function ArtifactVersion({
 }: ArtifactVersionProps) {
   const localize = useLocalize();
   const [isPopoverActive, setIsPopoverActive] = useState(false);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const menuId = 'version-dropdown-menu';
 
   const handleValueChange = (value: string) => {
