@@ -22,6 +22,12 @@ concurrency:
   group: deploy-chat-${{ github.ref }}
   cancel-in-progress: true
 
+# Needed to push the release commit + tag below. Absent, the checkout's token is
+# read-only and the write-back fails at the push rather than at the commit.
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     # Must name a label a runner ACTUALLY advertises. The git-runners offer
@@ -29,7 +35,12 @@ jobs:
     # until the 24h timeout — silence, not an error.
     runs-on: [hanzo-build-linux-amd64]
     steps:
+      # Full history + tags: this job now TAGS the release, so it needs the tag
+      # namespace to push into and a non-shallow clone to push a commit from.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       # The version universe PINS. We don't ship shas: a sha names a commit, and
       # a CR that names a commit cannot be read as "which release is live". The
@@ -39,6 +50,20 @@ jobs:
         uses: hanzoai/ci/.github/actions/imgver@v1
         with: { repo: ghcr.io/hanzoai/chat }
         env: { GH_PAT: '${{ secrets.GH_PAT }}' }
+
+      # imgver reads package.json as a FLOOR — max(declared, published) + 1 — so
+      # a declared number nothing writes back sinks one patch per release. It
+      # reached 1.0.77 against a published 1.0.113 that way: 36 patches behind,
+      # and silent, because a stale floor breaks nothing. It just loses.
+      #
+      # Stamping before the build is also what makes the commit below honest: the
+      # tree that gets tagged is byte-identical to the tree that was built.
+      - name: Stamp package.json with the release version
+        run: |
+          set -euo pipefail
+          v="${{ steps.ver.outputs.version }}"
+          sed -i.bak -E "s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]+(\")/\1${v}\2/" package.json && rm -f package.json.bak
+          echo "package.json -> $(grep -m1 '\"version\"' package.json)"
 
       # Kept alongside the semver, for forensics only. Nothing pins it.
       - id: meta
@@ -142,3 +167,44 @@ jobs:
             sleep 5
           done
           echo "::error::pushed image never resolved: $img"; exit 1
+
+      # ONLY after the image is proven pullable, so a git tag can never name a
+      # version the registry lacks — which is what lets scripts/version.sh treat
+      # git tags as a floor when it has no registry token.
+      #
+      # The tag also closes a gap of its own: this lane has never tagged, so the
+      # tag stream stopped at v1.0.109 while images ran to 1.0.113. The fleet's
+      # stated invariant is a git tag v<X.Y.Z> ⇔ an image :<X.Y.Z>; chat had the
+      # images and not the tags.
+      #
+      # `[skip ci]` because this workflow triggers on every push to main. Both
+      # remotes honour it — git.hanzo.ai via Gitea's SKIP_WORKFLOW_STRINGS
+      # default, github.com natively — so the write-back cannot re-enter here.
+      #
+      # Loud on failure, but LAST: the image is pushed and resolvable by now, and
+      # universe pins the image, not this commit. Bookkeeping must not be able to
+      # un-ship a good build. hanzo.yml's `version-drift` gate catches a miss on
+      # the next push regardless — one mechanism writes, the other refuses to go
+      # green while it is wrong.
+      - name: Commit + tag the version this image ships
+        run: |
+          set -euo pipefail
+          v="${{ steps.ver.outputs.version }}"
+          git config user.name 'hanzo-ci'
+          git config user.email 'ci@hanzo.ai'
+          git add package.json
+          git commit -m "release ${v} [skip ci]"
+          git tag "v${v}"
+          git push origin "v${v}"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "main declares ${v} — package.json and v${v} agree"; exit 0
+            fi
+            echo "main moved under us (attempt ${attempt}/5) — re-applying ${v} on the new tip"
+            git fetch --quiet origin main
+            git reset --quiet --hard origin/main
+            sed -i.bak -E "s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]+(\")/\1${v}\2/" package.json && rm -f package.json.bak
+            git diff --quiet -- package.json && { echo "main already declares ${v}"; exit 0; }
+            git commit --quiet -am "release ${v} [skip ci]"
+          done
+          echo "::error::image ${v} shipped, but package.json on main still does not declare it — commit it by hand or imgver's floor stays stale"; exit 1
