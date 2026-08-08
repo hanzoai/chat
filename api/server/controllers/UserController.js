@@ -17,6 +17,7 @@ const {
   deleteConvos,
   deleteFiles,
   updateUser,
+  getUserById,
   findToken,
   getFiles,
 } = require('~/models');
@@ -35,6 +36,7 @@ const {
 } = require('~/db/models');
 const { updateUserPluginAuth, deleteUserPluginAuth } = require('~/server/services/PluginService');
 const { verifyEmail, resendVerificationEmail } = require('~/server/services/AuthService');
+const { verifyOTPOrBackupCode } = require('~/server/services/twoFactorService');
 const { getMCPManager, getFlowStateManager, getMCPServersRegistry } = require('~/config');
 const { invalidateCachedTools } = require('~/server/services/Config/getCachedTools');
 const { needsRefresh, getNewS3URL } = require('~/server/services/Files/S3/crud');
@@ -303,6 +305,28 @@ const deleteUserController = async (req, res) => {
   const { user } = req;
 
   try {
+    /**
+     * Deleting an account is irreversible, so a live session is not enough on
+     * its own: someone holding a stolen token could erase everything the
+     * account owns without ever passing the second factor. Anyone who has
+     * turned 2FA on proves it again here.
+     *
+     * Only for accounts that HAVE a second factor — the record is read fresh
+     * because `req.user` carries neither `totpSecret` nor `backupCodes`
+     * (`select: false`, deliberately).
+     */
+    const record = await getUserById(user.id, '+totpSecret +backupCodes');
+    if (record?.twoFactorEnabled) {
+      const { verified, status, message } = await verifyOTPOrBackupCode({
+        user: record,
+        token: req.body?.token,
+        backupCode: req.body?.backupCode,
+      });
+      if (!verified) {
+        return res.status(status).json({ message });
+      }
+    }
+
     await deleteMessages({ user: user.id }); // delete user messages
     await deleteAllUserSessions({ userId: user.id }); // delete user sessions
     await Transaction.deleteMany({ user: user.id }); // delete user transactions

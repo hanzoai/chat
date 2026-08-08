@@ -66,13 +66,14 @@ test:
       node scripts/check-barrel.cjs
 
   # What a user document is allowed to carry out of this process, and who is
-  # allowed to ask. Sixty-five tests over the two hops where a credential
+  # allowed to ask. Seventy-three tests over the two hops where a credential
   # escapes: the projection every user-returning route sends through
   # (services/publicUser — an allow-list, because a deny-list only covers the
   # fields somebody thought of), and the schema's own default projection under
   # it. Around them, the specs for the routes that do the sending, the strategy
-  # that decides who verifies a request, the org header Commerce authorizes on,
-  # and the standing refusal to enable MCP while nothing filters its tools.
+  # that decides who verifies a request, the second factor a destructive action
+  # asks for again, the org header Commerce authorizes on, and the standing
+  # refusal to enable MCP while nothing filters its tools.
   #
   # These files were each written against a real defect and each mutation-tested
   # — every assertion here has been made to fail on purpose. That is what earns
@@ -89,6 +90,7 @@ test:
         server/services/publicUser.spec.js \
         server/services/CommerceClient.spec.js \
         server/services/AuthService.spec.js \
+        server/services/twoFactorService.spec.js \
         server/controllers/UserController.spec.js \
         server/controllers/AuthController.spec.js \
         server/controllers/agents/mcpAuthorizationGuard.spec.js \
@@ -96,7 +98,7 @@ test:
       cd ../packages/data-schemas
       npx jest src/schema/user.spec.ts
 
-# NO WHOLE jest suite is gated — the `credentials` gate above names eight files,
+# NO WHOLE jest suite is gated — the `credentials` gate above names nine files,
 # one at a time — and that is a measurement rather than an oversight. All five
 # suites are red on this commit — cb653548, node 22, pnpm 10.27.0, one full
 # local run each:
@@ -114,11 +116,16 @@ test:
 # lane, because it looks like coverage. Turn a suite green, then add its line.
 #
 # Most of the red is one shape, not one bug per failure: tests importing symbols
-# the source never exported. The sharpest instance is not merely a test failure —
-# merge 49dc4f7bf6 (LibreChat sync) dropped PERMISSION_TYPE_INTERFACE_FIELDS,
+# the source never exported — and a second shape this file used to hide inside
+# the same numbers: suites that die during IMPORT and run nothing at all, which a
+# failed/total count cannot distinguish from a suite that ran and disagreed.
+# Twelve of the api column were that; eleven run now.
+#
+# The sharpest instance of the first shape was never merely a test failure. Merge
+# 49dc4f7bf6 (LibreChat sync) dropped PERMISSION_TYPE_INTERFACE_FIELDS,
 # INTERFACE_PERMISSION_FIELDS and PERMISSION_SUB_KEYS out of
 # packages/data-provider/src/permissions.ts while packages/api/src/admin/config.ts
 # and packages/data-schemas/src/app/resolution.ts kept importing them, so the
-# admin config surface calls `.has()` on undefined in production today. Restoring
-# those 49 lines from e77b03ab6d takes resolution.spec.ts to 26/26 and
-# admin/config.handler.spec.ts to 54/54 — measured, not estimated.
+# admin config surface called `.has()` on undefined and threw on every override
+# write. FIXED: restored from e77b03ab6d, which took resolution.spec.ts to 26/26
+# and admin/config.handler.spec.ts to 54/54, exactly as this note predicted.

@@ -212,12 +212,53 @@ const generate2FATempToken = (userId) => {
   return sign({ userId, twoFAPending: true }, process.env.JWT_SECRET, { expiresIn: '5m' });
 };
 
+/**
+ * Check a second factor — a TOTP token or a backup code, whichever was sent.
+ *
+ * The sequence — fetch the secret, then verify a token or redeem a backup code —
+ * appears four times across the two 2FA controllers, but only two of those ask
+ * THIS question. `verify2FA` and `confirm2FA` run during setup, where
+ * `twoFactorEnabled` is false by definition and the question is "does this
+ * secret work"; `disable2FA` and `verify2FAWithTempToken` ask "prove the factor
+ * you have", which is what this answers and what deleting an account needs.
+ * Those two are worth converting and are not, yet: their user-facing messages
+ * differ slightly and `TwoFactorController.spec.js` is red for reasons that
+ * predate this, so there is nothing to catch a mistake.
+ *
+ * The answer is a value rather than a pile of `res.status` calls, which is what
+ * lets a caller that is not a login route use it.
+ *
+ * @param {object} params
+ * @param {object} params.user - a user document loaded WITH `+totpSecret +backupCodes`
+ * @param {string} [params.token] - a TOTP code
+ * @param {string} [params.backupCode] - a backup code, used when no token is given
+ * @returns {Promise<{verified: boolean, status?: number, message?: string}>}
+ */
+const verifyOTPOrBackupCode = async ({ user, token, backupCode }) => {
+  if (!user?.twoFactorEnabled || !user.totpSecret) {
+    return { verified: false, status: 400, message: '2FA is not enabled for this user' };
+  }
+  if (!token && !backupCode) {
+    return { verified: false, status: 400, message: 'Missing token or backup code' };
+  }
+
+  const secret = await getTOTPSecret(user.totpSecret);
+  const verified = token
+    ? await verifyTOTP(secret, token)
+    : await verifyBackupCode({ user, backupCode });
+
+  return verified
+    ? { verified: true }
+    : { verified: false, status: 401, message: 'Invalid token or backup code' };
+};
+
 module.exports = {
   generateTOTPSecret,
   generateTOTP,
   verifyTOTP,
   generateBackupCodes,
   verifyBackupCode,
+  verifyOTPOrBackupCode,
   getTOTPSecret,
   generate2FATempToken,
 };

@@ -120,7 +120,7 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
   kind before it, on main or on a pull request.
   Read `hanzo.yml` before adding a gate: it records why no whole jest suite is
   in it (all five are red on main) and what each gate costs. The one jest lane
-  is `credentials` — eight named files, 65 tests, ~5s — guarding what a user
+  is `credentials` — nine named files, 73 tests, ~5s — guarding what a user
   document may carry out of the process: the `publicUser` allow-list every
   user-returning route projects through, the schema's own default projection
   under it, the routes that send it, the strategy that picks who verifies a
