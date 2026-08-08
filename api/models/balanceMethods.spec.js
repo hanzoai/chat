@@ -1,5 +1,5 @@
 // Money-gate decision matrix for the Commerce-first, FAIL-CLOSED balance gate
-// (per-org via service token + X-Hanzo-Org; the cloud gateway debits the user's
+// (per-org via service token + X-Org-Id; the cloud gateway debits the user's
 // own hk- key against the SAME org). Proves both directions: unmetered AI never
 // leaks (block on any ambiguity), and funded users + capped guests are never
 // wrongly blocked.
