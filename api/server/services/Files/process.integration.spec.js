@@ -30,6 +30,7 @@ jest.mock('@hanzochat/agents', () => ({
 }));
 
 jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   sanitizeFilename: jest.fn((n) => n),
   parseText: jest.fn().mockResolvedValue({ text: '', bytes: 0 }),
   processAudioFile: jest.fn(),

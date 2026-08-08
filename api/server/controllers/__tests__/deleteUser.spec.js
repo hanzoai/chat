@@ -20,18 +20,20 @@ const mockDeleteUserPrompts = jest.fn();
 const mockDeleteUserSkills = jest.fn();
 
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: { error: jest.fn(), info: jest.fn() },
   webSearchKeys: [],
 }));
 
 jest.mock('@hanzochat/data-provider', () => ({
+  ...jest.requireActual('@hanzochat/data-provider'),
   Tools: {},
-  CacheKeys: {},
   Constants: { mcp_delimiter: '::', mcp_prefix: 'mcp_' },
   FileSources: {},
 }));
 
 jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   MCPOAuthHandler: {},
   MCPTokenStorage: {},
   normalizeHttpError: jest.fn(),
