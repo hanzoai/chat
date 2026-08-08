@@ -89,6 +89,21 @@ const errorMessages = {
   invalid_api_key:
     'Invalid API key. Please check your API key and try again. You can do this by clicking on the model logo in the left corner of the textbox and selecting "Set Token" for the current selected endpoint. Thank you for your understanding.',
   /**
+   * OUR credential, not the reader's — and not a paywall.
+   *
+   * IAM answers `key_unknown` for a key it does not hold, the gateway relays it
+   * (hanzoai/ai v1.832.44), and `server/utils/refusal.js` keeps it distinct from
+   * a spent balance. Both arrive as 402, so without that separation this
+   * rendered the add-credit link: it told a reader to buy credit for a
+   * credential no payment restores. Nothing the reader owns is wrong, so this
+   * offers no action to them and does not send them to billing — it says who is
+   * at fault, which is the only honest thing a service can say about its own
+   * broken key. `invalid_api_key` above stays as it is: that one IS a key the
+   * reader set.
+   */
+  key_unknown:
+    'This service’s API credential is not valid, so the request could not be sent. Nothing is wrong with your account and no credit has been used. This is a server-side problem on our end and has been logged.',
+  /**
    * A PAYWALL, not a failure. The gateway answers a request it cannot bill with
    * 402, and `server/utils/refusal.js` names that `insufficient_quota` — the same
    * name `hanzoGatewayFetch` already gives a spent balance. The one thing that

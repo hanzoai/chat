@@ -29,6 +29,32 @@ const PAYMENT_REQUIRED = 402;
  */
 const INSUFFICIENT_QUOTA = 'insufficient_quota';
 
+/**
+ * IAM's own name for a key it does not hold, relayed by the gateway since
+ * hanzoai/ai v1.832.44 (`iam: relay the reason IAM named`).
+ *
+ * It has to be told apart from a spent balance, because the two arrive as the
+ * SAME 402 and lead the reader to opposite places. Every gateway key in the
+ * cluster once resolved to `key_unknown` at the same time, and each of those
+ * turns rendered the add-credit paywall — pointing a reader at billing.hanzo.ai
+ * for a credential no payment can restore. A refusal that sends someone to buy
+ * something is worse than one that says nothing.
+ */
+const KEY_UNKNOWN = 'key_unknown';
+
+/**
+ * Whether a failure is about the CREDENTIAL rather than the balance.
+ *
+ * Matched on the relayed reason first (`key_unknown`), then on the gateway's
+ * older prose, so this still separates the two while a deployment predates
+ * v1.832.44 — the release that made the reason legible is the one this reads,
+ * and it must not depend on that release to avoid the false paywall.
+ */
+function isKeyFailure(error) {
+  const text = `${error?.message ?? ''} ${error?.error?.message ?? ''}`;
+  return /key_unknown|API key validation failed|invalid API key/i.test(text);
+}
+
 /** The upstream status, wherever the thrower left it. */
 const statusOf = (error) => error?.status ?? error?.statusCode ?? error?.response?.status ?? null;
 
@@ -45,6 +71,12 @@ const statusOf = (error) => error?.status ?? error?.statusCode ?? error?.respons
  * @returns {string|null}
  */
 function refusalCode(error) {
+  // A broken credential is decided BEFORE the thrower's own code and before the
+  // 402 default: the gateway reports it as a 402 either way, and both of the
+  // paths below would name that a paywall.
+  if (isKeyFailure(error)) {
+    return KEY_UNKNOWN;
+  }
   const code = error?.code ?? error?.type ?? error?.error?.code ?? error?.error?.type;
   if (typeof code === 'string' && code.length > 0) {
     return code;
@@ -97,4 +129,4 @@ function refusalText(error, fallback) {
   return JSON.stringify({ error: error?.message || code, code });
 }
 
-module.exports = { INSUFFICIENT_QUOTA, refusalCode, refusalText };
+module.exports = { INSUFFICIENT_QUOTA, KEY_UNKNOWN, isKeyFailure, refusalCode, refusalText };
