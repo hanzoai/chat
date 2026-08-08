@@ -311,12 +311,26 @@
 
 :root {
   /* One sweep, closing on the stop it opened with: a conic gradient whose first
-     and last stop differ shows a hard seam. Apple-Intelligence iridescence —
-     blue -> violet -> pink -> amber and home again — held at low alpha so it
-     glows instead of shouting. */
+     and last stop differ shows a hard seam.
+     
+     LUMINANCE, NOT HUE. This was four saturated stops — blue, violet, pink,
+     amber — at 0.40-0.48 alpha, and a conic gradient does not spread its stops
+     evenly around a rounded RECTANGLE: the long top and bottom edges each take
+     a wide angular slice while the short sides take almost none. So at any
+     instant one edge wore a bright pink and the opposite edge a dim blue, which
+     reads exactly as reported: "it only highlights the top half and slightly
+     off". Nothing was misaligned; an uneven ring cannot look aligned.
+     
+     White at two close alphas fixes the cause rather than nudging the geometry.
+     There is no bright arc to land in the wrong place, the peak is 0.18 instead
+     of 0.48, and the slow drift survives as a sheen — the composer still earns
+     its aliveness with MOTION and LIGHT, which is what the note below always
+     said it should do. It also stops being the one coloured thing in a
+     monochrome product. */
   --hz-spectrum:
-    rgba(8, 148, 255, 0.45), rgba(201, 89, 221, 0.48), rgba(255, 46, 84, 0.4),
-    rgba(255, 144, 4, 0.4), rgba(8, 148, 255, 0.45);
+    rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.1);
 }
 
 @keyframes hzComposerSpin {
