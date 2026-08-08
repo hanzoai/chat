@@ -285,4 +285,4 @@ async function iamSessionController(req, res) {
   }
 }
 
-module.exports = { iamSessionController, reconcileUser };
+module.exports = { iamSessionController, reconcileUser, pictureFromUserinfo };
