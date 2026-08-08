@@ -134,31 +134,31 @@ describe('loadAuthValues', () => {
 });
 
 /**
- * The `EnvVar.CODE_API_KEY` gap, pinned.
+ * `authFields` is now always a list of real names.
  *
- * `@hanzochat/agents@3.2.63` does not export CODE_API_KEY, so five call sites pass
- * `[undefined]` here and this threw `Cannot read properties of undefined (reading
- * 'split')` on every /v1/chat/agents/tools/execute_code/auth. The throw was caught
- * and answered 200 {authenticated:false} — right answer, ERROR-level log, on every
- * page load. Real errors get buried that way.
+ * There used to be a guard here — `typeof authField !== 'string' && continue` —
+ * and a describe block pinning it, because `EnvVar.CODE_API_KEY` did not exist in
+ * the shipped @hanzochat/agents and five call sites passed `[undefined]`. That
+ * threw on `.split('||')`, was caught upstream, answered the correct
+ * `200 {authenticated:false}`, and logged at ERROR on every page load.
+ *
+ * The key is gone: `execute_code` runs under the caller's own IAM bearer and
+ * declares NO auth fields at all. A workaround kept past the defect it worked
+ * around is just a place for the next one to hide, so both the guard and its pin
+ * are deleted rather than left to assert something nothing does.
  */
-describe('loadAuthValues — a field that is not a string', () => {
-  it('does not throw on an undefined field (the shipped EnvVar.CODE_API_KEY gap)', async () => {
-    await expect(loadAuthValues({ userId: 'user1', authFields: [undefined] })).resolves.toEqual({});
-  });
-
-  it('does not throw on null or empty fields', async () => {
-    await expect(loadAuthValues({ userId: 'user1', authFields: [null, ''] })).resolves.toEqual({});
-  });
-
-  it('still resolves the real fields beside an undefined one', async () => {
+describe('loadAuthValues — every caller names real fields', () => {
+  it('resolves a field from the environment', async () => {
     process.env.REAL_KEY = 'real-value';
-
-    const result = await loadAuthValues({
-      userId: 'user1',
-      authFields: [undefined, 'REAL_KEY'],
+    await expect(loadAuthValues({ userId: 'user1', authFields: ['REAL_KEY'] })).resolves.toEqual({
+      REAL_KEY: 'real-value',
     });
+  });
 
-    expect(result).toEqual({ REAL_KEY: 'real-value' });
+  it('answers {} for a field nothing provides', async () => {
+    getUserPluginAuthValue.mockResolvedValue(undefined);
+    await expect(
+      loadAuthValues({ userId: 'user1', authFields: ['NOT_SET_ANYWHERE'], throwError: false }),
+    ).resolves.toEqual({});
   });
 });

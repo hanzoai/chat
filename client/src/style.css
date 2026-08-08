@@ -27,6 +27,19 @@
    adds. Chat's own overrides below still win — they come later in the file. */
 @import '@hanzo/ui/theme.css';
 
+/* The dark-glass material and its elevation ladder, named EXPLICITLY rather than
+   taken from theme.css. theme.css does inline this slice — at 8.0.48 and above.
+   At 8.0.42, which is what a plain install resolved, `./glass.css` is not even
+   an export, and the difference is invisible: every `data-slot` below still
+   parses, the page still renders, and nothing is behind any of them. A menu with
+   no material is a menu you read the page through, and it reaches production
+   looking like a build that worked.
+
+   So the import is spelled out and the floor is `^8.0.48` — the version that
+   first shipped the module. One line that fails loudly at build time if the
+   dependency ever slips back under it, instead of a silently unstyled product. */
+@import '@hanzo/ui/glass.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -174,9 +187,9 @@
      triplet is strictly worse than an undefined token, because an undefined token
      at least takes the fallback. Real colours, one type, fleet-wide.
      --chart-1..5 went with them: declared as channels, read nowhere. */
-  --destructive: var(--state-error);          /* the system's red, not a literal */
+  --destructive: var(--state-error); /* the system's red, not a literal */
   --destructive-foreground: var(--pure-white);
-  --switch-unchecked: var(--neutral-500);     /* 4.74:1 on white, 4.43:1 on black */
+  --switch-unchecked: var(--neutral-500); /* 4.74:1 on white, 4.43:1 on black */
 
   /* Which theme is live is the HOST's fact, so the host declares it. It used to
      arrive from @hanzo/brand's stylesheet; @hanzo/design declares no
@@ -209,8 +222,14 @@
   --surface-tertiary: var(--gray-850);
   --surface-tertiary-alt: var(--gray-850);
   --surface-dialog: var(--gray-925);
-  --surface-submit: var(--green-700);
-  --surface-submit-hover: var(--green-800);
+  /* The raised pushbutton, and the rung above it. On a dark page a control
+     lifts by getting LIGHTER under the pointer; this pair ran the other way
+     (#2f2f2f resting, #212121 on hover), so the one loud control on every
+     dialog receded when you reached for it. The hover rung doubles as the
+     button's hairline, which is what makes it read as raised rather than as
+     another patch of surface. */
+  --surface-submit: var(--gray-700);
+  --surface-submit-hover: var(--gray-600);
   --surface-destructive: var(--red-800);
   --surface-destructive-hover: var(--red-900);
   --surface-chat: var(--gray-975);
@@ -247,6 +266,167 @@
   --border-medium: rgba(217, 217, 227, 0.15);
   --border-heavy: rgba(217, 217, 227, 0.2);
   --border-xheavy: rgba(217, 217, 227, 0.25);
+}
+
+/* The dark-glass material and its three-rung ladder are NOT stated here. They
+   arrive with `@hanzo/ui/theme.css` above, which inlines `@hanzo/ui/glass.css`
+   — the same sheet hanzo.app and the console paint from, guarded by that
+   package's own tests. Chat's job is only to say WHICH surfaces are floating
+   chrome, and it says it the way the sheet reads: `data-slot` on each Radix
+   content primitive (see packages/client/src/components), or the bare `glass`
+   class for chrome no slot names. A surface is glass because of what it IS.
+
+   Restating the rules here would be a second copy of a value that has one
+   home, and it would hold still the day design moves the theme. */
+
+/* ── The composer ring — the ONE prism on any Hanzo surface ──────────────────
+   A slow-drifting conic ring plus a soft glow on the chat composer, ~10s loop.
+   The composer is where you talk to Hanzo, so it is the thing that should look
+   alive — and it earns that with MOTION and LIGHT rather than with hue. Every
+   other pixel of chrome stays monochrome; there is no second exemption, and the
+   two attempts to grant one (a violet ring, then a full-wheel rainbow) each made
+   the surface wearing it the only colour in the product.
+
+   Same sweep, same 10s, same structure as hanzo.app's composer: one look across
+   the two surfaces you can type into. The stops are declared once here and read
+   by both the ring and the glow — duplicated, they drift on the first palette
+   change and nobody notices which half moved.
+
+   Structure: `.hz-composer` is a 1.5px-padded host carrying the conic ring
+   (::before) and the blurred glow (::after, extends past it); its direct child
+   is the composer panel. Both pseudo-elements are MASKED to exclude the panel's
+   own footprint, so the ring is a lip and the glow is a halo — neither paints
+   behind the panel, and the panel is free to be glass. They used to be filled
+   discs that an opaque panel covered, which made the panel's opacity
+   load-bearing for the ring's shape. `@property` is what lets the conic angle
+   animate at all; where it is unsupported the ring is simply static, which is a
+   fine second-best.
+
+   Reduced motion holds a frame — still lit, no drift. */
+@property --hz-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+  /* One sweep, closing on the stop it opened with: a conic gradient whose first
+     and last stop differ shows a hard seam. Apple-Intelligence iridescence —
+     blue -> violet -> pink -> amber and home again — held at low alpha so it
+     glows instead of shouting. */
+  --hz-spectrum:
+    rgba(8, 148, 255, 0.45), rgba(201, 89, 221, 0.48), rgba(255, 46, 84, 0.4),
+    rgba(255, 144, 4, 0.4), rgba(8, 148, 255, 0.45);
+}
+
+@keyframes hzComposerSpin {
+  to {
+    --hz-angle: 360deg;
+  }
+}
+
+/* The composer mic while a spoken conversation is live (see Chat/Input/Mic.tsx):
+   the glyph itself flashes white–green; hover overrides it to solid red. */
+@keyframes hzMicFlash {
+  0%,
+  100% {
+    color: #fff;
+  }
+  50% {
+    color: #4ade80;
+  }
+}
+
+.hz-composer {
+  position: relative;
+  isolation: isolate;
+  padding: 1.5px;
+}
+
+/* The ring DRAWS A RING. It used to draw a filled disc and rely on the panel
+   above it being opaque to cover the middle — which made the panel's opacity
+   load-bearing for something that was never about the panel. The moment the
+   composer became glass, the whole spectrum washed up through it.
+
+   `padding` here is the ring's own thickness, and the two-layer mask keeps the
+   paint outside that padding: `content-box` is the hole, the full box is the
+   plate, and `exclude` leaves the lip. So the ring is a rim by construction and
+   the panel is free to be any material at all. */
+.hz-composer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
+  animation: hzComposerSpin 10s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* After the standard shorthand: WebKit aliases `mask` onto `-webkit-mask`, so
+     declaring this first lets the shorthand reset it to `source-over` — which
+     is the filled disc again, on exactly the browsers too old to have
+     `mask-composite` at all. */
+  -webkit-mask-composite: xor;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* The glow is a HALO, masked like the ring so it lights the air around the box
+   and nothing behind it. The LOUD version of this — 0.5 resting, pulsing to
+   0.85 — was killed on purpose ("kill the composer glow halo"): over the
+   animated backdrop it read as a purple wash. This is the deliberately-subtle
+   replacement: a fifth of the alpha, a tighter spread, and no opacity pulse —
+   only the same slow spin the ring already runs, so the two stay in phase. */
+.hz-composer::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  padding: 6px;
+  /* Concentric with the box, NOT `inherit`: the halo lives 6px outside the
+     composer, so an inherited 24px corner on this larger box curves too tight
+     and reads as a second, mismatched rounding just outside the panel. */
+  border-radius: calc(1.5rem + 6px);
+  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
+  filter: blur(16px);
+  opacity: 0.22;
+  animation: hzComposerSpin 10s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* After the standard shorthand: WebKit aliases `mask` onto `-webkit-mask`, so
+     declaring this first lets the shorthand reset it to `source-over` — which
+     is the filled disc again, on exactly the browsers too old to have
+     `mask-composite` at all. */
+  -webkit-mask-composite: xor;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Focus lifts the glow — still well shy of where the old halo RESTED. */
+.hz-composer:focus-within::after {
+  opacity: 0.4;
+}
+
+/* The composer panel sits above the ring and the glow. */
+.hz-composer > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hz-composer::before,
+  .hz-composer::after {
+    animation: none;
+  }
 }
 
 .text-token-text-primary {
@@ -333,6 +513,12 @@
 
 .bg-token-surface-secondary {
   background-color: var(--surface-secondary);
+}
+
+/* The shim family above had secondary but not primary, so the agent-builder
+   field boxes carried a class with no rule and rendered transparent. */
+.bg-token-surface-primary {
+  background-color: var(--surface-primary);
 }
 
 @media (max-width: 640px) {
@@ -516,8 +702,12 @@ select {
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
   padding-right: 2.5rem;
-  background-color: #fff;
-  border-color: #8e8ea0;
+  /* Was #fff on a bare element selector, so every native <select> in the product
+     was a white slab in the dark theme. The ladder follows the theme; the
+     literals never could. */
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
   border-radius: 0;
   border-width: 1px;
   font-size: 1rem;
@@ -576,23 +766,6 @@ select {
 
 .hidden {
   display: none;
-}
-
-.creative-tab {
-  /* background: linear-gradient(90deg, #904887 10.79%, #8B257E 87.08%); */
-  background: linear-gradient(90deg, #904887 10.79%, #8b257e 87.08%);
-}
-
-.fast-tab {
-  background: linear-gradient(90deg, #2870ea 10.79%, #1b4aef 87.08%);
-}
-
-.balanced-tab {
-  background: linear-gradient(90deg, #d7871a 10.79%, #9f6005 87.08%);
-}
-
-.precise-tab {
-  background: linear-gradient(90deg, #006880 10.79%, #005366 87.08%);
 }
 
 p > small {
@@ -1041,7 +1214,10 @@ pre {
   --tw-prose-body: #424242;
   --tw-prose-headings: #111827;
   --tw-prose-lead: #4b5563;
-  --tw-prose-links: #0066cc;
+  /* A link in body copy is already marked by its underline; colouring it as
+     well is a second signal, and blue is the one hue the product does not
+     otherwise own. The foreground token carries it in both themes. */
+  --tw-prose-links: var(--text-primary);
   --tw-prose-bold: #111827;
   --tw-prose-counters: #6b7280;
   --tw-prose-bullets: #d1d5db;
@@ -1057,7 +1233,7 @@ pre {
   --tw-prose-invert-body: #d1d5db;
   --tw-prose-invert-headings: #fff;
   --tw-prose-invert-lead: #9ca3af;
-  --tw-prose-invert-links: #fff;
+  --tw-prose-invert-links: var(--text-primary);
   --tw-prose-invert-bold: #fff;
   --tw-prose-invert-counters: #9ca3af;
   --tw-prose-invert-bullets: #4b5563;
@@ -1234,14 +1410,7 @@ pre {
 code,
 pre {
   font-family:
-    'Geist Mono',
-    'Roboto Mono',
-    ui-monospace,
-    'SF Mono',
-    Menlo,
-    Monaco,
-    Consolas,
-    monospace !important;
+    'Geist Mono', 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace !important;
 }
 code.language-text,
 code.language-txt,
@@ -1401,12 +1570,19 @@ button {
   opacity: 0.5;
 }
 .btn-primary {
-  /* Monochrome primary: adaptive white-on-dark / black-on-light (matches send button). */
-  background-color: var(--primary);
-  color: var(--primary-foreground);
+  /* The same raised pushbutton the `Button` component paints, spelled in the
+     other language eleven call sites here happen to speak. It read
+     `var(--primary)`, which is design's brand foreground — near-white in both
+     themes — so every panel's Save button was a white slab. `--surface-submit`
+     is dark in both themes, so the label is light in both and needs no branch.
+     `.btn` already reserves a 1px transparent border, so the hairline that
+     makes it read as raised costs no layout. */
+  background-color: var(--surface-submit);
+  border-color: var(--surface-submit-hover);
+  color: var(--white);
 }
 .btn-primary:hover {
-  background-color: color-mix(in srgb, var(--primary) 90%, transparent);
+  background-color: var(--surface-submit-hover);
 }
 .btn-primary:focus {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width)
@@ -1742,8 +1918,10 @@ html {
   --tw-shadow: 0 0 transparent;
   -webkit-appearance: none;
   appearance: none;
-  background-color: #fff;
-  border-color: #8e8ea0;
+  /* Same fix as the bare `select` above: theme-following ground, not a literal. */
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
   border-radius: 0;
   border-width: 1px;
   font-size: 1rem;
@@ -1906,10 +2084,6 @@ html {
 }
 .markdown tbody tr:last-child td:last-child {
   border-bottom-right-radius: 0.75rem;
-}
-.markdown a {
-  text-decoration-line: underline;
-  text-underline-offset: 2px;
 }
 .conversation-item-time:before {
   content: attr(data-time);
@@ -2662,32 +2836,74 @@ html {
   outline: none;
 }
 
-.popover-ui {
-  display: flex;
-  max-height: min(var(--popover-available-height, 1700px), 1700px);
-  flex-direction: column;
-  overflow: auto;
-  overscroll-behavior: contain;
-  border-radius: 0.7rem;
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--border-light);
-  background-color: var(--surface-primary);
-  padding: 0.5rem;
-  color: var(--text-primary);
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-  transform-origin: top;
-  opacity: 0;
-  transition-property: opacity, scale, translate;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-  scale: 0.95;
-  translate: 0 -0.5rem;
-  margin-top: 4px;
-  margin-right: -2px;
+/*
+  …and the shell owns its control's EDGE for the same reason it owns the ring.
+
+  `@hanzo/design` gives every bare control a resting edge —
+  `:where(input, select, textarea) { border: 1px solid var(--border-control);
+  border-radius: var(--radius-md) }`. That is right for a field standing on its
+  own and wrong for one that FILLS a shell: the 8px box lands inside the shell's
+  24px curve and the composer reads as two boxes, an outline around "Ask
+  anything" floating inside the prism ring.
+
+  Four shells had already noticed and each written `border-0` on its own control
+  (Mention, PromptsCommand, AgentsCommand, SkillsCommand) — the same rule stated
+  four times, and not stated by the two that needed it most. It belongs here,
+  once, next to the ring it is the other half of: inside a `.field`, the shell is
+  the boundary and the control has none.
+*/
+.field :is(textarea, input) {
+  border: 0;
+  border-radius: 0;
 }
+
+/*
+  The composer's boundary is the prism, so it draws no second one.
+
+  `.field`'s ring is right for every OTHER shell — a popover — which has no ring
+  of its own. A composer already wears one: `.hz-composer`'s conic sweep IS its
+  edge, and since both composers now share that shell, both are indicated by the
+  sweep. Both fired on the same focus and the white 2px outline painted straight
+  over it, which is why focusing the composer turned a lit gradient into a flat
+  white rectangle.
+
+  One event, one indicator. The prism brightens instead — and it has to be
+  BRIGHT enough to BE the indicator, not merely different. Three passes of the
+  same gradient composite its stops from ~.45 to ~.83 alpha — an alpha lift on
+  one hue, not a repaint. The ground beside the ring carries only the subtle
+  ::after glow (0.22 resting, 0.4 focused) — far dimmer than the 0.85-at-focus
+  halo the 3.32:1 was originally measured over, so the WCAG 1.4.11 margin
+  holds; sample it off the rendered page rather than the stop list if the
+  spectrum ever moves.
+
+  `:focus-within`, not the `:has()` above: the composer is one control surface
+  and its attach/mic/send buttons keep their own `:focus-visible` ring on their
+  own bounds, so the shell lighting up never costs you which button you are on.
+*/
+.hz-composer .field:has(:is(textarea, input):focus-visible),
+.dark .hz-composer .field:has(:is(textarea, input):focus-visible) {
+  outline: none;
+}
+
+.hz-composer:focus-within::before {
+  background:
+    conic-gradient(from var(--hz-angle), var(--hz-spectrum)),
+    conic-gradient(from var(--hz-angle), var(--hz-spectrum)),
+    conic-gradient(from var(--hz-angle), var(--hz-spectrum));
+}
+
+/* `.popover-ui` and `.select-item` are declared ONCE, in
+   `packages/client/src/components/Dropdown.css`, beside the only two components
+   that wear them — `Dropdown` and `DropdownPopup`, both of which import that
+   sheet. A second copy lived here and lost every cascade it entered: the radius
+   the product actually painted was always the other file's 1rem, never this
+   one's 0.7rem. That is the failure mode worth naming — a rule you can edit
+   without effect reads as owned, so both copies get maintained and only one is
+   ever seen.
+
+   `.popover-animate` stays here: chat's own Feedback and Fork wear it and
+   neither imports Dropdown.css. Each rule lives with the components that use
+   it, and only there. */
 
 .popover-animate {
   opacity: 0;
@@ -2701,52 +2917,8 @@ html {
   transform: scale(1) translateY(0);
 }
 
-/* `outline: var(--bg-surface-hover)` — a tailwind CLASS name written as a custom
-   property, so the token was never defined and these popovers had no keyboard
-   focus indicator at all. Caught by e2e/specs/tokens.spec.ts. --ring is the
-   system's focus colour and clears 3:1 in both themes. */
-.popover-ui:focus-visible,
-.popover-ui[data-focus-visible] {
-  outline: 2px solid var(--ring);
-  outline-offset: -1px;
-}
-
-.popover-ui:where(.dark, .dark *) {
-  background-color: var(--surface-secondary);
-  color: var(--text-secondary);
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.25),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-
-.select-item {
-  display: flex;
-  cursor: pointer;
-  scroll-margin: 0.5rem;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  outline: none !important;
-}
-
-.select-item[aria-disabled='true'] {
-  opacity: 0.5;
-}
-
-.select-item[data-active-item] {
-  background-color: var(--surface-hover);
-  color: var(--text-primary);
-}
-
 .account-settings-popover .select-item[data-active-item] {
   box-shadow: 0 0 0 2px var(--ring);
-}
-
-.popover-ui[data-enter] {
-  opacity: 1;
-  scale: 1;
-  translate: 0;
 }
 
 .animate-popover-top,
@@ -2991,5 +3163,22 @@ html {
 }
 
 .sharepoint-picker-bg {
-  background-color: #f5f5f5;
+  background-color: var(--surface-secondary);
+}
+
+/* ── Fading a label's trailing edge ─────────────────────────────────────────
+   A MASK, not a painted gradient. The conversation rows used to fade long
+   titles by stacking an 80px strip of `--surface-primary-alt` over the row's
+   right end — the rail's own colour, painted back on top of the rail. That
+   works only while the rail is opaque and that colour is the truth. The moment
+   the rail became glass the strip stopped matching what was behind it and
+   became what it had always literally been: a solid box on every row, at rest,
+   which is what "the sidebar is a stack of boxes" was.
+
+   Masking fades the TEXT instead of painting over it, so it owes nothing to the
+   ground and is correct on all of them — light, dark, photo, video. One rule,
+   no colour, no hover variant to keep in sync with the row's own hover. */
+.fade-tail {
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 2rem);
+  mask-image: linear-gradient(to left, transparent 0, #000 2rem);
 }

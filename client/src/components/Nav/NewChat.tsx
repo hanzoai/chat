@@ -1,107 +1,117 @@
 import React, { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { QueryKeys } from '@hanzochat/data-provider';
-import { useQueryClient } from '@tanstack/react-query';
-import { TooltipAnchor, NewChatIcon, MobileSidebar, Sidebar, Button } from '@hanzochat/client';
+import { HanzoMark } from '@hanzogui/shell';
+import { TooltipAnchor, MobileSidebar, Sidebar, Button } from '@hanzochat/client';
 import { CLOSE_SIDEBAR_ID, OPEN_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
 import BrandCorner from './BrandCorner';
-import { useLocalize, useNewConvo } from '~/hooks';
-import { clearMessagesCache } from '~/utils';
-import store from '~/store';
+import { useLocalize } from '~/hooks';
+import { cn } from '~/utils';
 
+/** The one button ground the sidebar's head uses, in both of its states. */
+const TAP =
+  'rounded-full border-none bg-transparent duration-0 hover:bg-surface-active-alt focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl';
+
+/**
+ * The head of the sidebar: the corner and the toggle between the two widths.
+ *
+ * Collapsed the sidebar is a narrow rail rather than a panel pushed off screen,
+ * so the mark IS the way back in; its app-switcher self (`BrandCorner`) owns the
+ * corner the moment the sidebar opens, and the phone bar carries it at every
+ * width below md. Compose is not here in either state — it belongs to the view
+ * header, which spans the width beside this rail at every width.
+ */
 export default function NewChat({
-  index = 0,
   toggleNav,
   subHeaders,
-  isSmallScreen,
-  headerButtons,
+  collapsed,
 }: {
-  index?: number;
   toggleNav: () => void;
-  isSmallScreen?: boolean;
+  collapsed?: boolean;
   subHeaders?: React.ReactNode;
-  headerButtons?: React.ReactNode;
 }) {
-  const queryClient = useQueryClient();
-  /** Note: this component needs an explicit index passed if using more than one */
-  const { newConversation: newConvo } = useNewConvo(index);
-  const navigate = useNavigate();
   const localize = useLocalize();
-  const { conversation } = store.useCreateConversationAtom(index);
 
-  const handleToggleNav = useCallback(() => {
-    toggleNav();
-    // Delay focus until after the sidebar animation completes (200ms)
-    setTimeout(() => {
-      document.getElementById(OPEN_SIDEBAR_ID)?.focus();
-    }, 250);
-  }, [toggleNav]);
-
-  const clickHandler: React.MouseEventHandler<HTMLButtonElement> = useCallback(
-    (e) => {
-      if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-        window.open('/c/new', '_blank');
-        return;
-      }
-      clearMessagesCache(queryClient, conversation?.conversationId);
-      queryClient.invalidateQueries([QueryKeys.messages]);
-      newConvo();
-      navigate('/c/new', { state: { focusChat: true } });
-      if (isSmallScreen) {
-        toggleNav();
-      }
+  /** Focus follows the toggle to whichever control replaced it, once the 200ms
+      width transition has finished. */
+  const toggleThenFocus = useCallback(
+    (id: string) => {
+      toggleNav();
+      setTimeout(() => {
+        document.getElementById(id)?.focus();
+      }, 250);
     },
-    [queryClient, conversation, newConvo, navigate, toggleNav, isSmallScreen],
+    [toggleNav],
   );
 
   return (
     <>
-      <div className="flex items-center justify-between px-0.5 py-[2px] md:py-2">
-        {/* Top-left of the app: the Hanzo mark. It replaces the collapse button
-            that used to sit here — the toggle now closes the sidebar from the
-            sidebar's own right edge, which is the side it collapses toward. */}
-        <BrandCorner />
-        <div className="flex items-center gap-0.5">
-          {headerButtons}
-
+      <div
+        className={cn(
+          'flex',
+          collapsed === true
+            ? 'flex-col items-center gap-0.5 py-2'
+            : 'items-center justify-between px-0.5 py-[2px] md:py-2',
+        )}
+      >
+        {collapsed === true ? (
           <TooltipAnchor
-            description={localize('com_ui_new_chat')}
+            description={localize('com_nav_open_sidebar')}
             render={
               <Button
+                id={OPEN_SIDEBAR_ID}
                 size="icon"
                 variant="outline"
-                data-testid="nav-new-chat-button"
-                aria-label={localize('com_ui_new_chat')}
-                className="rounded-full border-none bg-transparent duration-0 hover:bg-surface-active-alt focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl"
-                onClick={clickHandler}
+                data-testid="open-sidebar-button"
+                aria-label={localize('com_nav_open_sidebar')}
+                aria-expanded={false}
+                aria-controls="chat-history-nav"
+                className={TAP}
+                onClick={() => toggleThenFocus(CLOSE_SIDEBAR_ID)}
               >
-                <NewChatIcon className="icon-lg text-text-primary" />
+                <span className="flex items-center justify-center text-text-primary">
+                  <HanzoMark size={18} />
+                </span>
               </Button>
             }
           />
+        ) : (
+          <BrandCorner />
+        )}
+        {collapsed === true ? null : (
+          /* The sidebar head is the mark and the collapse toggle, nothing else
+             (owner call). Compose lives in the view header, right of the
+             sidebar, because it acts on the open conversation.
 
-          <TooltipAnchor
-            description={localize('com_nav_close_sidebar')}
-            render={
-              <Button
-                id={CLOSE_SIDEBAR_ID}
-                size="icon"
-                variant="outline"
-                data-testid="close-sidebar-button"
-                aria-label={localize('com_nav_close_sidebar')}
-                aria-expanded={true}
-                className="rounded-full border-none bg-transparent duration-0 hover:bg-surface-active-alt focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl"
-                onClick={handleToggleNav}
-              >
-                <Sidebar aria-hidden="true" className="max-md:hidden" />
-                <MobileSidebar
-                  aria-hidden="true"
-                  className="icon-lg m-1 inline-flex items-center justify-center md:hidden"
-                />
-              </Button>
-            }
-          />
-        </div>
+             The COLLAPSED rail used to keep a compose of its own, on the
+             reasoning that a rail has no header beside it to hold one. It does:
+             Chat/Header spans the width right of the rail and renders
+             HeaderNewChat at every width, so collapsing the rail produced two
+             New chat buttons on screen at once — measured at 768 and at every
+             desktop width above it. One end, one copy, every width. */
+          <div className="flex items-center gap-0.5">
+            <TooltipAnchor
+              description={localize('com_nav_close_sidebar')}
+              render={
+                <Button
+                  id={CLOSE_SIDEBAR_ID}
+                  size="icon"
+                  variant="outline"
+                  data-testid="close-sidebar-button"
+                  aria-label={localize('com_nav_close_sidebar')}
+                  aria-expanded={true}
+                  aria-controls="chat-history-nav"
+                  className={TAP}
+                  onClick={() => toggleThenFocus(OPEN_SIDEBAR_ID)}
+                >
+                  <Sidebar aria-hidden="true" className="max-md:hidden" />
+                  <MobileSidebar
+                    aria-hidden="true"
+                    className="icon-lg m-1 inline-flex items-center justify-center md:hidden"
+                  />
+                </Button>
+              }
+            />
+          </div>
+        )}
       </div>
       {subHeaders != null ? subHeaders : null}
     </>

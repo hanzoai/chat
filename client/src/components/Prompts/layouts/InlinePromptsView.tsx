@@ -29,7 +29,7 @@ export default function InlinePromptsView() {
   );
 
   if (!hasAccess) {
-    return <Navigate to="/c/new" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (isNew && !hasCreateAccess) {

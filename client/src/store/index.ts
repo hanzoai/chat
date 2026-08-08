@@ -1,5 +1,6 @@
 import * as artifacts from './artifacts';
 import * as preview from './preview';
+import * as panels from './panels';
 import families from './families';
 import endpoints from './endpoints';
 import user from './user';
@@ -20,6 +21,7 @@ export * from './favorites';
 export default {
   ...artifacts,
   ...preview,
+  ...panels,
   ...families,
   ...endpoints,
   ...user,

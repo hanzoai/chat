@@ -76,7 +76,7 @@ export async function loadToolDefinitions(
   deps: LoadToolDefinitionsDeps,
 ): Promise<LoadToolDefinitionsResult> {
   const { userId, agentId, tools, toolOptions = {}, deferredToolsEnabled = false } = params;
-  const { getOrFetchMCPServerTools, isBuiltInTool, loadAuthValues, getActionToolDefinitions } =
+  const { getOrFetchMCPServerTools, isBuiltInTool, getActionToolDefinitions } =
     deps;
 
   const emptyResult: LoadToolDefinitionsResult = {
@@ -178,10 +178,8 @@ export async function loadToolDefinitions(
   })) as unknown as GenericTool[];
 
   const classificationResult = await buildToolClassification({
-    userId,
     agentId,
     loadedTools,
-    loadAuthValues,
     deferredToolsEnabled,
     definitionsOnly: true,
     agentToolOptions: toolOptions,

@@ -10,7 +10,7 @@ type FileListItemProps = {
 
 export default function FileListItem({ file, deleteFile, width = '400px' }: FileListItemProps) {
   return (
-    <div className="w-100 my-3 mr-2 flex cursor-pointer flex-row rounded-md border border-0 bg-white p-4 transition duration-300 ease-in-out hover:bg-slate-200">
+    <div className="w-100 my-3 mr-2 flex cursor-pointer flex-row rounded-md border border-0 bg-surface-primary p-4 transition duration-300 ease-in-out hover:bg-surface-hover">
       <div className="flex w-1/2 flex-col justify-around align-middle">
         <strong>{file.filename}</strong>
         <p className="text-sm text-gray-500">{file.object}</p>
@@ -21,7 +21,7 @@ export default function FileListItem({ file, deleteFile, width = '400px' }: File
       </div>
       <div className="flex w-1/6 justify-around">
         <Button
-          className="my-0 ml-3 bg-transparent p-0 text-[#666666] hover:bg-slate-200"
+          className="my-0 ml-3 bg-transparent p-0 text-[#666666] hover:bg-surface-hover"
           onClick={() => deleteFile(file._id)}
         >
           <TrashIcon className="m-0 p-0" />

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { ExternalLink, CreditCard, TrendingUp, Zap, ArrowUpRight } from 'lucide-react';
+import { balanceOn } from '@hanzochat/data-provider';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
 import TokenCreditsItem from './TokenCreditsItem';
@@ -85,7 +86,7 @@ function Balance() {
   const { data: startupConfig } = useGetStartupConfig();
 
   const balanceQuery = useGetUserBalance({
-    enabled: !!isAuthenticated && !!startupConfig?.balance?.enabled,
+    enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
   const balanceData = balanceQuery.data;
 
@@ -144,7 +145,7 @@ function Balance() {
       <div className="rounded-xl border border-border-medium bg-surface-secondary p-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-text-secondary">
               Available Balance
             </p>
             <p className="mt-1 text-2xl font-bold text-text-primary">
@@ -153,7 +154,7 @@ function Balance() {
           </div>
           <div className="flex items-center gap-1 rounded-full bg-surface-tertiary px-2.5 py-1">
             <Zap className="h-3 w-3 text-text-secondary" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+            <span className="text-[10px] font-semibold tracking-wider text-text-secondary">
               {tierLabel}
             </span>
           </div>
@@ -174,7 +175,7 @@ function Balance() {
           drawing an empty bar is the same lie as "$0.00" in a bigger font. */}
       {!balanceUnknown && (
         <div className="space-y-4">
-          <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider text-text-secondary">
             <TrendingUp className="h-3.5 w-3.5" />
             Usage
           </h3>
@@ -217,7 +218,7 @@ function Balance() {
       {/* Model access */}
       {allowedModels && allowedModels.length > 0 && allowedModels[0] !== '*' && (
         <div className="rounded-lg border border-border-light bg-surface-secondary p-3">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+          <p className="mb-2 text-[10px] font-semibold tracking-wider text-text-secondary">
             Available Models
           </p>
           <div className="flex flex-wrap gap-1">

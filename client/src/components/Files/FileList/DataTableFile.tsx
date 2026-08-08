@@ -192,7 +192,7 @@ export default function DataTableFile<TData, TValue>({
                   return (
                     <TableHead
                       key={header.id}
-                      className="align-start sticky top-0 rounded-t border-b border-black/10 bg-white px-2 py-1 text-left font-medium text-gray-700 dark:border-white/10 dark:bg-gray-700 dark:text-gray-100 sm:px-4 sm:py-2"
+                      className="align-start sticky top-0 rounded-t border-b border-black/10 bg-surface-primary px-2 py-1 text-left font-medium text-gray-700 dark:border-white/10 dark:bg-gray-700 dark:text-gray-100 sm:px-4 sm:py-2"
                       style={style}
                     >
                       {header.isPlaceholder

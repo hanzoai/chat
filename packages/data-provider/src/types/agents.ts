@@ -61,6 +61,20 @@ export namespace Agents {
   export type MessageContent = string | MessageContentComplex[];
 
   /**
+   * Where a tool call's work is happening, while it is happening.
+   *
+   * A tool that leases a sandbox and runs a command in it says nothing until the
+   * command returns — so a long build is a blank pause and a verdict. These two
+   * ids are what make it watchable instead: `session` names the live log to tail,
+   * `sandbox` names the thing Stop interrupts. Both arrive BEFORE the command
+   * starts, on a run-step delta, so the reader can open the tail immediately.
+   */
+  export type ToolRun = {
+    session: string;
+    sandbox: string;
+  };
+
+  /**
    * A call to a tool.
    */
   export type ToolCall = {
@@ -81,6 +95,8 @@ export namespace Agents {
     auth?: string;
     /** Expiration time */
     expires_at?: number;
+    /** Where this call's work is running, once it is. */
+    run?: ToolRun;
   };
 
   export type ToolEndEvent = {
@@ -245,6 +261,7 @@ export namespace Agents {
     tool_calls?: ToolCallChunk[];
     auth?: string;
     expires_at?: number;
+    run?: ToolRun;
   };
   export type AgentToolCall = FunctionToolCall | ToolCall;
   export interface ExtendedMessageContent {

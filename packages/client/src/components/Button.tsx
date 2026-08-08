@@ -8,7 +8,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        // The raised pushbutton, and the ONE loud thing a surface is allowed.
+        // It was `bg-primary`, which in both themes resolves to near-white — so
+        // every unnamed Button, and the primary action of every dialog, painted
+        // a white slab on a near-black page. `--surface-submit` is dark in both
+        // themes, so its label is light in both and needs no branch.
+        default:
+          'border border-surface-submit-hover bg-surface-submit text-white hover:bg-surface-submit-hover',
         destructive:
           'bg-surface-destructive text-destructive-foreground hover:bg-surface-destructive-hover',
         outline:
@@ -16,8 +22,11 @@ const buttonVariants = cva(
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-surface-hover hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
-        // Monochrome primary CTA: adaptive white-on-dark / black-on-light (matches default).
-        submit: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        // The primary CTA IS the default look — one raised pushbutton, spelled
+        // once. `submit` stays as a name because it says which action is the
+        // primary one, and that is worth reading at the call site.
+        submit:
+          'border border-surface-submit-hover bg-surface-submit text-white hover:bg-surface-submit-hover',
       },
       // 44px is the pointer-target floor: the box grows, the glyph inside does not.
       size: {
@@ -35,8 +44,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

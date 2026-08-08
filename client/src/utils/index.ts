@@ -116,6 +116,32 @@ export const extractContent = (
   return '';
 };
 
+/**
+ * The saved panel layout, or undefined when what is stored cannot be trusted.
+ * The last entry is the side panel — chrome, never content — so a restore
+ * where it claims more than 40% is a poisoned write (an artifacts-era shape,
+ * a mid-drag save, an old build), and replaying it squeezes the chat into a
+ * sliver beside a giant empty panel. Refusing it falls back to the defaults
+ * and the next honest save overwrites the poison.
+ */
+export const savedLayout = (): number[] | undefined => {
+  try {
+    const raw = localStorage.getItem('react-resizable-panels:layout');
+    if (raw == null) {
+      return undefined;
+    }
+    const layout = JSON.parse(raw) as unknown;
+    const sane =
+      Array.isArray(layout) &&
+      (layout.length === 2 || layout.length === 3) &&
+      layout.every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0) &&
+      layout[layout.length - 1] <= 40;
+    return sane ? (layout as number[]) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const normalizeLayout = (layout: number[]) => {
   const sum = layout.reduce((acc, size) => acc + size, 0);
   if (Math.abs(sum - 100) < 0.01) {

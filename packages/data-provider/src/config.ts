@@ -933,6 +933,16 @@ export const balanceSchema = z.object({
   }).optional(),
 });
 
+/**
+ * The money plane is on — either leg. `enabled` is the LOCAL tokenCredits
+ * ledger; `commerce.enabled` is Commerce as the cloud gate, which is how
+ * production runs (`balance.enabled=false`, cloud is the ONE gate). A client
+ * that checks `enabled` alone hides a funded account's balance, so every
+ * "should I read/show the balance" question asks this and nothing else.
+ */
+export const balanceOn = (config?: { balance?: TBalanceConfig } | null): boolean =>
+  config?.balance?.enabled === true || config?.balance?.commerce?.enabled === true;
+
 export const transactionsSchema = z.object({
   enabled: z.boolean().optional().default(true),
 });

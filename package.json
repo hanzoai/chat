@@ -1,6 +1,6 @@
 {
   "name": "@hanzochat/chat",
-  "version": "1.0.52",
+  "version": "1.0.118",
   "description": "Chat - Unified interface to Agents, LLMs, MCPs and any AI model or OpenAPI documented API with full RAG stack",
   "packageManager": "pnpm@10.27.0",
   "workspaces": [
@@ -53,6 +53,7 @@
     "frontend:ci": "npm run build:data-provider && npm run build:client-package && cd client && npm run build:ci",
     "build:static": "cp .env.static .env && npm run build:data-provider && npm run build:client-package && cd client && npm run build",
     "frontend:dev": "cd client && npm run dev",
+    "e2e:live": "node e2e/setup/live-run.js",
     "e2e": "playwright test --config=e2e/playwright.config.local.ts",
     "e2e:headed": "playwright test --config=e2e/playwright.config.local.ts --headed",
     "e2e:a11y": "playwright test --config=e2e/playwright.config.a11y.ts --headed",
@@ -186,6 +187,13 @@
     "@opentelemetry/sdk-trace-base": "^2.5.1"
   },
   "pnpm": {
+    "packageExtensions": {
+      "@hanzogui/static": {
+        "dependencies": {
+          "typescript": "^5.9.3"
+        }
+      }
+    },
     "onlyBuiltDependencies": [
       "sharp",
       "protobufjs",
@@ -197,7 +205,9 @@
       "@ariakit/react": "0.4.29",
       "zod-to-json-schema": "3.24.6",
       "@modelcontextprotocol/sdk": "1.22.0",
-      "zod@3.24.4": "3.25.76"
+      "zod@3.24.4": "3.25.76",
+      "@hanzogui/web": "8.1.1",
+      "@hanzogui/telemetry": "8.1.3"
     }
   }
 }

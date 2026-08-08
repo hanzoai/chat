@@ -2,12 +2,10 @@ const { logger } = require('@hanzochat/data-schemas');
 const { tool: toolFn, DynamicStructuredTool } = require('@langchain/core/tools');
 const {
   sleep,
-  EnvVar,
   StepTypes,
   GraphEvents,
   createToolSearch,
   Constants: AgentConstants,
-  createProgrammaticToolCallingTool,
 } = require('@hanzochat/agents');
 const {
   sendEvent,
@@ -697,20 +695,9 @@ async function loadToolDefinitionsWrapper({ req, res, agent, streamId = null, to
 
   if (hasExecuteCode && tool_resources) {
     try {
-      const authValues = await loadAuthValues({
-        userId: req.user.id,
-        authFields: [EnvVar.CODE_API_KEY],
-      });
-      const codeApiKey = authValues[EnvVar.CODE_API_KEY];
-
-      if (codeApiKey) {
-        const { toolContext } = await primeCodeFiles(
-          { req, tool_resources, agentId: agent.id },
-          codeApiKey,
-        );
-        if (toolContext) {
-          toolContextMap[Tools.execute_code] = toolContext;
-        }
+      const { toolContext } = await primeCodeFiles({ req, tool_resources, agentId: agent.id });
+      if (toolContext) {
+        toolContextMap[Tools.execute_code] = toolContext;
       }
     } catch (error) {
       logger.error('[loadToolDefinitionsWrapper] Error priming code files:', error);
@@ -896,11 +883,9 @@ async function loadAgentTools({
   const { toolRegistry, toolDefinitions, additionalTools, hasDeferredTools } =
     await buildToolClassification({
       loadedTools,
-      userId: req.user.id,
       agentId: agent.id,
       agentToolOptions: agent.tool_options,
       deferredToolsEnabled,
-      loadAuthValues,
     });
 
   const agentTools = [];
@@ -1158,22 +1143,11 @@ async function loadToolsForExecution({
 
   if (isPTC && toolRegistry) {
     configurable.toolRegistry = toolRegistry;
-    try {
-      const authValues = await loadAuthValues({
-        userId: req.user.id,
-        authFields: [EnvVar.CODE_API_KEY],
-      });
-      const codeApiKey = authValues[EnvVar.CODE_API_KEY];
-
-      if (codeApiKey) {
-        const ptcTool = createProgrammaticToolCallingTool({ apiKey: codeApiKey });
-        allLoadedTools.push(ptcTool);
-      } else {
-        logger.warn('[loadToolsForExecution] PTC requested but CODE_API_KEY not available');
-      }
-    } catch (error) {
-      logger.error('[loadToolsForExecution] Error creating PTC tool:', error);
-    }
+    /* Programmatic tool calling is a DIFFERENT protocol from a code run — it
+     * suspends the graph on each tool call and resumes it from a continuation
+     * token — and cloud answers it 501. It is not reachable over the sandbox
+     * verbs, so it is not offered rather than offered and failing mid-run. */
+    logger.debug('[loadToolsForExecution] PTC requested but not served by the sandbox runtime');
   }
 
   const specialToolNames = new Set([

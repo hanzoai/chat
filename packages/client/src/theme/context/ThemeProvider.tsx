@@ -190,6 +190,20 @@ export function ThemeProvider({
 
     root.classList.remove(darkMode ? 'light' : 'dark');
     root.classList.add(darkMode ? 'dark' : 'light');
+
+    /* gui's theme scope is a SECOND pair of classes on the same element, and
+       App.jsx mounts GuiProvider with a hardcoded `defaultTheme="dark"` from
+       outside this provider — so picking light produced `class="light t_dark"`:
+       Tailwind's tokens flipped to the light ramp while gui's (and, through
+       `--background`, the glass material's) stayed dark. Text went dark on
+       surfaces that stayed dark — the rail's labels, the hero, the footer — and
+       light mode was unreadable rather than merely off-palette.
+
+       One element, one owner. `defaultTheme` is an initial value, so setting
+       both pairs here leaves a single writer of what theme this document is
+       in, instead of two that agree only while nobody changes it. */
+    root.classList.remove(darkMode ? 't_light' : 't_dark');
+    root.classList.add(darkMode ? 't_dark' : 't_light');
   }, []);
 
   // Apply theme mode whenever theme changes

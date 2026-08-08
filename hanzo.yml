@@ -1,12 +1,92 @@
-# Native CI/CD. cloud/apps/git/build_on_push.go reads `images:` on a push to the
-# default branch and enqueues one build per entry at platform.hanzo.ai/v1/runner.
-# No `images:` anywhere in a repo means the orchestrator skips it silently.
+# Hanzo CI/CD — chat. All real config lives here; .hanzo/workflows/cicd.yml is
+# triggers and an import of hanzoai/ci.
 #
-# Matches .hanzo/workflows/deploy.yml on context, dockerfile and repo, so either
-# lane produces the same image. Tag is derived by hanzoai/ci imgver from
-# client/package.json, never set here.
-images:
-  - name: chat
-    context: .
-    dockerfile: Dockerfile
-    repo: ghcr.io/hanzoai/chat
+# NO `images:`, and this file used to declare one. Two lanes were already aimed
+# at ghcr.io/hanzoai/chat — this block (platform.hanzo.ai builds every `images:`
+# entry on a push to the default branch) and .hanzo/workflows/deploy.yml.
+# Importing the reusable would have made a third. Two builders racing one tag is
+# how hanzoai/app moved v1.42.225 off the bytes that had just been verified:
+# nothing errors, and the pod reports one version while serving another.
+#
+# deploy.yml is the lane that stays, because it is the lane that has been
+# building. Forge runs #90-#97 are green and #97 is this exact commit. It also
+# carries the two things the image cannot ship without: PUBLISHABLE_KEY read
+# from KMS (Vite inlines it at BUILD, so a runtime value cannot reach a compiled
+# bundle, and the Dockerfile refuses a blank one) and the post-push check that
+# the tag resolves. Folding it in here is mechanical later — `build_secrets:
+# [PUBLISHABLE_KEY]` reads the same KMS path deploy.yml curls — but changing
+# which lane ships hanzo.chat does not belong in the commit that gives this repo
+# its first tests.
+#
+# What was missing was never a builder. It was a gate: deploy.yml runs no test,
+# no lint, no typecheck, so hanzo.chat has shipped ungated for 97 builds.
+
+test:
+  # The declared version must never be BEHIND what ships. deploy.yml commits the
+  # number in the same commit it tags, so the steady state is equality; this gate
+  # is what proves the write-back landed, and it runs on every push AND every PR
+  # (deploy.yml fires on main pushes only, so a PR would otherwise never see it).
+  #
+  # Without it the drift is invisible by construction: imgver reads package.json
+  # as a FLOOR, so a stale number breaks no build, fails no test and changes no
+  # image — it just loses to the registry, every time, forever. It reached 1.0.77
+  # against a published 1.0.113 that way.
+  #
+  # Test gates get no GH_PAT from the reusable, so the registry half degrades to
+  # git tags alone — which deploy.yml now keeps complete, and which the script
+  # announces on stderr rather than silently skipping.
+  - name: version-drift
+    run: |
+      set -e
+      git fetch --tags --force --quiet || true
+      scripts/version.sh check
+
+  # The build the image itself runs, run before there is an image. `pnpm run
+  # frontend` is verbatim the Dockerfile's own build line — four workspace
+  # packages, then the client bundle — so a break here is a break there, reached
+  # in ~2 minutes instead of after a full layer stack. On a pull request it is
+  # the only signal that exists: deploy.yml fires on main pushes only.
+  - name: build
+    run: |
+      set -e
+      corepack enable pnpm
+      pnpm install --frozen-lockfile
+      NODE_OPTIONS=--max-old-space-size=8192 pnpm run frontend
+      # A vite build that emits nothing still exits 0.
+      test -f client/dist/index.html
+
+  # scripts/check-barrel.cjs, against the dist the gate above just produced. Two
+  # defects that are invisible until the process boots: an import of a package
+  # @hanzochat/api never declared (rollup inlines it, and an inlined native
+  # require throws at load), and a name api/server/** destructures from the
+  # barrel that the barrel does not export (`undefined` until its first call).
+  - name: barrel
+    run: |
+      set -e
+      node scripts/check-barrel.cjs
+
+# NO jest suite is gated, and that is a measurement rather than an oversight.
+# All five are red on this commit — cb653548, node 22, pnpm 10.27.0, one full
+# local run each:
+#     client                  515 failed / 2356      packages/api  711 / 4644
+#     api                     403 failed / 2737      data-schemas  246 / 1489
+#     packages/data-provider  227 failed /  985
+# The client column is exactly the baseline CLAUDE.md already records (77 suites
+# failed / 125 passed), so this is the long-standing state of the repo and not
+# something a run introduced. `pnpm lint` does not lint a single file either:
+# ESLint 9 loads @typescript-eslint/typescript-estree, which dies against the TS7
+# native compiler with "Cannot read properties of undefined (reading 'Cjs')".
+#
+# Gating any of that ships a lane that is red on arrival and red on every commit
+# after, which is read as noise within a day and then ignored — worse than no
+# lane, because it looks like coverage. Turn a suite green, then add its line.
+#
+# Most of the red is one shape, not one bug per failure: tests importing symbols
+# the source never exported. The sharpest instance is not merely a test failure —
+# merge 49dc4f7bf6 (LibreChat sync) dropped PERMISSION_TYPE_INTERFACE_FIELDS,
+# INTERFACE_PERMISSION_FIELDS and PERMISSION_SUB_KEYS out of
+# packages/data-provider/src/permissions.ts while packages/api/src/admin/config.ts
+# and packages/data-schemas/src/app/resolution.ts kept importing them, so the
+# admin config surface calls `.has()` on undefined in production today. Restoring
+# those 49 lines from e77b03ab6d takes resolution.spec.ts to 26/26 and
+# admin/config.handler.spec.ts to 54/54 — measured, not estimated.

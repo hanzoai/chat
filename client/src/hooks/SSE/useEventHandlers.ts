@@ -612,6 +612,13 @@ export default function useEventHandlers({
         const finalMessages: TMessage[] = [...messages, userMessage, errorMessage];
         setMessages(finalMessages);
         queryClient.setQueryData<TMessage[]>([QueryKeys.messages, convoId], finalMessages);
+        // An errored turn is still persisted server-side (the error middleware
+        // saves the user message and the refusal), but only the success path's
+        // title mutation ever refetched the sidebar — so a chat whose FIRST turn
+        // failed (a 402 refusal, a dead endpoint) existed in the DB and never
+        // appeared in Chats until a hard reload. Refetch the list whenever an
+        // error lands in a thread; it is cheap and already 30s-stale.
+        queryClient.invalidateQueries([QueryKeys.allConversations]);
       };
 
       const parseErrorResponse = (data: TResData | Partial<TMessage>): TMessage => {

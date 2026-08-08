@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
+import { hanzoguiPlugin } from '@hanzogui/vite-plugin';
 import { compression } from 'vite-plugin-compression2';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -59,37 +60,53 @@ export default defineConfig(({ command }) => ({
   envDir: '../',
   envPrefix: ['VITE_', 'SCRIPT_', 'DOMAIN_', 'ALLOW_', 'HANZO_'],
   plugins: [
+    /**
+     * gui's compiler. It resolves the same config the app mounts (gui.config.ts
+     * re-exports it) and writes gui's theme + base CSS to `src/gui.css`, which
+     * `main.jsx` imports — so that sheet ships as a hashed, cacheable file in
+     * `dist/assets` instead of a `<style>` the runtime rebuilds on every boot.
+     * `GuiProvider disableInjectCSS` in App.jsx is the other half; neither half
+     * works alone. It also extracts atomic styles out of gui JSX at build time.
+     *
+     * BUILD ONLY, and that is not a preference. The plugin's `config()` adds
+     * `define: { 'process.env.NODE_ENV': … }`, and that single define is enough
+     * to kill this app's dev server: with it, the pre-bundled `process` shim
+     * stops reaching ripemd160 → readable-stream, `_stream_writable` reads
+     * `process.version.slice` off undefined, and the page renders blank with one
+     * pageerror. Measured by adding ONLY that define to this config with no
+     * plugin at all — same blank page, same stack — so it is a property of this
+     * app's node-polyfill graph, not of the extraction. Dev therefore keeps
+     * gui's runtime injection (App.jsx), which is what it has always used.
+     */
+    ...(command === 'build'
+      ? [
+          hanzoguiPlugin({
+            components: ['@hanzo/gui'],
+            // absolute: the extractor copies the config into a .hanzogui/ temp dir
+            config: path.resolve(__dirname, 'gui.config.ts'),
+            outputCSS: path.resolve(__dirname, 'src/gui.css'),
+          }),
+        ]
+      : []),
     react(),
     nodePolyfills(),
     VitePWA({
-      injectRegister: 'auto', // 'auto' | 'manual' | 'disabled'
-      registerType: 'autoUpdate', // 'prompt' | 'autoUpdate'
+      injectRegister: 'auto',
+      // The worker self-destructs, by decision, not accident. This is an
+      // online AI chat: a precache worker only ever serves the PREVIOUS
+      // build's shell after a deploy (black page, missing lazy chunks, 401s
+      // until the user clears it by hand — observed on every release). The
+      // generated sw.js now replaces any installed worker on its next visit,
+      // clears its caches and unregisters. Deleting the file instead would
+      // strand installed workers forever: the SPA catch-all answers /sw.js
+      // with HTML, which is a failed update, not a 404. The manifest below
+      // keeps the app installable.
+      selfDestroying: true,
       devOptions: {
-        enabled: false, // disable service worker registration in development mode
+        enabled: false,
       },
       useCredentials: true,
       includeManifestIcons: false,
-      workbox: {
-        globPatterns: [
-          '**/*.{js,css,html}',
-          'assets/favicon*.png',
-          'assets/icon-*.png',
-          'assets/apple-touch-icon*.png',
-          'assets/maskable-icon.png',
-          'manifest.webmanifest',
-        ],
-        // Do NOT exclude index.html: vite-plugin-pwa's default navigateFallback
-        // is 'index.html', so the generated SW binds a navigation handler via
-        // createHandlerBoundToURL('index.html'). If it isn't precached, that
-        // throws "non-precached-url: index.html", the service worker breaks, and
-        // users are stranded on a stale shell after each deploy (they see
-        // /v1/chat/* 401s until they manually clear the SW). Precaching it — with
-        // registerType:'autoUpdate' above — keeps the SPA nav fallback valid and
-        // self-updates on every release.
-        globIgnores: ['images/**/*', '**/*.map'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        navigateFallbackDenylist: [/^\/v1\//, /^\/images\//],
-      },
       includeAssets: [],
       manifest: {
         name: 'Hanzo Chat',
@@ -305,6 +322,14 @@ export default defineConfig(({ command }) => ({
     chunkSizeWarningLimit: 1500,
   },
   resolve: {
+    // One axios for the whole page, no matter how many module copies import
+    // it. The data-provider ships two entrypoints that each inline their own
+    // copy of the request layer; without dedupe the bundle carries two axios
+    // instances, setTokenHeader writes defaults on one, and any request that
+    // fires through the other goes out with NO Authorization — measured as
+    // the guest send 401ing seconds after a bootstrap call carried the
+    // bearer fine.
+    dedupe: ['axios'],
     alias: {
       '~': path.join(__dirname, 'src/'),
       $fonts: path.resolve(__dirname, 'public/fonts'),

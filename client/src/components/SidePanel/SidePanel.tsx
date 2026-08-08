@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo, memo } from 'react';
-import { useAtomValue } from 'jotai';
+import { useState, useCallback, useEffect, useMemo, memo } from 'react';
+import { useAtom, useAtomValue } from 'jotai';
 import { getEndpointField } from '@hanzochat/data-provider';
 import { useUserKeyQuery } from '@hanzochat/data-provider/react-query';
 import { ResizableHandleAlt, ResizablePanel, useMediaQuery } from '@hanzochat/client';
@@ -78,6 +78,23 @@ const SidePanel = ({
     [keyExpiry.expiresAt, userProvidesKey],
   );
 
+  /**
+   * `store.sidePanelOpen` is the truth about whether this panel is open, and
+   * these two drive the imperative panel to match it. It used to live in this
+   * subtree's React state, so the only controls that could reach it were the
+   * ones rendered inside it.
+   */
+  const [sidePanelOpen, setSidePanelOpen] = useAtom(store.sidePanelOpen);
+
+  const showPanel = useCallback(() => {
+    setIsCollapsed(false);
+    setMinSize(defaultMinSize);
+    setCollapsedSize(navCollapsedSize);
+    setFullCollapse(false);
+    localStorage.setItem('fullPanelCollapse', 'false');
+    panelRef.current?.expand();
+  }, [panelRef, setMinSize, setIsCollapsed, setFullCollapse, setCollapsedSize, navCollapsedSize]);
+
   const hidePanel = useCallback(() => {
     setIsCollapsed(true);
     setCollapsedSize(0);
@@ -87,9 +104,24 @@ const SidePanel = ({
     panelRef.current?.collapse();
   }, [panelRef, setMinSize, setIsCollapsed, setFullCollapse, setCollapsedSize]);
 
+  /* A small screen collapses the panel unconditionally (SidePanelGroup), so
+     reconciling there would fight it and reopen a panel that covers the chat. */
+  useEffect(() => {
+    if (isSmallScreen) {
+      return;
+    }
+    if (sidePanelOpen) {
+      showPanel();
+    } else {
+      hidePanel();
+    }
+  }, [sidePanelOpen, isSmallScreen, showPanel, hidePanel]);
+
+  const closePanel = useCallback(() => setSidePanelOpen(false), [setSidePanelOpen]);
+
   const Links = useSideNavLinks({
     endpoint,
-    hidePanel,
+    hidePanel: closePanel,
     keyProvided,
     endpointType,
     interfaceConfig,
@@ -100,61 +132,53 @@ const SidePanel = ({
     if (newUser) {
       setNewUser(false);
     }
-    setIsCollapsed((prev: boolean) => {
-      if (prev) {
-        setMinSize(defaultMinSize);
-        setCollapsedSize(navCollapsedSize);
-        setFullCollapse(false);
-        localStorage.setItem('fullPanelCollapse', 'false');
-      }
-      return !prev;
-    });
-    if (!isCollapsed) {
-      panelRef.current?.collapse();
-    } else {
-      panelRef.current?.expand();
-    }
-  }, [
-    newUser,
-    panelRef,
-    setNewUser,
-    setMinSize,
-    isCollapsed,
-    setIsCollapsed,
-    setFullCollapse,
-    setCollapsedSize,
-    navCollapsedSize,
-  ]);
+    setSidePanelOpen((prev) => !prev);
+  }, [newUser, setNewUser, setSidePanelOpen]);
 
   return (
     <>
-      <div
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-        className="relative flex w-px items-center justify-center"
-      >
-        <NavToggle
-          navVisible={!isCollapsed}
-          isHovering={isHovering}
-          onToggle={toggleNavVisible}
-          setIsHovering={setIsHovering}
-          className={cn(
-            'fixed top-1/2',
-            (isCollapsed && (minSize === 0 || collapsedSize === 0)) || fullCollapse
-              ? 'mr-9'
-              : 'mr-16',
-          )}
-          translateX={false}
-          side="right"
-        />
-      </div>
+      {/* The chevron is hover-revealed (opacity 0 at rest), so on a touch width
+          it is an invisible control — and `fixed` inside the translated content
+          column, it leaves the viewport whenever the drawer opens (x=670 at
+          390px). A control nobody can see or reach is not rendered at all. */}
+      {!isSmallScreen && (
+        <div
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          className="relative flex w-px items-center justify-center"
+        >
+          <NavToggle
+            navVisible={!isCollapsed}
+            isHovering={isHovering}
+            onToggle={toggleNavVisible}
+            setIsHovering={setIsHovering}
+            className={cn(
+              'fixed top-1/2',
+              (isCollapsed && (minSize === 0 || collapsedSize === 0)) || fullCollapse
+                ? 'mr-9'
+                : 'mr-16',
+            )}
+            translateX={false}
+            side="right"
+          />
+        </div>
+      )}
       {(!isCollapsed || minSize > 0) && !isSmallScreen && !fullCollapse && (
         <ResizableHandleAlt withHandle className="bg-transparent text-text-primary" />
       )}
       <ResizablePanel
         tagName="nav"
         id="controls-nav"
-        order={hasArtifacts ? 3 : 2}
+        // ALWAYS LAST, and fixed rather than conditional. Panels are laid out in
+        // `order`, and the saved layout is an array of sizes in that same order,
+        // so "the nav is the last element" is the contract SidePanelGroup reads
+        // sizes back through. Expressing it as `hasArtifacts ? 3 : 2` made that
+        // contract depend on WHICH other panels happened to be mounted: add a
+        // third panel (the dock, order 3) with the artifacts panel closed and
+        // the nav sorts to the MIDDLE, so the restore read the dock's width as
+        // the nav's and the rail grew every reload. A constant above every other
+        // panel cannot be overtaken by a panel added later.
+        order={4}
         aria-label={localize('com_ui_controls')}
         role="navigation"
         collapsedSize={collapsedSize}

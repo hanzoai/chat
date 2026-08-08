@@ -55,7 +55,7 @@ export default function MemoryInfo({ memoryArtifacts }: { memoryArtifacts: Memor
           <div className="space-y-2">
             {updatedMemories.map((artifact) => (
               <div key={`update-${artifact.key}`} className="rounded-lg p-3">
-                <div className="mb-1 text-xs font-medium uppercase tracking-wide text-text-secondary">
+                <div className="mb-1 text-xs font-medium tracking-wide text-text-secondary">
                   {artifact.key}
                 </div>
                 <div className="whitespace-pre-wrap text-sm text-text-primary">
@@ -75,7 +75,7 @@ export default function MemoryInfo({ memoryArtifacts }: { memoryArtifacts: Memor
           <div className="space-y-2">
             {deletedMemories.map((artifact) => (
               <div key={`delete-${artifact.key}`} className="rounded-lg p-3 opacity-60">
-                <div className="mb-1 text-xs font-medium uppercase tracking-wide text-text-secondary">
+                <div className="mb-1 text-xs font-medium tracking-wide text-text-secondary">
                   {artifact.key}
                 </div>
                 <div className="text-sm italic text-text-secondary">

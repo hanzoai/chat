@@ -3,6 +3,7 @@ import { ArrowUp, Check, ChevronDown, Square } from 'lucide-react';
 import * as Ariakit from '@ariakit/react/menu';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import { DropdownPopup } from '@hanzochat/client';
+import ComposerShell from '~/components/Chat/Input/ComposerShell';
 import { useLocalize } from '~/hooks';
 
 /**
@@ -104,12 +105,12 @@ export default function AnswerComposer({
   return (
     <div className="w-full">
       {/*
-        Focus reads as a LIFT, not a second box. A mouse click lifts the shadow;
-        a keyboard tab adds the ring — and `field` (style.css) is what puts that
-        ring on THIS element, at its 24px radius, instead of letting the global
-        `.dark :focus-visible` paint a square one around the bare textarea.
+        The SAME shell the chat composer wears — see ComposerShell. This used to
+        be its own box (a drop shadow, a hairline border, `surface-primary`), so
+        picking Search or News swapped one composer for a differently-sized,
+        differently-coloured one and the input jumped under the pointer.
       */}
-      <div className="field rounded-3xl border border-border-medium bg-surface-primary shadow-md transition-shadow duration-200 focus-within:shadow-lg">
+      <ComposerShell className="pb-0">
         <label htmlFor="answer-input" className="sr-only">
           {localize('com_answer_ask_placeholder')}
         </label>
@@ -136,7 +137,7 @@ export default function AnswerComposer({
         <div className="flex items-center gap-1.5 px-2 pb-2 pt-1">
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <DropdownPopup
-              portal={false}
+              portal={true}
               isOpen={sourcesOpen}
               setIsOpen={setSourcesOpen}
               menuId={sourcesMenuId}
@@ -155,7 +156,7 @@ export default function AnswerComposer({
             />
 
             <DropdownPopup
-              portal={false}
+              portal={true}
               isOpen={modelOpen}
               setIsOpen={setModelOpen}
               menuId={modelMenuId}
@@ -178,7 +179,7 @@ export default function AnswerComposer({
               aria-label={localize(isLoading ? 'com_answer_stop' : 'com_answer_send')}
               onClick={isLoading ? onStop : submit}
               disabled={!isLoading && !text.trim()}
-              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-text-primary text-surface-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-surface-submit-hover bg-surface-submit text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
             >
               {isLoading ? (
                 <Square className="size-3.5 fill-current" aria-hidden="true" />
@@ -188,7 +189,7 @@ export default function AnswerComposer({
             </button>
           </div>
         </div>
-      </div>
+      </ComposerShell>
 
       {sources.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5 px-1">

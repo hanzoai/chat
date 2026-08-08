@@ -43,16 +43,17 @@
     left: 0;
     top: 0;
     bottom: 0;
-    /* Cap the dimmed scrim at the drawer width (420px) instead of stretching
-       edge-to-edge. On a tablet the drawer never fills the viewport, so a
-       full-width scrim would dim the still-visible content beside it. */
-    right: auto;
+    /* No dim, and no cap. A tinted scrim capped at 420px — wider than the
+       320px drawer — showed a hard-edged dark band right of the drawer that
+       ended abruptly, reading as an extra shadow. The drawer is opaque and
+       stands on its own, so this is now a full-width, INVISIBLE click-catcher:
+       nothing to see beside the drawer, and tapping the chat still closes it. */
+    right: 0;
     width: 100%;
-    max-width: 420px;
-    background-color: rgba(7, 7, 7, 0.4);
+    background-color: transparent;
     padding-top: 12px;
     opacity: 0;
-    transition: all 0.5s;
+    transition: opacity 0.2s;
     pointer-events: none;
   }
 
@@ -67,6 +68,11 @@
 
   .nav.active {
     position: fixed;
+    /* A soft drop-shadow off the drawer's right edge — the separation the flat
+       scrim band was standing in for, done as a shadow should be: it fades
+       smoothly into the backdrop instead of ending on a hard line, and it
+       rides the drawer rather than sitting beside it. */
+    box-shadow: 8px 0 32px -8px rgba(0, 0, 0, 0.55);
   }
 }
 
@@ -410,12 +416,10 @@ div[role="tabpanel"][data-state="active"][data-orientation="horizontal"][aria-la
   outline: none !important;
 }
 
+/* Links in a reply. They were blue, bold AND underlined — three signals for one
+   affordance, and the only hue on a monochrome page. The underline stays,
+   because in body copy that IS the affordance; the shouting goes. */
 p.whitespace-pre-wrap a, li a {
-  color: #0066cc;
+  color: var(--text-primary);
   text-decoration: underline;
-  font-weight: bold;
-}
-
-.dark p.whitespace-pre-wrap a, .dark li a {
-  color: #52a0ff;
 }

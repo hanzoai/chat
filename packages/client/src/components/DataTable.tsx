@@ -14,7 +14,7 @@ import {
 } from '@tanstack/react-table';
 import type { Table as TTable } from '@tanstack/react-table';
 import { Table, TableRow, TableBody, TableCell, TableHead, TableHeader } from './Table';
-import { useMediaQuery, useLocalize, TranslationKeys } from '~/hooks';
+import { useIsSmallScreen, useLocalize, TranslationKeys } from '~/hooks';
 import AnimatedSearchInput from './AnimatedSearchInput';
 import { TrashIcon, Spinner } from '~/svgs';
 import { Skeleton } from './Skeleton';
@@ -224,7 +224,7 @@ export default function DataTable<TData, TValue>({
   enableSearch = true,
 }: DataTableProps<TData, TValue>) {
   const localize = useLocalize();
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const [isDeleting, setIsDeleting] = useState(false);

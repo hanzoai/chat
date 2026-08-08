@@ -144,7 +144,11 @@ const startServer = async () => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Content-Security-Policy', contentSecurityPolicy);
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    // microphone=(self): the composer mic (@hanzo/voice) calls getUserMedia on
+    // THIS document. Denying it to our own origin made the mic throw
+    // NotAllowedError and sit permanently disabled, blaming the user for a
+    // policy the server sent. camera/geolocation stay denied — nothing uses them.
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
     next();
   });
 
@@ -199,6 +203,7 @@ const startServer = async () => {
   app.use('/v1/chat/tags', routes.tags);
   app.use('/v1/chat/mcp', routes.mcp);
   app.use('/v1/chat/ask', routes.ask);
+  app.use('/v1/chat/runs', routes.runs);
   /* No skills mount. `routes/skills.js` imports `canAccessSkillResource` from
      the middleware index — a middleware nobody has written — so requiring it
      throws before the server listens. The router, its types (which already name

@@ -101,16 +101,34 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 
 ## K8s Deployment
 
-- 2 replicas, port 3080
+- **1 replica, `strategy: Recreate`**, port 3080 — and both halves are forced,
+  not chosen. The store below is an in-process SQLite writer on a
+  ReadWriteOnce claim, so a second pod is either an unmountable volume or two
+  processes racing read-modify-write updates and dropping `Balance` /
+  `Transaction` writes with no error. Every release is therefore a ~3min
+  outage; the fix is a networked store handle behind `CollectionSpec`, never a
+  replica bump. Full reasoning: `charts/app/values/hanzo/chat.yaml` in universe.
 - Ingress: `hanzo.chat` (primary) + `chat.hanzo.ai` (301 → hanzo.chat)
 - Probes: `/v1/chat/health`
 - Secret: `chat-secrets` (JWT_SECRET, CREDS_KEY/IV)
 - Store: embedded SQLite on the `chat-app-db` PVC — no database service
-- CI: `.hanzo/workflows/deploy.yml` on the `hanzo-build-linux-amd64` git-runners
-  → `ghcr.io/hanzoai/chat`. It BUILDS only; choosing which tag runs is a
-  reviewed change in `hanzoai/universe`. The `.github/workflows/*` files here
-  are upstream residue — no GitHub-visible runner carries our label, so they
-  never execute, and Docker Hub is not a destination.
+- CI: two workflows on the `hanzo-build-linux-amd64` git-runners, and they do
+  different jobs. `.hanzo/workflows/deploy.yml` BUILDS `ghcr.io/hanzoai/chat`
+  and is the only thing that does; choosing which tag runs is a reviewed change
+  in `hanzoai/universe`. `.hanzo/workflows/cicd.yml` imports `hanzoai/ci` and
+  runs the `test:` gates in the root `hanzo.yml` — the repo had no gate of any
+  kind before it, on main or on a pull request.
+  Read `hanzo.yml` before adding a gate: it records why no jest suite is in it
+  (all five are red on main) and what each gate costs.
+  `hanzo.yml` declares NO `images:`, deliberately — that is what keeps deploy.yml
+  the single builder, and two lanes pushing one tag is how hanzoai/app served
+  bytes its version did not name.
+  `.github/workflows/` is down to `workflow-sanity.yml` and cannot run: no
+  GitHub-visible runner carries our labels, and on the forge `.hanzo/workflows`
+  wins so `.github/workflows` never executes at all. Docker Hub is not a
+  destination. Anything calling `hanzoai/.github` is dead on arrival from here —
+  that repo is private and this one is public, so GitHub refuses to resolve the
+  reusable and the run fails in 0s having created zero jobs.
 - Image: `ghcr.io/hanzoai/chat:<semver>` (linux/amd64). The semver is derived by
   `hanzoai/ci/.github/actions/imgver@v1` from this repo's `package.json` against
   the registry floor — never typed, never a sha. A `sha-<7>` tag is pushed
@@ -395,15 +413,74 @@ as "@hanzo/ui is banned" — it records why the *5.x shadcn* one went.
 - **Shell chrome** = `@hanzogui/shell` only (HanzoHeader / HanzoAppHeader /
   HanzoFooter / HanzoPreFooterCTA / MeetHanzoMenu / HanzoAppLauncher). It is
   self-contained — inline styles + `theme.ts` tokens — so it drops into Vite
-  with no provider. **The product still has NO cross-app nav.** `Chat/Header.tsx`
-  mounts `HanzoAppLauncher`, but that header does not paint on the default
-  screen: driving live hanzo.chat as a guest finds no `<header>`, no
-  `absolute top-0 h-14` div, and the string "Meet Hanzo" nowhere in the body.
-  Deleting the dead header removed the second implementation; it did not close
-  the gap. `HanzoAppHeader` is the shell's signed-in header and is the way to
-  close it — it is `position: sticky`, `height: 56`, so `Root.tsx`'s
-  `calc(100dvh - bannerHeight)` must subtract it too or the composer falls off
-  the bottom. That is a layout change, not a sweep.
+  with no provider. **Cross-app nav ships, and chat owns none of it.**
+  `Nav/BrandCorner.tsx` is the whole of chat's side: the mark plus
+  `HanzoAppLauncher`, mounted in the sidebar's first row and in the phone bar
+  (`Nav/MobileNav.tsx`, which owns the corner below md). It is no longer mounted
+  in `Chat/Header.tsx` — the header's collapsed-only cluster is gone, because
+  the sidebar no longer leaves the screen when it collapses (see "The collapsed
+  sidebar is a rail"), so the corner is never empty and never carries two marks
+  on one width.
+
+  The mark means "switcher" everywhere the sidebar has room for it, which is
+  every width below md and the open sidebar's first row. IN THE 56px RAIL IT
+  MEANS "EXPAND": a rail whose only affordance opens a nine-tile app grid gives
+  the visitor no way back to their own sidebar. That is hanzo.app's arrangement
+  too. On the phone the drawer opens from the hamburger beside the mark, never
+  from the mark. Do not hand-roll a drawer beside it; the tile list is
+  `HANZO_APPS`, owned upstream.
+- **The launcher panel is portalled, from `@hanzogui/shell@8.1.1` on.** Before
+  that it was `position: absolute`, and chat mounts it inside the sidebar's
+  `overflow-hidden` scroll column (`Nav.tsx`, `flex flex-1 flex-col
+  overflow-hidden`) — so the third column of tiles was clipped mid-tile and
+  Search / Platform / Admin rendered as one letter each on the live site.
+  `position: fixed` would NOT have fixed it either: `.nav` carried a
+  `transform` at the time, which makes an element the containing block for its
+  fixed descendants too. (That transform is gone now — collapsing animates
+  WIDTH, not translate — but the panel portals regardless, which is what makes
+  it robust to exactly this kind of change. Re-measured after the rail landed:
+  nine tiles, none clipped.) The panel leaves the stacking context entirely. **Do not "fix" clipping
+  here by loosening that column's overflow** — it is what makes the
+  conversation list scroll, and the defect belonged to the shared component.
+### The collapsed sidebar is a rail
+
+Collapsing animates the sidebar's WIDTH between `NAV_WIDTH.SIDEBAR` and
+`NAV_WIDTH.RAIL` (56). It does NOT translate the panel off screen, and it does
+not unmount it. That is the model console's `DashboardShell` and hanzo.app
+already share, and it is load-bearing rather than cosmetic:
+
+- **Keep the column and the stacking is free.** While collapse slid the sidebar
+  away there was nothing left in the corner, so the mark and compose had to be
+  re-homed into `Chat/Header.tsx`'s horizontal strip — which is the ONLY reason
+  "new chat" ever sat to the RIGHT of the mark. Do not "fix" corner layout by
+  moving controls into the header again; that is the symptom, not the cure.
+- **Collapse is EXPLICIT and remembered** (`localStorage.navVisible`, one key).
+  No hover-to-expand, no pin — hanzo.app marks both props `@deprecated`. A rail
+  that widens because a pointer crossed it moves the page out from under
+  whatever the pointer was reaching for. A 160ms hover-intent open lived in the
+  header and is gone.
+- **There is no rail below `md`.** `collapsed = !isSmallScreen && !navVisible`,
+  so the phone keeps the drawer it always had, byte-identical.
+- **The rail carries the mark, compose and the icon rows only.** The
+  conversation list and the account foot do not render at 56px — the list is
+  additionally gated on having history, so both conditions apply.
+
+Verified in Chromium, not by reading: rail `w:56` vs open `w:260`; mark at
+`y:8` and compose at `y:54` on the SAME `x` (a column, not a row); the state
+survives a reload in both directions; the composer reflows by exactly
+`(260-56)/2` rather than anything being hidden.
+
+- **Two controls say "bookmark", and they are not the same control.**
+  `Chat/Menus/BookmarkMenu` tags the OPEN conversation and lives with the other
+  view actions at the right end of `Chat/Header.tsx` (`data-testid=
+  "header-actions"`, with presets, share and temporary chat — one copy each, at
+  every width; they used to be written twice under opposite `isSmallScreen`
+  conditions and sat at opposite ends of the same header). `Nav/Bookmarks/
+  BookmarkNav` FILTERS the conversation list, its selection is `Nav.tsx`'s own
+  `tags` state, and it sits on the search row above that list. Neither belongs
+  in the icon strip, and merging them into one corner would put two bookmark
+  buttons side by side. The strip is the mark, the launcher, compose and the
+  collapse toggle — nothing else. `Chat/Header.spec.tsx` holds that line.
 - **Tailwind no longer scans the shell — that was a 7.x fact.** Under 7.x the
   shell painted itself with utility class names (`bg-[#0e0e13]`, `z-[101]`,
   `border-white/[0.06]`) and renders transparent in a host that never scans it,
@@ -509,6 +586,47 @@ Three things bite every time and none of them announces itself:
   content is invisible. Every `<TabsTrigger>Label</TabsTrigger>` in chat's markup
   is this shape, so a naive Tabs conversion produces empty tabs.
 
+### `@hanzo/ui/product` does not import here, and the version is capped at 8.0.51
+
+Chat consumes exactly three things from `@hanzo/ui`: `gui-config`, `theme.css`
+and `glass.css`. **No component.** That is not an oversight — the components
+worth taking (`SecretInput`, `CopyButton`, `EmptyState`, `UserMenu`,
+`Pagination`, `StatusTag`) all live behind the `./product` barrel, and the
+barrel is unreachable in BOTH of chat's toolchains. Measured at 8.0.59:
+
+- **jest** — `product/index.cjs` → `ComboBox` → `instrument` →
+  `@hanzogui/telemetry`, which is ESM-only (no `require` condition) and uses
+  `import.meta` in `dist/env.js`. `babel.config.cjs` DOES carry
+  `babel-plugin-transform-import-meta`, but it is a root config rooted at
+  `client/`, and telemetry resolves to `chat/node_modules/` — outside that root,
+  so the plugin never runs on it. `SyntaxError: Cannot use 'import.meta'
+  outside a module`. Predates 8.1.0; telemetry 8.0.0 has the same line.
+- **vite** — `product/ThemeToggleNext.js` imports `@hanzogui/next-theme`, whose
+  `NextThemeProvider` imports `next/script`. Chat is Vite; there is no Next.
+  Uninstalled it resolves to a `__vite-optional-peer-dep:` stub and rollup fails
+  on `"useThemeSetting" is not exported`; installed it drags `next/script` in.
+
+`./product/*` is NOT a wildcard in the exports map (only `./product`,
+`./product/social`, `./product/social/api`), so deep-importing one component
+past the barrel is blocked too. `./primitives/*` IS a wildcard and works — that
+is why `Progress.tsx` and `Separator.tsx` are one-line re-exports and nothing
+else is.
+
+**The fix belongs upstream, not here.** Add `./product/*` to the exports map, or
+move `ThemeToggleNext` off the barrel. Working around it in chat means aliasing
+`next/script` to a stub and re-rooting babel — two gates to import a button.
+
+**Separately, the version ceiling is 8.0.51.** 8.0.52 re-bases three theme
+rungs onto CSS custom properties with modern slash-alpha fallbacks —
+`$borderColor`/`$color12`/`$outlineColor` become `var(--border, rgb(255 255 255
+/ .10))` and friends. That is correct in a browser and is a real WCAG 2.4.11
+fix for the focus ring. jsdom's CSS parser cannot parse it, so the whole gui
+theme block is rejected and every `@hanzo/ui` primitive throws `Missing theme.`
+— `src/__tests__/guiPrimitives.spec.tsx`, the suite that exists to prove the
+harness can render primitives at all, goes red. Every version ≥8.0.52 has it,
+so pinning 8.0.57/58 does NOT dodge it. A bump was measured to 8.0.59 and
+reverted: it unlocks no component (see above) and costs that gate.
+
 ### Verifying a gui rewrite — the build cannot tell you
 
 A green `vite build` proves gui *compiled*, never that it *painted*: unknown
@@ -564,6 +682,33 @@ far enough to report their individual pre-existing failures. Those failures are
 one uniform shape: tests importing symbols the source never exported
 (`latestMessageFamily`, `resolveEndpointType`, `useFileHandling`,
 `updateFieldsInPlace`, …). The tests are ahead of the implementation.
+
+The other four suites had never been counted. Measured on `cb653548`, node 22,
+pnpm 10.27.0, one full run each — this is what `hanzo.yml` means when it says no
+jest suite is gated:
+
+| | failed / total |
+|---|---|
+| `api` | 403 / 2737 |
+| `packages/api` | 711 / 4644 |
+| `packages/data-schemas` | 246 / 1489 |
+| `packages/data-provider` | 227 / 985 |
+
+`pnpm lint` is a fifth casualty and not a code-quality one: ESLint 9 loads
+`@typescript-eslint/typescript-estree`, which dies against the TS7 native
+compiler with `Cannot read properties of undefined (reading 'Cjs')` before it
+reads a single file.
+
+Not every one of these is "tests ahead of implementation" — one is a live
+product bug wearing that costume. Merge `49dc4f7bf6` (a LibreChat sync) dropped
+`PERMISSION_TYPE_INTERFACE_FIELDS`, `INTERFACE_PERMISSION_FIELDS` and
+`PERMISSION_SUB_KEYS` out of `packages/data-provider/src/permissions.ts` while
+`packages/api/src/admin/config.ts` and `packages/data-schemas/src/app/resolution.ts`
+kept importing them, so the admin config surface calls `.has()` on `undefined`
+in production — `upsertConfigOverrides` and `deleteConfigField` both throw.
+Restoring those 49 lines from `e77b03ab6d` takes `resolution.spec.ts` to 26/26
+and `admin/config.handler.spec.ts` to 54/54. Measured, not estimated; unfixed,
+because a product repair is not a CI commit.
 
 ### Getting off Tailwind — the measured size of the job
 
@@ -688,14 +833,13 @@ extension's search surface (`~/work/hanzo/extension`), not a new design.
 
 **Three defects, measured 2026-07-28, in the order they must be fixed:**
 
-1. **No silent SSO — this is the root one.** `hanzo.chat` and `hanzo.app` are
-   different registrable domains, so a session cookie can NEVER span them. The only
-   mechanism that makes a signed-in hanzo.id user already-signed-in here is a
-   `prompt=none` authorize on load. Chat has none: zero hits for
-   `prompt=none|silentAuth|checkSession` across `client/src` and `api/server`.
-   `silentRefresh` only refreshes chat's OWN local JWT — it cannot mint one. So a
-   real user with credits renders anonymous on first visit, every visit.
-   This is the generalisable fix: every Hanzo surface needs it, not just chat.
+1. **No silent SSO — this is the root one. FIXED 2026-08-06, see below.**
+   `hanzo.chat` and `hanzo.app` are different registrable domains, so a session
+   cookie can NEVER span them. The only mechanism that makes a signed-in hanzo.id
+   user already-signed-in here is a `prompt=none` authorize on load. Chat had
+   none, so a real user with credits rendered anonymous on first visit, every
+   visit. `silentRefresh` only refreshes chat's OWN local JWT — it cannot mint one.
+   This was the generalisable fix: every Hanzo surface needs it, not just chat.
 
 2. **The landing swallows chat intent.** `routes/Root.tsx:41`
    `showChat = isAuthenticated || isGuest`; `:111` returns `<LandingPage/>` for EVERY
@@ -726,10 +870,10 @@ already describes the target and was failing against the brochure.
   route; `LoginGate` (already mounted for every `!isAuthenticated` visitor) asks
   for a session at submit — the first moment one is needed.
 - `utils/login.ts#trySilentSso()` — one `prompt=none` attempt per tab via
-  `IAM#signinSilent()`, posting to the SAME `/v1/chat/auth/iam/session` bridge the
-  interactive callback uses. Wired into `AuthContext`'s no-local-session path
-  BEFORE the guest fallback, so a funded customer adopts their real session
-  instead of being handed a 2-message anonymous trial. 5 tests, negative-controlled.
+  `IAM#signinSilent()`. **Reverted; it could never have worked, and what replaced
+  it is `utils/sso.ts` — see "Silent SSO" below.** `signinSilent` is a hidden
+  IFRAME, and an iframe is a cross-site SUBRESOURCE: SameSite=Lax withholds the
+  session cookie, so the issuer saw an anonymous request every time.
 - `GUEST_TOKEN_MAX` default 20 → 120. Spend is unchanged: `guestMessageLimiter`
   caps MESSAGES per real client IP (`GUEST_MESSAGE_MAX`, prod 2) and no amount of
   token minting resets it. Two limiters, two concerns.
@@ -748,18 +892,143 @@ already describes the target and was failing against the brochure.
   `GUEST_TOKEN_MAX=120`/`GUEST_TOKEN_WINDOW=60` are now pinned in the universe
   values file so a code-default change can never silently re-tighten the mint.
 
-### Arrival gate (2026-07-28)
+### Silent SSO — one session, every Hanzo surface (2026-08-06)
 
-The signed-out default is now chatgpt.com's shape: the app renders and a
-DISMISSIBLE login modal sits over it. `LoginGate` gained a third reason,
-`welcome`, and `Root` fires `offerLogin()` once `authChecked && !isAuthenticated`.
+Sign in once at hanzo.id — or at console.hanzo.ai, or hanzo.app — and chat finds
+you. `client/src/utils/sso.ts` asks the issuer, once per visit, whether this
+browser already has a session, and `AuthContext`'s signed-out path spends that
+question before it falls back to a guest.
 
-`welcome` is deliberately not like `limit`/`anonymous`. Those are REFUSALS —
-something was denied and the gate explains it, so it offers no dismissal (there
-is nothing behind it but the thing that just failed). `welcome` is an OFFER: no
-request failed, so it carries "Stay logged out" and `offerLogin` fires once per
-tab, meaning a dismissal sticks for the visit. Gating a product we deliberately
-let people use signed out would undo the front-door fix directly above.
+**The mechanism is a TOP-LEVEL REDIRECT, and nothing else can work.** No cookie
+spans `hanzo.ai` / `hanzo.chat` / `hanzo.app` — different registrable domains. It
+does not need to: the IAM session is `SameSite=Lax`, and Lax IS presented on a
+top-level cross-site GET navigation. So navigating the document to
+`/v1/iam/oauth/authorize?…&prompt=none` carries the cookie, and the issuer
+answers from the session alone. `prompt=none` means it renders NOTHING either
+way — a code, or `error=login_required` — which is what keeps the anonymous guest
+preview intact for a visitor who really is a stranger.
+
+The server half was already built, tested and deployed: `hanzoai/iam`
+`internal/oidc/prompt.go` (`silentGrant`), advertised at
+`hanzo.id/.well-known/openid-configuration` as
+`prompt_values_supported: [none, login, select_account]`. Chat was simply the one
+surface that never asked. Measured against production with a real Chromium:
+
+    Sec-Fetch-Dest: document  ->  302 …/auth/callback?error=login_required
+    Sec-Fetch-Dest: iframe    ->  302 …?error=interaction_required
+
+**Do not rebuild the iframe.** `IAM#signinSilent()` still exists in the SDK and is
+a trap here: an iframe is a cross-site SUBRESOURCE, so Lax withholds the cookie;
+the edge answers `X-Frame-Options: DENY`; and `silentGrant` refuses on
+`Sec-Fetch-Dest` besides. The only thing that would make it work is
+`SameSite=None`, which IAM refuses deliberately. The earlier `trySilentSso()` was
+exactly this and was reverted — but the revert took the *correct* conclusion with
+it, leaving a comment in `AuthContext` asserting that only an interactive
+redirect could ever sign anyone in. That was wrong for eight days.
+
+**The bound is the whole safety story.** This navigates the document away on
+boot; unbounded, that is not a bug, it is hanzo.chat being unreachable. So the
+attempt is recorded in `sessionStorage` BEFORE the navigation (a probe that never
+returns is still spent), the probe declines entirely when storage is unavailable
+to bound it with, and it stays off `/auth/callback` and `/login`, which own
+authorize round-trips of their own. `sessionStorage` not `localStorage`: "is
+anyone signed in?" is a question whose answer changes, so pinning the first
+answer forever would merely defer this bug. Cost is one redirect per visit, then
+it self-heals. `client/src/utils/__tests__/sso.spec.ts` holds all of it.
+
+`meansNoSession` is the other half: `OAuthCallback` reads `login_required` and
+its siblings as an ANSWER and returns the visitor to `/c/new`, not to
+`/login?error=auth_failed`. Treating it as a broken login would put a login
+screen in front of every first-time visitor — precisely the guest experience the
+probe exists to preserve. `access_denied` and friends still reach the error path.
+
+`exchanging()` keeps the guest fallback off the callback route while a code is
+being redeemed. That race predates this work but was rare; now every anonymous
+visitor passes through that route exactly once, so it had to close with it.
+
+### Arrival gate — REMOVED (2026-08-05, owner call)
+
+The arrival OFFER is gone: no login modal on load. `LoginGate` opens only for a
+REFUSAL (`limit`, `anonymous`, `unavailable`) — something was denied and the
+gate explains it, so it still offers no dismissal (`onOpenChange` ignores
+close requests: Escape and overlay clicks included, deliberately). The
+`welcome` reason, `offerLogin()`, the `hanzo.login.welcomed` session flag and
+the welcome/stay-logged-out strings are deleted, not parked. The standing
+invitation is the sidebar foot's Log in / Sign up (`Nav/Visitor.tsx`). Do not
+reintroduce an unprompted modal over the signed-out product.
+
+### Ambient backdrop (2026-08-05)
+
+The chat canvas plays a muted, looping YouTube embed behind everything
+(`Chat/Backdrop.tsx`, mounted first in `Presentation`; content sits in an
+explicit `z-10` wrapper because a cross-origin iframe composites above z-auto
+siblings). Facts that took a day to learn, kept here so they stay learned:
+
+- Host is `www.youtube.com` — the nocookie host answers embeds with
+  "video player configuration error" (153). CSP `frame-src` allows exactly
+  that origin (`api/server/csp.js`, pinned by `csp.spec.js`).
+- Cover math is `width: max(177.78vh, 100vw); height: max(56.25vw, 100vh)`
+  + center-translate + 1.4 overscan, with inline `maxWidth/maxHeight: none`
+  because the app's global `iframe { max-width: 100% }` otherwise clamps it
+  into a letterbox on phones.
+- The reveal is gated on PROOF of playback, not a timer: the listening
+  handshake makes the player report state, and the iframe stays `opacity: 0`
+  until `playerState === 1` AND the ~4s adaptive-ramp window has passed
+  (quality cannot be forced; embeds ignore every quality API). A video
+  YouTube refuses never reveals — clean canvas, not an error card. Verified
+  by aborting `*.youtube.com` at the network layer.
+- `showBackdrop` (Settings → Chat, default on) unmounts the embed entirely —
+  off means the third-party stream stops, not `opacity: 0`.
+- `ResizablePanelGroup` in `SidePanelGroup.tsx` must NOT paint
+  `bg-presentation`; that opaque sheet sits above the backdrop and was
+  exactly what hid it.
+
+### Signed-out boot is deterministic (2026-08-05)
+
+The anonymous cold start used to be a coin flip; three fixes made it one
+path, each at its own layer. Do not undo any of them singly:
+
+- `/v1/chat/auth/refresh` with no cookie answers **401**, not
+  `200 {message}` — a refusal wearing a success status made the client
+  believe a session existed, so it never minted a guest.
+- A 401 from `auth/refresh` is TERMINAL in the axios interceptor
+  (`data-provider/src/request.ts`), like 2fa and logout: retrying the
+  refresh through its own interceptor queues the retry behind
+  `isRefreshing` and deadlocks every queued caller.
+- `AuthContext`: `silentRefresh` is single-flight (`refreshBusyRef`), and
+  the guest fallback no-ops once ANY principal has landed — a straggler
+  refresh completing after guest adoption used to run the unauth branch,
+  which resets the global token header (`setTokenHeader(undefined)`) while
+  the composer stayed mounted: the next send went out tokenless and 401'd.
+  Adopting a principal also invalidates all queries, because bootstrap
+  queries that 401'd pre-token had burned their retries into a terminal
+  error state nothing else re-ran.
+- The DECISIVE one: `setUserContext` is a lodash `debounce(50)`, so a
+  refresh failure QUEUES its unauth write — and a local guest mint outruns
+  the timer, so the queued `setTokenHeader(undefined)` landed 50ms AFTER
+  adoption armed the header, deterministically, on every load. Guest sends
+  left with `Authorization: NONE` while a valid bearer sat in
+  sessionStorage. `acquireGuest` now calls `setUserContext.cancel()` before
+  arming. If sends ever 401 while bootstrap calls carry the bearer, look
+  for a new writer racing this debounce before suspecting the server.
+- Defense in depth for module duplication: `@hanzochat/data-provider` is
+  bundled at least twice (root + `./react-query` entrypoints each inline
+  the request layer), so axios `defaults` set through one copy are
+  invisible to the other. The client deduplicates axios
+  (`resolve.dedupe: ['axios']` in vite.config.ts) AND `setTokenHeader`
+  mirrors the bearer to `window.__hanzoBearer`, which a request
+  interceptor in EVERY copy injects when Authorization is absent. Use
+  `window`, not `globalThis` — the node-polyfill plugin shims `globalThis`
+  inside bundled modules and writes land on the shim.
+
+The PWA service worker is a SELF-DESTROYER (`selfDestroying: true` in
+`client/vite.config.ts`): an online AI chat gains nothing from a precache
+that serves the previous build's shell after every deploy (black page,
+missing lazy chunks — observed repeatedly). Installed workers unregister
+and purge on their next visit; the manifest keeps installability. Do not
+resurrect the workbox worker; if `/sw.js` ever stops being served, old
+workers strand forever (the SPA catch-all answers it with HTML, which is a
+failed update, not the 404 that would unregister them).
 
 ### Header restructure — NOT done, and it is not a tweak
 
@@ -767,8 +1036,174 @@ Owner wants: Hanzo mark top-left, search + sidebar toggle to the RIGHT of the
 sidebar, and a ChatGPT-style model/agent dropdown where `ChatGPT ⌄` sits.
 
 `@hanzogui/shell` already ships `HanzoAppHeader` (the signed-in header carrying
-the mark). Chat mounts only `HanzoAppLauncher` in `Chat/Header.tsx`, and that
-header **does not paint on the default screen** — driving live hanzo.chat finds no
-`<header>` at all. Adopting the real one is a LAYOUT change: `HanzoAppHeader` is
+the mark). Chat mounts `HanzoAppLauncher` via `Nav/BrandCorner.tsx` — in the
+sidebar's first row, and in `Chat/Header.tsx` only once the sidebar collapses.
+Adopting the full header is still a LAYOUT change: `HanzoAppHeader` is
 `position: sticky; height: 56`, so `Root.tsx`'s `calc(100dvh - ${bannerHeight}px)`
 must subtract it too or the composer falls off the bottom of the viewport.
+
+### Window chrome — one atom per panel (`store/panels.ts`)
+
+Three movable panels are toggled from the header, so each one's open state is a
+persisted atom in `client/src/store/panels.ts` and NOTHING else: `sidePanelOpen`,
+`bottomBarOpen` (+ `bottomBarTabs`, `bottomBarActiveTab`, `bottomBarSize`). Two
+write-only atoms, `openBottomBarTab` and `closeBottomBarTab`, are the one way a
+bar tab is created or destroyed — the companions menu, ⌘T and the strip's `+` all
+go through `openBottomBarTab`.
+
+**`Dock` and `BottomBar` are two different features and must never share a name.**
+`Chat/Dock` is a COLUMN of embedded iframe cards BESIDE the conversation — a
+sibling in the same horizontal `ResizablePanelGroup` as the artifacts panel, fed
+by the fixed `Chat/Dock/cards.ts` catalog, switched by `store.showDock` in
+Settings. `Chat/BottomBar` is a horizontal split of the chat column holding a tab
+strip of pages the reader opens themselves, one persisted URL per tab. Different
+axis, different data, different switch. If two things in this tree are both
+called "dock", one of them is wrong.
+
+- **Right**: `store.sidePanelOpen`. `SidePanel.tsx` reconciles the imperative
+  `react-resizable-panels` handle to it in ONE effect (skipped on small screens,
+  where `SidePanelGroup` collapses unconditionally and would fight it). Before
+  this the open state was React state inside that subtree, which is exactly why
+  nothing outside it — including the header — could toggle the panel. Note the
+  visible consequence: the panel is now open or closed, not open / 50px rail /
+  hidden, so the default (`false`) hides the rail and the header button is how it
+  comes back.
+- **Bottom**: `Chat/BottomBar/BottomBar.tsx`. `BottomBarGroup` wraps the chat
+  column in a vertical `ResizablePanelGroup` (mounted at all times, so toggling
+  the bar never remounts the conversation) and `Chat/Presentation.tsx` mounts it
+  around `<main>`. `minSize` on the chat panel is what keeps the composer on
+  screen — the bar takes height from the column, it never floats over it.
+  **Put no className on that chat-column `ResizablePanel`**: making it a flex row
+  shrink-to-fits `<main>` to its content (measured: 626px inside a 1439px column,
+  which bunches the header controls left). Measured after: 1179/1179.
+- **Left**: `navVisible` in `routes/Root.tsx`, toggled by `Nav/NewChat.tsx` — NOT
+  by `Chat/Menus/OpenSidebar`, which the chat view does not mount (the rail keeps
+  its own toggle, and `Chat/Header.spec.tsx` holds the header's left edge empty).
+  `OpenSidebar` still serves Marketplace / PromptForm / CreatePromptForm and now
+  takes an optional `navVisible` so it can state which way it toggles; those three
+  omit it and get the open wording, which is the state they mount it in.
+
+`Chat/PanelControls.tsx` is the cluster at the right end of `header-actions`:
+full-width (`store.maximizeChatSpace`), the companions menu, and the right panel.
+It also owns the shortcuts — a `document` keydown listener in an effect, the only
+shortcut mechanism this repo has — and they test `e.code`, not `e.key`, because
+Option+S on macOS types `ß`. **It does not use `PanelRight`**: the neighbouring
+`Chat/Menus/CanvasToggle` already carries that glyph for the ARTIFACTS panel, and
+two buttons in one row wearing one glyph name neither. The control panel gets
+`SlidersHorizontal`, which is what it calls itself (`aria-label` = Controls).
+
+The companions menu lists ONE companion, the Browser, and that is not an
+oversight. It used to open with a "Side chat" row that was the cluster's third
+button written a second time — same `toggleSideChat`, same `sidePanelOpen` atom,
+same `SlidersHorizontal` glyph, on screen twice at two weights. The row is gone
+rather than re-pointed: the only other companion surface that exists is
+`Chat/Dock` (`store.showDock`, a Settings switch), and giving it a header
+affordance is a product decision, not a defect repair. **Cost of the removal,
+recorded honestly: ⌥⌘S is no longer written down anywhere in the chrome.** The
+shortcut still works — `PanelControls`' keydown effect is untouched — but that
+menu row was its only label. If the menu ever gains a second real companion, that
+is where the chord goes back.
+
+Bar tabs frame pages through `SidePanel/Preview/Panel` — the sandboxed frame that
+was written and mounted nowhere. Its URL is `store.preview(tabId)`, an
+`atomFamily` of persisted atoms, so two tabs are two pages; `closeBottomBarTab`
+RESETs the tab's atom AND `preview.remove(id)`s it, so a long session cannot silt
+localStorage up with dead tabs (measured: the key is gone, not `""`).
+
+**The Browser tab can frame almost nothing, and it now SAYS so.** `frame-src`
+(`api/server/csp.js`) names three origins; a reader who types `example.com` is
+refused, and the browser's refusal is silent — the frame loads `about:blank`,
+keeps its full box (measured 1161×179.3) and logs only to devtools. `Panel.tsx`
+listens for the `securitypolicyviolation` the directive fires and renders an
+explicit state instead: the sentence, and the URL as a new-tab link. Two things
+about that detection are measured facts, not preferences:
+- **The sandbox makes every other test impossible.** `allow-scripts` without
+  `allow-same-origin` gives EVERY frame an opaque origin, so a loaded page and a
+  refused one are byte-identical from the embedder (`contentDocument` null, every
+  property a SecurityError). Timing does not separate them either — a refusal
+  lands in ~3ms, a same-origin page in ~5ms. `blockedURI` is exact; nothing else
+  available here is.
+- **`useLayoutEffect`, not `useEffect`.** The event is dispatched in a task
+  shortly after the frame is inserted: a listener attached synchronously, in a
+  microtask, or in a `setTimeout(0)` all catch it; one attached after two rAFs
+  does not. A layout effect runs inside the commit that inserts the frame.
+The policy itself was NOT widened — that is a security decision and the tradeoff
+is written at `csp.js` where it would be taken. `Panel.spec.tsx` holds the
+behaviour, including that another origin's violation must not blank this frame.
+
+`DropdownPopup` (packages/client) had two defects, and one of them had a live
+call site: `placement` was never forwarded, and Ariakit reads placement off the
+STORE — passing it to `<Menu>` is silently ignored. `SidePanel/Agents/Images.tsx`
+was already passing `placement="bottom"`, which type-errored (TS2322) and did
+nothing; forwarding it to `useMenuStore` fixes both. The other, `kbd`, printed a
+hardcoded `⌘` in front of the caller's string and only on hover — it cannot
+express `⌥⌘S` and is wrong on every non-Apple keyboard. `kbd` has zero other call
+sites; `placement` had that one.
+
+Three more, all measured rather than reviewed, and all now fixed:
+- **`.popover-ui { margin-right: -2px }` was a misalignment, not a nudge.**
+  Ariakit's positioner is a shrink-to-fit wrapper, so a negative right margin
+  makes the wrapper 2px narrower than the menu and floating-ui aligns the
+  WRAPPER to the trigger — every popover in the app hung 2px past the control it
+  belongs to (menu right 1381 vs trigger right 1379; 1379/1379 with it gone).
+  `margin-top: 4px` beside it is a real gap and stays.
+- **`mr-2` on the icon span stacked on the row's own `gap-2`**, putting 16px
+  between a glyph and its label — twice the row's rhythm. Dropped; the row's gap
+  is the one mechanism, so the gap is 8px. Two call sites existed ONLY to cancel
+  it (`iconClassName="mr-0"` in ToolsDropdown and AttachFileMenu) and went with
+  it.
+- **The `kbd` was `text-text-secondary`, one rung under the label**: 205 vs 236
+  on a surface that paints rgb(14,14,14), a 13% step that read as a second label.
+  It is `text-text-secondary-alt` now — 12.14:1 → 6.58:1 against the label's
+  16.34:1, measured off painted pixels. `--text-tertiary`, the next rung down,
+  is NOT usable here: it resolves to `#595959`, which is 2.76:1 and fails AA.
+
+**Measured in real Chromium at 1440×900**, signed in: the cluster is three 44×44
+boxes (1283/1335/1387) carrying ONE focus indicator between them — the Ariakit
+trigger is hand-rolled, so it restates `size-11` and the ring classes or it falls
+back to the UA outline; menu `role=menu` with 1 `menuitem` at 44.0px, right edge
+1379 = trigger right 1379; Escape unmounts it and returns `aria-expanded=false`;
+right panel 0 → 352 → 0; bar tabs 1 →2 via `+` →3 via ⌘T →2 via a tab's ×; drag
+315.3 → 475.0px and the floor holds at 135.7px (15.1% of a 900px column);
+composer bottom 415.7 vs bar top 584.7 and still clear at the floor;
+`scrollWidth === clientWidth` at 1440 and at 390; bar, tab count and height all
+survive a reload; the side `Dock` still renders its card and resizes 427.4 →
+592.1px beside it.
+
+**The bar strip's height is a budget, and every control in it is bled into that
+budget rather than allowed to grow it.** The strip is 41px (32px content +
+`py-1` + a 1px rule) and the composer sits directly above, so a taller strip
+costs conversation. So: the `+` and the panel `×` are `size-10 -my-1` — 40×40
+boxes whose margin box is 32, i.e. the largest square that fits the strip's
+padding edge to edge; and a tab's `×` is `size-6 -mx-0.5`, 24×24 giving back the
+4px so the tab measures the same 111.1px it did at 20×20. 44 is unreachable here
+without overhanging the drag handle. Verified that it does NOT: `elementFromPoint`
+returns the resize handle at all six probes across the seam — on the rule, above
+and below it, in open strip AND directly over the `+` — and a drag started 3px
+above the rule resizes the bar (435 → 372.1px), which the old 4px grab area could
+not reach. The seam also paints ONE rule now, not two: the bar panel's `border-t`
+duplicated the handle's own hairline.
+
+**Two upstream defects were measured on clean `origin/main` and are NOT from this
+work** — do not attribute them to the chrome:
+
+- **The sidebar toggle does not collapse the sidebar live.** Clicking it writes
+  `navVisible=false` to localStorage, but `main` stays at x=260 and the rail never
+  appears until a RELOAD, which reads the flag in `Root.tsx`'s initial `useState`.
+  Identical before and after this change; the bug is between `Nav.tsx`'s
+  `toggleNavVisible` (a `startTransition` around Root's setter) and the render.
+- **`maximizeChatSpace` cannot widen the empty landing.** The control works —
+  `aria-pressed` flips, the value persists, and the composer's own cap goes
+  `max-width: 896px → 100%` — but `Chat/Answer/AnswerEngine.tsx` wraps it in a
+  hardcoded `xl:max-w-4xl` column, so 100% resolves to the same 896px. The atom
+  does reach the message column (`MessageRender`, `ContentRender`,
+  `MessageParts`); it is the landing that is capped upstream.
+
+**Verifying this locally is not a `curl`.** There is no local login route in this
+fork (IAM OIDC or guest, nothing else). Mint a principal instead: with
+`CHAT_STORE_SQLITE` set and `MONGO_URI` unset, run `registerUser` + `setAuthTokens`
+from `api/server/services/AuthService` in a short script BEFORE starting the
+server (both write the same SQLite file and the store is an in-process writer),
+then hand Playwright the returned `refreshToken` cookie. Also pre-set
+`sessionStorage['hanzo.sso.probed'] = '1'` in an init script, or the signed-out
+SSO probe navigates the document to hanzo.id mid-run.

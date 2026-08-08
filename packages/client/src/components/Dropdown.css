@@ -1,3 +1,13 @@
+/* The one declaration of `.popover-ui` and `.select-item`. A second copy used to
+   live in `client/src/style.css` and never won a cascade; it is gone, so editing
+   this file is now the only way to change what these menus paint.
+
+   The fill and shadow below are the FALLBACK. `@hanzo/ui/glass.css` puts the
+   real material on `.glass` behind `@supports (backdrop-filter: …)`, and both
+   components that wear `.popover-ui` also wear `.glass elevation-2`, so a
+   browser that can blur gets the translucent surface and one that cannot keeps
+   the opaque one here. Do not delete these declarations to "clean up" — they are
+   what the no-backdrop-filter path renders. */
 .popover-ui {
   display: flex;
   max-height: min(var(--popover-available-height, 1700px), 1700px);
@@ -22,27 +32,19 @@
   scale: 0.95;
   translate: 0 -0.5rem;
   margin-top: 4px;
-  margin-right: -2px;
-}
-
-.popover-animate {
-  opacity: 0;
-  transform: scale(0.95) translateY(-0.5rem);
-  transition:
-    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-.popover-animate[data-enter] {
-  opacity: 1;
-  transform: scale(1) translateY(0);
+  /* NO `margin-right: -2px`. It read as a nudge and behaved as a misalignment:
+     Ariakit's positioner is a shrink-to-fit wrapper, so a negative right margin
+     makes the WRAPPER 2px narrower than this element, and floating-ui aligns the
+     wrapper's edge to the trigger's. The menu therefore hung 2px past the button
+     it belongs to (measured: menu right 1381 vs trigger right 1379; 1379/1379
+     with the margin gone). `margin-top` above is a real 4px gap and stays. */
 }
 
 /* `outline: var(--bg-surface-hover)` — a tailwind CLASS name written as a custom
    property, so it was never defined and these popovers had no keyboard focus
-   indicator at all. The same line exists in client/src/style.css; this is the
-   copy that actually reaches the bundle. Caught by e2e/specs/tokens.spec.ts
-   against the served image, not by reading the source. --ring is the system's
-   focus colour and clears 3:1 in both themes. */
+   indicator at all. Caught by e2e/specs/tokens.spec.ts against the served image,
+   not by reading the source. --ring is the system's focus colour and clears 3:1
+   in both themes. */
 .popover-ui:focus-visible,
 .popover-ui[data-focus-visible] {
   outline: 2px solid var(--ring);

@@ -1,8 +1,10 @@
 // file deepcode ignore HardcodedNonCryptoSecret: No hardcoded secrets
+import { useAtomValue } from 'jotai';
 import { ViolationTypes, ErrorTypes, alternateName } from '@hanzochat/data-provider';
 import type { LocalizeFunction } from '~/common';
 import { formatJSON, extractJson, isJson } from '~/utils/json';
 import { useLocalize } from '~/hooks';
+import store from '~/store';
 import CodeBlock from './CodeBlock';
 
 const localizedErrorPrefix = 'com_error';
@@ -140,7 +142,7 @@ const errorMessages = {
       windowInMinutes > 1 ? `${windowInMinutes} minutes` : 'minute'
     }.`;
   },
-  token_balance: (json: TTokenBalance) => {
+  token_balance: (json: TTokenBalance, _localize?: unknown, isAuthenticated?: boolean) => {
     const { balance, tokenCost, promptTokens, generations, reason, tier, allowedModels } = json;
 
     // Model not allowed for this tier
@@ -164,14 +166,34 @@ const errorMessages = {
       );
     }
 
-    // Commerce insufficient balance — new users claim the $5 starter credit,
-    // spent-out users add funds. Both live at billing.hanzo.ai.
+    // Commerce insufficient balance. There is NO starter credit — that offer is
+    // retired (billing requires a payment method and a plan), so this must never
+    // advertise free money it cannot grant. Add funds or pick a plan, both at
+    // billing.hanzo.ai.
     if (reason === 'commerce_insufficient') {
+      // Signed out: the door is sign-up, not top-up — a visitor with no account
+      // has no balance to add and would dead-end at a billing page for an
+      // account that doesn't exist.
+      if (isAuthenticated !== true) {
+        return (
+          <>
+            {'Sign up to start chatting with Hanzo — every account comes with credits.'}
+            <br />
+            <br />
+            <a
+              href="https://hanzo.id/signup/hanzo-chat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-hanzo-red underline"
+            >
+              Sign up free
+            </a>
+          </>
+        );
+      }
       return (
         <>
-          {
-            'You have no Hanzo Cloud balance. Claim your $5 starter credit (or add funds) to start chatting.'
-          }
+          {'You have no Hanzo Cloud balance. Add funds or choose a plan to start chatting.'}
           <br />
           <br />
           <a
@@ -180,7 +202,7 @@ const errorMessages = {
             rel="noopener noreferrer"
             className="text-hanzo-red underline"
           >
-            Claim your $5 credit at billing.hanzo.ai
+            Add funds at billing.hanzo.ai
           </a>
         </>
       );
@@ -238,6 +260,9 @@ const isUnauthorized = (value: unknown): boolean =>
 
 const Error = ({ text }: { text: string }) => {
   const localize = useLocalize();
+  // A refusal offers the door the visitor can actually walk through: a
+  // signed-out person has no balance to top up, they have an account to make.
+  const isAuthenticated = useAtomValue(store.isAuthenticated);
   const jsonString = extractJson(text);
 
   /**
@@ -278,7 +303,7 @@ const Error = ({ text }: { text: string }) => {
   const keyExists = errorKey && errorMessages[errorKey];
 
   if (keyExists && typeof errorMessages[errorKey] === 'function') {
-    return errorMessages[errorKey](json, localize);
+    return errorMessages[errorKey](json, localize, isAuthenticated);
   } else if (keyExists && keyExists.startsWith(localizedErrorPrefix)) {
     return localize(errorMessages[errorKey]);
   } else if (keyExists) {

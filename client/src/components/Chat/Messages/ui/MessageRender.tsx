@@ -136,37 +136,22 @@ const MessageRender = memo(
           'message-render',
         )}
       >
-        {!hasParallelContent && (
-          <div className="relative flex flex-shrink-0 flex-col items-center">
-            <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
-              <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
-            </div>
-          </div>
-        )}
-
+        {/* No avatar, no sender name, no routed-model tag (owner call): the
+            user's turn is a glass bubble on the right, the reply plain and full
+            width — the contrast is what says who is speaking. */}
         <div
           className={cn(
-            'relative flex flex-col',
-            hasParallelContent ? 'w-full' : 'w-11/12',
-            msg.isCreatedByUser ? 'user-turn' : 'agent-turn',
+            'relative flex w-full flex-col',
+            msg.isCreatedByUser ? 'user-turn items-end' : 'agent-turn',
           )}
         >
-          {!hasParallelContent && (
-            <h2 className={cn('flex select-none items-center gap-1.5 font-semibold', fontSize)}>
-              {messageLabel}
-              {routedModel != null && (
-                <span
-                  className="rounded bg-surface-tertiary px-1.5 py-0.5 text-xs font-normal text-text-secondary"
-                  title={localize('com_ui_routed_to', { 0: routedModel })}
-                >
-                  {routedModel}
-                </span>
+          <div className="flex w-full flex-col gap-1">
+            <div
+              className={cn(
+                'flex max-w-full flex-grow flex-col gap-0',
+                msg.isCreatedByUser && 'glass w-fit max-w-[85%] rounded-2xl px-4 py-2.5',
               )}
-            </h2>
-          )}
-
-          <div className="flex flex-col gap-1">
-            <div className="flex max-w-full flex-grow flex-col gap-0">
+            >
               <MessageContext.Provider
                 value={{
                   messageId: msg.messageId,

@@ -10,6 +10,7 @@ import {
   ErrorTypes,
   apiBaseUrl,
   createPayload,
+  balanceOn,
   ViolationTypes,
   LocalStorageKeys,
   removeNullishValues,
@@ -135,7 +136,7 @@ export default function useResumableSSE(
 
   const { data: startupConfig } = useGetStartupConfig();
   const balanceQuery = useGetUserBalance({
-    enabled: !!isAuthenticated && startupConfig?.balance?.enabled,
+    enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
 
   /**
@@ -189,7 +190,7 @@ export default function useResumableSSE(
             clearStepMaps();
             // Optimistically remove from active jobs
             removeActiveJob(currentStreamId);
-            (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
+            balanceOn(startupConfig) && balanceQuery.refetch();
             sse.close();
             setStreamId(null);
             return;
@@ -344,7 +345,7 @@ export default function useResumableSSE(
        * Order matters: check responseCode first since HTTP errors may also include data
        */
       sse.addEventListener('error', async (e: MessageEvent) => {
-        (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
+        balanceOn(startupConfig) && balanceQuery.refetch();
 
         /* @ts-ignore - sse.js types don't expose responseCode */
         const responseCode = e.responseCode;
@@ -558,7 +559,7 @@ export default function useResumableSSE(
       setIsSubmitting,
       getMessages,
       setMessages,
-      startupConfig?.balance?.enabled,
+      startupConfig,
       balanceQuery,
       removeActiveJob,
     ],

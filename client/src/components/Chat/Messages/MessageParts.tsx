@@ -108,27 +108,21 @@ export default function Message(props: TMessageProps) {
             aria-label={getMessageAriaLabel(message, localize)}
             className={cn(baseClasses.common, baseClasses.chat, 'message-render')}
           >
-            {!hasParallelContent && (
-              <div className="relative flex flex-shrink-0 flex-col items-center">
-                <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full pt-0.5">
-                  <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
-                </div>
-              </div>
-            )}
+            {/* No avatar, no sender name (owner call): the user's turn is a glass
+                bubble on the right, the reply plain and full width. */}
             <div
               className={cn(
-                'relative flex flex-col',
-                hasParallelContent ? 'w-full' : 'w-11/12',
-                isCreatedByUser ? 'user-turn' : 'agent-turn',
+                'relative flex w-full flex-col',
+                isCreatedByUser ? 'user-turn items-end' : 'agent-turn',
               )}
             >
-              {!hasParallelContent && (
-                <h2 className={cn('select-none font-semibold text-text-primary', fontSize)}>
-                  {name}
-                </h2>
-              )}
-              <div className="flex flex-col gap-1">
-                <div className="flex max-w-full flex-grow flex-col gap-0">
+              <div className="flex w-full flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex max-w-full flex-grow flex-col gap-0',
+                    isCreatedByUser && 'glass w-fit max-w-[85%] rounded-2xl px-4 py-2.5',
+                  )}
+                >
                   <ContentParts
                     edit={edit}
                     isLast={isLast}

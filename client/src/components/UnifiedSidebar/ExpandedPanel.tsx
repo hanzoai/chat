@@ -45,7 +45,7 @@ const NewChatButton = memo(function NewChatButton({
       description={localize('com_ui_new_chat')}
       render={
         <a
-          href="/c/new"
+          href="/"
           data-testid="new-chat-button"
           aria-label={localize('com_ui_new_chat')}
           className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-surface-hover"

@@ -18,7 +18,7 @@ import {
   OGDialog,
   DataTable,
   TooltipAnchor,
-  useMediaQuery,
+  useIsSmallScreen,
   OGDialogTitle,
   OGDialogHeader,
   useToastContext,
@@ -52,7 +52,7 @@ export default function ArchivedChatsTable({
   const { showToast } = useToastContext();
   const searchState = useAtomValue(store.search);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const [queryParams, setQueryParams] = useState<ConversationListParams>(DEFAULT_PARAMS);
   const [deleteConversation, setDeleteConversation] = useState<TConversation | null>(null);
 

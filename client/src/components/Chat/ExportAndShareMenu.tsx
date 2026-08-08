@@ -2,7 +2,7 @@ import { useState, useId, useRef } from 'react';
 import { useAtomValue } from 'jotai';
 import * as Ariakit from '@ariakit/react';
 import { Upload, Share2 } from 'lucide-react';
-import { DropdownPopup, TooltipAnchor, useMediaQuery } from '@hanzochat/client';
+import { DropdownPopup, TooltipAnchor, useIsSmallScreen } from '@hanzochat/client';
 import type * as t from '~/common';
 import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
 import { ShareButton } from '~/components/Conversations/ConvoOptions';
@@ -22,7 +22,7 @@ export default function ExportAndShareMenu({
   const menuId = useId();
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const conversation = useAtomValue(store.conversationByIndex(0));
 
   const exportable =
@@ -81,7 +81,7 @@ export default function ExportAndShareMenu({
               <Ariakit.MenuButton
                 id="export-menu-button"
                 aria-label="Export options"
-                className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light bg-presentation text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
+                className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-transparent bg-transparent text-text-primary transition-all ease-in-out hover:bg-white/10 hover:backdrop-blur-xl disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-white/10 radix-state-open:backdrop-blur-xl"
               >
                 <Share2
                   className="icon-lg text-text-primary"
