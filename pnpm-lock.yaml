@@ -361,7 +361,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@20.19.37)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@20.19.37)(typescript@7.0.2))
+        version: 30.3.0(@types/node@25.5.0)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@25.5.0)(typescript@7.0.2))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -423,8 +423,8 @@ importers:
         specifier: ^0.1.6
         version: 0.1.6(@hanzo/gui@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@hanzo/voice':
-        specifier: 0.1.5
-        version: 0.1.5(react@19.2.4)
+        specifier: 0.1.6
+        version: 0.1.6(react@19.2.4)
       '@hanzochat/client':
         specifier: workspace:*
         version: link:../packages/client
@@ -3728,8 +3728,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/voice@0.1.5':
-    resolution: {integrity: sha512-FhJZyTAUzESSQ6OMbCFw5OP2IfREFCABgI/1dciU8T7R6Bch2MaCLNG4SsdwUtmioDZA655JN3XHJgM9SP8jOA==}
+  '@hanzo/voice@0.1.6':
+    resolution: {integrity: sha512-08CyK+5/5FyHg0MpRdWYjCHbQYkMMBND6fJVK1K8VfkOMpsjUmkSpXpeSnyJA5LlBmp4aPi2I/sgWSotN3gSVA==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=18'
@@ -17964,7 +17964,7 @@ snapshots:
       '@hanzogui/lucide-icons-2': 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)
       react: 19.2.4
 
-  '@hanzo/voice@0.1.5(react@19.2.4)':
+  '@hanzo/voice@0.1.6(react@19.2.4)':
     dependencies:
       react: 19.2.4
 
@@ -22544,9 +22544,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-color@2.1.0': {}
 

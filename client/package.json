@@ -45,7 +45,7 @@
     "@hanzo/plans": "1.4.12",
     "@hanzo/ui": "^8.0.69",
     "@hanzo/usage": "^0.1.6",
-    "@hanzo/voice": "0.1.5",
+    "@hanzo/voice": "0.1.6",
     "@hanzochat/client": "workspace:*",
     "@hanzochat/data-provider": "workspace:*",
     "@hanzogui/config": "^8.0.1",
