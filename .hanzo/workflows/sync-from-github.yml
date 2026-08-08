@@ -1,0 +1,66 @@
+name: Sync from GitHub
+# git.hanzo.ai is the build plane — cicd.yml and deploy.yml both live under
+# `.hanzo/workflows/` and only this git runs them — but development also lands
+# on github.com/hanzoai/chat. Nothing carried commits from there to here, so a
+# push to GitHub sat unbuilt until somebody noticed and pushed by hand.
+#
+# Measured 2026-08-08: forge/main was two commits behind origin/main, and one of
+# them was a shipped fix. `git push` had reported success — about GitHub, which
+# is not the plane that builds. hanzo.app has had this workflow since the same
+# failure bit it twice (07-23, 07-24, each needing a manual port-forward push);
+# this repo simply never got the cure.
+#
+# An in-cluster PULL, not a push-based mirror: the runner reaches both ends —
+# GitHub outbound and this git via the instance URL actions/checkout already
+# uses — so there is no ingress dependency. Fast-forward ONLY: a divergence
+# fails loudly here rather than force-pushing either side.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+concurrency:
+  group: sync-from-github
+  cancel-in-progress: false
+jobs:
+  ff-main:
+    runs-on: [hanzo-build-linux-amd64]
+    steps:
+      - name: Checkout main (full history for the ancestry check)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Persist the token-auth remote so the push below reuses it.
+          persist-credentials: true
+      - name: Fast-forward main from github.com/hanzoai/chat
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet "https://x-access-token:${GH_PAT}@github.com/hanzoai/chat.git" main
+          LOCAL="$(git rev-parse HEAD)"
+          REMOTE="$(git rev-parse FETCH_HEAD)"
+          if [ "$LOCAL" = "$REMOTE" ]; then
+            echo "in sync at $LOCAL"
+            exit 0
+          fi
+          if git merge-base --is-ancestor "$LOCAL" "$REMOTE"; then
+            echo "fast-forwarding $LOCAL -> $REMOTE"
+            git push origin "$REMOTE:refs/heads/main"
+            # A push made with the workflow token does NOT trigger other
+            # workflows (loop prevention), so synced commits would arrive and
+            # never deploy — the stale-but-green state this workflow exists to
+            # end. Dispatch deploy.yml explicitly; a real fast-forward means
+            # real commits arrived.
+            curl -fsS --max-time 20 -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              "${{ github.server_url }}/v1/repos/${{ github.repository }}/actions/workflows/deploy.yml/dispatches" \
+              -d '{"ref":"main"}' \
+              && echo "deploy dispatched" || echo "deploy dispatch failed (non-fatal — next direct push will build)"
+          elif git merge-base --is-ancestor "$REMOTE" "$LOCAL"; then
+            echo "this git is AHEAD of GitHub ($REMOTE ancestor of $LOCAL) — nothing to pull."
+            echo "(GitHub catch-up is a separate concern; never force from here.)"
+          else
+            echo "::error::main DIVERGED between GitHub ($REMOTE) and this git ($LOCAL) — refusing to force. Reconcile manually."
+            exit 1
+          fi
