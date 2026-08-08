@@ -262,9 +262,29 @@ jobs:
           git config user.name 'hanzo-ci'
           git config user.email 'ci@hanzo.ai'
           git add package.json
-          git commit -m "release ${v} [skip ci]"
-          git tag "v${v}"
-          git push origin "v${v}"
+          # Idempotent, because this step gets RE-RUN. A run that pushed its image
+          # and then died later (a Docker-daemon drop mid-build is the common one)
+          # leaves package.json already declaring ${v}; imgver then rewrites the
+          # same value, `git add` stages nothing, and `git commit` exits non-zero
+          # on "nothing to commit, working tree clean". Under the runner's
+          # `bash -e` that killed the step — so the retry that should have healed
+          # the release failed on the half of it that had already succeeded.
+          #
+          # The loop below already knew this ("main already declares ${v}") and
+          # exits 0. The first attempt did not, which is the whole defect.
+          if git diff --cached --quiet; then
+            echo "package.json already declares ${v} — nothing to commit"
+          else
+            git commit -m "release ${v} [skip ci]"
+          fi
+          # Same reasoning for the tag: a partial run may have created and pushed
+          # it, and `git tag` on an existing name is a fatal error.
+          if git rev-parse -q --verify "refs/tags/v${v}" >/dev/null; then
+            echo "tag v${v} already exists"
+          else
+            git tag "v${v}"
+            git push origin "v${v}"
+          fi
           for attempt in 1 2 3 4 5; do
             if git push origin HEAD:main; then
               echo "main declares ${v} — package.json and v${v} agree"; exit 0
