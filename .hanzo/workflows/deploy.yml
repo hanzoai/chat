@@ -16,6 +16,19 @@ name: deploy
 on:
   push:
     branches: [main]
+    # Prose does not get a production outage. This lane builds an image, bumps
+    # the version, pins hanzoai/universe and cd rolls it — and the deploy is
+    # `replicas: 1, strategy: Recreate`, so every roll costs ~3 minutes of
+    # hanzo.chat answering 503. Paying that to change a sentence in LLM.md is
+    # not a tradeoff anyone chose; it was just never filtered.
+    #
+    # `**.md` is safe here, checked rather than assumed: nothing imports a
+    # markdown file into the client or the server bundle, and all 31 tracked
+    # `.md` are docs, issue templates or migration READMEs. `.hanzo/workflows/**`
+    # is deliberately NOT ignored — a change to this lane must prove it still
+    # builds.
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
 
 concurrency:
