@@ -14,6 +14,7 @@ const { getAppConfig } = require('~/server/services/Config');
 const getLogStores = require('~/cache/getLogStores');
 const { getOpenIdConfig } = require('~/strategies');
 const middleware = require('~/server/middleware');
+const { publicUser } = require('~/server/services/publicUser');
 const { Balance } = require('~/db/models');
 
 const setBalanceConfig = createSetBalanceConfig({
@@ -24,8 +25,8 @@ const setBalanceConfig = createSetBalanceConfig({
 const router = express.Router();
 
 router.get('/verify', middleware.requireJwtAuth, requireAdmin, (req, res) => {
-  const { password: _p, totpSecret: _t, __v, ...user } = req.user;
-  user.id = user._id.toString();
+  const user = publicUser(req.user);
+  user.id = req.user._id.toString();
   res.status(200).json({ user });
 });
 
