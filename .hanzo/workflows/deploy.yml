@@ -168,6 +168,75 @@ jobs:
           done
           echo "::error::pushed image never resolved: $img"; exit 1
 
+      # THE STEP THAT SHIPS. Everything above builds and proves an image; none of
+      # it deploys one. cd.hanzo.ai reconciles from universe's values files and
+      # never reads the registry, so a chat image that is built, pushed and
+      # resolvable is still unreachable until this pin moves. That is why the
+      # fleet sat on 1.0.115 while newer images existed: the lane ended at "push"
+      # and waited for a human who had no reason to know they were the mechanism.
+      #
+      # It runs BEFORE the commit+tag below on purpose. That step is bookkeeping
+      # and is deliberately last so it cannot un-ship a good build; this one IS
+      # the ship, and a release that tags a version it never deployed is the
+      # same lie in the other direction.
+      #
+      # pin.sh resolves tag AND digest from ONE registry lookup and writes them
+      # together. Two lookups at two moments drift, and drift here does not fail
+      # — it succeeds at doing nothing, because a reference carrying both
+      # resolves by DIGEST: the pod reports the new version and serves the old
+      # bytes.
+      - name: Ship it
+        env:
+          KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
+          KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
+          KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://api.hanzo.ai' }}
+          KMS_SECRET_ENV: ${{ vars.KMS_SECRET_ENV || 'prod' }}
+          # pin.sh probes the registry before it moves anything; these let it read
+          # a private manifest instead of falling back to anonymous.
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
+
+          # Secrets come from KMS, never from a file or a repo variable.
+          KMS_TOKEN=$(curl -fsS "${KMS_ENDPOINT}/v1/kms/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d "{\"clientId\":\"${KMS_CLIENT_ID}\",\"clientSecret\":\"${KMS_CLIENT_SECRET}\"}" \
+            | jq -r '.accessToken // empty')
+          [ -n "$KMS_TOKEN" ] || { echo "::error::KMS login failed at ${KMS_ENDPOINT} — image ${VERSION} is pushed but NOT deployed"; exit 1; }
+
+          # The org is carried by the credential, not by the path. An /orgs/<org>/
+          # spelling 404s, and curl -f turns that into a bare exit 22 that reads
+          # like a missing secret rather than a wrong route.
+          PIN_TOKEN=$(curl -fsS \
+            "${KMS_ENDPOINT}/v1/kms/secrets/deploy/UNIVERSE_PIN_TOKEN?env=${KMS_SECRET_ENV}" \
+            -H "Authorization: Bearer ${KMS_TOKEN}" | jq -r '.value // empty')
+          [ -n "$PIN_TOKEN" ] || { echo "::error::UNIVERSE_PIN_TOKEN missing in KMS (path deploy, env ${KMS_SECRET_ENV}) — image ${VERSION} is pushed but NOT deployed"; exit 1; }
+          echo "::add-mask::${PIN_TOKEN}"
+
+          # cd reads THIS copy. universe also exists under hanzoai/ and is a
+          # different, staler commit — pinning there deploys nothing, silently.
+          git clone --quiet --depth 1 \
+            "https://x-access-token:${PIN_TOKEN}@git.hanzo.ai/hanzo/universe" /tmp/universe
+
+          # Another service can land its own pin between our clone and our push.
+          # A shallow clone has no common history to rebase onto, so RE-APPLY
+          # rather than merge: pinning is idempotent and derives everything from
+          # the file it finds, so the retry re-checks the monotonic guard too.
+          for attempt in 1 2 3 4 5; do
+            /tmp/universe/charts/app/pin.sh chat "$VERSION"
+
+            if git -C /tmp/universe push --quiet origin HEAD:main 2>/dev/null; then
+              echo "pinned chat to ${VERSION} — cd.hanzo.ai rolls it out"; exit 0
+            fi
+
+            echo "universe moved under us (attempt ${attempt}/5) — re-applying on the new tip"
+            git -C /tmp/universe fetch --quiet --depth 1 origin main
+            git -C /tmp/universe reset --hard --quiet FETCH_HEAD
+          done
+          echo "::error::image ${VERSION} shipped but the pin never landed — chat is published and unreachable"; exit 1
+
       # ONLY after the image is proven pullable, so a git tag can never name a
       # version the registry lacks — which is what lets scripts/version.sh treat
       # git tags as a floor when it has no registry token.
