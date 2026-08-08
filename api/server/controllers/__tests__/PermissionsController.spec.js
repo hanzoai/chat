@@ -2,7 +2,16 @@ const mongoose = require('mongoose');
 
 const mockLogger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
 
+/**
+ * Override the logger, keep the module. Stubbing `@hanzochat/data-schemas` down
+ * to `{ logger }` is an enumeration of what the code under test happens to need
+ * today, so it breaks the moment anything in the require graph reaches for
+ * something else — here `db/models.js`, which calls `createModels(mongoose)` and
+ * got `undefined`. That killed this suite at import: zero tests, and a name in
+ * the report that reads like coverage.
+ */
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: mockLogger,
 }));
 

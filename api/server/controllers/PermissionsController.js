@@ -19,6 +19,7 @@ const {
   searchPrincipals: searchLocalPrincipals,
   sortPrincipalsByRelevance,
   calculateRelevanceScore,
+  removeAgentFromUserFavorites,
 } = require('~/models');
 const {
   entraIdPrincipalFeatureEnabled,
@@ -32,14 +33,51 @@ const { AclEntry, AccessRole } = require('~/db/models');
  */
 
 /**
+ * A refusal: the request was wrong, and the message was written to be read by
+ * whoever sent it.
+ *
+ * Every handler below used to answer a failure with `details: error.message`,
+ * which sends whatever threw — a driver's text, a path, a hostname — to the
+ * browser. The problem is not that those messages are secret; it is that nobody
+ * chose them. So the rule is inverted here: a message reaches the client only by
+ * being thrown as a Refusal, and everything else gets the handler's own static
+ * sentence plus a log line carrying the real error.
+ *
+ * The status travels with it, which fixes a second thing in passing: the update
+ * handler answered 400 for every failure, so a database outage was reported to
+ * the caller as their mistake.
+ */
+class Refusal extends Error {
+  constructor(message, status = 400) {
+    super(message);
+    this.name = 'Refusal';
+    this.status = status;
+  }
+}
+
+/**
+ * Answer a caught error. Refusals speak for themselves; anything else is
+ * internal and gets `fallback`.
+ * @param {import('express').Response} res
+ * @param {Error} error
+ * @param {string} fallback - the sentence this handler sends when it does not know
+ */
+const refuse = (res, error, fallback) =>
+  error instanceof Refusal
+    ? res.status(error.status).json({ error: error.message })
+    : res.status(500).json({ error: fallback });
+
+/**
  * Validates that the resourceType is one of the supported enum values
  * @param {string} resourceType - The resource type to validate
- * @throws {Error} If resourceType is not valid
+ * @throws {Refusal} If resourceType is not valid
  */
 const validateResourceType = (resourceType) => {
   const validTypes = Object.values(ResourceType);
   if (!validTypes.includes(resourceType)) {
-    throw new Error(`Invalid resourceType: ${resourceType}. Valid types: ${validTypes.join(', ')}`);
+    throw new Refusal(
+      `Invalid resourceType: ${resourceType}. Valid types: ${validTypes.join(', ')}`,
+    );
   }
 };
 
@@ -166,13 +204,46 @@ const updateResourcePermissions = async (req, res) => {
     };
 
     res.status(200).json(response);
+
+    removeRevokedAgentFromFavorites(resourceType, resourceId, results.revoked);
   } catch (error) {
     logger.error('Error updating resource permissions:', error);
-    res.status(400).json({
-      error: 'Failed to update permissions',
-      details: error.message,
-    });
+    refuse(res, error, 'Failed to update permissions');
   }
+};
+
+/**
+ * Drop an agent from the favorites of everyone who just lost access to it.
+ *
+ * Favorites are a list of ids, not a grant, so a stale entry is not a way in —
+ * every read still checks permissions. It is a dead row in the sidebar: the
+ * agent is listed, and choosing it fails. This removes it.
+ *
+ * Two details are the whole of the correctness here. It reads `revoked` from the
+ * service's RESULT rather than the request body, so a principal the service
+ * rejected is not treated as revoked; and it runs after the response has been
+ * sent, because tidying a list is not worth failing a permission change that
+ * already succeeded — a failure is logged and goes no further.
+ *
+ * @param {string} resourceType
+ * @param {string} resourceId
+ * @param {Array<{type: string, id: string}>} [revoked]
+ */
+const removeRevokedAgentFromFavorites = (resourceType, resourceId, revoked) => {
+  if (resourceType !== ResourceType.AGENT && resourceType !== ResourceType.REMOTE_AGENT) {
+    return;
+  }
+  const userIds = (revoked ?? [])
+    .filter((principal) => principal.type === PrincipalType.USER && principal.id)
+    .map((principal) => principal.id);
+
+  if (userIds.length === 0) {
+    return;
+  }
+
+  Promise.resolve(removeAgentFromUserFavorites(resourceId, userIds)).catch((error) =>
+    logger.error('[removeRevokedAgentFromFavorites] Error cleaning up favorites', error),
+  );
 };
 
 /**
@@ -302,10 +373,7 @@ const getResourcePermissions = async (req, res) => {
     res.status(200).json(response);
   } catch (error) {
     logger.error('Error getting resource permissions principals:', error);
-    res.status(500).json({
-      error: 'Failed to get permissions principals',
-      details: error.message,
-    });
+    refuse(res, error, 'Failed to get permissions principals');
   }
 };
 
@@ -330,10 +398,7 @@ const getResourceRoles = async (req, res) => {
     );
   } catch (error) {
     logger.error('Error getting resource roles:', error);
-    res.status(500).json({
-      error: 'Failed to get roles',
-      details: error.message,
-    });
+    refuse(res, error, 'Failed to get roles');
   }
 };
 
@@ -360,10 +425,7 @@ const getUserEffectivePermissions = async (req, res) => {
     });
   } catch (error) {
     logger.error('Error getting user effective permissions:', error);
-    res.status(500).json({
-      error: 'Failed to get effective permissions',
-      details: error.message,
-    });
+    refuse(res, error, 'Failed to get effective permissions');
   }
 };
 
@@ -376,7 +438,10 @@ const searchPrincipals = async (req, res) => {
   try {
     const { q: query, limit = 20, types } = req.query;
 
-    if (!query || query.trim().length === 0) {
+    // `?q[]=a&q[]=b` and `?q[x]=1` reach here as an array and an object — express
+    // parses both by default — and `.trim()` on either is a TypeError, so a
+    // malformed query was answered 500 as though the server had broken.
+    if (typeof query !== 'string' || query.trim().length === 0) {
       return res.status(400).json({
         error: 'Query parameter "q" is required and must not be empty',
       });
@@ -478,10 +543,7 @@ const searchPrincipals = async (req, res) => {
     });
   } catch (error) {
     logger.error('Error searching principals:', error);
-    res.status(500).json({
-      error: 'Failed to search principals',
-      details: error.message,
-    });
+    refuse(res, error, 'Failed to search principals');
   }
 };
 
@@ -525,10 +587,7 @@ const getAllEffectivePermissions = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     logger.error('Error getting all effective permissions:', error);
-    res.status(500).json({
-      error: 'Failed to get all effective permissions',
-      details: error.message,
-    });
+    refuse(res, error, 'Failed to get all effective permissions');
   }
 };
 
