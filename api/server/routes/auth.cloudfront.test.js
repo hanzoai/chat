@@ -42,36 +42,55 @@ jest.mock('~/server/services/Config', () => ({
   getAppConfig: jest.fn(),
 }));
 
+/**
+ * Every middleware is a no-op except the ones named here. A LIST of middleware
+ * names has to be kept in step with whatever the router mounts — miss one and
+ * express refuses the whole router at import with `argument handler must be a
+ * function`, so the suite reports zero tests instead of a failure anyone can
+ * read. Anything not named below passes through.
+ */
 jest.mock('~/server/middleware', () => {
   const pass = (req, res, next) => next();
-  return {
-    logHeaders: pass,
-    loginLimiter: pass,
-    checkBan: pass,
-    requireLocalAuth: pass,
-    requireLdapAuth: pass,
-    registerLimiter: pass,
-    checkInviteUser: pass,
-    validateRegistration: pass,
-    resetPasswordLimiter: pass,
-    validatePasswordReset: pass,
-    requireJwtAuth: jest.fn((req, res, next) => {
-      if (req.headers.authorization !== 'Bearer ok') {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-      req.user = { _id: 'user123', tenantId: 'tenantA' };
-      if (req.headers['x-cloudfront-warmed'] === 'true') {
-        req.cloudFrontAuthCookieRefreshResult = {
-          enabled: true,
-          attempted: true,
-          refreshed: true,
-          expiresInSec: 1800,
-          refreshAfterSec: 1500,
-        };
-      }
-      return next();
-    }),
+  const named = {
+      logHeaders: pass,
+      loginLimiter: pass,
+      checkBan: pass,
+      requireLocalAuth: pass,
+      requireLdapAuth: pass,
+      registerLimiter: pass,
+      checkInviteUser: pass,
+      validateRegistration: pass,
+      resetPasswordLimiter: pass,
+      validatePasswordReset: pass,
+      requireJwtAuth: jest.fn((req, res, next) => {
+        if (req.headers.authorization !== 'Bearer ok') {
+          return res.status(401).json({ message: 'Unauthorized' });
+        }
+        req.user = { _id: 'user123', tenantId: 'tenantA' };
+        if (req.headers['x-cloudfront-warmed'] === 'true') {
+          req.cloudFrontAuthCookieRefreshResult = {
+            enabled: true,
+            attempted: true,
+            refreshed: true,
+            expiresInSec: 1800,
+            refreshAfterSec: 1500,
+          };
+        }
+        return next();
+      }),
   };
+  return new Proxy(named, {
+    get: (target, key) => {
+      if (key in target) {
+        return target[key];
+      }
+      // Never answer the interop probes — a thenable module breaks `require`.
+      if (typeof key !== 'string' || key === 'then' || key === '__esModule') {
+        return undefined;
+      }
+      return pass;
+    },
+  });
 });
 
 const authRouter = require('./auth');

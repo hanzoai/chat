@@ -40,17 +40,37 @@ jest.mock('~/models', () => ({
   saveMessage: (...args) => mockSaveMessage(...args),
 }));
 
-jest.mock('~/server/middleware', () => ({
-  uaParser: (req, res, next) => next(),
-  checkBan: (req, res, next) => next(),
-  requireJwtAuth: (req, res, next) => {
-    req.user = { id: 'test-user-123' };
-    next();
-  },
-  messageIpLimiter: (req, res, next) => next(),
-  configMiddleware: (req, res, next) => next(),
-  messageUserLimiter: (req, res, next) => next(),
-}));
+/**
+ * Every middleware is a no-op except the ones named here.
+ *
+ * This was a LIST, and a list of middleware names has to be kept in step with
+ * whatever the router happens to mount — miss one and express refuses the whole
+ * router at import with `argument handler is required`, so the suite reports
+ * zero tests. Three were missing in a row (`cloudAgentLimiter`,
+ * `requireGuestOrJwtAuth`, `guestMessageLimiter`) and each fix revealed the
+ * next. The proxy states the intent instead: this suite is about ROUTING, so
+ * anything it does not name passes through.
+ */
+jest.mock('~/server/middleware', () => {
+  const named = {
+    requireJwtAuth: (req, res, next) => {
+      req.user = { id: 'test-user-123' };
+      next();
+    },
+  };
+  return new Proxy(named, {
+    get: (target, key) => {
+      if (key in target) {
+        return target[key];
+      }
+      // Never answer the interop probes — a thenable module breaks `require`.
+      if (typeof key !== 'string' || key === 'then' || key === '__esModule') {
+        return undefined;
+      }
+      return (req, res, next) => next();
+    },
+  });
+});
 
 // Mock the chat module - needs to be a router
 jest.mock('~/server/routes/agents/chat', () => require('express').Router());

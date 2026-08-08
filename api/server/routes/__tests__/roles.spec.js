@@ -5,9 +5,29 @@ const { SystemRoles, roleDefaults } = require('@hanzochat/data-provider');
 const mockGetRoleByName = jest.fn();
 const mockHasCapability = jest.fn();
 
-jest.mock('~/server/middleware', () => ({
-  requireJwtAuth: (_req, _res, next) => next(),
-}));
+/**
+ * Every middleware is a no-op except the ones named here. A LIST of middleware
+ * names has to be kept in step with whatever the router mounts — miss one and
+ * express refuses the whole router at import with `argument handler must be a
+ * function`, and the suite reports zero tests rather than a failure anyone can
+ * read. This suite is about ROUTING, so anything it does not name passes
+ * through.
+ */
+jest.mock('~/server/middleware', () => {
+  const named = {};
+  return new Proxy(named, {
+    get: (target, key) => {
+      if (key in target) {
+        return target[key];
+      }
+      // Never answer the interop probes — a thenable module breaks `require`.
+      if (typeof key !== 'string' || key === 'then' || key === '__esModule') {
+        return undefined;
+      }
+      return (req, res, next) => next();
+    },
+  });
+});
 
 jest.mock('~/server/middleware/roles/capabilities', () => ({
   hasCapability: (...args) => mockHasCapability(...args),
