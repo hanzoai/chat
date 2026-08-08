@@ -214,7 +214,10 @@ describe('getUserController', () => {
     expect(sentUser).not.toHaveProperty('pendingBackupCodes');
     expect(sentUser).not.toHaveProperty('refreshToken');
     expect(sentUser).not.toHaveProperty('googleId');
-    expect(sentUser).not.toHaveProperty('openidId');
+    // `openidId` IS public and this assertion was wrong: Providers/AnalyticsProvider
+    // reads it as the IAM `sub` — the one id that correlates a person across
+    // hanzo.ai, hanzo.app and here. Chat's own `id` is a different value.
+    expect(sentUser).toHaveProperty('openidId', 'openid-id');
     expect(sentUser).not.toHaveProperty('openidIssuer');
     expect(sentUser).not.toHaveProperty('idOnTheSource');
     expect(sentUser).not.toHaveProperty('federatedTokens');
