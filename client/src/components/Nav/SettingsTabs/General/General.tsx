@@ -6,6 +6,7 @@ import ArchivedChats from './ArchivedChats';
 import ToggleSwitch from '../ToggleSwitch';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
+import { Appearance } from '@hanzo/appearance';
 
 const toggleSwitchConfigs = [
   {
@@ -205,6 +206,14 @@ function General() {
     <div className="flex flex-col gap-3 p-1 text-sm text-text-primary">
       <div className="pb-3">
         <ThemeSelector theme={theme} onChange={changeTheme} />
+      </div>
+      {/* Text size, density and accent — the SAME panel hanzo.app and
+          console.hanzo.ai mount. It is @hanzo/appearance rather than three
+          near-identical screens, which is how "the same product" stops
+          looking like it. Theme stays above because light/dark is this
+          app's own choice; these three are the design system's knobs. */}
+      <div className="pb-3">
+        <Appearance />
       </div>
       <div className="pb-3">
         <LangSelector langcode={langcode} onChange={changeLang} />
