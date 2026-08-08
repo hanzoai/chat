@@ -127,6 +127,12 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
   request, the org header Commerce authorizes on, and the refusal to enable MCP
   while nothing filters its tools. Every file in it was mutation-tested; a new
   spec joins the lane by being listed there.
+  deploy.yml carries `paths-ignore: ['**.md']`, and the reason is the deploy
+  shape rather than build minutes: `replicas: 1` + `Recreate` means every roll
+  is ~3min of hanzo.chat answering 503 (measured twice: 195s, 195s), so a
+  sentence edited in this file used to cost an outage. `.hanzo/workflows/**` is
+  NOT ignored — a change to the lane must prove it still builds — and cicd.yml
+  still fires on everything, because its gates cost no downtime.
   `hanzo.yml` declares NO `images:`, deliberately — that is what keeps deploy.yml
   the single builder, and two lanes pushing one tag is how hanzoai/app served
   bytes its version did not name.
