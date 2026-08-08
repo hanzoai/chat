@@ -117,12 +117,19 @@ function AnalyticsBridge() {
  * `enabled` is the one consent gate, shared by the client and autocapture.
  */
 export default function AnalyticsProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuthContext();
+  const { token, isAuthenticated } = useAuthContext();
 
   // Read the live token at capture time without re-creating the config: the
   // 'session' sentinel (cookie-session auth, no JWT) is treated as anonymous.
   const tokenRef = useRef<string | undefined>(token);
   tokenRef.current = token;
+  // A GUEST bearer is not an ingest credential. The anonymous preview mints one,
+  // so `token` is a real JWT string for a visitor who is not signed in — and cloud
+  // validates an ingest bearer's `sub` against an IAM user, which a guest has
+  // none of, so it answers 401. Measured live: two flushes carrying the pk- were
+  // accepted and the one carrying the guest JWT was refused, from the same client.
+  const authedRef = useRef<boolean>(isAuthenticated);
+  authedRef.current = isAuthenticated;
 
   const enabled = consented();
 
@@ -143,6 +150,10 @@ export default function AnalyticsProvider({ children }: { children: ReactNode })
       // the product wants: one credential per state, the token whenever there is
       // one.
       getToken: () => {
+        // Signed in -> the visitor's OWN IAM token, so cloud attributes the event
+        // to their org and user. Anything else — guest, or signed out — sends the
+        // publishable key, which is what admission for anonymous traffic means.
+        if (!authedRef.current) return INGEST_KEY;
         const value = tokenRef.current;
         return value && value !== 'session' ? value : INGEST_KEY;
       },
