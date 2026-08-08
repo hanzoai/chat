@@ -118,8 +118,15 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
   in `hanzoai/universe`. `.hanzo/workflows/cicd.yml` imports `hanzoai/ci` and
   runs the `test:` gates in the root `hanzo.yml` — the repo had no gate of any
   kind before it, on main or on a pull request.
-  Read `hanzo.yml` before adding a gate: it records why no jest suite is in it
-  (all five are red on main) and what each gate costs.
+  Read `hanzo.yml` before adding a gate: it records why no whole jest suite is
+  in it (all five are red on main) and what each gate costs. The one jest lane
+  is `credentials` — eight named files, 65 tests, ~5s — guarding what a user
+  document may carry out of the process: the `publicUser` allow-list every
+  user-returning route projects through, the schema's own default projection
+  under it, the routes that send it, the strategy that picks who verifies a
+  request, the org header Commerce authorizes on, and the refusal to enable MCP
+  while nothing filters its tools. Every file in it was mutation-tested; a new
+  spec joins the lane by being listed there.
   `hanzo.yml` declares NO `images:`, deliberately — that is what keeps deploy.yml
   the single builder, and two lanes pushing one tag is how hanzoai/app served
   bytes its version did not name.
@@ -698,6 +705,28 @@ jest suite is gated:
 `@typescript-eslint/typescript-estree`, which dies against the TS7 native
 compiler with `Cannot read properties of undefined (reading 'Cjs')` before it
 reads a single file.
+
+**Count TESTS, not suites, and treat `Tests: 0 total` as its own category.** A
+large share of the `api` column is not failing assertions at all — it is suites
+that die during import and never run one. The cause is almost always the spec's
+own mocks: 80 of the 83 files that `jest.mock` a `@hanzochat/*` package replace
+it with two or three names, which holds only until something deeper in the
+require graph wants a fourth. One file walked through five in a row —
+`createModels`, `violationCache`, `FileContext.execute_code`, `isEnabled`,
+`requireAdmin` — each fix revealing the next. Spreading
+`...jest.requireActual('<pkg>')` under the overrides fixes it at the root, and
+`PermissionService.spec.js` was already doing that.
+
+This is worth doing rather than tidying: five revived suites reported an
+agent-file access check that handed the author of any agent every file id they
+named (reachable on `DELETE /v1/chat/files`, so it deleted them), six handlers
+returning `details: error.message` to the browser, a 500 on a non-string query
+parameter, and a `removeAgentFromUserFavorites` with no caller. All of it had
+been sitting behind a green-looking filename. Two cautions: `requireActual` can
+turn a red suite into a silent module-load HANG, which is worse — mock the one
+collaborator instead; and check the mock names the module the SUBJECT imports
+(one spec drove `~/models` while the subject read `~/models/Agent`, so its
+assertions were vacuous even once it loaded).
 
 Not every one of these is "tests ahead of implementation" — one is a live
 product bug wearing that costume. Merge `49dc4f7bf6` (a LibreChat sync) dropped
