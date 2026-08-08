@@ -14,6 +14,14 @@ jest.mock('@hanzochat/data-schemas', () => {
   };
 });
 
+jest.mock('~/server/services/iamBearerRefresh', () => ({
+  currentBearer: jest.fn(),
+}));
+
+jest.mock('~/server/controllers/auth/iamSession', () => ({
+  pictureFromUserinfo: jest.fn(),
+}));
+
 jest.mock('~/models', () => {
   const _mongoose = require('mongoose');
   return {
@@ -214,6 +222,85 @@ describe('getUserController', () => {
     expect(sentUser).not.toHaveProperty('tokenset');
     expect(sentUser).not.toHaveProperty('safeLookingRuntimeField');
   });
+  /**
+   * The photo, for a session that already existed.
+   *
+   * Reconciling at login covers everyone who signs in from now on and nobody who
+   * was already signed in — they would have had to sign out and back in to
+   * collect a photo hanzo.id already holds. These pin the three properties that
+   * make adopting it on an ordinary identity read safe rather than merely
+   * possible: it never overwrites, it asks at most once per session, and it
+   * cannot take the read down with it.
+   */
+  describe('the hanzo.id photo', () => {
+    const { currentBearer } = require('~/server/services/iamBearerRefresh');
+    const { pictureFromUserinfo } = require('~/server/controllers/auth/iamSession');
+    const { updateUser } = require('~/models');
+
+    const PHOTO = 'data:image/jpeg;base64,/9j/4AAQSkZJRg==';
+    const reqFor = (user, session = {}) => ({ config: {}, user, session });
+    const sent = () => mockRes.send.mock.calls[0][0];
+
+    it('adopts it when the record carries none', async () => {
+      currentBearer.mockResolvedValue('bearer-token');
+      pictureFromUserinfo.mockResolvedValue(PHOTO);
+
+      await getUserController(reqFor({ id: 'u1', email: 'a@hanzo.ai' }), mockRes);
+
+      expect(pictureFromUserinfo).toHaveBeenCalledWith('bearer-token');
+      expect(sent().avatar).toBe(PHOTO);
+      // Persisted, so the next read costs nothing.
+      expect(updateUser).toHaveBeenCalledWith('u1', { avatar: PHOTO });
+    });
+
+    it('never overwrites an avatar the visitor already has', async () => {
+      currentBearer.mockResolvedValue('bearer-token');
+      pictureFromUserinfo.mockResolvedValue(PHOTO);
+
+      await getUserController(
+        reqFor({ id: 'u1', email: 'a@hanzo.ai', avatar: '/avatars/mine.png' }),
+        mockRes,
+      );
+
+      expect(pictureFromUserinfo).not.toHaveBeenCalled();
+      expect(sent().avatar).toBe('/avatars/mine.png');
+    });
+
+    it('asks once per session, even when hanzo.id has no photo', async () => {
+      currentBearer.mockResolvedValue('bearer-token');
+      pictureFromUserinfo.mockResolvedValue('');
+      const session = {};
+
+      await getUserController(reqFor({ id: 'u1' }, session), mockRes);
+      await getUserController(reqFor({ id: 'u1' }, session), mockRes);
+
+      // Without the mark, an account with no picture pays two round-trips on
+      // EVERY identity read, forever, to be told "still none".
+      expect(pictureFromUserinfo).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves a local login alone — there is no bearer to ask with', async () => {
+      currentBearer.mockResolvedValue(null);
+
+      await getUserController(reqFor({ id: 'u1', provider: 'local' }), mockRes);
+
+      expect(pictureFromUserinfo).not.toHaveBeenCalled();
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+    });
+
+    it('still answers the read when the photo lookup throws', async () => {
+      currentBearer.mockResolvedValue('bearer-token');
+      pictureFromUserinfo.mockRejectedValue(new Error('hanzo.id unreachable'));
+
+      await getUserController(reqFor({ id: 'u1', email: 'a@hanzo.ai' }), mockRes);
+
+      // A photo is garnish. It must never cost the visitor their identity read.
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(sent().email).toBe('a@hanzo.ai');
+      expect(sent().avatar).toBeUndefined();
+    });
+  });
+
 });
 
 describe('deleteUserController', () => {

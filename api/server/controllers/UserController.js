@@ -41,10 +41,66 @@ const { needsRefresh, getNewS3URL } = require('~/server/services/Files/S3/crud')
 const { processDeleteRequest } = require('~/server/services/Files/process');
 const { getAppConfig } = require('~/server/services/Config');
 const { buildGuestUser } = require('~/server/services/guestConfig');
+const { pictureFromUserinfo } = require('~/server/controllers/auth/iamSession');
+const { currentBearer } = require('~/server/services/iamBearerRefresh');
 const { deleteToolCalls } = require('~/models/ToolCall');
 const { deleteUserPrompts } = require('~/models/Prompt');
 const { deleteUserAgents } = require('~/models/Agent');
 const { getLogStores } = require('~/cache');
+
+/**
+ * Adopt the visitor's hanzo.id photo, for a session that already existed.
+ *
+ * The avatar is reconciled at LOGIN (controllers/auth/iamSession), which is the
+ * right place for it and the only place that needs to run for anyone signing in
+ * from here on. It leaves out exactly one group: everybody already signed in
+ * when that shipped, who would have had to sign out and back in to see their own
+ * face. Telling a signed-in person to re-authenticate to collect a photo the
+ * platform already holds is a workaround, not a fix.
+ *
+ * So this reads the SAME userinfo endpoint, through the SAME
+ * `pictureFromUserinfo` — never a second copy of the discovery-and-fetch dance,
+ * because two of those drift and the wrong one is invisible until a photo
+ * silently stops arriving.
+ *
+ * Three things keep it cheap and quiet:
+ *
+ * - It runs ONLY when the record has no avatar. A photo already here — uploaded
+ *   by hand, or adopted on a previous pass — is the visitor's own and is never
+ *   overwritten from upstream.
+ * - It runs at most ONCE per session, marked whether or not a photo came back.
+ *   Without that, an account with no picture at hanzo.id would pay two HTTP
+ *   round-trips on EVERY identity read, forever, to be told "still none".
+ * - It cannot fail the read. `currentBearer` yields null for a local login or a
+ *   lapsed session and `pictureFromUserinfo` resolves to '' on every error, so
+ *   the worst case is the response this function was never called for.
+ *
+ * It runs AFTER the S3 branch above, and that order is load-bearing: that branch
+ * is gated on an avatar EXISTING and treats it as an S3 key to re-sign. Adopting
+ * first would hand it a hanzo.id data URI to refresh as one.
+ */
+async function adoptIamPhoto(req, userData) {
+  if (userData.avatar || req.session?.iamPhotoTried) {
+    return;
+  }
+  try {
+    if (req.session) {
+      req.session.iamPhotoTried = true;
+    }
+    const bearer = await currentBearer(req);
+    if (!bearer) {
+      return;
+    }
+    const picture = await pictureFromUserinfo(bearer);
+    if (!picture) {
+      return;
+    }
+    userData.avatar = picture;
+    await updateUser(userData.id, { avatar: picture });
+  } catch (error) {
+    logger.debug('[getUserController] could not adopt the hanzo.id photo', error);
+  }
+}
 
 const getUserController = async (req, res) => {
   if (req.user?.guest === true) {
@@ -74,6 +130,7 @@ const getUserController = async (req, res) => {
       logger.error('Error getting new S3 URL for avatar:', error);
     }
   }
+  await adoptIamPhoto(req, userData);
   res.status(200).send(userData);
 };
 
