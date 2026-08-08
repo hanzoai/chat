@@ -13,6 +13,17 @@ import './mobile.css';
 import { ApiErrorBoundaryProvider } from './hooks/ApiErrorBoundaryContext';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/contrib/copy-tex.js';
+import { apply as applyAppearance, read as readAppearance } from '@hanzo/appearance/state';
+
+// A person's text size and density, on the document before React renders.
+//
+// The Next apps inline @hanzo/appearance's bootScript() in <head>, which runs
+// before ANY bundle. A Vite SPA has no server-rendered markup to flash — the
+// shell in index.html is a loading screen — so applying here, ahead of the
+// first render, is the same guarantee without hand-copying the script's body
+// into index.html beside the theme one. Two copies of one rule is how they
+// drift, and this file is where the bundle first gets to speak.
+applyAppearance(readAppearance());
 
 const container = document.getElementById('root');
 const root = createRoot(container);
