@@ -9,11 +9,18 @@ jest.mock('openid-client', () => ({
   refreshTokenGrant: jest.fn(),
 }));
 
-jest.mock('@hanzochat/data-provider', () => ({
-  CacheKeys: { ADMIN_OAUTH_EXCHANGE: 'admin-oauth-exchange' },
-}));
+jest.mock('@hanzochat/data-provider', () => jest.requireActual('@hanzochat/data-provider'));
 
+/**
+ * Override the logger, keep the module. Stubbing `@hanzochat/data-schemas` down
+ * to the handful of names this file uses is an enumeration of what the code
+ * under test happens to need today, so it breaks the moment anything in the
+ * require graph reaches for something else — here `db/models.js`, which calls
+ * `createModels(mongoose)` and got `undefined`. That killed this suite at
+ * import: zero tests, and a name in the report that reads like coverage.
+ */
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
@@ -35,6 +42,7 @@ jest.mock('@hanzochat/api', () => {
   }
 
   return {
+    ...jest.requireActual('@hanzochat/api'),
     isEnabled: jest.fn(),
     getAdminPanelUrl: jest.fn(() => 'http://admin.example.com'),
     exchangeAdminCode: jest.fn(),
