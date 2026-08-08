@@ -11,11 +11,13 @@
  */
 
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() },
   SystemCapabilities: {},
 }));
 
 jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   refreshS3FileUrls: jest.fn(),
   resolveUploadErrorMessage: jest.fn(),
   verifyAgentUploadPermission: jest.fn(),

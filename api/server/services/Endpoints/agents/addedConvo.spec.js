@@ -5,6 +5,7 @@ const mockGetAgent = jest.fn();
 const mockGetMCPServerTools = jest.fn();
 
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -14,6 +15,7 @@ jest.mock('@hanzochat/data-schemas', () => ({
 }));
 
 jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   ADDED_AGENT_ID: '__added_agent__',
   initializeAgent: (...args) => mockInitializeAgent(...args),
   validateAgentModel: (...args) => mockValidateAgentModel(...args),

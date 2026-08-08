@@ -1,4 +1,5 @@
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: { error: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('@hanzochat/api', () => ({
