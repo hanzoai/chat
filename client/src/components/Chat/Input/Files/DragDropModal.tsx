@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { OGDialog, OGDialogTemplate } from '@hanzochat/client';
 import {
   Providers,
+  Constants,
   inferMimeType,
   EToolResources,
   EModelEndpoint,
@@ -48,7 +49,18 @@ const DragDropModal = ({ onOptionSelect, setShowModal, files, isVisible }: DragD
    * */
   const capabilities = useAgentCapabilities(agentsConfig?.capabilities ?? defaultAgentCapabilities);
   const { conversationId, agentId, endpoint, endpointType, useResponsesApi } = useDragDropContext();
-  const ephemeralAgent = useAtomValue(ephemeralAgentByConvoId(conversationId ?? ''));
+  /**
+   * `Constants.NEW_CONVO`, not `''`. Every writer of this atom keys a brand-new
+   * conversation as `new` — useDragHelpers and useFileHandling when they turn a
+   * tool resource on, BadgeRowContext, useMCPSelect, useToolToggle. This reader
+   * alone used the empty string, so on a NEW chat it subscribed to an atom
+   * nobody writes: pick "file search" in this very modal and the permission
+   * check right below still read an empty ephemeral agent. It agreed with the
+   * rest only once a conversation had an id, which is why it survived.
+   */
+  const ephemeralAgent = useAtomValue(
+    ephemeralAgentByConvoId(conversationId ?? Constants.NEW_CONVO),
+  );
   const { fileSearchAllowedByAgent, codeAllowedByAgent, provider } = useAgentToolPermissions(
     agentId,
     ephemeralAgent,
