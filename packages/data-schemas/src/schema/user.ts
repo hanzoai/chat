@@ -118,8 +118,34 @@ const userSchema = new Schema<IUser>(
       type: [BackupCodeSchema],
       select: false,
     },
+    /**
+     * LEGACY, and empty. Sessions live in their own collection now
+     * (`schema/session.ts`), which stores a `refreshTokenHash` — never the
+     * token. This array predates that and holds `refreshToken` as a plain
+     * String, so it is the one credential-shaped field on this schema.
+     *
+     * `select: false`, matching `backupCodes` above, for the reason
+     * `backupCodes` has it: a field the default projection returns is a field
+     * every future reader has to remember to strip. This one was not excluded,
+     * and it rode `GET /v1/chat/user` and every `/auth/refresh` into the
+     * browser until `services/publicUser` started projecting. This is the
+     * second lock, at the layer that cannot be bypassed by a new endpoint.
+     *
+     * Measured in production before changing it: 28 users, ZERO with a
+     * non-empty array, zero plaintext tokens at rest, against 130 rows in the
+     * hashed `Session` store. Nothing writes it and nothing reads it — the only
+     * `.refreshToken` reads in the tree are session objects and local
+     * variables, not this field.
+     *
+     * DELETING it is the honest end state and is deliberately not done here:
+     * chat is OSS, and another deployment may still hold rows this fork has
+     * migrated past. Dropping the field would orphan that data silently. The
+     * precondition for removal is a migration that clears it, not a grep of
+     * this repository.
+     */
     refreshToken: {
       type: [SessionSchema],
+      select: false,
     },
     expiresAt: {
       type: Date,
