@@ -16,6 +16,7 @@ const {
   deleteUserKey,
   deleteConvos,
   deleteFiles,
+  deleteAllAgentApiKeys,
   updateUser,
   getUserById,
   findToken,
@@ -23,7 +24,6 @@ const {
 } = require('~/models');
 const {
   ConversationTag,
-  AgentApiKey,
   Transaction,
   MemoryEntry,
   Assistant,
@@ -345,7 +345,22 @@ const deleteUserController = async (req, res) => {
     await deleteFiles(null, user.id); // delete database files in case of orphaned files from previous steps
     await deleteToolCalls(user.id); // delete user tool calls
     await deleteUserAgents(user.id); // delete user agents
-    await AgentApiKey.deleteMany({ user: user._id }); // delete user agent API keys
+    /**
+     * `deleteAllAgentApiKeys`, not `AgentApiKey.deleteMany({ user })` — the
+     * schema's owner field is `userId` and there is no `user` field at all, so
+     * that filter matched nothing while every other line in this chain quietly
+     * did its job around it. Deleting an account left its API key rows, hashed
+     * key material included, in the store forever.
+     *
+     * Bounded, because the key middleware loads the owning user and 401s when
+     * it is gone: an orphaned key cannot authenticate. It is retention, not a
+     * live credential — and the account had asked to be erased.
+     *
+     * Going through the model layer is the actual repair. A filter written at
+     * the call site is a second place that has to know the field name; there is
+     * nowhere to be wrong when the query lives with the schema.
+     */
+    await deleteAllAgentApiKeys(user._id); // delete user agent API keys
     await Assistant.deleteMany({ user: user.id }); // delete user assistants
     await ConversationTag.deleteMany({ user: user.id }); // delete user conversation tags
     await MemoryEntry.deleteMany({ userId: user.id }); // delete user memory entries
