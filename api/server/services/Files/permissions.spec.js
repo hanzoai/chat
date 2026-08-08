@@ -6,15 +6,32 @@ jest.mock('~/server/services/PermissionService', () => ({
   checkPermission: jest.fn(),
 }));
 
-jest.mock('~/models', () => ({
+/**
+ * `~/models/Agent`, not the `~/models` barrel — the subject imports the module
+ * directly, so a barrel mock is a different object that nothing under test ever
+ * calls. Both halves of this file were wrong before: it never loaded at all
+ * (the real `~/models/Agent` pulls in `~/models/Project` → `db/models`, and
+ * this file stubs `@hanzochat/data-schemas` down to a logger, so
+ * `createModels` was undefined), and had it loaded, every
+ * `expect(getAgent).not.toHaveBeenCalled()` would have passed against a mock
+ * the subject cannot reach.
+ *
+ * `getFiles` moves with it, to `~/models/File`: the access check consults file
+ * OWNERSHIP, so the mock has to be the one the subject reads.
+ */
+jest.mock('~/models/Agent', () => ({
   getAgent: jest.fn(),
+}));
+
+jest.mock('~/models/File', () => ({
   getFiles: jest.fn(),
 }));
 
 const { logger } = require('@hanzochat/data-schemas');
 const { Constants, PermissionBits, ResourceType } = require('@hanzochat/data-provider');
 const { checkPermission } = require('~/server/services/PermissionService');
-const { getAgent, getFiles } = require('~/models');
+const { getAgent } = require('~/models/Agent');
+const { getFiles } = require('~/models/File');
 const { filterFilesByAgentAccess, hasAccessToFilesViaAgent } = require('./permissions');
 
 const AUTHOR_ID = 'author-user-id';
@@ -51,27 +68,36 @@ beforeEach(() => {
 
 describe('filterFilesByAgentAccess', () => {
   describe('early returns (no DB calls)', () => {
-    it('should return files unfiltered for ephemeral agentId', async () => {
-      const files = [makeFile('f1', 'other-user')];
+    /**
+     * Upstream returns these UNFILTERED and this fork returns the caller's own
+     * files, which is the one deliberate divergence in this module. `agentId`
+     * comes off the request, so "an id that names no agent means no filtering"
+     * lets any caller opt out by sending one. An id that cannot name a saved
+     * agent grants nothing instead — same skipped lookup, opposite default.
+     */
+    it('grants nothing through an ephemeral agentId, without a lookup', async () => {
+      const mine = makeFile('mine', USER_ID);
+      const theirs = makeFile('f1', 'other-user');
       const result = await filterFilesByAgentAccess({
-        files,
+        files: [mine, theirs],
         userId: USER_ID,
         agentId: Constants.EPHEMERAL_AGENT_ID,
       });
 
-      expect(result).toBe(files);
+      expect(result).toEqual([mine]);
       expect(getAgent).not.toHaveBeenCalled();
     });
 
-    it('should return files unfiltered for non-agent_ prefixed agentId', async () => {
-      const files = [makeFile('f1', 'other-user')];
+    it('grants nothing through an id that is not an agent id, without a lookup', async () => {
+      const mine = makeFile('mine', USER_ID);
+      const theirs = makeFile('f1', 'other-user');
       const result = await filterFilesByAgentAccess({
-        files,
+        files: [mine, theirs],
         userId: USER_ID,
         agentId: 'custom-memory-id',
       });
 
-      expect(result).toBe(files);
+      expect(result).toEqual([mine]);
       expect(getAgent).not.toHaveBeenCalled();
     });
 
@@ -216,6 +242,9 @@ describe('filterFilesByAgentAccess', () => {
     it('should exclude the file even when attached to the agent', async () => {
       const noUserFile = makeFile('attached-1', undefined);
       getAgent.mockResolvedValue(makeAgent());
+      // The stored record is what ownership is read from, so it has to be the
+      // ownerless one too — otherwise this asserts nothing about ownerless files.
+      getFiles.mockResolvedValue([noUserFile]);
       checkPermission.mockResolvedValue(true);
 
       const result = await filterFilesByAgentAccess({

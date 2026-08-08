@@ -1,7 +1,8 @@
 const { logger } = require('@hanzochat/data-schemas');
-const { PermissionBits, ResourceType } = require('@hanzochat/data-provider');
+const { Constants, PermissionBits, ResourceType } = require('@hanzochat/data-provider');
 const { checkPermission } = require('~/server/services/PermissionService');
 const { getAgent } = require('~/models/Agent');
+const { getFiles } = require('~/models/File');
 
 /**
  * Checks if a user has access to multiple files through a shared agent (batch operation)
@@ -14,10 +15,7 @@ const { getAgent } = require('~/models/Agent');
  * @returns {Promise<Map<string, boolean>>} Map of fileId to access status
  */
 const hasAccessToFilesViaAgent = async ({ userId, role, fileIds, agentId, isDelete }) => {
-  const accessMap = new Map();
-
-  // Initialize all files as no access
-  fileIds.forEach((fileId) => accessMap.set(fileId, false));
+  const accessMap = new Map(fileIds.map((fileId) => [fileId, false]));
 
   try {
     const agent = await getAgent({ id: agentId });
@@ -26,57 +24,73 @@ const hasAccessToFilesViaAgent = async ({ userId, role, fileIds, agentId, isDele
       return accessMap;
     }
 
-    // Check if user is the author - if so, grant access to all files
-    if (agent.author.toString() === userId.toString()) {
-      fileIds.forEach((fileId) => accessMap.set(fileId, true));
+    /**
+     * Only files this agent carries are ever in play, and asking that first is
+     * both cheaper and safer than asking it last.
+     *
+     * The author branch used to sit above this and read
+     * `fileIds.forEach((id) => accessMap.set(id, true))` — every id the CALLER
+     * named, attached or not, owned or not. Since the caller names the ids and
+     * anyone can create an agent, that granted the author of any agent access
+     * to any file in the system by id. On `DELETE /v1/chat/files` it also
+     * returned before the `isDelete` EDIT check, so the same request deleted
+     * the file.
+     */
+    const attached = new Set();
+    for (const resource of Object.values(agent.tool_resources ?? {})) {
+      for (const fileId of resource?.file_ids ?? []) {
+        attached.add(fileId);
+      }
+    }
+    const candidates = fileIds.filter((fileId) => attached.has(fileId));
+    if (candidates.length === 0) {
       return accessMap;
     }
 
-    // Check if user has at least VIEW permission on the agent
-    const hasViewPermission = await checkPermission({
-      userId,
-      role,
-      resourceType: ResourceType.AGENT,
-      resourceId: agent._id,
-      requiredPermission: PermissionBits.VIEW,
-    });
-
-    if (!hasViewPermission) {
-      return accessMap;
-    }
-
-    if (isDelete) {
-      // Check if user has EDIT permission (which would indicate collaborative access)
-      const hasEditPermission = await checkPermission({
+    if (agent.author?.toString() !== userId.toString()) {
+      const canView = await checkPermission({
         userId,
         role,
         resourceType: ResourceType.AGENT,
         resourceId: agent._id,
-        requiredPermission: PermissionBits.EDIT,
+        requiredPermission: PermissionBits.VIEW,
       });
 
-      // If user only has VIEW permission, they can't access files
-      // Only users with EDIT permission or higher can access agent files
-      if (!hasEditPermission) {
+      if (!canView) {
         return accessMap;
       }
-    }
 
-    const attachedFileIds = new Set();
-    if (agent.tool_resources) {
-      for (const [_resourceType, resource] of Object.entries(agent.tool_resources)) {
-        if (resource?.file_ids && Array.isArray(resource.file_ids)) {
-          resource.file_ids.forEach((fileId) => attachedFileIds.add(fileId));
+      if (isDelete) {
+        /** Reading a shared agent's files is VIEW; removing them is EDIT. */
+        const canEdit = await checkPermission({
+          userId,
+          role,
+          resourceType: ResourceType.AGENT,
+          resourceId: agent._id,
+          requiredPermission: PermissionBits.EDIT,
+        });
+
+        if (!canEdit) {
+          return accessMap;
         }
       }
     }
 
-    // Grant access only to files that are attached to this agent
-    fileIds.forEach((fileId) => {
-      if (attachedFileIds.has(fileId)) {
-        accessMap.set(fileId, true);
+    /**
+     * An agent lends out its AUTHOR's files and nothing else. `tool_resources`
+     * is written by whoever edits the agent, so without this an id is a claim
+     * rather than a fact: attach a file you do not own and the agent hands it
+     * to you. A file with no owner recorded matches nobody and stays denied.
+     */
+    const wanted = new Set(candidates);
+    const files = await getFiles({ file_id: { $in: candidates } });
+    for (const file of files) {
+      // `wanted` again rather than trusting the filter to have been applied:
+      // the store answers the query, and a grant should not rest on that.
+      if (wanted.has(file.file_id) && file.user?.toString() === agent.author?.toString()) {
+        accessMap.set(file.file_id, true);
       }
-    });
+    }
 
     return accessMap;
   } catch (error) {
@@ -112,6 +126,20 @@ const filterFilesByAgentAccess = async ({ files, userId, role, agentId }) => {
   }
 
   if (filesToCheck.length === 0) {
+    return ownedFiles;
+  }
+
+  /**
+   * An id that cannot name a saved agent grants nothing, so there is no lookup
+   * to make — the ephemeral agent is the plain-chat path, where a file is
+   * reachable by owning it and by nothing else.
+   *
+   * Upstream returns `files` UNFILTERED here, and that is the one place this
+   * fork deliberately differs. `agentId` arrives from the request, so returning
+   * everything for an id of the wrong shape means any caller can skip the
+   * filter by naming one. Same saved round trip, opposite default.
+   */
+  if (agentId === Constants.EPHEMERAL_AGENT_ID || !agentId.startsWith('agent_')) {
     return ownedFiles;
   }
 
