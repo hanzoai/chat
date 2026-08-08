@@ -49,6 +49,19 @@ export interface Backdrop {
   playlist: Link[];
   /** Repeat when the end is reached — the single video, or the whole list. */
   loop: boolean;
+  /**
+   * Play the backdrop's audio. OFF by default, and that default is the point: a
+   * page that starts making noise on its own is a page people close, and this
+   * one is scenery behind someone's reading.
+   *
+   * It is not a URL parameter. The embed must start MUTED or it does not start
+   * at all — every current browser refuses autoplay with sound — so `mute=1`
+   * stays in the player params and the sound is turned on afterwards, through
+   * the API, once the player reports it is actually playing. Turning this on IS
+   * the gesture that permits it: a setting a person just toggled is a user
+   * activation, which is the thing the autoplay policy asks for.
+   */
+  sound: boolean;
 }
 
 /** How long a live stream holds the canvas before the list moves on. A Twitch
@@ -310,6 +323,9 @@ export function merge(current: Backdrop, change: unknown): Backdrop {
   }
   if (typeof given.loop === 'boolean') {
     next.loop = given.loop;
+  }
+  if (typeof given.sound === 'boolean') {
+    next.sound = given.sound;
   }
   const photo = picture(given.photo);
   if (photo) {

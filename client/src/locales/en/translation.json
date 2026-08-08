@@ -659,6 +659,8 @@
   "com_nav_backdrop_empty": "No links yet. Add a YouTube or Twitch link to play it behind the chat.",
   "com_nav_backdrop_loop": "Loop",
   "com_nav_backdrop_loop_info": "Start the list again when it reaches the end. Off plays through once and stops.",
+  "com_nav_backdrop_sound": "Sound",
+  "com_nav_backdrop_sound_info": "Play the video\u2019s audio. It always starts muted \u2014 browsers refuse to autoplay sound \u2014 and unmutes once it is running. YouTube only; Twitch stays silent.",
   "com_nav_backdrop_blocked": "Can\u2019t play here",
   "com_nav_backdrop_signin": "Only YouTube and Twitch can be embedded. Members-only and age-restricted streams play only if you are already signed in to that provider in this browser \u2014 we never ask for those passwords.",
   "com_nav_sites": "Sites",

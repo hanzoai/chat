@@ -20,6 +20,9 @@ const DEFAULT_BACKDROP: Backdrop = {
   video: readStorage('backdropVideo', 'https://www.youtube.com/watch?v=6lZ3CookYNg'),
   playlist: [],
   loop: true,
+  // Silent unless somebody asks. Nobody has ever wanted a browser tab to start
+  // talking to them, and this one is wallpaper.
+  sound: false,
 };
 
 /**
@@ -92,6 +95,11 @@ const localStorageAtoms = {
   backdropLoop: atom(
     (get) => get(backdrop).loop,
     (get, set, loop: boolean) => set(backdrop, { ...get(backdrop), loop }),
+  ),
+  /** The same lens onto `backdrop.sound`. */
+  backdropSound: atom(
+    (get) => get(backdrop).sound,
+    (get, set, sound: boolean) => set(backdrop, { ...get(backdrop), sound }),
   ),
   /**
    * A personal sign-off under the account row in the sidebar foot — the

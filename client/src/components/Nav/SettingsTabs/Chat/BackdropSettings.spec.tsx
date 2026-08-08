@@ -22,6 +22,7 @@ const config = (over: Partial<Config> = {}): Config => ({
   video: '',
   playlist: [],
   loop: true,
+  sound: false,
   ...over,
 });
 
@@ -120,6 +121,26 @@ describe('BackdropSettings', () => {
     const { read } = open({ source: 'playlist', loop: true });
     fireEvent.click(screen.getByTestId('backdropLoop'));
     expect(read().loop).toBe(false);
+  });
+
+  describe('sound', () => {
+    it('toggles through to the single stored configuration', () => {
+      const { read } = open({ source: 'video', sound: false });
+      fireEvent.click(screen.getByTestId('backdropSound'));
+      expect(read().sound).toBe(true);
+    });
+
+    // A switch that cannot change anything is worse than no switch: it says
+    // the setting applies here when it does not.
+    it.each([
+      ['video', true],
+      ['playlist', true],
+      ['photo', false],
+      ['off', false],
+    ] as const)('is offered for %s: %s', (source, offered) => {
+      open({ source });
+      expect(screen.queryByTestId('backdropSound') !== null).toBe(offered);
+    });
   });
 
   describe('a link nothing can embed', () => {

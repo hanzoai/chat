@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { Provider, createStore } from 'jotai';
 import type { Backdrop as Config } from '~/utils/backdrop';
 import Backdrop from './Backdrop';
@@ -12,6 +12,7 @@ const config = (over: Partial<Config> = {}): Config => ({
   video: '',
   playlist: [],
   loop: true,
+  sound: false,
   ...over,
 });
 
@@ -286,6 +287,99 @@ describe('Backdrop', () => {
     it('exposes no accessible content of its own', () => {
       paint({ source: 'video', video: 'https://youtu.be/6lZ3CookYNg' });
       expect(screen.queryAllByRole('img')).toEqual([]);
+    });
+  });
+  /**
+   * Sound is a COMMAND, not a URL parameter — `mute=1` has to stay in the
+   * player params or the embed is never allowed to start at all. So the only
+   * honest test is that the right command reaches the player, and only once it
+   * has reported itself playing: commands sent before that are dropped, so an
+   * unmute that races the report is an unmute that silently does nothing.
+   */
+  describe('sound', () => {
+    /**
+     * The player's window is stubbed BEFORE anything renders, because the
+     * command under test can be sent during mount — a spy attached afterwards
+     * would miss exactly the case that matters and pass while the gate is gone.
+     * (Measured: with the spy installed after `render`, removing the gate
+     * entirely still left every test green.)
+     */
+    let sent: jest.Mock;
+    const own = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'contentWindow');
+
+    beforeEach(() => {
+      sent = jest.fn();
+      Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
+        configurable: true,
+        get: () => ({ postMessage: sent }),
+      });
+    });
+
+    afterEach(() => {
+      if (own) {
+        Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', own);
+      }
+    });
+
+    /** Every command name the player has been sent, in order. */
+    const commands = () =>
+      sent.mock.calls
+        .map(([message]) => {
+          try {
+            return JSON.parse(String(message)).func as string;
+          } catch {
+            return '';
+          }
+        })
+        .filter(Boolean);
+
+    /** Answer as the player would: report a state, from YouTube's own origin. */
+    function report(playerState: number) {
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            origin: 'https://www.youtube.com',
+            data: JSON.stringify({ info: { playerState } }),
+          }),
+        );
+      });
+    }
+
+    const PLAYING = 1;
+    const PAUSED = 2;
+    const video = { source: 'video' as const, video: 'https://youtu.be/6lZ3CookYNg' };
+
+    it('unmutes the player once it is playing', () => {
+      paint({ ...video, sound: true });
+      report(PLAYING);
+      expect(commands()).toContain('unMute');
+    });
+
+    it('leaves it muted when sound is off', () => {
+      paint(video);
+      report(PLAYING);
+      expect(commands()).toContain('mute');
+      expect(commands()).not.toContain('unMute');
+    });
+
+    it('sends no unmute before the player reports itself playing', () => {
+      paint({ ...video, sound: true });
+      report(PAUSED);
+      expect(commands()).not.toContain('unMute');
+    });
+
+    it('follows the switch back off while the video is on screen', () => {
+      const { jotai } = paint({ ...video, sound: true });
+      report(PLAYING);
+      act(() => {
+        jotai.set(store.backdrop, config({ ...video, sound: false }));
+      });
+      expect(commands().at(-1)).toBe('mute');
+    });
+
+    it('keeps mute=1 in the player URL — sound never rides the address', () => {
+      const { container } = paint({ ...video, sound: true });
+      expect(frames(container)[0]).toContain('mute=1');
     });
   });
 });
