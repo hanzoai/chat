@@ -19,6 +19,7 @@ const {
 } = require('~/models');
 const { getGraphApiToken } = require('~/server/services/GraphTokenService');
 const { getOpenIdConfig } = require('~/strategies');
+const { publicUser } = require('~/server/services/publicUser');
 
 const registrationController = async (req, res) => {
   try {
@@ -128,7 +129,7 @@ const refreshController = async (req, res) => {
         expires_at: claims.exp,
       };
 
-      return res.status(200).send({ token, user });
+      return res.status(200).send({ token, user: publicUser(user) });
     } catch (error) {
       logger.error('[refreshController] OpenID token refresh error', error);
       return res.status(403).send('Invalid OpenID refresh token');
@@ -153,7 +154,7 @@ const refreshController = async (req, res) => {
 
     if (process.env.NODE_ENV === 'CI') {
       const token = await setAuthTokens(userId, res);
-      return res.status(200).send({ token, user });
+      return res.status(200).send({ token, user: publicUser(user) });
     }
 
     /** Session with the hashed refresh token */
@@ -168,7 +169,7 @@ const refreshController = async (req, res) => {
     if (session && session.expiration > new Date()) {
       const token = await setAuthTokens(userId, res, session);
 
-      res.status(200).send({ token, user });
+      res.status(200).send({ token, user: publicUser(user) });
     } else if (req?.query?.retry) {
       // Retrying from a refresh token request that failed (401)
       res.status(403).send('No session found');

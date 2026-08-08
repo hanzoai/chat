@@ -41,6 +41,7 @@ const { needsRefresh, getNewS3URL } = require('~/server/services/Files/S3/crud')
 const { processDeleteRequest } = require('~/server/services/Files/process');
 const { getAppConfig } = require('~/server/services/Config');
 const { buildGuestUser } = require('~/server/services/guestConfig');
+const { publicUser } = require('~/server/services/publicUser');
 const { pictureFromUserinfo } = require('~/server/controllers/auth/iamSession');
 const { currentBearer } = require('~/server/services/iamBearerRefresh');
 const { deleteToolCalls } = require('~/models/ToolCall');
@@ -108,14 +109,14 @@ const getUserController = async (req, res) => {
   }
   const appConfig = await getAppConfig({ role: req.user?.role });
   /** @type {IUser} */
-  const userData = req.user.toObject != null ? req.user.toObject() : { ...req.user };
+  const raw = req.user.toObject != null ? req.user.toObject() : { ...req.user };
   /**
-   * These fields should not exist due to secure field selection, but deletion
-   * is done in case of alternate database incompatibility with Mongo API
-   * */
-  delete userData.password;
-  delete userData.totpSecret;
-  delete userData.backupCodes;
+   * ONE projection, at the boundary. This was three `delete`s against a
+   * deny-list the jwt strategy also spells (`-password -__v -totpSecret
+   * -backupCodes`), which between them named four fields and shipped the other
+   * twenty-six — `refreshToken` among them. See services/publicUser.
+   */
+  const userData = publicUser(raw);
   if (appConfig.fileStrategy === FileSources.s3 && userData.avatar) {
     const avatarNeedsRefresh = needsRefresh(userData.avatar, 3600);
     if (!avatarNeedsRefresh) {
