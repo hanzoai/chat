@@ -30,6 +30,69 @@ function claimStr(value) {
   return typeof value === 'string' ? value : '';
 }
 
+/**
+ * The profile photo, from the ONE place hanzo.id actually publishes it.
+ *
+ * It is NOT in the id_token. Measured against production: a live token carries
+ * iss/sub/aud/exp/nbf/iat/jti/scope/owner/organization/email/name/
+ * preferred_username/displayName/billing_account/azp/tokenType/orgs — and no
+ * `picture`. IAM's userinfo endpoint DOES publish it
+ * (`internal/oidc/userinfo.go`: `putIf(info, "picture", u.Avatar)`), and its
+ * discovery document advertises `picture` in `claims_supported`, which is what
+ * made the token look like the place to read it. This file did exactly that and
+ * got '' for every user, so hanzo.chat drew a monogram for people who have a
+ * photo — the account it was measured on has one, stored in IAM as a
+ * `data:image/jpeg;base64,…` URI.
+ *
+ * The token is the wrong home for it regardless of the bug: the avatar is an
+ * inline data URI, and a JWT that carries one is a JWT nobody can put in a
+ * cookie. Large, optional profile data belongs at userinfo — which is where the
+ * server-initiated `openidStrategy` has always read it from.
+ *
+ * Best-effort by construction: a login must never fail because a photo could
+ * not be fetched, so every error resolves to '' and the caller falls back to the
+ * initials it already draws.
+ */
+async function pictureFromUserinfo(accessToken) {
+  const issuer = (process.env.OPENID_ISSUER || '').replace(/\/+$/, '');
+  if (!accessToken || !issuer) {
+    return '';
+  }
+  try {
+    // ASK DISCOVERY WHERE USERINFO IS. Guessing the path costs a silent failure:
+    // `/v1/iam/userinfo` looks right and 404s — the real endpoint is
+    // `/v1/iam/oauth/userinfo`. Since every error here resolves to '' so a login
+    // can never fail over a photo, a wrong path would have been invisible
+    // forever, which is the worst way to be wrong. The issuer publishes the
+    // answer, so read it instead of hardcoding a second guess.
+    const meta = await fetch(`${issuer}/.well-known/openid-configuration`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!meta.ok) {
+      logger.debug(`[iamSession] discovery ${meta.status} — no photo this login`);
+      return '';
+    }
+    const endpoint = claimStr((await meta.json())?.userinfo_endpoint);
+    if (!endpoint) {
+      logger.debug('[iamSession] issuer publishes no userinfo_endpoint — no photo this login');
+      return '';
+    }
+    const res = await fetch(endpoint, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      logger.debug(`[iamSession] userinfo ${res.status} — no photo this login`);
+      return '';
+    }
+    const info = await res.json();
+    return claimStr(info?.picture);
+  } catch (err) {
+    logger.debug('[iamSession] userinfo unreachable — no photo this login:', err?.message || err);
+    return '';
+  }
+}
+
 /** Best-effort display name from OIDC claims. */
 function fullNameFromClaims(claims) {
   if (claimStr(claims.name)) {
@@ -48,9 +111,10 @@ function fullNameFromClaims(claims) {
  * migration path, minus the userinfo/avatar enrichment (not needed for login/OBO;
  * cloud derives the tenant org from the forwarded id_token's `owner` claim).
  * @param {Record<string, any>} claims - verified IAM token claims
+ * @param {string} [picture] - the photo from userinfo, '' when there is none
  * @returns {Promise<import('@hanzochat/data-schemas').IUser>}
  */
-async function reconcileUser(claims) {
+async function reconcileUser(claims, picture = '') {
   const openidId = claimStr(claims.sub);
   const email = claimStr(claims.email);
   const { user: found, error } = await findOpenIDUser({
@@ -71,11 +135,15 @@ async function reconcileUser(claims) {
     claimStr(claims.username) ||
     (email ? email.split('@')[0] : openidId);
   const name = fullNameFromClaims(claims);
-  // The profile photo. hanzo.id issues it as the `picture` claim; stored as-is
-  // so the account menu can render it (resolveIdentity reads `avatar`). A
-  // manually-set avatar (`manual=true`) is the user's own choice and is never
-  // overwritten by the one from the token.
-  const avatar = claimStr(claims.picture);
+  // The profile photo, stored as-is so the account menu can render it
+  // (resolveIdentity reads `avatar`). It comes from USERINFO — see
+  // pictureFromUserinfo above for why the id_token is not the place, and was
+  // never carrying it. `claims.picture` stays as the fallback so this keeps
+  // working unchanged if IAM ever does put a (URL-shaped) photo in the token.
+  //
+  // A manually-set avatar (`manual=true`) is the user's own choice and is never
+  // overwritten by the one from the identity provider.
+  const avatar = picture || claimStr(claims.picture);
   const organization =
     claimStr(claims.owner) || claimStr(claims.organization) || claimStr(claims.org) || '';
   const project = claimStr(claims.project) || '';
@@ -162,7 +230,12 @@ async function iamSessionController(req, res) {
       return res.status(401).json({ message: 'IAM token missing subject' });
     }
 
-    const user = await reconcileUser(claims);
+    // The photo is a userinfo read, so it needs the ACCESS token — an id_token is
+    // an identity assertion, not a credential the userinfo endpoint accepts. When
+    // the SPA sent only an id_token there is nothing to ask with, and the login
+    // proceeds without a photo rather than failing.
+    const picture = await pictureFromUserinfo(accessToken);
+    const user = await reconcileUser(claims, picture);
     if (!user?._id) {
       return res.status(401).json({ message: 'user reconciliation failed' });
     }

@@ -339,6 +339,29 @@
   }
 }
 
+/* The composer is ONE surface, and the field inside it is not a field.
+   @hanzo/ui's theme.css lifts a hovered control a rung —
+   `:where(input,select,textarea):hover:not(:focus-visible):not(:disabled)
+   { background: var(--surface-3) }` — which is right for a standalone bordered
+   input and wrong here: the textarea is the transparent INTERIOR of a composite
+   control, so lifting it paints an opaque #262626 block over the composer's
+   translucent panel and the box reads as two stacked surfaces, lighter on top.
+   Measured on hanzo.chat: the textarea alone goes rgba(0,0,0,0) -> rgb(38,38,38)
+   on hover while every sibling stays transparent.
+
+   The composer already asks for transparency (`bg-transparent`, 0,1,0) and
+   loses. That is a specificity trap worth naming, because the upstream rule was
+   written to be overridable and is not: `:where()` contributes 0, but the
+   `:hover` and the two `:not()`s sit OUTSIDE it and each add a class-level rung,
+   so the "zero-specificity default" is really (0,3,0) and no single class can
+   beat it. The upstream repair is to wrap the whole compound in `:where()`;
+   chat cannot take it, because it pins @hanzo/ui at <=8.0.51 (>=8.0.52 fails the
+   jsdom theme parse — see LLM.md), so the override lives here and is scoped to
+   the one control rather than switching the default off for every field. */
+#prompt-textarea:hover:not(:focus-visible):not(:disabled) {
+  background: transparent;
+}
+
 /* The composer mic while a spoken conversation is live (see Chat/Input/Mic.tsx):
    the glyph itself flashes white–green; hover overrides it to solid red. */
 @keyframes hzMicFlash {

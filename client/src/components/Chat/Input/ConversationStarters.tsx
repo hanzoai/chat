@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
-import { AppWindow, ArrowRight } from 'lucide-react';
+import { AppWindow } from 'lucide-react';
 import { EModelEndpoint, Constants, replaceSpecialVars } from '@hanzochat/data-provider';
 import {
   useChatContext,
@@ -161,24 +161,12 @@ const ConversationStarters = () => {
         </button>
       )}
       </div>
-      {/* The funnel's endpoint: the chips above seed a conversation, this
-          seeds an APP. A text-forward action line, not a fifth pill, so it
-          reads as the one thing to do next; same builder handoff as the
-          "Build an app" chip, carrying the composer's current text along. */}
-      {isDefault && (
-        <div className="mt-3 flex justify-center px-4">
-          <button
-            onClick={openBuilder}
-            className="group flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
-          >
-            {localize('com_ui_ship_first_app')}
-            <ArrowRight
-              className="size-4 transition-transform group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </button>
-        </div>
-      )}
+      {/* No closing pitch under the chips. A "Ship your first app today" action
+          line used to sit here, and it went to the SAME builder the "Build an
+          app" chip goes to — one destination wearing two controls, stacked one
+          above the other. The chip is the one that stays: it sits with its
+          siblings, so the row reads as a set of things you can do rather than a
+          set plus an advertisement for one of them. */}
     </>
   );
 };
