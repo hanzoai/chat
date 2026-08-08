@@ -923,7 +923,6 @@
   "com_ui_build_app_preview": "App preview",
   "com_ui_build_app_preview_hint": "Describe your app in the chat, then open it in the full hanzo.app builder to generate and preview it.",
   "com_ui_build_app_preview_placeholder": "Your app preview will render here",
-  "com_ui_ship_first_app": "Ship your first app today",
   "com_ui_by_author": "by {{0}}",
   "com_ui_callback_url": "Callback URL",
   "com_ui_cancel": "Cancel",

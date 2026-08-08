@@ -120,11 +120,24 @@ function AccountSettings() {
   const expired = balanceQuery.data?.expiresAt
     ? new Date(balanceQuery.data.expiresAt) < new Date()
     : false;
+  const usd = expired ? 0 : Number(credits ?? 0) / 1000000;
   const balance =
     balanceOn(startupConfig) && credits != null
       ? {
-          amountUsd: expired ? 0 : Number(credits) / 1000000,
-          label: localize('com_nav_balance'),
+          amountUsd: usd,
+          // SAY WHICH ZERO THIS IS. The amount alone cannot: a spent balance and
+          // a lapsed trial both read "$0.00", and only one of them is about the
+          // clock. This menu used to render the bare number, so a reader whose
+          // grant had expired saw a plain zero and no reason for it — while the
+          // Balance tab, on the same data, said "Credits expired". One fact, two
+          // answers, and the one on the sidebar was the one people look at.
+          //
+          // `state` is the shared control's own vocabulary (ok | low | empty) —
+          // it was simply never passed. `low` is under $2, matching the
+          // threshold the Balance tab already warns at, so the two surfaces
+          // change together instead of drifting.
+          state: expired || usd <= 0 ? ('empty' as const) : usd < 2 ? ('low' as const) : ('ok' as const),
+          label: expired ? localize('com_nav_balance') + ' · expired' : localize('com_nav_balance'),
           topUpLabel: 'Add Funds',
           topUpUrl: 'https://billing.hanzo.ai',
         }
