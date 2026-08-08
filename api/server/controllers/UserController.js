@@ -371,7 +371,50 @@ const resendVerificationController = async (req, res) => {
 };
 
 /**
- * OAuth MCP specific uninstall logic
+ * Forget everything this deployment stores about one user's OAuth session with
+ * one MCP server: the tokens and the flow state. Never throws — it is the last
+ * step of an uninstall the user already asked for, and a failure to tidy up is
+ * not a reason to fail it.
+ */
+const clearStoredMCPOAuthState = async (userId, serverName) => {
+  try {
+    await MCPTokenStorage.deleteUserTokens({
+      userId,
+      serverName,
+      deleteToken: async (filter) => {
+        await Token.deleteOne(filter);
+      },
+    });
+  } catch (error) {
+    logger.warn(
+      `[clearStoredMCPOAuthState] Failed to delete MCP OAuth tokens for ${serverName}:`,
+      error,
+    );
+  }
+
+  try {
+    const flowManager = getFlowStateManager(getLogStores(CacheKeys.FLOWS));
+    const flowId = MCPOAuthHandler.generateFlowId(userId, serverName);
+    await flowManager.deleteFlow(flowId, 'mcp_get_tokens');
+    await flowManager.deleteFlow(flowId, 'mcp_oauth');
+  } catch (error) {
+    logger.warn(
+      `[clearStoredMCPOAuthState] Failed to clear MCP OAuth flow state for ${serverName}:`,
+      error,
+    );
+  }
+};
+
+/**
+ * Uninstalling an MCP plugin: revoke its OAuth tokens at the provider, then
+ * forget them here.
+ *
+ * Revocation is best-effort and clearing is not. Every path that could not
+ * revoke — the server no longer declares OAuth, the client metadata is gone,
+ * the tokens will not decrypt — used to RETURN, leaving the stored tokens
+ * behind for a plugin the user had just removed. Reconfiguring a server without
+ * OAuth was enough to strand them permanently. So the local state goes in all
+ * cases, and a failure upstream only costs the revocation.
  */
 const maybeUninstallOAuthMCP = async (userId, pluginKey, appConfig) => {
   if (!pluginKey.startsWith(Constants.mcp_prefix)) {
@@ -385,27 +428,42 @@ const maybeUninstallOAuthMCP = async (userId, pluginKey, appConfig) => {
     appConfig?.mcpServers?.[serverName];
   const oauthServers = await getMCPServersRegistry().getOAuthServers(userId);
   if (!oauthServers.has(serverName)) {
-    // this server does not use OAuth, so nothing to do here as well
-    return;
+    return clearStoredMCPOAuthState(userId, serverName);
   }
 
   // 1. get client info used for revocation (client id, secret)
-  const clientTokenData = await MCPTokenStorage.getClientInfoAndMetadata({
-    userId,
-    serverName,
-    findToken,
-  });
+  let clientTokenData = null;
+  try {
+    clientTokenData = await MCPTokenStorage.getClientInfoAndMetadata({
+      userId,
+      serverName,
+      findToken,
+    });
+  } catch (error) {
+    logger.warn(
+      `[maybeUninstallOAuthMCP] Unable to load OAuth client metadata for ${serverName}; clearing local MCP OAuth state only.`,
+      error,
+    );
+  }
   if (clientTokenData == null) {
-    return;
+    return clearStoredMCPOAuthState(userId, serverName);
   }
   const { clientInfo, clientMetadata } = clientTokenData;
 
   // 2. get decrypted tokens before deletion
-  const tokens = await MCPTokenStorage.getTokens({
-    userId,
-    serverName,
-    findToken,
-  });
+  let tokens = null;
+  try {
+    tokens = await MCPTokenStorage.getTokens({
+      userId,
+      serverName,
+      findToken,
+    });
+  } catch (error) {
+    logger.warn(
+      `[maybeUninstallOAuthMCP] Unable to load OAuth tokens for ${serverName}; clearing local token state.`,
+      error,
+    );
+  }
 
   // 3. revoke OAuth tokens at the provider
   const revocationEndpoint =
@@ -455,21 +513,8 @@ const maybeUninstallOAuthMCP = async (userId, pluginKey, appConfig) => {
     }
   }
 
-  // 4. delete tokens from the DB after revocation attempts
-  await MCPTokenStorage.deleteUserTokens({
-    userId,
-    serverName,
-    deleteToken: async (filter) => {
-      await Token.deleteOne(filter);
-    },
-  });
-
-  // 5. clear the flow state for the OAuth tokens
-  const flowsCache = getLogStores(CacheKeys.FLOWS);
-  const flowManager = getFlowStateManager(flowsCache);
-  const flowId = MCPOAuthHandler.generateFlowId(userId, serverName);
-  await flowManager.deleteFlow(flowId, 'mcp_get_tokens');
-  await flowManager.deleteFlow(flowId, 'mcp_oauth');
+  // 4. forget the tokens and the flow state, whether or not revocation ran
+  await clearStoredMCPOAuthState(userId, serverName);
 };
 
 module.exports = {
@@ -478,6 +523,9 @@ module.exports = {
   acceptTermsController,
   deleteUserController,
   verifyEmailController,
+  /** Not a route — uninstalling an MCP plugin revokes its OAuth tokens at the
+   * provider, and `maybeUninstallOAuthMCP.spec.js` tests that directly. */
+  maybeUninstallOAuthMCP,
   updateUserPluginsController,
   resendVerificationController,
 };
