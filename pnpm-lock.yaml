@@ -393,8 +393,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       '@hanzo/appearance':
-        specifier: ^0.1.0
-        version: 0.1.0(react@19.2.4)
+        specifier: ^0.1.2
+        version: 0.1.2(react@19.2.4)
       '@hanzo/design':
         specifier: ^0.4.12
         version: 0.4.12
@@ -3560,8 +3560,8 @@ packages:
     resolution: {integrity: sha512-nHj5rgSu5WD1fttfWv65HQ3WG65iztLFrwjb5B5BKSVwLVt7ZSLbioOZ6Of7GnFRG4PxtD0Sy961NnEA2FkaYA==}
     engines: {node: '>=18'}
 
-  '@hanzo/appearance@0.1.0':
-    resolution: {integrity: sha512-lN38BpvNgVMz4SZdUq1EKxiY8ohzP1rPDuVZFabnFEE/XL8u11bSx1uAUOiN7K0UOT8Zq8NRIkY/kTMKCj81Ow==}
+  '@hanzo/appearance@0.1.2':
+    resolution: {integrity: sha512-Oc67xzdurgX0dTz4GM5IBGjKD7mOOeVfDU6VvjTABU6hjT6rKfwrEPbSaVNCVK1ZGyJ5qdHHzwYmjFU1GTmLpw==}
     peerDependencies:
       react: '>=19'
 
@@ -17697,7 +17697,7 @@ snapshots:
 
   '@hanzo/ai@0.3.0': {}
 
-  '@hanzo/appearance@0.1.0(react@19.2.4)':
+  '@hanzo/appearance@0.1.2(react@19.2.4)':
     dependencies:
       '@hanzo/design': 0.4.12
       react: 19.2.4
