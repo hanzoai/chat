@@ -22,7 +22,7 @@
  * paint — see utils/backdrop for why that is a fact about Netflix and not a
  * gap here — so it is skipped, and the settings panel is where it is labelled.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import type { Backdrop as Config, Link } from '~/utils/backdrop';
 import { DWELL, playable, videoId, youtube, twitch } from '~/utils/backdrop';
@@ -93,8 +93,10 @@ function start(event: React.SyntheticEvent<HTMLIFrameElement>) {
 /** A YouTube player. Revealed on a real `playing` report; calls `onEnd` when
  *  the player says the video finished, which is how a mixed list advances. */
 function Video({ src, onEnd }: { src: string; onEnd?: () => void }) {
+  const sound = useAtomValue(store.backdrop).sound;
   const [playing, setPlaying] = useState(false);
   const [ramped, setRamped] = useState(false);
+  const frame = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
     const hear = (event: MessageEvent) => {
@@ -120,8 +122,36 @@ function Video({ src, onEnd }: { src: string; onEnd?: () => void }) {
     };
   }, [onEnd]);
 
+  /**
+   * Sound is turned on AFTER the player is playing, never in the URL.
+   *
+   * `mute=1` is what lets the embed start at all — autoplay with sound is
+   * refused by every current browser — so unmuting is a command, and it is only
+   * worth sending once the player has told us it is running: commands sent
+   * before its scripts boot are dropped, which is the same reason `start` above
+   * kicks three times. Gating on `playing` means this rides that report instead
+   * of racing it.
+   *
+   * It also follows the toggle both ways while the video is on screen, so
+   * turning the sound back off silences it now rather than at the next reload —
+   * which is the one direction a person is likely to be in a hurry about.
+   */
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    const post = (message: object) =>
+      frame.current?.contentWindow?.postMessage(JSON.stringify(message), ORIGIN);
+    post({ event: 'command', func: sound ? 'unMute' : 'mute', args: [] });
+    if (sound) {
+      // Wallpaper, not a concert. Loud enough to hear under a conversation.
+      post({ event: 'command', func: 'setVolume', args: [35] });
+    }
+  }, [playing, sound]);
+
   return (
     <iframe
+      ref={frame}
       src={src}
       title=""
       tabIndex={-1}

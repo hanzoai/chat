@@ -294,6 +294,18 @@ export default function BackdropSettings() {
         </div>
       )}
 
+      {/* Sound belongs to whichever source can carry it, so it sits outside both
+          blocks above rather than being written twice. A photo is silent and
+          `off` plays nothing, so neither offers a switch that would do nothing. */}
+      {(config.source === 'video' || config.source === 'playlist') && (
+        <ToggleSwitch
+          stateAtom={store.backdropSound}
+          localizationKey="com_nav_backdrop_sound"
+          switchId="backdropSound"
+          hoverCardText="com_nav_backdrop_sound_info"
+        />
+      )}
+
       {config.source !== 'off' && (
         <p className="text-xs text-text-secondary">{localize('com_nav_backdrop_signin')}</p>
       )}

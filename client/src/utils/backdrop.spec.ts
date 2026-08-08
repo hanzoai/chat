@@ -21,6 +21,7 @@ const base: Backdrop = {
   video: 'https://www.youtube.com/watch?v=6lZ3CookYNg',
   playlist: [],
   loop: true,
+  sound: false,
 };
 
 describe('web', () => {

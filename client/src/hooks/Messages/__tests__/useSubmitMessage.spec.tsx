@@ -46,6 +46,7 @@ function send(text: string) {
     video: reef,
     playlist: [],
     loop: true,
+    sound: false,
   });
   const wrap = ({ children }: { children: ReactNode }) => (
     <Provider store={jotai}>{children}</Provider>
@@ -78,6 +79,7 @@ describe('useSubmitMessage', () => {
       video: reef,
       playlist: [],
       loop: true,
+      sound: false,
     });
   });
 });
