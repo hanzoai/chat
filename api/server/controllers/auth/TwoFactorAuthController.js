@@ -7,6 +7,7 @@ const {
 } = require('~/server/services/twoFactorService');
 const { setAuthTokens } = require('~/server/services/AuthService');
 const { getUserById } = require('~/models');
+const { publicUser } = require('~/server/services/publicUser');
 
 /**
  * Verifies the 2FA code during login using a temporary token.
@@ -43,11 +44,7 @@ const verify2FAWithTempToken = async (req, res) => {
       return res.status(401).json({ message: 'Invalid 2FA code or backup code' });
     }
 
-    const userData = user.toObject ? user.toObject() : { ...user };
-    delete userData.__v;
-    delete userData.password;
-    delete userData.totpSecret;
-    delete userData.backupCodes;
+    const userData = publicUser(user);
     userData.id = user._id.toString();
 
     const authToken = await setAuthTokens(user._id, res);

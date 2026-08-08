@@ -6,6 +6,7 @@ const { setAuthTokens, persistOpenIDTokensToSession } = require('~/server/servic
 const { getAppConfig } = require('~/server/services/Config');
 const { checkBan } = require('~/server/middleware');
 const { findUser, createUser, updateUser, countUsers } = require('~/models');
+const { publicUser } = require('~/server/services/publicUser');
 
 /**
  * The session-bridge for the @hanzo/iam SPA login. This is the ONE server entry
@@ -269,10 +270,7 @@ async function iamSessionController(req, res) {
       logger.warn('[iamSession] failed to persist IAM tokens for on-behalf-of:', persistErr);
     }
 
-    const safeUser = typeof user.toObject === 'function' ? user.toObject() : { ...user };
-    delete safeUser.password;
-    delete safeUser.totpSecret;
-    delete safeUser.backupCodes;
+    const safeUser = publicUser(user);
 
     logger.info(
       `[iamSession] session established openidId: ${claimStr(claims.sub)} | email: ${safeUser.email}`,
