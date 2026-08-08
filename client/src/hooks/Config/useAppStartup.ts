@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { LocalStorageKeys } from '@hanzochat/data-provider';
 import type { TStartupConfig } from '@hanzochat/data-provider';
 import { cleanupTimestampedStorage } from '~/utils/timestamps';
 import useSpeechSettingsInit from './useSpeechSettingsInit';
 import { useMCPToolsQuery, useMCPServersQuery } from '~/data-provider';
 import store from '~/store';
+import { learnAppName, nameDocument } from '~/utils';
 
 export default function useAppStartup({
   startupConfig,
@@ -36,12 +36,8 @@ export default function useAppStartup({
 
   /** Set the app title */
   useEffect(() => {
-    const appTitle = startupConfig?.appTitle ?? '';
-    if (!appTitle) {
-      return;
-    }
-    document.title = appTitle;
-    localStorage.setItem(LocalStorageKeys.APP_TITLE, appTitle);
+    learnAppName(startupConfig?.appTitle);
+    nameDocument();
   }, [startupConfig]);
 
   /** Set the default spec's preset as default */

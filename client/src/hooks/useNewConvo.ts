@@ -25,6 +25,7 @@ import type {
 } from '@hanzochat/data-provider';
 import type { AssistantListItem } from '~/common';
 import {
+  nameDocument,
   updateLastSelectedModel,
   getLocalStorageItems,
   getDefaultModelSpec,
@@ -266,10 +267,7 @@ const useNewConvo = (index = 0) => {
       const getParams = () => (searchParamsString ? `?${searchParamsString}` : '');
 
       if (conversation.conversationId === Constants.NEW_CONVO && !modelsData) {
-        const appTitle = localStorage.getItem(LocalStorageKeys.APP_TITLE) ?? '';
-        if (appTitle) {
-          document.title = appTitle;
-        }
+        nameDocument();
         const path = `/c/${Constants.NEW_CONVO}${getParams()}`;
         navigate(path, { state: { focusChat: true } });
         return;

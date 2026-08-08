@@ -10,7 +10,7 @@ import { useGetEndpointsQuery } from '~/data-provider';
 import { ConvoOptions } from './ConvoOptions';
 import RenameForm from './RenameForm';
 import ConvoLink from './ConvoLink';
-import { cn } from '~/utils';
+import { cn, nameDocument } from '~/utils';
 import store from '~/store';
 
 interface ConversationProps {
@@ -133,7 +133,7 @@ export default function Conversation({
     toggleNav();
 
     if (typeof title === 'string' && title.length > 0) {
-      document.title = title;
+      nameDocument(title);
     }
 
     navigateToConvo(conversation, {

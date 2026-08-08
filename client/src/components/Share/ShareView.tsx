@@ -25,7 +25,7 @@ import { ShareContext } from '~/Providers';
 import { ShareMessagesProvider } from './ShareMessagesProvider';
 import MessagesView from './MessagesView';
 import Footer from '../Chat/Footer';
-import { cn } from '~/utils';
+import { cn, documentName } from '~/utils';
 import store from '~/store';
 
 function SharedView() {
@@ -39,15 +39,9 @@ function SharedView() {
 
   const [langcode, setLangcode] = useAtom(store.lang);
 
-  // configure document title
-  let docTitle = '';
-  if (config?.appTitle != null && data?.title != null) {
-    docTitle = `${data.title} | ${config.appTitle}`;
-  } else {
-    docTitle = data?.title ?? config?.appTitle ?? document.title;
-  }
-
-  useDocumentTitle(docTitle);
+  // A public share page: the visitor may never have signed in, so the app name
+  // is passed from the config in hand rather than read from what was learned.
+  useDocumentTitle(documentName(data?.title, config?.appTitle) || document.title);
 
   const locale =
     langcode ||
