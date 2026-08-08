@@ -1,8 +1,18 @@
+/**
+ * Override the logger, keep the module. Stubbing `@hanzochat/data-schemas` down
+ * to the handful of names this file uses is an enumeration of what the code
+ * under test happens to need today, so it breaks the moment anything in the
+ * require graph reaches for something else — here `db/models.js`, which calls
+ * `createModels(mongoose)` and got `undefined`. That killed this suite at
+ * import: zero tests, and a name in the report that reads like coverage.
+ */
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: { debug: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
 jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   checkAccess: jest.fn(),
   loadWebSearchAuth: jest.fn(),
 }));

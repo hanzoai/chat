@@ -8,19 +8,24 @@ const mockGetMCPManager = jest.fn();
 const mockGetFlowStateManager = jest.fn();
 const mockGetMCPServersRegistry = jest.fn();
 
+/**
+ * Override the logger, keep the module. Stubbing `@hanzochat/data-schemas` down
+ * to the handful of names this file uses is an enumeration of what the code
+ * under test happens to need today, so it breaks the moment anything in the
+ * require graph reaches for something else — here `db/models.js`, which calls
+ * `createModels(mongoose)` and got `undefined`. That killed this suite at
+ * import: zero tests, and a name in the report that reads like coverage.
+ */
 jest.mock('@hanzochat/data-schemas', () => ({
+  ...jest.requireActual('@hanzochat/data-schemas'),
   logger: { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
   webSearchKeys: [],
 }));
 
-jest.mock('@hanzochat/data-provider', () => ({
-  Tools: {},
-  CacheKeys: { FLOWS: 'flows' },
-  Constants: { mcp_delimiter: '_mcp_', mcp_prefix: 'mcp_' },
-  FileSources: {},
-}));
+jest.mock('@hanzochat/data-provider', () => jest.requireActual('@hanzochat/data-provider'));
 
 jest.mock('@hanzochat/api', () => ({
+  ...jest.requireActual('@hanzochat/api'),
   MCPOAuthHandler: {
     generateFlowId: jest.fn(() => 'user-1:test-server'),
     revokeOAuthToken: jest.fn(),
