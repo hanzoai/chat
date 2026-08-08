@@ -1947,9 +1947,21 @@ describe('getSoleOwnedResourceIds', () => {
   const editorBits = 3; // VIEW|EDIT — no DELETE, so NOT an owner
   const viewerBits = 1; // VIEW
 
+  // `principalModel` is REQUIRED by the schema for any non-PUBLIC principal
+  // (aclEntry.ts gates it on `principalType !== PUBLIC`), and omitting it is
+  // what kept all five of these from ever running: every one died in
+  // `AclEntry.create` with a ValidationError, before reaching the function
+  // they exist to pin.
+  const modelFor = {
+    [PrincipalType.USER]: PrincipalModel.USER,
+    [PrincipalType.GROUP]: PrincipalModel.GROUP,
+    [PrincipalType.ROLE]: PrincipalModel.ROLE,
+  };
+
   const own = async (principalId, resourceId, permBits, principalType = PrincipalType.USER) =>
     AclEntry.create({
       principalType,
+      principalModel: modelFor[principalType],
       principalId,
       resourceType: ResourceType.PROMPTGROUP,
       resourceId,
