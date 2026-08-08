@@ -68,15 +68,18 @@ export const useRefreshTokenMutation = (
 };
 
 /* User */
+/** The variable is the second factor, sent only by an account that has one. */
+export type DeleteUserVariables = { token?: string; backupCode?: string } | undefined;
+
 export const useDeleteUserMutation = (
-  options?: t.MutationOptions<unknown, undefined>,
-): UseMutationResult<unknown, unknown, undefined, unknown> => {
+  options?: t.MutationOptions<unknown, DeleteUserVariables>,
+): UseMutationResult<unknown, unknown, DeleteUserVariables, unknown> => {
   const queryClient = useQueryClient();
   const clearStates = useClearStates();
   const resetDefaultPreset = useResetAtom(store.defaultPreset);
 
   return useMutation([MutationKeys.deleteUser], {
-    mutationFn: () => dataService.deleteUser(),
+    mutationFn: (secondFactor: DeleteUserVariables) => dataService.deleteUser(secondFactor),
     ...(options || {}),
     onSuccess: (...args) => {
       resetDefaultPreset();

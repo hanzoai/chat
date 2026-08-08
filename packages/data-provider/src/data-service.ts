@@ -23,8 +23,16 @@ export function revokeAllUserKeys(): Promise<unknown> {
   return request.delete(endpoints.revokeAllUserKeys());
 }
 
-export function deleteUser(): Promise<s.TPreset> {
-  return request.delete(endpoints.deleteUser());
+/**
+ * Delete the signed-in account. An account with 2FA proves it again here — the
+ * server refuses without a factor, because a live session alone is not enough
+ * to authorize something irreversible.
+ */
+export function deleteUser(secondFactor?: {
+  token?: string;
+  backupCode?: string;
+}): Promise<s.TPreset> {
+  return request.deleteWithOptions(endpoints.deleteUser(), { data: secondFactor });
 }
 
 export type FavoriteItem = {
