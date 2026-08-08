@@ -42,7 +42,7 @@ class CommerceClient {
   }
 
   /**
-   * The Commerce namespace (X-Hanzo-Org) for a billing subject. The subject is
+   * The Commerce namespace (X-Org-Id) for a billing subject. The subject is
    * object.BillingSubject(owner, name): "owner/name" (per-user) or "owner"
    * (pooled) — so the namespace is always the part before the first "/", or the
    * whole subject. Deriving it here keeps every read/write scoped to the right
@@ -166,7 +166,7 @@ class CommerceClient {
     // the request rather than letting unfunded/unknown users spend. The cache
     // (serve-stale on refresh) smooths transient blips for already-known users;
     // only a cold miss + error propagates. `subject` is the billing account
-    // (object.BillingSubject) used as `?user=`; the namespace (X-Hanzo-Org) is
+    // (object.BillingSubject) used as `?user=`; the namespace (X-Org-Id) is
     // its org prefix — matching the gateway's keying so chat reads the SAME
     // account the gateway debits.
     const resp = await this._request(
@@ -223,8 +223,19 @@ class CommerceClient {
     }
     // Scope the service-token call to the tenant's commerce namespace so reads/
     // writes are correctly per-org (not the service token's default namespace).
+    //
+    // The header is `X-Org-Id`. It was `X-Hanzo-Org`, which Commerce does not
+    // read on the service-token path — so it answered 401 "sign in to view
+    // billing" to EVERY call, identically to sending no credential at all.
+    // That made the failure invisible: `checkBalance` throws, the controller's
+    // documented fall-through to the local ledger runs, and production does not
+    // fund that ledger (`balance.enabled=false`), so the read 404s and the
+    // client — which only renders a balance when one is present — showed a
+    // funded account nothing at all. Two deliberate fallbacks in a row turned a
+    // wrong header name into silence. `ask.js` and `CloudAgentsClient` already
+    // send `X-Org-Id`; this was the one caller that did not.
     if (orgId) {
-      headers['X-Hanzo-Org'] = orgId;
+      headers['X-Org-Id'] = orgId;
     }
 
     const controller = new AbortController();
