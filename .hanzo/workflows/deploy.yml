@@ -115,7 +115,13 @@ jobs:
           # `curl -sf` collapses 401, 404 and a network drop into one empty string,
           # which is how "login failed" and "secret absent" became the same
           # non-event.
-          login=$(curl -s -w '\n%{http_code}' "$KMS_ENDPOINT/v1/kms/auth/login" \
+          #
+          # -m 30 because a hung connection has no status to report: without it a
+          # KMS that accepts the socket and never answers holds the runner until
+          # the job timeout, and the release just never happens. A timeout lands
+          # here as code 000 and takes the same diagnosed path as any other
+          # failure. The "Ship it" step below already reads KMS this way.
+          login=$(curl -s -m 30 -w '\n%{http_code}' "$KMS_ENDPOINT/v1/kms/auth/login" \
             -H 'Content-Type: application/json' \
             -d "{\"clientId\":\"$KMS_CLIENT_ID\",\"clientSecret\":\"$KMS_CLIENT_SECRET\"}")
           code=$(printf '%s' "$login" | tail -n1)
@@ -129,7 +135,7 @@ jobs:
           # /v1/kms/orgs/<org>/... + .secret.value pair 404s and selects nothing.
           # The key lives at hanzo / env=prod / path=deploy / PUBLISHABLE_KEY, and
           # that address is load-bearing: a key stored anywhere else is never read.
-          get=$(curl -s -w '\n%{http_code}' "$KMS_ENDPOINT/v1/kms/secrets/deploy/PUBLISHABLE_KEY?env=prod" \
+          get=$(curl -s -m 30 -w '\n%{http_code}' "$KMS_ENDPOINT/v1/kms/secrets/deploy/PUBLISHABLE_KEY?env=prod" \
             -H "Authorization: Bearer $TOKEN")
           code=$(printf '%s' "$get" | tail -n1)
           V=$(printf '%s' "$get" | sed '$d' | jq -r '.value // empty')
