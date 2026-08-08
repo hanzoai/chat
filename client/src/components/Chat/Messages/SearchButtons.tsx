@@ -6,6 +6,7 @@ import type { TMessage, TConversation } from '@hanzochat/data-provider';
 import type { InfiniteData } from '@tanstack/react-query';
 import type { ConversationCursorData } from '~/utils';
 import { useLocalize, useNavigateToConvo } from '~/hooks';
+import { nameDocument } from '~/utils';
 import { findConversationInInfinite } from '~/utils';
 import store from '~/store';
 
@@ -38,7 +39,7 @@ export default function SearchButtons({ message }: { message: TMessage }) {
       title = cachedConvo?.title ?? '';
     }
 
-    document.title = title;
+    nameDocument(title);
     navigateToConvo(
       cachedConvo ??
         ({

@@ -15,6 +15,7 @@ export * from './buildApp';
 export * from './drafts';
 export * from './convos';
 export * from './conversationImages';
+export * from './documentName';
 export * from './routes';
 export * from './presets';
 export * from './prompts';

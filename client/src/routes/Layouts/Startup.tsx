@@ -4,6 +4,7 @@ import type { TStartupConfig } from '@hanzochat/data-provider';
 import { useGetStartupConfig } from '~/data-provider';
 import AuthLayout from '~/components/Auth/AuthLayout';
 import { TranslationKeys, useLocalize } from '~/hooks';
+import { learnAppName, nameDocument } from '~/utils';
 
 const headerMap: Record<string, TranslationKeys> = {
   '/login': 'com_auth_welcome_back',
@@ -38,7 +39,10 @@ export default function StartupLayout({ isAuthenticated }: { isAuthenticated?: b
   }, [isAuthenticated, navigate, data]);
 
   useEffect(() => {
-    document.title = startupConfig?.appTitle || 'Hanzo Chat';
+    // No literal fallback: this app white-labels, so `'Hanzo Chat'` here printed
+    // Hanzo's name on every other brand's login screen whenever config was slow.
+    learnAppName(startupConfig?.appTitle);
+    nameDocument();
   }, [startupConfig?.appTitle]);
 
   useEffect(() => {
