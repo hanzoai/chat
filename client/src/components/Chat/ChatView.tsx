@@ -12,6 +12,7 @@ import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } fro
 import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
 import Presentation from './Presentation';
+import SelectionAsk from './SelectionAsk';
 import ChatForm from './Input/ChatForm';
 import AnswerEngine from './Answer/AnswerEngine';
 import Header from './Header';
@@ -35,7 +36,11 @@ function ChatView({ index = 0 }: { index?: number }) {
 
   const fileMap = useFileMapContext();
 
-  const { data: messagesTree = null, isLoading } = useGetMessagesByConvoId(conversationId ?? '', {
+  const {
+    data: messagesTree = null,
+    isLoading,
+    isInitialLoading,
+  } = useGetMessagesByConvoId(conversationId ?? '', {
     select: useCallback(
       (data: TMessage[]) => {
         const dataTree = buildTree({ messages: data, fileMap });
@@ -89,7 +94,11 @@ function ChatView({ index = 0 }: { index?: number }) {
   // conversation exists this branch is gone and the thread renders as always.
   const chatColumn = (
     <div className="relative flex h-full w-full flex-col">
-      {!isLoading && <Header />}
+      {/* `isInitialLoading`, not `isLoading`: the messages query is DISABLED for
+          a guest (no fileMap), and a disabled query reports `isLoading` forever —
+          which meant a signed-out visitor never got a header at all: no sidebar
+          toggle, no brand corner, no way back once the drawer was closed. */}
+      {!isInitialLoading && <Header />}
       {isLandingPage ? (
         <>
           <div className="flex min-h-0 flex-1 flex-col">
@@ -104,6 +113,10 @@ function ChatView({ index = 0 }: { index?: number }) {
             <ChatForm index={index} />
             <Footer />
           </div>
+          {/* Highlight text in a reply → ask about just that, folded back into
+              this thread. One overlay for the whole conversation; it reads the
+              live selection, so it only acts on the words under the cursor. */}
+          <SelectionAsk />
         </div>
       )}
     </div>

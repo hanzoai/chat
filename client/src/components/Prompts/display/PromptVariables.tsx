@@ -158,7 +158,7 @@ const PromptVariables = ({ promptText }: { promptText: string }) => {
       >
         {specialVars.length > 0 && (
           <section aria-label={localize('com_ui_special_variables')}>
-            <h5 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-text-secondary">
+            <h5 className="mb-2 text-[11px] font-medium tracking-wide text-text-secondary">
               {localize('com_ui_special_variables')}
             </h5>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -171,7 +171,7 @@ const PromptVariables = ({ promptText }: { promptText: string }) => {
 
         {dropdownVariables.length > 0 && (
           <section aria-label={localize('com_ui_dropdown_variables')}>
-            <h5 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-text-secondary">
+            <h5 className="mb-2 text-[11px] font-medium tracking-wide text-text-secondary">
               {localize('com_ui_dropdown_variables')}
             </h5>
             <div className="flex flex-col gap-2">
@@ -184,7 +184,7 @@ const PromptVariables = ({ promptText }: { promptText: string }) => {
 
         {simpleVariables.length > 0 && (
           <section aria-label={localize('com_ui_text_variables')}>
-            <h5 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-text-secondary">
+            <h5 className="mb-2 text-[11px] font-medium tracking-wide text-text-secondary">
               {localize('com_ui_text_variables')}
             </h5>
             <div className="flex flex-wrap gap-2">

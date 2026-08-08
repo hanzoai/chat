@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 import { TAttachment } from '@hanzochat/data-provider';
+import { SMALL_SCREEN_QUERY } from '@hanzochat/client';
 import { atomWithLocalStorage } from './utils';
 import { BadgeItem } from '~/common';
 
@@ -58,6 +59,26 @@ const chatBadges = atomWithLocalStorage<Pick<BadgeItem, 'id'>[]>('chatBadges', [
   // { id: '2' },
 ]);
 
+/**
+ * Is the conversation rail showing? ONE value, in ONE place.
+ *
+ * It used to be a `useState` in Root whose persistence was hand-written at
+ * three separate call sites — Nav, MobileNav and OpenSidebar each did their own
+ * `localStorage.setItem('navVisible', …)` beside their own setter call. Three
+ * writers of one fact is three chances for them to disagree, and the layout
+ * consequence was drawn twice on top of that (the rail's transform AND a
+ * translate on the content pane), which is how one boolean produced a drawer
+ * that overlaid the page and shoved it sideways at the same time.
+ *
+ * The first-visit default is the viewport's answer: a phone starts shut, a
+ * desktop starts open. After that the stored value is the answer, which is why
+ * this is read once at module load rather than on every render.
+ */
+const navVisible = atomWithLocalStorage(
+  'navVisible',
+  typeof window === 'undefined' ? true : !window.matchMedia(SMALL_SCREEN_QUERY).matches,
+);
+
 export default {
   hideBannerHint,
   messageAttachmentsMap,
@@ -66,4 +87,5 @@ export default {
   isAuthenticated,
   isEditingBadges,
   chatBadges,
+  navVisible,
 };

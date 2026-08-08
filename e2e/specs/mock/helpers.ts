@@ -4,7 +4,7 @@ import type { Page, Response } from '@playwright/test';
 /** Substring of the reply emitted by the mock LLM server. */
 export const MOCK_REPLY_TEXT = 'E2E mock reply';
 
-/** Custom endpoints defined in e2e/config/librechat.e2e.yaml. */
+/** Custom endpoints defined in e2e/config/chat.e2e.yaml. */
 export const MOCK_ENDPOINTS = [
   { label: 'Mock Provider A', model: 'mock-model-a' },
   { label: 'Mock Provider B', model: 'mock-model-b' },

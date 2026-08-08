@@ -15,6 +15,9 @@ interface DropdownProps {
   itemClassName?: string;
   sameWidth?: boolean;
   anchor?: { x: string; y: string };
+  /** Which corner the popup hangs from. Ariakit reads this off the STORE, not
+   *  off `<Menu>` — passing it to the element is silently ignored. */
+  placement?: Ariakit.MenuStoreProps['placement'];
   gutter?: number;
   modal?: boolean;
   portal?: boolean;
@@ -24,11 +27,18 @@ interface DropdownProps {
   mountByState?: boolean;
   unmountOnHide?: boolean;
   finalFocus?: React.RefObject<HTMLElement | null>;
+  /**
+   * Anchors the menu to an arbitrary rect instead of its trigger. This is what
+   * makes the SAME menu serve a right-click: the caller returns the pointer
+   * position and Ariakit positions against it. Return null to fall back to the
+   * trigger, so one menu covers both openings.
+   */
+  getAnchorRect?: () => { x: number; y: number; width?: number; height?: number } | null;
 }
 
 type MenuProps = Omit<
   DropdownProps,
-  'trigger' | 'isOpen' | 'setIsOpen' | 'focusLoop' | 'mountByState'
+  'trigger' | 'isOpen' | 'setIsOpen' | 'focusLoop' | 'mountByState' | 'placement'
 > &
   Ariakit.MenuProps;
 
@@ -38,9 +48,10 @@ const DropdownPopup: React.FC<DropdownProps> = ({
   setIsOpen,
   focusLoop,
   mountByState,
+  placement,
   ...props
 }) => {
-  const menu = Ariakit.useMenuStore({ open: isOpen, setOpen: setIsOpen, focusLoop });
+  const menu = Ariakit.useMenuStore({ open: isOpen, setOpen: setIsOpen, focusLoop, placement });
   if (mountByState) {
     return (
       <Ariakit.MenuProvider store={menu}>
@@ -71,6 +82,7 @@ const Menu: React.FC<MenuProps> = ({
   finalFocus,
   unmountOnHide,
   preserveTabOrder,
+  getAnchorRect,
   ...props
 }) => {
   const menuStore = Ariakit.useMenuStore();
@@ -85,7 +97,8 @@ const Menu: React.FC<MenuProps> = ({
       finalFocus={finalFocus}
       unmountOnHide={unmountOnHide}
       preserveTabOrder={preserveTabOrder}
-      className={cn('popover-ui z-40', className)}
+      getAnchorRect={getAnchorRect}
+      className={cn('popover-ui glass elevation-2 z-40', className)}
       {...props}
     >
       {items
@@ -114,7 +127,7 @@ const Menu: React.FC<MenuProps> = ({
                 >
                   <span className="flex items-center gap-2">
                     {item.icon != null && (
-                      <span className={cn('mr-2 size-4', iconClassName)} aria-hidden="true">
+                      <span className={cn('size-4', iconClassName)} aria-hidden="true">
                         {item.icon}
                       </span>
                     )}
@@ -162,15 +175,28 @@ const Menu: React.FC<MenuProps> = ({
                 menu?.hide();
               }}
             >
+              {/* No `mr-2`: the row is already a `gap-2` flex line, so the
+                  margin stacked on top of the gap and put 16px between a glyph
+                  and its own label — twice the distance the row spends on
+                  anything else. One mechanism, and it is the row's. */}
               {item.icon != null && (
-                <span className={cn('mr-2 size-4', iconClassName)} aria-hidden="true">
+                <span className={cn('size-4', iconClassName)} aria-hidden="true">
                   {item.icon}
                 </span>
               )}
               {item.label}
+              {/* The whole shortcut, as the caller wrote it. This used to print
+                  a hardcoded `⌘` before the value, which cannot express `⌥⌘S`
+                  and is wrong on every non-Apple keyboard.
+                  `text-text-secondary` was one rung under the label and read as
+                  a second label: 205 vs 236 on a near-black surface is a 13%
+                  step. `--text-secondary-alt` is the next rung the token layer
+                  actually publishes and still clears WCAG AA on this surface —
+                  `--text-tertiary`, the rung below it, does not (measured
+                  2.8:1). */}
               {item.kbd != null && (
-                <kbd className="ml-auto hidden font-sans text-xs text-black/50 group-hover:inline group-focus:inline dark:text-white/50">
-                  ⌘{item.kbd}
+                <kbd className="ml-auto font-sans text-xs text-text-secondary-alt" aria-hidden="true">
+                  {item.kbd}
                 </kbd>
               )}
             </Ariakit.MenuItem>

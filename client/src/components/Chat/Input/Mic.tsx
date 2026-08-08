@@ -1,126 +1,226 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { Voice, useVoice, type Speech } from '@hanzo/voice';
+import { useVoice, type Speech } from '@hanzo/voice';
 import { dataService } from '@hanzochat/data-provider';
-import { useToastContext } from '@hanzochat/client';
+import { TooltipAnchor, useToastContext } from '@hanzochat/client';
 
 import { useChatFormContext } from '~/Providers';
 import { useGetAudioSettings, useLocalize } from '~/hooks';
-import { getLatestText, cn } from '~/utils';
+import { NotificationSeverity } from '~/common';
+import { cn } from '~/utils';
 import store from '~/store';
 
 /**
- * The composer's microphone — one click starts a conversation, the next ends it.
+ * The composer's microphone — DICTATION, not a spoken conversation.
  *
- * The machine is `@hanzo/voice`, the same one hanzo.app's builder uses: the
- * transcript streams into this composer as it is heard, each pause is sent
- * through `ask` (the composer's own submit path, never a second one), the reply
- * is read back, and speaking over the reply stops it and starts the next turn.
+ * One click opens the mic and shows a live waveform of what it is hearing; the
+ * transcript streams into the composer as you speak and STAYS there. A second
+ * click (the stop square) ends it and leaves the text in the box for you to
+ * read and send yourself. Nothing is auto-sent and no reply is read back —
+ * this is a way of typing with your voice, which is what a composer mic is for.
  *
- * Speech itself is whatever `speech:` in chat.yaml points at — the platform's
- * `/v1/audio/*` — reached through the routes this server already has. With no
- * `speech:` configured the browser's own recogniser and voice stand in, which
- * is exactly what happened before this control existed.
+ * The machine is still `@hanzo/voice` (shared with hanzo.app): its `onLevel`
+ * drives the waveform, its partials fill the composer, and each settled
+ * utterance is committed so the next one appends after it instead of replacing.
  */
+
+/** How many bars the waveform holds. The newest level enters on the right. */
+const BARS = 48;
+
+/** A dictation shorter than this that heard nothing is just a misclick; past
+ *  it, silence means the browser's speech engine produced no words at all. */
+const SILENT_MS = 2000;
+
 export default function Mic({
   disabled,
-  ask,
-  isSubmitting,
-  index = 0,
-  onLive,
+  onRecordingChange,
 }: {
   disabled: boolean;
-  ask: (data: { text: string }) => void;
-  isSubmitting: boolean;
-  index?: number;
-  /** Reported up so the composer can leave the reply to this control. */
-  onLive?: (live: boolean) => void;
+  /** Told when dictation opens/closes so the composer row can clear itself and
+   *  give the waveform the full width. */
+  onRecordingChange?: (open: boolean) => void;
 }) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
-  const { setValue, getValues, reset } = useChatFormContext();
-  const { speechToTextEndpoint, textToSpeechEndpoint } = useGetAudioSettings();
+  const { setValue, getValues } = useChatFormContext();
+  const { speechToTextEndpoint } = useGetAudioSettings();
   const chosenVoice = useAtomValue(store.voice);
-  const latestMessage = useAtomValue(store.latestMessageFamily(index));
 
-  // Configured speech goes through this server's own speech routes; anything
-  // unconfigured is simply absent, and the browser leg covers it.
   const speech = useMemo<Speech | undefined>(() => {
-    const configured: Partial<Speech> = {};
-    if (speechToTextEndpoint === 'external') {
-      configured.transcribe = async (audio) => {
+    if (speechToTextEndpoint !== 'external') {
+      return undefined;
+    }
+    return {
+      transcribe: async (audio) => {
         const form = new FormData();
         form.append('audio', audio, 'turn.webm');
         const { text } = await dataService.speechToText(form);
         return text ?? '';
-      };
-    }
-    if (textToSpeechEndpoint === 'external') {
-      configured.speak = async (text) => {
-        const form = new FormData();
-        form.append('input', text);
-        form.append('voice', chosenVoice ?? '');
-        const audio = await dataService.textToSpeech(form);
-        return new Blob([audio], { type: 'audio/mpeg' });
-      };
-    }
-    return configured.transcribe || configured.speak ? (configured as Speech) : undefined;
-  }, [speechToTextEndpoint, textToSpeechEndpoint, chosenVoice]);
+      },
+    };
+  }, [speechToTextEndpoint]);
 
-  // Whatever was already typed is kept: the transcript is appended to it, and
-  // the turn that gets sent is the whole line, exactly as if it had been typed.
+  // The text that was already in the composer, plus every settled utterance so
+  // far. Live partials are appended to THIS, so a pause never rewrites what was
+  // already dictated.
   const kept = useRef<string | null>(null);
   const join = useCallback((heard: string) => {
     const before = kept.current;
     return before ? `${before} ${heard}` : heard;
   }, []);
 
-  const submitting = useRef(isSubmitting);
-  submitting.current = isSubmitting;
+  // The waveform samples live in a ref (onLevel fires ~60/s) and are flushed to
+  // state on an interval, so the mic draws at a cheap ~16fps instead of
+  // re-rendering the whole composer on every animation frame.
+  const samples = useRef<number[]>(new Array(BARS).fill(0));
+  const [bars, setBars] = useState<number[]>(samples.current);
+  const [elapsed, setElapsed] = useState(0);
+
+  // Whether the engine returned a single word this session. Brave records
+  // audio happily but ships its speech engine disabled, so a dictation can run
+  // for minutes and insert nothing — with no error from anywhere. The close
+  // handler below names that instead of letting it pass as a mystery.
+  const spoken = useRef(false);
+  const openedAt = useRef(0);
 
   const voice = useVoice({
     speech,
+    onLevel: (value) => {
+      samples.current = [...samples.current.slice(1), value];
+    },
     onPartial: (heard) => {
-      if (kept.current === null) kept.current = (getValues('text') || '').trim();
+      spoken.current = true;
+      if (kept.current === null) {
+        kept.current = (getValues('text') || '').trim();
+      }
       setValue('text', join(heard), { shouldValidate: true });
     },
     onUtterance: (said) => {
-      const turn = join(said);
-      kept.current = null;
-      if (submitting.current) {
-        showToast({ message: localize('com_ui_speech_while_submitting'), status: 'error' });
-        return;
-      }
-      ask({ text: turn });
-      reset({ text: '' });
+      // Commit it: the composer already shows it, and folding it into `kept`
+      // means the next partial appends rather than replacing this sentence.
+      spoken.current = true;
+      kept.current = join(said);
+      setValue('text', kept.current, { shouldValidate: true });
     },
   });
 
-  useEffect(() => onLive?.(voice.open), [voice.open, onLive]);
-
-  // Read the settled reply back. `say` is a no-op outside a conversation, so a
-  // typed turn stays silent without anyone here asking whether it was spoken.
-  const read = useRef<string | null>(null);
+  // Let the composer row know, so it can hand the recorder the full width.
   useEffect(() => {
-    if (isSubmitting || !latestMessage || latestMessage.isCreatedByUser) return;
-    const text = getLatestText(latestMessage);
-    const id = latestMessage.messageId;
-    if (!text || !id || read.current === id) return;
-    read.current = id;
-    void voice.say(text);
-  }, [isSubmitting, latestMessage, voice]);
+    onRecordingChange?.(voice.open);
+  }, [voice.open, onRecordingChange]);
+
+  useEffect(() => {
+    if (!voice.open) {
+      // Ended without one word, after a real attempt (a shorter run is a
+      // misclick). The recording worked; the transcription never did.
+      if (
+        openedAt.current > 0 &&
+        !spoken.current &&
+        performance.now() - openedAt.current >= SILENT_MS
+      ) {
+        showToast({
+          message: localize('com_ui_dictation_nothing'),
+          severity: NotificationSeverity.WARNING,
+        });
+      }
+      openedAt.current = 0;
+      kept.current = null;
+      samples.current = new Array(BARS).fill(0);
+      setBars(samples.current);
+      setElapsed(0);
+      return;
+    }
+    spoken.current = false;
+    openedAt.current = performance.now();
+    const draw = setInterval(() => setBars([...samples.current]), 60);
+    const clock = setInterval(
+      () => setElapsed(Math.floor((performance.now() - openedAt.current) / 1000)),
+      250,
+    );
+    return () => {
+      clearInterval(draw);
+      clearInterval(clock);
+    };
+    // `showToast` (context) and `localize` are not identity-stable; listing
+    // them would re-run this effect mid-dictation and reset the clock.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.open]);
+
+  if (voice.open) {
+    const mm = String(Math.floor(elapsed / 60)).padStart(1, '0');
+    const ss = String(elapsed % 60).padStart(2, '0');
+    return (
+      // Dictation takes the WHOLE row: `flex-1` grows the recorder across the
+      // composer so the waveform spans the full width instead of a thumbnail
+      // crammed by the send button. The bars pack at a fixed 3px rhythm and
+      // center in that room — spread edge-to-edge (`justify-between`) they
+      // drifted apart on a wide screen and read as a row of dots, not sound.
+      // A phone is the other way: the packed row is wider than the space, so
+      // it clips symmetrically at the edges instead of overflowing.
+      <div className="flex flex-1 items-center gap-3 pr-1" aria-label={localize('com_ui_dictating')}>
+        <div
+          className="flex h-9 flex-1 items-center justify-center gap-[3px] overflow-hidden"
+          aria-hidden="true"
+        >
+          {bars.map((v, i) => (
+            <span
+              key={i}
+              className="w-[3px] shrink-0 rounded-full bg-white"
+              style={{ height: `${Math.max(4, Math.round(v * 34))}px`, opacity: 0.45 + v * 0.55 }}
+            />
+          ))}
+        </div>
+        <span className="tabular-nums text-xs text-text-secondary">{`${mm}:${ss}`}</span>
+        <TooltipAnchor
+          description={localize('com_ui_dictation_stop')}
+          render={
+            <button
+              type="button"
+              aria-label={localize('com_ui_dictation_stop')}
+              onClick={voice.toggle}
+              className="flex size-9 items-center justify-center rounded-full text-white transition-colors hover:bg-surface-hover"
+            >
+              {/* White, not red: stopping dictation keeps the text — it is not
+                  a destructive act, and red was the one warm pixel in the row. */}
+              <span className="block size-3.5 rounded-[3px] bg-white" />
+            </button>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
-    <Voice
-      voice={voice}
-      disabled={disabled}
-      className={cn(
-        'flex size-9 items-center justify-center rounded-full p-1 text-text-secondary transition-colors',
-        'hover:bg-surface-hover disabled:opacity-40',
-        'data-[state=listening]:text-text-primary data-[state=speaking]:text-text-primary',
-        'data-[state=speaking]:animate-pulse motion-reduce:data-[state=speaking]:animate-none',
-        '[&_svg]:size-5',
-      )}
+    <TooltipAnchor
+      description={voice.reason ?? localize('com_ui_dictate')}
+      render={
+        <button
+          type="button"
+          aria-label={voice.reason ?? localize('com_ui_dictate')}
+          disabled={disabled || !!voice.blocked}
+          onClick={voice.toggle}
+          className={cn(
+            'flex size-9 items-center justify-center rounded-full p-1 text-white transition-colors',
+            'hover:bg-surface-hover disabled:opacity-40 [&_svg]:size-5',
+          )}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="1em"
+            height="1em"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <path d="M12 19v3" />
+          </svg>
+        </button>
+      }
     />
   );
 }

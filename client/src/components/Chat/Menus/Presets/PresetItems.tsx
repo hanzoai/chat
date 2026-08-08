@@ -3,14 +3,14 @@ import { Close } from '@radix-ui/react-popover';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { getEndpointField } from '@hanzochat/data-provider';
 import {
-  Dialog,
+  OGDialog,
   Label,
   PinIcon,
   EditIcon,
   TrashIcon,
-  DialogTrigger,
+  OGDialogTrigger,
   TooltipAnchor,
-  DialogTemplate,
+  OGDialogTemplate,
 } from '@hanzochat/client';
 import type { TPreset } from '@hanzochat/data-provider';
 import type { FC } from 'react';
@@ -59,8 +59,8 @@ const PresetItems: FC<{
               ? `${localize('com_endpoint_preset_default_item')} ${defaultPreset.title}`
               : localize('com_endpoint_preset_default_none')}
           </label>
-          <Dialog>
-            <DialogTrigger asChild>
+          <OGDialog>
+            <OGDialogTrigger asChild>
               <button
                 type="button"
                 className="mr-1 flex h-[32px] cursor-pointer items-center rounded bg-transparent px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-red-700 focus:ring-ring dark:bg-transparent dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-red-700"
@@ -79,8 +79,8 @@ const PresetItems: FC<{
                 </svg>
                 {localize('com_ui_clear_all')}
               </button>
-            </DialogTrigger>
-            <DialogTemplate
+            </OGDialogTrigger>
+            <OGDialogTemplate
               showCloseButton={false}
               title={localize('com_ui_clear_presets')}
               className="max-w-[450px]"
@@ -105,7 +105,7 @@ const PresetItems: FC<{
               }}
             />
             <FileUpload onFileSelected={onFileSelected} />
-          </Dialog>
+          </OGDialog>
         </div>
       </div>
       {presets && presets.length === 0 && (

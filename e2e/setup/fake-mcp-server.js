@@ -6,7 +6,7 @@ const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const z = require('zod/v4');
 
-const APPROVAL_AUDIT_DIR = path.join('/tmp', 'librechat-e2e-approval-audit');
+const APPROVAL_AUDIT_DIR = path.join('/tmp', 'chat-e2e-approval-audit');
 
 function recordApprovalInvocation(value) {
   fs.mkdirSync(APPROVAL_AUDIT_DIR, { recursive: true });
@@ -22,12 +22,12 @@ const server = new McpServer({
 server.registerTool(
   'remember_fact',
   {
-    description: 'Stores a deterministic fact for LibreChat mock end-to-end tests.',
+    description: 'Stores a deterministic fact for mock end-to-end tests.',
     inputSchema: {
       fact: z.string().optional(),
     },
   },
-  async ({ fact = 'LibreChat MCP e2e fact' }) => ({
+  async ({ fact = 'Hanzo Chat MCP e2e fact' }) => ({
     content: [
       {
         type: 'text',
@@ -40,14 +40,14 @@ server.registerTool(
 server.registerTool(
   'recall_fact',
   {
-    description: 'Returns a deterministic fact for LibreChat mock end-to-end tests.',
+    description: 'Returns a deterministic fact for mock end-to-end tests.',
     inputSchema: {},
   },
   async () => ({
     content: [
       {
         type: 'text',
-        text: 'E2E MCP memory recalled: LibreChat can persist MCP tools on agents.',
+        text: 'E2E MCP memory recalled: Hanzo Chat can persist MCP tools on agents.',
       },
     ],
   }),
@@ -80,7 +80,7 @@ server.registerTool(
   'approval_probe',
   {
     description:
-      'Echoes reviewed input so LibreChat mock end-to-end tests can verify tool approval decisions.',
+      'Echoes reviewed input so mock end-to-end tests can verify tool approval decisions.',
     inputSchema: {
       value: z.string(),
       review: z.string().optional(),

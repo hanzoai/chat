@@ -1,18 +1,16 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { useAtomValue } from 'jotai';
 import { useParams } from 'react-router-dom';
 import { Constants } from '@hanzochat/data-provider';
-import { useToastContext, useMediaQuery } from '@hanzochat/client';
+import { useIsSmallScreen } from '@hanzochat/client';
 import type { TConversation } from '@hanzochat/data-provider';
-import { useUpdateConversationMutation } from '~/data-provider';
 import EndpointIcon from '~/components/Endpoints/EndpointIcon';
-import { useNavigateToConvo, useLocalize, useShiftKey } from '~/hooks';
+import { useNavigateToConvo, useLocalize, useShiftKey, useConvoRename } from '~/hooks';
 import { useGetEndpointsQuery } from '~/data-provider';
-import { NotificationSeverity } from '~/common';
 import { ConvoOptions } from './ConvoOptions';
 import RenameForm from './RenameForm';
-import { cn, logger } from '~/utils';
 import ConvoLink from './ConvoLink';
+import { cn } from '~/utils';
 import store from '~/store';
 
 interface ConversationProps {
@@ -30,31 +28,23 @@ export default function Conversation({
 }: ConversationProps) {
   const params = useParams();
   const localize = useLocalize();
-  const { showToast } = useToastContext();
   const { navigateToConvo } = useNavigateToConvo();
   const { data: endpointsConfig } = useGetEndpointsQuery();
   const currentConvoId = useMemo(() => params.conversationId, [params.conversationId]);
-  const updateConvoMutation = useUpdateConversationMutation(currentConvoId ?? '');
   const activeConvos = useAtomValue(store.allConversationsSelector);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const isShiftHeld = useShiftKey();
-  const { conversationId, title = '' } = conversation;
+  const { conversationId, title = '', tags, isPinned = false } = conversation;
 
-  const [titleInput, setTitleInput] = useState(title || '');
-  const [renaming, setRenaming] = useState(false);
+  const { titleInput, setTitleInput, renaming, startRename, cancelRename, submitRename } =
+    useConvoRename(conversationId, title);
   const [isPopoverActive, setIsPopoverActive] = useState(false);
   // Lazy-load ConvoOptions to avoid running heavy hooks for all conversations
   const [hasInteracted, setHasInteracted] = useState(false);
+  /** Pointer position of the last right-click; null means anchor to the kebab. */
+  const contextPointRef = useRef<{ x: number; y: number } | null>(null);
 
-  const previousTitle = useRef(title);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (title !== previousTitle.current) {
-      setTitleInput(title as string);
-      previousTitle.current = title;
-    }
-  }, [title]);
 
   const isActiveConvo = useMemo(() => {
     if (conversationId === Constants.NEW_CONVO) {
@@ -69,40 +59,10 @@ export default function Conversation({
     }
   }, [currentConvoId, conversationId, activeConvos]);
 
-  const handleRename = () => {
+  const handleRename = useCallback(() => {
     setIsPopoverActive(false);
-    setTitleInput(title as string);
-    setRenaming(true);
-  };
-
-  const handleRenameSubmit = async (newTitle: string) => {
-    if (!conversationId || newTitle === title) {
-      setRenaming(false);
-      return;
-    }
-
-    try {
-      await updateConvoMutation.mutateAsync({
-        conversationId,
-        title: newTitle.trim() || localize('com_ui_untitled'),
-      });
-      setRenaming(false);
-    } catch (error) {
-      logger.error('Error renaming conversation', error);
-      setTitleInput(title as string);
-      showToast({
-        message: localize('com_ui_rename_failed'),
-        severity: NotificationSeverity.ERROR,
-        showIcon: true,
-      });
-      setRenaming(false);
-    }
-  };
-
-  const handleCancelRename = () => {
-    setTitleInput(title as string);
-    setRenaming(false);
-  };
+    startRename();
+  }, [startRename]);
 
   const handleMouseEnter = useCallback(() => {
     if (!hasInteracted) {
@@ -132,6 +92,7 @@ export default function Conversation({
   const handlePopoverOpenChange = useCallback((open: boolean) => {
     setIsPopoverActive(open);
     if (!open) {
+      contextPointRef.current = null;
       requestAnimationFrame(() => {
         const container = containerRef.current;
         if (container && !container.contains(document.activeElement)) {
@@ -140,6 +101,21 @@ export default function Conversation({
       });
     }
   }, []);
+
+  /**
+   * Full right-click: opens the SAME menu the kebab opens, anchored at the
+   * pointer instead of the button. Mounting is lazy, so record the point and
+   * mark the row interacted before asking the menu to open.
+   */
+  const handleContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    contextPointRef.current = { x: e.clientX, y: e.clientY };
+    setHasInteracted(true);
+    setIsPopoverActive(true);
+  }, []);
+
+  const getAnchorRect = useCallback(() => contextPointRef.current, []);
 
   const handleNavigation = (ctrlOrMetaKey: boolean) => {
     if (ctrlOrMetaKey) {
@@ -168,6 +144,8 @@ export default function Conversation({
 
   const convoOptionsProps = {
     title,
+    tags,
+    isPinned,
     retainView,
     renameHandler: handleRename,
     isActiveConvo,
@@ -175,6 +153,7 @@ export default function Conversation({
     isPopoverActive,
     setIsPopoverActive: handlePopoverOpenChange,
     isShiftHeld: isActiveConvo ? isShiftHeld : false,
+    getAnchorRect,
   };
 
   return (
@@ -203,6 +182,7 @@ export default function Conversation({
           handleNavigation(e.ctrlKey || e.metaKey);
         }
       }}
+      onContextMenu={renaming ? undefined : handleContextMenu}
       onKeyDown={(e) => {
         if (renaming) {
           return;
@@ -222,8 +202,8 @@ export default function Conversation({
         <RenameForm
           titleInput={titleInput}
           setTitleInput={setTitleInput}
-          onSubmit={handleRenameSubmit}
-          onCancel={handleCancelRename}
+          onSubmit={submitRename}
+          onCancel={cancelRename}
           localize={localize}
         />
       ) : (

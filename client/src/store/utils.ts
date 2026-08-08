@@ -1,13 +1,40 @@
 import { atom } from 'jotai';
-import { atomFamily, atomWithReset, atomWithStorage } from 'jotai/utils';
+import { atomFamily, atomWithReset, atomWithStorage, createJSONStorage } from 'jotai/utils';
 import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 
 /**
  * An atom persisted to localStorage: read on first access, written on every
  * set. Changes reach other tabs through the browser `storage` event.
+ *
+ * `sane` runs on everything that comes OUT of storage — the first read and
+ * every cross-tab update — and returns a value of the shape the app promises.
+ * Reach for it whenever code downstream would be hurt by a value it did not
+ * write, because a validator on the write path alone does not survive a reload:
+ * the bytes in localStorage are not ours. A previous release wrote a different
+ * shape; an extension or a devtools console can write anything at all. Storage
+ * already yields the default for a key that is missing or is not JSON — `sane`
+ * is what covers valid JSON of the WRONG SHAPE, which is the case that reaches
+ * a component and throws there.
+ *
+ * Omit it when any JSON at all is harmless (a boolean, a string).
  */
-export function atomWithLocalStorage<T>(key: string, defaultValue: T) {
-  return atomWithStorage<T>(key, defaultValue, undefined, { getOnInit: true });
+export function atomWithLocalStorage<T>(
+  key: string,
+  defaultValue: T,
+  sane: (value: unknown) => T = (value) => value as T,
+) {
+  const json = createJSONStorage<T>();
+  return atomWithStorage<T>(
+    key,
+    defaultValue,
+    {
+      ...json,
+      getItem: (name, initial) => sane(json.getItem(name, initial)),
+      subscribe: (name, notify, initial) =>
+        json.subscribe?.(name, (value) => notify(sane(value)), initial),
+    },
+    { getOnInit: true },
+  );
 }
 
 /**

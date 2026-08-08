@@ -247,8 +247,12 @@ module.exports = {
       }
 
       const convos = await Conversation.find(query)
+        // `isPinned` and `tags` are what the list itself renders — the pinned
+        // section above recents, and which bookmarks a row's menu shows ticked.
+        // Omit them and both features fail silently: the rows still draw, they
+        // just never look pinned or tagged.
         .select(
-          'conversationId endpoint title createdAt updatedAt user model agent_id assistant_id spec iconURL',
+          'conversationId endpoint title createdAt updatedAt user model agent_id assistant_id spec iconURL isPinned tags',
         )
         .sort(sortObj)
         .limit(limit + 1)

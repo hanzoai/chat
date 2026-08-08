@@ -8,10 +8,15 @@ import { cn } from '~/utils';
 /**
  * ONE link style for every footer link (main content, privacy, terms).
  *
+ * No underline. A rule of underlined links across the bottom of every screen is
+ * a second horizontal line competing with the composer above it; the link says
+ * it is a link by lifting to the foreground colour under the pointer, which is
+ * how the rest of the product spells the same thing.
+ *
  * `pointer-events-auto` re-arms the links against the strip's
  * `pointer-events-none` — see the note on the container below.
  */
-const LINK = 'pointer-events-auto text-text-secondary underline';
+const LINK = 'pointer-events-auto text-text-secondary hover:text-text-primary';
 
 export default function Footer({ className }: { className?: string }) {
   const { data: config } = useGetStartupConfig();
@@ -47,12 +52,7 @@ export default function Footer({ className }: { className?: string }) {
         components={{
           a: ({ node: _n, href, children, ...otherProps }) => {
             return (
-              <a
-                className={LINK}
-                href={href}
-                rel="noreferrer"
-                {...otherProps}
-              >
+              <a className={LINK} href={href} rel="noreferrer" {...otherProps}>
                 {children}
               </a>
             );
@@ -71,7 +71,9 @@ export default function Footer({ className }: { className?: string }) {
   );
 
   return (
-    <div className="w-full">
+    /* pb-[env(...)]: 0 in a browser tab; in an installed PWA (viewport-fit=cover)
+       it keeps the composer clear of the iPhone home indicator. */
+    <div className="w-full pb-[env(safe-area-inset-bottom)]">
       {/*
         The strip lays out IN FLOW and occupies its own height.
 
@@ -94,7 +96,11 @@ export default function Footer({ className }: { className?: string }) {
       <div
         className={cn(
           className ??
-            'hidden w-full items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]',
+            // Visible at every width. It was `hidden … sm:flex`, so the privacy
+            // policy and the terms — the two links a visitor is entitled to
+            // reach before they type anything — existed only on a desktop. They
+            // are one line of 12px text; a phone can afford them.
+            'flex w-full flex-wrap items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary md:px-[60px]',
           'pointer-events-none',
         )}
         role="contentinfo"

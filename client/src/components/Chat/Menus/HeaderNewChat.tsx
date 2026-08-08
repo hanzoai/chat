@@ -12,7 +12,7 @@ export default function HeaderNewChat() {
 
   const clickHandler: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-      window.open('/c/new', '_blank');
+      window.open('/', '_blank');
       return;
     }
     clearMessagesCache(queryClient, conversation?.conversationId);
@@ -29,7 +29,7 @@ export default function HeaderNewChat() {
           variant="outline"
           data-testid="wide-header-new-chat-button"
           aria-label={localize('com_ui_new_chat')}
-          className="rounded-xl bg-presentation duration-0 hover:bg-surface-active-alt max-md:hidden"
+          className="rounded-xl border-transparent bg-transparent duration-0 hover:bg-white/10 hover:backdrop-blur-xl max-md:hidden"
           onClick={clickHandler}
         >
           <NewChatIcon />

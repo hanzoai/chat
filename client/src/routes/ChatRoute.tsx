@@ -19,10 +19,11 @@ import ChatView from '~/components/Chat/ChatView';
 import { NotificationSeverity } from '~/common';
 import useAuthRedirect from './useAuthRedirect';
 import temporaryStore from '~/store/temporary';
+import { requireLogin } from '~/utils/login';
 import store from '~/store';
 
 export default function ChatRoute() {
-  const { data: startupConfig } = useGetStartupConfig();
+  const { data: startupConfig, isError: startupConfigFailed } = useGetStartupConfig();
   const { isAuthenticated, isGuest, roles } = useAuthRedirect();
   // Anonymous guests (when ALLOW_GUEST_CHAT is on) get the full chat composer,
   // scoped server-side to the free preview model. They render the same view as
@@ -34,7 +35,9 @@ export default function ChatRoute() {
   useAppStartup({ startupConfig, isAuthenticated });
 
   const index = 0;
-  const { conversationId = '' } = useParams();
+  // `/` carries no param and IS a new conversation, so that is the default
+  // rather than the empty string — every branch below keys off NEW_CONVO.
+  const { conversationId = Constants.NEW_CONVO } = useParams();
   useIdChangeEffect(conversationId);
   const { hasSetConversation, conversation } = store.useCreateConversationAtom(index);
   const { newConversation } = useNewConvo();
@@ -163,7 +166,36 @@ export default function ChatRoute() {
     assistantListMap,
   ]);
 
-  if (endpointsQuery.isLoading || modelsQuery.isLoading) {
+  /**
+   * A dead end has to SAY so. Two states leave an anonymous visitor with no
+   * path to chat at all, and both used to render as a black void:
+   *   - the startup config request failed, so guest chat can never be attempted
+   *   - the config loaded and says guest chat is off, and nobody is signed in
+   * Neither is "still loading", so neither resolves by waiting.
+   *
+   * It deliberately does NOT fire while a guest mint is in flight — config
+   * present + allowGuestChat true is the normal boot window, and asking there
+   * would put an unprompted modal over the signed-out product, which is the one
+   * thing the arrival-gate removal forbids. A mint that is ATTEMPTED and refused
+   * is already handled where it happens (AuthContext.acquireGuest).
+   */
+  const noPathToChat =
+    !canChat && (startupConfigFailed === true || startupConfig?.allowGuestChat === false);
+  useEffect(() => {
+    if (noPathToChat) {
+      requireLogin('unavailable');
+    }
+  }, [noPathToChat]);
+
+  // `isInitialLoading`, NOT `isLoading`. In react-query v4 a DISABLED query
+  // reports `status: 'loading'` forever — it has no data and never will, because
+  // it is never allowed to run. Both queries here are `enabled: canChat`, so an
+  // anonymous visitor whose guest session never landed sat under this spinner
+  // permanently: no error, no gate, no timeout, and the `!canChat` branch below
+  // was unreachable dead code behind it. `isInitialLoading` is
+  // `isLoading && isFetching`, which is false for a disabled query, so the
+  // spinner now means "a request is in flight" and nothing else.
+  if (endpointsQuery.isInitialLoading || modelsQuery.isInitialLoading) {
     return (
       <div className="flex h-screen items-center justify-center" aria-live="polite" role="status">
         <Spinner className="text-text-primary" />
@@ -172,6 +204,10 @@ export default function ChatRoute() {
   }
 
   if (!canChat) {
+    // Renders nothing ON PURPOSE, and it is no longer silent: the effect above
+    // has asked for the login gate, which is the one component that explains a
+    // refusal. Returning null WITHOUT that ask is how a config fetch failing
+    // turned the product into sidebar chrome over a black void.
     return null;
   }
 

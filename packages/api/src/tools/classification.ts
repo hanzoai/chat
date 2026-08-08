@@ -8,10 +8,8 @@
 import { logger } from '@hanzochat/data-schemas';
 import { Constants } from '@hanzochat/data-provider';
 import {
-  EnvVar,
   createToolSearch,
   ToolSearchToolDefinition,
-  createProgrammaticToolCallingTool,
   ProgrammaticToolCallingDefinition,
 } from '@hanzochat/agents';
 import type { AgentToolOptions } from '@hanzochat/data-provider';
@@ -178,8 +176,6 @@ function buildToolRegistry(
 export interface BuildToolClassificationParams {
   /** All loaded tools (will be filtered for MCP tools) */
   loadedTools: GenericTool[];
-  /** User ID for auth lookup */
-  userId: string;
   /** Agent ID (used for logging and context) */
   agentId?: string;
   /** Per-tool configuration from the agent */
@@ -188,11 +184,6 @@ export interface BuildToolClassificationParams {
   deferredToolsEnabled?: boolean;
   /** When true, skip creating tool instances (for event-driven mode) */
   definitionsOnly?: boolean;
-  /** Function to load auth values (dependency injection) */
-  loadAuthValues: (params: {
-    userId: string;
-    authFields: string[];
-  }) => Promise<Record<string, string>>;
 }
 
 /** Result from building tool classification */
@@ -245,20 +236,18 @@ export function agentHasDeferredTools(toolRegistry: LCToolRegistry): boolean {
  * 4. Creates PTC tool only if agent has tools configured for programmatic calling
  * 5. Creates tool search tool only if agent has deferred tools
  *
- * @param params - Parameters including loaded tools, userId, agentId, agentToolOptions, and dependencies
+ * @param params - Parameters including loaded tools, agentId and agentToolOptions
  * @returns Tool registry and any additional tools created
  */
 export async function buildToolClassification(
   params: BuildToolClassificationParams,
 ): Promise<BuildToolClassificationResult> {
   const {
-    userId,
     agentId,
     loadedTools,
     agentToolOptions,
     definitionsOnly = false,
     deferredToolsEnabled = true,
-    loadAuthValues,
   } = params;
   const additionalTools: GenericTool[] = [];
 
@@ -331,7 +320,6 @@ export async function buildToolClassification(
     logger.debug(`[buildToolClassification] Tool Search enabled for agent ${agentId}`);
   }
 
-  /** PTC requires CODE_API_KEY for sandbox execution */
   if (!hasProgrammaticTools) {
     return { toolRegistry, toolDefinitions, additionalTools, hasDeferredTools };
   }
@@ -353,36 +341,13 @@ export async function buildToolClassification(
     return { toolRegistry, toolDefinitions, additionalTools, hasDeferredTools };
   }
 
-  try {
-    const authValues = await loadAuthValues({
-      userId,
-      authFields: [EnvVar.CODE_API_KEY],
-    });
-    const codeApiKey = authValues[EnvVar.CODE_API_KEY];
-
-    if (!codeApiKey) {
-      logger.warn('[buildToolClassification] PTC configured but CODE_API_KEY not available');
-      return { toolRegistry, toolDefinitions, additionalTools, hasDeferredTools };
-    }
-
-    const ptcTool = createProgrammaticToolCallingTool({ apiKey: codeApiKey });
-    additionalTools.push(ptcTool);
-
-    /** Add PTC definition for event-driven mode */
-    toolDefinitions.push({
-      name: ProgrammaticToolCallingDefinition.name,
-      description: ProgrammaticToolCallingDefinition.description,
-      parameters: ProgrammaticToolCallingDefinition.schema as unknown as LCTool['parameters'],
-    });
-    toolRegistry.set(ProgrammaticToolCallingDefinition.name, {
-      name: ProgrammaticToolCallingDefinition.name,
-      allowed_callers: ['direct'],
-    });
-
-    logger.debug(`[buildToolClassification] PTC tool enabled for agent ${agentId}`);
-  } catch (error) {
-    logger.error('[buildToolClassification] Error creating PTC tool:', error);
-  }
+  /* Programmatic tool calling is a DIFFERENT protocol from a code run: it
+   * suspends the graph on every tool call and resumes it from a continuation
+   * token, which the sandbox verbs do not express and cloud answers 501. The
+   * DEFINITION is still published so an agent configured for PTC keeps its shape,
+   * but no executable tool is created — offering one that fails mid-run is worse
+   * than not offering it. */
+  logger.debug(`[buildToolClassification] PTC declared but not executable for agent ${agentId}`);
 
   return { toolRegistry, toolDefinitions, additionalTools, hasDeferredTools };
 }

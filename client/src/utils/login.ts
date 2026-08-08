@@ -7,10 +7,7 @@ import { getHanzoIamSdk } from '~/utils/iam';
  * signed-out preview itself could not be started, so there is no anonymous
  * product to fall back to.
  */
-export type LoginReason = 'limit' | 'anonymous' | 'welcome' | 'unavailable';
-
-/** Marks that this tab has already shown the arrival gate; dismissing must stick. */
-const WELCOME_SHOWN = 'hanzo.login.welcomed';
+export type LoginReason = 'limit' | 'anonymous' | 'unavailable';
 
 /**
  * The reason a gate that has not mounted yet must still show.
@@ -27,26 +24,6 @@ export function takePendingLogin(): LoginReason | null {
   const reason = pendingReason;
   pendingReason = null;
   return reason;
-}
-
-/**
- * Open the arrival gate once per tab for a visitor who is not signed in.
- *
- * `limit`, `anonymous` and `unavailable` are REFUSALS — something was denied and
- * the gate explains it. `welcome` is not: nothing failed, we are simply offering
- * the better product before they start, the way chatgpt.com does. It must
- * therefore be dismissible and must stay dismissed, or it becomes a wall in front
- * of a product we deliberately let people use signed out.
- */
-export function offerLogin(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  if (sessionStorage.getItem(WELCOME_SHOWN) === '1') {
-    return;
-  }
-  sessionStorage.setItem(WELCOME_SHOWN, '1');
-  requireLogin('welcome');
 }
 
 /** Window event carrying a {@link LoginReason}. `LoginGate` listens for it. */

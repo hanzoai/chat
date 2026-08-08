@@ -57,6 +57,8 @@ __blobstorage__/**/*
 /.tabnine/
 /e2e/playwright-report/
 /e2e/specs/.test-results/
+/e2e/test-results/
+/test-results/
 /images
 /packages/ux-shared/
 /playwright/.cache/
@@ -104,6 +106,8 @@ client/public/main.js
 client/public/main.js.LICENSE.txt
 client/public/main.js.map
 client/src/localization/languages/*_missing_keys.json
+# where the gui compiler stages the bundled config it reads
+client/.hanzogui/
 config.local.ts
 config/translations/stores/*
 coordination/

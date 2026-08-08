@@ -198,6 +198,15 @@ export default function useStepHandler({
         type: ToolCallTypes.TOOL_CALL,
         auth: contentPart.tool_call.auth,
         expires_at: contentPart.tool_call.expires_at,
+        /**
+         * KEPT, unlike `auth` directly above, and the difference is deliberate.
+         * `auth` is CLEARED by omission — that is how an OAuth prompt is taken
+         * down once it is answered. A run's ids never change and are sent once,
+         * before the command starts, so the deltas that follow (and the final
+         * update) do not repeat them. Assigning from the delta alone would drop
+         * the ids on the very next frame and close the live tail mid-command.
+         */
+        run: contentPart.tool_call.run ?? existingToolCall?.run,
       };
 
       if (finalUpdate) {
@@ -517,6 +526,13 @@ export default function useStepHandler({
             if (runStepDelta.delta.auth != null) {
               contentPart.tool_call.auth = runStepDelta.delta.auth;
               contentPart.tool_call.expires_at = runStepDelta.delta.expires_at;
+            }
+
+            // Where this call's work is running. Sent once, just before the
+            // command starts, so the reader can tail its log while it runs
+            // instead of waiting for the output to land all at once.
+            if (runStepDelta.delta.run != null) {
+              contentPart.tool_call.run = runStepDelta.delta.run;
             }
 
             // Use server's index, offset by initialContent for edit scenarios

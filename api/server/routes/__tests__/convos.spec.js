@@ -627,6 +627,102 @@ describe('Convos Routes', () => {
       expect(response.body).toEqual({ error: 'conversationId is required' });
     });
   });
+
+  /**
+   * `/update` carries a conversation's own metadata — its title, its pinned
+   * state, or both. One route, because they are the same kind of edit; the
+   * pinned section in the sidebar reads the flag this writes.
+   */
+  describe('POST /update', () => {
+    it('should rename a conversation', async () => {
+      saveConvo.mockResolvedValue({ conversationId: 'conv-1', title: 'Renamed' });
+
+      const response = await request(app)
+        .post('/v1/chat/convos/update')
+        .send({ arg: { conversationId: 'conv-1', title: '  Renamed  ' } });
+
+      expect(response.status).toBe(201);
+      expect(saveConvo).toHaveBeenCalledWith(
+        expect.objectContaining({ user: { id: 'test-user-123' } }),
+        { conversationId: 'conv-1', title: 'Renamed' },
+        { context: 'POST /v1/chat/convos/update conv-1' },
+      );
+    });
+
+    it('should pin a conversation without touching its title', async () => {
+      saveConvo.mockResolvedValue({ conversationId: 'conv-1', isPinned: true });
+
+      const response = await request(app)
+        .post('/v1/chat/convos/update')
+        .send({ arg: { conversationId: 'conv-1', isPinned: true } });
+
+      expect(response.status).toBe(201);
+      expect(saveConvo).toHaveBeenCalledWith(
+        expect.objectContaining({ user: { id: 'test-user-123' } }),
+        { conversationId: 'conv-1', isPinned: true },
+        { context: 'POST /v1/chat/convos/update conv-1' },
+      );
+    });
+
+    it('should unpin a conversation', async () => {
+      saveConvo.mockResolvedValue({ conversationId: 'conv-1', isPinned: false });
+
+      const response = await request(app)
+        .post('/v1/chat/convos/update')
+        .send({ arg: { conversationId: 'conv-1', isPinned: false } });
+
+      expect(response.status).toBe(201);
+      expect(saveConvo).toHaveBeenCalledWith(
+        expect.anything(),
+        { conversationId: 'conv-1', isPinned: false },
+        expect.anything(),
+      );
+    });
+
+    it('should accept a rename and a pin together', async () => {
+      saveConvo.mockResolvedValue({});
+
+      const response = await request(app)
+        .post('/v1/chat/convos/update')
+        .send({ arg: { conversationId: 'conv-1', title: 'Both', isPinned: true } });
+
+      expect(response.status).toBe(201);
+      expect(saveConvo).toHaveBeenCalledWith(
+        expect.anything(),
+        { conversationId: 'conv-1', title: 'Both', isPinned: true },
+        expect.anything(),
+      );
+    });
+
+    it('should return 400 when neither title nor isPinned is present', async () => {
+      const response = await request(app)
+        .post('/v1/chat/convos/update')
+        .send({ arg: { conversationId: 'conv-1' } });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'title or isPinned is required' });
+      expect(saveConvo).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when isPinned is not a boolean', async () => {
+      const response = await request(app)
+        .post('/v1/chat/convos/update')
+        .send({ arg: { conversationId: 'conv-1', isPinned: 'yes' } });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'isPinned must be a boolean' });
+      expect(saveConvo).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when conversationId is missing', async () => {
+      const response = await request(app)
+        .post('/v1/chat/convos/update')
+        .send({ arg: { isPinned: true } });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'conversationId is required' });
+    });
+  });
 });
 
 /**

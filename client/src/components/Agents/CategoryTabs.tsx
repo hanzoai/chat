@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMediaQuery } from '@hanzochat/client';
+import { useIsSmallScreen } from '@hanzochat/client';
 import type t from '@hanzochat/data-provider';
 import { useLocalize, TranslationKeys } from '~/hooks';
 import { SmartLoader } from './SmartLoader';
@@ -34,7 +34,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   onChange,
 }) => {
   const localize = useLocalize();
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
 
   /** Helper function to get category display name from database data */
   const getCategoryDisplayName = (category: t.TCategory) => {

@@ -62,7 +62,14 @@ const App = () => {
   const envTheme = getThemeFromEnv();
 
   return (
-    <GuiProvider config={guiConfig} defaultTheme="dark">
+    // Injection is off exactly where the compiler is on. `vite build` runs
+    // gui's compiler, which writes that same sheet to src/gui.css (imported by
+    // main.jsx) and ships it as a cacheable file — injecting it again would
+    // duplicate 350KB into every document. The dev server does NOT run the
+    // compiler (see vite.config.ts for why), so there it injects, as always.
+    // Turning this on with nothing writing the sheet is how a page ends up with
+    // no rules at all.
+    <GuiProvider config={guiConfig} defaultTheme="dark" disableInjectCSS={!import.meta.env.DEV}>
       <QueryClientProvider client={queryClient}>
         <Provider>
           <LiveAnnouncer>

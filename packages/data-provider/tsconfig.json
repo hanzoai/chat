@@ -5,10 +5,13 @@
     "module": "esnext",
     "noImplicitAny": true,
     "outDir": "./types",
-    "target": "es5",
+    // TS7 removed target=ES5 (TS5108). noEmit + an explicit lib list mean
+    // target only shapes checking here; lib carries es2018 so AsyncGenerator
+    // (zap.ts) resolves under both toolchains.
+    "target": "es2017",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "lib": ["es2017", "dom", "ES2021.String"],
+    "lib": ["es2018", "dom", "ES2021.String"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,27 +21,19 @@
     "isolatedModules": true,
     "noEmit": true,
     "sourceMap": true,
-    // baseUrl is what makes a bare "src/..." specifier resolvable. Without it
-    // TypeScript has no root to resolve non-relative paths against, so
-    // src/types/assistants.ts fails with
+    // Bare "src/..." specifiers used to resolve through baseUrl, which TS7
+    // refuses outright (TS5102) — and two "semantics-preserving" migrations
+    // (1266c6b9c, c07a00d1f) deleted baseUrl without a replacement, each killing
+    // the image build with
     //   TS2307: Cannot find module 'src/schemas'
-    // even though src/schemas.ts is right there — and rollup-plugin-typescript2
-    // turns that into a hard RollupError that fails the whole image build.
-    // "paths" was already here and worked, because paths entries resolve
-    // relative to the config file rather than baseUrl.
-    //
-    // Deleted TWICE now, both times by an automated tsconfig migration calling
-    // itself semantics-preserving. It is not:
-    //   1266c6b9c -> the v1.0.49 image build died on exactly the TS2307 above.
-    //   c07a00d1f -> "idempotent and semantics-preserving"; the v1.0.50 build
-    //                died on exactly the TS2307 above, and the deletion took
-    //                THIS COMMENT with it, so the next migration would have had
-    //                nothing to read.
-    // If a migration wants this line gone it must first make `pnpm run frontend`
-    // pass without it. Nothing else is evidence.
-    "baseUrl": ".",
+    // (rollup-plugin-typescript2 turns that into a hard RollupError). The
+    // "src/*" paths entry below IS the replacement: paths resolve relative to
+    // this config file, so it satisfies TS 5 and TS 7 alike. The bar from the
+    // baseUrl era stands: `pnpm run frontend` passing without baseUrl is the
+    // only evidence that counts.
     "paths": {
-      "@hanzochat/data-provider/react-query": ["./src/react-query/index.ts"]
+      "@hanzochat/data-provider/react-query": ["./src/react-query/index.ts"],
+      "src/*": ["./src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "types", "src/**/*.spec.ts", "src/**/*.test.ts"],

@@ -15,7 +15,7 @@ import type { DataTableProps, ProcessedDataRow } from './DataTable.types';
 import { SelectionCheckbox, MemoizedTableRow, SkeletonRows } from './DataTableComponents';
 import { Table, TableBody, TableHead, TableHeader, TableCell, TableRow } from '../Table';
 import { useDebounced, useOptimizedRowSelection } from './DataTable.hooks';
-import { useMediaQuery, useLocalize } from '~/hooks';
+import { useIsSmallScreen, useLocalize } from '~/hooks';
 import { DataTableSearch } from './DataTableSearch';
 import { cn, logger } from '~/utils';
 import { Label } from '../Label';
@@ -39,7 +39,7 @@ function DataTable<TData extends Record<string, unknown>, TValue>({
   customActionsRenderer,
 }: DataTableProps<TData, TValue>) {
   const localize = useLocalize();
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
 
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<number | null>(null);

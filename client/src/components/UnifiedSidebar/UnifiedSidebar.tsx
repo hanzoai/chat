@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect, useRef, memo, startTransition } from 
 import type { ReactNode } from 'react';
 import { useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
-import { useMediaQuery } from '@hanzochat/client';
+import { useIsSmallScreen } from '@hanzochat/client';
 import type { ChatFormValues } from '~/common';
 import { ChatContext, ChatFormProvider, ActivePanelProvider } from '~/Providers';
 import useUnifiedSidebarLinks from '~/hooks/Nav/useUnifiedSidebarLinks';
@@ -41,7 +41,7 @@ function SidebarChatProvider({ children }: { children: ReactNode }) {
 
 function UnifiedSidebar() {
   const localize = useLocalize();
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const [expanded, setExpanded] = useAtom(store.sidebarExpanded);
   const [sidebarWidth, setSidebarWidth] = useState(getInitialWidth);
   const [isResizing, setIsResizing] = useState(false);

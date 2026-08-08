@@ -1,8 +1,9 @@
 import { useMemo, memo, type FC, useCallback, useEffect, useRef } from 'react';
 import throttle from 'lodash/throttle';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ArrowUpRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAtomValue } from 'jotai';
-import { Spinner, useMediaQuery } from '@hanzochat/client';
+import { Spinner, useIsSmallScreen } from '@hanzochat/client';
 import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import type { TConversation } from '@hanzochat/data-provider';
 import { useLocalize, TranslationKeys, useFavorites, useShowMarketplace } from '~/hooks';
@@ -76,20 +77,39 @@ interface ChatsHeaderProps {
   onToggle: () => void;
 }
 
-/** Collapsible header for the Chats section */
+/**
+ * Collapsible header for the Chats section. Two controls, two jobs: the label
+ * collapses the list, the arrow opens the full "Chats and tasks" pane.
+ */
 const ChatsHeader: FC<ChatsHeaderProps> = memo(({ isExpanded, onToggle }) => {
   const localize = useLocalize();
+  const navigate = useNavigate();
   return (
-    <button
-      onClick={onToggle}
-      className="group flex min-h-11 w-full items-center justify-between rounded-lg px-1 py-2 text-xs font-bold text-text-secondary outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white"
-      type="button"
-    >
-      <span className="select-none">{localize('com_ui_chats')}</span>
-      <ChevronDown
-        className={cn('h-3 w-3 transition-transform duration-200', isExpanded ? 'rotate-180' : '')}
-      />
-    </button>
+    <div className="group flex min-h-11 w-full items-center justify-between rounded-lg px-1 py-2 text-xs font-bold text-text-secondary">
+      <button
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        className="flex flex-1 items-center gap-1 rounded-lg text-left outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white"
+        type="button"
+      >
+        <span className="select-none">{localize('com_ui_chats')}</span>
+        <ChevronDown
+          className={cn(
+            'h-3 w-3 transition-transform duration-200',
+            isExpanded ? 'rotate-180' : '',
+          )}
+        />
+      </button>
+      <button
+        type="button"
+        data-testid="nav-all-chats-button"
+        onClick={() => navigate('/chats')}
+        aria-label={localize('com_ui_chats_and_tasks')}
+        className="rounded-lg p-1 opacity-0 outline-none hover:bg-surface-active-alt focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black group-hover:opacity-100 dark:focus-visible:ring-white"
+      >
+        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden={true} />
+      </button>
+    </div>
   );
 });
 
@@ -115,6 +135,9 @@ type FlattenedItem =
   | { type: 'header'; groupName: string }
   | { type: 'convo'; convo: TConversation }
   | { type: 'loading' };
+
+/** Pinned conversations sit in their own section above the dated recents. */
+const PINNED_GROUP = 'com_ui_pinned';
 
 const MemoizedConvo = memo(
   ({
@@ -142,6 +165,8 @@ const MemoizedConvo = memo(
       prevProps.conversation.conversationId === nextProps.conversation.conversationId &&
       prevProps.conversation.title === nextProps.conversation.title &&
       prevProps.conversation.endpoint === nextProps.conversation.endpoint &&
+      prevProps.conversation.isPinned === nextProps.conversation.isPinned &&
+      prevProps.conversation.tags === nextProps.conversation.tags &&
       prevProps.isGenerating === nextProps.isGenerating
     );
   },
@@ -161,7 +186,7 @@ const Conversations: FC<ConversationsProps> = ({
   const localize = useLocalize();
   const search = useAtomValue(store.search);
   const { favorites, isLoading: isFavoritesLoading } = useFavorites();
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const convoHeight = isSmallScreen ? 44 : 34;
   const showAgentMarketplace = useShowMarketplace();
 
@@ -181,8 +206,14 @@ const Conversations: FC<ConversationsProps> = ({
     [rawConversations],
   );
 
+  const pinnedConversations = useMemo(
+    () => filteredConversations.filter((convo) => convo.isPinned === true),
+    [filteredConversations],
+  );
+
   const groupedConversations = useMemo(
-    () => groupConversationsByDate(filteredConversations),
+    () =>
+      groupConversationsByDate(filteredConversations.filter((convo) => convo.isPinned !== true)),
     [filteredConversations],
   );
 
@@ -195,6 +226,11 @@ const Conversations: FC<ConversationsProps> = ({
     items.push({ type: 'chats-header' });
 
     if (isChatsExpanded) {
+      if (pinnedConversations.length > 0) {
+        items.push({ type: 'header', groupName: PINNED_GROUP });
+        items.push(...pinnedConversations.map((convo) => ({ type: 'convo' as const, convo })));
+      }
+
       groupedConversations.forEach(([groupName, convos]) => {
         items.push({ type: 'header', groupName });
         items.push(...convos.map((convo) => ({ type: 'convo' as const, convo })));
@@ -205,7 +241,7 @@ const Conversations: FC<ConversationsProps> = ({
       }
     }
     return items;
-  }, [groupedConversations, isLoading, isChatsExpanded, shouldShowFavorites]);
+  }, [groupedConversations, pinnedConversations, isLoading, isChatsExpanded, shouldShowFavorites]);
 
   // Store flattenedItems in a ref for keyMapper to access without recreating cache
   const flattenedItemsRef = useRef(flattenedItems);

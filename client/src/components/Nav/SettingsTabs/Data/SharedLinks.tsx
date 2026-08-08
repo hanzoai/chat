@@ -17,7 +17,7 @@ import {
   Spinner,
   OGDialog,
   DataTable,
-  useMediaQuery,
+  useIsSmallScreen,
   OGDialogTitle,
   TooltipAnchor,
   OGDialogHeader,
@@ -50,7 +50,7 @@ export default function SharedLinks() {
   const [isOpen, setIsOpen] = useState(false);
   const searchStore = useAtomValue(store.search);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const [deleteRow, setDeleteRow] = useState<SharedLinkItem | null>(null);
   const [queryParams, setQueryParams] = useState<SharedLinksListParams>(DEFAULT_PARAMS);
 

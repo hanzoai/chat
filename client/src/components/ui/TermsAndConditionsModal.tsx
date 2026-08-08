@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { OGDialog, DialogTemplate, useToastContext } from '@hanzochat/client';
+import { OGDialog, OGDialogTemplate, useToastContext } from '@hanzochat/client';
 import type { TTermsOfService } from '@hanzochat/data-provider';
 import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import { useAcceptTermsMutation } from '~/data-provider';
@@ -63,7 +63,7 @@ const TermsAndConditionsModal = ({
 
   return (
     <OGDialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTemplate
+      <OGDialogTemplate
         title={title ?? localize('com_ui_terms_and_conditions')}
         className="w-11/12 max-w-3xl sm:w-3/4 md:w-1/2 lg:w-2/5"
         showCloseButton={false}

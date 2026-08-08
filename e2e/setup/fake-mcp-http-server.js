@@ -28,7 +28,7 @@ function createMcpServer() {
   server.registerTool(
     'http_ping',
     {
-      description: 'Returns a deterministic value for LibreChat allowlist-override e2e tests.',
+      description: 'Returns a deterministic value for allowlist-override e2e tests.',
       inputSchema: {},
     },
     async () => ({

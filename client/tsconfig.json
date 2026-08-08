@@ -5,6 +5,8 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": true,
     "skipLibCheck": true,
+    // TS7 removed esModuleInterop=false (TS5108). Omitting it is byte-identical
+    // under TS5 (false is the default) and legal under TS7.
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": false,

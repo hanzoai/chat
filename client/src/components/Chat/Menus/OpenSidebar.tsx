@@ -1,5 +1,5 @@
-import { startTransition } from 'react';
-import { TooltipAnchor, Button, Sidebar } from '@hanzochat/client';
+import { PanelLeft } from 'lucide-react';
+import { TooltipAnchor, Button } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -8,24 +8,32 @@ export const CLOSE_SIDEBAR_ID = 'close-sidebar-button';
 /** Element ID for the open sidebar button - used for focus management */
 export const OPEN_SIDEBAR_ID = 'open-sidebar-button';
 
+/**
+ * The left sidebar's toggle, for the surfaces that carry their own chrome row.
+ *
+ * It has always toggled; `navVisible` is what lets it SAY so. Callers that only
+ * mount it while the sidebar is closed leave it out and get the open wording,
+ * which is the state they mount it in.
+ *
+ * The CHAT view does not mount this: there the sidebar collapses to a rail that
+ * keeps its own toggle (`Nav/NewChat.tsx`), so a copy in `Chat/Header.tsx`
+ * would be a second control for one panel. `Chat/Header.spec.tsx` holds that.
+ */
 export default function OpenSidebar({
+  navVisible = false,
   setNavVisible,
   className,
 }: {
+  navVisible?: boolean;
   setNavVisible: React.Dispatch<React.SetStateAction<boolean>>;
   className?: string;
 }) {
   const localize = useLocalize();
+  const label = localize(navVisible ? 'com_nav_close_sidebar' : 'com_nav_open_sidebar');
 
   const handleClick = () => {
-    // Use startTransition to mark this as a non-urgent update
-    // This prevents blocking the main thread during the cascade of re-renders
-    startTransition(() => {
-      setNavVisible((prev) => {
-        localStorage.setItem('navVisible', JSON.stringify(!prev));
-        return !prev;
-      });
-    });
+    // Urgent, and persisted by the atom — see Nav.toggleNavVisible.
+    setNavVisible((prev) => !prev);
     // Delay focus until after the sidebar animation completes (200ms)
     setTimeout(() => {
       document.getElementById(CLOSE_SIDEBAR_ID)?.focus();
@@ -34,15 +42,15 @@ export default function OpenSidebar({
 
   return (
     <TooltipAnchor
-      description={localize('com_nav_open_sidebar')}
+      description={label}
       render={
         <Button
           id={OPEN_SIDEBAR_ID}
           size="icon"
           variant="outline"
           data-testid="open-sidebar-button"
-          aria-label={localize('com_nav_open_sidebar')}
-          aria-expanded={false}
+          aria-label={label}
+          aria-expanded={navVisible}
           aria-controls="chat-history-nav"
           className={cn(
             'rounded-xl bg-presentation duration-0 hover:bg-surface-active-alt',
@@ -50,7 +58,7 @@ export default function OpenSidebar({
           )}
           onClick={handleClick}
         >
-          <Sidebar aria-hidden="true" />
+          <PanelLeft aria-hidden="true" />
         </Button>
       }
     />

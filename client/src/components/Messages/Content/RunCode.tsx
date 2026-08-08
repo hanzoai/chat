@@ -1,12 +1,11 @@
 import React, { useMemo, useCallback, useEffect } from 'react';
 import debounce from 'lodash/debounce';
+import { Tools } from '@hanzochat/data-provider';
 import { TerminalSquareIcon } from 'lucide-react';
-import { Tools, AuthType } from '@hanzochat/data-provider';
 import { Spinner, TooltipAnchor, useToastContext } from '@hanzochat/client';
 import type { CodeBarProps } from '~/common';
-import { useVerifyAgentToolAuth, useToolCallMutation } from '~/data-provider';
-import ApiKeyDialog from '~/components/SidePanel/Agents/Code/ApiKeyDialog';
-import { useLocalize, useCodeApiKeyForm } from '~/hooks';
+import { useToolCallMutation } from '~/data-provider';
+import { useLocalize } from '~/hooks';
 import { useMessageContext } from '~/Providers';
 import { cn, normalizeLanguage } from '~/utils';
 
@@ -22,22 +21,11 @@ const RunCode: React.FC<CodeBarProps & { iconOnly?: boolean }> = React.memo(
 
     const { messageId, conversationId, partIndex } = useMessageContext();
     const normalizedLang = useMemo(() => normalizeLanguage(lang), [lang]);
-    const { data } = useVerifyAgentToolAuth(
-      { toolId: Tools.execute_code },
-      {
-        retry: 1,
-      },
-    );
-    const authType = useMemo(() => data?.message ?? false, [data?.message]);
-    const isAuthenticated = useMemo(() => data?.authenticated ?? false, [data?.authenticated]);
-    const { methods, onSubmit, isDialogOpen, setIsDialogOpen, handleRevokeApiKey } =
-      useCodeApiKeyForm({});
-
+    /* No key dialog and no client-side auth gate. The sandbox runs under the
+     * signed-in user's own IAM bearer, so there is nothing to collect here: a
+     * caller with no session gets the server's honest refusal, which is a fact the
+     * user can act on, rather than a form asking for a key that does not exist. */
     const handleExecute = useCallback(async () => {
-      if (!isAuthenticated) {
-        setIsDialogOpen(true);
-        return;
-      }
       const codeString: string = codeRef.current?.textContent ?? '';
       if (
         typeof codeString !== 'string' ||
@@ -56,17 +44,7 @@ const RunCode: React.FC<CodeBarProps & { iconOnly?: boolean }> = React.memo(
         lang: normalizedLang,
         code: codeString,
       });
-    }, [
-      codeRef,
-      execute,
-      partIndex,
-      messageId,
-      blockIndex,
-      conversationId,
-      normalizedLang,
-      setIsDialogOpen,
-      isAuthenticated,
-    ]);
+    }, [codeRef, execute, partIndex, messageId, blockIndex, conversationId, normalizedLang]);
 
     const debouncedExecute = useMemo(
       () => debounce(handleExecute, 1000, { leading: true }),
@@ -109,24 +87,10 @@ const RunCode: React.FC<CodeBarProps & { iconOnly?: boolean }> = React.memo(
       </button>
     );
 
-    return (
-      <>
-        {iconOnly ? (
-          <TooltipAnchor description={localize('com_ui_run_code')} render={button} />
-        ) : (
-          button
-        )}
-        <ApiKeyDialog
-          onSubmit={onSubmit}
-          isOpen={isDialogOpen}
-          register={methods.register}
-          onRevoke={handleRevokeApiKey}
-          onOpenChange={setIsDialogOpen}
-          handleSubmit={methods.handleSubmit}
-          isToolAuthenticated={isAuthenticated}
-          isUserProvided={authType === AuthType.USER_PROVIDED}
-        />
-      </>
+    return iconOnly ? (
+      <TooltipAnchor description={localize('com_ui_run_code')} render={button} />
+    ) : (
+      button
     );
   },
 );

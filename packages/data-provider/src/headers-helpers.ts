@@ -5,6 +5,18 @@ export function setAcceptLanguageHeader(value: string): void {
 }
 
 export function setTokenHeader(token: string) {
+  // The bearer is PAGE state, not module state. This module is bundled more
+  // than once (root + react-query entrypoints each inline it), so a copy's
+  // axios defaults are invisible to requests dispatched through another
+  // copy — measured as a guest send leaving with no Authorization seconds
+  // after a bootstrap call carried it. The page-global is the one source of
+  // truth; every copy's injection interceptor (request.ts) reads it.
+  // `window`, NOT `globalThis`: the client build's node-polyfill plugin shims
+  // `globalThis` inside bundled modules, so a globalThis write lands on the
+  // shim and the page never sees it.
+  if (typeof window !== 'undefined') {
+    (window as unknown as { __hanzoBearer?: string }).__hanzoBearer = token || undefined;
+  }
   if (token) {
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
   } else {

@@ -4,7 +4,7 @@ import { FileSources, FileContext } from '@hanzochat/data-provider';
 import {
   Button,
   Checkbox,
-  useMediaQuery,
+  useIsSmallScreen,
   TooltipAnchor,
   AzureMinimalIcon,
   OpenAIMinimalIcon,
@@ -163,7 +163,7 @@ export const columns: ColumnDef<TFile>[] = [
       );
     },
     cell: ({ row }) => {
-      const isSmallScreen = useMediaQuery('(max-width: 768px)');
+      const isSmallScreen = useIsSmallScreen();
       return formatDate(row.original.updatedAt?.toString() ?? '', isSmallScreen);
     },
   },

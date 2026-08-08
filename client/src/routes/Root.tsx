@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useMediaQuery } from '@hanzochat/client';
+import { useIsSmallScreen } from '@hanzochat/client';
+import { useAtom } from 'jotai';
 import type { ContextType } from '~/common';
 import {
   useSearchEnabled,
@@ -17,22 +18,23 @@ import {
   FileMapContext,
 } from '~/Providers';
 import { useUserTermsQuery, useGetStartupConfig } from '~/data-provider';
-import { Nav, MobileNav, NAV_WIDTH } from '~/components/Nav';
+import { Nav, MobileNav } from '~/components/Nav';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
+import Backdrop from '~/components/Chat/Backdrop';
 import LandingPage from '~/components/Landing/LandingPage';
 import LoginGate from '~/components/Auth/LoginGate';
-import { offerLogin } from '~/utils/login';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
+import store from '~/store';
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
   const [bannerHeight, setBannerHeight] = useState(0);
-  const [navVisible, setNavVisible] = useState(() => {
-    const savedNavVisible = localStorage.getItem('navVisible');
-    return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
-  });
+  // One value, owned by the atom — which also owns its first-visit default
+  // (canvas on desktop, chrome on a phone) and its persistence. Root reads it
+  // like any other consumer instead of being the place it lives.
+  const [navVisible, setNavVisible] = useAtom(store.navVisible);
 
   const { isAuthenticated, isGuest, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
@@ -51,23 +53,13 @@ export default function Root() {
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, token]);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const location = useLocation();
 
-  // Offer the account on ARRIVAL, not only after something is refused — the
-  // chatgpt.com shape. Gated on authChecked so it never flashes over a session
-  // that is still resolving, and `offerLogin` itself fires once per tab, so
-  // dismissing it sticks for the visit.
-  //
-  // Also gated on `showChat`: an OFFER is for a visitor who has a product to keep
-  // using. A visitor whose guest mint was refused has none, and `acquireGuest`
-  // has already opened the gate with the reason — overwriting that with "Welcome
-  // back" would put the cheerful copy on the one visitor owed an explanation.
-  useEffect(() => {
-    if (authChecked && !isAuthenticated && showChat) {
-      offerLogin();
-    }
-  }, [authChecked, isAuthenticated, showChat]);
+  // No offer on arrival. The gate opens only for a REFUSAL (quota spent, session
+  // lapsed, preview unavailable) — a signed-out visitor lands in the product and
+  // stays uninterrupted until something is actually denied. The sidebar foot's
+  // Log in / Sign up carries the standing invitation.
 
   // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);
@@ -181,20 +173,25 @@ export default function Root() {
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
+                  {/* The backdrop paints behind the WHOLE app — sidebar included.
+                      It used to mount inside Presentation, which put it BESIDE
+                      the sidebar rather than under it, so the sidebar's glass
+                      had nothing to show through and read as an opaque panel.
+                      The scene composites on its own layer (a YouTube iframe),
+                      so the content column below carries an explicit z-10 —
+                      z-auto loses to a composited layer in a real (headed)
+                      browser even though DOM order suggests otherwise; the
+                      sidebar holds its own place (`.nav` is z-110). */}
+                  <Backdrop />
                   <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
-                  <div
-                    className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden"
-                    style={
-                      isSmallScreen
-                        ? {
-                            transform: navVisible
-                              ? `translateX(${NAV_WIDTH.MOBILE}px)`
-                              : 'translateX(0)',
-                            transition: 'transform 0.2s ease-out',
-                          }
-                        : undefined
-                    }
-                  >
+                  {/* The rail OVERLAYS on a phone — `.nav` is `position: fixed`
+                      at z-110 — so the content underneath must not also be
+                      pushed aside. Doing both drew one boolean twice: the
+                      drawer covered the page AND slid it 320px right, which put
+                      the hero at x=332 of a 390px viewport with `scrollWidth`
+                      still 390. Clipped, not scrollable, so the text was simply
+                      gone. A drawer that overlays is the whole treatment. */}
+                  <div className="relative z-10 flex h-full max-w-full flex-1 flex-col overflow-hidden">
                     <MobileNav navVisible={navVisible} setNavVisible={setNavVisible} />
                     <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
                   </div>

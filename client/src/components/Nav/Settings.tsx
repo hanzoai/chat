@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { SettingsTabValues } from '@hanzochat/data-provider';
+import { SettingsTabValues, balanceOn } from '@hanzochat/data-provider';
 import { MessageSquare, Command, DollarSign, BarChart3 } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import {
@@ -44,7 +44,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
       SettingsTabValues.SPEECH,
       ...(hasAnyPersonalizationFeature ? [SettingsTabValues.PERSONALIZATION] : []),
       SettingsTabValues.DATA,
-      ...(startupConfig?.balance?.enabled
+      ...(balanceOn(startupConfig)
         ? [SettingsTabValues.BALANCE, SettingsTabValues.USAGE]
         : []),
       SettingsTabValues.ACCOUNT,
@@ -110,7 +110,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
       icon: <DataIcon />,
       label: 'com_nav_setting_data',
     },
-    ...(startupConfig?.balance?.enabled
+    ...(balanceOn(startupConfig)
       ? [
           {
             value: SettingsTabValues.BALANCE,
@@ -253,12 +253,12 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                     <Tabs.Content value={SettingsTabValues.DATA} tabIndex={-1}>
                       <Data />
                     </Tabs.Content>
-                    {startupConfig?.balance?.enabled && (
+                    {balanceOn(startupConfig) && (
                       <Tabs.Content value={SettingsTabValues.BALANCE} tabIndex={-1}>
                         <Balance />
                       </Tabs.Content>
                     )}
-                    {startupConfig?.balance?.enabled && (
+                    {balanceOn(startupConfig) && (
                       <Tabs.Content value={SettingsTabValues.USAGE} tabIndex={-1}>
                         <Usage />
                       </Tabs.Content>

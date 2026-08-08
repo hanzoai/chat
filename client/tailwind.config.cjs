@@ -30,10 +30,11 @@ module.exports = {
     // NOTE: @hanzogui/shell is deliberately NOT scanned. Under 7.x the shell
     // painted itself with utility class names, so a host that did not scan it
     // rendered it transparent — hence the glob that used to sit here. Under
-    // 8.0.3 the five components chat imports (HanzoHeader, HanzoFooter,
+    // 8.0.6 the five components chat imports (HanzoHeader, HanzoFooter,
     // HanzoPreFooterCTA, HanzoAppLauncher, HanzoMark) are 100% inline-styled
-    // and contain ZERO className literals; verified against the installed
-    // package, not the changelog. The only Tailwind-bearing components left in
+    // (theme.ts tokens + useShellStyles) and the whole dist contains ZERO
+    // hardcoded className strings; verified against the installed package,
+    // not the changelog. The only Tailwind-bearing components left in
     // the shell are the Tenant* authenticated chrome (TenantHeader, TenantMark,
     // TenantCommandPalette, UserOrgDropdown, AppSwitcher), which chat does not
     // import and which HanzoHeader does not pull in transitively. Scanning them
@@ -186,6 +187,10 @@ module.exports = {
         primary: {
           DEFAULT: 'var(--primary)',
           foreground: 'var(--primary-foreground)',
+          /* `bg-primary/90` generates NO rule — Tailwind cannot alpha a var()
+             color — so hover states written that way silently did nothing.
+             This is the same 90% mix `.btn-primary:hover` uses (style.css). */
+          hover: 'color-mix(in srgb, var(--primary) 90%, transparent)',
         },
         secondary: {
           DEFAULT: 'var(--secondary)',

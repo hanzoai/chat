@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { SearchMode } from '@hanzo/ai';
-import { useLocalize } from '~/hooks';
+import { useLocalize, useAuthContext } from '~/hooks';
 import useAnswer from '~/hooks/useAnswer';
+import { cn } from '~/utils';
 import ChatForm from '~/components/Chat/Input/ChatForm';
 import ConversationStarters from '~/components/Chat/Input/ConversationStarters';
 import AnswerComposer from './AnswerComposer';
 import AnswerView from './AnswerView';
-import ModeChips from './ModeChips';
+import Modes from './Modes';
 
 /**
  * The answer engine — hanzo.chat's default surface.
@@ -36,9 +37,41 @@ import ModeChips from './ModeChips';
  */
 const CHAT_PARAMS = ['prompt', 'q', 'submit', 'project'];
 
+/** `label` is the chip caption; `text` is the ask that gets run. */
+type Starter = { label: string; text: string };
+
+/**
+ * Suggestions for the web modes, one set per mode, shown under the composer the
+ * way chat shows its starters. Clicking one RUNS it, so every `text` is a
+ * complete, standalone ask. ConversationStarters is not reused here — that
+ * component is chat-coupled (it sends through the chat form and carries the
+ * app-builder handoff), and the builder funnel stays chat-only on purpose.
+ */
+const MODE_STARTERS: Partial<Record<SearchMode, Starter[]>> = {
+  search: [
+    { label: 'Espresso machines', text: 'What is the best espresso machine under $400, according to recent reviews?' },
+    { label: 'Daily protein', text: 'How much protein per day does an active adult actually need?' },
+    { label: 'Fewest delays', text: 'Which US airlines had the fewest delays this year?' },
+    { label: 'EV: lease or buy', text: 'Is it cheaper to lease or buy an electric car right now?' },
+  ],
+  news: [
+    { label: 'AI this week', text: 'What are the biggest AI announcements this week?' },
+    { label: 'World briefing', text: 'Brief me on the top world stories today.' },
+    { label: 'Markets today', text: 'What moved the markets today, and why?' },
+    { label: 'Space', text: 'What launches and discoveries happened in space this week?' },
+  ],
+  research: [
+    { label: 'Solid-state batteries', text: 'Write a brief on how solid-state batteries change EV economics over the next decade.' },
+    { label: 'Carbon removal', text: 'Compare the leading carbon removal approaches — cost per ton, scale today, and who funds each.' },
+    { label: 'AI regulation', text: 'How do the EU AI Act and current US policy differ on frontier-model rules?' },
+    { label: 'Creator economy', text: 'Map the creator economy: major platforms, their take rates, and where the money flows.' },
+  ],
+};
+
 export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const localize = useLocalize();
   const answer = useAnswer();
+  const { isAuthenticated } = useAuthContext();
 
   // Read through react-router, the same source useQueryParams reads, so a
   // client-side navigation to a chat link switches modes too — a one-time read of
@@ -97,8 +130,14 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
     [run, model, sources],
   );
 
+  // The column tracks the composer's OWN width law (ChatForm: md:max-w-3xl
+  // xl:max-w-4xl) so the box is the same size here as in a live thread. A bare
+  // max-w-3xl here silently narrowed it, and sending the first message — which
+  // swaps this landing for the docked ChatForm — snapped it 128px wider. The
+  // greeting and mode tabs are centered, so the extra room on a wide screen
+  // costs them nothing.
   return (
-    <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-3 sm:px-4">
+    <div className="mx-auto flex h-full w-full flex-col px-3 sm:px-4 md:max-w-3xl xl:max-w-4xl">
       {hasResult && !isChat ? (
         <div className="min-h-0 flex-1 overflow-y-auto pt-4">
           <AnswerView
@@ -113,16 +152,41 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
           {answer.error && <ErrorNotice message={answer.error} needsSignIn={answer.needsSignIn} />}
         </div>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-end pb-6 sm:justify-center">
+        // Centred at every width. It used to sit at the bottom of its column on a
+        // phone (`justify-end`), which parked the line directly on top of the
+        // composer under a screen and a half of empty black — the greeting read
+        // as a caption for the input rather than as the page's opening.
+        <div className="flex flex-1 flex-col items-center justify-center pb-6">
           <h1 className="text-balance px-2 text-center text-3xl font-medium tracking-tight text-text-primary sm:text-4xl">
             {localize('com_ui_landing_title')}
           </h1>
         </div>
       )}
 
-      <div className="shrink-0 pb-3 pt-2">
-        <div className="mb-2 px-1">
-          <ModeChips mode={mode} setMode={changeMode} />
+      {/* The composer must not move when the mode does. This block is the last
+          thing in a flex column, so its TOP is the container's bottom minus its
+          own height — which means anything that renders BELOW the composer
+          decides where the composer sits. The two composers differ in height by
+          their own control rows (and, before the web modes had starters of
+          their own, by chat's starter row), so picking Search dropped the input
+          83px on the very pointer that was reaching for it (measured, 1440x900
+          and 390x844).
+
+          Reserving chat mode's natural height pins the top edge instead: the
+          rows above the composer are identical in every mode, so the composer
+          lands in the same place and the surplus falls below it, where there is
+          nothing to move. `min-h` rather than `h` so a wrapped starter row can
+          still grow rather than overflow — and the floor has to clear chat
+          mode's TALLEST natural height, not its height at one width: at 768 and
+          1024 the starter row wraps, 260 stopped binding, and the drift came
+          back at 6px. */}
+      <div className="min-h-[280px] shrink-0 pb-3 pt-2">
+        {/* The mode row is the one thing on the arrival screen that is about the
+            product rather than the visitor's question, and a phone has no room to
+            spend on it before they have asked anything. It returns the moment
+            there is a session — and at every width above a phone. */}
+        <div className={cn('mb-2 px-1', !isAuthenticated && 'max-sm:hidden')}>
+          <Modes mode={mode} setMode={changeMode} />
         </div>
 
         {isChat ? (
@@ -141,6 +205,9 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
               onSubmit={(text) => ask(text, mode as SearchMode)}
               onStop={answer.stop}
             />
+            {!hasResult && (
+              <ModeStarters mode={mode as SearchMode} disabled={answer.isLoading} ask={ask} />
+            )}
             {hasResult && (
               <button
                 type="button"
@@ -157,6 +224,49 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
   );
 }
 
+/**
+ * The web modes' starter row. Chips match ConversationStarters' exactly — same
+ * glass, same signed-out phone trim (one example, the rest `max-sm:hidden`) —
+ * so switching modes changes the suggestions, not the furniture. No "Build an
+ * app" chip and no ship-your-first-app line here: those seed a CHAT.
+ */
+function ModeStarters({
+  mode,
+  disabled,
+  ask,
+}: {
+  mode: SearchMode;
+  disabled: boolean;
+  ask: (text: string, mode: SearchMode) => void;
+}) {
+  const { isAuthenticated } = useAuthContext();
+  const starters = MODE_STARTERS[mode] ?? [];
+
+  if (!starters.length) {
+    return null;
+  }
+
+  return (
+    <div className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2 px-4">
+      {starters.map(({ label, text }, index) => (
+        <button
+          key={index}
+          type="button"
+          onClick={() => ask(text, mode)}
+          disabled={disabled}
+          title={text}
+          className={cn(
+            'glass min-h-11 max-w-full truncate rounded-full px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:bg-surface-active-alt hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
+            index > 0 && !isAuthenticated && 'max-sm:hidden',
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** An honest failure, with the one action that resolves it when there is one. */
 function ErrorNotice({ message, needsSignIn }: { message: string; needsSignIn: boolean }) {
   const localize = useLocalize();
@@ -166,7 +276,7 @@ function ErrorNotice({ message, needsSignIn }: { message: string; needsSignIn: b
       {needsSignIn && (
         <a
           href="/login"
-          className="mt-3 inline-flex items-center rounded-full bg-text-primary px-4 py-2 text-sm font-medium text-surface-primary"
+          className="mt-3 inline-flex items-center rounded-full border border-surface-submit-hover bg-surface-submit px-4 py-2 text-sm font-medium text-white"
         >
           {localize('com_answer_sign_in')}
         </a>

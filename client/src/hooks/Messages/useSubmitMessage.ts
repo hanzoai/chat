@@ -5,6 +5,15 @@ import { useChatContext, useChatFormContext, useAddedChatContext } from '~/Provi
 import { useAuthContext } from '~/hooks/AuthContext';
 import store from '~/store';
 
+/**
+ * Sending a message.
+ *
+ * NOT where a slash command is read: this is reached by a conversation starter
+ * an agent wrote, by a prompt somebody shared, and by a `?prompt=` in the
+ * address bar — none of which the viewer typed. Typed commands live in the
+ * composer's own submit (components/Chat/Input/ChatForm), beside `/build` and
+ * the agent command.
+ */
 export default function useSubmitMessage() {
   const { user } = useAuthContext();
   const methods = useChatFormContext();
@@ -19,6 +28,7 @@ export default function useSubmitMessage() {
       if (!data) {
         return console.warn('No data provided to submitMessage');
       }
+
       const rootMessages = getMessages();
       const isLatestInRootMessages = rootMessages?.some(
         (message) => message.messageId === latestMessage?.messageId,

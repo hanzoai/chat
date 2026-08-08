@@ -17,15 +17,30 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
   const getVariant = (link: NavLink) => (link.id === active ? 'default' : 'ghost');
 
   return (
+    /* `h-full` is what makes the fill a SURFACE. Without it this div sized to
+       its icons — 160px — while the panel under it is `bg-background`, so the
+       collapsed rail painted a near-black cap on a lighter column with a hard
+       seam between them, and the left sidebar (the same
+       `surface-primary-alt`, full height) had no twin on the right. Every
+       descendant already asks for `h-full`; none of them could resolve it,
+       because this element never had a height to resolve against. */
     <div
       data-collapsed={isCollapsed}
-      className="bg-token-sidebar-surface-primary hide-scrollbar group flex-shrink-0 overflow-x-hidden"
+      className="glass bg-surface-primary-alt hide-scrollbar group h-full flex-shrink-0 overflow-x-hidden"
     >
       <div className="h-full">
         <div className="flex h-full min-h-0 flex-col">
           <div className="flex h-full min-h-0 flex-col opacity-100 transition-opacity">
             <div className="scrollbar-trigger relative h-full w-full flex-1 items-start border-white/20">
-              <div className="flex h-full w-full flex-col gap-1 px-3 py-2.5 group-[[data-collapsed=true]]:items-center group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
+              {/* `justify-center` sat here too, and giving the parent a height
+                  above would have switched it on for the first time — dropping
+                  the collapsed rail's icons into the middle of a 900px column.
+                  It has never once taken effect, so it is not a behaviour being
+                  removed; it is dormant intent that would have shipped as a
+                  regression the moment the layout above started working.
+                  `items-center` is the cross axis and does centre the icons in
+                  the 49px rail, which is wanted, so it stays. */}
+              <div className="flex h-full w-full flex-col gap-1 px-3 py-2.5 group-[[data-collapsed=true]]:items-center group-[[data-collapsed=true]]:px-2">
                 {links.map((link, index) => {
                   const variant = getVariant(link);
                   return isCollapsed ? (
@@ -90,7 +105,7 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
                           </AccordionPrimitive.Trigger>
                         </AccordionPrimitive.Header>
 
-                        <AccordionContent className="bg-token-sidebar-surface-primary w-full text-text-primary">
+                        <AccordionContent className="bg-surface-primary-alt w-full text-text-primary">
                           {link.Component && <link.Component />}
                         </AccordionContent>
                       </AccordionItem>

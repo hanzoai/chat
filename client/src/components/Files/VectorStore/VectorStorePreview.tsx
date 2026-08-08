@@ -98,7 +98,7 @@ export default function VectorStorePreview() {
   const params = useParams();
 
   return (
-    <div className="m-3 ml-1 mr-7 bg-white p-2 sm:p-4 md:p-6 lg:p-10">
+    <div className="m-3 ml-1 mr-7 bg-surface-primary p-2 sm:p-4 md:p-6 lg:p-10">
       <div className="flex flex-col justify-between md:flex-row">
         <div className="flex flex-col">
           <b className="hidden text-base md:text-lg lg:block lg:text-xl">VECTOR STORE</b>
@@ -200,7 +200,7 @@ export default function VectorStorePreview() {
                 <div className="flex w-1/2 flex-row lg:w-1/3">
                   <div className="content-center text-nowrap">{file.createdAt?.toString()}</div>
                   <Button
-                    className="my-0 ml-3 h-min bg-transparent p-0 text-[#666666] hover:bg-slate-200"
+                    className="my-0 ml-3 h-min bg-transparent p-0 text-[#666666] hover:bg-surface-hover"
                     onClick={() => console.log('click')}
                   >
                     <TrashIcon className="m-0 p-0" />

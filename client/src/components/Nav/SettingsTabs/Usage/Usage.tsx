@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { Switch } from '@hanzochat/client';
+import { balanceOn } from '@hanzochat/data-provider';
 import { ExternalLink, TrendingUp, Zap, ArrowUpRight, BarChart3, Sparkles } from 'lucide-react';
 import { useGetStartupConfig, useGetUserUsage, useGetRoutingDefaults } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
@@ -124,7 +125,7 @@ function Usage() {
   const { data: startupConfig } = useGetStartupConfig();
 
   const usageQuery = useGetUserUsage({
-    enabled: !!isAuthenticated && !!startupConfig?.balance?.enabled,
+    enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
   const usage = usageQuery.data;
 
@@ -154,14 +155,14 @@ function Usage() {
       <div className="rounded-xl border border-border-medium bg-surface-secondary p-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-text-secondary">
               {localize('com_nav_usage_spend_30d')}
             </p>
             <p className="mt-1 text-2xl font-bold text-text-primary">{formatUsd(monthSpend)}</p>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-surface-tertiary px-2.5 py-1">
             <Zap className="h-3 w-3 text-text-secondary" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+            <span className="text-[10px] font-semibold tracking-wider text-text-secondary">
               {tierLabel}
             </span>
           </div>
@@ -173,7 +174,7 @@ function Usage() {
 
       {/* Token usage by window */}
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+        <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider text-text-secondary">
           <TrendingUp className="h-3.5 w-3.5" />
           {localize('com_nav_usage_tokens')}
         </h3>
@@ -208,7 +209,7 @@ function Usage() {
       {/* Per-model breakdown */}
       {models.length > 0 && (
         <div className="space-y-4">
-          <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider text-text-secondary">
             <BarChart3 className="h-3.5 w-3.5" />
             {localize('com_nav_usage_by_model')}
           </h3>

@@ -3,7 +3,7 @@ import { useAtom } from 'jotai';
 import { useOutletContext } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { TooltipAnchor, Button, NewChatIcon, useMediaQuery } from '@hanzochat/client';
+import { TooltipAnchor, Button, NewChatIcon, useIsSmallScreen } from '@hanzochat/client';
 import { PermissionTypes, Permissions, QueryKeys } from '@hanzochat/data-provider';
 import type t from '@hanzochat/data-provider';
 import type { ContextType } from '~/common';
@@ -13,7 +13,7 @@ import MarketplaceAdminSettings from './MarketplaceAdminSettings';
 import { SidePanelProvider, useChatContext } from '~/Providers';
 import { SidePanelGroup } from '~/components/SidePanel';
 import { OpenSidebar } from '~/components/Chat/Menus';
-import { cn, clearMessagesCache } from '~/utils';
+import { cn, clearMessagesCache, savedLayout } from '~/utils';
 import CategoryTabs from './CategoryTabs';
 import SearchBar from './SearchBar';
 import AgentGrid from './AgentGrid';
@@ -38,7 +38,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
   const [searchParams, setSearchParams] = useSearchParams();
   const { conversation, newConversation } = useChatContext();
 
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useIsSmallScreen();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
   const [hideSidePanel, setHideSidePanel] = useAtom(store.hideSidePanel);
 
@@ -199,7 +199,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
 
   const handleNewChat = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-      window.open('/c/new', '_blank');
+      window.open('/', '_blank');
       return;
     }
     clearMessagesCache(queryClient, conversation?.conversationId);
@@ -208,10 +208,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
   };
 
   // Layout configuration for SidePanelGroup
-  const defaultLayout = useMemo(() => {
-    const resizableLayout = localStorage.getItem('react-resizable-panels:layout');
-    return typeof resizableLayout === 'string' ? JSON.parse(resizableLayout) : undefined;
-  }, []);
+  const defaultLayout = useMemo(savedLayout, []);
 
   const defaultCollapsed = useMemo(() => {
     const collapsedPanels = localStorage.getItem('react-resizable-panels:collapsed');
@@ -228,7 +225,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
     let timeoutId: ReturnType<typeof setTimeout>;
     if (!hasAccessToMarketplace) {
       timeoutId = setTimeout(() => {
-        navigate('/c/new');
+        navigate('/');
       }, 1000);
     }
     return () => {

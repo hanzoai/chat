@@ -108,7 +108,8 @@ router.get('/', async function (req, res) {
         isBirthday() ||
         isEnabled(process.env.SHOW_BIRTHDAY_ICON) ||
         process.env.SHOW_BIRTHDAY_ICON === '',
-      helpAndFaqURL: process.env.HELP_AND_FAQ_URL || 'https://docs.hanzo.ai/chat',
+      // The docs site serves this page at /docs/chat; the bare /chat is a 404.
+      helpAndFaqURL: process.env.HELP_AND_FAQ_URL || 'https://docs.hanzo.ai/docs/chat',
       interface: appConfig?.interfaceConfig,
       turnstile: appConfig?.turnstileConfig,
       modelSpecs: appConfig?.modelSpecs,

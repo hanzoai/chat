@@ -11,12 +11,14 @@ export const useGetFiles = <TData = t.TFile[] | boolean>(
   config?: UseQueryOptions<t.TFile[], unknown, TData>,
 ): QueryObserverResult<TData, unknown> => {
   const queriesEnabled = useAtomValue<boolean>(store.queriesEnabled);
+  /* Member-only route: it refuses a guest bearer, so asking as one only logs a 401. */
+  const isAuthenticated = useAtomValue<boolean>(store.isAuthenticated);
   return useQuery<t.TFile[], unknown, TData>([QueryKeys.files], () => dataService.getFiles(), {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: false,
     ...config,
-    enabled: (config?.enabled ?? true) === true && queriesEnabled,
+    enabled: (config?.enabled ?? true) === true && queriesEnabled && isAuthenticated,
   });
 };
 

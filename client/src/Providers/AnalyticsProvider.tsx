@@ -7,6 +7,7 @@ import {
   usePageview,
 } from '@hanzo/event/react';
 import { ObserveProvider } from '@hanzo/observe/react';
+import { setTelemetry } from '@hanzo/ui/telemetry';
 import { useAuthContext } from '~/hooks/AuthContext';
 
 const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
@@ -22,7 +23,7 @@ const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api
  * then dropped — and the caller still gets 200, so the loss is silent on both
  * ends. The key is what buys full-capability ingest.
  */
-const INGEST_KEY = import.meta.env.VITE_EVENT_INGEST_KEY?.trim() || undefined;
+const INGEST_KEY = import.meta.env.VITE_PUBLISHABLE_KEY?.trim() || undefined;
 
 /**
  * Consent gate — an explicit browser opt-out (Global Privacy Control, then legacy
@@ -69,6 +70,28 @@ function AnalyticsBridge() {
 
   usePageview(pathname);
 
+  // The shared components emit through an AMBIENT client, not this one. Left
+  // unregistered that ambient client is a SECOND client with no credential, and
+  // it was posting the same $pageview this one does — three refused requests per
+  // load, answered 401, while the keyed request beside them succeeded. Installing
+  // this client as the ambient one collapses the two into a single keyed stream,
+  // which is what the rest of the estate does (hanzoai/console src/lib/event.ts).
+  useEffect(() => {
+    setTelemetry({
+      enabled: true,
+      product: 'chat',
+      client: analytics,
+      track: (event, properties, commerce) => analytics.capture(event, properties, commerce),
+      pageview: (path, properties) => analytics.pageview(path, properties),
+      identify: (personId, traits) => analytics.identify(personId, traits),
+      group: (groupId, traits) => analytics.group(groupId, traits),
+      captureError: (err, context) => analytics.captureError(err, context),
+      captureException: (err, context) => analytics.captureError(err, context),
+      setCohort: (patch) => analytics.setCohort(patch),
+      flush: () => analytics.flush(),
+    });
+  }, [analytics]);
+
   const iamSubject = isAuthenticated ? user?.openidId : undefined;
   useEffect(() => {
     if (iamSubject) {
@@ -107,11 +130,21 @@ export default function AnalyticsProvider({ children }: { children: ReactNode })
     () => ({
       product: 'chat',
       host: ANALYTICS_HOST,
-      ingestKey: INGEST_KEY,
       enabled,
+      // Signed in -> the visitor's OWN IAM token, so cloud attributes the event to
+      // their org and user. Signed out -> the publishable key, which is admission
+      // for anonymous traffic and nothing more.
+      //
+      // The key is supplied HERE and never as `ingestKey`. The SDK resolves the
+      // credential as `ingestKey ?? token`, so passing it there makes the key win
+      // even for a signed-in user — their events get filed under the key's org
+      // instead of their own, and this `getToken` becomes unreachable. Feeding it
+      // through the resolver inverts that to `token ?? key`, which is the order
+      // the product wants: one credential per state, the token whenever there is
+      // one.
       getToken: () => {
         const value = tokenRef.current;
-        return value && value !== 'session' ? value : undefined;
+        return value && value !== 'session' ? value : INGEST_KEY;
       },
     }),
     [enabled],

@@ -40,28 +40,7 @@ const loadAuthValues = async ({ userId, authFields, optional, throwError = true 
     return null;
   };
 
-  for (let authField of authFields) {
-    /**
-     * A field that is not a string is NOT an auth field, and asking for its value
-     * is not a failure worth an error-level log.
-     *
-     * `@hanzochat/agents@3.2.63` exports an `EnvVar` with only CODE_BASEURL and
-     * CODE_API_RUN_TIMEOUT_MS — `EnvVar.CODE_API_KEY` is `undefined`, at five call
-     * sites. So `authFields` arrives as `[undefined]` and this line threw
-     * `Cannot read properties of undefined (reading 'split')` on every
-     * `/v1/chat/agents/tools/execute_code/auth`. The throw was caught upstream and
-     * answered `200 {authenticated:false}` — the correct answer — but it logged at
-     * ERROR on every page load, which is how real errors get buried.
-     *
-     * Skipping is exactly the honest outcome: an unnamed field has no value, which
-     * is the same `authenticated:false` the caller already reported. The MISSING
-     * enum member is a separate, upstream defect (the intended literal is
-     * 'CODE_API_KEY', per packages/api/src/tools/classification.spec.ts) and needs
-     * an `@hanzochat/agents` bump — it is not something this loop can invent.
-     */
-    if (typeof authField !== 'string' || authField.length === 0) {
-      continue;
-    }
+  for (const authField of authFields) {
     const fields = authField.split('||');
     const result = await findAuthValue(fields);
     if (result) {

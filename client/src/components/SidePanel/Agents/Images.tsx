@@ -37,7 +37,7 @@ export const AgentAvatarRender = ({ url }: { url?: string }) => {
       <div className="relative h-20 w-20 overflow-hidden rounded-full">
         <img
           src={url}
-          className="bg-token-surface-secondary dark:bg-token-surface-tertiary h-full w-full rounded-full object-cover"
+          className="bg-surface-secondary dark:bg-surface-tertiary h-full w-full rounded-full object-cover"
           alt="Agent avatar"
           width="80"
           height="80"

@@ -12,7 +12,8 @@ export default function StopButton({ stop, setShowStopButton }) {
         <button
           type="button"
           className={cn(
-            'rounded-full bg-text-primary p-1.5 text-text-primary outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
+            // Sibling of the send button, so it wears the same pushbutton.
+            'rounded-full border border-surface-submit-hover bg-surface-submit p-1.5 text-white outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
           )}
           aria-label={localize('com_nav_stop_generating')}
           onClick={(e) => {
