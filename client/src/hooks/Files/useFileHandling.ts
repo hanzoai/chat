@@ -81,14 +81,37 @@ const useFileHandling = (params?: UseFileHandling) => {
     setErrors([]);
   }, [errors, showToast, localize]);
 
-  const debouncedDisplayToast = debounce(displayToast, 250);
+  /**
+   * ONE debounced toast for the life of the hook.
+   *
+   * `debounce(displayToast, 250)` used to be called in the render body, so it
+   * had a new identity on every render and sat in the effect's dependency
+   * array. The effect therefore re-ran after EVERY render, and its cleanup
+   * cancelled the pending toast each time — so while anything was re-rendering
+   * faster than 250ms, which an upload does constantly as progress ticks, the
+   * error never surfaced at all. The user saw a file fail silently.
+   *
+   * `displayToast` cannot be the memo's dependency either: it closes over
+   * `errors` and is rebuilt whenever they change, which is exactly when this
+   * runs. So the debounced wrapper is built ONCE and reads the current
+   * `displayToast` through a ref — the same shape useDragHelpers already uses
+   * next door to keep its drop handler stable.
+   */
+  const displayToastRef = useRef(displayToast);
+  displayToastRef.current = displayToast;
+
+  const debouncedDisplayToast = useMemo(
+    () => debounce(() => displayToastRef.current(), 250),
+    [],
+  );
+
+  /** Cancel only when the hook goes away, never on an unrelated re-render. */
+  useEffect(() => () => debouncedDisplayToast.cancel(), [debouncedDisplayToast]);
 
   useEffect(() => {
     if (errors.length > 0) {
       debouncedDisplayToast();
     }
-
-    return () => debouncedDisplayToast.cancel();
   }, [errors, debouncedDisplayToast]);
 
   const uploadFile = useUploadFileMutation(
