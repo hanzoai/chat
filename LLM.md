@@ -402,6 +402,44 @@ Read this before deleting anything else Mongo-shaped:
   client_id **`app-chat`** while prod uses `hanzo-chat` — align to `hanzo-chat`.
   `@hanzo/iam` is pinned `^0.4.0` (HIP-0111 wants ≥0.11.0); this path is dormant.
 
+### What leaves this process, and what a session alone may authorize
+
+Three rules that a well-meaning change will otherwise undo. Each was a live
+defect; each is held by a spec in the `credentials` gate.
+
+**A user document leaves ONLY through `services/publicUser`.** It is an
+ALLOW-LIST, and that is the whole point: both places that used to hand a user to
+the browser named what to WITHHOLD, and a deny-list is only ever correct for the
+fields somebody thought of. `refreshToken` rode `GET /v1/chat/user`, every
+`/auth/refresh`, the IAM login response, 2FA verify and the admin `/verify` into
+the browser that way. Eight send sites project through it now. Adding a field to
+the list is a decision; deleting the projection at one site reopens the class.
+The schema is the second lock — `refreshToken`, `totpSecret` and `backupCodes`
+carry `select: false`, so a route nobody has written yet cannot leak what the
+query never loaded.
+
+**An agent lends out its AUTHOR's attached files and nothing else.**
+`hasAccessToFilesViaAgent` once granted the author of an agent every file id the
+CALLER named — attached or not, owned or not — and returned before the
+`isDelete` EDIT check, so `DELETE /v1/chat/files` with someone else's `file_id`
+and your own `agent_id` deleted their file. Three conditions hold now, in order:
+the file is attached to the agent; a non-author holds VIEW (and EDIT to delete);
+and the file belongs to the agent's author. `tool_resources` is written by
+whoever edits the agent, so an id there is a claim, not a fact.
+`filterFilesByAgentAccess` returns the caller's OWN files for an ephemeral or
+non-`agent_` id — upstream returns everything unfiltered there, and that is the
+one deliberate divergence: `agentId` comes off the request, so upstream's shape
+lets any caller opt out of filtering by naming an id of the wrong form.
+
+**Deleting an account re-verifies the second factor.** A live session is not
+enough to authorize something irreversible. `verifyOTPOrBackupCode`
+(twoFactorService) answers with a value rather than writing a response, which is
+what lets a caller that is not a login route use it; the confirm dialog collects
+the code, so an account with 2FA can still delete itself. Measured before
+landing: 28 users, ZERO with 2FA enabled, 27 of 28 on OIDC — the factor lives at
+hanzo.id, so this changes nothing here today and everything for a deployment
+with local auth.
+
 ### One shell, one accent, one menu
 
 Chat used to carry TWO cross-app headers: `@hanzogui/shell`'s on the landing and
