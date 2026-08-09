@@ -41,6 +41,7 @@ import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
 import SendButton from './SendButton';
 import EditBadges from './EditBadges';
+import { BadgeRowProvider } from '~/Providers';
 import BadgeRow from './BadgeRow';
 import Mention from './Mention';
 import ComposerShell from './ComposerShell';
@@ -372,7 +373,17 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             >
               {/* Hidden while dictating so the waveform owns the full row. */}
               {!recording && (
-                <>
+                <BadgeRowProvider
+                  conversationId={conversationId}
+                  specName={conversation?.spec}
+                  isSubmitting={isSubmitting}
+                >
+                  {/* The provider wraps the WHOLE control row, not just the
+                      badges. It used to live inside BadgeRow, which made the
+                      tools state reachable only from BadgeRow's own subtree —
+                      so the "+" could not offer them without throwing. Its three
+                      props are ones this form already holds and already passes
+                      down. */}
                   <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
                     <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
                   </div>
@@ -390,7 +401,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                     }
                   />
                   <div className="mx-auto flex" />
-                </>
+                </BadgeRowProvider>
               )}
               {/* The mic is a core composer control — always present. It
                   self-disables and names the reason when dictation is
