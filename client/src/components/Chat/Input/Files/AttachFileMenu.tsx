@@ -52,7 +52,20 @@ interface AttachFileMenuProps {
   useResponsesApi?: boolean;
 }
 
-const AttachFileMenu = ({
+/**
+ * Everything the attach control IS, minus the button that opens it: the upload
+ * items, the hidden file input, and the two dialogs.
+ *
+ * Split out so the composer's "+" can offer attaching as a submenu without a
+ * second copy of the upload handling. `FileUpload` renders `<>{children}<input
+ * hidden/></>` — a FRAGMENT — so the input is a SIBLING, not a wrapper, and
+ * moving the items to another menu does not move the input out from under them.
+ * `handleUploadClick` reaches it by ref either way.
+ *
+ * `portals` must be rendered by exactly ONE consumer, or there are two hidden
+ * inputs and two dialog sets.
+ */
+export function useAttachFile({
   agentId,
   endpoint,
   disabled,
@@ -60,11 +73,10 @@ const AttachFileMenu = ({
   conversationId,
   endpointFileConfig,
   useResponsesApi,
-}: AttachFileMenuProps) => {
+}: AttachFileMenuProps) {
   const localize = useLocalize();
   const isUploadDisabled = disabled ?? false;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isPopoverActive, setIsPopoverActive] = useState(false);
   const [ephemeralAgent, setEphemeralAgent] = useAtom(ephemeralAgentByConvoId(conversationId));
   const [toolResource, setToolResource] = useState<EToolResources | undefined>();
   const { handleFileChange } = useFileHandling();
@@ -238,6 +250,52 @@ const AttachFileMenu = ({
     setIsPreviousImagesOpen,
   ]);
 
+  const handleSharePointFilesSelected = async (sharePointFiles: any[]) => {
+    try {
+      await handleSharePointFiles(sharePointFiles);
+      setIsSharePointDialogOpen(false);
+    } catch (error) {
+      console.error('SharePoint file processing error:', error);
+    }
+  };
+
+  const portals = (
+    <>
+      <FileUpload
+        ref={inputRef}
+        handleFileChange={(e) => {
+          handleFileChange(e, toolResource);
+        }}
+      >
+        <></>
+      </FileUpload>
+      <SharePointPickerDialog
+        isOpen={isSharePointDialogOpen}
+        onOpenChange={setIsSharePointDialogOpen}
+        onFilesSelected={handleSharePointFilesSelected}
+        isDownloading={isProcessing}
+        downloadProgress={downloadProgress}
+        maxSelectionCount={endpointFileConfig?.fileLimit}
+      />
+      {isPreviousImagesOpen && (
+        <PreviousImagesDialog
+          isOpen={isPreviousImagesOpen}
+          onOpenChange={setIsPreviousImagesOpen}
+          conversationId={conversationId}
+        />
+      )}
+    </>
+  );
+
+  return { items: dropdownItems, portals };
+}
+
+const AttachFileMenu = (props: AttachFileMenuProps) => {
+  const localize = useLocalize();
+  const isUploadDisabled = props.disabled ?? false;
+  const [isPopoverActive, setIsPopoverActive] = useState(false);
+  const { items: dropdownItems, portals } = useAttachFile(props);
+
   const menuTrigger = (
     <TooltipAnchor
       render={
@@ -260,49 +318,20 @@ const AttachFileMenu = ({
       disabled={isUploadDisabled}
     />
   );
-  const handleSharePointFilesSelected = async (sharePointFiles: any[]) => {
-    try {
-      await handleSharePointFiles(sharePointFiles);
-      setIsSharePointDialogOpen(false);
-    } catch (error) {
-      console.error('SharePoint file processing error:', error);
-    }
-  };
 
   return (
     <>
-      <FileUpload
-        ref={inputRef}
-        handleFileChange={(e) => {
-          handleFileChange(e, toolResource);
-        }}
-      >
-        <DropdownPopup
-          menuId="attach-file-menu"
-          className="overflow-visible"
-          isOpen={isPopoverActive}
-          setIsOpen={setIsPopoverActive}
-          modal={true}
-          unmountOnHide={true}
-          trigger={menuTrigger}
-          items={dropdownItems}
-        />
-      </FileUpload>
-      <SharePointPickerDialog
-        isOpen={isSharePointDialogOpen}
-        onOpenChange={setIsSharePointDialogOpen}
-        onFilesSelected={handleSharePointFilesSelected}
-        isDownloading={isProcessing}
-        downloadProgress={downloadProgress}
-        maxSelectionCount={endpointFileConfig?.fileLimit}
+      {portals}
+      <DropdownPopup
+        menuId="attach-file-menu"
+        className="overflow-visible"
+        isOpen={isPopoverActive}
+        setIsOpen={setIsPopoverActive}
+        modal={true}
+        unmountOnHide={true}
+        trigger={menuTrigger}
+        items={dropdownItems}
       />
-      {isPreviousImagesOpen && (
-        <PreviousImagesDialog
-          isOpen={isPreviousImagesOpen}
-          onOpenChange={setIsPreviousImagesOpen}
-          conversationId={conversationId}
-        />
-      )}
     </>
   );
 };
