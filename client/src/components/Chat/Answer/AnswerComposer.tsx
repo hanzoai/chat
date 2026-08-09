@@ -131,11 +131,17 @@ export default function AnswerComposer({
               submit();
             }
           }}
-          className="max-h-[200px] min-h-11 w-full resize-none bg-transparent px-4 pt-3.5 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
+          className="max-h-[200px] min-h-14 w-full resize-none bg-transparent px-4 pt-4 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary md:text-lg"
         />
 
-        <div className="flex items-center gap-1.5 px-2 pb-2 pt-1">
-          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        {/* The SAME skeleton as the chat composer's action row (its own
+            `composer-actions` class): input tools on the LEFT, a spacer, the
+            submit on the RIGHT. Switching a mode tab now keeps the frame and
+            changes only the tools inside it — @sources/model here, attach/mic
+            there — instead of swapping one widget for a differently-laid-out
+            one. The submit stays the larger size-11 (owner call). */}
+        <div className="composer-actions flex items-center gap-1.5 pb-2 pt-1">
+          <div className="ml-2 flex items-center gap-1.5">
             <DropdownPopup
               portal={true}
               isOpen={sourcesOpen}
@@ -173,7 +179,11 @@ export default function AnswerComposer({
                 </Ariakit.MenuButton>
               }
             />
+          </div>
 
+          <div className="mx-auto flex" />
+
+          <div className="mr-2">
             <button
               type="button"
               aria-label={localize(isLoading ? 'com_answer_stop' : 'com_answer_send')}
