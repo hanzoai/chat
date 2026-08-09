@@ -395,6 +395,17 @@
   background-color: color-mix(in oklab, var(--background) 93%, transparent) !important;
 }
 
+/* Sidebar conversation rows lift off the GLASS sidebar with a translucent tint,
+   never the opaque `surface-active-alt` slab — a solid token there paints a
+   second opaque panel over the blur. Hover is more opaque than the transparent
+   rest state but never fully solid; the selected row is firmer still. Built from
+   the foreground colour, so it is white-ish in dark and black-ish in light with
+   one definition. */
+:root {
+  --surface-row-hover: color-mix(in oklab, var(--text-primary) 9%, transparent);
+  --surface-row-active: color-mix(in oklab, var(--text-primary) 15%, transparent);
+}
+
 /* The ring DRAWS A RING. It used to draw a filled disc and rely on the panel
    above it being opaque to cover the middle — which made the panel's opacity
    load-bearing for something that was never about the panel. The moment the
