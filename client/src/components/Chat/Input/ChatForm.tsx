@@ -61,7 +61,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const [recording, setRecording] = useState(false);
   /** True from the moment the mic opens until it closes. */
 
-  const SpeechToText = useAtomValue(store.speechToText);
   const TextToSpeech = useAtomValue(store.textToSpeech);
   const chatDirection = useAtomValue(store.chatDirection);
   const automaticPlayback = useAtomValue(store.automaticPlayback);
@@ -392,12 +391,16 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   <div className="mx-auto flex" />
                 </>
               )}
-              {SpeechToText && (
-                <Mic
-                  disabled={disableInputs || isNotAppendable}
-                  onRecordingChange={setRecording}
-                />
-              )}
+              {/* The mic is a core composer control — always present. It
+                  self-disables and names the reason when dictation is
+                  unavailable (Brave ships speech off). Gating its existence
+                  behind the STT setting silently stripped it from anyone whose
+                  stored value was off, and left no affordance to discover
+                  dictation; the Speech settings still tune it. */}
+              <Mic
+                disabled={disableInputs || isNotAppendable}
+                onRecordingChange={setRecording}
+              />
               <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
                 {/* No stop circle (owner call): the send arrow holds its seat,
                       disabled while the reply streams; the mic carries the
