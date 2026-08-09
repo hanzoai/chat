@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { CONTROL, CONTROL_OPEN } from './chrome';
+import { CONTROL, CONTROL_OPEN, ROW } from './chrome';
 
 /**
  * The top row is one row, so it wears one box.
@@ -23,7 +23,7 @@ import { CONTROL, CONTROL_OPEN } from './chrome';
 const HERE = join(__dirname);
 
 /** Every file that renders a control in the top row. */
-const ROW = [
+const TOP_ROW = [
   'Nav/NewChat.tsx',
   'Nav/BrandCorner.tsx',
   'Chat/PanelControls.tsx',
@@ -72,12 +72,20 @@ describe('the top row wears one box', () => {
     expect(CONTROL_OPEN).toBe('bg-surface-active-alt');
   });
 
+  it('keys the row height on the POINTER, never on a width breakpoint', () => {
+    // A narrow desktop window is still a mouse; a 768px tablet is still a thumb.
+    // `md:min-h-9` got both backwards and shipped 36px rows to every tablet.
+    expect(ROW).toContain('min-h-12');
+    expect(ROW).not.toMatch(/\bmd:min-h-/);
+    expect(ROW).toContain('hz-row');
+  });
+
   it('rounds the same way in both grounds', () => {
     expect(CONTROL).toContain('rounded-full');
     expect(CONTROL).toContain('md:rounded-xl');
   });
 
-  it.each(ROW)('%s sets no box of its own', (rel) => {
+  it.each(TOP_ROW)('%s sets no box of its own', (rel) => {
     const src = source(rel);
     // `size-10` is the 40px box that made Temporary chat the odd control in the
     // row; a bare `rounded-xl` is a second radius answer beside CONTROL's.

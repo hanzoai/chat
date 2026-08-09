@@ -85,4 +85,4 @@ export const CONTROL_OPEN = 'bg-surface-active-alt';
  * not a row in a list.
  */
 export const ROW =
-  'flex min-h-12 w-full items-center gap-2 rounded-lg px-2 text-sm text-text-primary transition-colors hover:bg-surface-active-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy md:min-h-9 [&_svg]:size-4';
+  'hz-row flex min-h-12 w-full items-center gap-2 rounded-lg px-2 text-sm text-text-primary transition-colors hover:bg-surface-active-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy [&_svg]:size-4';
