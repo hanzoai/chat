@@ -13,7 +13,6 @@ import { useAtomValue } from 'jotai';
 import { useAtomCallback } from 'jotai/utils';
 import type { LucideIcon } from 'lucide-react';
 import CodeInterpreter from './CodeInterpreter';
-import { BadgeRowProvider } from '~/Providers';
 import ToolsDropdown from './ToolsDropdown';
 import type { BadgeItem } from '~/common';
 import { useChatBadges } from '~/hooks';
@@ -320,11 +319,7 @@ function BadgeRow({
   }, [dragState.draggedBadge, handleMouseMove, handleMouseUp]);
 
   return (
-    <BadgeRowProvider
-      conversationId={conversationId}
-      specName={specName}
-      isSubmitting={isSubmitting}
-    >
+    <>
       <div ref={containerRef} className="relative flex flex-wrap items-center gap-2">
         {showEphemeralBadges === true && <ToolsDropdown />}
         {tempBadges.map((badge, index) => (
@@ -401,7 +396,7 @@ function BadgeRow({
         )}
       </div>
       <ToolDialogs />
-    </BadgeRowProvider>
+    </>
   );
 }
 
