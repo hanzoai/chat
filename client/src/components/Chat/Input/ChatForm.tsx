@@ -31,6 +31,7 @@ import {
   parseBuildCommand,
   openAppBuilder,
 } from '~/utils';
+import { COLUMN } from '~/components/chrome';
 import TextareaHeader from './TextareaHeader';
 import PromptsCommand from './PromptsCommand';
 import AgentsCommand from './AgentsCommand';
@@ -271,7 +272,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
       onSubmit={methods.handleSubmit(onSubmit)}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:mb-10 sm:px-2',
-        maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
+        COLUMN(maximizeChatSpace),
       )}
     >
       <div className="relative flex h-full flex-1 items-stretch md:flex-col">

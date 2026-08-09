@@ -86,3 +86,19 @@ export const CONTROL_OPEN = 'bg-surface-active-alt';
  */
 export const ROW =
   'hz-row flex min-h-12 w-full items-center gap-2 rounded-lg px-2 text-sm text-text-primary transition-colors hover:bg-surface-active-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy [&_svg]:size-4';
+
+
+/**
+ * The conversation column's width, and the ONE thing `maximizeChatSpace` means.
+ *
+ * It was spelled twice: `ChatForm` honoured the atom and `AnswerEngine` — the
+ * landing that WRAPS ChatForm — hardcoded `md:max-w-3xl xl:max-w-4xl`. So the
+ * composer widened to `max-w-full` inside a parent that had not moved, `100%`
+ * resolved to the parent's 4xl, and the control changed nothing you could see.
+ * The button was never broken; the column above it did not agree.
+ *
+ * Anything that draws the column reads this. Two copies of a width law is how
+ * one of them stops being true.
+ */
+export const COLUMN = (maximized: boolean) =>
+  maximized ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl';
