@@ -380,6 +380,21 @@
   padding: 1.5px;
 }
 
+/* The composer sits a touch more solid than ambient glass (menus, dialogs at
+   72%) so it holds ONE identity over whatever backdrop the landing rotates
+   behind it — the modes stopped "changing the look" once the box stopped
+   reading the image through itself — and firmer still while you point at it or
+   type into it. `!important` matches the glass fill it overrides, and it is
+   scoped to the composer so no other glass surface moves. Still liquid glass:
+   translucent and blurred, only less see-through. */
+.hz-composer > .glass {
+  background-color: color-mix(in oklab, var(--background) 84%, transparent) !important;
+}
+.hz-composer:hover > .glass,
+.hz-composer:focus-within > .glass {
+  background-color: color-mix(in oklab, var(--background) 93%, transparent) !important;
+}
+
 /* The ring DRAWS A RING. It used to draw a filled disc and rely on the panel
    above it being opaque to cover the middle — which made the panel's opacity
    load-bearing for something that was never about the panel. The moment the
