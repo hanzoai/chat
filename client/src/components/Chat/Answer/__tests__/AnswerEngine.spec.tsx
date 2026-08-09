@@ -100,3 +100,38 @@ describe('AnswerEngine default mode', () => {
     expect(screen.getByTestId('search-composer')).toBeInTheDocument();
   });
 });
+
+
+/**
+ * "Maximize chat space" has to reach the LANDING, not just the docked composer.
+ *
+ * The atom was honoured in `ChatForm` and hardcoded in `AnswerEngine`, which
+ * WRAPS ChatForm — so the composer widened to `max-w-full` inside a parent that
+ * had not moved, `100%` resolved to that parent's `xl:max-w-4xl`, and pressing
+ * the button changed nothing you could see. `aria-pressed` flipped and the value
+ * persisted, which is why it read as "the control does not work" rather than as
+ * a layout bug one level up.
+ *
+ * Read the SOURCE rather than rendering: the failure is a hardcoded class
+ * reappearing on the column, and that is a fact about the file. A render test
+ * would pass just as happily with the cap restored on some ancestor.
+ */
+describe('the conversation column has ONE width law', () => {
+  const read = (p: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('fs').readFileSync(require('path').join(__dirname, p), 'utf8');
+
+  it('AnswerEngine sizes from COLUMN, never its own cap', () => {
+    const src = read('../AnswerEngine.tsx');
+    expect(src).toMatch(/COLUMN\(maximizeChatSpace\)/);
+    // The literal the fix removed. `md:max-w-3xl xl:max-w-4xl` belongs in COLUMN
+    // and nowhere else — spelled here again it silently outranks the atom.
+    expect(src).not.toMatch(/className="[^"]*xl:max-w-4xl/);
+  });
+
+  it('ChatForm reads the same law, so the two cannot disagree', () => {
+    const src = read('../../Input/ChatForm.tsx');
+    expect(src).toMatch(/COLUMN\(maximizeChatSpace\)/);
+    expect(src).not.toMatch(/maximizeChatSpace \? 'max-w-full'/);
+  });
+});
