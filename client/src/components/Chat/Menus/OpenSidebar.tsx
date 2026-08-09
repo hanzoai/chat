@@ -1,5 +1,6 @@
 import { PanelLeft } from 'lucide-react';
 import { TooltipAnchor, Button } from '@hanzochat/client';
+import { CONTROL } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -52,10 +53,7 @@ export default function OpenSidebar({
           aria-label={label}
           aria-expanded={navVisible}
           aria-controls="chat-history-nav"
-          className={cn(
-            'rounded-xl bg-presentation duration-0 hover:bg-surface-active-alt',
-            className,
-          )}
+          className={cn(CONTROL, className)}
           onClick={handleClick}
         >
           <PanelLeft aria-hidden="true" />

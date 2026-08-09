@@ -42,7 +42,7 @@ const AttachFile = ({ disabled }: { disabled?: boolean | null }) => {
             }}
           >
             <div className="flex w-full items-center justify-center gap-2">
-              <AttachmentIcon />
+              <AttachmentIcon className="size-5" />
             </div>
           </button>
         }

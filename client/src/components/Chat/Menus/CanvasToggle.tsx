@@ -1,6 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { PanelRight, PanelRightClose } from 'lucide-react';
 import { TooltipAnchor, Button } from '@hanzochat/client';
+import { CONTROL } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
@@ -38,14 +39,10 @@ export default function CanvasToggle() {
           aria-label={label}
           aria-pressed={visible}
           data-testid="canvas-toggle-button"
-          className="rounded-xl bg-presentation duration-0 hover:bg-surface-active-alt"
+          className={CONTROL}
           onClick={() => setVisible((v) => !v)}
         >
-          {visible ? (
-            <PanelRightClose aria-hidden="true" />
-          ) : (
-            <PanelRight aria-hidden="true" />
-          )}
+          {visible ? <PanelRightClose aria-hidden="true" /> : <PanelRight aria-hidden="true" />}
         </Button>
       }
     />

@@ -3,6 +3,7 @@ import { TooltipAnchor } from '@hanzochat/client';
 import { MessageCircleDashed } from 'lucide-react';
 import { useAtom } from 'jotai';
 import { useChatContext } from '~/Providers';
+import { CONTROL } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 import store from '~/store';
@@ -38,14 +39,9 @@ export function TemporaryChat() {
             onClick={handleBadgeToggle}
             aria-label={localize('com_ui_temporary')}
             aria-pressed={isTemporary}
-            className={cn(
-              'inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light text-text-primary transition-all ease-in-out',
-              isTemporary
-                ? 'bg-surface-active'
-                : 'bg-presentation shadow-sm hover:bg-surface-active-alt',
-            )}
+            className={cn(CONTROL, isTemporary && 'bg-surface-active')}
           >
-            <MessageCircleDashed className="icon-lg" aria-hidden="true" />
+            <MessageCircleDashed aria-hidden="true" />
           </button>
         }
       />

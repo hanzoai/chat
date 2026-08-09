@@ -84,7 +84,7 @@ export default function CreateMenu() {
               aria-label={localize('com_ui_create')}
               className="flex size-9 items-center justify-center rounded-full text-text-primary transition-colors hover:bg-surface-hover radix-state-open:bg-surface-hover"
             >
-              <Plus className="icon-lg" aria-hidden="true" focusable="false" />
+              <Plus className="size-5" aria-hidden="true" focusable="false" />
             </Ariakit.MenuButton>
           }
         />
