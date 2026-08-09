@@ -18,25 +18,14 @@ export default function Header() {
   });
 
   return (
-    /* The app's top bar wears the app's material — `glass bg-surface-primary-alt`,
-       the same one `Nav.tsx` gives the sidebar — so the bar reads as ONE band
-       across the width and has a bottom edge.
-
-       It used to be `bg-gradient-to-b from-presentation to-transparent`, which
-       fades to nothing inside its own 56px and so draws no boundary anywhere.
-       In a browser that is a real defect and not a matter of taste: the page's
-       first row sits flush under the browser's own chrome, and on a dark
-       backdrop beneath a dark tab bar the controls at this end read as part of
-       Safari's tab strip rather than as part of the app. Reported exactly that
-       way. The sidebar never had the problem, because the sidebar always had a
-       ground — which is also why the two ends of one row looked like different
-       software.
-
-       The ground belongs to the BAR, not to the buttons. Four of these used to
-       carry a `bg-presentation` plate each while their three neighbours carried
-       none — one row, two kinds of button (`components/chrome.ts`). One ground,
-       in one place, is what both of those complaints were actually asking for. */
-    <div className="glass absolute top-0 z-10 flex h-14 w-full items-center justify-between border-b border-border-light bg-surface-primary-alt p-2 font-semibold text-text-primary">
+    /* The top bar is the app's glass — the blur alone, with no opaque plate over
+       it (owner call: the solid `bg-surface-primary-alt` band read too heavy at
+       the top of the page). Its boundary is the hairline `border-b`, not a filled
+       ground, so the row still has a bottom edge — it does not blend upward into
+       the browser's own chrome the way a boundary-less gradient once did — while
+       the conversation shows through the blur behind it. The ground belongs to
+       the BAR, never the buttons: one row, one material (`components/chrome.ts`). */
+    <div className="glass absolute top-0 z-10 flex h-14 w-full items-center justify-between border-b border-border-light p-2 font-semibold text-text-primary">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center">
           {/* New chat lives here now — right of the sidebar, with the controls
