@@ -18,14 +18,13 @@ export default function Header() {
   });
 
   return (
-    /* The top bar is the app's glass — the blur alone, with no opaque plate over
-       it (owner call: the solid `bg-surface-primary-alt` band read too heavy at
-       the top of the page). Its boundary is the hairline `border-b`, not a filled
-       ground, so the row still has a bottom edge — it does not blend upward into
-       the browser's own chrome the way a boundary-less gradient once did — while
-       the conversation shows through the blur behind it. The ground belongs to
-       the BAR, never the buttons: one row, one material (`components/chrome.ts`). */
-    <div className="glass absolute top-0 z-10 flex h-14 w-full items-center justify-between border-b border-border-light p-2 font-semibold text-text-primary">
+    /* The top bar carries NO ground of its own (owner call): no glass, no plate,
+       no border — the content reads straight up through it. The darker glass
+       lives only where a real surface sits: the left sidebar, the right control
+       panel, and the bottom bar. The header is just its controls floating over
+       whatever is behind, each button carrying its own hover ground when the
+       pointer needs it (`components/chrome.ts`). */
+    <div className="absolute top-0 z-10 flex h-14 w-full items-center justify-between p-2 font-semibold text-text-primary">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center">
           {/* New chat lives here now — right of the sidebar, with the controls
