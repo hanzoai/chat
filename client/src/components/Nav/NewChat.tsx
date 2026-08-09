@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { HanzoMark } from '@hanzogui/shell';
+import { PanelLeftOpen } from 'lucide-react';
 import { TooltipAnchor, MobileSidebar, Sidebar, Button } from '@hanzochat/client';
 import { CLOSE_SIDEBAR_ID, OPEN_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
 import BrandCorner from './BrandCorner';
@@ -66,16 +67,20 @@ export default function NewChat({
               >
                 {/* Brand at rest, affordance on point. The rail has exactly one
                     slot, and it owes the eye two things: whose app this is, and
-                    the way back to the panel. Pointing at the mark reveals the
-                    canonical PanelLeft, so the slot answers both without ever
-                    showing two shapes at once — and the tooltip says it in
-                    words for anyone who never hovers. Both marks share ONE 18px
-                    box, stacked, so the swap moves no pixel. */}
+                    the way back to the panel. Pointing at the mark reveals
+                    `PanelLeftOpen` — a left panel opening to the RIGHT — so a
+                    collapsed rail shows the way it will EXPAND, not a static
+                    panel that reads the same shut as open. The tooltip says it
+                    in words for anyone who never hovers. Both marks share ONE
+                    18px box, stacked, so the swap moves no pixel. */}
                 <span className="relative flex size-5 items-center justify-center text-text-primary">
                   <span className="flex transition-opacity group-hover:opacity-0 group-focus-visible:opacity-0">
                     <HanzoMark size={20} />
                   </span>
-                  <Sidebar className="absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+                  <PanelLeftOpen
+                    aria-hidden="true"
+                    className="absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                  />
                 </span>
               </Button>
             }

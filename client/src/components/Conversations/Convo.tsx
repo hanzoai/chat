@@ -4,9 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Constants } from '@hanzochat/data-provider';
 import { useIsSmallScreen } from '@hanzochat/client';
 import type { TConversation } from '@hanzochat/data-provider';
-import EndpointIcon from '~/components/Endpoints/EndpointIcon';
 import { useNavigateToConvo, useLocalize, useShiftKey, useConvoRename } from '~/hooks';
-import { useGetEndpointsQuery } from '~/data-provider';
 import { ConvoOptions } from './ConvoOptions';
 import RenameForm from './RenameForm';
 import ConvoLink from './ConvoLink';
@@ -29,7 +27,6 @@ export default function Conversation({
   const params = useParams();
   const localize = useLocalize();
   const { navigateToConvo } = useNavigateToConvo();
-  const { data: endpointsConfig } = useGetEndpointsQuery();
   const currentConvoId = useMemo(() => params.conversationId, [params.conversationId]);
   const activeConvos = useAtomValue(store.allConversationsSelector);
   const isSmallScreen = useIsSmallScreen();
@@ -215,7 +212,10 @@ export default function Conversation({
           isSmallScreen={isSmallScreen}
           localize={localize}
         >
-          {isGenerating ? (
+          {/* No per-row endpoint mark — the list is titles, not a column of
+              repeated model glyphs. Only the transient generating spinner takes
+              the leading slot, and only while a row is streaming. */}
+          {isGenerating && (
             <svg
               className="h-5 w-5 flex-shrink-0 animate-spin text-text-primary"
               viewBox="0 0 24 24"
@@ -236,13 +236,6 @@ export default function Conversation({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-          ) : (
-            <EndpointIcon
-              conversation={conversation}
-              endpointsConfig={endpointsConfig}
-              size={20}
-              context="menu-item"
-            />
           )}
         </ConvoLink>
       )}

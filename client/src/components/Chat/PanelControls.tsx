@@ -1,33 +1,33 @@
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
-import * as Ariakit from '@ariakit/react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { Globe, Maximize2, Minimize2, Monitor, SlidersHorizontal } from 'lucide-react';
-import { Button, DropdownPopup, TooltipAnchor } from '@hanzochat/client';
-import type { MenuItemProps } from '~/common';
+import { useCallback, useEffect } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
+import { Maximize2, Minimize2, PanelRight, PanelRightClose } from 'lucide-react';
+import { Button, TooltipAnchor } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
-import { CONTROL, CONTROL_OPEN } from '~/components/chrome';
+import { CONTROL } from '~/components/chrome';
 import { cn } from '~/utils';
 import store from '~/store';
 
 const buttonClass = CONTROL;
 
 /**
- * The window controls at the right end of the header: width, companions, right
- * panel. Each one owns a persisted atom and nothing else — the panels read the
- * same atoms, so a toggle here and a toggle inside a panel are one control.
+ * The window controls at the right end of the header: maximize width, and the
+ * right panel. Each owns a persisted atom the panel itself reads too, so a
+ * toggle here and a toggle inside the panel are one control.
  *
- * `SlidersHorizontal` rather than `PanelRight` for the right-hand panel: the
- * neighbouring `CanvasToggle` already carries `PanelRight` for the ARTIFACTS
- * panel, and two buttons in one row wearing one glyph name neither. This panel
- * calls itself Controls in its own `aria-label`, which is what the sliders say.
+ * The right panel wears `PanelRight` — the mirror of the left sidebar's
+ * `PanelLeft`. One rail on each edge, one glyph pointing at each, so the two
+ * ends of the row read as the same idea reflected; open, it flips to
+ * `PanelRightClose`, exactly as the left toggle and the canvas toggle do. The
+ * canvas toggle shares the family because it, too, opens a right-edge panel —
+ * the tooltip names which one.
+ *
+ * ⌘T still opens the bottom bar (the framed-page strip under the conversation);
+ * it no longer has a header button, so the shortcut is its opener.
  */
 export default function PanelControls() {
   const localize = useLocalize();
-  const menuId = useId();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [maximized, setMaximized] = useAtom(store.maximizeChatSpace);
   const [sidePanelOpen, setSidePanelOpen] = useAtom(store.sidePanelOpen);
-  const bottomBarOpen = useAtomValue(store.bottomBarOpen);
   const openBottomBarTab = useSetAtom(store.openBottomBarTab);
 
   const toggleSideChat = useCallback(() => setSidePanelOpen((v) => !v), [setSidePanelOpen]);
@@ -37,6 +37,7 @@ export default function PanelControls() {
    * The app's shortcuts. A document listener in an effect is how this repo
    * registers keys (there is no hotkey library); `e.code` rather than `e.key`
    * because Option+S on macOS types "ß" and would never match a letter test.
+   * ⌥S toggles the right panel; ⌘T opens the bottom bar.
    */
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -54,29 +55,6 @@ export default function PanelControls() {
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [toggleSideChat, newBottomBarTab]);
-
-  /**
-   * The companions this menu can open, and ONLY those.
-   *
-   * A "Side chat" row used to head this list, and it was button 3 written a
-   * second time — same `toggleSideChat`, same `sidePanelOpen` atom, same
-   * `SlidersHorizontal` glyph, twice on one screen at two weights. A menu row is
-   * a place to reach something the row beside it cannot; a row that duplicates
-   * its own neighbour teaches the reader that one of them does something else,
-   * and then costs them the click that proves it does not.
-   */
-  const items: MenuItemProps[] = useMemo(
-    () => [
-      {
-        id: 'companion-browser',
-        label: localize('com_ui_browser'),
-        icon: <Globe className="size-4" />,
-        kbd: '⌘T',
-        onClick: newBottomBarTab,
-      },
-    ],
-    [localize, newBottomBarTab],
-  );
 
   const maximizeLabel = localize('com_nav_maximize_chat_space');
   const sidePanelLabel = localize(sidePanelOpen ? 'com_ui_close_var' : 'com_ui_open_var', {
@@ -101,42 +79,6 @@ export default function PanelControls() {
           </Button>
         }
       />
-      <DropdownPopup
-        portal={true}
-        menuId={menuId}
-        focusLoop={true}
-        isOpen={menuOpen}
-        unmountOnHide={true}
-        setIsOpen={setMenuOpen}
-        placement="bottom-end"
-        className="min-w-52"
-        itemClassName="min-h-11"
-        items={items}
-        trigger={
-          <TooltipAnchor
-            description={localize('com_ui_companions')}
-            render={
-              <Ariakit.MenuButton
-                id="companions-menu-button"
-                data-testid="companions-menu"
-                aria-label={localize('com_ui_companions')}
-                /* Ariakit owns this element, so the box and the ring are
-                   written here rather than inherited from `Button`'s
-                   `size="icon"` — with no focus classes it falls back to the UA
-                   outline, and one row of three then paints two different focus
-                   indicators. */
-                className={cn(
-                  CONTROL,
-                  'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  (menuOpen || bottomBarOpen) && CONTROL_OPEN,
-                )}
-              >
-                <Monitor aria-hidden="true" />
-              </Ariakit.MenuButton>
-            }
-          />
-        }
-      />
       <TooltipAnchor
         description={sidePanelLabel}
         render={
@@ -150,7 +92,11 @@ export default function PanelControls() {
             className={cn(buttonClass, sidePanelOpen && 'bg-surface-active-alt')}
             onClick={toggleSideChat}
           >
-            <SlidersHorizontal aria-hidden="true" />
+            {sidePanelOpen ? (
+              <PanelRightClose aria-hidden="true" />
+            ) : (
+              <PanelRight aria-hidden="true" />
+            )}
           </Button>
         }
       />
