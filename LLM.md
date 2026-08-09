@@ -446,6 +446,65 @@ landing: 28 users, ZERO with 2FA enabled, 27 of 28 on OIDC — the factor lives 
 hanzo.id, so this changes nothing here today and everything for a deployment
 with local auth.
 
+### One row, one box — `client/src/components/chrome.ts`
+
+The app's top row is ONE row to the eye and eight files to the code, and every
+one of them had grown its own answer to the same question. Measured on
+production at 1440×900, signed out:
+
+| | |
+|---|---|
+| boxes | 44, 44, 44, **40**, 44, 44, 44 |
+| glyphs | 24, 24, 24, 18, 18, 18 |
+| grounds | four `bg-presentation` (an opaque patch of the canvas colour) beside three transparent |
+| radii | 12px everywhere except the mark, at 999 |
+
+Over the backdrop video that reads as four dark slabs floating next to four
+bare glyphs, with no rule saying which control gets which. **`CONTROL` is the
+single answer** — 44 square, one radius, a 20px glyph, no ground until you
+point at it — and `chrome.spec.ts` (in the `chrome` CI lane) reads the source
+of every file in that row to stop a second answer growing back. `ROW` is the
+same for the sidebar column, which ran five shapes at once; it takes the
+conversation list's own `h-12 md:h-9` because that list had the most rows and
+already had it right.
+
+Three things the code cannot say for itself:
+
+- **The glyph size lives in the class, not at the call site.** `[&_svg]:size-5`
+  is a descendant selector at (0,1,1) and beats `icon-lg`, `icon-md`, a bare
+  24×24 `<svg>` and `size={20}` — which are four ways to say one thing and are
+  exactly how 24 and 18 came to sit side by side.
+- **`aria-expanded` is NOT the hook for the lit ground**, though every menu
+  trigger sets it. So do the sidebar toggles — correctly; the sidebar is a
+  thing they expand — so keying the shared class on it lights `Close sidebar`
+  for as long as the sidebar is open: one permanent plate in a row of none.
+  `CONTROL_OPEN` is applied from the boolean each menu already holds. A menu
+  lights so the eye can trace a floating popup back to its trigger; a panel
+  toggle has its panel attached to it and has nothing to trace.
+- **`BrandCorner` cannot use `CONTROL` at all.** `HanzoAppLauncher` writes its
+  trigger's box INLINE, so the corner reaches it through a descendant selector
+  and the radius must be `!important` — a class alone loses to an inline
+  declaration. `min-h`/`min-w` work without it only because the shell writes
+  `height`, a different property.
+
+**The corner mark is the H, in both states.** It was the Enso ring open and
+`HanzoMark` collapsed, so the corner appeared to swap logos on collapse. One
+corner, one glyph, at one size (20): what changes on collapse is what the mark
+DOES, not what it is. Collapsed, it is the way back into the sidebar and says
+so — the H at rest, the canonical `PanelLeft` on hover, both stacked in the
+same 20px box so the swap moves no pixel, plus the tooltip for anyone who never
+hovers. The Enso stays where it means something: beside an AI reply
+(`MessageEndpointIcon`).
+
+`Chat/Header.spec.tsx` — which holds WHICH controls belong to the header and
+which to the sidebar — was dying at IMPORT the whole time, reporting `Tests: 0
+total`. It sat that way long enough for the contract it describes to reverse
+underneath it: the file asserted the left edge was empty while `Header.tsx` had
+moved compose there. The cause was the usual one, a three-name stub of
+`@hanzochat/data-provider` that held until `CanvasToggle` reached `~/store` for
+a fourth. **A suite that cannot run is not a weaker gate than one that fails;
+it is a green light.**
+
 ### One shell, one accent, one menu
 
 Chat used to carry TWO cross-app headers: `@hanzogui/shell`'s on the landing and

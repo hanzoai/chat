@@ -5,11 +5,11 @@ import { Globe, Maximize2, Minimize2, Monitor, SlidersHorizontal } from 'lucide-
 import { Button, DropdownPopup, TooltipAnchor } from '@hanzochat/client';
 import type { MenuItemProps } from '~/common';
 import { useLocalize } from '~/hooks';
+import { CONTROL, CONTROL_OPEN } from '~/components/chrome';
 import { cn } from '~/utils';
 import store from '~/store';
 
-const buttonClass =
-  'rounded-xl bg-presentation duration-0 hover:bg-surface-active-alt aria-expanded:bg-surface-active-alt';
+const buttonClass = CONTROL;
 
 /**
  * The window controls at the right end of the header: width, companions, right
@@ -97,11 +97,7 @@ export default function PanelControls() {
             className={cn(buttonClass, maximized && 'bg-surface-active-alt')}
             onClick={() => setMaximized(!maximized)}
           >
-            {maximized ? (
-              <Minimize2 className="icon-md" aria-hidden="true" />
-            ) : (
-              <Maximize2 className="icon-md" aria-hidden="true" />
-            )}
+            {maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
           </Button>
         }
       />
@@ -124,21 +120,18 @@ export default function PanelControls() {
                 id="companions-menu-button"
                 data-testid="companions-menu"
                 aria-label={localize('com_ui_companions')}
-                /* `size-11` and the ring classes are `Button`'s `size="icon"`
-                   and its base, restated because Ariakit owns this element.
-                   They are not decoration: at `size-10` this was the one box in
-                   the cluster under the 44px pointer floor (44/40/44 across a
-                   row of three), and with no focus classes it fell back to the
-                   UA outline — so one row of three painted two different focus
+                /* Ariakit owns this element, so the box and the ring are
+                   written here rather than inherited from `Button`'s
+                   `size="icon"` — with no focus classes it falls back to the UA
+                   outline, and one row of three then paints two different focus
                    indicators. */
                 className={cn(
-                  'inline-flex size-11 flex-shrink-0 items-center justify-center border border-border-light text-text-primary',
+                  CONTROL,
                   'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  buttonClass,
-                  bottomBarOpen && 'bg-surface-active-alt',
+                  (menuOpen || bottomBarOpen) && CONTROL_OPEN,
                 )}
               >
-                <Monitor className="icon-md" aria-hidden="true" />
+                <Monitor aria-hidden="true" />
               </Ariakit.MenuButton>
             }
           />
@@ -157,7 +150,7 @@ export default function PanelControls() {
             className={cn(buttonClass, sidePanelOpen && 'bg-surface-active-alt')}
             onClick={toggleSideChat}
           >
-            <SlidersHorizontal className="icon-md" aria-hidden="true" />
+            <SlidersHorizontal aria-hidden="true" />
           </Button>
         }
       />

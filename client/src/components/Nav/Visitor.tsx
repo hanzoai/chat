@@ -4,6 +4,7 @@ import { GearIcon, Button } from '@hanzochat/client';
 import { useGetStartupConfig } from '~/data-provider';
 import { startHanzoLogin } from '~/utils/login';
 import { useLocalize } from '~/hooks';
+import { ROW } from '~/components/chrome';
 import Settings from './Settings';
 
 /**
@@ -26,9 +27,6 @@ import Settings from './Settings';
  * no account creation of its own.
  */
 
-const ROW =
-  'flex min-h-11 w-full items-center gap-2 rounded-xl px-2 text-sm text-text-primary transition-colors hover:bg-surface-active-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy';
-
 export default function Visitor() {
   const localize = useLocalize();
   const { data: startupConfig } = useGetStartupConfig();
@@ -39,18 +37,18 @@ export default function Visitor() {
   return (
     <div className="flex flex-col gap-0.5 pt-2">
       <a className={ROW} href="https://hanzo.ai/pricing" target="_blank" rel="noreferrer">
-        <CreditCard className="icon-md" aria-hidden="true" />
+        <CreditCard aria-hidden="true" />
         {localize('com_nav_plans')}
       </a>
 
       <button type="button" className={ROW} onClick={() => setShowSettings(true)}>
-        <GearIcon className="icon-md" aria-hidden="true" />
+        <GearIcon aria-hidden="true" />
         {localize('com_nav_settings')}
       </button>
 
       {helpUrl != null && helpUrl !== '/' && (
         <a className={ROW} href={helpUrl} target="_blank" rel="noreferrer">
-          <CircleHelp className="icon-md" aria-hidden="true" />
+          <CircleHelp aria-hidden="true" />
           {localize('com_nav_help')}
         </a>
       )}

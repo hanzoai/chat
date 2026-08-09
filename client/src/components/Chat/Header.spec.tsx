@@ -9,14 +9,27 @@ import Header from './Header';
  * to be written twice under opposite `isSmallScreen` conditions, which is how
  * they drifted to opposite ends of the same header.
  *
- * The left edge is empty, and that is the contract this file exists to hold.
- * The mark, compose and the sidebar toggle appeared here while the sidebar was
- * collapsed, because collapsing slid the sidebar off screen and left its corner
- * empty. Collapsed it is now a rail that keeps them, so a copy here would be a
- * second set of the same three controls — the duplication the strip was
- * invented to avoid. The mocks below stay wired to the modules that would
- * render them, so re-adding any one of them fails these tests rather than
- * quietly restoring the duplicate.
+ * The left edge carries COMPOSE, and only compose. The mark and the sidebar
+ * toggle belong to the sidebar, which is a rail when collapsed and so never
+ * gives its corner up; a copy of either here would be the duplication this
+ * strip was invented to avoid. Compose is the opposite case and the rail
+ * deliberately does NOT keep it: the header spans the width beside the rail at
+ * every width, so putting compose in both put two "New chat" buttons on screen
+ * together — measured at 768 and above. One end, one copy, every width.
+ *
+ * The mocks below stay wired to the modules that would render each control, so
+ * moving one back across that line fails these tests rather than quietly
+ * restoring a duplicate.
+ *
+ * `./Menus/CanvasToggle` is mocked for a duller reason, and it is worth stating
+ * because it cost this file its whole life: it reaches `~/store`, the real
+ * `@hanzochat/data-provider` is stubbed here with three names, and the store
+ * wants a fourth (`EModelEndpoint`). That threw while `./Header` was being
+ * required on line 2 — so the suite died at IMPORT and reported `Tests: 0`,
+ * which reads in CI as a passing file. It sat that way long enough for the
+ * left-edge contract above to reverse underneath it. Mock every child the
+ * header renders; a partial package stub only holds until something deeper
+ * wants one more name.
  */
 
 let mockSmallScreen = false;
@@ -71,6 +84,7 @@ jest.mock('./Menus/Endpoints/ModelSelector', () => ({
   default: mockMarker('model'),
 }));
 jest.mock('./Menus/BookmarkMenu', () => ({ __esModule: true, default: mockMarker('bookmarks') }));
+jest.mock('./Menus/CanvasToggle', () => ({ __esModule: true, default: mockMarker('canvas') }));
 jest.mock('./ExportAndShareMenu', () => ({ __esModule: true, default: mockMarker('share') }));
 jest.mock('./TemporaryChat', () => ({ TemporaryChat: mockMarker('temporary') }));
 jest.mock('./PanelControls', () => ({ __esModule: true, default: mockMarker('panel-controls') }));
@@ -104,10 +118,13 @@ describe.each([
     expect(screen.getAllByTestId('temporary')).toHaveLength(1);
   });
 
-  it('leaves the mark, compose and the sidebar toggle to the sidebar', () => {
+  it('leaves the mark and the sidebar toggle to the sidebar', () => {
     expect(screen.queryByTestId('brand')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('header-new-chat')).not.toBeInTheDocument();
     expect(screen.queryByTestId('open-sidebar')).not.toBeInTheDocument();
+  });
+
+  it('carries compose at the left edge, in one copy', () => {
+    expect(screen.getAllByTestId('header-new-chat')).toHaveLength(1);
   });
 
   it('names no model and offers no preset', () => {

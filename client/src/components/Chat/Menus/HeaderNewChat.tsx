@@ -2,7 +2,8 @@ import { QueryKeys } from '@hanzochat/data-provider';
 import { useQueryClient } from '@tanstack/react-query';
 import { TooltipAnchor, Button, NewChatIcon } from '@hanzochat/client';
 import { useChatContext } from '~/Providers';
-import { clearMessagesCache } from '~/utils';
+import { clearMessagesCache, cn } from '~/utils';
+import { CONTROL } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
 
 export default function HeaderNewChat() {
@@ -29,7 +30,7 @@ export default function HeaderNewChat() {
           variant="outline"
           data-testid="wide-header-new-chat-button"
           aria-label={localize('com_ui_new_chat')}
-          className="rounded-xl border-transparent bg-transparent duration-0 hover:bg-white/10 hover:backdrop-blur-xl max-md:hidden"
+          className={cn(CONTROL, 'max-md:hidden')}
           onClick={clickHandler}
         >
           <NewChatIcon />

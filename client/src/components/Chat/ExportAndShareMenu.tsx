@@ -6,7 +6,9 @@ import { DropdownPopup, TooltipAnchor, useIsSmallScreen } from '@hanzochat/clien
 import type * as t from '~/common';
 import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
 import { ShareButton } from '~/components/Conversations/ConvoOptions';
+import { CONTROL, CONTROL_OPEN } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
+import { cn } from '~/utils';
 import store from '~/store';
 
 export default function ExportAndShareMenu({
@@ -81,13 +83,13 @@ export default function ExportAndShareMenu({
               <Ariakit.MenuButton
                 id="export-menu-button"
                 aria-label="Export options"
-                className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-transparent bg-transparent text-text-primary transition-all ease-in-out hover:bg-white/10 hover:backdrop-blur-xl disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-white/10 radix-state-open:backdrop-blur-xl"
+                className={cn(
+                  CONTROL,
+                  'disabled:pointer-events-none disabled:opacity-50',
+                  isPopoverActive && CONTROL_OPEN,
+                )}
               >
-                <Share2
-                  className="icon-lg text-text-primary"
-                  aria-hidden="true"
-                  focusable="false"
-                />
+                <Share2 className="text-text-primary" aria-hidden="true" focusable="false" />
               </Ariakit.MenuButton>
             }
           />

@@ -101,6 +101,30 @@ test:
       cd ../packages/data-schemas
       npx jest src/schema/user.spec.ts
 
+  # One row, one box. The app's top row is one row to the eye and eight files to
+  # the code, and each had grown its own answer: measured on production, 44s
+  # beside a 40, glyphs of 24 and 18, four opaque plates beside four transparent
+  # glyphs, and a mark rounder than any of them. `components/chrome.ts` is the
+  # single answer; `chrome.spec.ts` is what stops a second one growing back, by
+  # reading the source of every file that renders a control in that row.
+  #
+  # `Header.spec.tsx` rides along because it is the same lesson in a worse form:
+  # it holds which controls belong to the header and which belong to the
+  # sidebar, and it had been dying at IMPORT — `Tests: 0 total`, which reads in
+  # CI exactly like a file with nothing to say. It sat that way long enough for
+  # the contract it describes to reverse underneath it. A suite that cannot run
+  # is not a weaker gate than one that fails; it is a green light.
+  #
+  # Both were mutation-tested — every assertion here has been made to fail on
+  # purpose — which is what earns a lane, same as above. ~2s, no downtime.
+  - name: chrome
+    run: |
+      set -e
+      cd client
+      npx jest --coverage=false \
+        src/components/chrome.spec.ts \
+        src/components/Chat/Header.spec.tsx
+
 # NO WHOLE jest suite is gated — the `credentials` gate above names ten files,
 # one at a time — and that is a measurement rather than an oversight. All five
 # suites are red on this commit — cb653548, node 22, pnpm 10.27.0, one full

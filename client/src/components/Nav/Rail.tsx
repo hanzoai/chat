@@ -2,6 +2,7 @@ import { Clock, Folder, Globe, Puzzle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
+import { ROW } from '~/components/chrome';
 
 /**
  * The sidebar's destinations — Projects, Sites, Scheduled, Plugins — one row
@@ -43,7 +44,7 @@ export default function Rail({
             aria-current={active ? 'page' : undefined}
             title={collapsed === true ? localize(label) : undefined}
             className={cn(
-              'flex w-full items-center rounded-lg p-2 text-sm text-text-primary transition-colors duration-200',
+              ROW,
               collapsed === true ? 'justify-center' : 'gap-2.5',
               active ? 'bg-surface-active-alt' : 'hover:bg-surface-active-alt',
             )}
@@ -52,7 +53,7 @@ export default function Rail({
               toggleNav();
             }}
           >
-            <Icon className="size-4 shrink-0 text-text-secondary" aria-hidden="true" />
+            <Icon className="shrink-0 text-text-secondary" aria-hidden="true" />
             {collapsed !== true && localize(label)}
           </button>
         );

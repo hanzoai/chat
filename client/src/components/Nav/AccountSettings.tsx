@@ -14,6 +14,8 @@ import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { startHanzoLogin } from '~/utils/login';
 import { useLocalize } from '~/hooks';
+import { ROW } from '~/components/chrome';
+import { cn } from '~/utils';
 import Settings from './Settings';
 
 /**
@@ -136,7 +138,8 @@ function AccountSettings() {
           // it was simply never passed. `low` is under $2, matching the
           // threshold the Balance tab already warns at, so the two surfaces
           // change together instead of drifting.
-          state: expired || usd <= 0 ? ('empty' as const) : usd < 2 ? ('low' as const) : ('ok' as const),
+          state:
+            expired || usd <= 0 ? ('empty' as const) : usd < 2 ? ('low' as const) : ('ok' as const),
           label: expired ? localize('com_nav_balance') + ' · expired' : localize('com_nav_balance'),
           topUpLabel: 'Add Funds',
           topUpUrl: 'https://billing.hanzo.ai',
@@ -167,8 +170,7 @@ function AccountSettings() {
         // `.popover-ui` / `.account-settings-popover` classes are NOT passed: they
         // were written for ariakit's enter/leave lifecycle and set opacity:0.
         classNames={{
-          trigger:
-            'flex min-h-11 w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt',
+          trigger: cn(ROW, 'aria-[expanded=true]:bg-surface-active-alt'),
           item: 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-surface-hover',
         }}
       />

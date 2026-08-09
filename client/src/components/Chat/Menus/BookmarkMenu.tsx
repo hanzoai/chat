@@ -10,6 +10,7 @@ import type { FC } from 'react';
 import type * as t from '~/common';
 import { useConversationTagsQuery, useTagConversationMutation } from '~/data-provider';
 import { BookmarkContext } from '~/Providers/BookmarkContext';
+import { CONTROL, CONTROL_OPEN } from '~/components/chrome';
 import { BookmarkEditDialog } from '~/components/Bookmarks';
 import { useBookmarkSuccess, useLocalize } from '~/hooks';
 import { NotificationSeverity } from '~/common';
@@ -156,9 +157,9 @@ const BookmarkMenu: FC = () => {
       return <Spinner aria-label="Spinner" />;
     }
     if (hasBookmarks) {
-      return <Bookmark className="icon-lg" aria-hidden="true" fill="currentColor" />;
+      return <Bookmark aria-hidden="true" fill="currentColor" />;
     }
-    return <Bookmark className="icon-lg" aria-hidden="true" />;
+    return <Bookmark aria-hidden="true" />;
   };
 
   return (
@@ -180,7 +181,8 @@ const BookmarkMenu: FC = () => {
                 aria-label={buttonAriaLabel}
                 aria-pressed={hasBookmarks}
                 className={cn(
-                  'mt-text-sm flex size-10 flex-shrink-0 items-center justify-center gap-2 rounded-xl border border-transparent bg-transparent text-sm transition-colors duration-200 hover:bg-white/10 hover:backdrop-blur-xl',
+                  CONTROL,
+                  isMenuOpen && CONTROL_OPEN,
                   isMenuOpen ? 'bg-white/10 backdrop-blur-xl' : '',
                 )}
                 data-testid="bookmark-menu"
