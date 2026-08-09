@@ -3219,3 +3219,25 @@ html {
   -webkit-mask-image: linear-gradient(to left, transparent 0, #000 2rem);
   mask-image: linear-gradient(to left, transparent 0, #000 2rem);
 }
+
+/* A sidebar row's height is decided by the POINTER, not by the viewport.
+ *
+ * `components/chrome.ts`'s ROW first said `min-h-12 md:min-h-9` — 48 below the
+ * md breakpoint, 36 at and above it. That is a width test wearing a pointer
+ * test's job, and it gets the two cases that matter backwards: a narrow desktop
+ * window is still a mouse, and a 768px tablet is still a thumb. Measured on
+ * production at 768 with a coarse pointer: every sidebar row came back 36px,
+ * four short of the floor, on a device that has nothing but fingers.
+ *
+ * So the base is the SAFE one — 48, what a finger needs — and a fine pointer is
+ * what opts down to 36. A mouse is precise, and a conversation list may be a
+ * hundred rows long, so the tighter row is worth having where it is correct.
+ * Stated as a floor, not a height, so a row whose label wraps still grows.
+ *
+ * A media query rather than a Tailwind variant on purpose: this project is on
+ * tailwind 3.4, which has no `pointer-*` variant to write it with. */
+@media (pointer: fine) {
+  .hz-row {
+    min-height: 2.25rem;
+  }
+}
