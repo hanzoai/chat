@@ -39,7 +39,9 @@ const KINDS = {
     title: 'com_nav_plugins',
     body: 'com_nav_plugins_body',
     action: 'com_nav_plugins_action',
-    href: `${APP_ORIGIN}/integrations`,
+    // The canonical surface is `/connectors`; `/integrations` only 307-redirects
+    // there. Link straight at it — one hop, the name hanzo.app actually uses.
+    href: `${APP_ORIGIN}/connectors`,
   },
 } as const;
 
