@@ -21,10 +21,19 @@ interface ToolsDropdownProps {
   disabled?: boolean;
 }
 
-const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
+/**
+ * The tools a turn can use, as menu items.
+ *
+ * Extracted so the composer's "+" can offer them as a submenu without a
+ * second copy of the toggles, the pins and the capability checks. The items
+ * never read the dropdown's own open state — that stays with the component
+ * that draws a trigger.
+ *
+ * Requires BadgeRowProvider above it. It wraps the whole control row from
+ * ChatForm now, so any control in the composer may call this.
+ */
+export function useToolsItems(): MenuItemProps[] {
   const localize = useLocalize();
-  const isDisabled = disabled ?? false;
-  const [isPopoverActive, setIsPopoverActive] = useState(false);
   const {
     webSearch,
     artifacts,
@@ -266,6 +275,15 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
       render: (props) => <MCPSubMenu {...props} placeholder={mcpPlaceholder} />,
     });
   }
+
+  return dropdownItems;
+}
+
+const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
+  const localize = useLocalize();
+  const isDisabled = disabled ?? false;
+  const [isPopoverActive, setIsPopoverActive] = useState(false);
+  const dropdownItems = useToolsItems();
 
   if (dropdownItems.length === 0) {
     return null;

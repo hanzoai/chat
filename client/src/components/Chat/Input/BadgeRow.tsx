@@ -13,7 +13,6 @@ import { useAtomValue } from 'jotai';
 import { useAtomCallback } from 'jotai/utils';
 import type { LucideIcon } from 'lucide-react';
 import CodeInterpreter from './CodeInterpreter';
-import ToolsDropdown from './ToolsDropdown';
 import type { BadgeItem } from '~/common';
 import { useChatBadges } from '~/hooks';
 import ToolDialogs from './ToolDialogs';
@@ -321,7 +320,6 @@ function BadgeRow({
   return (
     <>
       <div ref={containerRef} className="relative flex flex-wrap items-center gap-2">
-        {showEphemeralBadges === true && <ToolsDropdown />}
         {tempBadges.map((badge, index) => (
           <React.Fragment key={badge.id}>
             {dragState.draggedBadge && dragState.insertIndex === index && ghostBadge && (
