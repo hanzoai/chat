@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import * as Ariakit from '@ariakit/react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Presentation, Sheet, Globe, Bot, Plus } from 'lucide-react';
+import { FileText, Presentation, Sheet, Globe, Bot, Plus, Settings2 } from 'lucide-react';
 import { DropdownPopup, TooltipAnchor } from '@hanzochat/client';
 import { openAppBuilder } from '~/utils/buildApp';
 import { useSubmitMessage } from '~/hooks';
 import { useLocalize } from '~/hooks';
+import { useToolsItems } from './ToolsDropdown';
 
 /**
  * Make something from here: the composer's "+".
@@ -31,6 +32,9 @@ export default function CreateMenu() {
   const navigate = useNavigate();
   const { submitMessage } = useSubmitMessage();
   const [open, setOpen] = useState(false);
+  // The turn's tools, as a submenu — same items the standalone dropdown drew,
+  // from the same hook, so there is no second copy of the toggles or the pins.
+  const toolsItems = useToolsItems();
 
   const make = (kind: keyof typeof PROMPTS) => submitMessage({ text: PROMPTS[kind] });
 
@@ -66,6 +70,18 @@ export default function CreateMenu() {
       icon: <Bot className="icon-md mr-2 text-text-secondary" />,
       render: (props: React.HTMLAttributes<HTMLButtonElement>) => <button {...props} />,
     },
+    // Tools last, and only when the turn actually has any: a submenu that opens
+    // onto nothing is worse than an absent one.
+    ...(toolsItems.length
+      ? [
+          { separator: true, render: () => <div className="my-1 h-px bg-border-light" /> },
+          {
+            label: localize('com_ui_tools'),
+            icon: <Settings2 className="icon-md mr-2 text-text-secondary" />,
+            subItems: toolsItems,
+          },
+        ]
+      : []),
   ];
 
   return (
