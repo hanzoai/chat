@@ -63,6 +63,21 @@ function AccountSettings() {
   const orgNames = [currentOrg, ...(user?.groups ?? [])].filter(
     (o, i, all) => !!o && all.indexOf(o) === i,
   );
+  // A project belongs to an organization, and `Project` says so — `organization`
+  // is required. This built the array without it and then set `currentProject`
+  // to a flat `null` while `currentProjectId` named a real project, so the
+  // switcher was handed a malformed list AND told nothing was selected. It had
+  // been a standing `tsc` error rather than a silent one; the type was right and
+  // the object was wrong. One project, named once, used in both places.
+  const project = user?.project
+    ? {
+        owner: currentOrg,
+        name: user.project,
+        displayName: user.project,
+        organization: currentOrg,
+      }
+    : null;
+
   const orgState: OrgState | undefined = currentOrg
     ? {
         organizations: orgNames.map((name) => ({ owner: 'admin', name, displayName: name })),
@@ -71,11 +86,9 @@ function AccountSettings() {
         currentOrg: { owner: 'admin', name: currentOrg, displayName: currentOrg },
         currentOrgId: currentOrg,
         switchOrg: (org: string) => void switchOrg(org),
-        projects: user?.project
-          ? [{ owner: currentOrg, name: user.project, displayName: user.project }]
-          : [],
-        currentProject: null,
-        currentProjectId: user?.project ?? null,
+        projects: project ? [project] : [],
+        currentProject: project,
+        currentProjectId: project?.name ?? null,
         switchProject: () => undefined,
         isLoading: false,
       }
@@ -170,7 +183,14 @@ function AccountSettings() {
         // `.popover-ui` / `.account-settings-popover` classes are NOT passed: they
         // were written for ariakit's enter/leave lifecycle and set opacity:0.
         classNames={{
-          trigger: cn(ROW, 'aria-[expanded=true]:bg-surface-active-alt'),
+          // The account block takes the column's radius, ground and gap, but
+          // NOT its height. `ROW` is 36 on a pointer because a conversation
+          // list may be a hundred rows long; this is one row carrying an
+          // avatar, a name and a balance, and at 36 those three are squeezed
+          // into a line that reads as a caption rather than as the account.
+          // 44 at every width, which is what it was before it was folded into
+          // the shared row by mistake.
+          trigger: cn(ROW, 'min-h-11 md:min-h-11', 'aria-[expanded=true]:bg-surface-active-alt'),
           item: 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-surface-hover',
         }}
       />
