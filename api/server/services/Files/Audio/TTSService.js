@@ -4,6 +4,7 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const { genAzureEndpoint, logAxiosError } = require('@hanzochat/api');
 const { extractEnvVariable, TTSProviders } = require('@hanzochat/data-provider');
 const { getRandomVoiceId, createChunkProcessor, splitTextIntoChunks } = require('./streamAudio');
+const { resolveSpeechCredential } = require('./speechCredential');
 const { getAppConfig } = require('~/server/services/Config');
 
 /**
@@ -102,7 +103,7 @@ class TTSService {
    * @returns {Array} An array containing the URL, data, and headers for the request.
    * @throws {Error} If the selected voice is not available.
    */
-  openAIProvider(ttsSchema, input, voice) {
+  openAIProvider(ttsSchema, input, voice, stream, req) {
     const url = ttsSchema?.url || 'https://api.openai.com/v1/audio/speech';
 
     if (
@@ -121,9 +122,13 @@ class TTSService {
       backend: ttsSchema?.backend,
     };
 
+    // Same credential rule as STT and as a completion — one resolver, so a reply
+    // read aloud bills the account that asked for it.
+    const { apiKey, tenantHeaders } = resolveSpeechCredential(ttsSchema?.apiKey, req);
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${extractEnvVariable(ttsSchema?.apiKey)}`,
+      ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
+      ...tenantHeaders,
     };
 
     return [url, data, headers];
@@ -255,13 +260,13 @@ class TTSService {
    * @returns {Promise<Object>} The axios response object.
    * @throws {Error} If the provider is invalid or the request fails.
    */
-  async ttsRequest(provider, ttsSchema, { input, voice, stream = true }) {
+  async ttsRequest(provider, ttsSchema, { input, voice, stream = true, req }) {
     const strategy = this.providerStrategies[provider];
     if (!strategy) {
       throw new Error('Invalid provider');
     }
 
-    const [url, data, headers] = strategy.call(this, ttsSchema, input, voice, stream);
+    const [url, data, headers] = strategy.call(this, ttsSchema, input, voice, stream, req);
 
     [data, headers].forEach(this.removeUndefined.bind(this));
 
@@ -305,7 +310,7 @@ class TTSService {
       const voice = await this.getVoice(ttsSchema, requestVoice);
 
       if (input.length < 4096) {
-        const response = await this.ttsRequest(provider, ttsSchema, { input, voice });
+        const response = await this.ttsRequest(provider, ttsSchema, { input, voice, req });
         response.data.pipe(res);
         return;
       }
@@ -318,6 +323,7 @@ class TTSService {
             voice,
             input: chunk.text,
             stream: true,
+            req,
           });
 
           logger.debug(`[textToSpeech] user: ${req?.user?.id} | writing audio stream`);
@@ -398,6 +404,7 @@ class TTSService {
               voice,
               input: update.text,
               stream: true,
+            req,
             });
 
             if (!shouldContinue) {

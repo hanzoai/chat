@@ -6,6 +6,7 @@ const { logger } = require('@hanzochat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { genAzureEndpoint, logAxiosError } = require('@hanzochat/api');
 const { extractEnvVariable, STTProviders } = require('@hanzochat/data-provider');
+const { resolveSpeechCredential } = require('./speechCredential');
 const { getAppConfig } = require('~/server/services/Config');
 
 /**
@@ -192,9 +193,9 @@ class STTService {
    * @param {string} language - The language code for the transcription.
    * @returns {Array} An array containing the URL, data, and headers for the request.
    */
-  openAIProvider(sttSchema, audioReadStream, audioFile, language) {
+  openAIProvider(sttSchema, audioReadStream, audioFile, language, req) {
     const url = sttSchema?.url || 'https://api.openai.com/v1/audio/transcriptions';
-    const apiKey = extractEnvVariable(sttSchema.apiKey) || '';
+    const { apiKey, tenantHeaders } = resolveSpeechCredential(sttSchema.apiKey, req);
 
     const data = {
       file: audioReadStream,
@@ -209,6 +210,7 @@ class STTService {
     const headers = {
       'Content-Type': 'multipart/form-data',
       ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
+      ...tenantHeaders,
     };
     [headers].forEach(this.removeUndefined);
 
@@ -274,7 +276,7 @@ class STTService {
    * @returns {Promise<string>} A promise that resolves to the transcribed text.
    * @throws {Error} If the provider is invalid, the response status is not 200, or the response data is missing.
    */
-  async sttRequest(provider, sttSchema, { audioBuffer, audioFile, language }) {
+  async sttRequest(provider, sttSchema, { audioBuffer, audioFile, language, req }) {
     const strategy = this.providerStrategies[provider];
     if (!strategy) {
       throw new Error('Invalid provider');
@@ -291,6 +293,7 @@ class STTService {
       audioReadStream,
       audioFile,
       language,
+      req,
     );
 
     const options = { headers };
@@ -339,7 +342,7 @@ class STTService {
     try {
       const [provider, sttSchema] = await this.getProviderSchema(req);
       const language = req.body?.language || '';
-      const text = await this.sttRequest(provider, sttSchema, { audioBuffer, audioFile, language });
+      const text = await this.sttRequest(provider, sttSchema, { audioBuffer, audioFile, language, req });
       res.json({ text });
     } catch (error) {
       logAxiosError({ message: 'An error occurred while processing the audio:', error });
