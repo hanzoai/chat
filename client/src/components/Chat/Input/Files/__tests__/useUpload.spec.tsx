@@ -4,7 +4,37 @@ import '@testing-library/jest-dom';
 import { Provider } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EModelEndpoint } from '@hanzochat/data-provider';
-import AttachFileMenu from '../AttachFileMenu';
+import { useUpload } from '../useUpload';
+import { DropdownPopup, TooltipAnchor } from '@hanzochat/client';
+
+/**
+ * `useUpload` answers the turn's upload items plus the input and dialogs behind
+ * them. It used to be reached through `AttachFileMenu`, a trigger + dropdown
+ * that this spec drove; attaching now lives in the composer's "+", so that
+ * component is gone and `Harness` is the same three lines it contributed —
+ * every assertion below still drives real items through a real popup.
+ */
+function Harness(props: any) {
+  const { items, portals } = useUpload(props);
+  const [open, setOpen] = React.useState(false);
+  return (
+    <>
+      {portals}
+      <DropdownPopup
+        menuId="attach-file-menu"
+        isOpen={open}
+        setIsOpen={setOpen}
+        trigger={
+          <TooltipAnchor
+            description="Attach files"
+            render={<button aria-label="Attach File Options" disabled={props.disabled ?? false} />}
+          />
+        }
+        items={items}
+      />
+    </>
+  );
+}
 
 // Mock all the hooks
 jest.mock('~/hooks', () => ({
@@ -152,7 +182,7 @@ describe('AttachFileMenu', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <Provider>
-          <AttachFileMenu conversationId="test-conversation" {...props} />
+          <Harness conversationId="test-conversation" {...props} />
         </Provider>
       </QueryClientProvider>,
     );
