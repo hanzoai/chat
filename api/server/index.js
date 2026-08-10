@@ -28,6 +28,7 @@ const { updateInterfacePermissions } = require('~/models/interface');
 const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
 const configureIamLogin = require('./iamLogin');
+const { injectIamConfig } = require('./iamConfig');
 const { getAppConfig } = require('./services/Config');
 const { resolveAllowedOrigin } = require('./utils/allowedOrigins');
 const staticCache = require('./utils/staticCache');
@@ -86,6 +87,12 @@ const startServer = async () => {
       indexHTML = indexHTML.replace(/base href="\/"/, `base href="${baseHref}"`);
     }
   }
+
+  /* The browser's IAM identity travels in the shell, not in the bundle. Vite
+     inlines `import.meta.env.VITE_*` at BUILD time, so without this the login
+     client is whatever the image was built with and one image can serve exactly
+     one brand's login — see api/server/iamConfig.js. */
+  indexHTML = injectIamConfig(indexHTML);
 
   /* Liveness. Registered ahead of the middleware stack so a probe costs nothing
      and can never be answered by the SPA catch-all. */
