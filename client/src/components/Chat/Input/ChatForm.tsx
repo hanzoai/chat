@@ -22,7 +22,6 @@ import {
 import { useRunCloudAgent } from '~/hooks/Agents';
 import { command as backdrop } from '~/utils/backdrop';
 import { mainTextareaId, BadgeItem } from '~/common';
-import AttachFileChat from './Files/AttachFileChat';
 import FileFormChat from './Files/FileFormChat';
 import {
   cn,
@@ -384,10 +383,13 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                       so the "+" could not offer them without throwing. Its three
                       props are ones this form already holds and already passes
                       down. */}
+                  {/* ONE control for "add something to this turn": attaching,
+                      making, and the turn's tools all hang off the "+". The
+                      attach button used to sit beside it and the two were never
+                      distinguishable — both meant "add". */}
                   <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
-                    <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
+                    <CreateMenu conversation={conversation} disableInputs={disableInputs} />
                   </div>
-                  <CreateMenu />
                   <BadgeRow
                     showEphemeralBadges={
                       !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)

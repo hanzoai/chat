@@ -1,10 +1,24 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { Provider } from 'jotai';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EModelEndpoint, mergeFileConfig } from '@hanzochat/data-provider';
 import type { TEndpointsConfig, Agent } from '@hanzochat/data-provider';
-import AttachFileChat from '../AttachFileChat';
+import { useAttach } from '../useAttach';
+
+/**
+ * What the conversation says about attaching — the derivation that decides
+ * WHICH upload options a turn gets, and whether it gets any.
+ *
+ * This used to test `AttachFileChat`, the component that both derived this and
+ * chose between two controls. The controls are gone (attaching is items in the
+ * composer's "+" now) but the derivation is the part that was ever subtle:
+ * an agent's endpointType comes from its provider, through a fetch when the
+ * agent is not in the map, and `useResponsesApi` has to prefer an explicit
+ * `false` on the conversation over the agent's `true`. So the assertions are
+ * unchanged and only what they read moved — from the props of a mocked
+ * component to the argument of the mocked hook.
+ */
 
 const mockEndpointsConfig: TEndpointsConfig = {
   [EModelEndpoint.openAI]: { userProvide: false, order: 0 },
@@ -38,61 +52,62 @@ jest.mock('~/Providers', () => ({
   useAgentsMapContext: () => mockAgentsMap,
 }));
 
-/** Capture the props passed to AttachFileMenu */
+/** Capture what the derivation hands the upload machinery. */
 let mockAttachFileMenuProps: Record<string, unknown> = {};
-jest.mock('../AttachFileMenu', () => {
-  return function MockAttachFileMenu(props: Record<string, unknown>) {
+jest.mock('../useUpload', () => ({
+  useUpload: (props: Record<string, unknown>) => {
     mockAttachFileMenuProps = props;
-    return <div data-testid="attach-file-menu" data-endpoint-type={String(props.endpointType)} />;
-  };
-});
+    // One item, so "this turn can attach" is observable as a length.
+    return { items: [{ label: 'upload' }], upload: () => {}, portals: null };
+  },
+}));
 
-jest.mock('../AttachFile', () => {
-  return function MockAttachFile() {
-    return <div data-testid="attach-file" />;
-  };
-});
+jest.mock('~/hooks', () => ({ useLocalize: () => (key: string) => key }));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
+/** The hook's result for one conversation, read through a probe component. */
+let seen: { items: unknown[] } = { items: [] };
+
 function renderComponent(conversation: Record<string, unknown> | null, disableInputs = false) {
+  function Probe() {
+    seen = useAttach(conversation as never, disableInputs) as never;
+    return null;
+  }
   return render(
     <QueryClientProvider client={queryClient}>
       <Provider>
-        <AttachFileChat
-          conversation={conversation as never}
-          disableInputs={disableInputs}
-          files={new Map()}
-          setFiles={() => {}}
-          setFilesLoading={() => {}}
-        />
+        <Probe />
       </Provider>
     </QueryClientProvider>,
   );
 }
 
-describe('AttachFileChat', () => {
+describe('useAttach', () => {
   beforeEach(() => {
     mockFileConfig = defaultFileConfig;
     mockAgentsMap = {};
     mockAgentQueryData = undefined;
     mockAttachFileMenuProps = {};
+    seen = { items: [] };
   });
 
-  describe('rendering decisions', () => {
-    it('renders AttachFileMenu for agents endpoint', () => {
+  describe('whether the turn can attach at all', () => {
+    it('offers items for an agents endpoint', () => {
       renderComponent({ endpoint: EModelEndpoint.agents, agent_id: 'agent-1' });
-      expect(screen.getByTestId('attach-file-menu')).toBeInTheDocument();
+      expect(seen.items.length).toBeGreaterThan(0);
     });
 
-    it('renders AttachFileMenu for custom endpoint with file support', () => {
+    it('offers items for a custom endpoint that takes files', () => {
       renderComponent({ endpoint: 'Moonshot' });
-      expect(screen.getByTestId('attach-file-menu')).toBeInTheDocument();
+      expect(seen.items.length).toBeGreaterThan(0);
     });
 
-    it('renders null for null conversation', () => {
-      const { container } = renderComponent(null);
-      expect(container.innerHTML).toBe('');
+    it('offers NOTHING when there is no conversation', () => {
+      // An "Attach" that opens onto nothing is worse than an absent one, and an
+      // empty list is what makes the "+" simply not draw the section.
+      renderComponent(null);
+      expect(seen.items).toHaveLength(0);
     });
   });
 
@@ -209,27 +224,29 @@ describe('AttachFileChat', () => {
           [EModelEndpoint.agents]: { disabled: true },
         },
       });
-      const { container } = renderComponent({
+      renderComponent({
         endpoint: EModelEndpoint.agents,
         agent_id: 'agent-1',
       });
-      expect(container.innerHTML).toBe('');
+      expect(seen.items).toHaveLength(0);
     });
 
     it('renders null for agents endpoint when disableInputs is true', () => {
-      const { container } = renderComponent(
+      renderComponent(
         { endpoint: EModelEndpoint.agents, agent_id: 'agent-1' },
         true,
       );
-      expect(container.innerHTML).toBe('');
+      expect(seen.items).toHaveLength(0);
     });
 
-    it('renders AttachFile for assistants endpoint when not disabled', () => {
+    it('offers exactly one item for an assistants endpoint when not disabled', () => {
+      // Assistants expose no capability choice, so the menu of one IS the
+      // honest shape — it is what the old plain button did, as an item.
       renderComponent({ endpoint: EModelEndpoint.assistants });
-      expect(screen.getByTestId('attach-file')).toBeInTheDocument();
+      expect(seen.items).toHaveLength(1);
     });
 
-    it('renders AttachFileMenu when provider-specific config overrides agents disabled', () => {
+    it('offers items when provider config overrides agents disabled', () => {
       mockFileConfig = mergeFileConfig({
         endpoints: {
           Moonshot: { disabled: false, fileLimit: 5 },
@@ -240,7 +257,7 @@ describe('AttachFileChat', () => {
         'agent-1': { provider: 'Moonshot', model_parameters: {} } as Partial<Agent>,
       };
       renderComponent({ endpoint: EModelEndpoint.agents, agent_id: 'agent-1' });
-      expect(screen.getByTestId('attach-file-menu')).toBeInTheDocument();
+      expect(seen.items.length).toBeGreaterThan(0);
     });
 
     it('renders null for assistants endpoint when fileConfig.assistants.disabled is true', () => {
@@ -249,10 +266,10 @@ describe('AttachFileChat', () => {
           [EModelEndpoint.assistants]: { disabled: true },
         },
       });
-      const { container } = renderComponent({
+      renderComponent({
         endpoint: EModelEndpoint.assistants,
       });
-      expect(container.innerHTML).toBe('');
+      expect(seen.items).toHaveLength(0);
     });
   });
 

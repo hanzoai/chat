@@ -65,7 +65,7 @@ interface AttachFileMenuProps {
  * `portals` must be rendered by exactly ONE consumer, or there are two hidden
  * inputs and two dialog sets.
  */
-export function useAttachFile({
+export function useUpload({
   agentId,
   endpoint,
   disabled,
@@ -287,53 +287,8 @@ export function useAttachFile({
     </>
   );
 
-  return { items: dropdownItems, portals };
+  // `upload` is the same trigger the items use, exposed for the endpoints that
+  // offer no capability choices (assistants): one plain "attach files" with no
+  // accept filter, drawn from THIS input rather than a second one.
+  return { items: dropdownItems, upload: handleUploadClick, portals };
 }
-
-const AttachFileMenu = (props: AttachFileMenuProps) => {
-  const localize = useLocalize();
-  const isUploadDisabled = props.disabled ?? false;
-  const [isPopoverActive, setIsPopoverActive] = useState(false);
-  const { items: dropdownItems, portals } = useAttachFile(props);
-
-  const menuTrigger = (
-    <TooltipAnchor
-      render={
-        <Ariakit.MenuButton
-          disabled={isUploadDisabled}
-          id="attach-file-menu-button"
-          aria-label="Attach File Options"
-          className={cn(
-            'flex size-9 items-center justify-center rounded-full p-1 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-50',
-            isPopoverActive && 'bg-surface-hover',
-          )}
-        >
-          <div className="flex w-full items-center justify-center gap-2">
-            <AttachmentIcon className="size-5" />
-          </div>
-        </Ariakit.MenuButton>
-      }
-      id="attach-file-menu-button"
-      description={localize('com_sidepanel_attach_files')}
-      disabled={isUploadDisabled}
-    />
-  );
-
-  return (
-    <>
-      {portals}
-      <DropdownPopup
-        menuId="attach-file-menu"
-        className="overflow-visible"
-        isOpen={isPopoverActive}
-        setIsOpen={setIsPopoverActive}
-        modal={true}
-        unmountOnHide={true}
-        trigger={menuTrigger}
-        items={dropdownItems}
-      />
-    </>
-  );
-};
-
-export default React.memo(AttachFileMenu);
