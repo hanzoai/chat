@@ -44,6 +44,47 @@ const SERVER_URL = shell.serverUrl || import.meta.env.VITE_HANZO_IAM_URL || 'htt
 const CLIENT_ID = shell.clientId || import.meta.env.VITE_HANZO_IAM_APP || 'hanzo-chat';
 const ORGANIZATION = shell.organization || import.meta.env.VITE_HANZO_IAM_ORG || 'hanzo';
 
+/**
+ * The identity provider's name, for the one screen that says where it is sending
+ * you. Derived from the SAME runtime organization the SDK signs in against, so
+ * the sentence and the destination cannot disagree.
+ *
+ * It existed as the literal "Hanzo" on the redirect screen, which put HANZO's
+ * name on LUX's identity host: a customer on lux.chat was told "Redirecting to
+ * Hanzo..." while being sent to lux.id. That is the white-label rule broken on
+ * the one screen whose entire job is to name the destination.
+ *
+ * Capitalised rather than mapped through a table: the org slug IS the brand for
+ * every tenant here (hanzo, lux, zoo, pars), and a table would be a second place
+ * for the name to drift from the identity actually being used.
+ */
+export const IAM_PROVIDER_NAME =
+  ORGANIZATION.charAt(0).toUpperCase() + ORGANIZATION.slice(1);
+
+/**
+ * WHICH tenant this deployment serves, read from the same runtime organization
+ * the SDK signs in against.
+ *
+ * Anything carrying a brand's wordmark, copy or cross-app chrome has to ask this
+ * before it paints, because one image serves every brand. A build-time `VITE_*`
+ * cannot answer it — Vite inlines the value, so the image would carry whichever
+ * brand happened to build it. That is precisely how hanzo.chat's marketing page
+ * became the signed-out front door of lux.chat: nothing on it ever asked.
+ */
+export const IAM_ORG = ORGANIZATION;
+
+/**
+ * Where a visitor with no account goes to make one.
+ *
+ * Composed from the SAME issuer and client the SDK signs in against, because the
+ * account it creates has to be an account this app can then log in with. Written
+ * out by hand it was `hanzo.id/signup/hanzo-chat` in every image, so the Sign up
+ * button in lux.chat's sidebar sent a Lux visitor to Hanzo's identity host to
+ * create a Hanzo account — the login half of this file already learned that
+ * lesson; the sign-up half had not.
+ */
+export const IAM_SIGNUP_URL = `${SERVER_URL}/signup/${CLIENT_ID}`;
+
 /** The single IAM SDK instance driving PKCE login and callback exchange. */
 export function getHanzoIamSdk(): IAM {
   if (instance) {

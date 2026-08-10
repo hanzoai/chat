@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Dispatch, SetStateAction } from 'react';
 import { useLocalize, useNewConvo, useAuthContext } from '~/hooks';
 import { startHanzoLogin } from '~/utils/login';
+import { IAM_SIGNUP_URL } from '~/utils/iam';
 import { clearMessagesCache } from '~/utils';
 import BrandCorner from './BrandCorner';
 import store from '~/store';
@@ -126,7 +127,7 @@ export default function MobileNav({
             {localize('com_nav_log_in')}
           </button>
           <a
-            href="https://hanzo.id/signup/hanzo-chat"
+            href={IAM_SIGNUP_URL}
             className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-text-secondary hover:text-text-primary"
           >
             {localize('com_auth_sign_up')}
