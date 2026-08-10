@@ -88,6 +88,17 @@ const startServer = async () => {
     }
   }
 
+  /* The shell's own name, from the same APP_TITLE the running config reports.
+     The built HTML carries whichever brand built it, and it is what a tab, a
+     bookmark and a link unfurl show BEFORE any script runs — so on lux.chat the
+     tab read "Hanzo Chat" until React replaced it, and a shared link said so
+     forever. The SPA already titles itself from this value once it boots; this
+     is the same answer, early enough to be true on arrival. */
+  if (process.env.APP_TITLE) {
+    const title = process.env.APP_TITLE.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    indexHTML = indexHTML.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
+  }
+
   /* The browser's IAM identity travels in the shell, not in the bundle. Vite
      inlines `import.meta.env.VITE_*` at BUILD time, so without this the login
      client is whatever the image was built with and one image can serve exactly

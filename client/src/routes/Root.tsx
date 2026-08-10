@@ -24,6 +24,7 @@ import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
 import Backdrop from '~/components/Chat/Backdrop';
 import LandingPage from '~/components/Landing/LandingPage';
+import { IAM_ORG } from '~/utils/iam';
 import LoginGate from '~/components/Auth/LoginGate';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 import store from '~/store';
@@ -150,7 +151,22 @@ export default function Root() {
   // is the one component that says it; without it mounted here, the refusal was
   // dispatched into an empty room and the visitor saw a site with no composer and
   // no error.
-  if (!showChat && location.pathname === '/') {
+  // ...and only for the tenant whose page it is. LandingPage carries Hanzo's
+  // wordmark, Hanzo's copy and @hanzogui/shell's cross-app header and footer, and
+  // one image serves every brand — so on lux.chat this branch answered a Lux
+  // visitor with "Meet Hanzo · Hanzo Chat — Every Model, One Interface", 21 times
+  // the word Hanzo and not once the word Lux. Guest chat is off there, which makes
+  // `showChat` false for EVERY anonymous visitor, so the brochure was not a last
+  // resort on that host: it was the front door.
+  //
+  // The org comes from the same runtime value the login SDK signs in against
+  // (`window.__HANZO_IAM__`), because a build-time constant would pin one brand
+  // into an image two brands share. Falling through hands the visitor the chat
+  // shell, where `useAuthRedirect` answers from that deployment's own config —
+  // guests stay, and a host that offers no guest product goes to /login. That
+  // redirect was always the right answer on lux.chat; returning early is what
+  // swallowed it.
+  if (!showChat && location.pathname === '/' && IAM_ORG === 'hanzo') {
     return (
       <>
         <LandingPage />

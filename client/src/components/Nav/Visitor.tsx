@@ -3,6 +3,7 @@ import { CreditCard, CircleHelp } from 'lucide-react';
 import { GearIcon, Button } from '@hanzochat/client';
 import { useGetStartupConfig } from '~/data-provider';
 import { startHanzoLogin } from '~/utils/login';
+import { IAM_SIGNUP_URL } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 import { ROW } from '~/components/chrome';
 import Settings from './Settings';
@@ -56,17 +57,18 @@ export default function Visitor() {
       {/* The offer, at the bottom-left corner the account block occupies once it
           is taken up. Sign-up leads — a visitor's most likely next step is to
           make an account, so it is the raised primary on TOP; log in sits under
-          it, quieter, for the returning user who already knows to look. Both are
-          hanzo.id; chat implements no account creation of its own. */}
+          it, quieter, for the returning user who already knows to look. Both go
+          to whichever issuer this deployment signs into; chat implements no
+          account creation of its own. */}
       <div className="mt-2 flex flex-col gap-1">
-        {/* Sign-up leads and is a real navigation (hanzo.id's app-scoped form),
+        {/* Sign-up leads and is a real navigation (the issuer's app-scoped form),
             so it stays an anchor — right-click-open, crawlable — wearing the
             primary pushbutton look directly (the submit variant's tokens) rather
             than through asChild, which the resolved Button does not honor in
             every context. Log in triggers the OAuth redirect in JS, so it is a
             real button; outline keeps it the quieter second path underneath. */}
         <a
-          href="https://hanzo.id/signup/hanzo-chat"
+          href={IAM_SIGNUP_URL}
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-submit-hover bg-surface-submit px-2 text-sm font-medium text-white transition-colors hover:bg-surface-submit-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
         >
           {localize('com_auth_sign_up')}

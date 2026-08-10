@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { ViolationTypes, ErrorTypes, alternateName } from '@hanzochat/data-provider';
 import type { LocalizeFunction } from '~/common';
 import { formatJSON, extractJson, isJson } from '~/utils/json';
+import { IAM_SIGNUP_URL } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 import CodeBlock from './CodeBlock';
@@ -181,7 +182,7 @@ const errorMessages = {
             <br />
             <br />
             <a
-              href="https://hanzo.id/signup/hanzo-chat"
+              href={IAM_SIGNUP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-hanzo-red underline"
