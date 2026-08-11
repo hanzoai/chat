@@ -29,7 +29,7 @@ const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
 const configureIamLogin = require('./iamLogin');
 const { injectIamConfig } = require('./iamConfig');
-const { injectIcons } = require('./icons');
+const { injectIcons, mountIcons } = require('./icons');
 const { getAppConfig } = require('./services/Config');
 const { resolveAllowedOrigin } = require('./utils/allowedOrigins');
 const staticCache = require('./utils/staticCache');
@@ -180,6 +180,12 @@ const startServer = async () => {
   app.use(cookieParser());
 
   app.use(compression());
+
+  /* This brand's marks answer BEFORE the built client's, because the built
+     client's are whichever brand's were in the tree at build time — see
+     api/server/icons.js. Ordered ahead of the three mounts below for that
+     reason and no other. */
+  mountIcons(app, appConfig.paths.dist, process.env.OPENID_ORG);
 
   app.use(staticCache(appConfig.paths.dist));
   app.use(staticCache(appConfig.paths.fonts));
