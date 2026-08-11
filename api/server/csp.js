@@ -1,12 +1,38 @@
 /**
+ * The IAM origin THIS deployment federates to.
+ *
+ * Read from `OPENID_ISSUER` — the same variable the backend's passport strategy
+ * registers with and `iamConfig.js` hands the browser as `window.__HANZO_IAM__`
+ * — so the policy cannot name a different issuer than the login it is there to
+ * permit. Written out as the literal `https://hanzo.id`, it was Hanzo's origin
+ * in an image two brands share: on lux.chat the SPA signed in at lux.id, came
+ * back to `/auth/callback` with a code, and the token POST died on this policy.
+ * Login was impossible there for EVERY account, new or existing, while the
+ * server stayed healthy and the issuer did nothing wrong.
+ *
+ * One origin, not a list of every brand's: naming hanzo.id here on lux.chat
+ * would grant a connection Lux's product has no reason to make.
+ *
+ * `.origin` normalises a trailing slash or path away, since a CSP source is an
+ * origin; an unparseable value falls back rather than emitting a broken policy.
+ */
+const IAM_ORIGIN = (() => {
+  try {
+    return new URL(process.env.OPENID_ISSUER || 'https://hanzo.id').origin;
+  } catch {
+    return 'https://hanzo.id';
+  }
+})();
+
+/**
  * The one Content-Security-Policy served with every response.
  *
- * `connect-src` must include the IAM origin (hanzo.id): login is browser PKCE,
- * so the SPA itself fetches `/.well-known/openid-configuration` and POSTs the
- * code to `/v1/iam/oauth/token`. Without it a visitor signs in at hanzo.id,
- * returns to `/auth/callback`, and the exchange dies on CSP ("IAM session bridge
- * failed: Failed to fetch") — login silently never completes. hanzo.id is NOT
- * covered by `*.hanzo.ai`.
+ * `connect-src` must include the IAM origin: login is browser PKCE, so the SPA
+ * itself fetches `/.well-known/openid-configuration` and POSTs the code to
+ * `/v1/iam/oauth/token`. Without it a visitor signs in, returns to
+ * `/auth/callback`, and the exchange dies on CSP ("IAM session bridge failed:
+ * Failed to fetch") — login silently never completes. hanzo.id is NOT covered
+ * by `*.hanzo.ai`.
  *
  * `frame-src` stays at `'self'`. It once also listed hanzo.id, for `signinSilent()`
  * — a `prompt=none` authorize in a HIDDEN IFRAME. That flow is gone: hanzo.id
@@ -41,15 +67,15 @@ const contentSecurityPolicy = [
   // covers the bucket subdomains and nothing else: it is one registrable domain
   // we own, not a bare scheme, so the exfiltration channel described above stays
   // shut.
-  // hanzo.id serves the account's profile photo (the `picture` claim the IAM
+  // The issuer serves the account's profile photo (the `picture` claim the IAM
   // login stores as the user's avatar); the account menu renders it as a plain
   // <img>. Safe to allow: it is our own IdP (one registrable domain we own,
   // not a scheme), and the markdown image renderer still auto-loads ONLY
   // same-origin, so this cannot become a beacon in message content.
-  "img-src 'self' data: blob: https://hanzo.id https://s3.hanzo.ai https://s3-api.hanzo.ai https://*.s3-api.hanzo.ai",
+  `img-src 'self' data: blob: ${IAM_ORIGIN} https://s3.hanzo.ai https://s3-api.hanzo.ai https://*.s3-api.hanzo.ai`,
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
-  "connect-src 'self' https://hanzo.id https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com",
+  `connect-src 'self' ${IAM_ORIGIN} https://hanzo.app https://*.hanzo.ai https://*.hanzo.chat wss://*.hanzo.chat https://static.cloudflareinsights.com https://cloudflareinsights.com`,
   // 'self' keeps the same-origin silent.mp3 audio-unlock iframe.
   //
   // www.youtube.com and player.twitch.tv are the only players the backdrop can
