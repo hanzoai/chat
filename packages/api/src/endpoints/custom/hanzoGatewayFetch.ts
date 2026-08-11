@@ -6,42 +6,188 @@ export type GatewayFetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-/** Shape of the Hanzo Cloud gateway's non-streaming error envelope. */
+/** Shape of the Hanzo Cloud gateway's error envelope (streamed or not). */
 interface HanzoErrorEnvelope {
   status?: string;
   msg?: string;
+  error?: { message?: string } | string;
   choices?: unknown;
 }
 
+const FALLBACK_MESSAGE = 'Hanzo Cloud rejected the model request.';
+
 /**
- * Wrap an OpenAI-client `fetch` so the Hanzo Cloud gateway's HTTP-200 error
- * envelope becomes a real, surfaced error instead of an opaque crash.
+ * The gateway's error, if a JSON payload IS one: `status:"error"` with no
+ * `choices`. Returns the actionable message, or null for anything else — a
+ * normal chunk (has `choices`), a `[DONE]`, or a body that is not the envelope.
+ *
+ * A successful OpenAI chunk always carries `choices`, so it can never match;
+ * that is what makes rewriting the matched payload safe for a live stream.
+ */
+function readErrorEnvelope(payload: string): string | null {
+  let json: HanzoErrorEnvelope;
+  try {
+    json = JSON.parse(payload) as HanzoErrorEnvelope;
+  } catch {
+    return null;
+  }
+  if (!json || typeof json !== 'object' || json.choices != null || json.status !== 'error') {
+    return null;
+  }
+  if (typeof json.msg === 'string' && json.msg.trim()) {
+    return json.msg.trim();
+  }
+  if (typeof json.error === 'string' && json.error.trim()) {
+    return json.error.trim();
+  }
+  if (json.error && typeof json.error === 'object' && typeof json.error.message === 'string') {
+    return json.error.message.trim() || FALLBACK_MESSAGE;
+  }
+  return FALLBACK_MESSAGE;
+}
+
+/** The message an SSE event carries IF one of its `data:` lines is the envelope. */
+function eventError(rawEvent: string): string | null {
+  for (const line of rawEvent.split(/\r?\n/)) {
+    if (!line.startsWith('data:')) {
+      continue;
+    }
+    const payload = line.slice(5).trim();
+    if (!payload || payload === '[DONE]') {
+      continue;
+    }
+    const message = readErrorEnvelope(payload);
+    if (message != null) {
+      return message;
+    }
+  }
+  return null;
+}
+
+/** The OpenAI-standard error event the client SDK surfaces as a clean throw. */
+const encodeErrorEvent = (message: string): Uint8Array =>
+  new TextEncoder().encode(
+    `data: ${JSON.stringify({
+      error: { message, type: 'insufficient_quota', code: 'insufficient_quota' },
+    })}\n\n`,
+  );
+
+/** End index (exclusive) of the first complete SSE event in `s`, or -1. */
+function boundary(s: string): number {
+  const lf = s.indexOf('\n\n');
+  const crlf = s.indexOf('\r\n\r\n');
+  if (lf < 0 && crlf < 0) {
+    return -1;
+  }
+  if (crlf < 0 || (lf >= 0 && lf < crlf)) {
+    return lf + 2;
+  }
+  return crlf + 4;
+}
+
+/**
+ * Pass an SSE stream through event-by-event, forwarding every event's original
+ * bytes UNTOUCHED, and rewriting only an event that IS the gateway's error
+ * envelope into an OpenAI-standard error event — then ending the stream.
+ *
+ * The gateway commits to `text/event-stream` before it knows a request will
+ * fail (e.g. an upstream route drops after a reasoning model has streamed its
+ * thinking), so a real failure can arrive mid-stream as
+ * `data: {"status":"error","msg":"..."}` — a payload with no `choices`. The
+ * OpenAI client parses that as a chunk and crashes on `undefined.role`, so the
+ * reply that had been streaming vanishes into the opaque "Something went wrong".
+ * Surfacing it as a standard error event makes the client raise the gateway's
+ * own message instead. A successful stream never carries that shape, so its
+ * bytes are forwarded verbatim.
+ */
+function surfaceStreamErrors(body: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = '';
+
+  const surface = (controller: ReadableStreamDefaultController<Uint8Array>, message: string) => {
+    logger.warn('[hanzoGatewayFetch] surfacing gateway error from an SSE stream', { message });
+    controller.enqueue(encodeErrorEvent(message));
+    controller.close();
+    void reader.cancel();
+  };
+
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          if (buffer) {
+            const message = eventError(buffer);
+            if (message != null) {
+              surface(controller, message);
+              return;
+            }
+            controller.enqueue(encoder.encode(buffer));
+          }
+          controller.close();
+          return;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        for (let end = boundary(buffer); end >= 0; end = boundary(buffer)) {
+          const rawEvent = buffer.slice(0, end);
+          buffer = buffer.slice(end);
+          const message = eventError(rawEvent);
+          if (message != null) {
+            surface(controller, message);
+            return;
+          }
+          controller.enqueue(encoder.encode(rawEvent));
+        }
+      } catch (err) {
+        controller.error(err);
+      }
+    },
+    cancel(reason) {
+      void reader.cancel(reason);
+    },
+  });
+}
+
+/**
+ * Wrap an OpenAI-client `fetch` so the Hanzo Cloud gateway's error envelope
+ * becomes a real, surfaced error instead of an opaque crash — whether it arrives
+ * as a plain body or inside a `text/event-stream`.
  *
  * The gateway (api.hanzo.ai) answers some failures — most importantly a request
  * for a premium model when the caller's balance is only the $5 starter credit —
- * with HTTP 200 and a JSON body `{ "status": "error", "msg": "..." }` that has no
- * `choices`. The OpenAI client treats the 200 as success and parses the body to
+ * with an error envelope `{ "status": "error", "msg": "..." }` that has no
+ * `choices`. The OpenAI client treats it as success and parses the body to
  * `undefined`; the agent run then throws the opaque
  * `Cannot read properties of undefined (reading 'role')`, so NO assistant reply
  * renders and the user never learns why (and the title call dies the same way on
  * `reading 'message'`).
  *
- * This wrapper rewrites that envelope into a conventional 402 response carrying
- * the gateway's own `msg`, so the OpenAI client raises a clean, non-retryable
- * error and the existing error path shows the actionable message ("... requires a
- * paid balance. Add funds ...") instead of crashing. Successful SSE streams
- * (`text/event-stream`) and normal completions pass through untouched, and the
- * request headers/body are never inspected — per-user `hk-` billing is unaffected.
+ * A non-streaming envelope is rewritten into a conventional 402 carrying the
+ * gateway's own `msg`. A streaming envelope — which the gateway can emit AFTER
+ * committing to `text/event-stream`, e.g. a mid-stream upstream failure once a
+ * reasoning model has begun — is rewritten into a standard SSE error event by
+ * `surfaceStreamErrors`, forwarding every successful event untouched. Either
+ * way the client raises a clean error with the actionable message. The request
+ * headers/body are never inspected — per-user `hk-` billing is unaffected.
  */
 export function wrapHanzoGatewayFetch(baseFetch?: GatewayFetch): GatewayFetch {
   const inner: GatewayFetch = baseFetch ?? ((input, init) => fetch(input, init));
   return async (input, init) => {
     const response = await inner(input, init);
 
-    /** Live SSE success streams must pass through without buffering the body. */
+    /** SSE streams pass through the event-aware guard, never a body buffer. */
     const contentType = response.headers.get('content-type') ?? '';
     if (contentType.includes('text/event-stream')) {
-      return response;
+      if (!response.body) {
+        return response;
+      }
+      return new Response(surfaceStreamErrors(response.body), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
     }
 
     /** Read a clone so the original body stays intact for the OpenAI client. */
@@ -54,8 +200,7 @@ export function wrapHanzoGatewayFetch(baseFetch?: GatewayFetch): GatewayFetch {
 
     if (envelope && envelope.status === 'error' && envelope.choices == null) {
       const message =
-        (typeof envelope.msg === 'string' && envelope.msg.trim()) ||
-        'Hanzo Cloud rejected the model request.';
+        (typeof envelope.msg === 'string' && envelope.msg.trim()) || FALLBACK_MESSAGE;
       logger.warn('[hanzoGatewayFetch] gateway returned a 200 error envelope; surfacing as 402', {
         message,
       });
