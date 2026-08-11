@@ -134,12 +134,14 @@ const ConversationStarters = () => {
             // lighter liquid-glass fill (see style.css) so the landing video
             // reads through the suggestions instead of dark slabs on the hero.
             'glass hz-chip min-h-11 max-w-full truncate rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
-            // A phone fits two of these per row, so five of them are three rows of
-            // suggestions stacked under the one control an arriving visitor came
-            // to use. The first is an example; the rest were a menu. Signed in
-            // the screen belongs to someone who has already chosen to be here,
-            // and the full set is useful again.
-            index > 0 && !isAuthenticated && 'max-sm:hidden',
+            // On a phone the suggestions are ONE row, never an orphan. Signed
+            // out, only the first example shows (the rest were a menu the
+            // arriving visitor did not ask for). Signed in, two starters show
+            // and the rest step out below sm, so the row is two starters + the
+            // "Build an app" chip = three items, which fit one line at any phone
+            // width instead of dropping the build chip onto a lonely line
+            // beneath four. Desktop shows the full set.
+            ((!isAuthenticated && index > 0) || (isAuthenticated && index >= 2)) && 'max-sm:hidden',
           )}
         >
           {label}
