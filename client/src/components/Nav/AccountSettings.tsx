@@ -13,6 +13,7 @@ import { MyFilesModal } from '~/components/Chat/Input/Files/MyFilesModal';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { startHanzoLogin } from '~/utils/login';
+import { IAM_ACCOUNT_URL, IAM_ORG } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 import { ROW } from '~/components/chrome';
 import { cn } from '~/utils';
@@ -113,16 +114,27 @@ function AccountSettings() {
     {
       label: 'Account',
       icon: <UserCog className="icon-md" aria-hidden="true" />,
-      href: 'https://hanzo.id/account',
+      // The issuer this deployment actually signs in against — see utils/iam.
+      href: IAM_ACCOUNT_URL,
       external: true,
       separatorBefore: true,
     },
-    {
-      label: 'Console',
-      icon: <LayoutDashboard className="icon-md" aria-hidden="true" />,
-      href: 'https://console.hanzo.ai',
-      external: true,
-    },
+    /* Hanzo's admin console, offered to Hanzo's tenant. There is no Lux console
+       to send a Lux customer to — checked, `console.lux.network` does not
+       resolve — so the row is HIDDEN rather than repointed at a guess or left
+       pointing at another company's admin surface. Same rule the Plans row in
+       Nav/Visitor already follows; it comes back for a brand the day that brand
+       has one. */
+    ...(IAM_ORG === 'hanzo'
+      ? ([
+          {
+            label: 'Console',
+            icon: <LayoutDashboard className="icon-md" aria-hidden="true" />,
+            href: 'https://console.hanzo.ai',
+            external: true,
+          },
+        ] as UserMenuItem[])
+      : []),
     {
       label: localize('com_nav_settings'),
       icon: <GearIcon className="icon-md" aria-hidden="true" />,
@@ -155,7 +167,11 @@ function AccountSettings() {
             expired || usd <= 0 ? ('empty' as const) : usd < 2 ? ('low' as const) : ('ok' as const),
           label: expired ? localize('com_nav_balance') + ' · expired' : localize('com_nav_balance'),
           topUpLabel: 'Add Funds',
-          topUpUrl: 'https://billing.hanzo.ai',
+          // Hanzo's checkout, for Hanzo's tenant. Inert on lux.chat today
+          // (balance is off there, so this whole block is undefined), and stated
+          // anyway: the day another brand turns balance on, an ungated literal
+          // here would take that brand's customer to Hanzo's card form.
+          topUpUrl: IAM_ORG === 'hanzo' ? 'https://billing.hanzo.ai' : undefined,
         }
       : undefined;
 
@@ -170,8 +186,19 @@ function AccountSettings() {
         items={items}
         balance={balance}
         signOutLabel={localize('com_nav_log_out')}
-        usageUrl="https://cloud.hanzo.ai/usage"
-        brand={{ name: 'Hanzo AI', href: 'https://hanzo.ai' }}
+        /* Both are Hanzo's own surfaces and neither has a Lux counterpart
+           (`billing.lux.network` and a Lux usage page do not exist), so they are
+           omitted rather than repointed — the props are optional precisely so a
+           surface can decline them.
+
+           The brand strip is the sharper of the two, and @hanzo/iam says so in
+           its own types: omitting `markSvg` falls back to the Hanzo mark from
+           @hanzo/logo, so passing `{name: 'Lux Network'}` would have printed
+           Lux's NAME under Hanzo's LOGO. Lux's mark set is raster and there is
+           no SVG to hand it, so the honest answer is no strip at all — the
+           footer already says "Powered by Lux Network" from CUSTOM_FOOTER. */
+        usageUrl={IAM_ORG === 'hanzo' ? 'https://cloud.hanzo.ai/usage' : undefined}
+        brand={IAM_ORG === 'hanzo' ? { name: 'Hanzo AI', href: 'https://hanzo.ai' } : undefined}
         usageLabel="Usage & billing"
         theme={{
           mode: (theme as ThemeMode) ?? 'system',

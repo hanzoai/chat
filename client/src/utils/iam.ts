@@ -85,6 +85,19 @@ export const IAM_ORG = ORGANIZATION;
  */
 export const IAM_SIGNUP_URL = `${SERVER_URL}/signup/${CLIENT_ID}`;
 
+/**
+ * Where a person manages the account itself — profile, password, sessions.
+ *
+ * Composed from the SAME issuer the SDK signs in against, for the same reason
+ * sign-up above is: the account being managed LIVES at that issuer, so any other
+ * host is not a branding slip but a dead end. Written out by hand it was
+ * `hanzo.id/account` in every image, so the Account row of lux.chat's own menu
+ * sent a Lux customer to Hanzo's identity host to manage an account that exists
+ * at lux.id — and being signed in here says nothing about being signed in there,
+ * so what they actually got was a sign-in form for the wrong tenant.
+ */
+export const IAM_ACCOUNT_URL = `${SERVER_URL}/account`;
+
 /** The single IAM SDK instance driving PKCE login and callback exchange. */
 export function getHanzoIamSdk(): IAM {
   if (instance) {
