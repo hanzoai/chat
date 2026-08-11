@@ -35,8 +35,9 @@ concurrency:
   group: deploy-chat-${{ github.ref }}
   cancel-in-progress: true
 
-# Needed to push the release commit + tag below. Absent, the checkout's token is
-# read-only and the write-back fails at the push rather than at the commit.
+# `contents: write` is for the release TAG. It is not enough for a commit to
+# main and never was — the forge refuses an Actions-token push to a protected
+# branch whatever this says, which is why the write-back is gone.
 permissions:
   contents: write
   packages: write
@@ -48,8 +49,8 @@ jobs:
     # until the 24h timeout — silence, not an error.
     runs-on: [hanzo-build-linux-amd64]
     steps:
-      # Full history + tags: this job now TAGS the release, so it needs the tag
-      # namespace to push into and a non-shallow clone to push a commit from.
+      # Full history + tags: this job TAGS the release, so it needs the tag
+      # namespace to push into and a non-shallow clone to describe from.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -69,8 +70,8 @@ jobs:
       # reached 1.0.77 against a published 1.0.113 that way: 36 patches behind,
       # and silent, because a stale floor breaks nothing. It just loses.
       #
-      # Stamping before the build is also what makes the commit below honest: the
-      # tree that gets tagged is byte-identical to the tree that was built.
+      # Stamping before the build is what makes the TAG below honest: the tree
+      # that gets tagged is byte-identical to the tree that was built.
       - name: Stamp package.json with the release version
         run: |
           set -euo pipefail
@@ -194,10 +195,10 @@ jobs:
       # fleet sat on 1.0.115 while newer images existed: the lane ended at "push"
       # and waited for a human who had no reason to know they were the mechanism.
       #
-      # It runs BEFORE the commit+tag below on purpose. That step is bookkeeping
-      # and is deliberately last so it cannot un-ship a good build; this one IS
-      # the ship, and a release that tags a version it never deployed is the
-      # same lie in the other direction.
+      # It runs BEFORE the tag below on purpose. Tagging is bookkeeping and is
+      # deliberately last so it cannot un-ship a good build; this one IS the
+      # ship, and a release that tags a version it never deployed is the same lie
+      # in the other direction.
       #
       # pin.sh resolves tag AND digest from ONE registry lookup and writes them
       # together. Two lookups at two moments drift, and drift here does not fail
@@ -269,50 +270,40 @@ jobs:
       # remotes honour it — git.hanzo.ai via Gitea's SKIP_WORKFLOW_STRINGS
       # default, github.com natively — so the write-back cannot re-enter here.
       #
-      # Loud on failure, but LAST: the image is pushed and resolvable by now, and
-      # universe pins the image, not this commit. Bookkeeping must not be able to
-      # un-ship a good build. hanzo.yml's `version-drift` gate catches a miss on
-      # the next push regardless — one mechanism writes, the other refuses to go
-      # green while it is wrong.
-      - name: Commit + tag the version this image ships
+      # LAST: the image is pushed and resolvable by now, and universe pins the
+      # image, not this tag. Bookkeeping must not be able to un-ship a good build.
+      # hanzo.yml's `version-drift` gate is gone with the write-back — it existed
+      # to prove that write-back landed, so keeping it would have meant a gate
+      # that goes red forever about a copy with no authority.
+      # TAG ONLY. The commit-to-main half of this step is gone, and the reason is
+      # in the comment on `imgver` above: the version is `max(declared, published)
+      # + 1`, so once an image is published the registry carries the floor and the
+      # copy in package.json can only ever restate it. What the copy DOES buy — a
+      # deliberate jump to, say, 1.1.0 — is a human editing that file, which max()
+      # still honours. So the write-back kept a redundant copy in sync.
+      #
+      # It could not do even that: the forge refuses an Actions-token push to a
+      # protected branch, so the five-attempt loop below retried a race it was
+      # never losing, then failed the job. The image had already shipped, been
+      # tagged and been pinned by then — a RED run that meant "released fine", the
+      # same shape hanzo-apps/app resolved by deleting its write-back.
+      #
+      # The tag stays: `git push origin v${v}` succeeds (v1.0.150 is on the forge),
+      # and the pre-build stamp stays too, so the tree that gets tagged is still
+      # byte-identical to the tree that was built.
+      - name: Tag the version this image ships
         run: |
           set -euo pipefail
           v="${{ steps.ver.outputs.version }}"
           git config user.name 'hanzo-ci'
           git config user.email 'ci@hanzo.ai'
-          git add package.json
-          # Idempotent, because this step gets RE-RUN. A run that pushed its image
-          # and then died later (a Docker-daemon drop mid-build is the common one)
-          # leaves package.json already declaring ${v}; imgver then rewrites the
-          # same value, `git add` stages nothing, and `git commit` exits non-zero
-          # on "nothing to commit, working tree clean". Under the runner's
-          # `bash -e` that killed the step — so the retry that should have healed
-          # the release failed on the half of it that had already succeeded.
-          #
-          # The loop below already knew this ("main already declares ${v}") and
-          # exits 0. The first attempt did not, which is the whole defect.
-          if git diff --cached --quiet; then
-            echo "package.json already declares ${v} — nothing to commit"
-          else
-            git commit -m "release ${v} [skip ci]"
-          fi
-          # Same reasoning for the tag: a partial run may have created and pushed
-          # it, and `git tag` on an existing name is a fatal error.
+          # Idempotent: this step gets RE-RUN, and `git tag` on an existing name
+          # is fatal. A run that pushed its image and then died later leaves the
+          # tag already there.
           if git rev-parse -q --verify "refs/tags/v${v}" >/dev/null; then
             echo "tag v${v} already exists"
           else
             git tag "v${v}"
             git push origin "v${v}"
           fi
-          for attempt in 1 2 3 4 5; do
-            if git push origin HEAD:main; then
-              echo "main declares ${v} — package.json and v${v} agree"; exit 0
-            fi
-            echo "main moved under us (attempt ${attempt}/5) — re-applying ${v} on the new tip"
-            git fetch --quiet origin main
-            git reset --quiet --hard origin/main
-            sed -i.bak -E "s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]+(\")/\1${v}\2/" package.json && rm -f package.json.bak
-            git diff --quiet -- package.json && { echo "main already declares ${v}"; exit 0; }
-            git commit --quiet -am "release ${v} [skip ci]"
-          done
-          echo "::error::image ${v} shipped, but package.json on main still does not declare it — commit it by hand or imgver's floor stays stale"; exit 1
+          echo "v${v} tagged — package.json on main is not written back by design (see above)"
