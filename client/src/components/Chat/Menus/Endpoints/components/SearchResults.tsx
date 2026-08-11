@@ -6,6 +6,7 @@ import type { TModelSpec } from '@hanzochat/data-provider';
 import type { Endpoint } from '~/common';
 import { useModelSelectorContext } from '../ModelSelectorContext';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
+import { isCurrent } from './EndpointModelItem';
 import SpecIcon from './SpecIcon';
 import { cn, label } from '~/utils';
 
@@ -24,11 +25,7 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
     endpointsConfig,
   } = useModelSelectorContext();
 
-  const {
-    modelSpec: selectedSpec,
-    endpoint: selectedEndpoint,
-    model: selectedModel,
-  } = selectedValues;
+  const { modelSpec: selectedSpec, endpoint: selectedEndpoint } = selectedValues;
 
   if (!results) {
     return null;
@@ -159,8 +156,7 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
                     modelName = endpoint.assistantNames[modelId];
                   }
 
-                  const isModelSelected =
-                    selectedEndpoint === endpoint.value && selectedModel === modelId;
+                  const isModelSelected = isCurrent(endpoint, modelId, selectedValues);
                   return (
                     <MenuItem
                       key={`${endpoint.value}-${modelId}-search-${i}`}
@@ -199,7 +195,9 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
             );
           } else {
             // Endpoints with no models
-            const isEndpointSelected = selectedEndpoint === endpoint.value;
+            // A spec outranks an endpoint too — same rule as isCurrent, one
+            // condition shorter because there is no model to compare here.
+            const isEndpointSelected = !selectedSpec && selectedEndpoint === endpoint.value;
             return (
               <MenuItem
                 key={`endpoint-${endpoint.value}-search-item`}

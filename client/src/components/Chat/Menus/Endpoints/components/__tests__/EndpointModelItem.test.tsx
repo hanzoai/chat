@@ -1,15 +1,11 @@
 import { render, screen } from '@testing-library/react';
-import type { Endpoint, SelectedValues } from '~/common';
-import { EndpointModelItem } from '../EndpointModelItem';
+import type { Endpoint } from '~/common';
+import { EndpointModelItem, isCurrent } from '../EndpointModelItem';
 
 const mockHandleSelectModel = jest.fn();
-let mockSelectedValues: SelectedValues;
 
 jest.mock('~/components/Chat/Menus/Endpoints/ModelSelectorContext', () => ({
-  useModelSelectorContext: () => ({
-    handleSelectModel: mockHandleSelectModel,
-    selectedValues: mockSelectedValues,
-  }),
+  useModelSelectorContext: () => ({ handleSelectModel: mockHandleSelectModel }),
 }));
 
 jest.mock('~/components/Chat/Menus/Endpoints/CustomMenu', () => {
@@ -32,7 +28,7 @@ jest.mock('~/hooks', () => ({
     isFavoriteAgent: () => false,
     toggleFavoriteAgent: jest.fn(),
   }),
-  useIsActiveItem: () => ({ ref: { current: null }, isActive: false }),
+  useActive: () => ({ ref: { current: null }, isActive: false }),
 }));
 
 const baseEndpoint: Endpoint = {
@@ -48,39 +44,64 @@ describe('EndpointModelItem', () => {
     jest.clearAllMocks();
   });
 
-  it('renders checkmark when model and endpoint match with no active spec', () => {
-    mockSelectedValues = { endpoint: 'anthropic', model: 'claude-opus-4-6', modelSpec: '' };
-    render(<EndpointModelItem modelId="claude-opus-4-6" endpoint={baseEndpoint} />);
-
-    const menuItem = screen.getByRole('menuitem');
-    expect(menuItem).toHaveAttribute('aria-selected', 'true');
+  it('renders aria-selected when it is told it is the current row', () => {
+    render(<EndpointModelItem modelId="claude-opus-4-6" endpoint={baseEndpoint} isSelected />);
+    expect(screen.getByRole('menuitem')).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('does NOT render checkmark when a model spec is active even if endpoint and model match', () => {
-    mockSelectedValues = {
-      endpoint: 'anthropic',
-      model: 'claude-opus-4-6',
-      modelSpec: 'my-anthropic-spec',
-    };
-    render(<EndpointModelItem modelId="claude-opus-4-6" endpoint={baseEndpoint} />);
-
-    const menuItem = screen.getByRole('menuitem');
-    expect(menuItem).not.toHaveAttribute('aria-selected');
+  it('renders no aria-selected when it is not', () => {
+    render(
+      <EndpointModelItem modelId="claude-opus-4-6" endpoint={baseEndpoint} isSelected={false} />,
+    );
+    expect(screen.getByRole('menuitem')).not.toHaveAttribute('aria-selected');
   });
 
-  it('does NOT render checkmark when model matches but endpoint differs', () => {
-    mockSelectedValues = { endpoint: 'openai', model: 'claude-opus-4-6', modelSpec: '' };
-    render(<EndpointModelItem modelId="claude-opus-4-6" endpoint={baseEndpoint} />);
+  /**
+   * The rule that decides which row wears the mark. It moved out of the
+   * component when selection became a prop, and on the way it lost two of its
+   * three conditions — leaving `selected.model === modelId`, which puts a
+   * second checkmark in the menu whenever a spec is active or two endpoints
+   * happen to offer the same model id.
+   */
+  describe('isCurrent', () => {
+    it('is the current row when endpoint and model match and no spec is active', () => {
+      expect(
+        isCurrent(baseEndpoint, 'claude-opus-4-6', {
+          endpoint: 'anthropic',
+          model: 'claude-opus-4-6',
+          modelSpec: '',
+        }),
+      ).toBe(true);
+    });
 
-    const menuItem = screen.getByRole('menuitem');
-    expect(menuItem).not.toHaveAttribute('aria-selected');
-  });
+    it('yields to an active spec even when endpoint and model match', () => {
+      expect(
+        isCurrent(baseEndpoint, 'claude-opus-4-6', {
+          endpoint: 'anthropic',
+          model: 'claude-opus-4-6',
+          modelSpec: 'my-anthropic-spec',
+        }),
+      ).toBe(false);
+    });
 
-  it('does NOT render checkmark when endpoint matches but model differs', () => {
-    mockSelectedValues = { endpoint: 'anthropic', model: 'claude-sonnet-4-5', modelSpec: '' };
-    render(<EndpointModelItem modelId="claude-opus-4-6" endpoint={baseEndpoint} />);
+    it('does not claim a matching model id under a different endpoint', () => {
+      expect(
+        isCurrent(baseEndpoint, 'claude-opus-4-6', {
+          endpoint: 'openai',
+          model: 'claude-opus-4-6',
+          modelSpec: '',
+        }),
+      ).toBe(false);
+    });
 
-    const menuItem = screen.getByRole('menuitem');
-    expect(menuItem).not.toHaveAttribute('aria-selected');
+    it('does not claim a different model under a matching endpoint', () => {
+      expect(
+        isCurrent(baseEndpoint, 'claude-opus-4-6', {
+          endpoint: 'anthropic',
+          model: 'claude-sonnet-4-5',
+          modelSpec: '',
+        }),
+      ).toBe(false);
+    });
   });
 });
