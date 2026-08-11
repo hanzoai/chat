@@ -1,15 +1,7 @@
 import { useMemo } from 'react';
 import { TAttachment, Tools, SearchResultData } from '@hanzochat/data-provider';
+import type { FileMatch } from '@hanzochat/data-provider';
 import { useLocalize } from '~/hooks';
-
-interface FileSource {
-  fileId: string;
-  fileName: string;
-  pages?: number[];
-  relevance?: number;
-  pageRelevance?: Record<string, number>;
-  metadata?: any;
-}
 
 interface DeduplicatedSource {
   fileId: string;
@@ -47,7 +39,7 @@ export function useSearchResultsByTurn(attachments?: TAttachment[]) {
         // Deduplicate sources by fileId and merge pages
         const deduplicatedSources = new Map<string, DeduplicatedSource>();
 
-        sources.forEach((source: FileSource) => {
+        sources.forEach((source: FileMatch) => {
           const fileId = source.fileId;
           if (deduplicatedSources.has(fileId)) {
             // Merge pages for the same file
