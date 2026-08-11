@@ -162,10 +162,15 @@ export default function Root() {
   // The org comes from the same runtime value the login SDK signs in against
   // (`window.__HANZO_IAM__`), because a build-time constant would pin one brand
   // into an image two brands share. Falling through hands the visitor the chat
-  // shell, where `useAuthRedirect` answers from that deployment's own config —
-  // guests stay, and a host that offers no guest product goes to /login. That
-  // redirect was always the right answer on lux.chat; returning early is what
-  // swallowed it.
+  // shell, which is this app's answer for every tenant.
+  //
+  // It briefly ALSO went to /login from there, and that was worse than the
+  // brochure it replaced. `useAuthRedirect` navigated any visitor with no path
+  // to chat to `/login`, which redirects to the issuer on sight — so a Lux
+  // visitor got ~3s of empty canvas and then left the product entirely, having
+  // seen none of it. Measured at 1440 and 390 against production. The hook is
+  // deleted; a visitor who cannot chat stays here, and the sidebar foot's
+  // Log in / Sign up is the offer. Seeing the product must not require a token.
   if (!showChat && location.pathname === '/' && IAM_ORG === 'hanzo') {
     return (
       <>
