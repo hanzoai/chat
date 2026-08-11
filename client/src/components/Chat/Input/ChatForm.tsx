@@ -154,20 +154,14 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   /**
    * Submit handler for text TYPED INTO THIS COMPOSER. It intercepts the slash
-   * commands — `/build`, `/agent <name> [prompt]`, `/background` — and turns
-   * each into its one action; everything else is a normal chat message. This is
-   * the ONE place each of those commands is read.
+   * commands — `/agent <name> [prompt]`, `/background` — and turns each into its
+   * one action; everything else is a normal chat message. This is the ONE place
+   * each of those commands is read. `/build` is read a step earlier, in
+   * `submit`, for the reason given there.
    */
   const onSubmit = useCallback(
     (data?: { text: string }) => {
       const text = data?.text ?? '';
-      /** `/build [prompt]` hands off to the hanzo.app builder (new tab). */
-      const buildPrompt = parseBuildCommand(text);
-      if (buildPrompt !== null) {
-        methods.reset();
-        openAppBuilder(buildPrompt);
-        return;
-      }
       const command = parseAgentCommand(text);
       if (command) {
         methods.reset();
@@ -197,6 +191,27 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
       submitMessage(data);
     },
     [methods, runCloudAgent, submitMessage, setShowAgentsPopover, atoms],
+  );
+
+  /**
+   * The form's submit. `/build [prompt]` is read HERE, ahead of `handleSubmit`,
+   * because the builder opens a tab and a tab opens only inside the gesture that
+   * asked for it: `handleSubmit` awaits validation before it calls back, and a
+   * phone browser drops a `window.open` that lands after that await — composer
+   * cleared, no builder, nothing said. Everything else submits as it did.
+   */
+  const submit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      const buildPrompt = parseBuildCommand(methods.getValues('text'));
+      if (buildPrompt !== null) {
+        e.preventDefault();
+        openAppBuilder(buildPrompt);
+        methods.reset();
+        return;
+      }
+      void methods.handleSubmit(onSubmit)(e);
+    },
+    [methods, onSubmit],
   );
 
   const handleKeyUp = useHandleKeyUp({
@@ -272,7 +287,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   return (
     <form
-      onSubmit={methods.handleSubmit(onSubmit)}
+      onSubmit={submit}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:mb-10 sm:px-2',
         COLUMN(maximizeChatSpace),
