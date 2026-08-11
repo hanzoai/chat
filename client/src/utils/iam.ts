@@ -35,7 +35,7 @@ let instance: IAM | null = null;
 type IamShellConfig = { serverUrl?: string; clientId?: string; organization?: string };
 
 function fromShell(): IamShellConfig {
-  return (typeof window !== 'undefined' && (window as { __HANZO_IAM__?: IamShellConfig }).__HANZO_IAM__) || {};
+  return (typeof window !== 'undefined' && (window as { __IAM__?: IamShellConfig }).__IAM__) || {};
 }
 
 const shell = fromShell();
