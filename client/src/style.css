@@ -395,6 +395,23 @@
   background-color: color-mix(in oklab, var(--background) 93%, transparent) !important;
 }
 
+/* The conversation-starter chips are liquid glass over the landing video: a much
+   LIGHTER fill than the composer, so the footage reads THROUGH them instead of
+   the chips sitting on the hero as dark slabs. The base `.glass` (72% ground)
+   and the composer (84%) are the right weight for a control you type into; a
+   one-tap suggestion pill wants to look like frosted glass laid on the video.
+   Inside `@supports` so a browser that cannot blur still gets `.glass`'s opaque
+   ground and the labels stay legible; `!important` because `.glass`'s own fill
+   is `!important`. Hover firms it up a touch for feedback. */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass.hz-chip {
+    background-color: color-mix(in oklab, var(--background) 42%, transparent) !important;
+  }
+  .glass.hz-chip:hover {
+    background-color: color-mix(in oklab, var(--background) 58%, transparent) !important;
+  }
+}
+
 /* Sidebar conversation rows lift off the GLASS sidebar with a translucent tint,
    never the opaque `surface-active-alt` slab — a solid token there paints a
    second opaque panel over the blur. Hover is more opaque than the transparent
