@@ -15,7 +15,7 @@ export function setTokenHeader(token: string) {
   // `globalThis` inside bundled modules, so a globalThis write lands on the
   // shim and the page never sees it.
   if (typeof window !== 'undefined') {
-    (window as unknown as { __hanzoBearer?: string }).__hanzoBearer = token || undefined;
+    (window as unknown as { __bearer?: string }).__bearer = token || undefined;
   }
   if (token) {
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;

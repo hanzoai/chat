@@ -135,7 +135,7 @@ function isGuestSession(): boolean {
 if (typeof window !== 'undefined') {
   axios.interceptors.request.use((config) => {
     // `window`, not `globalThis` — see headers-helpers.ts.
-    const bearer = (window as unknown as { __hanzoBearer?: string }).__hanzoBearer;
+    const bearer = (window as unknown as { __bearer?: string }).__bearer;
     if (bearer && config.headers?.Authorization == null) {
       config.headers.Authorization = 'Bearer ' + bearer;
     }
