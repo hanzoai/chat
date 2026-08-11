@@ -17,16 +17,8 @@ import {
 } from '@hanzochat/client';
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
 import { IconProps } from '~/common';
-import { cn } from '~/utils';
+import { cn, isEnso } from '~/utils';
 
-/**
- * Whether a model id belongs to the Enso router family (enso, enso-flash,
- * enso-ultra). Prefix match, so a future enso-* rung is covered without another
- * edit here; anchored so a model merely CONTAINING "enso" is not caught.
- */
-function isEnso(model?: string | null): boolean {
-  return typeof model === 'string' && /^enso(-|$)/.test(model.trim().toLowerCase());
-}
 
 
 type EndpointIcon = {
@@ -184,6 +176,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
             <UnknownIcon
               iconURL={iconURL}
               endpoint={endpoint ?? ''}
+              model={model}
               className="h-full w-full object-contain"
               context="message"
             />

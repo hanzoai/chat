@@ -51,7 +51,15 @@ const MinimalIcon: React.FC<IconProps> = (props) => {
       name: props.modelLabel ?? alternateName[EModelEndpoint.bedrock],
     },
     default: {
-      icon: <UnknownIcon iconURL={iconURL} endpoint={endpoint} className="icon-sm" context="nav" />,
+      icon: (
+        <UnknownIcon
+          iconURL={iconURL}
+          endpoint={endpoint}
+          model={props.model}
+          className="icon-sm"
+          context="nav"
+        />
+      ),
       name: endpoint,
     },
   };
