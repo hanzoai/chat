@@ -6,16 +6,33 @@ import type { TOptionSettings } from '~/common';
 import type { Backdrop } from '~/utils/backdrop';
 
 /**
- * What the canvas paints when nobody has chosen anything: the reef, looping.
+ * What the canvas paints when nobody has chosen anything: NOTHING. Black ground,
+ * no third-party media, until someone asks for scenery.
+ *
+ * OFF FOR EVERY BRAND, not just Lux, because the reason is not taste. Playing
+ * the backdrop hands a third party — YouTube — the visitor's address, user agent
+ * and the fact that they opened this product, on first paint, before a stranger
+ * has asked us for anything at all. That is a disclosure to make on request, and
+ * a default is not a request. It also runs a video decode forever behind
+ * somebody's reading, on an entry graph that was deliberately cut by a third to
+ * put the composer on screen sooner. A per-brand default was the alternative and
+ * is worse on its own terms: it would put brand inside a stored preference,
+ * where nothing brand-shaped otherwise lives, to answer a question that was
+ * never about brand.
+ *
+ * Nothing is removed — the source selector still offers video, playlist and
+ * photo, and the reef stays as the video FIELD's default so choosing "Video"
+ * has something to play. What changed is that nobody arrives there.
  *
  * Seeded from the two settings this one replaces, so an upgrade keeps what the
- * visitor already chose. `showBackdrop` was how someone said "no third-party
- * embed, no motion behind my text" and must not be quietly overruled, so anyone
- * who turned it off starts at `off`; `backdropVideo` held their footage, as a
- * bare id or a URL, and `videoId` reads both.
+ * visitor already chose. `showBackdrop` was how someone said "yes, play it", so
+ * anyone who had it on still starts at `video` — flipping the default must not
+ * silently take the backdrop away from someone who went and asked for it;
+ * `backdropVideo` held their footage, as a bare id or a URL, and `videoId`
+ * reads both.
  */
 const DEFAULT_BACKDROP: Backdrop = {
-  source: readStorage('showBackdrop', true) ? 'video' : 'off',
+  source: readStorage('showBackdrop', false) ? 'video' : 'off',
   photo: '',
   video: readStorage('backdropVideo', 'https://www.youtube.com/watch?v=6lZ3CookYNg'),
   playlist: [],
