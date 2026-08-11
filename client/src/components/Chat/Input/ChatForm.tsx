@@ -44,6 +44,8 @@ import { BadgeRowProvider } from '~/Providers';
 import BadgeRow from './BadgeRow';
 import Mention from './Mention';
 import ComposerShell from './ComposerShell';
+import ModelSelector from '../Menus/Endpoints/ModelSelector';
+import { useGetStartupConfig } from '~/data-provider';
 import store from '~/store';
 
 const ChatForm = memo(({ index = 0 }: { index?: number }) => {
@@ -51,6 +53,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   useFocusChatEffect(textAreaRef);
   const localize = useLocalize();
+  const { data: startupConfig } = useGetStartupConfig();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [, setIsScrollable] = useState(false);
@@ -389,6 +392,11 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
                     <CreateMenu conversation={conversation} disableInputs={disableInputs} />
                   </div>
+                  {/* The model you're on — a compact ghost chip, switchable
+                      mid-conversation. It reads as one of the composer's own
+                      controls, not a slab, and hides itself when the deployment
+                      turns model choice off (ModelSelector's own gate). */}
+                  <ModelSelector startupConfig={startupConfig} variant="inline" />
                   <BadgeRow
                     showEphemeralBadges={
                       !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
