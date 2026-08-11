@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { HanzoHeader, HanzoPreFooterCTA, HanzoFooter } from '@hanzogui/shell';
+import { label } from '~/utils/house';
 import { useLandingPlans } from '~/utils/plans';
 import { getHanzoIamSdk } from '~/utils/iam';
 
@@ -465,7 +466,7 @@ zen5: Searched the web — 21 sources. Short version:
                     className="text-sm font-semibold"
                     style={{ fontFamily: "'Roboto Mono', 'Geist Mono', monospace" }}
                   >
-                    {m.name}
+                    {label(m.name)}
                   </span>
                 </div>
                 <p className="text-xs" style={{ color: colors.mutedFg }}>

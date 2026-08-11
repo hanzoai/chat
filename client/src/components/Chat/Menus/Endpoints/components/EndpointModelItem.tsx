@@ -6,7 +6,7 @@ import { useModelSelectorContext } from '../ModelSelectorContext';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
 import { useFavorites, useLocalize } from '~/hooks';
 import type { Endpoint } from '~/common';
-import { cn } from '~/utils';
+import { cn, label } from '~/utils';
 
 interface EndpointModelItemProps {
   modelId: string | null;
@@ -116,7 +116,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
     >
       <div className="flex w-full min-w-0 items-center gap-2 px-1 py-1">
         {renderAvatar()}
-        <span className="truncate">{modelName}</span>
+        <span className="truncate">{label(modelName)}</span>
         {isGlobal && <EarthIcon className="ml-1 size-4 text-surface-submit" />}
       </div>
       <button
