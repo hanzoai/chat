@@ -8,6 +8,7 @@ import type { TPreset } from '@hanzochat/data-provider';
 import {
   useNewConvo,
   useAppStartup,
+  useAuthContext,
   useAssistantListMap,
   useIdChangeEffect,
   useLocalize,
@@ -17,14 +18,28 @@ import { getDefaultModelSpec, getModelSpecPreset, logger, isNotFoundError } from
 import { ToolCallsMapProvider } from '~/Providers';
 import ChatView from '~/components/Chat/ChatView';
 import { NotificationSeverity } from '~/common';
-import useAuthRedirect from './useAuthRedirect';
 import temporaryStore from '~/store/temporary';
 import { requireLogin } from '~/utils/login';
 import store from '~/store';
 
 export default function ChatRoute() {
   const { data: startupConfig, isError: startupConfigFailed } = useGetStartupConfig();
-  const { isAuthenticated, isGuest, roles } = useAuthRedirect();
+  /**
+   * Reading auth is all this ever needed. It used to come through
+   * `useAuthRedirect`, which also navigated a visitor with no path to chat to
+   * `/login` — an arrival gate at the router, and the one thing that made
+   * lux.chat unreachable: guest chat is off there, so EVERY anonymous visitor
+   * was bounced to the issuer roughly three seconds after arriving, having seen
+   * nothing of the product. `/login` redirects to IAM on sight, so the bounce
+   * was off-site, not to a page of ours.
+   *
+   * hanzo.chat never saw it — guest chat is on, so the branch was unreachable —
+   * which is exactly how a redirect this total stayed invisible on the surface
+   * everyone looks at. Nothing is lost by deleting it: `/login` still exists,
+   * and the sidebar foot carries the standing Log in / Sign up invitation
+   * (`Nav/Visitor.tsx`), which is the offer this app already decided to make.
+   */
+  const { isAuthenticated, isGuest, roles } = useAuthContext();
   // Anonymous guests (when ALLOW_GUEST_CHAT is on) get the full chat composer,
   // scoped server-side to the free preview model. They render the same view as
   // an authenticated user, minus the capability-gated queries below.
@@ -167,20 +182,29 @@ export default function ChatRoute() {
   ]);
 
   /**
-   * A dead end has to SAY so. Two states leave an anonymous visitor with no
-   * path to chat at all, and both used to render as a black void:
-   *   - the startup config request failed, so guest chat can never be attempted
-   *   - the config loaded and says guest chat is off, and nobody is signed in
-   * Neither is "still loading", so neither resolves by waiting.
+   * A FAILURE has to say so. A POLICY does not.
+   *
+   * This fires for the one state that is genuinely broken and does not resolve
+   * by waiting: the startup config request failed, so guest chat can never even
+   * be attempted and the visitor is owed an explanation.
+   *
+   * It used to fire for `allowGuestChat === false` too, and that is a different
+   * kind of thing wearing the same shape. A deployment that runs no signed-out
+   * preview has refused nobody — the visitor has simply not signed in yet — so
+   * answering their arrival with an undismissable "The signed-out preview isn't
+   * available / We couldn't start a signed-out preview for you just now" states
+   * an outage that is not happening. On lux.chat, where guest chat is off, that
+   * was every first-time visitor's first and only impression of the product.
+   * An unprompted modal over the signed-out product is the arrival gate this
+   * app removed on purpose; the sidebar foot's Log in / Sign up is the standing
+   * invitation, and the gate still opens the moment something is actually
+   * refused (`limit`, `anonymous`) at submit.
    *
    * It deliberately does NOT fire while a guest mint is in flight — config
-   * present + allowGuestChat true is the normal boot window, and asking there
-   * would put an unprompted modal over the signed-out product, which is the one
-   * thing the arrival-gate removal forbids. A mint that is ATTEMPTED and refused
-   * is already handled where it happens (AuthContext.acquireGuest).
+   * present + allowGuestChat true is the normal boot window. A mint that is
+   * ATTEMPTED and refused is handled where it happens (AuthContext.acquireGuest).
    */
-  const noPathToChat =
-    !canChat && (startupConfigFailed === true || startupConfig?.allowGuestChat === false);
+  const noPathToChat = !canChat && startupConfigFailed === true;
   useEffect(() => {
     if (noPathToChat) {
       requireLogin('unavailable');
