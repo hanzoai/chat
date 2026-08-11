@@ -2,7 +2,14 @@
 # The version of ghcr.io/hanzoai/chat — is the declared one still true?
 #
 #   scripts/version.sh published   # the highest version already shipped
-#   scripts/version.sh check       # package.json must not lag it (default)
+#
+# `check` is GONE with the write-back it existed to police. It compared the
+# declared number against the published one and failed when declared was behind
+# — which is the PERMANENT state now that deploy.yml no longer commits to main
+# (the forge refuses an Actions-token push to a protected branch). imgver takes
+# `max(declared, published) + 1`, so a lagging declaration loses to the registry
+# and costs nothing; the gate would only have gone red forever about a copy with
+# no authority.
 #
 # THIS SCRIPT DOES NOT COMPUTE THE NEXT NUMBER, and that is deliberate.
 # hanzoai/ci's `imgver` does, it is the fleet's ONE implementation for container
@@ -63,28 +70,9 @@ published() {
     | grep -E "$semver" | sort -V | tail -1
 }
 
-declared() { jq -r '.version // ""' package.json; }
 
-# `a` is at least `b` — string-equal, or the larger of the two under sort -V.
-at_least() { [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -1)" = "$1" ]; }
-
-case "${1:-check}" in
+case "${1:-published}" in
   published) published ;;
 
-  check)
-    pub="$(published)"; dec="$(declared)"
-    if ! echo "$dec" | grep -qE "$semver"; then
-      echo "::error::package.json declares '${dec}', which is not a semver — imgver cannot read it as a floor." >&2
-      exit 1
-    fi
-    if ! at_least "$dec" "$pub"; then
-      echo "::error::package.json says ${dec} but ${pub} is already published — the declared version is BEHIND what ships." >&2
-      echo "  A release commits the number it tags; this means that write-back did not land." >&2
-      echo "  Fix: set package.json version to ${pub} (never lower — universe pins the published tag)." >&2
-      exit 1
-    fi
-    echo "version.sh: declared=${dec} published=${pub} — declared is not behind. OK"
-    ;;
-
-  *) echo "usage: scripts/version.sh [published|check]" >&2; exit 2 ;;
+  *) echo "usage: scripts/version.sh [published]" >&2; exit 2 ;;
 esac
