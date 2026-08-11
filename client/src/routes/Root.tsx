@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useIsSmallScreen } from '@hanzochat/client';
 import { useAtom } from 'jotai';
@@ -27,7 +27,13 @@ import LandingPage from '~/components/Landing/LandingPage';
 import { IAM_ORG } from '~/utils/iam';
 import LoginGate from '~/components/Auth/LoginGate';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
+import Palette from '~/components/Palette';
 import store from '~/store';
+
+/** Two controls open Settings — the account menu and the palette — so the dialog
+    stands here, above both, rather than inside either. Lazy because its tab tree
+    is large and it arrived here from a block that was itself lazy-loaded. */
+const Settings = lazy(() => import('~/components/Nav/Settings'));
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
@@ -36,6 +42,7 @@ export default function Root() {
   // (canvas on desktop, chrome on a phone) and its persistence. Root reads it
   // like any other consumer instead of being the place it lives.
   const [navVisible, setNavVisible] = useAtom(store.navVisible);
+  const [showSettings, setShowSettings] = useAtom(store.showSettings);
 
   const { isAuthenticated, isGuest, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
@@ -232,6 +239,14 @@ export default function Root() {
                   </div>
                 </div>
               </div>
+              {/* ⌘K, from any screen and at any width — which is why it hangs
+                  here rather than off the sidebar that used to own the key. */}
+              <Palette />
+              {showSettings && (
+                <Suspense fallback={null}>
+                  <Settings open={showSettings} onOpenChange={setShowSettings} />
+                </Suspense>
+              )}
             </PromptGroupsProvider>
           </AgentsMapContext.Provider>
           {config?.interface?.termsOfService?.modalAcceptance === true && (

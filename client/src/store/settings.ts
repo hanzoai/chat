@@ -68,6 +68,15 @@ const staticAtoms = {
   optionSettings: atom<TOptionSettings>({}),
   currentSettingsView: atom<SettingsViews>(SettingsViews.default),
   showPopover: atom<boolean>(false),
+  /**
+   * Whether the Settings dialog is on screen. Two controls open it — the account
+   * menu and the ⌘K palette — and a boolean each would let both be true at once.
+   * It lives here rather than in the account block because that block unmounts
+   * with the collapsed rail, which would have made the palette's Settings row do
+   * nothing at exactly the width where the menu holding it is also gone. Root
+   * mounts the dialog; anyone may flip this.
+   */
+  showSettings: atom<boolean>(false),
 };
 
 const localStorageAtoms = {

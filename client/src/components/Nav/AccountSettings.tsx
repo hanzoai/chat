@@ -1,4 +1,5 @@
 import { useState, memo, useCallback, useContext } from 'react';
+import { useSetAtom } from 'jotai';
 import { FileText, UserCog, LayoutDashboard } from 'lucide-react';
 import {
   UserMenu,
@@ -17,7 +18,7 @@ import { IAM_ACCOUNT_URL, IAM_ORG } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 import { ROW } from '~/components/chrome';
 import { cn } from '~/utils';
-import Settings from './Settings';
+import store from '~/store';
 
 /**
  * The account control IS `@hanzo/iam`'s `UserMenu` — the same one every Hanzo
@@ -37,7 +38,9 @@ function AccountSettings() {
   const balanceQuery = useGetUserBalance({
     enabled: !!isAuthenticated && balanceOn(startupConfig),
   });
-  const [showSettings, setShowSettings] = useState(false);
+  // The dialog itself hangs off Root, because the ⌘K palette opens it too and
+  // this block is gone at the collapsed rail. This menu only asks for it.
+  const setShowSettings = useSetAtom(store.showSettings);
   const [showFiles, setShowFiles] = useState(false);
 
   // One control, chat's store: the menu renders the light/dark/system choice and
@@ -222,7 +225,6 @@ function AccountSettings() {
         }}
       />
       {showFiles && <MyFilesModal open={showFiles} onOpenChange={setShowFiles} />}
-      {showSettings && <Settings open={showSettings} onOpenChange={setShowSettings} />}
     </>
   );
 }
