@@ -8,6 +8,7 @@ import { PermissionTypes, Permissions, QueryKeys } from '@hanzochat/data-provide
 import type t from '@hanzochat/data-provider';
 import type { ContextType } from '~/common';
 import { useDocumentTitle, useHasAccess, useLocalize, TranslationKeys } from '~/hooks';
+import { documentName } from '~/utils';
 import { useGetEndpointsQuery, useGetAgentCategoriesQuery } from '~/data-provider';
 import MarketplaceAdminSettings from './MarketplaceAdminSettings';
 import { SidePanelProvider, useChatContext } from '~/Providers';
@@ -57,7 +58,12 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Set page title
-  useDocumentTitle(`${localize('com_agents_marketplace')} | Hanzo Chat`);
+  // The DEPLOYMENT's name, not the one that built the image — `documentName`
+  // composes "<page> | <app>" from the APP_TITLE this host reports, so this tab
+  // read "Agent Marketplace | Hanzo Chat" on lux.chat. The one way to write a
+  // title already existed in utils/documentName and said so; this call site was
+  // the last one still spelling the app's name by hand.
+  useDocumentTitle(documentName(localize('com_agents_marketplace')));
 
   // Ensure right sidebar is always visible in marketplace
   useEffect(() => {
