@@ -29,6 +29,7 @@ const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
 const configureIamLogin = require('./iamLogin');
 const { injectIamConfig } = require('./iamConfig');
+const { injectIcons } = require('./icons');
 const { getAppConfig } = require('./services/Config');
 const { resolveAllowedOrigin } = require('./utils/allowedOrigins');
 const staticCache = require('./utils/staticCache');
@@ -98,6 +99,12 @@ const startServer = async () => {
     const title = process.env.APP_TITLE.replace(/&/g, '&amp;').replace(/</g, '&lt;');
     indexHTML = indexHTML.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
   }
+
+  /* The shell's marks, from the org this deployment already signs in against.
+     Same reason as the title above and one step further back: the tab's icon is
+     painted before the first byte of script and survives in a bookmark long
+     after — see api/server/icons.js. */
+  indexHTML = injectIcons(indexHTML, appConfig.paths.dist, process.env.OPENID_ORG);
 
   /* The browser's IAM identity travels in the shell, not in the bundle. Vite
      inlines `import.meta.env.VITE_*` at BUILD time, so without this the login
