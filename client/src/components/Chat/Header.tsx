@@ -24,7 +24,15 @@ export default function Header() {
        panel, and the bottom bar. The header is just its controls floating over
        whatever is behind, each button carrying its own hover ground when the
        pointer needs it (`components/chrome.ts`). */
-    <div className="absolute top-0 z-10 flex h-14 w-full items-center justify-between p-2 font-semibold text-text-primary">
+    /* DESKTOP header only. On a phone this whole row — new chat, bookmarks,
+       share, temporary, canvas, the window chrome — floated over the hero as a
+       cluster of icons a thumb had no use for, on top of the phone's own top bar
+       (`Nav/MobileNav`, which owns new chat and the drawer below md). A phone
+       wants the composer in focus, not a title bar; new chat and search live one
+       tap away in the drawer. So the row is `hidden` below md and unchanged from
+       md up. It stays in the DOM (the header-contract spec reads presence, not
+       visibility). */
+    <div className="absolute top-0 z-10 hidden h-14 w-full items-center justify-between p-2 font-semibold text-text-primary md:flex">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center">
           {/* New chat lives here now — right of the sidebar, with the controls
@@ -50,15 +58,9 @@ export default function Header() {
           {/* The window controls (width, companions, right panel) are chrome for
               the WINDOW, not for the conversation, so they sit after every
               conversation action — last thing at the right end, the way a title
-              bar reads. They are DESKTOP chrome: a phone has no right panel and
-              no maximize (there is no rail below md — `collapsed` is gated on
-              `!isSmallScreen`), so on a phone they were two icons floating over
-              the hero that did nothing a thumb wanted. Hidden below md; still in
-              the DOM (the header contract spec reads presence, not visibility)
-              and unchanged on desktop. */}
-          <div className="hidden items-center gap-2 md:flex">
-            <PanelControls />
-          </div>
+              bar reads. The whole row is already desktop-only (see the container
+              above), so these need no width gate of their own. */}
+          <PanelControls />
         </div>
       </div>
       {/* Empty div for spacing */}
