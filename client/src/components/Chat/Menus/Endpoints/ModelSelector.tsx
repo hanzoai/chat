@@ -109,6 +109,7 @@ function ModelSelectorContent({ variant }: { variant: 'block' | 'inline' }) {
       )}
     >
       <Menu
+        bare={isInline}
         values={selectedValues}
         onValuesChange={(values: Record<string, any>) => {
           setSelectedValues({
