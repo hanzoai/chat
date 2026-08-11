@@ -7,7 +7,7 @@ import type { Endpoint } from '~/common';
 import { useModelSelectorContext } from '../ModelSelectorContext';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
 import SpecIcon from './SpecIcon';
-import { cn } from '~/utils';
+import { cn, label } from '~/utils';
 
 interface SearchResultsProps {
   results: (TModelSpec | Endpoint)[] | null;
@@ -178,7 +178,7 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
                             />
                           </div>
                         )}
-                        <span>{modelName}</span>
+                        <span>{label(modelName)}</span>
                       </div>
                       {isGlobal && (
                         <EarthIcon className="ml-auto size-4 text-green-400" aria-hidden="true" />
