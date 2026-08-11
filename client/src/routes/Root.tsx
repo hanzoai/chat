@@ -57,6 +57,20 @@ export default function Root() {
   const isSmallScreen = useIsSmallScreen();
   const location = useLocation();
 
+  // A phone opens with the drawer SHUT every load, not only on first visit. The
+  // atom owns the correct first-visit default (chrome on a phone), but its
+  // PERSISTED value can carry a `true` from a wider session and would then drop
+  // the drawer over the chat on a phone. The viewport is the authority here, so
+  // close it once on mount when the screen is small. `useIsSmallScreen` reads
+  // matchMedia synchronously, so its mount value is real; a mid-session resize
+  // is deliberately left alone so an open drawer is never yanked shut mid-use.
+  useEffect(() => {
+    if (isSmallScreen) {
+      setNavVisible(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // No offer on arrival. The gate opens only for a REFUSAL (quota spent, session
   // lapsed, preview unavailable) — a signed-out visitor lands in the product and
   // stays uninterrupted until something is actually denied. The sidebar foot's

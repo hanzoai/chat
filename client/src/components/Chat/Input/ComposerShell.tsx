@@ -25,24 +25,25 @@ export interface ComposerShellProps {
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   /** A temporary chat says so with its edge, the one exemption from the ring. */
   temporary?: boolean;
-  /**
-   * Docked composers meet the bottom of the viewport on a phone, so they round
-   * only their top corners; a floating one rounds all four. The chat composer
-   * docks (`sm:mb-10`, no mobile margin), the answer composer floats above
-   * 12px of padding — square bottom corners with a prism tracing them is the
-   * shape you get from imposing one geometry on both.
-   */
-  docked?: boolean;
 }
+
+/*
+ * ONE radius, every state. An earlier build rounded only the top corners on a
+ * phone (`rounded-t-3xl`, via a `docked` prop) on the theory that the docked
+ * composer met the bottom edge of the viewport — but on the empty/landing state
+ * the composer floats mid-screen with content below it, so the square bottom
+ * read as "not rounded". The bottom margin that clears the home indicator is the
+ * caller's (`ChatForm`'s `pb-4 sm:pb-0`), not this shell's, so nothing here needs
+ * to know whether it docks.
+ */
 
 export default function ComposerShell({
   children,
   className,
   onClick,
   temporary = false,
-  docked = false,
 }: ComposerShellProps) {
-  const radius = docked ? 'rounded-t-3xl sm:rounded-3xl' : 'rounded-3xl';
+  const radius = 'rounded-3xl';
   return (
     <div className={cn('hz-composer w-full', radius, temporary && 'opacity-90')}>
       <div

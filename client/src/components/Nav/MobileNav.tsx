@@ -49,7 +49,7 @@ export default function MobileNav({
     : localize('com_nav_open_sidebar');
 
   return (
-    <div className="sticky top-0 z-10 flex min-h-[40px] items-center justify-between bg-presentation pl-1 pt-[env(safe-area-inset-top)] dark:text-white md:hidden">
+    <div className="sticky top-0 z-10 flex min-h-[40px] items-center justify-between pl-1 pt-[env(safe-area-inset-top)] dark:text-white md:hidden">
       <div className="flex items-center">
         <button
           type="button"

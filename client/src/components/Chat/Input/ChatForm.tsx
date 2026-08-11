@@ -301,7 +301,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
           <ComposerShell
             onClick={handleContainerClick}
             temporary={isTemporary}
-            docked
             className="flex-grow pb-4 sm:pb-0"
           >
             <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
