@@ -2,8 +2,9 @@ import { memo } from 'react';
 import { EModelEndpoint, KnownEndpoints } from '@hanzochat/data-provider';
 import { CustomMinimalIcon, XAIcon, MoonshotIcon } from '@hanzochat/client';
 import ZenLogoIcon from '~/components/svg/ZenLogoIcon';
+import EnsoLogoIcon from '~/components/svg/EnsoLogoIcon';
 import { IconContext } from '~/common';
-import { cn } from '~/utils';
+import { cn, isEnso } from '~/utils';
 
 const knownEndpointAssets = {
   [KnownEndpoints.anyscale]: 'assets/anyscale.png',
@@ -61,12 +62,16 @@ const getKnownClass = ({
 function UnknownIcon({
   className = '',
   endpoint: _endpoint,
+  model,
   iconURL = '',
   context,
 }: {
   iconURL?: string;
   className?: string;
   endpoint?: EModelEndpoint | string | null;
+  /** The selected model. The house endpoint serves TWO families, so the
+   *  endpoint alone cannot choose a mark — see the branch below. */
+  model?: string | null;
   context?: 'landing' | 'menu-item' | 'nav' | 'message';
 }) {
   const endpoint = _endpoint ?? '';
@@ -76,10 +81,21 @@ function UnknownIcon({
 
   const currentEndpoint = endpoint.toLowerCase();
 
-  // Hanzo's house endpoint (the Zen family) renders the ensō (円相), matching the
-  // assistant message avatar. Without this it fell through to the generic bot glyph.
+  // Hanzo's house endpoint serves TWO families, so the endpoint does not pick the
+  // mark — the MODEL does. Enso is the closed ring, Zen the open ensō (円相), and
+  // the gap is the only thing telling them apart, so getting this wrong renders
+  // one product wearing the other's identity.
+  //
+  // This read the endpoint alone and always answered Zen, so every Enso row in
+  // the model menu wore the open ring while the message avatar beside it (which
+  // has always asked `isEnso`) wore the closed one. One predicate now, imported
+  // from ~/utils, so the two surfaces cannot disagree again.
   if (currentEndpoint === 'hanzo' || currentEndpoint === 'zen') {
-    return <ZenLogoIcon className={cn(className, 'text-black dark:text-white')} />;
+    return isEnso(model) ? (
+      <EnsoLogoIcon className={cn(className, 'text-black dark:text-white')} />
+    ) : (
+      <ZenLogoIcon className={cn(className, 'text-black dark:text-white')} />
+    );
   }
 
   if (currentEndpoint === KnownEndpoints.xai) {
