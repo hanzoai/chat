@@ -2,7 +2,7 @@
  * The IAM origin THIS deployment federates to.
  *
  * Read from `OPENID_ISSUER` — the same variable the backend's passport strategy
- * registers with and `iamConfig.js` hands the browser as `window.__HANZO_IAM__`
+ * registers with and `iamConfig.js` hands the browser as `window.__IAM__`
  * — so the policy cannot name a different issuer than the login it is there to
  * permit. Written out as the literal `https://hanzo.id`, it was Hanzo's origin
  * in an image two brands share: on lux.chat the SPA signed in at lux.id, came
