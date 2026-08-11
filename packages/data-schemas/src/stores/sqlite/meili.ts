@@ -158,15 +158,29 @@ class MeiliCollectionSync {
 
   /** Remove the document from the index by its primary key. */
   onDelete(doc: Doc): void {
-    const key = doc[this.config.primaryKey];
+    const key = this.keyOf(doc);
     if (key == null) {
       return;
     }
     this.index
-      .deleteDocument(String(key))
+      .deleteDocument(key)
       .catch((err: unknown) =>
         logger.error(`[meili] delete from ${this.config.indexName} failed:`, err),
       );
+  }
+
+  /**
+   * The document's key AS THE INDEX HOLDS IT — derived through the same
+   * `preprocessForIndex` that wrote it, so the two cannot disagree. Reading the
+   * raw field instead would delete under an id that was never written whenever
+   * preprocessing rewrites it (a conversationId carrying `|`, which Meili does
+   * not admit in a primary key), and the real entry would survive every delete
+   * for the life of the index. Only the key field is preprocessed, so this stays
+   * cheap on a bulk delete.
+   */
+  private keyOf(doc: Doc): string | null {
+    const key = preprocessForIndex(doc, [this.config.primaryKey])[this.config.primaryKey];
+    return key == null ? null : String(key);
   }
 
   /**
@@ -264,7 +278,22 @@ export function attachMeili(
       continue;
     }
     const sync = new MeiliCollectionSync(client, config, model);
-    model.onMutate = (op, doc) => (op === 'upsert' ? sync.onUpsert(doc) : sync.onDelete(doc));
+    model.onMutate = (change, doc) => {
+      // Total by construction: the store calls this AFTER the write is on disk,
+      // so anything raised here would fail a call that already succeeded. An
+      // unreachable Meili costs a stale index entry and nothing else — the
+      // request rejections are caught in onUpsert/onDelete, this catches the
+      // preprocessing that runs before them.
+      try {
+        if (change === 'delete') {
+          sync.onDelete(doc);
+        } else {
+          sync.onUpsert(doc);
+        }
+      } catch (err) {
+        logger.error(`[meili] indexing ${config.indexName} failed:`, err);
+      }
+    };
     model.meiliSearch = (query, params, populate) =>
       sync.search(query, params ?? {}, populate ?? false);
     attached.add(model);

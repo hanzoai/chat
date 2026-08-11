@@ -8,8 +8,12 @@
  *
  * No mongoose. No tenant middleware (Conversation/Message are not tenant-plugged
  * upstream; collections that are — skill/config/systemGrant — declare it in their
- * CollectionSpec when migrated). MeiliSearch stays a separate concern: `.meiliSearch`
- * is intentionally absent, matching a mongoose model with no INDEX_URL configured.
+ * CollectionSpec when migrated).
+ *
+ * Search is a DERIVED view of this store, so the store announces what it wrote:
+ * every committed change reaches `onMutate`, which `attachMeili` installs. Two
+ * private primitives are the whole of it — `insertDoc`/`replaceDoc` for upserts,
+ * `removeDocs` for deletes — and no write in this class goes around them.
  */
 import { getTenantId, SYSTEM_TENANT_ID } from '~/config/tenantContext';
 import {
@@ -84,6 +88,9 @@ export interface CollectionSpec {
   tenantIsolated?: boolean;
 }
 
+/** What a committed write did to one document. */
+export type Change = 'upsert' | 'delete';
+
 interface WriteResult {
   acknowledged: true;
   matchedCount: number;
@@ -119,6 +126,33 @@ export class DocModel {
   private readonly tenantIsolated: boolean;
   /** Resolves sibling collections for `.populate()`; wired by createSqliteHandle. */
   resolver?: (name: string) => DocModel | undefined;
+  /**
+   * Called once per document after a committed write, with the document as it
+   * was written (`upsert`) or as it last existed (`delete`). `attachMeili`
+   * installs it to drive the search index; unset, the store behaves identically.
+   *
+   * It MUST NOT throw. The write has already landed, so raising here would fail
+   * a call whose data is safely on disk. `attachMeili` holds that end: its
+   * handler is total and reports its own failures.
+   */
+  onMutate?: (change: Change, doc: Doc) => void;
+  /**
+   * Search this collection, hydrated from the store. `attachMeili` installs it
+   * in the same pass as `onMutate`, so a collection that can be searched is a
+   * collection whose writes are indexed — the two cannot come apart.
+   */
+  meiliSearch?: (
+    query: string,
+    params?: Record<string, unknown>,
+    populate?: boolean,
+  ) => Promise<{ hits: Array<Record<string, unknown>> }>;
+  /**
+   * Changes withheld while a transaction is open. `bulkWrite` can ROLL BACK,
+   * and an index told about a write that then vanished holds rows the store
+   * never kept — the same divergence this seam exists to prevent, arriving by a
+   * different road. Collected here, released only once the COMMIT lands.
+   */
+  private pending: Array<[Change, Doc]> | null = null;
 
   constructor(db: SqliteDatabase, spec: CollectionSpec) {
     this.db = db;
@@ -338,6 +372,39 @@ export class DocModel {
     return JSON.stringify(doc);
   }
 
+  /** Announces a committed change, or holds it until the open transaction commits. */
+  private notify(change: Change, doc: Doc): void {
+    if (!this.onMutate) {
+      return;
+    }
+    if (this.pending) {
+      this.pending.push([change, doc]);
+      return;
+    }
+    this.onMutate(change, doc);
+  }
+
+  /**
+   * Deletes documents that have ALREADY been read, and announces each one.
+   *
+   * It takes the documents rather than a filter, and that is the point. A
+   * derived index is keyed by a FIELD of the document, so it can only be told
+   * what to forget while the row still exists; a delete that starts from a
+   * filter has nothing to hand on, and leaves the index serving rows the store
+   * dropped — which looks exactly like search working. Passing `Doc[]` makes the
+   * read a precondition of the type rather than a habit of the caller.
+   *
+   * Every delete in this class comes through here. There is no other DELETE.
+   */
+  private removeDocs(docs: Doc[]): number {
+    const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
+    for (const doc of docs) {
+      del.run(doc._id as string);
+      this.notify('delete', doc);
+    }
+    return docs.length;
+  }
+
   private insertDoc(doc: Doc): Doc {
     if (!doc._id) {
       doc._id = objectId();
@@ -352,6 +419,7 @@ export class DocModel {
     this.db
       .prepare(`INSERT INTO ${this.table} (_id, doc) VALUES (?, ?)`)
       .run(doc._id as string, this.serialize(doc));
+    this.notify('upsert', doc);
     return doc;
   }
 
@@ -360,6 +428,7 @@ export class DocModel {
     this.db
       .prepare(`UPDATE ${this.table} SET doc = ? WHERE _id = ?`)
       .run(this.serialize(doc), doc._id as string);
+    this.notify('upsert', doc);
   }
 
   private stampTimestamps(doc: Doc, isInsert: boolean, enabled: boolean): void {
@@ -429,10 +498,9 @@ export class DocModel {
       docs = docs.slice(0, opts.limit);
     }
     if (opts.deleteAfter) {
-      const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
-      for (const d of docs) {
-        del.run(d._id as string);
-      }
+      // Before populate/projection, so what is announced is the whole document
+      // that existed, not the shape this caller asked to see.
+      this.removeDocs(docs);
     }
     if (opts.populate?.length) {
       for (const d of docs) {
@@ -581,22 +649,14 @@ export class DocModel {
     };
   }
 
+  /** A SET, not a row: every matched document is read, deleted and announced. */
   async deleteMany(filter: Filter = {}): Promise<DeleteResult> {
-    const docs = this.candidates(filter);
-    const del = this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`);
-    for (const doc of docs) {
-      del.run(doc._id as string);
-    }
-    return { acknowledged: true, deletedCount: docs.length };
+    return { acknowledged: true, deletedCount: this.removeDocs(this.candidates(filter)) };
   }
 
   async deleteOne(filter: Filter = {}): Promise<DeleteResult> {
     const doc = this.candidates(filter)[0];
-    if (!doc) {
-      return { acknowledged: true, deletedCount: 0 };
-    }
-    this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id as string);
-    return { acknowledged: true, deletedCount: 1 };
+    return { acknowledged: true, deletedCount: this.removeDocs(doc ? [doc] : []) };
   }
 
   async countDocuments(filter: Filter = {}): Promise<number> {
@@ -834,6 +894,12 @@ export class DocModel {
    * owns those. Idempotent: re-running with the same `_id` replaces the row, so
    * the backfill and live mirroring converge on the same keyspace and never
    * duplicate (both sides key on the primary store's `_id`).
+   *
+   * It announces nothing either, for the same reason: this is a bulk import, and
+   * a per-document notification would be one fire-and-forget index request per
+   * imported row. History is indexed in one pass by `backfillMeili`
+   * (`config/backfill-index.js`), which batches. Do not use this for a live
+   * write — that is what `create` / `updateOne` are for.
    */
   upsertRaw(input: Doc): void {
     const doc = deepCoerceIds(input) as Doc;
@@ -859,6 +925,10 @@ export class DocModel {
       insertedIds: {},
     };
     this.db.exec('BEGIN');
+    // Held until the COMMIT: a batch that rolls back wrote nothing, so it must
+    // have announced nothing.
+    const held: Array<[Change, Doc]> = [];
+    this.pending = held;
     try {
       ops.forEach((op, i) => {
         if ('updateOne' in op) {
@@ -895,16 +965,10 @@ export class DocModel {
         } else if ('deleteOne' in op) {
           const { filter } = op.deleteOne as { filter: Filter };
           const doc = this.candidates(filter)[0];
-          if (doc) {
-            this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id as string);
-            result.deletedCount++;
-          }
+          result.deletedCount += this.removeDocs(doc ? [doc] : []);
         } else if ('deleteMany' in op) {
           const { filter } = op.deleteMany as { filter: Filter };
-          for (const doc of this.candidates(filter)) {
-            this.db.prepare(`DELETE FROM ${this.table} WHERE _id = ?`).run(doc._id as string);
-            result.deletedCount++;
-          }
+          result.deletedCount += this.removeDocs(this.candidates(filter));
         } else if ('updateMany' in op) {
           const { filter, update } = op.updateMany as { filter: Filter; update: Update };
           for (const existing of this.candidates(filter)) {
@@ -921,6 +985,11 @@ export class DocModel {
     } catch (err) {
       this.db.exec('ROLLBACK');
       throw err;
+    } finally {
+      this.pending = null;
+    }
+    for (const [change, doc] of held) {
+      this.notify(change, doc);
     }
     return result;
   }
