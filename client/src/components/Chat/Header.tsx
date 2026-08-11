@@ -50,8 +50,15 @@ export default function Header() {
           {/* The window controls (width, companions, right panel) are chrome for
               the WINDOW, not for the conversation, so they sit after every
               conversation action — last thing at the right end, the way a title
-              bar reads. */}
-          <PanelControls />
+              bar reads. They are DESKTOP chrome: a phone has no right panel and
+              no maximize (there is no rail below md — `collapsed` is gated on
+              `!isSmallScreen`), so on a phone they were two icons floating over
+              the hero that did nothing a thumb wanted. Hidden below md; still in
+              the DOM (the header contract spec reads presence, not visibility)
+              and unchanged on desktop. */}
+          <div className="hidden items-center gap-2 md:flex">
+            <PanelControls />
+          </div>
         </div>
       </div>
       {/* Empty div for spacing */}
