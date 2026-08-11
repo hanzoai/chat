@@ -3,7 +3,7 @@ const os = require('os');
 const path = require('path');
 const express = require('express');
 const request = require('supertest');
-const { injectIcons, mountIcons } = require('./icons');
+const { injectIcons, mountIcons, injectManifest } = require('./icons');
 
 /* The shell's icon block, as `client/index.html` writes it: five links, two href
    shapes (`assets/…` and a root-absolute `/favicon.ico`), one of them an SVG the
@@ -193,5 +193,75 @@ describe('mountIcons', () => {
     ship('lux', { 'favicon.ico': 'LUX' });
     const res = await request(serve('lux')).get('/assets/brand/lux/favicon.ico');
     expect(body(res)).toBe('HANZO');
+  });
+});
+
+/* The manifest is generated at BUILD time, so an install prompt on lux.chat
+   offered "Hanzo Chat" wearing Hanzo's icons — measured on production. It
+   outlives a tab by the widest margin of anything here: an installed app keeps
+   the name and icon it was installed with until someone deletes it. */
+describe('injectManifest', () => {
+  let dist;
+
+  const BUILT = JSON.stringify({
+    name: 'Hanzo Chat',
+    short_name: 'Hanzo Chat',
+    start_url: '/',
+    icons: [
+      { src: 'assets/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { src: 'assets/maskable-icon.png', sizes: '512x512', purpose: 'maskable' },
+    ],
+  });
+
+  beforeEach(() => {
+    dist = fs.mkdtempSync(path.join(os.tmpdir(), 'icons-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(dist, { recursive: true, force: true });
+  });
+
+  const ship = (org, ...files) => {
+    const dir = path.join(dist, 'assets', 'brand', org);
+    fs.mkdirSync(dir, { recursive: true });
+    files.forEach((f) => fs.writeFileSync(path.join(dir, f), 'x'));
+  };
+
+  /* hanzo.chat brands neither field, and must therefore get the built file
+     back — the STRING, not a re-serialised copy of the same object. */
+  it('returns the built manifest untouched when nothing is branded', () => {
+    expect(injectManifest(BUILT, dist, 'hanzo', 'Hanzo Chat')).toBe(BUILT);
+    expect(injectManifest(BUILT, dist, undefined, undefined)).toBe(BUILT);
+  });
+
+  it('installs under this deployment name', () => {
+    const out = JSON.parse(injectManifest(BUILT, dist, undefined, 'Lux Chat'));
+    expect(out.name).toBe('Lux Chat');
+    expect(out.short_name).toBe('Lux Chat');
+  });
+
+  it("points icons at the brand's own copies", () => {
+    ship('lux', 'favicon-32x32.png');
+    const out = JSON.parse(injectManifest(BUILT, dist, 'lux', 'Lux Chat'));
+    expect(out.icons[0].src).toBe('/assets/brand/lux/favicon-32x32.png');
+    expect(out.icons[0].sizes).toBe('32x32');
+  });
+
+  /* Same rule as the shell's links: an icon the brand does not ship is dropped,
+     never left pointing at the other brand's art. Lux ships no maskable icon. */
+  it('drops an icon the brand does not ship', () => {
+    ship('lux', 'favicon-32x32.png');
+    const out = JSON.parse(injectManifest(BUILT, dist, 'lux', 'Lux Chat'));
+    expect(out.icons).toHaveLength(1);
+    expect(JSON.stringify(out)).not.toContain('maskable-icon');
+  });
+
+  it('keeps everything it was not asked about', () => {
+    ship('lux', 'favicon-32x32.png');
+    expect(JSON.parse(injectManifest(BUILT, dist, 'lux', 'Lux Chat')).start_url).toBe('/');
+  });
+
+  it('leaves a manifest it cannot parse alone', () => {
+    expect(injectManifest('not json', dist, 'lux', 'Lux Chat')).toBe('not json');
   });
 });

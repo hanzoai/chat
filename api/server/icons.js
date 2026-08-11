@@ -120,4 +120,79 @@ function mountIcons(app, dist, org) {
   });
 }
 
-module.exports = { injectIcons, mountIcons, BRAND, ROOTED };
+/**
+ * This brand's name and marks in the PWA install manifest.
+ *
+ * `manifest.webmanifest` is generated at BUILD time, so lux.chat offered "add to
+ * home screen" as an app called Hanzo Chat wearing Hanzo's icons — measured on
+ * production, both fields. It is the same defect as the shell's `<title>` and
+ * its icon links, one file over, and it outlives the tab by the widest margin of
+ * any of them: an installed app keeps the name and the icon it was installed
+ * with, on a home screen, until someone deletes it.
+ *
+ * The name is APP_TITLE, the same value the shell's title already uses, so the
+ * tab and the installed app cannot disagree. Icons follow `injectIcons`' rule
+ * exactly: the brand's copy of the same basename, or the entry is DROPPED rather
+ * than left pointing at another brand's art.
+ *
+ * Returns the input UNCHANGED when this deployment brands neither — so
+ * hanzo.chat keeps the built manifest byte-for-byte rather than a re-serialised
+ * copy of it.
+ *
+ * @param {string} json The built `manifest.webmanifest`.
+ * @param {string} dist Absolute path to the built client.
+ * @param {string} [org] The org this deployment serves (`OPENID_ORG`).
+ * @param {string} [title] This deployment's name (`APP_TITLE`).
+ * @returns {string} The manifest, as this brand.
+ */
+function injectManifest(json, dist, org, title) {
+  let manifest;
+  try {
+    manifest = JSON.parse(json);
+  } catch {
+    /* Not a manifest we wrote; not ours to repair. */
+    return json;
+  }
+  const dir = org && path.join(dist, BRAND, org);
+  const branded = Boolean(dir && fs.existsSync(dir));
+  const renames = Boolean(title && title !== manifest.name);
+  if (!branded && !renames) {
+    return json;
+  }
+  if (renames) {
+    manifest.name = title;
+    manifest.short_name = title;
+  }
+  if (branded && Array.isArray(manifest.icons)) {
+    manifest.icons = manifest.icons
+      .filter((icon) => icon.src && fs.existsSync(path.join(dir, path.basename(icon.src))))
+      .map((icon) => ({ ...icon, src: `/${BRAND}/${org}/${path.basename(icon.src)}` }));
+  }
+  return JSON.stringify(manifest);
+}
+
+/**
+ * Serve the branded manifest ahead of the built one.
+ *
+ * Read once at boot, like the shell: the two facts it composes — APP_TITLE and
+ * the brand's directory — are fixed for the life of the process. `no-store`
+ * matches what `staticCache` already gives a `.webmanifest`, so an installed app
+ * still picks up a change on its next visit.
+ *
+ * @param {import('express').Application} app
+ * @param {string} dist Absolute path to the built client.
+ * @param {string} [org] The org this deployment serves (`OPENID_ORG`).
+ * @param {string} [title] This deployment's name (`APP_TITLE`).
+ */
+function mountManifest(app, dist, org, title) {
+  const file = path.join(dist, 'manifest.webmanifest');
+  if (!fs.existsSync(file)) {
+    return;
+  }
+  const body = injectManifest(fs.readFileSync(file, 'utf8'), dist, org, title);
+  app.get('/manifest.webmanifest', (_req, res) =>
+    res.type('application/manifest+json').set('Cache-Control', 'no-store').send(body),
+  );
+}
+
+module.exports = { injectIcons, mountIcons, injectManifest, mountManifest, BRAND, ROOTED };
