@@ -23,8 +23,17 @@
  * deployment that sets none of this behaves exactly as it did before.
  */
 
-/** The global the SPA reads before its own build-time defaults. */
-const GLOBAL = '__HANZO_IAM__';
+/**
+ * The global the SPA reads before its own build-time defaults.
+ *
+ * Named for WHAT it carries, not for whose it is. It was `__HANZO_IAM__`, and
+ * every value inside it was already correct Lux — `serverUrl: lux.id`,
+ * `clientId: lux-chat` — so the only thing left saying "Hanzo" on a Lux page was
+ * the name we chose for the box. That is the same defect as a mark or a link,
+ * just spelled as an identifier, and it is visible in `view-source` on a
+ * customer's own domain.
+ */
+const GLOBAL = '__IAM__';
 
 /**
  * The browser's IAM config, or null when the environment states none.

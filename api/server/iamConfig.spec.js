@@ -44,7 +44,7 @@ describe('iamConfig', () => {
   it('injects ahead of the module scripts', () => {
     process.env.OPENID_ISSUER = 'https://lux.id';
     const out = injectIamConfig(HTML);
-    expect(out.indexOf('__HANZO_IAM__')).toBeLessThan(out.indexOf('type="module"'));
+    expect(out.indexOf('__IAM__')).toBeLessThan(out.indexOf('type="module"'));
     expect(out).toContain('</script></head>');
   });
 
@@ -57,6 +57,6 @@ describe('iamConfig', () => {
 
   it('still delivers the config when there is no head to anchor to', () => {
     process.env.OPENID_ISSUER = 'https://lux.id';
-    expect(injectIamConfig('<body>x</body>')).toContain('__HANZO_IAM__');
+    expect(injectIamConfig('<body>x</body>')).toContain('__IAM__');
   });
 });
