@@ -3,7 +3,7 @@ import { CreditCard, CircleHelp } from 'lucide-react';
 import { GearIcon, Button } from '@hanzochat/client';
 import { useGetStartupConfig } from '~/data-provider';
 import { startHanzoLogin } from '~/utils/login';
-import { IAM_SIGNUP_URL } from '~/utils/iam';
+import { IAM_ORG, IAM_SIGNUP_URL } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 import { ROW } from '~/components/chrome';
 import Settings from './Settings';
@@ -37,10 +37,22 @@ export default function Visitor() {
 
   return (
     <div className="flex flex-col gap-0.5 pt-2">
-      <a className={ROW} href="https://hanzo.ai/pricing" target="_blank" rel="noreferrer">
-        <CreditCard aria-hidden="true" />
-        {localize('com_nav_plans')}
-      </a>
+      {/* Hanzo's price list, so it is offered to Hanzo's tenant. On lux.chat this
+          row read "Plans" and opened hanzo.ai/pricing — another company's prices,
+          in another company's branding, for a product this visitor is buying from
+          Lux. Wrong destination as well as wrong brand.
+
+          It is HIDDEN rather than repointed, on the same rule the Help row below
+          already follows: a row whose destination is not known does not render.
+          Guessing `lux.ai/pricing` would invent a URL, and sending a Lux customer
+          to Hanzo's checkout is the defect. This comes back for a brand the day
+          that brand has a page to send them to. */}
+      {IAM_ORG === 'hanzo' && (
+        <a className={ROW} href="https://hanzo.ai/pricing" target="_blank" rel="noreferrer">
+          <CreditCard aria-hidden="true" />
+          {localize('com_nav_plans')}
+        </a>
+      )}
 
       <button type="button" className={ROW} onClick={() => setShowSettings(true)}>
         <GearIcon aria-hidden="true" />
