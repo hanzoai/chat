@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
-import { HanzoMark } from '@hanzogui/shell';
 import { PanelLeftOpen } from 'lucide-react';
 import { TooltipAnchor, MobileSidebar, Sidebar, Button } from '@hanzochat/client';
 import { CLOSE_SIDEBAR_ID, OPEN_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
 import BrandCorner from './BrandCorner';
+import Mark from './Mark';
 import { useLocalize } from '~/hooks';
 import { CONTROL } from '~/components/chrome';
 import { cn } from '~/utils';
@@ -75,7 +75,7 @@ export default function NewChat({
                     18px box, stacked, so the swap moves no pixel. */}
                 <span className="relative flex size-5 items-center justify-center text-text-primary">
                   <span className="flex transition-opacity group-hover:opacity-0 group-focus-visible:opacity-0">
-                    <HanzoMark size={20} />
+                    <Mark />
                   </span>
                   <PanelLeftOpen
                     aria-hidden="true"

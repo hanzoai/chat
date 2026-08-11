@@ -17,6 +17,19 @@ jest.mock('~/data-provider', () => ({
   useGetStartupConfig: () => ({ data: { helpAndFaqURL: 'https://docs.hanzo.ai' } }),
 }));
 jest.mock('~/utils/login', () => ({ startHanzoLogin: () => mockLogin() }));
+/* The brand this deployment serves. A getter rather than a literal because the
+   value is read at RENDER time, so one mock can answer for both tenants. */
+let mockOrg = 'hanzo';
+jest.mock('~/utils/iam', () => ({
+  get IAM_ORG() {
+    return mockOrg;
+  },
+  get IAM_SIGNUP_URL() {
+    return mockOrg === 'hanzo'
+      ? 'https://hanzo.id/signup/hanzo-chat'
+      : `https://${mockOrg}.id/signup/${mockOrg}-chat`;
+  },
+}));
 jest.mock('./Settings', () => ({ __esModule: true, default: () => <div data-testid="settings" /> }));
 jest.mock('@hanzochat/client', () => ({
   GearIcon: () => <span />,
@@ -29,6 +42,7 @@ import Visitor from './Visitor';
 describe('the sidebar foot, signed out', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockOrg = 'hanzo';
     render(<Visitor />);
   });
 
@@ -69,6 +83,38 @@ describe('the sidebar foot, signed out', () => {
     expect(screen.getByRole('link', { name: 'com_auth_sign_up' })).toHaveAttribute(
       'href',
       'https://hanzo.id/signup/hanzo-chat',
+    );
+  });
+});
+
+/**
+ * One image serves every brand, so every row in this foot has to be a row THIS
+ * tenant can use. "Plans" was the one that was not: it opened hanzo.ai/pricing —
+ * another company's prices, for a product the visitor is buying from Lux.
+ */
+describe('the sidebar foot on another tenant', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockOrg = 'lux';
+    render(<Visitor />);
+  });
+
+  it("offers no row that sells another brand's plans", () => {
+    expect(screen.queryByRole('link', { name: 'com_nav_plans' })).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain('hanzo.ai/pricing');
+  });
+
+  /* Hiding the wrong row must not take the working ones with it. */
+  it('keeps settings, help and the login path', () => {
+    expect(screen.getByRole('button', { name: 'com_nav_settings' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'com_nav_help' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'com_nav_log_in' })).toBeInTheDocument();
+  });
+
+  it("sends sign-up to this tenant's issuer", () => {
+    expect(screen.getByRole('link', { name: 'com_auth_sign_up' })).toHaveAttribute(
+      'href',
+      'https://lux.id/signup/lux-chat',
     );
   });
 });

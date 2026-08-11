@@ -27,11 +27,33 @@
  * (a class outranks an inherited inline value) and the corner lifts it to pure
  * white on hover. Monochrome in both themes — chat bakes in no hue of its own.
  */
-import { HanzoAppLauncher, HanzoMark } from '@hanzogui/shell';
+import { HanzoAppLauncher } from '@hanzogui/shell';
+import { IAM_ORG } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
+import Mark from './Mark';
 
 export default function BrandCorner() {
   const localize = useLocalize();
+
+  /* The switcher is HANZO's, and it says so in as many words: the panel is
+     titled "Hanzo apps" and every tile in it is a hanzo.ai surface. On lux.chat
+     that is a Hanzo menu, under a Hanzo logo, in the first control of the page.
+
+     A brand with no cross-app estate has nothing for a switcher to switch
+     between, so the corner is its mark and nothing else — which is also why this
+     returns early rather than passing a brand into the launcher. The tile list
+     (`HANZO_APPS`) is owned upstream and takes no brand parameter; giving one
+     brand a launcher over another brand's apps would be the same defect wearing
+     a label. The rail's own toggle is in `NewChat`, so nothing is lost here. */
+  if (IAM_ORG !== 'hanzo') {
+    return (
+      <div className="flex items-center">
+        <span className="flex size-11 items-center justify-center" data-testid="brand-mark">
+          <Mark />
+        </span>
+      </div>
+    );
+  }
 
   return (
     // The shared shell hard-codes its trigger box inline, so these reach it
@@ -58,7 +80,7 @@ export default function BrandCorner() {
             className="flex items-center justify-center text-text-secondary transition-colors"
             data-testid="brand-mark"
           >
-            <HanzoMark size={20} />
+            <Mark />
           </span>
         )}
       />
