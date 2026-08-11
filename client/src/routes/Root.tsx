@@ -160,7 +160,7 @@ export default function Root() {
   // resort on that host: it was the front door.
   //
   // The org comes from the same runtime value the login SDK signs in against
-  // (`window.__HANZO_IAM__`), because a build-time constant would pin one brand
+  // (`window.__IAM__`), because a build-time constant would pin one brand
   // into an image two brands share. Falling through hands the visitor the chat
   // shell, which is this app's answer for every tenant.
   //
