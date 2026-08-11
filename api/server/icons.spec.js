@@ -1,7 +1,9 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { injectIcons } = require('./icons');
+const express = require('express');
+const request = require('supertest');
+const { injectIcons, mountIcons } = require('./icons');
 
 /* The shell's icon block, as `client/index.html` writes it: five links, two href
    shapes (`assets/…` and a root-absolute `/favicon.ico`), one of them an SVG the
@@ -88,5 +90,108 @@ describe('injectIcons', () => {
     expect(out.match(/<link[^>]*rel="(?:icon|apple-touch-icon)"/g)).toHaveLength(4);
     expect(out).not.toMatch(/href="assets\//);
     expect(out).not.toContain('logo.svg');
+  });
+});
+
+/* The paths the shell cannot speak for. A browser fetches `/favicon.ico` at the
+   document root whatever the links say, and the bundle renders
+   `/assets/logo.svg` on the sign-in screen — so both were answered by the built
+   client, i.e. by Hanzo, on every brand. */
+describe('mountIcons', () => {
+  let dist;
+
+  beforeEach(() => {
+    dist = fs.mkdtempSync(path.join(os.tmpdir(), 'icons-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(dist, { recursive: true, force: true });
+  });
+
+  const ship = (org, files) => {
+    const dir = path.join(dist, 'assets', 'brand', org);
+    fs.mkdirSync(dir, { recursive: true });
+    Object.entries(files).forEach(([name, body]) =>
+      fs.writeFileSync(path.join(dir, name), body),
+    );
+  };
+
+  /** The brand's marks in front of a built client that answers everything with
+   *  Hanzo's — which is what `staticCache(paths.dist)` is in production. */
+  const serve = (org) => {
+    const app = express();
+    mountIcons(app, dist, org);
+    app.use((req, res) => res.status(200).send('HANZO'));
+    return app;
+  };
+
+  /** What came back, whoever answered. A mark is served under its own binary
+   *  content type (`image/x-icon`, `image/svg+xml`), which supertest does not
+   *  decode into `.text` — so reading only `.text` reports `undefined` for the
+   *  case these tests exist to prove. */
+  const body = (res) => (res.text === undefined ? Buffer.from(res.body).toString() : res.text);
+
+  it("serves the brand's own favicon at the document root", async () => {
+    ship('lux', { 'favicon.ico': 'LUX' });
+    const res = await request(serve('lux')).get('/favicon.ico');
+    expect(res.status).toBe(200);
+    expect(body(res)).toBe('LUX');
+  });
+
+  /* The whole defect, at the path that caused it: the shell's links were already
+     correct and lux.chat still served Hanzo's bytes here, because a browser asks
+     for this one without being told to. */
+  it('does not fall through to the built mark', async () => {
+    ship('lux', { 'favicon.ico': 'LUX' });
+    const res = await request(serve('lux')).get('/favicon.ico');
+    expect(body(res)).not.toBe('HANZO');
+  });
+
+  /* Same rule as `injectIcons`: a mark the brand does not ship is not served.
+     Serving the file whose LINK was just removed would be two policies for one
+     question, and it would put Hanzo's logo on Lux's sign-in screen. */
+  it('refuses a rooted mark the brand does not ship', async () => {
+    ship('lux', { 'favicon.ico': 'LUX' });
+    const res = await request(serve('lux')).get('/assets/logo.svg');
+    expect(res.status).toBe(404);
+    expect(body(res)).not.toBe('HANZO');
+  });
+
+  it("serves a rooted mark the brand does ship", async () => {
+    ship('lux', { 'favicon.ico': 'LUX', 'logo.svg': '<svg/>' });
+    const res = await request(serve('lux')).get('/assets/logo.svg');
+    expect(res.status).toBe(200);
+    expect(body(res)).toBe('<svg/>');
+  });
+
+  /* hanzo.chat ships no directory, so it must not be intercepted at all — the
+     built client answers exactly as it did before this existed. */
+  it('leaves a brand with no directory alone', async () => {
+    ship('lux', { 'favicon.ico': 'LUX' });
+    for (const org of ['hanzo', undefined]) {
+      const app = serve(org);
+      expect(body(await request(app).get('/favicon.ico'))).toBe('HANZO');
+      expect(body(await request(app).get('/assets/logo.svg'))).toBe('HANZO');
+    }
+  });
+
+  /* Only the rooted marks are claimed. The brand's directory is not a general
+     overlay on the built client, and the rewrite that finds a mark by basename
+     must not escape these paths. */
+  it('claims nothing but the rooted marks', async () => {
+    ship('lux', { 'favicon.ico': 'LUX', 'favicon-32x32.png': 'LUX32' });
+    const app = serve('lux');
+    for (const url of ['/', '/c/new', '/favicon-32x32.png', '/assets/favicon-32x32.png']) {
+      expect(body(await request(app).get(url))).toBe('HANZO');
+    }
+  });
+
+  /* The link path keeps working: `Mark` renders `/assets/brand/<org>/…` directly
+     and the shell's rewritten links point there too, so that prefix must still
+     reach the built client rather than being shadowed by the rewrite above. */
+  it('leaves the brand directory reachable at its own path', async () => {
+    ship('lux', { 'favicon.ico': 'LUX' });
+    const res = await request(serve('lux')).get('/assets/brand/lux/favicon.ico');
+    expect(body(res)).toBe('HANZO');
   });
 });

@@ -3,6 +3,7 @@ import { TStartupConfig } from '@hanzochat/data-provider';
 import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import { TranslationKeys, useLocalize } from '~/hooks';
 import { BlinkAnimation } from './BlinkAnimation';
+import Mark from '~/components/Nav/Mark';
 import { Banner } from '../Banners';
 import Footer from './Footer';
 
@@ -59,12 +60,20 @@ function AuthLayout({
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-10 w-full bg-cover">
-          <img
-            src="assets/logo.svg"
-            className="h-full w-full object-contain"
-            alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Hanzo Chat' })}
-          />
+        {/* The brand's mark, not a fixed path. `assets/logo.svg` is whichever
+            brand built the image, so the sign-in screen wore Hanzo's logo on
+            lux.chat — the same defect as the tab's icon, one layer up. `Mark`
+            already answers this from the running org, so this asks it rather
+            than growing a second way to know the brand. Labelled on the box:
+            the mark is the only thing here that names the product, and the
+            element inside it differs per brand (a tinted glyph for Hanzo, an
+            image for everyone else). */}
+        <div
+          className="mt-6 flex h-10 w-full items-center justify-center"
+          role="img"
+          aria-label={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Hanzo Chat' })}
+        >
+          <Mark size={40} />
         </div>
       </BlinkAnimation>
       <DisplayError />
