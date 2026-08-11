@@ -122,7 +122,7 @@ const ConversationStarters = () => {
 
   return (
     <>
-      <div className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2 px-4">
+      <div className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-1.5 px-4">
       {starters.slice(0, Constants.MAX_CONVO_STARTERS).map(({ label, text }, index) => (
         <button
           key={index}
@@ -133,7 +133,7 @@ const ConversationStarters = () => {
             // `glass hz-chip` — the same material family as the composer, but a
             // lighter liquid-glass fill (see style.css) so the landing video
             // reads through the suggestions instead of dark slabs on the hero.
-            'glass hz-chip min-h-11 max-w-full truncate rounded-full px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
+            'glass hz-chip min-h-11 max-w-full truncate rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
             // A phone fits two of these per row, so five of them are three rows of
             // suggestions stacked under the one control an arriving visitor came
             // to use. The first is an example; the rest were a menu. Signed in
@@ -153,7 +153,7 @@ const ConversationStarters = () => {
           // so the row reads as one set. It keeps its icon to stay legible as
           // the one that leaves for the builder.
           className={cn(
-            'glass hz-chip inline-flex min-h-11 max-w-full items-center gap-1.5 truncate rounded-full px-4 py-2 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
+            'glass hz-chip inline-flex min-h-11 max-w-full items-center gap-1 truncate rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
             !isAuthenticated && 'max-sm:hidden',
           )}
         >
