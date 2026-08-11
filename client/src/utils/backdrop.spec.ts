@@ -95,7 +95,12 @@ describe('picture', () => {
     // `load`, so the canvas simply stays blank. Read the real policy so this
     // list and that one cannot drift apart.
     const csp = readFileSync(join(__dirname, '../../../api/server/csp.js'), 'utf8');
-    const imgSrc = csp.split('\n').find((line) => line.includes('"img-src')) ?? '';
+    // Matched on the directive, NOT on the quote that happened to precede it:
+    // the policy became a template literal when it started interpolating the
+    // issuer, and a needle of `"img-src` then found nothing. The assertions
+    // below all passed against that empty string, so the one gate holding this
+    // list and the served policy together had been quietly answering yes.
+    const imgSrc = csp.split('\n').find((line) => line.includes('img-src')) ?? '';
     expect(imgSrc).toContain('img-src');
     ['https://s3.hanzo.ai', 'https://s3-api.hanzo.ai'].forEach((allowed) =>
       expect(imgSrc).toContain(allowed),
