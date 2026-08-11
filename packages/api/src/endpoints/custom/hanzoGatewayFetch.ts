@@ -10,6 +10,8 @@ export type GatewayFetch = (
 interface HanzoErrorEnvelope {
   status?: string;
   msg?: string;
+  code?: string;
+  type?: string;
   error?: { message?: string } | string;
   choices?: unknown;
 }
@@ -17,14 +19,21 @@ interface HanzoErrorEnvelope {
 const FALLBACK_MESSAGE = 'Hanzo Cloud rejected the model request.';
 
 /**
- * The gateway's error, if a JSON payload IS one: `status:"error"` with no
- * `choices`. Returns the actionable message, or null for anything else — a
- * normal chunk (has `choices`), a `[DONE]`, or a body that is not the envelope.
+ * A stream that fails AFTER it began is transient, not a paywall: the balance
+ * was cleared before the first token. So a surfaced stream error defaults to a
+ * retryable code the client renders as "send it again", never the add-credit
+ * paywall — unless the gateway itself named a code (e.g. it really did run the
+ * balance to zero mid-run), which is preserved.
+ */
+const STREAM_DEFAULT_CODE = 'upstream_error';
+
+/** The gateway's error and its code, IF a JSON payload IS one: `status:"error"`
+ * with no `choices`. Returns null for anything else — a normal chunk (has
+ * `choices`), a `[DONE]`, or a body that is not the envelope.
  *
  * A successful OpenAI chunk always carries `choices`, so it can never match;
- * that is what makes rewriting the matched payload safe for a live stream.
- */
-function readErrorEnvelope(payload: string): string | null {
+ * that is what makes rewriting the matched payload safe for a live stream. */
+function readErrorEnvelope(payload: string): { message: string; code?: string } | null {
   let json: HanzoErrorEnvelope;
   try {
     json = JSON.parse(payload) as HanzoErrorEnvelope;
@@ -34,20 +43,24 @@ function readErrorEnvelope(payload: string): string | null {
   if (!json || typeof json !== 'object' || json.choices != null || json.status !== 'error') {
     return null;
   }
+  const code =
+    (typeof json.code === 'string' && json.code) ||
+    (typeof json.type === 'string' && json.type) ||
+    undefined;
   if (typeof json.msg === 'string' && json.msg.trim()) {
-    return json.msg.trim();
+    return { message: json.msg.trim(), code };
   }
   if (typeof json.error === 'string' && json.error.trim()) {
-    return json.error.trim();
+    return { message: json.error.trim(), code };
   }
   if (json.error && typeof json.error === 'object' && typeof json.error.message === 'string') {
-    return json.error.message.trim() || FALLBACK_MESSAGE;
+    return { message: json.error.message.trim() || FALLBACK_MESSAGE, code };
   }
-  return FALLBACK_MESSAGE;
+  return { message: FALLBACK_MESSAGE, code };
 }
 
-/** The message an SSE event carries IF one of its `data:` lines is the envelope. */
-function eventError(rawEvent: string): string | null {
+/** The error an SSE event carries IF one of its `data:` lines is the envelope. */
+function eventError(rawEvent: string): { message: string; code?: string } | null {
   for (const line of rawEvent.split(/\r?\n/)) {
     if (!line.startsWith('data:')) {
       continue;
@@ -56,21 +69,17 @@ function eventError(rawEvent: string): string | null {
     if (!payload || payload === '[DONE]') {
       continue;
     }
-    const message = readErrorEnvelope(payload);
-    if (message != null) {
-      return message;
+    const found = readErrorEnvelope(payload);
+    if (found != null) {
+      return found;
     }
   }
   return null;
 }
 
 /** The OpenAI-standard error event the client SDK surfaces as a clean throw. */
-const encodeErrorEvent = (message: string): Uint8Array =>
-  new TextEncoder().encode(
-    `data: ${JSON.stringify({
-      error: { message, type: 'insufficient_quota', code: 'insufficient_quota' },
-    })}\n\n`,
-  );
+const encodeErrorEvent = (message: string, code: string): Uint8Array =>
+  new TextEncoder().encode(`data: ${JSON.stringify({ error: { message, type: code, code } })}\n\n`);
 
 /** End index (exclusive) of the first complete SSE event in `s`, or -1. */
 function boundary(s: string): number {
@@ -97,8 +106,8 @@ function boundary(s: string): number {
  * OpenAI client parses that as a chunk and crashes on `undefined.role`, so the
  * reply that had been streaming vanishes into the opaque "Something went wrong".
  * Surfacing it as a standard error event makes the client raise the gateway's
- * own message instead. A successful stream never carries that shape, so its
- * bytes are forwarded verbatim.
+ * message under a retryable code. A successful stream never carries that shape,
+ * so its bytes are forwarded verbatim.
  */
 function surfaceStreamErrors(body: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
   const reader = body.getReader();
@@ -106,9 +115,16 @@ function surfaceStreamErrors(body: ReadableStream<Uint8Array>): ReadableStream<U
   const encoder = new TextEncoder();
   let buffer = '';
 
-  const surface = (controller: ReadableStreamDefaultController<Uint8Array>, message: string) => {
-    logger.warn('[hanzoGatewayFetch] surfacing gateway error from an SSE stream', { message });
-    controller.enqueue(encodeErrorEvent(message));
+  const surface = (
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    found: { message: string; code?: string },
+  ) => {
+    const code = found.code ?? STREAM_DEFAULT_CODE;
+    logger.warn('[hanzoGatewayFetch] surfacing gateway error from an SSE stream', {
+      message: found.message,
+      code,
+    });
+    controller.enqueue(encodeErrorEvent(found.message, code));
     controller.close();
     void reader.cancel();
   };
@@ -119,9 +135,9 @@ function surfaceStreamErrors(body: ReadableStream<Uint8Array>): ReadableStream<U
         const { done, value } = await reader.read();
         if (done) {
           if (buffer) {
-            const message = eventError(buffer);
-            if (message != null) {
-              surface(controller, message);
+            const found = eventError(buffer);
+            if (found != null) {
+              surface(controller, found);
               return;
             }
             controller.enqueue(encoder.encode(buffer));
@@ -133,9 +149,9 @@ function surfaceStreamErrors(body: ReadableStream<Uint8Array>): ReadableStream<U
         for (let end = boundary(buffer); end >= 0; end = boundary(buffer)) {
           const rawEvent = buffer.slice(0, end);
           buffer = buffer.slice(end);
-          const message = eventError(rawEvent);
-          if (message != null) {
-            surface(controller, message);
+          const found = eventError(rawEvent);
+          if (found != null) {
+            surface(controller, found);
             return;
           }
           controller.enqueue(encoder.encode(rawEvent));
@@ -165,12 +181,13 @@ function surfaceStreamErrors(body: ReadableStream<Uint8Array>): ReadableStream<U
  * `reading 'message'`).
  *
  * A non-streaming envelope is rewritten into a conventional 402 carrying the
- * gateway's own `msg`. A streaming envelope — which the gateway can emit AFTER
- * committing to `text/event-stream`, e.g. a mid-stream upstream failure once a
- * reasoning model has begun — is rewritten into a standard SSE error event by
- * `surfaceStreamErrors`, forwarding every successful event untouched. Either
- * way the client raises a clean error with the actionable message. The request
- * headers/body are never inspected — per-user `hk-` billing is unaffected.
+ * gateway's own `msg` — a paywall, the dominant cause of an upfront rejection. A
+ * streaming envelope — which the gateway can emit AFTER committing to
+ * `text/event-stream`, e.g. a mid-stream upstream failure once a reasoning model
+ * has begun — is rewritten by `surfaceStreamErrors` under a retryable code,
+ * forwarding every successful event untouched. Either way the client raises a
+ * clean error with the actionable message. The request headers/body are never
+ * inspected — per-user `hk-` billing is unaffected.
  */
 export function wrapHanzoGatewayFetch(baseFetch?: GatewayFetch): GatewayFetch {
   const inner: GatewayFetch = baseFetch ?? ((input, init) => fetch(input, init));

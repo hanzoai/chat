@@ -107,6 +107,16 @@ const errorMessages = {
   key_unknown:
     'This service’s API credential is not valid, so the request could not be sent. Nothing is wrong with your account and no credit has been used. This is a server-side problem on our end and has been logged.',
   /**
+   * The stream broke AFTER it began — the gateway committed to text/event-stream
+   * and then an upstream route dropped (surfaced by `hanzoGatewayFetch`). The
+   * balance was already cleared, so this is transient, not a paywall: nothing the
+   * reader owns is wrong and a resend usually succeeds. It offers the action, not
+   * an apology, and is distinct from `key_unknown` (our credential) and
+   * `insufficient_quota` (a real paywall).
+   */
+  upstream_error:
+    'The response was interrupted before it finished. Nothing is wrong with your account and this has been logged — please send your message again.',
+  /**
    * A PAYWALL, not a failure. The gateway answers a request it cannot bill with
    * 402, and `server/utils/refusal.js` names that `insufficient_quota` — the same
    * name `hanzoGatewayFetch` already gives a spent balance. The one thing that

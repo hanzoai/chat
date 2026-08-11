@@ -94,7 +94,20 @@ describe('wrapHanzoGatewayFetch', () => {
     // the crash-shaped envelope is gone, replaced by an OpenAI error event
     expect(text).not.toContain('"status":"error"');
     expect(text).toContain('"error":{"message":"upstream route closed"');
+    // a mid-stream drop is retryable, NOT the add-credit paywall
+    expect(text).toContain('"code":"upstream_error"');
+    expect(text).not.toContain('insufficient_quota');
+  });
+
+  it('preserves an explicit gateway code on a streamed envelope (a real mid-stream paywall)', async () => {
+    const sse = 'data: {"status":"error","code":"insufficient_quota","msg":"balance spent"}\n\n';
+    const wrapped = wrapHanzoGatewayFetch(async () => makeStream([sse]));
+
+    const res = await wrapped('https://api.hanzo.ai/v1/chat/completions');
+    const text = await res.text();
+    expect(text).toContain('"error":{"message":"balance spent"');
     expect(text).toContain('"code":"insufficient_quota"');
+    expect(text).not.toContain('upstream_error');
   });
 
   it('surfaces an error envelope split across chunk boundaries', async () => {
