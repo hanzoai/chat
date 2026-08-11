@@ -29,7 +29,7 @@ const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
 const configureIamLogin = require('./iamLogin');
 const { injectIamConfig } = require('./iamConfig');
-const { injectIcons, mountIcons } = require('./icons');
+const { injectIcons, mountIcons, mountManifest } = require('./icons');
 const { getAppConfig } = require('./services/Config');
 const { resolveAllowedOrigin } = require('./utils/allowedOrigins');
 const staticCache = require('./utils/staticCache');
@@ -186,6 +186,10 @@ const startServer = async () => {
      api/server/icons.js. Ordered ahead of the three mounts below for that
      reason and no other. */
   mountIcons(app, appConfig.paths.dist, process.env.OPENID_ORG);
+
+  /* The install manifest carries a name and an icon set too, and an installed
+     app keeps both until it is deleted — see icons.js. */
+  mountManifest(app, appConfig.paths.dist, process.env.OPENID_ORG, process.env.APP_TITLE);
 
   app.use(staticCache(appConfig.paths.dist));
   app.use(staticCache(appConfig.paths.fonts));
