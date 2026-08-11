@@ -12,6 +12,13 @@ export interface CustomMenuProps extends Ariakit.MenuButtonProps<'div'> {
   comboboxLabel?: string;
   trigger?: Ariakit.MenuButtonProps['render'];
   defaultOpen?: boolean;
+  /**
+   * Drop the built-in block trigger chrome (the bordered `bg-presentation`
+   * slab) and the resting fill, so the caller's own trigger className defines
+   * the look — used by the composer's inline, ghost model chip. The open-state
+   * ground still applies, so the trigger lights while its menu is open.
+   */
+  bare?: boolean;
 }
 
 export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(function CustomMenu(
@@ -26,6 +33,7 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
     comboboxLabel,
     trigger,
     defaultOpen,
+    bare,
     ...props
   },
   ref,
@@ -45,11 +53,11 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
         ref={ref}
         {...props}
         className={cn(
-          !parent &&
+          !parent && !bare &&
             'flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border-light px-3 py-2 text-sm text-text-primary',
           menuStore.useState('open')
             ? 'bg-surface-active-alt hover:bg-surface-active-alt'
-            : 'bg-presentation hover:bg-surface-active-alt',
+            : !bare && 'bg-presentation hover:bg-surface-active-alt',
           props.className,
         )}
         render={parent ? <CustomMenuItem render={trigger} /> : trigger}
