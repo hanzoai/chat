@@ -63,6 +63,49 @@ export type EventHandlerParams = {
   resetLatestMessage?: () => void;
 };
 
+/**
+ * Whether a message carries anything the thread should show: an error part, a tool
+ * call, an attachment — or text that is not empty. A text part is a bare string on
+ * the agents endpoint and `{ value }` on assistants, so both spellings are read.
+ *
+ * This is the predicate that decides whether a finished turn is kept or thrown
+ * away, so "nothing came back" has to mean exactly that. It used to compare
+ * `content[0].text.value` against the initial response's — a shape only assistants
+ * ever produce. On agents that is `undefined === undefined`: true for a refusal and
+ * equally true for a perfect answer, which left the guard below reading
+ * `if (!conversation.conversationId)` alone. A refusal arrives as an error part on a
+ * turn the server never managed to save, so it met both halves, and a billing 402
+ * erased the exchange that provoked it instead of explaining itself.
+ */
+export const carriesContent = (message?: TMessage | null): boolean =>
+  Array.isArray(message?.content) &&
+  message.content.some((part) => {
+    if (part == null) {
+      return false;
+    }
+    if (part.type !== ContentTypes.TEXT) {
+      return true;
+    }
+    const value = part[ContentTypes.TEXT];
+    return typeof value === 'string' ? value.length > 0 : (value?.value?.length ?? 0) > 0;
+  });
+
+/**
+ * Whether we are on the surface a new conversation starts from.
+ *
+ * `/c/new` is no longer a route. `routes/index.tsx` serves it with
+ * `NewChatCanonical`, which redirects to `/` — "`new` was never a conversation id,
+ * it was a sentinel meaning no conversation yet, which is what `/` already says."
+ * So a running app is at `/` the whole time a first turn is in flight, and every
+ * `pathname === '/c/new'` test matches nothing. That is why a finished turn never
+ * became a thread: the navigation into `/c/<id>` was guarded on a path the router
+ * had stopped serving, so the conversation was created, saved and cached while the
+ * screen stayed on the landing — the answer visible only as it streamed, and a
+ * refusal, which streams nothing, never visible at all.
+ */
+const isNewChatSurface = (pathname: string): boolean =>
+  pathname === '/' || pathname === `/c/${Constants.NEW_CONVO}`;
+
 const createErrorMessage = ({
   errorMetadata,
   getMessages,
@@ -492,9 +535,9 @@ export default function useEventHandlers({
         };
 
         const hasNoResponse =
-          responseMessage?.content?.[0]?.['text']?.value ===
-            submission.initialResponse?.content?.[0]?.['text']?.value ||
+          !carriesContent(responseMessage) ||
           !!responseMessage?.content?.[0]?.['tool_call']?.auth;
+
 
         /** Handle edge case where stream is cancelled before any response, which creates a blank page */
         if (!conversation.conversationId && hasNoResponse) {
@@ -505,8 +548,7 @@ export default function useEventHandlers({
           }
 
           const isNewChat =
-            location.pathname === `/c/${Constants.NEW_CONVO}` &&
-            currentConvoId === Constants.NEW_CONVO;
+            isNewChatSurface(location.pathname) && currentConvoId === Constants.NEW_CONVO;
 
           setFinalMessages(currentConvoId, isNewChat ? [] : [...messages]);
           setDraft({ id: currentConvoId, value: requestMessage?.text });
@@ -574,7 +616,13 @@ export default function useEventHandlers({
             });
           }
 
-          if (location.pathname === `/c/${Constants.NEW_CONVO}`) {
+          /**
+           * Leave the landing for the conversation the turn just created — and only
+           * for one that exists. A turn the server could not save arrives with no
+           * conversationId, and `/c/undefined` would lose the answer, refusal
+           * included, that was just committed to the new-chat surface.
+           */
+          if (isNewChatSurface(location.pathname) && conversation.conversationId) {
             navigate(`/c/${conversation.conversationId}`, { replace: true });
           }
         }
