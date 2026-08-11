@@ -40,6 +40,61 @@ describe('Content-Security-Policy', () => {
     expect(directive('frame-src')).not.toContain('hanzo.id');
   });
 
+  /**
+   * The regression this pins: written as the literal `https://hanzo.id`, the
+   * policy shipped Hanzo's issuer inside an image every brand runs, so lux.chat
+   * signed a visitor in at lux.id and then refused its own token POST. Login was
+   * impossible there for every account while nothing looked broken.
+   */
+  describe('the IAM origin is the DEPLOYMENT\'s, not the one that built the image', () => {
+    const cspFor = (issuer) => {
+      jest.resetModules();
+      const previous = process.env.OPENID_ISSUER;
+      if (issuer === undefined) {
+        delete process.env.OPENID_ISSUER;
+      } else {
+        process.env.OPENID_ISSUER = issuer;
+      }
+      const { contentSecurityPolicy: policy } = require('./csp');
+      if (previous === undefined) {
+        delete process.env.OPENID_ISSUER;
+      } else {
+        process.env.OPENID_ISSUER = previous;
+      }
+      return policy;
+    };
+    const connect = (policy) =>
+      policy
+        .split('; ')
+        .find((d) => d.startsWith('connect-src '))
+        .slice('connect-src '.length)
+        .split(' ');
+
+    it('lets a Lux deployment reach lux.id, and does not name hanzo.id', () => {
+      const sources = connect(cspFor('https://lux.id'));
+      expect(sources).toContain('https://lux.id');
+      expect(sources).not.toContain('https://hanzo.id');
+    });
+
+    it('serves the avatar from that same issuer', () => {
+      expect(cspFor('https://lux.id')).toContain('img-src');
+      expect(cspFor('https://lux.id')).toContain('https://lux.id');
+    });
+
+    it('falls back to hanzo.id when the environment states no issuer', () => {
+      expect(connect(cspFor(undefined))).toContain('https://hanzo.id');
+    });
+
+    it('normalises an issuer carrying a path or trailing slash to its origin', () => {
+      expect(connect(cspFor('https://lux.id/'))).toContain('https://lux.id');
+      expect(connect(cspFor('https://lux.id/v1/iam'))).toContain('https://lux.id');
+    });
+
+    it('emits a usable policy rather than a broken one for a malformed issuer', () => {
+      expect(connect(cspFor('not-a-url'))).toContain('https://hanzo.id');
+    });
+  });
+
   it('never opens the door to any origin', () => {
     expect(contentSecurityPolicy).not.toContain('*;');
     expect(directive('connect-src')).not.toContain(' * ');
