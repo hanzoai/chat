@@ -404,20 +404,36 @@
    ground and the labels stay legible; `!important` because `.glass`'s own fill
    is `!important`.
 
-   Hover LIGHTS the glass rather than firming it: the fill flips from a faint
-   DARK ground to a faint WHITE one — glass catching light — so the chip stays
-   see-through and the video keeps reading through it on hover instead of
-   thickening into a slab. A 1px inner rim (a hair of white) draws the glass
-   edge at rest and brightens with it. */
+   The glass STAYS glass on hover — it does not change identity. An earlier pass
+   flipped the fill from a dark ground to a white one on hover, which read as the
+   chip lighting up and swapping colour under the pointer; the ask was the
+   opposite — transparent glass that stays transparent. So the fill is the same
+   at rest and on hover, and the only feedback is a hair of extra rim (the label
+   also brightens, from `hover:text-text-primary` on the element). A 1px inner
+   rim draws the glass edge. */
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .glass.hz-chip {
     background-color: color-mix(in oklab, var(--background) 34%, transparent) !important;
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-primary) 8%, transparent);
   }
   .glass.hz-chip:hover {
-    background-color: color-mix(in oklab, var(--text-primary) 12%, transparent) !important;
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-primary) 22%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-primary) 16%, transparent);
   }
+}
+
+/* The gui Switch paints its track `$color3` in BOTH states, which on the dark
+   settings surface is near-invisible — an OFF toggle read as a white thumb
+   floating with no track under it, and ON was barely distinguishable. The thumb
+   is white and moves left↔right, so position is the primary signal; these give
+   the track a visible ground in both states as the secondary one — a dim gray
+   off, a bright gray on, both clear against a white thumb. Scoped to the switch
+   role so nothing else moves; `!important` beats gui's inline atomic fill. */
+[role='switch'] {
+  background-color: color-mix(in oklab, var(--text-primary) 14%, transparent) !important;
+}
+[role='switch'][aria-checked='true'],
+[role='switch'][data-state='checked'] {
+  background-color: color-mix(in oklab, var(--text-primary) 48%, transparent) !important;
 }
 
 /* Sidebar conversation rows lift off the GLASS sidebar with a translucent tint,
