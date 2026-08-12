@@ -10,6 +10,7 @@ import type {
 import type { useLocalize } from '~/hooks';
 import SpecIcon from '~/components/Chat/Menus/Endpoints/components/SpecIcon';
 import { Endpoint, SelectedValues } from '~/common';
+import { label } from '~/utils';
 
 export function filterItems<
   T extends {
@@ -205,7 +206,10 @@ export const getDisplayValue = ({
       return endpoint.assistantNames[selectedValues.model];
     }
 
-    return selectedValues.model;
+    // The chip that names the CURRENT model, which sat in lower case beside a
+    // menu whose rows were already titled — the same string, two spellings, one
+    // above the other.
+    return label(selectedValues.model);
   }
 
   if (selectedValues.endpoint) {
