@@ -1815,6 +1815,22 @@ export enum Constants {
   EPHEMERAL_AGENT_ID = 'ephemeral',
   /** Programmatic Tool Calling tool name */
   PROGRAMMATIC_TOOL_CALLING = 'run_tools_with_code',
+  /**
+   * Programmatic Tool Calling, bash flavour. A sibling of the line above, not a
+   * variant of it: routing.ts answers `isBashProgrammaticToolCall` from THIS
+   * name directly, and falls back to reading `lang`/`runtime`/`language` out of
+   * the arguments only for the generic `run_tools_with_code`.
+   *
+   * It was referenced before it existed. Every consumer said
+   * Constants.BASH_PROGRAMMATIC_TOOL_CALLING, which resolved to undefined, so
+   * `name === undefined` was false for every real tool call and the bash branch
+   * was dead — bash PTC calls fell through to the generic path and were labelled
+   * by whatever their `lang` happened to say. The value is not a guess:
+   * client/src/utils/toolLabels.ts already maps `run_tools_with_bash` to the
+   * Code label, and ToolCallGroup's own test lists it beside
+   * `run_tools_with_code` as a Code-family name.
+   */
+  BASH_PROGRAMMATIC_TOOL_CALLING = 'run_tools_with_bash',
 }
 
 export enum LocalStorageKeys {

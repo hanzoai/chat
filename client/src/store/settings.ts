@@ -82,6 +82,16 @@ const staticAtoms = {
 const localStorageAtoms = {
   // General settings
   autoScroll: atomWithLocalStorage('autoScroll', false),
+  // Whether a tool call opens showing its input and output, or collapsed to its
+  // header. False keeps a run of completed calls out of the way; a reader opens
+  // the one they care about.
+  //
+  // This atom was REFERENCED before it existed. ToolCallGroup and
+  // useToolCallState both read store.autoExpandTools, which resolved to
+  // undefined, and useAtomValue(undefined) throws "Atom is undefined or null" —
+  // so every message carrying a tool call died on render. tsc had been saying so
+  // in a pile of 814 errors nobody could act on.
+  autoExpandTools: atomWithLocalStorage('autoExpandTools', false),
   // Smart routing user OVERRIDE. `null` (never touched) === follow the org's
   // server-driven default; `true`/`false` === an explicit user choice that wins.
   // When on, new conversations on the Hanzo endpoint default to model "auto" (the
