@@ -17,7 +17,7 @@ import { useLocalize } from '~/hooks';
 /** `@source` hints cloud honors. Chips, not free text — no unmatched hint. */
 const SOURCES = ['news', 'academic', 'github', 'reddit', 'x'];
 
-/** The endpoint whose catalog backs the picker (the house Zen family). */
+/** The endpoint whose catalog backs the picker: Hanzo's gateway, Enso and Zen. */
 const CATALOG_ENDPOINT = 'Hanzo';
 
 /** One trigger shape for both pickers. */

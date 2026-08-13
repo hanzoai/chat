@@ -94,8 +94,8 @@ export const useEndpoints = ({
 
       // Base result object with formatted default icon.
       // Custom endpoints have no `alternateName`; honor their configured
-      // `modelDisplayLabel` as the group label so the house family can present
-      // as "Zen" while its endpoint VALUE stays stable ("Hanzo") — keeping
+      // `modelDisplayLabel` as the group label so the endpoint can present
+      // as "Zen" while its VALUE stays stable ("Hanzo") — keeping
       // existing conversations and the pinned guest endpoint intact.
       const result: Endpoint = {
         value: ep,

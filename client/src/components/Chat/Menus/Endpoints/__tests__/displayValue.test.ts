@@ -29,11 +29,11 @@ const chip = (selected: Partial<SelectedValues>) =>
  * The chip names the model you are on; the menu below it names the same model
  * on a row. They read the SAME string, so they have to spell it the same way —
  * and they did not: production showed `zen5-flash` on the chip directly above
- * "Zen5 Flash" in the list. The menu had been taught the house names and the
+ * "Zen5 Flash" in the list. The menu had been taught these spellings and the
  * chip had not.
  */
 describe('getDisplayValue', () => {
-  it('spells a house model the way the menu row does', () => {
+  it('spells a titled model the way the menu row does', () => {
     expect(chip({ endpoint: 'hanzo', model: 'zen5-flash' })).toBe('Zen5 Flash');
     expect(chip({ endpoint: 'hanzo', model: 'enso' })).toBe('Enso');
   });

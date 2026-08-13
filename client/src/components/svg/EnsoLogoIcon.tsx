@@ -3,21 +3,18 @@ import React from 'react';
 export interface EnsoLogoIconProps extends React.SVGProps<SVGSVGElement> {
   /** Pixel size; when set, applies to width and height. */
   size?: number | string;
-  /** Stroke width in the 100-unit viewBox. Matches ZenLogoIcon for optical parity. */
+  /** Stroke width in the 100-unit viewBox. */
   strokeWidth?: number;
 }
 
 /**
- * Enso mark — a CLOSED ring.
+ * Enso mark — the ensō (円相), drawn CLOSED.
  *
- * Not the same mark as Zen, and the difference is the whole point. The Zen ensō
- * (ZenLogoIcon) is drawn open: a single brush arc with a gap, the canonical 円相.
- * Enso the router is drawn CLOSED — it is the rung that completes the circle by
- * picking the right model, so the mark has no gap.
- *
- * Both share the 0 0 100 100 viewBox, stroke-width 11 and round caps, so they sit
- * at identical optical weight beside each other in a model list. The ONLY visual
- * difference is the gap, which is exactly the distinction being drawn.
+ * Enso is Hanzo's own router model (`owned_by: hanzo`), and the ring closes
+ * because Enso is the rung that completes the circle by picking the right
+ * model. Zen is Zoo Labs Foundation's family and carries Zoo's mark
+ * (ZenLogoIcon), so the two are told apart by shape — never by a gap in one
+ * shared shape, which is what let one maker's model wear the other's identity.
  */
 export default function EnsoLogoIcon({
   className = '',
@@ -38,8 +35,8 @@ export default function EnsoLogoIcon({
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      {/* Closed ring. r=37 matches the Zen arc's radius so the two marks are the
-          same size on screen and only the gap distinguishes them. */}
+      {/* Closed ring, r=37 — sized so the mark carries the same optical weight
+          as the neighbouring Zen mark in a model list. */}
       <circle cx="50" cy="50" r="37" strokeWidth={strokeWidth} />
     </svg>
   );

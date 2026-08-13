@@ -1,13 +1,13 @@
-import { isEnso, label } from './house';
+import { isEnso, label } from './model';
 
 /**
- * ONE predicate, because the house endpoint serves TWO families.
+ * ONE predicate, because the Hanzo endpoint serves TWO makers' families.
  *
  * This lived privately inside MessageEndpointIcon, so the message avatar could
  * tell Enso from Zen and the model menu could not: the menu keyed on the
  * ENDPOINT, and Enso is a model ON the hanzo/zen endpoint, so every Enso row
- * wore Zen's open ring. The marks differ only by the gap, so the wrong one
- * renders one product wearing the other's identity.
+ * wore Zen's mark. Enso is Hanzo's and Zen is Zoo Labs Foundation's, so the
+ * wrong mark renders one maker's model under the other's identity.
  */
 describe('isEnso', () => {
   it('claims the router family', () => {
@@ -48,11 +48,14 @@ describe('isEnso', () => {
 /**
  * The catalog serves ids and NO display name (verified against
  * api.hanzo.ai/v1/models: id, owned_by, pricing, context_window — no name), and
- * the model menu rendered `modelId` verbatim. So our own flagship sat in lower
- * case beside third-party models wearing their vendors' capitals.
+ * the model menu rendered `modelId` verbatim. So Enso and Zen sat in lower case
+ * beside third-party models wearing their vendors' capitals.
+ *
+ * What is titled is what this app knows how to SPELL, which is not a claim on
+ * who made it: `owned_by` reads `hanzo` for enso* and `zenlm` for zen*.
  */
 describe('label', () => {
-  it('titles the house families', () => {
+  it('titles the ids it knows how to spell, whoever made them', () => {
     expect(label('enso')).toBe('Enso');
     expect(label('enso-flash')).toBe('Enso Flash');
     expect(label('enso-ultra')).toBe('Enso Ultra');
@@ -73,7 +76,7 @@ describe('label', () => {
     expect(label('deepseek-v4')).toBe('deepseek-v4');
   });
 
-  it('does not claim a model that merely CONTAINS a house name', () => {
+  it('does not title a model that merely CONTAINS a titled name', () => {
     expect(label('super-enso')).toBe('super-enso');
     expect(label('zenith')).toBe('zenith');
   });
@@ -86,7 +89,7 @@ describe('label', () => {
 
   it('passes a human name through, so it is safe on an agent row', () => {
     // EndpointModelItem overwrites modelName with an agent/assistant name
-    // before this runs; a name that is not a house id must survive untouched.
+    // before this runs; a name that is not a titled id must survive untouched.
     expect(label('My Support Bot')).toBe('My Support Bot');
   });
 });

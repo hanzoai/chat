@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { HanzoHeader, HanzoPreFooterCTA, HanzoFooter } from '@hanzogui/shell';
-import { label } from '~/utils/house';
+import { label } from '~/utils/model';
 import { useLandingPlans } from '~/utils/plans';
 import { getHanzoIamSdk } from '~/utils/iam';
 
@@ -173,7 +173,7 @@ const features = [
   {
     title: 'Zen Models',
     description:
-      '14 frontier models from 4B to 480B parameters. Code, reason, vision, multimodal — all trained in-house.',
+      '14 frontier models from 4B to 480B parameters. Code, reason, vision, multimodal — built by Zoo Labs Foundation.',
     Icon: IconSparkles,
   },
   {
@@ -196,10 +196,11 @@ const features = [
   },
 ];
 
-// Current house families served today. Names only — the repo carries no
-// authoritative param/context numbers, so we advertise none rather than invent
-// them (honesty: only claim what's live).
-const zenModels = [
+// The frontier models served today: Enso, which is Hanzo's, and Zen, which is
+// Zoo Labs Foundation's. Names only — the repo carries no authoritative
+// param/context numbers, so we advertise none rather than invent them (honesty:
+// only claim what's live).
+const frontierModels = [
   { name: 'enso', description: 'Flagship reasoning model' },
   { name: 'enso-flash', description: 'Fast, low-latency responses' },
   { name: 'zen5', description: 'General-purpose frontier model' },
@@ -208,8 +209,8 @@ const zenModels = [
 ];
 
 // Independent third-party models the gateway actually streams today (verified
-// live via api.hanzo.ai). This is the third-party wall — distinct from the Zen
-// house family above; we only list providers that are genuinely served.
+// live via api.hanzo.ai). This is the third-party wall — distinct from the
+// frontier models above; we only list providers that are genuinely served.
 const thirdPartyModels = [
   'Claude Opus 4.8',
   'Claude 5 Sonnet',
@@ -437,14 +438,12 @@ zen5: Searched the web — 21 sources. Short version:
           }}
         >
           <IconBolt className="mb-4 size-8" style={{ color: colors.brand }} />
-          <h3 className="mb-4 text-xl font-medium tracking-tight lg:text-2xl">
-            Zen Frontier Models
-          </h3>
+          <h3 className="mb-4 text-xl font-medium tracking-tight lg:text-2xl">Frontier Models</h3>
           <p className="mb-6" style={{ color: colors.mutedFg }}>
-            Trained in-house. Fast, capable, affordable.
+            Enso by Hanzo, Zen by Zoo Labs Foundation. Fast, capable, affordable.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {zenModels.map((m) => (
+            {frontierModels.map((m) => (
               <div
                 key={m.name}
                 className="rounded-lg p-4 transition-colors"
