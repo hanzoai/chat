@@ -69,7 +69,7 @@ function UnknownIcon({
   iconURL?: string;
   className?: string;
   endpoint?: EModelEndpoint | string | null;
-  /** The selected model. The house endpoint serves TWO families, so the
+  /** The selected model. The Hanzo endpoint serves two makers' families, so the
    *  endpoint alone cannot choose a mark — see the branch below. */
   model?: string | null;
   context?: 'landing' | 'menu-item' | 'nav' | 'message';
@@ -81,15 +81,15 @@ function UnknownIcon({
 
   const currentEndpoint = endpoint.toLowerCase();
 
-  // Hanzo's house endpoint serves TWO families, so the endpoint does not pick the
-  // mark — the MODEL does. Enso is the closed ring, Zen the open ensō (円相), and
-  // the gap is the only thing telling them apart, so getting this wrong renders
-  // one product wearing the other's identity.
+  // Hanzo's endpoint serves two makers' families, so the endpoint does not pick
+  // the mark — the MODEL does. Enso is Hanzo's, drawn as the closed ensō; Zen is
+  // Zoo Labs Foundation's and wears Zoo's mark. Getting this wrong renders one
+  // maker's model under the other's identity.
   //
   // This read the endpoint alone and always answered Zen, so every Enso row in
-  // the model menu wore the open ring while the message avatar beside it (which
-  // has always asked `isEnso`) wore the closed one. One predicate now, imported
-  // from ~/utils, so the two surfaces cannot disagree again.
+  // the model menu wore Zen's mark while the message avatar beside it (which has
+  // always asked `isEnso`) wore Enso's. One predicate now, imported from
+  // ~/utils, so the two surfaces cannot disagree again.
   if (currentEndpoint === 'hanzo' || currentEndpoint === 'zen') {
     return isEnso(model) ? (
       <EnsoLogoIcon className={cn(className, 'text-black dark:text-white')} />

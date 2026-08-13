@@ -23,7 +23,7 @@ export * from './textarea';
 export * from './messages';
 export * from './languages';
 export * from './endpoints';
-export * from './house';
+export * from './model';
 export * from './resources';
 export * from './roles';
 export * from './localStorage';
