@@ -36,6 +36,8 @@ export interface IUser extends Document {
   };
   favorites?: Array<{
     agentId?: string;
+    skillId?: string;
+    spec?: string;
     model?: string;
     endpoint?: string;
   }>;
