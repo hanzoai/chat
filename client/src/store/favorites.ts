@@ -2,6 +2,7 @@ import { atomWithTabStorage } from './utils';
 
 export type Favorite = {
   agentId?: string;
+  skillId?: string;
   model?: string;
   endpoint?: string;
   spec?: string;

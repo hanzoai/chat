@@ -2,6 +2,8 @@ const { updateUser, getUserById } = require('~/models');
 
 const MAX_FAVORITES = 50;
 const MAX_STRING_LENGTH = 256;
+/** The kinds a favorite may be, written once so no two refusals disagree. */
+const KINDS = 'agentId, skillId, model+endpoint, or spec';
 
 const updateFavoritesController = async (req, res) => {
   try {
@@ -25,35 +27,56 @@ const updateFavoritesController = async (req, res) => {
     }
 
     for (const fav of favorites) {
+      for (const field of ['agentId', 'skillId', 'model', 'endpoint']) {
+        if (fav[field] && fav[field].length > MAX_STRING_LENGTH) {
+          return res
+            .status(400)
+            .json({ message: `${field} exceeds maximum length of ${MAX_STRING_LENGTH}` });
+        }
+      }
+      /* `spec` is the one field with a shape rule of its own: null and undefined
+       * mean absent, anything else must be a non-empty string. */
+      if (fav.spec != null && (typeof fav.spec !== 'string' || fav.spec.length === 0)) {
+        return res.status(400).json({ message: 'spec must be a non-empty string' });
+      }
+      if (typeof fav.spec === 'string' && fav.spec.length > MAX_STRING_LENGTH) {
+        return res
+          .status(400)
+          .json({ message: `spec exceeds maximum length of ${MAX_STRING_LENGTH}` });
+      }
+
+      /* One entry names exactly ONE thing. `model` and `endpoint` are halves of
+       * a single name, so they count once and must both be present. */
       const hasAgent = !!fav.agentId;
-      const hasModel = !!(fav.model && fav.endpoint);
+      const hasSkill = !!fav.skillId;
+      const hasSpec = typeof fav.spec === 'string' && fav.spec.length > 0;
+      const hasModelPart = !!fav.model || !!fav.endpoint;
+      const hasModel = !!fav.model && !!fav.endpoint;
+      const kinds = [hasAgent, hasSkill, hasSpec, hasModel].filter(Boolean).length;
 
-      if (fav.agentId && fav.agentId.length > MAX_STRING_LENGTH) {
-        return res
-          .status(400)
-          .json({ message: `agentId exceeds maximum length of ${MAX_STRING_LENGTH}` });
+      if (kinds > 1) {
+        return res.status(400).json({ message: `Favorite cannot have multiple types (${KINDS})` });
       }
-      if (fav.model && fav.model.length > MAX_STRING_LENGTH) {
-        return res
-          .status(400)
-          .json({ message: `model exceeds maximum length of ${MAX_STRING_LENGTH}` });
-      }
-      if (fav.endpoint && fav.endpoint.length > MAX_STRING_LENGTH) {
-        return res
-          .status(400)
-          .json({ message: `endpoint exceeds maximum length of ${MAX_STRING_LENGTH}` });
-      }
-
-      if (!hasAgent && !hasModel) {
+      if (hasSpec && (hasAgent || hasSkill || hasModelPart)) {
         return res.status(400).json({
-          message: 'Each favorite must have either agentId or model+endpoint',
+          message: 'spec cannot be combined with agentId, skillId, model, or endpoint',
         });
       }
-
-      if (hasAgent && hasModel) {
+      if (hasAgent && hasModelPart) {
         return res.status(400).json({
-          message: 'Favorite cannot have both agentId and model/endpoint',
+          message: 'agentId cannot be combined with model or endpoint',
         });
+      }
+      if (hasSkill && hasModelPart) {
+        return res.status(400).json({
+          message: 'skillId cannot be combined with model or endpoint',
+        });
+      }
+      if (hasModelPart && !hasModel) {
+        return res.status(400).json({ message: 'model and endpoint must be provided together' });
+      }
+      if (kinds === 0) {
+        return res.status(400).json({ message: `Each favorite must have one of: ${KINDS}` });
       }
     }
 

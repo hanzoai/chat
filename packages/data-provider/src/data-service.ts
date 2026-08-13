@@ -37,6 +37,8 @@ export function deleteUser(secondFactor?: {
 
 export type FavoriteItem = {
   agentId?: string;
+  skillId?: string;
+  spec?: string;
   model?: string;
   endpoint?: string;
 };
