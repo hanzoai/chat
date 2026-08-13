@@ -886,6 +886,40 @@ they actually render). The rest, by weight: **popover 10 files, dialog 5, tabs 5
 accordion 3, toast 2, slot 2, select 2**, then one each for dropdown-menu,
 radio-group, alert-dialog, hover-card, slider, collapsible.
 
+**Three of those thirteen packages are now gone, and they were never imported.**
+`alert-dialog`, `select` and `collapsible` were declared in `client/package.json`
+and peered from `packages/client` with ZERO importers in either workspace, and
+`packages/client/src/components/Collapsible.tsx` — a bare re-export of three Radix
+names, absent from the components barrel — went with them. Ten packages / 34 files
+remain. `collapsible` still shows in a grep twice over, and both are correct: as a
+transitive of `react-accordion` in the lockfile, and as a shadcn component in the
+artifact sandbox payload.
+
+**@hanzo/ui 8.0.63 cannot receive four of the ten, and this is where the migration
+actually stops.** `@hanzo/ui/primitives/*` exports Popover, Dialog, DropdownMenu,
+Select, Tabs, Slider, Collapsible, Tooltip, Command, ScrollArea, Resizable — and no
+**Accordion**, no **HoverCard**, no **RadioGroup**, and no compound **Toast**
+(`toast`/`Toaster` are a different model from Radix's Provider/Viewport/Root/Title/
+Description/Action/Close). Three of the four exist one layer down —
+`@hanzogui/{accordion,radio-group,toast}` are already dependencies of `@hanzo/gui`
+— so the gap is in @hanzo/ui's barrel, not in gui. HoverCard has no gui backing at
+all; gui offers `tooltip` and `popover`. Reaching past @hanzo/ui into `@hanzo/gui`
+for these would be a second way to do one thing; the fix belongs upstream.
+
+Two more facts about the six that @hanzo/ui DOES export, measured against the
+installed 8.0.63 rather than assumed, because both break a "swap the import"
+conversion:
+- **`PopoverContent` drops `align`.** The gui backend destructures it as `align:
+  _align` and discards it — Content also mounts its OWN portal (so there is no
+  `Portal` to import) and paints `bg $color2`, a 1px border, `p $4` and a fixed
+  `width: 288`. Chat's ten popovers pass `align`, their own widths and their own
+  surfaces.
+- **`Slider` does not expose its thumb.** It renders Track/Range/Thumb itself and
+  spreads caller props onto the ROOT, but `role="slider"` lives on the thumb — so
+  `aria-label` lands on an element no screen reader reads as the control.
+  `packages/client/src/components/Slider.tsx` exists to enforce exactly that name
+  at compile time, and cannot convert until the primitive forwards it.
+
 Ordering constraints that are not obvious and will bite:
 1. `packages/client/src/components/Button.tsx` (`Slot`) migrates **last** — every
    `<Trigger asChild><Button/></Trigger>` chain depends on it forwarding `data-state`.
@@ -904,6 +938,16 @@ Ordering constraints that are not obvious and will bite:
    `--radix-accordion-content-height` drives the `animate-accordion-*` keyframes in
    `client/tailwind.config.cjs`, and `--radix-select-trigger-{height,width}` size the
    Select/Combobox popper. They die with Radix and need replacements written first.
+7. The `radix-*` Tailwind variants are down to **19 live uses from 35**, and every
+   survivor now sits on something Radix really renders: Speech 6 and Settings 4
+   (`radix-state-active` on Tabs), SelectDropDownPop 2 / MultiSelectPop 2 /
+   TitleButton 1 (`radix-state-open` on a `<Trigger asChild>` child, which Radix
+   does write `data-state` onto), plus the four `[aria-labelledby^="radix-"]`
+   scrollbar rules in `mobile.css`. Twelve were on elements Radix never touched
+   and are gone; see "A variant is not a class" below. **Write the removal reason
+   without naming the class.** Tailwind's scanner is a regex over file text and
+   does not know what a comment is, so explaining `radix-state-open:` in prose
+   regenerates the rule you just deleted.
 
 The external blocker people assume exists does NOT: `@hanzogui/shell@8.0.3` is
 inline-styled for everything chat imports (see "One shell" above). Nothing
@@ -921,6 +965,42 @@ Full footprint to delete when the markup is done: `client/tailwind.config.cjs`,
 (client) + `tailwind-merge` (packages/client peer) + `prettier-plugin-tailwindcss`
 (root). Note `tailwindcss-radix` supplies the `radix-state-*` / `radix-disabled`
 variants and therefore dies WITH Radix, not before it.
+
+### A variant is not a class — twelve utilities that could never match
+
+Tailwind is LIVE here, so `radix-state-open:bg-surface-hover` really does compile:
+the shipped stylesheet carries `.radix-state-open\:bg-surface-hover[data-state="open"]`,
+read out of `document.styleSheets` in Chromium. What it selects on is the trap.
+Radix writes `data-state` / `data-disabled`; nothing else does. The same class on
+a non-Radix element is a rule with no matching attribute — it reads correct in
+review and paints nothing, forever, with no error anywhere.
+
+Two of the twelve were visible defects rather than dead weight:
+
+- **The composer's "+" never lit while its menu was open.** It is an Ariakit
+  `MenuButton`, whose complete attribute set (measured) is `aria-expanded,
+  aria-haspopup, aria-label, class, id, type`, plus `aria-controls` on open. No
+  `data-state`, ever. It reads its own `open` state now: `rgba(0,0,0,0)` closed,
+  `rgb(33,33,33)` with the menu up.
+- **The parameters gear could not have worked either, for a different reason.**
+  `Chat/Input/HeaderOptions` builds an ANCHORED popover — `<Root open=…><Anchor>` —
+  and Radix writes `data-state` from `Popover.Trigger`, not `Popover.Anchor`.
+  There is no trigger in that tree. It reads `showPopover` now.
+
+The remaining ten had no behaviour to restore: `MenuItem` and `PresetItems` are
+plain `<div role="option">` / `role="menuitem"` rows wearing `radix-disabled:*`,
+and no call site passes that attribute; `AddMultiConvo` asked for an open-state
+ground on a button that opens nothing.
+
+**`aria-expanded` is not the fallback, because it is broken too.** Measured in
+Chromium on the landing: the Create trigger carries
+`aria-controls="composer-create-menu"`, that menu is `display: flex` with
+`data-enter="true"` — and the trigger still reports `aria-expanded="false"`. The
+model picker does the same. Ariakit updates `aria-controls` on open and leaves
+`aria-expanded` behind, in every `DropdownPopup` (28 call sites), which is a
+WCAG 4.1.2 failure across the app's whole menu layer. NOT fixed here: the cause is
+in the Ariakit 0.4 / React 19 composition and guessing at it would be worse than
+recording it. Reproduce with `[aria-label="Create"]` on `/c/new`.
 
 ### Config filename caveat
 
