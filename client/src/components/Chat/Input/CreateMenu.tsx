@@ -7,6 +7,7 @@ import type { TConversation } from '@hanzochat/data-provider';
 import { openAppBuilder } from '~/utils/buildApp';
 import { useSubmitMessage } from '~/hooks';
 import { useLocalize } from '~/hooks';
+import { cn } from '~/utils';
 import { useToolsItems } from './ToolsDropdown';
 import { useAttach } from './Files/useAttach';
 
@@ -117,7 +118,19 @@ export default function CreateMenu({
           render={
             <Ariakit.MenuButton
               aria-label={localize('com_ui_create')}
-              className="flex size-9 items-center justify-center rounded-full text-text-primary transition-colors hover:bg-surface-hover radix-state-open:bg-surface-hover"
+              /* Lit while the menu is open, from the boolean this component
+               * already holds. It used to ask for the Radix open-state variant,
+               * which compiles to a `[data-state=open]` attribute selector —
+               * Radix writes that attribute and this Ariakit trigger never does,
+               * so the "+" stayed unlit for the whole time its menu was on
+               * screen. Measured in Chromium: transparent before, rgb(33,33,33)
+               * after, with the menu visible in both. The ground is the one the
+               * button already wears under the pointer, which is what the dead
+               * class named. */
+              className={cn(
+                'flex size-9 items-center justify-center rounded-full text-text-primary transition-colors hover:bg-surface-hover',
+                open && 'bg-surface-hover',
+              )}
             >
               <Plus className="size-5" aria-hidden="true" focusable="false" />
             </Ariakit.MenuButton>

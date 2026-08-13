@@ -38,7 +38,11 @@ const MenuItem: FC<MenuItemProps> = ({
       aria-label={title}
       data-testid="chat-menu-item"
       className={cn(
-        'group m-1.5 flex cursor-pointer gap-2 rounded px-5 py-2.5 !pr-3 text-sm !opacity-100 hover:bg-black/5 focus:ring-0 radix-disabled:pointer-events-none radix-disabled:opacity-50 dark:hover:bg-gray-600 md:min-w-[240px]',
+        /* This row is a plain div, so the two Radix disabled-state utilities
+         * it used to carry compiled to `[data-disabled]` — an attribute a Radix
+         * `Item` writes and this element never had. No call site passes it
+         * either. A disabled row here is drawn by the caller's own className. */
+        'group m-1.5 flex cursor-pointer gap-2 rounded px-5 py-2.5 !pr-3 text-sm !opacity-100 hover:bg-black/5 focus:ring-0 dark:hover:bg-gray-600 md:min-w-[240px]',
         className || '',
       )}
       tabIndex={0} // Change to 0 to make it focusable

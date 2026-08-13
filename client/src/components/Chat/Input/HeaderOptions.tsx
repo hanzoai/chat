@@ -10,6 +10,7 @@ import { useGetEndpointsQuery } from '~/data-provider';
 import OptionsPopover from './OptionsPopover';
 import PopoverButtons from './PopoverButtons';
 import { useChatContext } from '~/Providers';
+import { cn } from '~/utils';
 
 export default function HeaderOptions({
   interfaceConfig,
@@ -56,7 +57,16 @@ export default function HeaderOptions({
                   role="button"
                   onClick={triggerAdvancedMode}
                   data-testid="parameters-button"
-                  className="inline-flex size-10 items-center justify-center rounded-lg border border-border-light bg-transparent text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
+                  /* Lit from `showPopover`, the boolean this component already
+                   * drives the panel with. The Radix open-state variant could not
+                   * work here: the popover is anchored, not triggered — only
+                   * `Popover.Trigger` writes `data-state` onto its child, and
+                   * `Popover.Anchor` does not — so the gear stayed unlit for the
+                   * whole time the parameters panel was open. */
+                  className={cn(
+                    'inline-flex size-10 items-center justify-center rounded-lg border border-border-light bg-transparent text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50',
+                    showPopover && 'bg-surface-tertiary',
+                  )}
                 >
                   <Settings2 size={16} aria-hidden="true" />
                 </TooltipAnchor>
