@@ -40,7 +40,10 @@ function AddMultiConvo() {
       aria-label={localize('com_ui_add_multi_conversation')}
       onClick={clickHandler}
       data-testid="add-multi-convo-button"
-      className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light bg-presentation text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
+      /* No open-state variant here: this control opens nothing — it adds a
+       * second conversation column and returns. `[data-state=open]`, which that
+       * variant selects on, was never going to appear on this button. */
+      className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light bg-presentation text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50"
     >
       <PlusCircle className="icon-lg" aria-hidden="true" />
     </TooltipAnchor>
