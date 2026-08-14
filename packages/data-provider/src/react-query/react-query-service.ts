@@ -235,24 +235,6 @@ export const useUpdateTokenCountMutation = (): UseMutationResult<
   });
 };
 
-export const useRegisterUserMutation = (
-  options?: m.RegistrationOptions,
-): UseMutationResult<t.TError, unknown, t.TRegisterUser, unknown> => {
-  const queryClient = useQueryClient();
-  return useMutation<t.TRegisterUserResponse, t.TError, t.TRegisterUser>(
-    (payload: t.TRegisterUser) => dataService.register(payload),
-    {
-      ...options,
-      onSuccess: (...args) => {
-        queryClient.invalidateQueries([QueryKeys.user]);
-        if (options?.onSuccess) {
-          options.onSuccess(...args);
-        }
-      },
-    },
-  );
-};
-
 export const useUserKeyQuery = (
   name: string,
   config?: UseQueryOptions<t.TCheckUserKeyResponse>,
@@ -273,26 +255,6 @@ export const useUserKeyQuery = (
       ...config,
     },
   );
-};
-
-export const useRequestPasswordResetMutation = (): UseMutationResult<
-  t.TRequestPasswordResetResponse,
-  unknown,
-  t.TRequestPasswordReset,
-  unknown
-> => {
-  return useMutation((payload: t.TRequestPasswordReset) =>
-    dataService.requestPasswordReset(payload),
-  );
-};
-
-export const useResetPasswordMutation = (): UseMutationResult<
-  unknown,
-  unknown,
-  t.TResetPassword,
-  unknown
-> => {
-  return useMutation((payload: t.TResetPassword) => dataService.resetPassword(payload));
 };
 
 export const useAvailablePluginsQuery = <TData = s.TPlugin[]>(

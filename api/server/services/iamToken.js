@@ -15,12 +15,20 @@ const { logger } = require('@hanzochat/data-schemas');
  * login strategy being registered.
  *
  * Security properties enforced: RS256 signature against IAM's JWKS (key matched by
- * `kid`), unexpired `exp` (jsonwebtoken default), and issuer equality with
- * `OPENID_ISSUER` (trailing-slash-normalized). Audience is intentionally NOT
- * pinned here — the SPA client id (`VITE_HANZO_IAM_APP`) and the backend
- * `OPENID_CLIENT_ID` may differ per deployment, and cloud is the authoritative
- * audience/claim validator on the on-behalf-of path — matching the existing
- * `openIdJwtStrategy` which likewise verifies signature, not audience.
+ * `kid`), unexpired `exp` (jsonwebtoken default), issuer equality with
+ * `OPENID_ISSUER` (trailing-slash-normalized), and audience equality with
+ * `OPENID_CLIENT_ID`.
+ *
+ * Audience is checked because this verifier now stands alone. One issuer serves
+ * every Hanzo relying party, so without `aud` a token minted for a different app
+ * — a different product, with a different reason to trust its holder — would
+ * authenticate here on the strength of being signed by the same issuer. Reading
+ * `aud` is what makes a token addressed to this app.
+ *
+ * The client id itself and the org-scoped form are both accepted because those
+ * are the two shapes IAM mints for one client (`audienceFor`, RFC 8707): a
+ * shared application scopes the audience to its org. Both name THIS client; no
+ * other client's token matches either.
  */
 
 const OIDC_DISCOVERY_PATH = '/.well-known/openid-configuration';
@@ -33,25 +41,17 @@ function normalizeIssuer(value) {
   return (value || '').replace(/\/+$/, '');
 }
 
+/** Quote a client id so it matches literally inside the audience pattern. */
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
- * Resolve IAM's JWKS URI. Prefers the openid-client Configuration's discovered
- * metadata (already fetched at boot when OpenID is configured); otherwise runs a
- * one-time OIDC discovery against `OPENID_ISSUER`. Cached process-wide.
+ * Resolve IAM's JWKS URI by asking the issuer where it publishes its keys.
+ * Discovered once and cached process-wide.
  * @returns {Promise<string>}
  */
 async function resolveJwksUri() {
-  try {
-    // Lazy require to avoid a circular import at module load and to stay
-    // decoupled from whether the Passport OpenID strategy is registered.
-    const { getOpenIdConfig } = require('~/strategies');
-    const metaUri = getOpenIdConfig?.()?.serverMetadata?.().jwks_uri;
-    if (metaUri) {
-      return metaUri;
-    }
-  } catch (err) {
-    logger.debug('[iamToken] openid-client config unavailable; discovering JWKS', err?.message);
-  }
-
   if (_discoveredJwksUri) {
     return _discoveredJwksUri;
   }
@@ -116,8 +116,13 @@ async function verifyIamToken(token) {
     throw new Error('missing token');
   }
   const client = await getJwksClient();
+  const options = { algorithms: ['RS256'] };
+  const clientId = process.env.OPENID_CLIENT_ID;
+  if (clientId) {
+    options.audience = new RegExp(`^${escapeRegExp(clientId)}(-org-.+)?$`);
+  }
   const claims = await new Promise((resolve, reject) => {
-    jwt.verify(token, keyResolver(client), { algorithms: ['RS256'] }, (err, decoded) => {
+    jwt.verify(token, keyResolver(client), options, (err, decoded) => {
       if (err) {
         reject(err);
         return;

@@ -1,7 +1,6 @@
 const { logger } = require('@hanzochat/data-schemas');
 const { isEnabled, math } = require('@hanzochat/api');
 const { ViolationTypes } = require('@hanzochat/data-provider');
-const { deleteAllUserSessions } = require('~/models');
 const { removePorts } = require('~/server/utils');
 const getLogStores = require('./getLogStores');
 
@@ -46,19 +45,9 @@ const banViolation = async (req, res, errorMessage) => {
     return;
   }
 
-  await deleteAllUserSessions({ userId: user_id });
-
-  /** Clear OpenID session tokens if present */
-  if (req.session?.openidTokens) {
-    delete req.session.openidTokens;
-  }
-
-  res.clearCookie('refreshToken');
-  res.clearCookie('openid_access_token');
-  res.clearCookie('openid_id_token');
-  res.clearCookie('openid_user_id');
-  res.clearCookie('token_provider');
-
+  /* The ban itself is the enforcement: `checkBan` reads this store on every
+     request the banned account can make, so there is no session to tear down
+     and no cookie to clear. */
   const banLogs = getLogStores(ViolationTypes.BAN);
   const duration = errorMessage.duration || banLogs.opts.ttl;
   if (duration <= 0) {

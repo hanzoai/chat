@@ -41,3 +41,31 @@ export function setPublishableKeyHeader(key: string) {
 export function enableCrossOriginCredentials() {
   axios.defaults.withCredentials = true;
 }
+
+/**
+ * How this page gets a fresh bearer when the one it holds is refused.
+ *
+ * The renewal itself belongs to Hanzo IAM — its refresh grant, spent by the IAM
+ * SDK the app configures — so this layer only needs to be told how to ask. The
+ * app installs it once at startup; nothing here knows what a token is or how one
+ * is minted.
+ *
+ * Page-global for the same reason the bearer is: this module is bundled more
+ * than once, and a renewer stored in one copy's module state is invisible to a
+ * request dispatched through another.
+ */
+export function setTokenRenewer(renew: () => Promise<string | null>): void {
+  if (typeof window !== 'undefined') {
+    (window as unknown as { __renewBearer?: () => Promise<string | null> }).__renewBearer = renew;
+  }
+}
+
+/** Ask for a fresh bearer, or null when nothing can supply one. */
+export function renewBearer(): Promise<string | null> {
+  if (typeof window === 'undefined') {
+    return Promise.resolve(null);
+  }
+  const renew = (window as unknown as { __renewBearer?: () => Promise<string | null> })
+    .__renewBearer;
+  return renew ? renew() : Promise.resolve(null);
+}

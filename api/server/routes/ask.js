@@ -1,8 +1,7 @@
 const express = require('express');
 const { Readable, pipeline } = require('stream');
 const { logger } = require('@hanzochat/data-schemas');
-const { resolveActiveOrg } = require('@hanzochat/api');
-const { currentBearer } = require('~/server/services/iamBearerRefresh');
+const { resolveActiveOrg, resolveTenantBearer } = require('@hanzochat/api');
 const { requireGuestOrJwtAuth, guestMessageLimiter } = require('~/server/middleware');
 const { getGuestConfig } = require('~/server/services/guestConfig');
 const { upstreamMessage, needsSignIn, SIGNIN_REQUIRED } = require('./askMessage');
@@ -116,18 +115,17 @@ function cloudBaseUrl() {
  * The credential for the on-behalf-of call to cloud, or null when the caller has
  * none. Mirrors the completion path's precedence exactly.
  *
- * Select-then-renew is `currentBearer` (services/iamBearerRefresh.js), the ONE
- * composition both surfaces share — this route adds only what is its own: the guest
- * key and the selected org.
+ * `resolveTenantBearer` is the ONE selector both surfaces share — this route adds
+ * only what is its own: the guest key and the selected org.
  * @param {import('express').Request} req
- * @returns {Promise<{ bearer: string, org: string|null }|null>}
+ * @returns {{ bearer: string, org: string|null }|null}
  */
-async function resolveCredential(req) {
+function resolveCredential(req) {
   if (isGuest(req)) {
     const guestKey = process.env.GUEST_API_KEY || process.env.HANZO_API_KEY || '';
     return guestKey ? { bearer: guestKey, org: null } : null;
   }
-  const bearer = await currentBearer(req);
+  const bearer = resolveTenantBearer(req);
   return bearer ? { bearer, org: resolveActiveOrg(req) } : null;
 }
 
@@ -151,14 +149,13 @@ router.post('/', requireGuestOrJwtAuth, guestMessageLimiter, async (req, res) =>
     return res.status(400).json({ error: 'unknown mode' });
   }
 
-  const credential = await resolveCredential(req);
+  const credential = resolveCredential(req);
   if (!credential) {
     // Honest, actionable: the surface renders for everyone, but an answer is a
     // real metered cloud call and needs a real principal behind it. SIGNIN_REQUIRED
     // drives the client's "Sign in" button; needsSignIn is the ONE place that
-    // decides who earns it. Reaching here means resolveCredential found no bearer
-    // AND `currentBearer` could not renew one, so a signed-in caller's session is
-    // spent too — the button is the only thing that helps either of them.
+    // decides who earns it. Reaching here means the caller presented no bearer,
+    // so the button is the only thing that helps them.
     const signedIn = req.user != null && !isGuest(req);
     const body = { error: upstreamMessage(401, signedIn) };
     if (needsSignIn(401, signedIn)) {

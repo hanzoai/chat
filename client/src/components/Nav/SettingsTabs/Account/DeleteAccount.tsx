@@ -26,24 +26,12 @@ const DeleteAccount = ({ disabled = false }: { title?: string; disabled?: boolea
 
   const [isDialogOpen, setDialogOpen] = useState<boolean>(false);
   const [isLocked, setIsLocked] = useState(true);
-  /**
-   * A second factor, for an account that has one. The server refuses to delete
-   * without it — a live session is not enough to authorize something
-   * irreversible — so the field has to be here or such an account could never
-   * delete itself. A six-digit entry is read as a TOTP code and anything else
-   * as a backup code, which is the same rule the login screen uses.
-   */
-  const needsSecondFactor = user?.twoFactorEnabled === true;
-  const [code, setCode] = useState('');
-  const secondFactor = /^\d{6}$/.test(code.trim())
-    ? { token: code.trim() }
-    : { backupCode: code.trim() };
 
   const handleDeleteUser = () => {
     if (isLocked) {
       return;
     }
-    deleteUser(needsSecondFactor ? secondFactor : undefined);
+    deleteUser();
   };
 
   const handleInputChange = useCallback(
@@ -92,29 +80,7 @@ const DeleteAccount = ({ disabled = false }: { title?: string; disabled?: boolea
                 (e) => handleInputChange(e.target.value),
               )}
             </div>
-            {needsSecondFactor && (
-              <div className="mb-4">
-                <label
-                  className="mb-1 block text-sm font-medium text-black dark:text-white"
-                  htmlFor="delete-account-2fa"
-                >
-                  {localize('com_ui_2fa_code_or_backup')}
-                </label>
-                <Input
-                  id="delete-account-2fa"
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                />
-              </div>
-            )}
-            {renderDeleteButton(
-              handleDeleteUser,
-              isDeleting,
-              isLocked || (needsSecondFactor && code.trim() === ''),
-              localize,
-            )}
+            {renderDeleteButton(handleDeleteUser, isDeleting, isLocked, localize)}
           </div>
         </OGDialogContent>
       </OGDialog>

@@ -38,11 +38,9 @@ export * from './keys';
 export * from './headers-helpers';
 export {
   loginPage,
-  registerPage,
   apiBaseUrl,
   setApiBaseUrl,
   zapUrl,
-  iamSession,
   imagesRoute,
   isServedImage,
 } from './api-endpoints';
