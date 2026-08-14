@@ -777,7 +777,6 @@ export type TStartupConfig = {
   sharePointBaseUrl?: string;
   sharePointPickerGraphScope?: string;
   sharePointPickerSharePointScope?: string;
-  openidReuseTokens?: boolean;
   allowGuestChat?: boolean;
   guestMessageMax?: number;
   minPasswordLength?: number;
