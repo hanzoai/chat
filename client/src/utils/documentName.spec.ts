@@ -14,7 +14,7 @@ describe('documentName', () => {
   it('names the app beside the conversation', () => {
     learnAppName('Hanzo Chat');
     expect(documentName('Refactoring the auth module')).toBe(
-      'Refactoring the auth module | Hanzo Chat',
+      'Refactoring the auth module — Hanzo Chat',
     );
   });
 
@@ -35,7 +35,7 @@ describe('documentName', () => {
   it('takes an explicit app name, for a visitor who never signed in', () => {
     // The share view holds the config directly and its reader may have nothing
     // in localStorage.
-    expect(documentName('A shared chat', 'Other Brand')).toBe('A shared chat | Other Brand');
+    expect(documentName('A shared chat', 'Other Brand')).toBe('A shared chat — Other Brand');
   });
 
   it('hardcodes no brand — this app white-labels', () => {
@@ -65,7 +65,7 @@ describe('nameDocument', () => {
   it('writes the composed name when there is one', () => {
     learnAppName('Hanzo Chat');
     nameDocument('Deploying the gateway');
-    expect(document.title).toBe('Deploying the gateway | Hanzo Chat');
+    expect(document.title).toBe('Deploying the gateway — Hanzo Chat');
   });
 });
 

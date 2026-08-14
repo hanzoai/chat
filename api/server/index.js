@@ -30,6 +30,7 @@ const initializeMCPs = require('./services/initializeMCPs');
 const configureIamLogin = require('./iamLogin');
 const { injectIamConfig } = require('./iamConfig');
 const { injectIcons, mountIcons, mountManifest } = require('./icons');
+const { injectCard } = require('./card');
 const { getAppConfig } = require('./services/Config');
 const { resolveAllowedOrigin } = require('./utils/allowedOrigins');
 const staticCache = require('./utils/staticCache');
@@ -105,6 +106,12 @@ const startServer = async () => {
      painted before the first byte of script and survives in a bookmark long
      after — see api/server/icons.js. */
   indexHTML = injectIcons(indexHTML, appConfig.paths.dist, process.env.OPENID_ORG);
+
+  /* What a SHARE of this app shows. The shell carried no og:/twitter: tags, so
+     every link to it unfurled as a bare URL. Composed after the marks above
+     because the card's image is the mark those links now point at — see
+     api/server/card.js. */
+  indexHTML = injectCard(indexHTML, process.env.APP_TITLE, process.env.DOMAIN_CLIENT);
 
   /* The browser's IAM identity travels in the shell, not in the bundle. Vite
      inlines `import.meta.env.VITE_*` at BUILD time, so without this the login
