@@ -1,7 +1,9 @@
 import { useRef } from 'react';
 import { Trans } from 'react-i18next';
 import { BookCopy } from 'lucide-react';
-import { Content, Portal, Root, Trigger } from '@radix-ui/react-popover';
+import { Popover } from '@hanzo/ui/primitives/Popover';
+import { PopoverContent } from '@hanzo/ui/primitives/PopoverContent';
+import { PopoverTrigger } from '@hanzo/ui/primitives/PopoverTrigger';
 import {
   Button,
   OGDialog,
@@ -45,8 +47,18 @@ const PresetsMenu: FC = () => {
   };
 
   return (
-    <Root>
-      <Trigger asChild>
+    /* `allowFlip` restates Radix's default. Radix's `avoidCollisions` is on
+     * unless you turn it off; gui's flip middleware is opt-in, so without this
+     * a preset list opened near the bottom of the window runs off it. */
+    <Popover allowFlip>
+      {/* `except-style-web`, and both halves are load-bearing. `web` because
+        * the slotted child is a COMPONENT, not a host element: gui hands a
+        * component child `onPress`, and only the host-element path remaps it to
+        * `onClick` — without `web` the trigger takes the prop, forwards an
+        * unknown `onPress` to the DOM, and silently does nothing. `except-style`
+        * because gui's View styles would otherwise be merged onto the Button
+        * through TooltipAnchor. */}
+      <PopoverTrigger asChild="except-style-web">
         <TooltipAnchor
           ref={presetsMenuTriggerRef}
           description={localize('com_endpoint_examples')}
@@ -64,35 +76,36 @@ const PresetsMenu: FC = () => {
             </Button>
           }
         ></TooltipAnchor>
-      </Trigger>
-      <Portal>
-        <div
-          style={{
-            position: 'fixed',
-            left: '0px',
-            top: '0px',
-            transform: 'translate3d(268px, 50px, 0px)',
-            minWidth: 'max-content',
-            zIndex: 'auto',
-          }}
-        >
-          <Content
-            side="bottom"
-            align="center"
-            className="mt-2 max-h-[495px] overflow-x-hidden rounded-lg border border-border-light bg-presentation text-text-primary shadow-lg md:min-w-[400px]"
-          >
-            <PresetItems
-              presets={presetsQuery.data}
-              onSetDefaultPreset={onSetDefaultPreset}
-              onSelectPreset={onSelectPreset}
-              onChangePreset={onChangePreset}
-              onDeletePreset={onDeletePreset}
-              clearAllPresets={clearAllPresets}
-              onFileSelected={onFileSelected}
-            />
-          </Content>
-        </div>
-      </Portal>
+      </PopoverTrigger>
+      {/* PopoverContent mounts its own portal, so the `Portal` wrapper is gone
+        * — and with it the hand-written `position: fixed; translate3d(268px,
+        * 50px, 0)` div it held, which was a frozen copy of Radix's own popper
+        * wrapper. Left behind it would sit in normal flow at the root as an
+        * empty fixed-position box while the panel portalled away.
+        *
+        * `side="bottom"` and `align="center"` are both gui's defaults now, so
+        * neither needs restating. The three layout props do: gui bakes
+        * `width: 288`, `p: '$4'` and `alignItems: 'center'` before spreading
+        * caller props, and this menu is a shrink-to-fit column of full-width
+        * rows that carry their own padding. `trapFocus={false}` matches Radix's
+        * non-modal content, which does not trap. */}
+      <PopoverContent
+        trapFocus={false}
+        width="auto"
+        p={0}
+        alignItems="stretch"
+        className="mt-2 max-h-[495px] overflow-x-hidden rounded-lg border border-border-light bg-presentation text-text-primary shadow-lg md:min-w-[400px]"
+      >
+        <PresetItems
+          presets={presetsQuery.data}
+          onSetDefaultPreset={onSetDefaultPreset}
+          onSelectPreset={onSelectPreset}
+          onChangePreset={onChangePreset}
+          onDeletePreset={onDeletePreset}
+          clearAllPresets={clearAllPresets}
+          onFileSelected={onFileSelected}
+        />
+      </PopoverContent>
       {preset && (
         <EditPresetDialog
           submitPreset={submitPreset}
@@ -132,7 +145,7 @@ const PresetsMenu: FC = () => {
           </OGDialogContent>
         </OGDialog>
       )}
-    </Root>
+    </Popover>
   );
 };
 
