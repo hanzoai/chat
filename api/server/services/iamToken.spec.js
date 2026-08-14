@@ -1,75 +1,85 @@
-const mockVerify = jest.fn();
-const mockGetSigningKey = jest.fn();
-const mockJwksRsa = jest.fn(() => ({ getSigningKey: mockGetSigningKey }));
-const mockGetOpenIdConfig = jest.fn();
+const crypto = require('node:crypto');
+const jwt = require('jsonwebtoken');
 
-jest.mock('jsonwebtoken', () => ({ verify: (...args) => mockVerify(...args) }));
-jest.mock('jwks-rsa', () => (...args) => mockJwksRsa(...args));
-jest.mock('https-proxy-agent', () => ({ HttpsProxyAgent: class {} }));
 jest.mock('@hanzochat/data-schemas', () => ({
-  logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+  logger: { error: jest.fn(), warn: jest.fn(), debug: jest.fn(), info: jest.fn() },
 }));
-jest.mock(
-  '~/strategies',
-  () => ({ getOpenIdConfig: (...args) => mockGetOpenIdConfig(...args) }),
-  { virtual: true },
-);
 
-const { verifyIamToken, _resetIamToken } = require('~/server/services/iamToken');
+const mockGetSigningKey = jest.fn();
+jest.mock('jwks-rsa', () => () => ({ getSigningKey: mockGetSigningKey }));
 
-describe('verifyIamToken — JWKS verification for hanzo.id tokens', () => {
+const { verifyIamToken, _resetIamToken } = require('./iamToken');
+
+const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+
+const ISSUER = 'https://hanzo.id';
+const CLIENT = 'hanzo-chat';
+
+const sign = (claims, key = privateKey) =>
+  jwt.sign({ sub: 'hanzo/alice', iss: ISSUER, aud: CLIENT, ...claims }, key, {
+    algorithm: 'RS256',
+    expiresIn: '1h',
+    keyid: 'k1',
+  });
+
+/**
+ * The one proof that a caller is who they say they are. Every request now rests
+ * on it, so what it refuses matters as much as what it accepts — particularly
+ * the audience, since one issuer serves every Hanzo relying party and a token
+ * meant for another app is signed by the very same key.
+ */
+describe('verifyIamToken', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     _resetIamToken();
-    process.env.OPENID_ISSUER = 'https://hanzo.id';
-    // Resolve JWKS URI from the already-initialized openid-client config (no network).
-    mockGetOpenIdConfig.mockReturnValue({
-      serverMetadata: () => ({ jwks_uri: 'https://hanzo.id/v1/iam/.well-known/jwks' }),
+    process.env.OPENID_ISSUER = ISSUER;
+    process.env.OPENID_CLIENT_ID = CLIENT;
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ jwks_uri: `${ISSUER}/v1/iam/.well-known/jwks` }),
     });
-    mockGetSigningKey.mockImplementation((kid, cb) => cb(null, { getPublicKey: () => 'PUBKEY' }));
-  });
-
-  afterEach(() => {
-    delete process.env.OPENID_ISSUER;
-  });
-
-  it('throws on a missing token', async () => {
-    await expect(verifyIamToken('')).rejects.toThrow('missing token');
-  });
-
-  it('returns claims for a valid, correctly-issued token', async () => {
-    mockVerify.mockImplementation((token, key, opts, cb) =>
-      cb(null, { sub: 'hanzo/alice', iss: 'https://hanzo.id', email: 'alice@hanzo.ai' }),
+    mockGetSigningKey.mockImplementation((kid, cb) =>
+      cb(null, { getPublicKey: () => publicKey.export({ type: 'spki', format: 'pem' }) }),
     );
-    const claims = await verifyIamToken('good.token');
+  });
+
+  it('accepts a token this app was issued', async () => {
+    const claims = await verifyIamToken(sign({}));
     expect(claims.sub).toBe('hanzo/alice');
-    // RS256 only, JWKS-backed key resolver used.
-    expect(mockVerify).toHaveBeenCalledWith(
-      'good.token',
-      expect.any(Function),
-      expect.objectContaining({ algorithms: ['RS256'] }),
-      expect.any(Function),
-    );
   });
 
-  it('rejects a token whose issuer does not match OPENID_ISSUER', async () => {
-    mockVerify.mockImplementation((token, key, opts, cb) =>
-      cb(null, { sub: 'hanzo/eve', iss: 'https://evil.example' }),
-    );
-    await expect(verifyIamToken('forged.iss')).rejects.toThrow('unexpected token issuer');
+  it('accepts the org-scoped audience IAM mints for a shared application', async () => {
+    const claims = await verifyIamToken(sign({ aud: `${CLIENT}-org-hanzo` }));
+    expect(claims.sub).toBe('hanzo/alice');
   });
 
-  it('accepts a trailing-slash issuer variant (normalized)', async () => {
-    process.env.OPENID_ISSUER = 'https://hanzo.id/';
-    mockVerify.mockImplementation((token, key, opts, cb) =>
-      cb(null, { sub: 'hanzo/al', iss: 'https://hanzo.id' }),
-    );
-    const claims = await verifyIamToken('ok.token');
-    expect(claims.sub).toBe('hanzo/al');
+  it('refuses a token addressed to another Hanzo app', async () => {
+    await expect(verifyIamToken(sign({ aud: 'hanzo-app' }))).rejects.toThrow();
   });
 
-  it('propagates a signature-verification failure', async () => {
-    mockVerify.mockImplementation((token, key, opts, cb) => cb(new Error('invalid signature')));
-    await expect(verifyIamToken('bad.sig')).rejects.toThrow('invalid signature');
+  it('refuses an app whose name merely starts the same', async () => {
+    await expect(verifyIamToken(sign({ aud: 'hanzo-chat-admin' }))).rejects.toThrow();
+  });
+
+  it('refuses another issuer', async () => {
+    await expect(verifyIamToken(sign({ iss: 'https://evil.example' }))).rejects.toThrow();
+  });
+
+  it('refuses a token signed by someone else', async () => {
+    const other = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey;
+    await expect(verifyIamToken(sign({}, other))).rejects.toThrow();
+  });
+
+  it('refuses an expired token', async () => {
+    const expired = jwt.sign({ sub: 'hanzo/alice', iss: ISSUER, aud: CLIENT }, privateKey, {
+      algorithm: 'RS256',
+      expiresIn: '-1s',
+      keyid: 'k1',
+    });
+    await expect(verifyIamToken(expired)).rejects.toThrow();
+  });
+
+  it('refuses nothing at all', async () => {
+    await expect(verifyIamToken(undefined)).rejects.toThrow('missing token');
   });
 });
