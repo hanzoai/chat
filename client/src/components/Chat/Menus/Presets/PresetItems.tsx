@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { Close } from '@radix-ui/react-popover';
+import { PopoverClose } from '@hanzo/ui/primitives/PopoverClose';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { getEndpointField } from '@hanzochat/data-provider';
 import {
@@ -138,7 +138,12 @@ const PresetItems: FC<{
             const Icon = icons[iconKey];
 
             return (
-              <Close asChild key={`preset-${presetId}`}>
+              /* `except-style`: gui's Close is a YStack, so a bare `asChild`
+               * would merge a flex column onto this wrapper. Radix's Close
+               * styled nothing. The child is a host element, so gui's `onPress`
+               * is remapped to `onClick` and the row still dismisses the menu
+               * when a preset is chosen. */
+              <PopoverClose asChild="except-style" key={`preset-${presetId}`}>
                 <div key={`preset-${presetId}`}>
                   <Flipped flipId={presetId}>
                     <MenuItem
@@ -247,7 +252,7 @@ const PresetItems: FC<{
                   </Flipped>
                   {i !== presets.length - 1 && <MenuSeparator />}
                 </div>
-              </Close>
+              </PopoverClose>
             );
           })}
       </Flipper>
