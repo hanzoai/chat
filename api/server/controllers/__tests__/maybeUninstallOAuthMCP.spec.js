@@ -71,15 +71,6 @@ jest.mock('~/server/services/PluginService', () => ({
   deleteUserPluginAuth: jest.fn(),
 }));
 
-jest.mock('~/server/services/twoFactorService', () => ({
-  verifyOTPOrBackupCode: jest.fn(),
-}));
-
-jest.mock('~/server/services/AuthService', () => ({
-  verifyEmail: jest.fn(),
-  resendVerificationEmail: jest.fn(),
-}));
-
 jest.mock('~/server/services/Config/getCachedTools', () => ({
   invalidateCachedTools: jest.fn(),
 }));

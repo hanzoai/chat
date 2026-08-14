@@ -1,10 +1,11 @@
 /**
  * Integration test for the guest chat middleware chain composition:
  * guest auth -> scope enforcement -> quota, plus the reserved-subpath guard
- * that keeps management routes (abort/active/...) on the JWT-only parent router.
+ * that keeps management routes (abort/active/...) on the identified parent
+ * router. A guest carries no Authorization header at all — that absence is what
+ * makes them a guest.
  */
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const request = require('supertest');
 
 jest.mock('@hanzochat/data-schemas', () => ({
@@ -26,6 +27,11 @@ jest.mock('~/server/utils', () => ({
     req.headers['cf-connecting-ip'] || req.headers['x-test-ip'] || req.ip,
 }));
 
+jest.mock(
+  '~/server/utils/guestClientIp',
+  () => (req) => req.headers['cf-connecting-ip'] || req.headers['x-test-ip'] || req.ip,
+);
+
 jest.mock('../requireJwtAuth', () =>
   jest.fn((req, res, next) => {
     req.user = { id: 'real-user', role: 'USER' };
@@ -36,8 +42,6 @@ jest.mock('../requireJwtAuth', () =>
 const requireGuestOrJwtAuth = require('../requireGuestOrJwtAuth');
 const enforceGuestScope = require('../enforceGuestScope');
 const { guestMessageLimiter } = require('../limiters/guestMessageLimiter');
-
-const JWT_SECRET = 'test-guest-secret';
 
 const buildRouter = () => {
   const router = express.Router();
@@ -76,11 +80,8 @@ const buildApp = () => {
   return app;
 };
 
-const guestToken = () => jwt.sign({ id: 'guest_1', guest: true, role: 'GUEST' }, JWT_SECRET);
-
 describe('guest chat middleware chain', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = JWT_SECRET;
     process.env.ALLOW_GUEST_CHAT = 'true';
     process.env.GUEST_MESSAGE_MAX = '2';
     process.env.GUEST_ENDPOINT = 'Hanzo';
@@ -97,7 +98,6 @@ describe('guest chat middleware chain', () => {
   it('lets a guest reach the completion route, pinned to the free endpoint/model', async () => {
     const res = await request(buildApp())
       .post('/v1/chat/agents/chat')
-      .set('Authorization', `Bearer ${guestToken()}`)
       .set('x-test-ip', '10.1.0.1')
       .send({ endpoint: 'Hanzo', model: 'zen3-nano', text: 'hi' });
     expect(res.status).toBe(200);
@@ -110,7 +110,6 @@ describe('guest chat middleware chain', () => {
     const send = () =>
       request(app)
         .post('/v1/chat/agents/chat')
-        .set('Authorization', `Bearer ${guestToken()}`)
         .set('x-test-ip', ip)
         .send({ endpoint: 'Hanzo', model: 'zen3-nano', text: 'hi' });
 
@@ -121,10 +120,9 @@ describe('guest chat middleware chain', () => {
     expect(blocked.body.type).toBe('GUEST_LIMIT');
   });
 
-  it('routes reserved /chat/abort to the JWT-only handler, not the guest router', async () => {
+  it('routes reserved /chat/abort to the identified handler, not the guest router', async () => {
     const res = await request(buildApp())
       .post('/v1/chat/agents/chat/abort')
-      .set('Authorization', `Bearer ${guestToken()}`)
       .set('x-test-ip', '10.1.0.3')
       .send({ streamId: 'x' });
     // requireJwtAuth mock forces a real USER; guest never reaches abort.

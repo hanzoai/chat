@@ -21,12 +21,10 @@ function upstreamMessage(status, signedIn) {
   if (status === 401 && !signedIn) {
     return 'Sign in with Hanzo to search — your Hanzo account funds this request.';
   }
-  // A 401 for a caller who still HOLDS a session means the forwarded IAM bearer is
-  // dead and could not be renewed — renewal already ran on the way in
-  // (services/iamBearerRefresh.js `currentBearer`, called by this route and by the
-  // agents router), and a refused renewal DELETES the refresh credential from the
-  // session. So nothing in the session can recover it and the only cure is a new
-  // sign-in.
+  // A 401 for a caller who still HOLDS a token means IAM refused it, and the
+  // browser has already tried to renew it with IAM's refresh grant before the
+  // request was ever sent. So nothing on this side can recover it and the only
+  // cure is a new sign-in.
   //
   // This used to say "reload the page and try again", from a time when there was no
   // durable refresh and a reload genuinely re-authenticated from scratch. Once

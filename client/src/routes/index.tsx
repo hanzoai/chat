@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom';
-import { Login, VerifyEmail, ApiErrorWatcher, TwoFactorScreen } from '~/components/Auth';
+import { Login, ApiErrorWatcher } from '~/components/Auth';
 import OAuthCallback from '~/components/Auth/OAuthCallback';
 import { MarketplaceProvider } from '~/components/Agents/MarketplaceContext';
 import AgentMarketplace from '~/components/Agents/Marketplace';
@@ -80,11 +80,6 @@ export const router = createBrowserRouter(
       ],
     },
     {
-      path: 'verify',
-      element: <VerifyEmail />,
-      errorElement: <RouteErrorBoundary />,
-    },
-    {
       element: <AuthLayout />,
       errorElement: <RouteErrorBoundary />,
       children: [
@@ -95,10 +90,6 @@ export const router = createBrowserRouter(
             {
               path: 'login',
               element: <Login />,
-            },
-            {
-              path: 'login/2fa',
-              element: <TwoFactorScreen />,
             },
           ],
         },

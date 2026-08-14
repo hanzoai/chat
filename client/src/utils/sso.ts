@@ -50,12 +50,11 @@ import { getHanzoIamSdk } from '~/utils/iam';
 const PROBED = 'hanzo.sso.probed';
 
 /**
- * `sessionStorage`, matching the scope `useGuestAuth` already uses: the tab is
- * the visit. "Is anyone signed in?" is a question whose answer CHANGES — someone
- * signs in at hanzo.id in another tab and comes back — so pinning the first
- * answer in `localStorage` would mean a browser that answered "no" once answers
- * "no" forever, which is the bug this file exists to fix, merely deferred. Per
- * visit it costs one redirect and then self-heals.
+ * `sessionStorage`: the tab is the visit. "Is anyone signed in?" is a question
+ * whose answer CHANGES — someone signs in at hanzo.id in another tab and comes
+ * back — so pinning the first answer in `localStorage` would mean a browser that
+ * answered "no" once answers "no" forever, which is the bug this file exists to
+ * fix, merely deferred. Per visit it costs one redirect and then self-heals.
  */
 function store(): Storage | null {
   try {

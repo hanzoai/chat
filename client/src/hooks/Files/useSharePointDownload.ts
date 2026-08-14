@@ -2,7 +2,12 @@ import { useCallback, useState } from 'react';
 import { useToastContext } from '@hanzochat/client';
 import type { SharePointFile, SharePointBatchProgress } from '~/data-provider/Files';
 import { useSharePointBatchDownload } from '~/data-provider/Files';
-import useSharePointToken from './useSharePointToken';
+
+/**
+ * Downloading from SharePoint spends a Microsoft Graph access token. Chat has
+ * no source for one, so every download reports the token as missing.
+ */
+const graphToken: { access_token: string } | undefined = undefined;
 
 interface UseSharePointDownloadProps {
   onFilesDownloaded?: (files: File[]) => void | Promise<void>;
@@ -24,11 +29,6 @@ export default function useSharePointDownload({
   const [downloadProgress, setDownloadProgress] = useState<SharePointBatchProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { token, refetch: refetchToken } = useSharePointToken({
-    enabled: false,
-    purpose: 'Download',
-  });
-
   const batchDownloadMutation = useSharePointBatchDownload();
 
   const downloadSharePointFiles = useCallback(
@@ -41,20 +41,9 @@ export default function useSharePointDownload({
       setDownloadProgress({ completed: 0, total: files.length, failed: [] });
 
       try {
-        let accessToken = token?.access_token;
+        const accessToken = graphToken?.access_token;
         if (!accessToken) {
-          showToast({
-            message: 'Getting SharePoint access token...',
-            status: 'info',
-            duration: 2000,
-          });
-
-          const tokenResult = await refetchToken();
-          accessToken = tokenResult.data?.access_token;
-
-          if (!accessToken) {
-            throw new Error('Failed to obtain SharePoint access token');
-          }
+          throw new Error('No SharePoint access token available');
         }
 
         showToast({
@@ -117,7 +106,7 @@ export default function useSharePointDownload({
         throw error;
       }
     },
-    [token, showToast, batchDownloadMutation, onFilesDownloaded, onError, refetchToken],
+    [showToast, batchDownloadMutation, onFilesDownloaded, onError],
   );
 
   return {

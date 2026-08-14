@@ -38,10 +38,10 @@ const IAM_ORIGIN = (() => {
  * — a `prompt=none` authorize in a HIDDEN IFRAME. That flow is gone: hanzo.id
  * answers `frame-ancestors 'none'` + `X-Frame-Options: DENY` on every route
  * including `/login/oauth/authorize`, so the IdP refuses to be framed by anyone
- * and no relying-party CSP can change that. Chat now signs in by interactive
- * redirect only, and renews the forwarded bearer server-side
- * (services/iamBearerRefresh.js `currentBearer`) — which is what actually keeps a
- * signed-in session answering. Do not re-add the origin without a flow that uses it.
+ * and no relying-party CSP can change that. Chat signs in by interactive redirect
+ * only, and the browser renews its own token with IAM's refresh grant — which is
+ * what actually keeps a signed-in visitor answering. Do not re-add the origin
+ * without a flow that uses it.
  *
  * `frame-ancestors 'self'` (with `X-Frame-Options: SAMEORIGIN`) refuses framing by
  * any other origin; same-origin is needed for the silent.mp3 audio unlock iframe.

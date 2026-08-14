@@ -2,12 +2,7 @@ import React from 'react';
 
 jest.mock('~/components/Auth', () => ({
   Login: () => null,
-  VerifyEmail: () => null,
-  Registration: () => null,
-  ResetPassword: () => null,
   ApiErrorWatcher: () => null,
-  TwoFactorScreen: () => null,
-  RequestPasswordReset: () => null,
 }));
 
 jest.mock('~/components/Agents/MarketplaceContext', () => ({

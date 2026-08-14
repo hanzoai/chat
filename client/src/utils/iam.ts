@@ -10,6 +10,7 @@
 // constructor config (serverUrl, clientId, redirectUri, scope, proxyBaseUrl) is
 // unchanged from the earlier `BrowserIamSdk` name.
 import { IAM } from '@hanzo/iam';
+import { setTokenRenewer } from '@hanzochat/data-provider';
 
 let instance: IAM | null = null;
 
@@ -109,9 +110,24 @@ export function getHanzoIamSdk(): IAM {
     clientId: CLIENT_ID,
     organization: ORGANIZATION,
     redirectUri: `${window.location.origin}/auth/callback`,
-    scope: 'openid profile email',
+    /**
+     * `offline_access` is what makes a session outlive its access token.
+     *
+     * IAM issues a refresh token only when it is asked for one, and without it
+     * the only way past an expiry is a full redirect to the issuer — a page
+     * navigation in the middle of whatever someone was typing. With it, the SDK
+     * renews in place and the visit is uninterrupted.
+     */
+    scope: 'openid profile email offline_access',
     proxyBaseUrl: import.meta.env.VITE_HANZO_API_URL || undefined,
   });
+
+  /**
+   * Teach the request layer how to get a fresh bearer. It knows when one is
+   * refused; IAM is what can issue another. Installed here so there is exactly
+   * one renewal path, and it is the SDK's.
+   */
+  setTokenRenewer(() => instance!.getValidAccessToken());
 
   return instance;
 }

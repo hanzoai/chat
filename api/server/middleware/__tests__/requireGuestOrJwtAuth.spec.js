@@ -1,5 +1,3 @@
-const jwt = require('jsonwebtoken');
-
 jest.mock('@hanzochat/data-schemas', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), debug: jest.fn(), info: jest.fn() },
 }));
@@ -17,17 +15,17 @@ jest.mock('../requireJwtAuth', () => jest.fn((req, res, next) => next('jwt-fallb
 const requireJwtAuth = require('../requireJwtAuth');
 const requireGuestOrJwtAuth = require('../requireGuestOrJwtAuth');
 
-const JWT_SECRET = 'test-guest-secret';
-
 const mockRes = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() });
 
-const guestToken = (claims = {}) =>
-  jwt.sign({ id: 'guest_abc', guest: true, role: 'GUEST', ...claims }, JWT_SECRET);
-
+/**
+ * A guest holds nothing. That is the whole design, and these tests pin both
+ * halves of it: no bearer means an anonymous visitor, and a bearer — any bearer
+ * — means IAM decides. There is no third case, because there is no longer a
+ * credential this app issues that could be presented here.
+ */
 describe('requireGuestOrJwtAuth', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.JWT_SECRET = JWT_SECRET;
     process.env.ALLOW_GUEST_CHAT = 'true';
   });
 
@@ -35,59 +33,44 @@ describe('requireGuestOrJwtAuth', () => {
     delete process.env.ALLOW_GUEST_CHAT;
   });
 
-  it('delegates to requireJwtAuth when guest chat is disabled', () => {
-    process.env.ALLOW_GUEST_CHAT = 'false';
-    const req = { headers: { authorization: `Bearer ${guestToken()}` } };
+  const run = (headers) => {
+    const req = { headers };
     const next = jest.fn();
     requireGuestOrJwtAuth(req, mockRes(), next);
-    expect(requireJwtAuth).toHaveBeenCalledTimes(1);
-    expect(req.user).toBeUndefined();
-  });
+    return { req, next };
+  };
 
-  it('authenticates a valid guest token as an ephemeral GUEST principal', () => {
-    const req = { headers: { authorization: `Bearer ${guestToken()}` } };
-    const next = jest.fn();
-    requireGuestOrJwtAuth(req, mockRes(), next);
+  it('admits a visitor carrying nothing as an anonymous guest', () => {
+    const { req, next } = run({});
     expect(requireJwtAuth).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith();
-    expect(req.user).toEqual({ id: 'guest_abc', role: 'GUEST', name: 'Guest', guest: true });
+    expect(req.user).toMatchObject({ role: 'GUEST', name: 'Guest', guest: true });
   });
 
-  it('delegates to requireJwtAuth when no bearer token is present', () => {
-    const req = { headers: {} };
-    requireGuestOrJwtAuth(req, mockRes(), jest.fn());
+  it('gives that guest a stable id, so they can read back their own reply', () => {
+    const headers = { 'cf-connecting-ip': '203.0.113.7' };
+    expect(run(headers).req.user.id).toBe(run(headers).req.user.id);
+  });
+
+  it('tells two visitors apart', () => {
+    expect(run({ 'cf-connecting-ip': '203.0.113.7' }).req.user.id).not.toBe(
+      run({ 'cf-connecting-ip': '198.51.100.4' }).req.user.id,
+    );
+  });
+
+  it('keeps the visitor address out of the id it hands around', () => {
+    expect(run({ 'cf-connecting-ip': '203.0.113.7' }).req.user.id).not.toContain('203.0.113.7');
+  });
+
+  it('sends anyone presenting a bearer to IAM', () => {
+    const { req } = run({ authorization: 'Bearer some-iam-token' });
     expect(requireJwtAuth).toHaveBeenCalledTimes(1);
     expect(req.user).toBeUndefined();
   });
 
-  it('delegates to requireJwtAuth for a non-guest (regular) JWT', () => {
-    const userToken = jwt.sign({ id: 'real-user' }, JWT_SECRET);
-    const req = { headers: { authorization: `Bearer ${userToken}` } };
-    requireGuestOrJwtAuth(req, mockRes(), jest.fn());
-    expect(requireJwtAuth).toHaveBeenCalledTimes(1);
-    expect(req.user).toBeUndefined();
-  });
-
-  it('delegates to requireJwtAuth for a token signed with the wrong secret (fail closed)', () => {
-    const forged = jwt.sign({ id: 'guest_x', guest: true }, 'wrong-secret');
-    const req = { headers: { authorization: `Bearer ${forged}` } };
-    requireGuestOrJwtAuth(req, mockRes(), jest.fn());
-    expect(requireJwtAuth).toHaveBeenCalledTimes(1);
-    expect(req.user).toBeUndefined();
-  });
-
-  it('delegates to requireJwtAuth when guest claim is missing', () => {
-    const token = jwt.sign({ id: 'guest_x' }, JWT_SECRET);
-    const req = { headers: { authorization: `Bearer ${token}` } };
-    requireGuestOrJwtAuth(req, mockRes(), jest.fn());
-    expect(requireJwtAuth).toHaveBeenCalledTimes(1);
-    expect(req.user).toBeUndefined();
-  });
-
-  it('delegates to requireJwtAuth when guest token lacks an id', () => {
-    const token = jwt.sign({ guest: true }, JWT_SECRET);
-    const req = { headers: { authorization: `Bearer ${token}` } };
-    requireGuestOrJwtAuth(req, mockRes(), jest.fn());
+  it('requires an identity of everyone when guest chat is off', () => {
+    process.env.ALLOW_GUEST_CHAT = 'false';
+    const { req } = run({});
     expect(requireJwtAuth).toHaveBeenCalledTimes(1);
     expect(req.user).toBeUndefined();
   });

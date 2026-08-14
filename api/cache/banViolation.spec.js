@@ -2,12 +2,6 @@ const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const banViolation = require('./banViolation');
 
-// Mock deleteAllUserSessions since we're testing ban logic, not session deletion
-jest.mock('~/models', () => ({
-  ...jest.requireActual('~/models'),
-  deleteAllUserSessions: jest.fn().mockResolvedValue(true),
-}));
-
 describe('banViolation', () => {
   let mongoServer;
   let req, res, errorMessage;
@@ -24,15 +18,8 @@ describe('banViolation', () => {
   });
 
   beforeEach(() => {
-    req = {
-      ip: '127.0.0.1',
-      cookies: {
-        refreshToken: 'someToken',
-      },
-    };
-    res = {
-      clearCookie: jest.fn(),
-    };
+    req = { ip: '127.0.0.1' };
+    res = {};
     errorMessage = {
       type: 'someViolation',
       user_id: new mongoose.Types.ObjectId().toString(), // Use valid ObjectId
@@ -95,14 +82,6 @@ describe('banViolation', () => {
     errorMessage.violation_count = 39;
     await banViolation(req, res, errorMessage);
     expect(errorMessage.ban).toBeTruthy();
-  });
-
-  it('should not ban if BAN_DURATION is 0 but should clear cookies', async () => {
-    process.env.BAN_DURATION = '0';
-    errorMessage.prev_count = 19;
-    errorMessage.violation_count = 39;
-    await banViolation(req, res, errorMessage);
-    expect(res.clearCookie).toHaveBeenCalledWith('refreshToken');
   });
 
   it('should not ban if violation_count does not change', async () => {

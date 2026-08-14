@@ -12,7 +12,6 @@ const {
   guestMessageLimiter,
   requireGuestOrJwtAuth,
 } = require('~/server/middleware');
-const { currentBearer } = require('~/server/services/iamBearerRefresh');
 const { saveMessage } = require('~/models');
 const openai = require('./openai');
 const responses = require('./responses');
@@ -67,34 +66,6 @@ chatRouter.use((req, res, next) => {
   return next();
 });
 chatRouter.use(requireGuestOrJwtAuth);
-/**
- * Leave the session holding a CURRENT on-behalf-of bearer before the completion
- * runs.
- *
- * `custom/initialize.ts` selects the bearer with `resolveTenantBearer`, a pure
- * selector that returns null the moment the forwarded id_token passes its ~1h
- * expiry — and it had no way to renew one, because renewal needs the OIDC client
- * config that lives in this app layer, not in `packages/api`. The refresh
- * credential was therefore sitting unspent in the session while every ordinary
- * message failed; `/v1/chat/ask` composed the same two halves itself and kept
- * working, which is exactly how the two paths drifted apart.
- *
- * So the renewal happens HERE, once, against the same `req` the controller hands
- * down, and the selector downstream is left untouched. `currentBearer` is the ONE
- * composition (services/iamBearerRefresh.js) that `/v1/chat/ask` also uses. Cheap
- * and inert for anyone it does not apply to: a guest or a local user is not an
- * `openid` principal, so selection returns null and renewal finds no credential.
- * Never fatal — a refused renewal falls through to the honest refusal the
- * completion path already produces.
- */
-chatRouter.use(async (req, _res, next) => {
-  try {
-    await currentBearer(req);
-  } catch (err) {
-    logger.debug('[agents/chat] bearer renewal skipped', { message: err?.message });
-  }
-  next();
-});
 chatRouter.use(checkBan);
 chatRouter.use(uaParser);
 chatRouter.use(configMiddleware);

@@ -1,10 +1,11 @@
+const { createHash } = require('node:crypto');
 const { isEnabled } = require('@hanzochat/api');
 const { EModelEndpoint } = require('@hanzochat/data-provider');
+const guestClientIp = require('~/server/utils/guestClientIp');
 
 const GUEST_ROLE = 'GUEST';
 const GUEST_NAME = 'Guest';
 const DEFAULT_GUEST_MESSAGE_MAX = 3;
-const DEFAULT_GUEST_TOKEN_EXPIRY_MS = 60 * 60 * 1000;
 const DEFAULT_GUEST_ENDPOINT = 'Hanzo';
 const DEFAULT_GUEST_MODEL = 'zen5-flash';
 
@@ -15,40 +16,44 @@ const DEFAULT_GUEST_MODEL = 'zen5-flash';
  * @returns {{
  *   enabled: boolean,
  *   messageMax: number,
- *   tokenExpiryMs: number,
  *   endpoint: string,
  *   model: string,
  * }}
  */
 const getGuestConfig = () => {
   const messageMax = Number.parseInt(process.env.GUEST_MESSAGE_MAX, 10);
-  const tokenExpiryMs = Number.parseInt(process.env.GUEST_TOKEN_EXPIRY, 10);
 
   return {
     enabled: isEnabled(process.env.ALLOW_GUEST_CHAT),
     messageMax:
       Number.isFinite(messageMax) && messageMax > 0 ? messageMax : DEFAULT_GUEST_MESSAGE_MAX,
-    tokenExpiryMs:
-      Number.isFinite(tokenExpiryMs) && tokenExpiryMs > 0
-        ? tokenExpiryMs
-        : DEFAULT_GUEST_TOKEN_EXPIRY_MS,
     endpoint: process.env.GUEST_ENDPOINT || DEFAULT_GUEST_ENDPOINT,
     model: process.env.GUEST_MODEL || DEFAULT_GUEST_MODEL,
   };
 };
 
 /**
- * Builds the ephemeral guest principal for a verified guest token.
+ * Builds the ephemeral guest principal for an anonymous request.
  *
  * This is the SINGLE source of truth for the guest `req.user` shape. It is a
  * plain object — never a DB document — so no route ever reads or writes real
  * user data on behalf of a guest. No email, no DB id.
  *
- * @param {string} id - The synthetic guest id from the token (`guest_<uuid>`).
+ * The id is derived from the visitor's address rather than handed to them,
+ * because a guest holds no credential to present. It has to be STABLE for the
+ * length of one exchange: a generation job records the principal that started
+ * it, and the reader subscribes to that job on a second request. A fresh id per
+ * request would 403 every guest off their own reply.
+ *
+ * The address is hashed, not stored: the id travels into job metadata and log
+ * lines, and an address in either is a record of who visited that nothing here
+ * needs. A digest keys the same request to the same guest without keeping that.
+ *
+ * @param {import('express').Request} req
  * @returns {{ id: string, role: string, name: string, guest: true }}
  */
-const buildGuestPrincipal = (id) => ({
-  id,
+const buildGuestPrincipal = (req) => ({
+  id: `guest_${createHash('sha256').update(guestClientIp(req)).digest('hex').slice(0, 32)}`,
   role: GUEST_ROLE,
   name: GUEST_NAME,
   guest: true,
@@ -112,7 +117,6 @@ module.exports = {
   GUEST_ROLE,
   GUEST_NAME,
   DEFAULT_GUEST_MESSAGE_MAX,
-  DEFAULT_GUEST_TOKEN_EXPIRY_MS,
   DEFAULT_GUEST_ENDPOINT,
   DEFAULT_GUEST_MODEL,
 };

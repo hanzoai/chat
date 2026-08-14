@@ -23,16 +23,9 @@ export function revokeAllUserKeys(): Promise<unknown> {
   return request.delete(endpoints.revokeAllUserKeys());
 }
 
-/**
- * Delete the signed-in account. An account with 2FA proves it again here — the
- * server refuses without a factor, because a live session alone is not enough
- * to authorize something irreversible.
- */
-export function deleteUser(secondFactor?: {
-  token?: string;
-  backupCode?: string;
-}): Promise<s.TPreset> {
-  return request.deleteWithOptions(endpoints.deleteUser(), { data: secondFactor });
+/** Delete the signed-in account. */
+export function deleteUser(): Promise<s.TPreset> {
+  return request.delete(endpoints.deleteUser());
 }
 
 export type FavoriteItem = {
@@ -155,48 +148,8 @@ export const updateTokenCount = (text: string) => {
   return request.post(endpoints.tokenizer(), { arg: text });
 };
 
-export const login = (payload: t.TLoginUser): Promise<t.TLoginResponse> => {
-  return request.post(endpoints.login(), payload);
-};
-
-export const logout = (): Promise<m.TLogoutResponse> => {
-  return request.post(endpoints.logout());
-};
-
-export const getGuestToken = (): Promise<t.TGuestTokenResponse> => {
-  return request.post(endpoints.guestToken());
-};
-
-export const register = (payload: t.TRegisterUser) => {
-  return request.post(endpoints.register(), payload);
-};
-
 export const userKeyQuery = (name: string): Promise<t.TCheckUserKeyResponse> =>
   request.get(endpoints.userKeyQuery(name));
-
-export const getLoginGoogle = () => {
-  return request.get(endpoints.loginGoogle());
-};
-
-export const requestPasswordReset = (
-  payload: t.TRequestPasswordReset,
-): Promise<t.TRequestPasswordResetResponse> => {
-  return request.post(endpoints.requestPasswordReset(), payload);
-};
-
-export const resetPassword = (payload: t.TResetPassword) => {
-  return request.post(endpoints.resetPassword(), payload);
-};
-
-export const verifyEmail = (payload: t.TVerifyEmail): Promise<t.VerifyEmailResponse> => {
-  return request.post(endpoints.verifyEmail(), payload);
-};
-
-export const resendVerificationEmail = (
-  payload: t.TResendVerificationEmail,
-): Promise<t.VerifyEmailResponse> => {
-  return request.post(endpoints.resendVerificationEmail(), payload);
-};
 
 export const getAvailablePlugins = (): Promise<s.TPlugin[]> => {
   return request.get(endpoints.plugins());
@@ -1015,33 +968,6 @@ export function updateFeedback(
   return request.put(endpoints.feedback(conversationId, messageId), payload);
 }
 
-// 2FA
-export function enableTwoFactor(): Promise<t.TEnable2FAResponse> {
-  return request.get(endpoints.enableTwoFactor());
-}
-
-export function verifyTwoFactor(payload: t.TVerify2FARequest): Promise<t.TVerify2FAResponse> {
-  return request.post(endpoints.verifyTwoFactor(), payload);
-}
-
-export function confirmTwoFactor(payload: t.TVerify2FARequest): Promise<t.TVerify2FAResponse> {
-  return request.post(endpoints.confirmTwoFactor(), payload);
-}
-
-export function disableTwoFactor(payload?: t.TDisable2FARequest): Promise<t.TDisable2FAResponse> {
-  return request.post(endpoints.disableTwoFactor(), payload);
-}
-
-export function regenerateBackupCodes(): Promise<t.TRegenerateBackupCodesResponse> {
-  return request.post(endpoints.regenerateBackupCodes());
-}
-
-export function verifyTwoFactorTemp(
-  payload: t.TVerify2FATempRequest,
-): Promise<t.TVerify2FATempResponse> {
-  return request.post(endpoints.verifyTwoFactorTemp(), payload);
-}
-
 /* Memories */
 export const getMemories = (): Promise<q.MemoriesResponse> => {
   return request.get(endpoints.memories());
@@ -1110,11 +1036,6 @@ export function getAllEffectivePermissions(
   resourceType: permissions.ResourceType,
 ): Promise<permissions.TAllEffectivePermissionsResponse> {
   return request.get(endpoints.getAllEffectivePermissions(resourceType));
-}
-
-// SharePoint Graph API Token
-export function getGraphApiToken(params: q.GraphTokenParams): Promise<q.GraphTokenResponse> {
-  return request.get(endpoints.graphToken(params.scopes));
 }
 
 export function getDomainServerBaseUrl(): string {
