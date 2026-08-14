@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAtom } from 'jotai';
-import * as Tabs from '@radix-ui/react-tabs';
+import { Tabs } from '@hanzo/ui/primitives/Tabs';
+import { TabsList } from '@hanzo/ui/primitives/TabsList';
+import { TabsTrigger } from '@hanzo/ui/primitives/TabsTrigger';
+import { TabsContent } from '@hanzo/ui/primitives/TabsContent';
 import { Lightbulb, Cog } from 'lucide-react';
 import { useOnClickOutside, useMediaQuery } from '@hanzochat/client';
 import { useGetCustomConfigSpeechQuery } from '@hanzochat/data-provider/react-query';
@@ -148,15 +151,28 @@ function Speech() {
   useOnClickOutside(contentRef, () => confirmClear && setConfirmClear(false), []);
 
   return (
-    <Tabs.Root
+    <Tabs
       defaultValue={'simple'}
       orientation="horizontal"
       value={advancedMode ? 'advanced' : 'simple'}
+      onValueChange={(value) => setAdvancedMode(value === 'advanced')}
+      gap={0}
     >
       <div className="sticky -top-1 z-50 mb-4 bg-white dark:bg-gray-700">
-        <Tabs.List className="flex justify-center bg-background">
-          <Tabs.Trigger
-            onClick={() => setAdvancedMode(false)}
+        {/* TabsList and TabsTrigger paint a pill before they spread, and gui's
+            runtime sheet is appended after the Tailwind sheet, so at equal
+            specificity its values beat the classes below. Each style prop here
+            restates the class it would otherwise silently replace; the ones set
+            to 0/auto undo a value this surface never asked for. */}
+        <TabsList
+          className="flex justify-center bg-background"
+          height="auto"
+          p={0}
+          gap={0}
+          rounded={0}
+          bg="var(--background)"
+        >
+          <TabsTrigger
             className={cn(
               'group m-1 flex items-center justify-center gap-2 bg-transparent px-4 py-2 text-sm text-text-secondary transition-all duration-200 ease-in-out radix-state-active:bg-secondary radix-state-active:text-foreground radix-state-active:shadow-lg',
               isSmallScreen ? 'flex-row rounded-lg' : 'rounded-xl',
@@ -164,12 +180,18 @@ function Speech() {
             )}
             value="simple"
             style={{ userSelect: 'none' }}
+            flexDirection="row"
+            height="auto"
+            px={16}
+            gap={8}
+            rounded={isSmallScreen ? 8 : 12}
+            hoverStyle={{}}
+            focusStyle={{}}
           >
             <Lightbulb aria-hidden="true" />
-            {localize('com_ui_simple')}
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            onClick={() => setAdvancedMode(true)}
+            <span>{localize('com_ui_simple')}</span>
+          </TabsTrigger>
+          <TabsTrigger
             className={cn(
               'group m-1 flex items-center justify-center gap-2 bg-transparent px-4 py-2 text-sm text-text-secondary transition-all duration-200 ease-in-out radix-state-active:bg-secondary radix-state-active:text-foreground radix-state-active:shadow-lg',
               isSmallScreen ? 'flex-row rounded-lg' : 'rounded-xl',
@@ -177,14 +199,21 @@ function Speech() {
             )}
             value="advanced"
             style={{ userSelect: 'none' }}
+            flexDirection="row"
+            height="auto"
+            px={16}
+            gap={8}
+            rounded={isSmallScreen ? 8 : 12}
+            hoverStyle={{}}
+            focusStyle={{}}
           >
             <Cog aria-hidden="true" />
-            {localize('com_ui_advanced')}
-          </Tabs.Trigger>
-        </Tabs.List>
+            <span>{localize('com_ui_advanced')}</span>
+          </TabsTrigger>
+        </TabsList>
       </div>
 
-      <Tabs.Content value={'simple'} tabIndex={-1}>
+      <TabsContent value={'simple'} tabIndex={-1}>
         <div className="flex flex-col gap-3 text-sm text-text-primary">
           <SpeechToTextSwitch />
           <EngineSTTDropdown external={sttExternal} />
@@ -194,9 +223,9 @@ function Speech() {
           <EngineTTSDropdown external={ttsExternal} />
           <VoiceDropdown />
         </div>
-      </Tabs.Content>
+      </TabsContent>
 
-      <Tabs.Content value={'advanced'} tabIndex={-1}>
+      <TabsContent value={'advanced'} tabIndex={-1}>
         <div className="flex flex-col gap-3 text-sm text-text-primary">
           <ConversationModeSwitch />
           <div className="mt-2 h-px bg-border-medium" role="none" />
@@ -233,8 +262,8 @@ function Speech() {
           </div>
           <CacheTTSSwitch />
         </div>
-      </Tabs.Content>
-    </Tabs.Root>
+      </TabsContent>
+    </Tabs>
   );
 }
 
