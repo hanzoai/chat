@@ -127,7 +127,7 @@ function MultiSelectPop({
           <PopoverContent
             trapFocus={false}
             width="auto"
-            p={0}
+            padding={0}
             alignItems="stretch"
             className={cn(
               'mt-2 max-h-[52vh] min-w-full overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white',

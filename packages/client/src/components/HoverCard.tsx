@@ -61,7 +61,7 @@ const HoverCardContent = ({
       align={align}
       sideOffset={sideOffset}
       width={undefined}
-      bg={undefined}
+      backgroundColor={undefined}
       className={cn(
         // Two things left this list: the transform-origin utility that read a
         // Radix custom property, and the four side-keyed slide-in utilities.

@@ -109,7 +109,7 @@ export function AvatarMenu({
       sideOffset={5}
       trapFocus={false}
       width="auto"
-      p={0}
+      padding={0}
       alignItems="stretch"
     >
       <div
