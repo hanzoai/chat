@@ -132,7 +132,7 @@ function SelectDropDownPop({
             align="start"
             trapFocus={false}
             width="100%"
-            p={0}
+            padding={0}
             alignItems="stretch"
             className={cn(
               'z-50 mr-3 mt-2 max-h-[52vh] w-full max-w-[85vw] overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white sm:max-w-full lg:max-h-[52vh]',

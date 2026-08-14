@@ -167,10 +167,10 @@ function Speech() {
         <TabsList
           className="flex justify-center bg-background"
           height="auto"
-          p={0}
+          padding={0}
           gap={0}
-          rounded={0}
-          bg="var(--background)"
+          borderRadius={0}
+          backgroundColor="var(--background)"
         >
           <TabsTrigger
             className={cn(
@@ -182,9 +182,9 @@ function Speech() {
             style={{ userSelect: 'none' }}
             flexDirection="row"
             height="auto"
-            px={16}
+            paddingHorizontal={16}
             gap={8}
-            rounded={isSmallScreen ? 8 : 12}
+            borderRadius={isSmallScreen ? 8 : 12}
             hoverStyle={{}}
             focusStyle={{}}
           >
@@ -201,9 +201,9 @@ function Speech() {
             style={{ userSelect: 'none' }}
             flexDirection="row"
             height="auto"
-            px={16}
+            paddingHorizontal={16}
             gap={8}
-            rounded={isSmallScreen ? 8 : 12}
+            borderRadius={isSmallScreen ? 8 : 12}
             hoverStyle={{}}
             focusStyle={{}}
           >

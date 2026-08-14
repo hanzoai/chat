@@ -92,7 +92,7 @@ const PresetsMenu: FC = () => {
       <PopoverContent
         trapFocus={false}
         width="auto"
-        p={0}
+        padding={0}
         alignItems="stretch"
         className="mt-2 max-h-[495px] overflow-x-hidden rounded-lg border border-border-light bg-presentation text-text-primary shadow-lg md:min-w-[400px]"
       >

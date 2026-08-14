@@ -224,14 +224,14 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                     )}
                     onKeyDown={handleKeyDown}
                     flexDirection={isSmallScreen ? 'row' : 'column'}
-                    items="stretch"
-                    justify="flex-start"
-                    self="stretch"
+                    alignItems="stretch"
+                    justifyContent="flex-start"
+                    alignSelf="stretch"
                     height={isSmallScreen ? 'auto' : '100%'}
-                    p={0}
+                    padding={0}
                     gap={0}
-                    rounded={isSmallScreen ? 12 : 0}
-                    bg={isSmallScreen ? 'var(--surface-secondary)' : 'transparent'}
+                    borderRadius={isSmallScreen ? 12 : 0}
+                    backgroundColor={isSmallScreen ? 'var(--surface-secondary)' : 'transparent'}
                   >
                     {settingsTabs.map(({ value, icon, label }) => (
                       <TabsTrigger
@@ -248,10 +248,10 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                         }}
                         flexDirection="row"
                         height="auto"
-                        justify={isSmallScreen ? 'center' : 'flex-start'}
-                        px={isSmallScreen ? 12 : 8}
+                        justifyContent={isSmallScreen ? 'center' : 'flex-start'}
+                        paddingHorizontal={isSmallScreen ? 12 : 8}
                         gap={8}
-                        rounded={12}
+                        borderRadius={12}
                         hoverStyle={{}}
                         focusStyle={{}}
                       >
