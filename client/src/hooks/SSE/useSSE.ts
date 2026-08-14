@@ -10,6 +10,7 @@ import {
   createPayload,
   LocalStorageKeys,
   removeNullishValues,
+  renewBearer,
 } from '@hanzochat/data-provider';
 import type { TMessage, TPayload, TSubmission, EventSubmission } from '@hanzochat/data-provider';
 import { useAnalytics } from '@hanzo/event/react';
@@ -120,7 +121,11 @@ export default function useSSE(
 
     const sse = new SSE(payloadData.server, {
       payload: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      /* Only claim an identity when there is one — see useResumableSSE. */
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
 
     sse.addEventListener('attachment', (e: MessageEvent) => {
@@ -227,12 +232,11 @@ export default function useSSE(
       const responseCode = e.responseCode as number | undefined;
 
       if (responseCode === 401) {
-        /* token expired, refresh and retry */
+        /* IAM refused the token; ask it for a fresh one and retry */
         try {
-          const refreshResponse = await request.refreshToken();
-          const token = refreshResponse?.token ?? '';
+          const token = (await renewBearer()) ?? '';
           if (!token) {
-            throw new Error('Token refresh failed.');
+            throw new Error('Nothing left to renew.');
           }
           sse.headers = {
             'Content-Type': 'application/json',

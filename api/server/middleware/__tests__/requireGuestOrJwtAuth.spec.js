@@ -62,6 +62,16 @@ describe('requireGuestOrJwtAuth', () => {
     expect(run({ 'cf-connecting-ip': '203.0.113.7' }).req.user.id).not.toContain('203.0.113.7');
   });
 
+  it.each([['Bearer '], ['Bearer   ']])(
+    'treats %j as no credential, not as a claim to be somebody',
+    (authorization) => {
+      const { req, next } = run({ authorization });
+      expect(requireJwtAuth).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith();
+      expect(req.user).toMatchObject({ guest: true });
+    },
+  );
+
   it('sends anyone presenting a bearer to IAM', () => {
     const { req } = run({ authorization: 'Bearer some-iam-token' });
     expect(requireJwtAuth).toHaveBeenCalledTimes(1);
