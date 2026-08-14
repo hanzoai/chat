@@ -18,7 +18,13 @@ const { getGuestConfig, buildGuestPrincipal } = require('~/server/services/guest
  * @type {import('express').RequestHandler}
  */
 const requireGuestOrJwtAuth = (req, res, next) => {
-  const hasBearer = req.headers?.authorization?.startsWith('Bearer ');
+  /* An EMPTY bearer is not a claim to be anybody. A caller with no token can
+     still send the header — `Bearer ` with nothing after it — and reading that
+     as "presented a credential" sends a guest to IAM, which refuses them, which
+     is a guest locked out of the one surface built for them. Ask whether there
+     is a token, not whether there is a header. */
+  const header = req.headers?.authorization;
+  const hasBearer = header?.startsWith('Bearer ') && header.slice('Bearer '.length).trim() !== '';
   if (!hasBearer && getGuestConfig().enabled) {
     req.user = buildGuestPrincipal(req);
     return next();
