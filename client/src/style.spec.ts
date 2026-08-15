@@ -157,6 +157,8 @@ describe('the look, ratcheted', () => {
  */
 describe('the composer, one surface', () => {
   const css = read(path.join(CLIENT, 'style.css'));
+  /** The material itself — shared with hanzo.ai and hanzo.app. */
+  const pkg = read(require.resolve('@hanzo/composer/composer.css'));
 
   /** The declarations of the rule whose selector list ends with `selector`. */
   const block = (selector: string): string => {
@@ -198,7 +200,13 @@ describe('the composer, one surface', () => {
    */
   it('makes the prism the focus indicator instead', () => {
     expect(block('.hz-composer:focus-within::before')).toMatch(/conic-gradient/);
-    expect(block('.hz-composer:focus-within::after')).toMatch(/opacity/);
+    // The halo's lift is @hanzo/composer's, along with the ring and the sweep.
+    // Read the package rather than trusting it: this app removed `.field`'s own
+    // focus ring on the strength of the prism brightening, so a dependency that
+    // stopped brightening would leave the composer with NO focus indicator —
+    // a WCAG 2.4.7 failure that nothing in this repo would report.
+    expect(pkg).toMatch(/\.hz-composer:focus-within::after/);
+    expect(pkg).toMatch(/--hz-composer-glow-lift/);
   });
 
   /**
