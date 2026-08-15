@@ -48,6 +48,10 @@ jest.mock('../AnswerComposer', () => ({
   default: () => <div data-testid="search-composer" />,
 }));
 jest.mock('../AnswerView', () => ({ __esModule: true, default: () => null }));
+/** The offer itself is covered in `components/Free`; here it only has to BE here. */
+jest.mock('~/components/Free', () => ({
+  Notice: () => <div data-testid="free-offer" />,
+}));
 
 import AnswerEngine from '../AnswerEngine';
 
@@ -116,6 +120,31 @@ describe('AnswerEngine default mode', () => {
  * reappearing on the column, and that is a fact about the file. A render test
  * would pass just as happily with the cap restored on some ancestor.
  */
+/**
+ * A refused turn has to have somewhere to land on THIS screen.
+ *
+ * The thread view keeps the free offer beside its composer, but the landing owns
+ * a different one — so a first message that met a spent balance raised an offer
+ * with no listener mounted, and the visitor got no reply, no refusal and no way
+ * forward. The offer belongs with whichever composer carries the next message.
+ */
+describe('the landing carries the free offer', () => {
+  it('mounts it in chat mode, beside the composer that sends', () => {
+    renderAt();
+
+    expect(screen.getByTestId('chat-composer')).toBeInTheDocument();
+    expect(screen.getByTestId('free-offer')).toBeInTheDocument();
+  });
+
+  it('and in the web modes, which run the other composer', async () => {
+    renderAt();
+    await userEvent.click(screen.getByRole('button', { name: 'com_answer_mode_search' }));
+
+    expect(screen.getByTestId('search-composer')).toBeInTheDocument();
+    expect(screen.getByTestId('free-offer')).toBeInTheDocument();
+  });
+});
+
 describe('the conversation column has ONE width law', () => {
   const read = (p: string) =>
     // eslint-disable-next-line @typescript-eslint/no-var-requires
