@@ -1,21 +1,12 @@
-import { PermissionTypes, Permissions } from '@hanzochat/data-provider';
 import { HeaderNewChat } from './Menus';
 import CanvasToggle from './Menus/CanvasToggle';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
-import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import PanelControls from './PanelControls';
-import { useHasAccess, useLocalize } from '~/hooks';
 
 export default function Header() {
-  const localize = useLocalize();
   const { data: startupConfig } = useGetStartupConfig();
-
-  const hasAccessToBookmarks = useHasAccess({
-    permissionType: PermissionTypes.BOOKMARKS,
-    permission: Permissions.USE,
-  });
 
   return (
     /* The top bar carries NO ground of its own (owner call): no glass, no plate,
@@ -24,8 +15,8 @@ export default function Header() {
        panel, and the bottom bar. The header is just its controls floating over
        whatever is behind, each button carrying its own hover ground when the
        pointer needs it (`components/chrome.ts`). */
-    /* DESKTOP header only. On a phone this whole row — new chat, bookmarks,
-       share, temporary, canvas, the window chrome — floated over the hero as a
+    /* DESKTOP header only. On a phone this whole row — new chat, share,
+       temporary, canvas, the panel toggle — floated over the hero as a
        cluster of icons a thumb had no use for, on top of the phone's own top bar
        (`Nav/MobileNav`, which owns new chat and the drawer below md). A phone
        wants the composer in focus, not a title bar; new chat and search live one
@@ -42,24 +33,23 @@ export default function Header() {
           <HeaderNewChat />
         </div>
 
-        {/* The right end of the header is where every control that acts on THIS
-            view lives — presets, bookmarks, share, temporary. They used to be
-            split by width, the same two components written twice under opposite
-            conditions, with presets and bookmarks crowding the left edge beside
-            the mark and the model. One end, one copy, every width: the left edge
-            is the app's identity and the model it is talking to, nothing else. */}
+        {/* The right end carries the controls that act on THIS view and have no
+            other home. Two used to sit here that did: bookmarking, which the
+            conversation's own row menu already offers under the same permission
+            with the same tags, and maximize, which is a switch in Settings →
+            Chat and a row in the backdrop menu besides. A control with a second
+            home is a second answer, and this row was invented to have one. */}
         <div className="flex items-center gap-2" data-testid="header-actions">
-          {hasAccessToBookmarks === true && <BookmarkMenu />}
           <ExportAndShareMenu isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false} />
           <TemporaryChat />
           {/* The right edge's mirror of the left sidebar button: it opens the
               canvas (the artifacts panel). Shows only when there is one. */}
           <CanvasToggle />
-          {/* The window controls (width, companions, right panel) are chrome for
-              the WINDOW, not for the conversation, so they sit after every
-              conversation action — last thing at the right end, the way a title
-              bar reads. The whole row is already desktop-only (see the container
-              above), so these need no width gate of their own. */}
+          {/* The right panel is chrome for the WINDOW, not for the conversation,
+              so it sits after every conversation action — last thing at the
+              right end, the way a title bar reads. The whole row is already
+              desktop-only (see the container above), so it needs no width gate
+              of its own. */}
           <PanelControls />
         </div>
       </div>

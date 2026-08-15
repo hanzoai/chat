@@ -29,7 +29,6 @@ const TOP_ROW = [
   'Chat/PanelControls.tsx',
   'Chat/TemporaryChat.tsx',
   'Chat/ExportAndShareMenu.tsx',
-  'Chat/Menus/BookmarkMenu.tsx',
   'Chat/Menus/CanvasToggle.tsx',
   'Chat/Menus/OpenSidebar.tsx',
   'Chat/Menus/HeaderNewChat.tsx',
