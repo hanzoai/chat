@@ -131,7 +131,7 @@ export default function AnswerComposer({
               submit();
             }
           }}
-          className="max-h-[200px] min-h-14 w-full resize-none bg-transparent px-4 pt-4 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary md:text-lg"
+          className="max-h-[200px] min-h-10 w-full resize-none bg-transparent px-4 pt-3 text-[15px] leading-6 text-text-primary outline-none placeholder:text-text-secondary"
         />
 
         {/* The SAME skeleton as the chat composer's action row (its own
@@ -140,7 +140,7 @@ export default function AnswerComposer({
             changes only the tools inside it — @sources/model here, attach/mic
             there — instead of swapping one widget for a differently-laid-out
             one. The submit stays the larger size-11 (owner call). */}
-        <div className="composer-actions flex items-center gap-1.5 pb-2 pt-1">
+        <div className="composer-actions flex items-center gap-1.5 pb-1.5 pt-0.5">
           <div className="ml-2 flex items-center gap-1.5">
             <DropdownPopup
               portal={true}

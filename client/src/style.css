@@ -377,7 +377,9 @@
 .hz-composer {
   position: relative;
   isolation: isolate;
-  padding: 1.5px;
+  /* Equals the ring band in ::before. They are two halves of one measurement;
+     disagreeing makes the band clip or show a hairline of panel behind it. */
+  padding: 1px;
 }
 
 /* The composer sits a touch more solid than ambient glass (menus, dialogs at
@@ -390,6 +392,19 @@
 .hz-composer > .glass {
   background-color: color-mix(in oklab, var(--background) 84%, transparent) !important;
 }
+/* Attention lifts both ring layers together, so the control answers the
+   pointer without changing character. Hover and focus say the same thing:
+   the composer is one target, and a keyboard user should see what a mouse
+   user sees. */
+.hz-composer:hover::before,
+.hz-composer:focus-within::before {
+  opacity: 0.8;
+}
+.hz-composer:hover::after,
+.hz-composer:focus-within::after {
+  opacity: 0.16;
+}
+
 .hz-composer:hover > .glass,
 .hz-composer:focus-within > .glass {
   background-color: color-mix(in oklab, var(--background) 93%, transparent) !important;
@@ -460,7 +475,11 @@
   content: '';
   position: absolute;
   inset: 0;
-  padding: 1.5px;
+  padding: 1px;
+  /* Rests quiet and lifts on attention. At full strength the spectrum reads as
+     a hard white edge on black — louder than the one control it draws around. */
+  opacity: 0.5;
+  transition: opacity 200ms ease;
   border-radius: inherit;
   background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
   animation: hzComposerSpin 10s linear infinite;
@@ -489,15 +508,16 @@
 .hz-composer::after {
   content: '';
   position: absolute;
-  inset: -6px;
-  padding: 6px;
+  inset: -5px;
+  padding: 5px;
   /* Concentric with the box, NOT `inherit`: the halo lives 6px outside the
      composer, so an inherited 24px corner on this larger box curves too tight
      and reads as a second, mismatched rounding just outside the panel. */
   border-radius: calc(1.5rem + 6px);
   background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
-  filter: blur(16px);
-  opacity: 0.22;
+  filter: blur(14px);
+  opacity: 0.1;
+  transition: opacity 200ms ease;
   animation: hzComposerSpin 10s linear infinite;
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,

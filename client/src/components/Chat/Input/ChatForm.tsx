@@ -363,12 +363,12 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                     onFocus={handleFocusOrClick}
                     aria-label={localize('com_ui_message_input')}
                     onClick={handleFocusOrClick}
-                    style={{ height: isLanding ? 56 : 44, overflowY: 'auto' }}
+                    style={{ height: isLanding ? 46 : 44, overflowY: 'auto' }}
                     className={cn(
                       baseClasses,
                       removeFocusRings,
                       'scrollbar-hover transition-[max-height] duration-200 disabled:cursor-not-allowed',
-                      isLanding && 'text-base md:text-lg',
+                      isLanding && 'text-[15px]',
                     )}
                   />
                 </div>
