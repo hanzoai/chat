@@ -9,6 +9,7 @@ import { COLUMN } from '~/components/chrome';
 import store from '~/store';
 import ChatForm from '~/components/Chat/Input/ChatForm';
 import ConversationStarters from '~/components/Chat/Input/ConversationStarters';
+import { Notice } from '~/components/Free';
 import AnswerComposer from './AnswerComposer';
 import AnswerView from './AnswerView';
 import Modes from './Modes';
@@ -186,6 +187,11 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
           1024 the starter row wraps, 260 stopped binding, and the drift came
           back at 6px. */}
       <div className="min-h-[280px] shrink-0 pb-3 pt-2">
+        {/* The offer to continue on Free, with the composer that carries the next
+            message — where the thread view keeps it too. This screen is the one a
+            first message of the day is sent from, so it is where a spent balance
+            is met, and the offer has to be heard here or it is not heard at all. */}
+        <Notice />
         {/* The mode row is the one thing on the arrival screen that is about the
             product rather than the visitor's question, and a phone has no room to
             spend on it before they have asked anything. It returns the moment
