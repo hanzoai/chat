@@ -84,8 +84,7 @@ describe('label', () => {
 
   it('names the free route, which a guest is the one to read', () => {
     // A guest is served this id and no other, so it is the only model name on
-    // their screen — and `nvidia/nemotron-nano-9b-v2:free` names the provider
-    // that happens to serve it, not the thing being offered.
+    // their screen, and the id is a route rather than a product name.
     expect(label(FREE_MODEL)).toBe(FREE_MODEL_LABEL);
   });
 

@@ -1,4 +1,5 @@
 const { createHash } = require('node:crypto');
+const { FREE_MODEL } = require('@hanzo/ai');
 const { isEnabled } = require('@hanzochat/api');
 const { EModelEndpoint } = require('@hanzochat/data-provider');
 const guestClientIp = require('~/server/utils/guestClientIp');
@@ -7,11 +8,12 @@ const GUEST_ROLE = 'GUEST';
 const GUEST_NAME = 'Guest';
 const DEFAULT_GUEST_MESSAGE_MAX = 3;
 const DEFAULT_GUEST_ENDPOINT = 'Hanzo';
-// A guest pays nothing and holds no balance, so the guest model must be one that
-// serves at zero cost: a free route (`:free`), not a paid house SKU that draws on
-// the deployment's balance. This is the same verified free model @hanzo/ai's
-// FREE_MODEL names for a signed-in fallback, so both paths land on one free id.
-const DEFAULT_GUEST_MODEL = 'nvidia/nemotron-nano-9b-v2:free';
+// A guest pays nothing and holds no balance, so the guest model has to serve at
+// zero cost — a free route, not a paid house SKU drawing on the deployment's
+// balance. @hanzo/ai holds the id: the client reads the same constant to name
+// the chip "Enso Free", so taking it from there is what keeps the model a guest
+// runs and the model the chip claims the same one.
+const DEFAULT_GUEST_MODEL = FREE_MODEL;
 
 /**
  * Resolves the guest-chat configuration from the environment.

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'jotai';
 import { seed } from 'test/store';
+import { FREE_MODEL } from '@hanzo/ai';
 import { SystemRoles } from '@hanzochat/data-provider';
 import type { TStartupConfig, TUser } from '@hanzochat/data-provider';
 import useNewConvo from '../useNewConvo';
@@ -20,7 +21,7 @@ import store from '~/store';
  * settles its model against that list drops the pin and lands on `enso`.
  */
 
-const mockGuestModel = 'nvidia/nemotron-nano-9b-v2:free';
+const mockGuestModel = FREE_MODEL;
 const mockStartupConfig = {
   allowGuestChat: true,
   guestEndpoint: 'Hanzo',
