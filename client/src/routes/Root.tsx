@@ -26,6 +26,7 @@ import Backdrop from '~/components/Chat/Backdrop';
 import LandingPage from '~/components/Landing/LandingPage';
 import { IAM_ORG } from '~/utils/iam';
 import LoginGate from '~/components/Auth/LoginGate';
+import { Consent } from '~/components/Free';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 import Palette from '~/components/Palette';
 import store from '~/store';
@@ -212,6 +213,10 @@ export default function Root() {
                   a lapsed or unminted guest token is exactly the case that needs
                   the gate. */}
               {!isAuthenticated && <LoginGate />}
+              {/* Mounted for everyone: a guest is served free on their first
+                  send, and a signed-in visitor is offered free when the paid
+                  route cannot serve. Both wait on the same consent. */}
+              <Consent />
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
