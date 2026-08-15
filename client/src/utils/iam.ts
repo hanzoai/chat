@@ -111,6 +111,17 @@ export function getHanzoIamSdk(): IAM {
     organization: ORGANIZATION,
     redirectUri: `${window.location.origin}/auth/callback`,
     /**
+     * Where IAM returns the browser once the session has ended.
+     *
+     * `?redirect=false` is what makes this a landing rather than a bounce: the
+     * login route starts a fresh authorize on mount, so a bare `/login` would
+     * send someone who just signed out straight back to the issuer. Built from
+     * `window.location.origin` for the same reason the callback above is — each
+     * brand returns to its OWN host, and each host registers this exact address
+     * with its own IAM application.
+     */
+    postLogoutRedirectUri: `${window.location.origin}/login?redirect=false`,
+    /**
      * `offline_access` is what makes a session outlive its access token.
      *
      * IAM issues a refresh token only when it is asked for one, and without it

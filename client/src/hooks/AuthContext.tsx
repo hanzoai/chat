@@ -38,7 +38,6 @@ const AuthContextProvider = ({
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const setAuthenticatedAtom = useSetAtom(store.isAuthenticated);
   useEffect(() => setAuthenticatedAtom(isAuthenticated), [isAuthenticated, setAuthenticatedAtom]);
-  const logoutRedirectRef = useRef<string | undefined>(undefined);
 
   /**
    * What the session probe has established about this visitor. A guest is the
@@ -74,19 +73,14 @@ const AuthContextProvider = ({
           setIsGuest(false);
         }
 
-        // Use a custom redirect if set
-        const finalRedirect = logoutRedirectRef.current || redirect;
-        // Clear the stored redirect
-        logoutRedirectRef.current = undefined;
-
-        if (finalRedirect == null) {
+        if (redirect == null) {
           return;
         }
 
-        if (finalRedirect.startsWith('http://') || finalRedirect.startsWith('https://')) {
-          window.location.href = finalRedirect;
+        if (redirect.startsWith('http://') || redirect.startsWith('https://')) {
+          window.location.href = redirect;
         } else {
-          navigate(finalRedirect, { replace: true });
+          navigate(redirect, { replace: true });
         }
       }, 50),
     [navigate, setUser],
@@ -99,33 +93,20 @@ const AuthContextProvider = ({
    * Sign out where the session actually lives.
    *
    * The issuer holds it — an SSO cookie at hanzo.id plus the refresh token this
-   * browser stores — so ending it is `IAM#logout()`: revoke both tokens, end the
-   * session there, then clear what this browser holds. Clearing only the local
-   * copy would leave the issuer still recognising this browser, and the silent
-   * probe below would sign the same person straight back in.
+   * browser stores — so ending it is `IAM#logout()`: revoke both tokens, then
+   * hand the WHOLE browser to the issuer, which ends the session and returns it
+   * to `/login`. The navigation is the point: the session cookie is
+   * `SameSite=Lax`, so it rides a document navigation and is withheld from a
+   * cross-site fetch — exactly as the sign-in probe already relies on. Clearing
+   * only the local copy would leave the issuer still recognising this browser,
+   * and the next sign-in would be silent.
+   *
+   * Nothing follows it here. The browser is leaving, and it comes back to a
+   * fresh boot on the login route.
    */
-  const logout = useCallback(
-    (redirect?: string) => {
-      if (redirect) {
-        logoutRedirectRef.current = redirect;
-      }
-      void getHanzoIamSdk()
-        .logout()
-        .catch(() => {
-          /* Reaching the issuer is best-effort; leaving this machine is not. */
-        })
-        .then(() => {
-          setIsGuest(false);
-          setUserContext({
-            token: undefined,
-            isAuthenticated: false,
-            user: undefined,
-            redirect: '/login',
-          });
-        });
-    },
-    [setUserContext],
-  );
+  const logout = useCallback(() => {
+    void getHanzoIamSdk().logout();
+  }, []);
 
   const userQuery = useGetUserQuery({ enabled: !!(token ?? '') && !isGuest });
 

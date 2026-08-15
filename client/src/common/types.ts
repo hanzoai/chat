@@ -460,7 +460,7 @@ export type TAuthContext = {
   isGuest: boolean;
   error: string | undefined;
   login: () => void;
-  logout: (redirect?: string) => void;
+  logout: () => void;
   setError: React.Dispatch<React.SetStateAction<string | undefined>>;
   roles?: Record<string, t.TRole | null | undefined>;
 };

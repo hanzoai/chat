@@ -365,7 +365,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@20.19.37)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@20.19.37)(typescript@7.0.2))
+        version: 30.3.0(@types/node@25.5.0)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@25.5.0)(typescript@7.0.2))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -412,8 +412,8 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4)
       '@hanzo/iam':
-        specifier: ^0.21.10
-        version: 0.21.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^0.21.12
+        version: 0.21.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@19.2.4)
@@ -3595,8 +3595,8 @@ packages:
     peerDependencies:
       react: '>=19'
 
-  '@hanzo/iam@0.21.10':
-    resolution: {integrity: sha512-HuEUw3t12DB5NZEHOUgqEbzw+kh6YLzX0Lue54OzIFNeCAtZMHJIS5R+CajDPBYZ4S9/JkmwXOL+u6K23EPAPg==}
+  '@hanzo/iam@0.21.12':
+    resolution: {integrity: sha512-cRs8SsOYuCeOsqsWFMUaRbNPW6o24veSYO1XHLcjlW3Au/T35j6gXioHxBqcESljRjz4XpVcg7X0lT/KwfnK3Q==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
@@ -17810,7 +17810,7 @@ snapshots:
       - react-dom
       - react-native
 
-  '@hanzo/iam@0.21.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@hanzo/iam@0.21.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
