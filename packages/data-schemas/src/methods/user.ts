@@ -116,13 +116,11 @@ export function createUserMethods(handle: DataHandle) {
         new: true,
       }).lean();
 
-      // NOTE: the real new-user $5 is the Commerce starter credit, granted
-      // idempotently on first chat by resolveHanzoCloudKey (→ /v1/billing/
-      // grant-starter), keyed on the user's per-user billing subject. It is NOT
-      // granted here: this createUser path does not fire for SSO/OIDC signups
-      // (which is how hanzo.chat users arrive), and the old credit-grants call
-      // wrote a separate ledger the balance gate never reads. The local
-      // tokenCredits above stay as the in-app display only.
+      // These tokenCredits are the in-app display balance and nothing else.
+      // No signup credit is granted anywhere: an account starts at zero and
+      // pays as it goes. This block is inert on hanzo.chat for two independent
+      // reasons — balance is disabled in the deployed config, and createUser
+      // does not fire for the SSO/OIDC signups that is how users arrive.
     }
 
     if (returnUser) {
