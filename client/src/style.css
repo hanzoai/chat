@@ -214,7 +214,13 @@
   --surface-active-alt: var(--gray-800);
   --surface-hover: var(--gray-800);
   --surface-hover-alt: var(--gray-800);
-  --surface-primary: var(--gray-975);
+  /* The page ground, and it must equal what the design layer already
+     declares: --background is #0a0a0a on hanzo.ai, hanzo.app and here.
+     This line pointed at --gray-975 (#000), so chat DECLARED the shared
+     value and painted a different one — two surfaces of one product a
+     shade apart, which is the kind of difference you feel switching tabs
+     without being able to name it. */
+  --surface-primary: #0a0a0a;
   --surface-primary-alt: var(--gray-925);
   --surface-primary-contrast: var(--gray-900);
   --surface-secondary: var(--gray-950);
