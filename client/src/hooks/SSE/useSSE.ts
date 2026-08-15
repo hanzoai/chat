@@ -21,6 +21,7 @@ import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
 import { requireLogin } from '~/utils/login';
+import { offerSwitch } from '~/utils/free';
 import store from '~/store';
 
 const clearDraft = (conversationId?: string | null) => {
@@ -274,6 +275,9 @@ export default function useSSE(
         console.log(e);
         setIsSubmitting(false);
       }
+
+      // Same offer the resumable path makes, at the other place a refusal lands.
+      offerSwitch(responseCode, data);
 
       errorHandler({ data, submission: { ...submission, userMessage } as EventSubmission });
     });

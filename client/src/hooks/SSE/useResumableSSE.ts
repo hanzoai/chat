@@ -23,6 +23,7 @@ import type { ActiveJobsResponse } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
 import { requireLogin } from '~/utils/login';
+import { offerSwitch } from '~/utils/free';
 import store from '~/store';
 
 const clearDraft = (conversationId?: string | null) => {
@@ -640,6 +641,11 @@ export default function useResumableSSE(
         setIsSubmitting(false);
         return null;
       }
+
+      // The paid route could not serve and free would. An offer, not a move:
+      // the refusal still lands as an errored reply below, so the notice adds a
+      // way forward rather than replacing what happened.
+      offerSwitch(status, errorData);
 
       if (errorData) {
         errorHandler({
