@@ -162,7 +162,7 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
         // composer under a screen and a half of empty black — the greeting read
         // as a caption for the input rather than as the page's opening.
         <div className="flex flex-1 flex-col items-center justify-center pb-6">
-          <h1 className="text-balance px-2 text-center text-3xl font-medium tracking-tight text-text-primary sm:text-4xl">
+          <h1 className="text-balance px-2 text-center text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
             {localize('com_ui_landing_title')}
           </h1>
         </div>
