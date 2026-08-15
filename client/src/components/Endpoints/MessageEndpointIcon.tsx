@@ -17,16 +17,8 @@ import {
 } from '@hanzochat/client';
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
 import { IconProps } from '~/common';
-import { cn } from '~/utils';
+import { cn, isEnso } from '~/utils';
 
-/**
- * Whether a model id belongs to the Enso router family (enso, enso-flash,
- * enso-ultra). Prefix match, so a future enso-* rung is covered without another
- * edit here; anchored so a model merely CONTAINING "enso" is not caught.
- */
-function isEnso(model?: string | null): boolean {
-  return typeof model === 'string' && /^enso(-|$)/.test(model.trim().toLowerCase());
-}
 
 
 type EndpointIcon = {
@@ -160,11 +152,11 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       name: alternateName[EModelEndpoint.bedrock],
     },
     [EModelEndpoint.custom]: {
-      // Two marks, and the difference is load-bearing. Enso is drawn CLOSED — it
-      // is the rung that completes the circle by routing to the right model. The
-      // Zen ensō (円相) is drawn OPEN, a single brush arc with a gap. Same viewBox,
-      // same stroke weight, same radius, so they sit at identical optical weight
-      // and ONLY the gap tells them apart.
+      // Two marks, and the difference is load-bearing. Enso is Hanzo's router
+      // model, drawn as the closed ensō (円相) — the rung that completes the
+      // circle by routing to the right model. Zen is Zoo Labs Foundation's
+      // family and carries Zoo's mark, so neither maker's model can be read as
+      // the other's.
       //
       // The comment here used to say this endpoint is "Zen-only", which stopped
       // being true: the gateway serves enso, enso-flash and enso-ultra alongside
@@ -184,6 +176,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
             <UnknownIcon
               iconURL={iconURL}
               endpoint={endpoint ?? ''}
+              model={model}
               className="h-full w-full object-contain"
               context="message"
             />

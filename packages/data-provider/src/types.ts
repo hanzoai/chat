@@ -186,12 +186,6 @@ export type TError = {
   };
 };
 
-export type TBackupCode = {
-  codeHash: string;
-  used: boolean;
-  usedAt: Date | null;
-};
-
 export type TUser = {
   id: string;
   /**
@@ -215,7 +209,6 @@ export type TUser = {
   provider: string;
   plugins?: string[];
   twoFactorEnabled?: boolean;
-  backupCodes?: TBackupCode[];
   personalization?: {
     memories?: boolean;
   };
@@ -422,127 +415,8 @@ export type TSearchMessage = object;
 
 export type TSearchMessageTreeNode = object;
 
-export type TRegisterUserResponse = {
-  message: string;
-};
-
-export type TRegisterUser = {
-  name: string;
-  email: string;
-  username: string;
-  password: string;
-  confirm_password?: string;
-  token?: string;
-};
-
-export type TLoginUser = {
-  email: string;
-  password: string;
-  token?: string;
-  backupCode?: string;
-};
-
-export type TLoginResponse = {
-  token?: string;
-  user?: TUser;
-  twoFAPending?: boolean;
-  tempToken?: string;
-};
-
-export type TEnable2FAResponse = {
-  otpauthUrl: string;
-  backupCodes: string[];
-  message?: string;
-};
-
-export type TVerify2FARequest = {
-  token?: string;
-  backupCode?: string;
-};
-
-export type TVerify2FAResponse = {
-  message: string;
-};
-
-/**
- * For verifying 2FA during login with a temporary token.
- */
-export type TVerify2FATempRequest = {
-  tempToken: string;
-  token?: string;
-  backupCode?: string;
-};
-
-export type TVerify2FATempResponse = {
-  token?: string;
-  user?: TUser;
-  message?: string;
-};
-
-/**
- * Request for disabling 2FA.
- */
-export type TDisable2FARequest = {
-  token?: string;
-  backupCode?: string;
-};
-
-/**
- * Response from disabling 2FA.
- */
-export type TDisable2FAResponse = {
-  message: string;
-};
-
-/**
- * Response from regenerating backup codes.
- */
-export type TRegenerateBackupCodesResponse = {
-  message: string;
-  backupCodes: string[];
-  backupCodesHash: string[];
-};
-
-export type TRequestPasswordReset = {
-  email: string;
-};
-
-export type TResetPassword = {
-  userId: string;
-  token: string;
-  password: string;
-  confirm_password?: string;
-};
-
-export type VerifyEmailResponse = { message: string };
-
-export type TVerifyEmail = {
-  email: string;
-  token: string;
-};
-
-export type TResendVerificationEmail = Omit<TVerifyEmail, 'token'>;
-
-export type TRefreshTokenResponse = {
-  token: string;
-  user: TUser;
-};
-
-export type TGuestTokenResponse = {
-  token: string;
-  expiresIn: number;
-  endpoint: string;
-  model: string;
-  messageMax: number;
-};
-
 export type TCheckUserKeyResponse = {
   expiresAt: string;
-};
-
-export type TRequestPasswordResetResponse = {
-  link?: string;
-  message?: string;
 };
 
 /**

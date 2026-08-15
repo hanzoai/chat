@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { TooltipAnchor } from '@hanzochat/client';
 import { getConfigDefaults } from '@hanzochat/data-provider';
 import type { ModelSelectorProps } from '~/common';
@@ -59,28 +60,34 @@ function ModelSelectorContent() {
     [localize, agentsMap, modelSpecs, selectedValues, mappedEndpoints],
   );
 
+  /* One shape, and one owner for each part of it. The box — height, border,
+     radius, ground — belongs to `CustomMenu`, which paints it for every root
+     trigger; this button carries only what is inside it. Restating the box here
+     is how a control ends up with two answers for one border.
+     The chevron is inside, not outside: Ariakit renders a `MenuButtonArrow`
+     of its own, and a trigger passed through `render` with its own children
+     replaces them — so that arrow never paints for this call site, and the
+     control read as a field you could not open. */
   const trigger = (
     <TooltipAnchor
       aria-label={localize('com_ui_select_model')}
       description={localize('com_ui_select_model')}
       render={
-        <button
-          className="my-1 flex h-10 w-full max-w-[70vw] items-center justify-center gap-2 rounded-xl border border-border-light bg-presentation px-3 py-2 text-sm text-text-primary hover:bg-surface-active-alt"
-          aria-label={localize('com_ui_select_model')}
-        >
+        <button aria-label={localize('com_ui_select_model')}>
           {selectedIcon && React.isValidElement(selectedIcon) && (
-            <div className="flex flex-shrink-0 items-center justify-center overflow-hidden">
+            <div className="flex flex-shrink-0 items-center justify-center overflow-hidden [&_svg]:size-4">
               {selectedIcon}
             </div>
           )}
           <span className="flex-grow truncate text-left">{selectedDisplayValue}</span>
+          <ChevronDown className="size-4 flex-shrink-0 opacity-60" aria-hidden="true" />
         </button>
       }
     />
   );
 
   return (
-    <div className="relative flex w-full max-w-md flex-col items-center gap-2">
+    <div className="relative flex w-full flex-col">
       <Menu
         values={selectedValues}
         onValuesChange={(values: Record<string, any>) => {

@@ -726,16 +726,21 @@ else is.
 move `ThemeToggleNext` off the barrel. Working around it in chat means aliasing
 `next/script` to a stub and re-rooting babel — two gates to import a button.
 
-**Separately, the version ceiling is 8.0.51.** 8.0.52 re-bases three theme
-rungs onto CSS custom properties with modern slash-alpha fallbacks —
-`$borderColor`/`$color12`/`$outlineColor` become `var(--border, rgb(255 255 255
-/ .10))` and friends. That is correct in a browser and is a real WCAG 2.4.11
-fix for the focus ring. jsdom's CSS parser cannot parse it, so the whole gui
-theme block is rejected and every `@hanzo/ui` primitive throws `Missing theme.`
-— `src/__tests__/guiPrimitives.spec.tsx`, the suite that exists to prove the
-harness can render primitives at all, goes red. Every version ≥8.0.52 has it,
-so pinning 8.0.57/58 does NOT dodge it. A bump was measured to 8.0.59 and
-reverted: it unlocks no component (see above) and costs that gate.
+**There used to be a version ceiling at 8.0.51. There is not one now.** The claim
+was that 8.0.52 re-bases three theme rungs onto CSS custom properties with
+slash-alpha fallbacks — `$borderColor`/`$color12`/`$outlineColor` become
+`var(--border, rgb(255 255 255 / .10))` and friends — which jsdom's CSS parser
+cannot read, rejecting the whole gui theme block so every primitive throws
+`Missing theme.` and `src/__tests__/guiPrimitives.spec.tsx` goes red.
+
+Re-measured on the installed **8.0.75**: that suite is **4 passed / 4 total**.
+jsdom still logs `Could not parse CSS stylesheet` — the parser really cannot read
+those declarations — but it drops the rules it cannot parse rather than the
+stylesheet, so the theme resolves and the primitives render. Whatever made this
+fatal at 8.0.52 does not at 8.0.75. Note the trap that kept the ceiling on the
+books: a mis-invoked jest reports `1 failed, 0 total`, which reads like the
+documented failure and is actually a harness that never ran. Check for `Tests: 0
+total` before believing a gate is red.
 
 ### Verifying a gui rewrite — the build cannot tell you
 
@@ -886,17 +891,95 @@ they actually render). The rest, by weight: **popover 10 files, dialog 5, tabs 5
 accordion 3, toast 2, slot 2, select 2**, then one each for dropdown-menu,
 radio-group, alert-dialog, hover-card, slider, collapsible.
 
+**That count is now 11 files, and the four upstream gaps below are down to one.**
+Eighteen files moved onto `@hanzo/ui` in one pass: eight popovers (PresetsMenu,
+PresetItems, TitleButton, ProgressText, MultiSelectPop, SelectDropDownPop,
+AssistantAvatar, Images), two tab strips plus the two Artifacts files, the three
+shared primitives in `packages/client` (Accordion, HoverCard, Slider), and the
+side panel's three (Nav, MCPTool, ActionsAuth). Reproduce with the count command
+at the top of this section. What remains, one import each, and every one of them
+for a reason written down below or in the commit that refused it:
+
+| file | why it stays |
+|---|---|
+| `Chat/Input/OptionsPopover.tsx` | `asChild` on `Popover.Content` — gui's Content never slots the caller's element, and the panel carries two widths against a hardcoded 288 |
+| `Chat/Input/HeaderOptions.tsx` | renders OptionsPopover inside its `Anchor`; a gui root around a Radix Content shares no context. The pair converts together or not at all |
+| `Chat/Input/Files/ImagePreview.tsx` | the overlay has no destination — `DialogContent` renders its own `<DialogOverlay/>` with no props, so the dim, the z-index and the click target are unreachable |
+| `Chat/Messages/Content/DialogImage.tsx` | same shape at a different z-index |
+| `packages/client/OriginalDialog.tsx` | `overlayClassName` and the depth z-ladder are live props with no element to land on once Content owns the overlay |
+| `packages/client/OGDialogTemplate.spec.tsx` | its subject is refused, and jest transforms no `.mjs` |
+| `packages/client/DropdownMenu.tsx` | `dropdown-menu.tsx` never got the `place()` translation popover and hover-card have, so `align`/`side`/`collisionPadding` are dropped. One file upstream |
+| `packages/client/Breadcrumb.tsx` | `Slot`, which @hanzo/ui does not export |
+| `packages/client/Button.tsx` | same missing `Slot`, and 302 files reference this Button |
+| `packages/client/Toast.tsx` | the viewport's className has nowhere to go, and the correct conversion rewrites `store.ts` and `useToast.ts` |
+| `client/src/App.jsx` | holds the Toast Provider+Viewport; removing it alone throws at the Root |
+
+**Three of those thirteen packages are now gone, and they were never imported.**
+`alert-dialog`, `select` and `collapsible` were declared in `client/package.json`
+and peered from `packages/client` with ZERO importers in either workspace, and
+`packages/client/src/components/Collapsible.tsx` — a bare re-export of three Radix
+names, absent from the components barrel — went with them. Ten packages / 34 files
+remain. `collapsible` still shows in a grep twice over, and both are correct: as a
+transitive of `react-accordion` in the lockfile, and as a shadcn component in the
+artifact sandbox payload.
+
+**Three of those four gaps closed upstream; only Toast is left.** That paragraph
+described 8.0.63 and is no longer the state of the package. Measured against the
+installed **8.0.75**: `@hanzo/ui/primitives/*` now exports Accordion (+Item,
+Trigger, Content), HoverCard (+Trigger, Content) and RadioGroup (+Item), and all
+three are in use here. **Toast is still the one real gap** — `toast`/`Toaster` are
+an imperative model, not Radix's Provider/Viewport/Root/Title/Description/Action/
+Close, so it is a rewrite of two files this repo owns rather than an import swap.
+
+**The floor is `^8.0.73` in BOTH `client` and `packages/client`, and the split is
+why this looked blocked longer than it was.** They asked for `^8.0.69` and
+`>=8.0.48`: two halves of one app naming two libraries, neither bounded above.
+Keep them equal. A floor below 8.0.73 silently reintroduces the two defects below.
+
+Two more facts that were true at 8.0.63 and are **fixed at 8.0.73**, read out of
+the installed `dist` rather than a changelog:
+- **`PopoverContent` no longer drops `align`.** It destructures `align` and
+  `sideOffset` and publishes both up to the popper root through `place()` — gui
+  keeps placement on the root, so Content is a publisher, not the owner. Content
+  still mounts its OWN portal (there is no `Portal` to import) and still paints
+  `bg $color2`, a 1px border, `p $4` and `width: 288` — but those land **before**
+  `{...props}`, so a caller replaces any of them. It can only replace, never keep
+  two values for one property, which is what refuses OptionsPopover.
+- **`Slider` forwards the name to the thumb.** `role="slider"` lives on the Thumb,
+  so a name spread onto the root labels a container no screen reader announces.
+  The backend now splits caller props: `aria-label`, `aria-labelledby`,
+  `aria-describedby` and `aria-valuetext` go to the Thumb, everything else stays
+  on the root. `packages/client/src/components/Slider.tsx` exists to enforce that
+  name at compile time and converts cleanly now.
+
+**gui's style shorthands do not typecheck in this app — write the longhand.**
+Measured on a bare `View`, so it is not a per-primitive quirk: `p`, `px`, `bg`,
+`rounded`, `items`, `justify` and `self` are all excess properties, because the
+shorthand map is registered through the gui config and this tree registers none,
+leaving `WithShorthands` empty. Registering it does not help (tried; it adds an
+error). Use `padding`, `paddingHorizontal`, `backgroundColor`, `borderRadius`,
+`alignItems`, `justifyContent`, `alignSelf` — same values, same components, and
+they compile. `gap`, `height`, `flexDirection`, `hoverStyle` and `focusStyle`
+were never shorthands and are fine as they are.
+
 Ordering constraints that are not obvious and will bite:
 1. `packages/client/src/components/Button.tsx` (`Slot`) migrates **last** — every
    `<Trigger asChild><Button/></Trigger>` chain depends on it forwarding `data-state`.
 2. Two Popovers are split ACROSS files and must convert as pairs:
    `Chat/Input/HeaderOptions` (Root+Anchor) ↔ `Chat/Input/OptionsPopover` (Portal+Content),
    and `SidePanel/Builder/AssistantAvatar` (Root+Trigger) ↔ `SidePanel/Builder/Images` (Portal+Content).
+   **The second pair is done** — both files converted in the same commit, which is
+   the only way that works. The first pair is the one still refusing, together.
 3. The Toast is split across PACKAGES: Provider+Viewport in `client/src/App.jsx`,
-   Root+Description in `packages/client/src/components/Toast.tsx`.
+   Root+Description in `packages/client/src/components/Toast.tsx`. Still true, and
+   now the last real blocker: the conversion also deletes the `toastState` atom in
+   `packages/client/src/store.ts` and rewrites `showToast` over `toast()` in
+   `hooks/useToast.ts`. Confined to Toast.tsx it becomes an atom-to-observer bridge
+   — auto-hide timer in one state machine, render lifetime in the other — behind
+   257 call sites. Convert the four files at once or not at all.
 4. `SidePanel/Builder/ActionsAuth`'s checked radio has **no CSS state hook** — the
    dot is `RadioGroup.Indicator`'s conditional mount. Render it unconditionally and
-   every radio reads as checked.
+   every radio reads as checked. **Done**, on `@hanzo/ui/primitives/RadioGroupItem`.
 5. `OriginalDialog`'s `onEscapeKeyDown` is a WCAG tooltip-dismissal handler that
    cancels Escape while focus is in a menu/listbox/combobox. Any replacement must
    expose a cancellable escape with the same timing.
@@ -904,6 +987,23 @@ Ordering constraints that are not obvious and will bite:
    `--radix-accordion-content-height` drives the `animate-accordion-*` keyframes in
    `client/tailwind.config.cjs`, and `--radix-select-trigger-{height,width}` size the
    Select/Combobox popper. They die with Radix and need replacements written first.
+7. The `radix-*` Tailwind variants are down to **18 live uses from 35**, and every
+   survivor now sits on something that really writes `data-state`: Speech 6 and
+   Settings 4 on the tab strips, SelectDropDownPop 3 / MultiSelectPop 3 /
+   TitleButton 2 on the popovers. Twelve were on elements Radix never touched and
+   are gone; see "A variant is not a class" below. **Write the removal reason
+   without naming the class** in anything under `client/src` or
+   `packages/client/src` — those two globs are all Tailwind scans, and its scanner
+   is a regex over file text that does not know what a comment is, so explaining a
+   variant in a source comment regenerates the rule you just deleted. This file is
+   outside both globs, which is why it can name them.
+   **The eighteen still fire even though none of those five files is Radix any
+   more**: the plugin compiles the variant to a plain `data-state` attribute
+   selector, gui writes `data-state` on tabs and popover content, and a class plus
+   an attribute outranks the single class gui compiles a style prop into. The four
+   `[aria-labelledby^="radix-"]` scrollbar rules in `mobile.css` could NOT survive
+   that way — gui generates `_r_f_-trigger-b`-shaped ids, not `radix-*` — and went
+   with the Tabs conversion.
 
 The external blocker people assume exists does NOT: `@hanzogui/shell@8.0.3` is
 inline-styled for everything chat imports (see "One shell" above). Nothing
@@ -921,6 +1021,42 @@ Full footprint to delete when the markup is done: `client/tailwind.config.cjs`,
 (client) + `tailwind-merge` (packages/client peer) + `prettier-plugin-tailwindcss`
 (root). Note `tailwindcss-radix` supplies the `radix-state-*` / `radix-disabled`
 variants and therefore dies WITH Radix, not before it.
+
+### A variant is not a class — twelve utilities that could never match
+
+Tailwind is LIVE here, so `radix-state-open:bg-surface-hover` really does compile:
+the shipped stylesheet carries `.radix-state-open\:bg-surface-hover[data-state="open"]`,
+read out of `document.styleSheets` in Chromium. What it selects on is the trap.
+Radix writes `data-state` / `data-disabled`; nothing else does. The same class on
+a non-Radix element is a rule with no matching attribute — it reads correct in
+review and paints nothing, forever, with no error anywhere.
+
+Two of the twelve were visible defects rather than dead weight:
+
+- **The composer's "+" never lit while its menu was open.** It is an Ariakit
+  `MenuButton`, whose complete attribute set (measured) is `aria-expanded,
+  aria-haspopup, aria-label, class, id, type`, plus `aria-controls` on open. No
+  `data-state`, ever. It reads its own `open` state now: `rgba(0,0,0,0)` closed,
+  `rgb(33,33,33)` with the menu up.
+- **The parameters gear could not have worked either, for a different reason.**
+  `Chat/Input/HeaderOptions` builds an ANCHORED popover — `<Root open=…><Anchor>` —
+  and Radix writes `data-state` from `Popover.Trigger`, not `Popover.Anchor`.
+  There is no trigger in that tree. It reads `showPopover` now.
+
+The remaining ten had no behaviour to restore: `MenuItem` and `PresetItems` are
+plain `<div role="option">` / `role="menuitem"` rows wearing `radix-disabled:*`,
+and no call site passes that attribute; `AddMultiConvo` asked for an open-state
+ground on a button that opens nothing.
+
+**`aria-expanded` is not the fallback, because it is broken too.** Measured in
+Chromium on the landing: the Create trigger carries
+`aria-controls="composer-create-menu"`, that menu is `display: flex` with
+`data-enter="true"` — and the trigger still reports `aria-expanded="false"`. The
+model picker does the same. Ariakit updates `aria-controls` on open and leaves
+`aria-expanded` behind, in every `DropdownPopup` (28 call sites), which is a
+WCAG 4.1.2 failure across the app's whole menu layer. NOT fixed here: the cause is
+in the Ariakit 0.4 / React 19 composition and guessing at it would be worse than
+recording it. Reproduce with `[aria-label="Create"]` on `/c/new`.
 
 ### Config filename caveat
 

@@ -96,7 +96,7 @@ function EndpointMenuContent({
   const localize = useLocalize();
   const { agentsMap, assistantsMap, modelSpecs, selectedValues, endpointSearchValues } =
     useModelSelectorContext();
-  const { model: selectedModel, modelSpec: selectedSpec } = selectedValues;
+  const { modelSpec: selectedSpec } = selectedValues;
   const searchValue = endpointSearchValues[endpoint.value] || '';
 
   const endpointSpecs = useMemo(() => {
@@ -137,12 +137,12 @@ function EndpointMenuContent({
         ? renderEndpointModels(
             endpoint,
             endpoint.models || [],
-            selectedModel,
+            selectedValues,
             filteredModels,
             endpointIndex,
           )
         : endpoint.models &&
-          renderEndpointModels(endpoint, endpoint.models, selectedModel, undefined, endpointIndex)}
+          renderEndpointModels(endpoint, endpoint.models, selectedValues, undefined, endpointIndex)}
     </>
   );
 }

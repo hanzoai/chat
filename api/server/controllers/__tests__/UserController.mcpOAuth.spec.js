@@ -52,15 +52,6 @@ jest.mock('~/server/services/PluginService', () => ({
   deleteUserPluginAuth: (...args) => mockDeleteUserPluginAuth(...args),
 }));
 
-jest.mock('~/server/services/twoFactorService', () => ({
-  verifyOTPOrBackupCode: jest.fn(),
-}));
-
-jest.mock('~/server/services/AuthService', () => ({
-  verifyEmail: jest.fn(),
-  resendVerificationEmail: jest.fn(),
-}));
-
 jest.mock('~/config', () => ({
   getMCPManager: (...args) => mockGetMCPManager(...args),
   getFlowStateManager: (...args) => mockGetFlowStateManager(...args),

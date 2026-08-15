@@ -3,7 +3,7 @@ import { Tools } from './types/assistants';
 import type { TMessageContentParts, FunctionTool, FunctionToolCall } from './types/assistants';
 import { TFeedback, feedbackSchema } from './feedback';
 import type { SearchResultData } from './types/web';
-import type { TFile } from './types/files';
+import type { TFile, FileSearchData } from './types/files';
 
 export const isUUID = z.string().uuid();
 
@@ -643,7 +643,7 @@ export type TAttachmentMetadata = {
   [Tools.memory]?: MemoryArtifact;
   [Tools.ui_resources]?: UIResource[];
   [Tools.web_search]?: SearchResultData;
-  [Tools.file_search]?: SearchResultData;
+  [Tools.file_search]?: FileSearchData;
 };
 
 export type TAttachment =

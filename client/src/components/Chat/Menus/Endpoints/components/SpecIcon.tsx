@@ -15,14 +15,15 @@ type IconType = (props: IconMapProps) => React.JSX.Element;
 
 const SpecIcon: React.FC<SpecIconProps> = ({ currentSpec, endpointsConfig }) => {
   const iconURL = getModelSpecIconURL(currentSpec);
-  const { endpoint } = currentSpec.preset;
+  const endpoint = currentSpec.preset?.endpoint;
   const endpointIconURL = getEndpointField(endpointsConfig, endpoint, 'iconURL');
   const iconKey = getIconKey({ endpoint, endpointsConfig, endpointIconURL });
-  let Icon: IconType;
-
-  if (!iconURL.includes('http')) {
-    Icon = (icons[iconURL] ?? icons[iconKey] ?? icons.unknown) as IconType;
-  } else if (iconURL) {
+  // A picture or a name — nothing else. `/assets/clickhouse-logo.svg` is a
+  // picture we serve ourselves, and the test used to be `includes('http')`,
+  // which reads a same-origin path as a name and looks it up among the built-in
+  // icons: every self-hosted spec logo silently became the unknown glyph. It
+  // also matched any name that merely CONTAINED "http".
+  if (/^(https?:\/\/|\/|data:)/.test(iconURL)) {
     return (
       <URLIcon
         iconURL={iconURL}
@@ -32,9 +33,9 @@ const SpecIcon: React.FC<SpecIconProps> = ({ currentSpec, endpointsConfig }) => 
         endpoint={endpoint || undefined}
       />
     );
-  } else {
-    Icon = (icons[endpoint ?? ''] ?? icons[iconKey] ?? icons.unknown) as IconType;
   }
+
+  const Icon = (icons[iconURL] ?? icons[iconKey] ?? icons.unknown) as IconType;
 
   return (
     <Icon

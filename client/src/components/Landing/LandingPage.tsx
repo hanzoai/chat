@@ -24,9 +24,13 @@ import { getHanzoIamSdk } from '~/utils/iam';
  * because what a consumer product costs is a fair question to ask on its front
  * page. The detail lives at hanzo.ai/pricing and every card goes there.
  *
- * ATTRIBUTION. Enso is ours. Models from other labs are served here too and
- * belong to those labs. This page previously said fourteen frontier models were
- * "all trained in-house", which was not ours to say.
+ * ATTRIBUTION. Enso is Hanzo's. Zen is Zoo Labs Foundation's. Models from other
+ * labs belong to those labs. This page previously said fourteen frontier models
+ * were "all trained in-house", which was not ours to say — and the correction
+ * that landed first, naming Zoo Labs Foundation beside the wall, still left the
+ * wall itself counting models and quoting a parameter range. Removing the wall
+ * settles both: nothing here counts what we serve, so nothing has to be kept in
+ * step with a catalog that changes without asking.
  */
 
 /* ------------------------------------------------------------------ */

@@ -83,10 +83,12 @@ describe('guest principal + scoped-config builders', () => {
     delete process.env.GUEST_MODEL;
   });
 
+  const req = { headers: { 'cf-connecting-ip': '203.0.113.7' } };
+
   it('buildGuestPrincipal returns an ephemeral GUEST principal with no DB id/email', () => {
-    const principal = buildGuestPrincipal('guest_abc');
+    const principal = buildGuestPrincipal(req);
     expect(principal).toEqual({
-      id: 'guest_abc',
+      id: expect.stringMatching(/^guest_[0-9a-f]{32}$/),
       role: GUEST_ROLE,
       name: GUEST_NAME,
       guest: true,
@@ -96,8 +98,8 @@ describe('guest principal + scoped-config builders', () => {
   });
 
   it('buildGuestUser exposes only safe, guest-scoped fields (no email)', () => {
-    const user = buildGuestUser(buildGuestPrincipal('guest_abc'));
-    expect(user.id).toBe('guest_abc');
+    const user = buildGuestUser(buildGuestPrincipal(req));
+    expect(user.id).toMatch(/^guest_[0-9a-f]{32}$/);
     expect(user.role).toBe(GUEST_ROLE);
     expect(user.name).toBe(GUEST_NAME);
     expect(user.guest).toBe(true);

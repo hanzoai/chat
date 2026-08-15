@@ -1,57 +1,50 @@
 import * as React from 'react';
-import * as SliderPrimitive from '@radix-ui/react-slider';
+import { Slider as GuiSlider } from '@hanzo/ui/primitives/Slider';
 import { cn } from '~/utils';
 
-type SliderProps = React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
-  className?: string;
-  onDoubleClick?: () => void;
-  'aria-describedby'?: string;
-} & (
+type BaseSliderProps = Omit<
+  React.ComponentProps<typeof GuiSlider>,
+  'aria-label' | 'aria-labelledby'
+>;
+
+/**
+ * A slider that assistive tech can see must be NAMED, and requiring exactly one
+ * of `aria-label` / `aria-labelledby` at compile time is what this wrapper is
+ * for. `value`, `defaultValue`, `min`, `max`, `step`, `orientation`, `disabled`
+ * and `onValueChange` carry the same names and the same shapes as before
+ * (`number[]` in, `number[]` out), and `onDoubleClick` is typed on the
+ * primitive's web props, so the reset-on-double-click call sites are unchanged.
+ */
+type SliderProps = BaseSliderProps &
+  (
     | { 'aria-label': string; 'aria-labelledby'?: never }
     | { 'aria-labelledby': string; 'aria-label'?: never }
     | { 'aria-label': string; 'aria-labelledby': string }
   );
 
-const Slider = React.forwardRef<React.ElementRef<typeof SliderPrimitive.Root>, SliderProps>(
-  (
-    {
+/**
+ * The primitive renders its own track, range and thumb, so those three elements
+ * and their class strings are gone with them.
+ *
+ * The names now go straight through. This file used to hand-place `aria-label`,
+ * `aria-labelledby` and `aria-describedby` on the thumb, because that is where
+ * `role="slider"` lives and a name spread onto the root reaches a node no
+ * screen reader announces. @hanzo/ui 8.0.73 routes those four naming properties
+ * to the thumb itself and keeps value, range and step on the root, so the
+ * placement is the primitive's job and the compile-time requirement above is
+ * all that is left here.
+ *
+ * One limitation to know before reaching for it: the thumb is index 0 and there
+ * is exactly one, so a two-handle range slider is not expressible.
+ */
+const Slider = ({ className, ...props }: SliderProps) => (
+  <GuiSlider
+    {...props}
+    className={cn(
+      'relative flex w-full cursor-pointer touch-none select-none items-center',
       className,
-      onDoubleClick,
-      'aria-labelledby': ariaLabelledBy,
-      'aria-label': ariaLabel,
-      'aria-describedby': ariaDescribedBy,
-      ...props
-    },
-    ref,
-  ) => (
-    <SliderPrimitive.Root
-      ref={ref}
-      {...props}
-      {...{
-        className: cn(
-          'relative flex w-full cursor-pointer touch-none select-none items-center',
-          className,
-        ),
-        onDoubleClick,
-      }}
-    >
-      <SliderPrimitive.Track
-        {...{ className: 'relative h-2 w-full grow overflow-hidden rounded-full bg-secondary' }}
-      >
-        <SliderPrimitive.Range {...{ className: 'absolute h-full bg-primary' }} />
-      </SliderPrimitive.Track>
-      <SliderPrimitive.Thumb
-        {...{
-          className:
-            'block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
-          'aria-labelledby': ariaLabelledBy,
-          'aria-label': ariaLabel,
-          'aria-describedby': ariaDescribedBy,
-        }}
-      />
-    </SliderPrimitive.Root>
-  ),
+    )}
+  />
 );
-Slider.displayName = SliderPrimitive.Root.displayName;
 
 export { Slider };

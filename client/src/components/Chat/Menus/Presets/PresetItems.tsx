@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { Close } from '@radix-ui/react-popover';
+import { PopoverClose } from '@hanzo/ui/primitives/PopoverClose';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { getEndpointField } from '@hanzochat/data-provider';
 import {
@@ -47,7 +47,7 @@ const PresetItems: FC<{
     <>
       <div
         role="menuitem"
-        className="pointer-none group m-1.5 flex h-8 min-w-[170px] gap-2 rounded px-5 py-2.5 !pr-3 text-sm !opacity-100 focus:ring-0 radix-disabled:pointer-events-none radix-disabled:opacity-50 md:min-w-[240px]"
+        className="pointer-none group m-1.5 flex h-8 min-w-[170px] gap-2 rounded px-5 py-2.5 !pr-3 text-sm !opacity-100 focus:ring-0 md:min-w-[240px]"
         tabIndex={-1}
       >
         <div className="flex h-full grow items-center justify-end gap-2">
@@ -111,7 +111,7 @@ const PresetItems: FC<{
       {presets && presets.length === 0 && (
         <div
           role="menuitem"
-          className="pointer-none group m-1.5 flex h-8 min-w-[170px] gap-2 rounded px-5 py-2.5 !pr-3 text-sm !opacity-100 focus:ring-0 radix-disabled:pointer-events-none radix-disabled:opacity-50 md:min-w-[240px]"
+          className="pointer-none group m-1.5 flex h-8 min-w-[170px] gap-2 rounded px-5 py-2.5 !pr-3 text-sm !opacity-100 focus:ring-0 md:min-w-[240px]"
           tabIndex={-1}
         >
           <div className="flex h-full grow items-center justify-end gap-2 text-gray-600 dark:text-gray-300">
@@ -138,7 +138,12 @@ const PresetItems: FC<{
             const Icon = icons[iconKey];
 
             return (
-              <Close asChild key={`preset-${presetId}`}>
+              /* `except-style`: gui's Close is a YStack, so a bare `asChild`
+               * would merge a flex column onto this wrapper. Radix's Close
+               * styled nothing. The child is a host element, so gui's `onPress`
+               * is remapped to `onClick` and the row still dismisses the menu
+               * when a preset is chosen. */
+              <PopoverClose asChild="except-style" key={`preset-${presetId}`}>
                 <div key={`preset-${presetId}`}>
                   <Flipped flipId={presetId}>
                     <MenuItem
@@ -247,7 +252,7 @@ const PresetItems: FC<{
                   </Flipped>
                   {i !== presets.length - 1 && <MenuSeparator />}
                 </div>
-              </Close>
+              </PopoverClose>
             );
           })}
       </Flipper>

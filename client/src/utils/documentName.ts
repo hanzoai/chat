@@ -51,7 +51,10 @@ export function documentName(conversationTitle?: string | null, app = appName())
   const convo = (conversationTitle ?? '').trim();
   const name = (app ?? '').trim();
   if (!convo) return name;
-  return name ? `${convo} | ${name}` : convo;
+  // An em dash, which is how every Hanzo surface appends its name — the same
+  // shape hanzo.app's title template writes. The pipe was a second spelling of
+  // one convention, and a tab is where a person compares two of our tabs.
+  return name ? `${convo} — ${name}` : convo;
 }
 
 /** Name the document — the one way to write `document.title`. */

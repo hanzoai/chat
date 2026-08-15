@@ -14,18 +14,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { setTokenHeader, SystemRoles } from '@hanzochat/data-provider';
 import type * as t from '@hanzochat/data-provider';
-import {
-  useGetRole,
-  useGetUserQuery,
-  useLoginUserMutation,
-  useLogoutUserMutation,
-  useRefreshTokenMutation,
-  useGetStartupConfig,
-} from '~/data-provider';
-import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
-import { requireLogin } from '~/utils/login';
+import { useGetRole, useGetUserQuery, useGetStartupConfig } from '~/data-provider';
+import { TAuthConfig, TUserContext, TAuthContext } from '~/common';
+import { guestUser } from '~/utils/guest';
 import { exchanging, probeSession } from '~/utils/sso';
-import useGuestAuth from './useGuestAuth';
+import { getHanzoIamSdk } from '~/utils/iam';
 import useTimeout from './useTimeout';
 import store from '~/store';
 
@@ -56,7 +49,6 @@ const AuthContextProvider = ({
   const sessionRef = useRef<'unknown' | 'none' | 'live'>('unknown');
 
   const { data: startupConfig } = useGetStartupConfig();
-  const { acquireGuestToken } = useGuestAuth();
 
   const { data: userRole = null } = useGetRole(SystemRoles.USER, {
     enabled: !!(isAuthenticated && (user?.role ?? '')),
@@ -101,109 +93,94 @@ const AuthContextProvider = ({
   );
   const doSetError = useTimeout({ callback: (error) => setError(error as string | undefined) });
 
-  const loginUser = useLoginUserMutation({
-    onSuccess: (data: t.TLoginResponse) => {
-      const { user, token, twoFAPending, tempToken } = data;
-      if (twoFAPending) {
-        // Redirect to the two-factor authentication route.
-        navigate(`/login/2fa?tempToken=${tempToken}`, { replace: true });
-        return;
-      }
-      setError(undefined);
-      setUserContext({ token, isAuthenticated: true, user, redirect: '/c/new' });
-    },
-    onError: (error: TResError | unknown) => {
-      const resError = error as TResError;
-      doSetError(resError.message);
-      navigate('/login', { replace: true });
-    },
-  });
-  const logoutUser = useLogoutUserMutation({
-    onSuccess: (data) => {
-      setUserContext({
-        token: undefined,
-        isAuthenticated: false,
-        user: undefined,
-        redirect: data.redirect ?? '/login',
-      });
-    },
-    onError: (error) => {
-      doSetError((error as Error).message);
-      setUserContext({
-        token: undefined,
-        isAuthenticated: false,
-        user: undefined,
-        redirect: '/login',
-      });
-    },
-  });
-  const refreshToken = useRefreshTokenMutation();
   const queryClient = useQueryClient();
 
+  /**
+   * Sign out where the session actually lives.
+   *
+   * The issuer holds it — an SSO cookie at hanzo.id plus the refresh token this
+   * browser stores — so ending it is `IAM#logout()`: revoke both tokens, end the
+   * session there, then clear what this browser holds. Clearing only the local
+   * copy would leave the issuer still recognising this browser, and the silent
+   * probe below would sign the same person straight back in.
+   */
   const logout = useCallback(
     (redirect?: string) => {
       if (redirect) {
         logoutRedirectRef.current = redirect;
       }
-      logoutUser.mutate(undefined);
+      void getHanzoIamSdk()
+        .logout()
+        .catch(() => {
+          /* Reaching the issuer is best-effort; leaving this machine is not. */
+        })
+        .then(() => {
+          setIsGuest(false);
+          setUserContext({
+            token: undefined,
+            isAuthenticated: false,
+            user: undefined,
+            redirect: '/login',
+          });
+        });
     },
-    [logoutUser],
+    [setUserContext],
   );
 
   const userQuery = useGetUserQuery({ enabled: !!(token ?? '') && !isGuest });
 
+  /**
+   * Become a guest.
+   *
+   * A guest is anonymous, which means they hold nothing: no account, no token,
+   * no credential to acquire. The identity is entirely local, and the server
+   * recognises the visitor by the absence of a bearer — which is why this cannot
+   * fail and no longer asks anyone's permission. What a guest may do is decided
+   * server-side (`enforceGuestScope`), never here.
+   */
   const acquireGuest = useCallback(async (): Promise<boolean> => {
-    const session = await acquireGuestToken();
     if (sessionRef.current === 'live') {
-      /* A real session landed while the guest token was in flight — drop it. */
+      /* A real session landed in the meantime — it supersedes the guest. */
       return false;
     }
-    if (!session) {
-      /**
-       * The mint was REFUSED (per-IP quota, or guest chat off server-side). That
-       * leaves this visitor with no product at all, and it used to pass silently:
-       * `Root` fell through to the marketing page, so a 429 on an auxiliary token
-       * read as a site with no composer and no explanation. Say it, and offer the
-       * one thing that resolves it.
-       */
-      requireLogin('unavailable');
-      return false;
-    }
-    // setUserContext is DEBOUNCED (50ms). A refresh failure queues its unauth
-    // write — which ends in setTokenHeader(undefined) — and a local guest
-    // mint outruns that timer, so the erase used to land AFTER this adoption
-    // and every send left tokenless while the composer stayed up. Adopting a
-    // principal cancels whatever unauth write is still pending.
+    // setUserContext is DEBOUNCED (50ms) and its unauth write ends in
+    // setTokenHeader(undefined). Adopting a principal cancels whatever unauth
+    // write is still pending, so it cannot land on top of this one.
     setUserContext.cancel();
-    setUser(session.user);
-    setToken(session.token);
-    setTokenHeader(session.token);
+    setUser(guestUser());
+    setToken(undefined);
+    setTokenHeader(undefined as unknown as string);
     setIsGuest(true);
     setIsAuthenticated(false);
     // Bootstrap queries (models, endpoints, convos) that fired before this
-    // bearer existed have burned their retries into a terminal error state,
-    // and nothing else re-runs them — the chat pane would stay empty with a
-    // valid session in hand. Adopting a principal refetches the world.
+    // identity existed have burned their retries into a terminal error state,
+    // and nothing else re-runs them — the chat pane would stay empty. Adopting a
+    // principal refetches the world.
     await queryClient.invalidateQueries();
     return true;
-  }, [acquireGuestToken, setUser, queryClient]);
+  }, [setUser, setUserContext, queryClient]);
 
-  const login = (data: t.TLoginUser) => {
-    loginUser.mutate(data);
+  /**
+   * Start a sign-in. IAM owns every credential step, so there is nothing to
+   * collect here and nothing to post — this hands the browser to the issuer and
+   * `OAuthCallback` picks it up on the way back.
+   */
+  const login = () => {
+    void getHanzoIamSdk().signinRedirect();
   };
 
   /**
-   * Ref-held guest fallback so `silentRefresh` (intentionally dep-free) always
+   * Ref-held guest fallback so `adoptSession` (intentionally dep-free) always
    * sees the latest config/handler without resubscribing. When no session
-   * exists and guest chat is enabled, acquire a guest token; otherwise let the
-   * root route show the landing/login gate.
+   * exists and guest chat is enabled, fall back to the anonymous preview;
+   * otherwise let the root route show the landing/login gate.
    */
   const guestFallbackRef = useRef<() => Promise<void>>(async () => {});
   guestFallbackRef.current = async () => {
-    // A principal already landed (guest or real) — a straggler refresh must
-    // not run the fallback: its unauth branch resets the token header that
-    // the adopted session just installed, and the next send goes out
-    // tokenless while the composer still renders.
+    // A principal already landed (guest or real) — a straggler must not run the
+    // fallback: its unauth branch resets the token header that the adopted
+    // session just installed, and the next send goes out tokenless while the
+    // composer still renders.
     if (isGuest || isAuthenticated) {
       return;
     }
@@ -256,46 +233,47 @@ const AuthContextProvider = ({
   };
 
   /** One probe at a time: the effect below refires on every auth-state change
-   *  while signed out, and parallel refreshes mean parallel fallbacks — the
+   *  while signed out, and parallel probes mean parallel fallbacks — the
    *  stragglers land after the guest has adopted and undo it. */
   const refreshBusyRef = useRef(false);
-  const silentRefresh = useCallback(() => {
+  const adoptSession = useCallback(() => {
     if (authConfig?.test === true) {
-      console.log('Test mode. Skipping silent refresh.');
+      console.log('Test mode. Skipping session adoption.');
       return;
     }
     if (refreshBusyRef.current) {
       return;
     }
     refreshBusyRef.current = true;
-    refreshToken.mutate(undefined, {
-      onSettled: () => {
-        refreshBusyRef.current = false;
-      },
-      onSuccess: (data: t.TRefreshTokenResponse | undefined) => {
-        const { user, token = '' } = data ?? {};
-        if (token) {
-          setUserContext({ token, isAuthenticated: true, user });
-        } else if (user) {
-          // Session-based auth: no JWT token, but user data means session is valid
-          // Use a sentinel value so isAuthenticated works
-          setUserContext({ token: 'session', isAuthenticated: true, user });
-        } else {
-          console.log('No valid session. User is not authenticated.');
-          if (authConfig?.test === true) {
-            return;
-          }
-          void guestFallbackRef.current();
+
+    /**
+     * Ask IAM whether this browser still has a session.
+     *
+     * `getValidAccessToken` answers from what the browser already holds and
+     * spends the refresh token on it when the access token has aged out, so a
+     * reload and an expiry are the same question with the same answer. There is
+     * nothing to ask this server: it issues no credential, and the token the
+     * SDK returns is the one it will verify.
+     */
+    void getHanzoIamSdk()
+      .getValidAccessToken()
+      .then((token) => {
+        if (token != null && token !== '') {
+          setUserContext({ token, isAuthenticated: true, user: undefined });
+          return;
         }
-      },
-      onError: (error) => {
-        console.log('refreshToken mutation error:', error);
+        return guestFallbackRef.current();
+      })
+      .catch((error) => {
+        console.log('IAM session adoption error:', error);
         if (authConfig?.test === true) {
           return;
         }
-        void guestFallbackRef.current();
-      },
-    });
+        return guestFallbackRef.current();
+      })
+      .finally(() => {
+        refreshBusyRef.current = false;
+      });
   }, []);
 
   useEffect(() => {
@@ -309,7 +287,7 @@ const AuthContextProvider = ({
       doSetError(undefined);
     }
     if (!isGuest && (token == null || !token || !isAuthenticated)) {
-      silentRefresh();
+      adoptSession();
     }
   }, [
     token,
@@ -321,12 +299,12 @@ const AuthContextProvider = ({
     error,
     setUser,
     navigate,
-    silentRefresh,
+    adoptSession,
     setUserContext,
   ]);
 
-  // Acquire a guest session once startup config confirms guest chat is enabled.
-  // silentRefresh's fallback can run before startupConfig has loaded (when
+  // Adopt the guest identity once startup config confirms guest chat is enabled.
+  // The fallback can run before startupConfig has loaded (when
   // `allowGuestChat` is still undefined), and it is not retried — so this effect
   // closes that race by acquiring the guest token when the flag becomes true.
   // It waits for `sessionRef` to say there is no session: the probe is the ONLY

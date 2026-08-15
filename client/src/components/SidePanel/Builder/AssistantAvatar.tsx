@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import * as Popover from '@radix-ui/react-popover';
+import { Popover } from '@hanzo/ui/primitives/Popover';
+import { PopoverTrigger } from '@hanzo/ui/primitives/PopoverTrigger';
 import { useToastContext } from '@hanzochat/client';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -210,9 +211,19 @@ function Avatar({
   };
 
   return (
-    <Popover.Root open={menuOpen} onOpenChange={setMenuOpen}>
+    /* The Root lives here and the Content lives in `./Images` (`AvatarMenu`) —
+     * one popover across two files, so the two convert together.
+     *
+     * `allowFlip` restates Radix's default: `avoidCollisions` is on unless a
+     * caller turns it off, while gui's flip middleware is opt-in. gui calls
+     * `onOpenChange(open, via)`; the extra argument is ignored by `setMenuOpen`. */
+    <Popover open={menuOpen} onOpenChange={setMenuOpen} allowFlip>
       <div className="flex w-full items-center justify-center gap-4">
-        <Popover.Trigger asChild>
+        {/* `except-style`: gui merges its View styles onto a slotted child and
+          * the View is a flex column, which would fight this button's `h-20
+          * w-20` avatar box. Radix's trigger styled nothing. The child is a host
+          * element, so gui's `onPress` is remapped to `onClick`. */}
+        <PopoverTrigger asChild="except-style">
           <button
             type="button"
             className="h-20 w-20"
@@ -220,10 +231,10 @@ function Avatar({
           >
             {previewUrl ? <AssistantAvatar url={previewUrl} progress={progress} /> : <NoImage />}
           </button>
-        </Popover.Trigger>
+        </PopoverTrigger>
       </div>
       {<AvatarMenu handleFileChange={handleFileChange} />}
-    </Popover.Root>
+    </Popover>
   );
 }
 

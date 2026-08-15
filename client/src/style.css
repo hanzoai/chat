@@ -40,6 +40,12 @@
    dependency ever slips back under it, instead of a silently unstyled product. */
 @import '@hanzo/ui/glass.css';
 
+/* The composer's material — the lit ring around the field. Shared with hanzo.ai
+   and hanzo.app, which is the point: it was copied into all three stylesheets
+   and the copies drifted. Its own package rather than a @hanzo/ui subpath,
+   because this app pins that library below 8.0.52. */
+@import '@hanzo/composer/composer.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -214,7 +220,13 @@
   --surface-active-alt: var(--gray-800);
   --surface-hover: var(--gray-800);
   --surface-hover-alt: var(--gray-800);
-  --surface-primary: var(--gray-975);
+  /* The page ground, and it must equal what the design layer already
+     declares: --background is #0a0a0a on hanzo.ai, hanzo.app and here.
+     This line pointed at --gray-975 (#000), so chat DECLARED the shared
+     value and painted a different one — two surfaces of one product a
+     shade apart, which is the kind of difference you feel switching tabs
+     without being able to name it. */
+  --surface-primary: #0a0a0a;
   --surface-primary-alt: var(--gray-925);
   --surface-primary-contrast: var(--gray-900);
   --surface-secondary: var(--gray-950);
@@ -279,66 +291,6 @@
    Restating the rules here would be a second copy of a value that has one
    home, and it would hold still the day design moves the theme. */
 
-/* ── The composer ring — the ONE prism on any Hanzo surface ──────────────────
-   A slow-drifting conic ring plus a soft glow on the chat composer, ~10s loop.
-   The composer is where you talk to Hanzo, so it is the thing that should look
-   alive — and it earns that with MOTION and LIGHT rather than with hue. Every
-   other pixel of chrome stays monochrome; there is no second exemption, and the
-   two attempts to grant one (a violet ring, then a full-wheel rainbow) each made
-   the surface wearing it the only colour in the product.
-
-   Same sweep, same 10s, same structure as hanzo.app's composer: one look across
-   the two surfaces you can type into. The stops are declared once here and read
-   by both the ring and the glow — duplicated, they drift on the first palette
-   change and nobody notices which half moved.
-
-   Structure: `.hz-composer` is a 1.5px-padded host carrying the conic ring
-   (::before) and the blurred glow (::after, extends past it); its direct child
-   is the composer panel. Both pseudo-elements are MASKED to exclude the panel's
-   own footprint, so the ring is a lip and the glow is a halo — neither paints
-   behind the panel, and the panel is free to be glass. They used to be filled
-   discs that an opaque panel covered, which made the panel's opacity
-   load-bearing for the ring's shape. `@property` is what lets the conic angle
-   animate at all; where it is unsupported the ring is simply static, which is a
-   fine second-best.
-
-   Reduced motion holds a frame — still lit, no drift. */
-@property --hz-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
-:root {
-  /* One sweep, closing on the stop it opened with: a conic gradient whose first
-     and last stop differ shows a hard seam.
-     
-     LUMINANCE, NOT HUE. This was four saturated stops — blue, violet, pink,
-     amber — at 0.40-0.48 alpha, and a conic gradient does not spread its stops
-     evenly around a rounded RECTANGLE: the long top and bottom edges each take
-     a wide angular slice while the short sides take almost none. So at any
-     instant one edge wore a bright pink and the opposite edge a dim blue, which
-     reads exactly as reported: "it only highlights the top half and slightly
-     off". Nothing was misaligned; an uneven ring cannot look aligned.
-     
-     White at two close alphas fixes the cause rather than nudging the geometry.
-     There is no bright arc to land in the wrong place, the peak is 0.18 instead
-     of 0.48, and the slow drift survives as a sheen — the composer still earns
-     its aliveness with MOTION and LIGHT, which is what the note below always
-     said it should do. It also stops being the one coloured thing in a
-     monochrome product. */
-  --hz-spectrum:
-    rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.18),
-    rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.18),
-    rgba(255, 255, 255, 0.1);
-}
-
-@keyframes hzComposerSpin {
-  to {
-    --hz-angle: 360deg;
-  }
-}
-
 /* The composer is ONE surface, and the field inside it is not a field.
    @hanzo/ui's theme.css lifts a hovered control a rung —
    `:where(input,select,textarea):hover:not(:focus-visible):not(:disabled)
@@ -374,10 +326,13 @@
   }
 }
 
+/* The ring, the halo and the sweep are @hanzo/composer, imported above — the
+   same material hanzo.ai and hanzo.app draw. One knob differs: this composer is
+   a box, not a pill, and the halo derives its own corner from this. Stated here
+   rather than as a utility on the host, so the shell's radius and the ring's are
+   one value. */
 .hz-composer {
-  position: relative;
-  isolation: isolate;
-  padding: 1.5px;
+  --hz-composer-radius: 1.5rem;
 }
 
 /* The composer sits a touch more solid than ambient glass (menus, dialogs at
@@ -390,9 +345,51 @@
 .hz-composer > .glass {
   background-color: color-mix(in oklab, var(--background) 84%, transparent) !important;
 }
+
 .hz-composer:hover > .glass,
 .hz-composer:focus-within > .glass {
   background-color: color-mix(in oklab, var(--background) 93%, transparent) !important;
+}
+
+/* The conversation-starter chips are liquid glass over the landing video: a much
+   LIGHTER fill than the composer, so the footage reads THROUGH them instead of
+   the chips sitting on the hero as dark slabs. The base `.glass` (72% ground)
+   and the composer (84%) are the right weight for a control you type into; a
+   one-tap suggestion pill wants to look like frosted glass laid on the video.
+   Inside `@supports` so a browser that cannot blur still gets `.glass`'s opaque
+   ground and the labels stay legible; `!important` because `.glass`'s own fill
+   is `!important`.
+
+   The glass STAYS glass on hover — it does not change identity. An earlier pass
+   flipped the fill from a dark ground to a white one on hover, which read as the
+   chip lighting up and swapping colour under the pointer; the ask was the
+   opposite — transparent glass that stays transparent. So the fill is the same
+   at rest and on hover, and the only feedback is a hair of extra rim (the label
+   also brightens, from `hover:text-text-primary` on the element). A 1px inner
+   rim draws the glass edge. */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass.hz-chip {
+    background-color: color-mix(in oklab, var(--background) 34%, transparent) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-primary) 8%, transparent);
+  }
+  .glass.hz-chip:hover {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-primary) 16%, transparent);
+  }
+}
+
+/* The gui Switch paints its track `$color3` in BOTH states, which on the dark
+   settings surface is near-invisible — an OFF toggle read as a white thumb
+   floating with no track under it, and ON was barely distinguishable. The thumb
+   is white and moves left↔right, so position is the primary signal; these give
+   the track a visible ground in both states as the secondary one — a dim gray
+   off, a bright gray on, both clear against a white thumb. Scoped to the switch
+   role so nothing else moves; `!important` beats gui's inline atomic fill. */
+[role='switch'] {
+  background-color: color-mix(in oklab, var(--text-primary) 14%, transparent) !important;
+}
+[role='switch'][aria-checked='true'],
+[role='switch'][data-state='checked'] {
+  background-color: color-mix(in oklab, var(--text-primary) 48%, transparent) !important;
 }
 
 /* Sidebar conversation rows lift off the GLASS sidebar with a translucent tint,
@@ -404,92 +401,6 @@
 :root {
   --surface-row-hover: color-mix(in oklab, var(--text-primary) 9%, transparent);
   --surface-row-active: color-mix(in oklab, var(--text-primary) 15%, transparent);
-}
-
-/* The ring DRAWS A RING. It used to draw a filled disc and rely on the panel
-   above it being opaque to cover the middle — which made the panel's opacity
-   load-bearing for something that was never about the panel. The moment the
-   composer became glass, the whole spectrum washed up through it.
-
-   `padding` here is the ring's own thickness, and the two-layer mask keeps the
-   paint outside that padding: `content-box` is the hole, the full box is the
-   plate, and `exclude` leaves the lip. So the ring is a rim by construction and
-   the panel is free to be any material at all. */
-.hz-composer::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 1.5px;
-  border-radius: inherit;
-  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
-  animation: hzComposerSpin 10s linear infinite;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  /* After the standard shorthand: WebKit aliases `mask` onto `-webkit-mask`, so
-     declaring this first lets the shorthand reset it to `source-over` — which
-     is the filled disc again, on exactly the browsers too old to have
-     `mask-composite` at all. */
-  -webkit-mask-composite: xor;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* The glow is a HALO, masked like the ring so it lights the air around the box
-   and nothing behind it. The LOUD version of this — 0.5 resting, pulsing to
-   0.85 — was killed on purpose ("kill the composer glow halo"): over the
-   animated backdrop it read as a purple wash. This is the deliberately-subtle
-   replacement: a fifth of the alpha, a tighter spread, and no opacity pulse —
-   only the same slow spin the ring already runs, so the two stay in phase. */
-.hz-composer::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  padding: 6px;
-  /* Concentric with the box, NOT `inherit`: the halo lives 6px outside the
-     composer, so an inherited 24px corner on this larger box curves too tight
-     and reads as a second, mismatched rounding just outside the panel. */
-  border-radius: calc(1.5rem + 6px);
-  background: conic-gradient(from var(--hz-angle), var(--hz-spectrum));
-  filter: blur(16px);
-  opacity: 0.22;
-  animation: hzComposerSpin 10s linear infinite;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  /* After the standard shorthand: WebKit aliases `mask` onto `-webkit-mask`, so
-     declaring this first lets the shorthand reset it to `source-over` — which
-     is the filled disc again, on exactly the browsers too old to have
-     `mask-composite` at all. */
-  -webkit-mask-composite: xor;
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* Focus lifts the glow — still well shy of where the old halo RESTED. */
-.hz-composer:focus-within::after {
-  opacity: 0.4;
-}
-
-/* The composer panel sits above the ring and the glow. */
-.hz-composer > * {
-  position: relative;
-  z-index: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hz-composer::before,
-  .hz-composer::after {
-    animation: none;
-  }
 }
 
 .text-token-text-primary {

@@ -200,38 +200,8 @@ export const models = () => `${BASE_URL}/v1/chat/models`;
 
 export const tokenizer = () => `${BASE_URL}/v1/chat/tokenizer`;
 
-export const login = () => `${BASE_URL}/v1/chat/auth/login`;
-
-export const logout = () => `${BASE_URL}/v1/chat/auth/logout`;
-
-export const register = () => `${BASE_URL}/v1/chat/auth/register`;
-
-export const loginFacebook = () => `${BASE_URL}/v1/chat/auth/facebook`;
-
-export const loginGoogle = () => `${BASE_URL}/v1/chat/auth/google`;
-
-export const refreshToken = (retry?: boolean) =>
-  `${BASE_URL}/v1/chat/auth/refresh${retry === true ? '?retry=true' : ''}`;
-
-/**
- * Session-bridge: exchange an @hanzo/iam SPA token for a Chat session
- * (refresh cookie + Mongo Session + Chat JWT). POST { accessToken, idToken }.
- */
-export const iamSession = () => `${BASE_URL}/v1/chat/auth/iam/session`;
-
-export const guestToken = () => `${BASE_URL}/v1/chat/auth/guest`;
-
-export const requestPasswordReset = () => `${BASE_URL}/v1/chat/auth/requestPasswordReset`;
-
-export const resetPassword = () => `${BASE_URL}/v1/chat/auth/resetPassword`;
-
-export const verifyEmail = () => `${BASE_URL}/v1/chat/user/verify`;
-
-// Auth page URLs (for client-side navigation and redirects)
+/** Where the app sends a visitor who needs to sign in. */
 export const loginPage = () => `${BASE_URL}/login`;
-export const registerPage = () => `${BASE_URL}/register`;
-
-export const resendVerificationEmail = () => `${BASE_URL}/v1/chat/user/verify/resend`;
 
 export const plugins = () => `${BASE_URL}/v1/chat/plugins`;
 
@@ -446,14 +416,6 @@ export const banner = () => `${BASE_URL}/v1/chat/banner`;
 export const feedback = (conversationId: string, messageId: string) =>
   `${BASE_URL}/v1/chat/messages/${conversationId}/${messageId}/feedback`;
 
-// Two-Factor Endpoints
-export const enableTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/enable`;
-export const verifyTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/verify`;
-export const confirmTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/confirm`;
-export const disableTwoFactor = () => `${BASE_URL}/v1/chat/auth/2fa/disable`;
-export const regenerateBackupCodes = () => `${BASE_URL}/v1/chat/auth/2fa/backup/regenerate`;
-export const verifyTwoFactorTemp = () => `${BASE_URL}/v1/chat/auth/2fa/verify-temp`;
-
 /* Memories */
 export const memories = () => `${BASE_URL}/v1/chat/memories`;
 export const memory = (key: string) => `${memories()}/${encodeURIComponent(key)}`;
@@ -488,7 +450,3 @@ export const getEffectivePermissions = (resourceType: ResourceType, resourceId: 
 
 export const getAllEffectivePermissions = (resourceType: ResourceType) =>
   `${BASE_URL}/v1/chat/permissions/${resourceType}/effective/all`;
-
-// SharePoint Graph API Token
-export const graphToken = (scopes: string) =>
-  `${BASE_URL}/v1/chat/auth/graph-token?scopes=${encodeURIComponent(scopes)}`;

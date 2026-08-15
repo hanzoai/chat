@@ -32,7 +32,13 @@ const ConvoLink: React.FC<ConvoLinkProps> = ({
     >
       {children}
       <div
-        className="fade-tail relative flex-1 grow overflow-hidden whitespace-nowrap"
+        className={cn(
+          'fade-tail relative flex-1 grow overflow-hidden whitespace-nowrap',
+          // A chat with no title yet is not a chat NAMED "Untitled". Same word,
+          // quieter, so a column of them reads as a title still coming rather
+          // than as a hundred chats that share one name.
+          title == null || title === '' ? 'text-text-secondary' : undefined,
+        )}
         style={{ textOverflow: 'clip' }}
         onDoubleClick={(e) => {
           if (isSmallScreen) {

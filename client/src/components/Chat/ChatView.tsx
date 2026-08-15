@@ -15,6 +15,7 @@ import Presentation from './Presentation';
 import SelectionAsk from './SelectionAsk';
 import ChatForm from './Input/ChatForm';
 import AnswerEngine from './Answer/AnswerEngine';
+import { Notice } from '~/components/Free';
 import Header from './Header';
 import Footer from './Footer';
 import { resolveProjectSlug, projectOpener } from '~/utils/project';
@@ -110,6 +111,10 @@ function ChatView({ index = 0 }: { index?: number }) {
         <div className="flex h-full flex-col overflow-y-auto">
           {content}
           <div className="w-full">
+            {/* Sits with the composer, above it: when a paid model cannot serve,
+                the offer to continue on Free belongs beside the thing that will
+                carry the next message. */}
+            <Notice />
             <ChatForm index={index} />
             <Footer />
           </div>

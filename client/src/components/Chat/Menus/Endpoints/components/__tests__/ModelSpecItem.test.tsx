@@ -37,7 +37,7 @@ jest.mock('~/hooks', () => ({
     isFavoriteSpec: () => mockIsFavoriteSpec,
     toggleFavoriteSpec: mockToggleFavoriteSpec,
   }),
-  useIsActiveItem: () => ({ ref: { current: null }, isActive: mockIsActive }),
+  useActive: () => ({ ref: { current: null }, isActive: mockIsActive }),
 }));
 
 const baseSpec: TModelSpec = {

@@ -1,6 +1,8 @@
 import { Wrench } from 'lucide-react';
 import { useMultiSearch } from '@hanzochat/client';
-import { Root, Trigger, Content, Portal } from '@radix-ui/react-popover';
+import { Popover } from '@hanzo/ui/primitives/Popover';
+import { PopoverContent } from '@hanzo/ui/primitives/PopoverContent';
+import { PopoverTrigger } from '@hanzo/ui/primitives/PopoverTrigger';
 import type { TPlugin } from '@hanzochat/data-provider';
 import MenuItem from '~/components/Chat/Menus/UI/MenuItem';
 import { cn } from '~/utils/';
@@ -45,10 +47,18 @@ function MultiSelectPop({
   const options = hasSearchRender ? filteredValues : availableValues;
 
   return (
-    <Root>
+    /* `allowFlip` restates Radix's default: `avoidCollisions` is on unless a
+     * caller turns it off, while gui's flip middleware is opt-in. Without it a
+     * plugin list opened low in the window runs off the bottom. */
+    <Popover allowFlip>
       <div className={cn('flex items-center justify-center gap-2', containerClassName ?? '')}>
         <div className="relative">
-          <Trigger asChild>
+          {/* `except-style`: gui merges its View styles onto a slotted child,
+            * and the View is a flex COLUMN — this button's label, icons and
+            * chevron would stop sitting in a row. Radix's trigger styled
+            * nothing. `data-state` still lands, so `radix-state-open:bg-gray-50`
+            * keeps matching. */}
+          <PopoverTrigger asChild="except-style">
             <button
               data-testid="select-dropdown-button"
               className={cn(
@@ -106,48 +116,55 @@ function MultiSelectPop({
                 </svg>
               </span>
             </button>
-          </Trigger>
-          <Portal>
-            <Content
-              side="bottom"
-              align="center"
-              className={cn(
-                'mt-2 max-h-[52vh] min-w-full overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white',
-                hasSearchRender && 'relative',
-              )}
-            >
-              {searchRender}
-              {options.map((option) => {
-                if (!option) {
-                  return null;
-                }
-                const selected = isSelected(option[optionValueKey]);
-                return (
-                  <MenuItem
-                    key={`${option[optionValueKey]}`}
-                    title={option.name}
-                    value={option[optionValueKey]}
-                    selected={selected}
-                    onClick={() => setSelected(option.pluginKey)}
-                    icon={
-                      option.icon ? (
-                        <img
-                          src={option.icon}
-                          alt={`${option.name} logo`}
-                          className="icon-sm mr-1 rounded-sm bg-cover"
-                        />
-                      ) : (
-                        <Wrench className="icon-sm mr-1 rounded-sm bg-white bg-cover dark:bg-gray-800" />
-                      )
-                    }
-                  />
-                );
-              })}
-            </Content>
-          </Portal>
+          </PopoverTrigger>
+          {/* No `Portal` wrapper: PopoverContent mounts its own. `side="bottom"`
+            * and `align="center"` are gui's defaults, so neither needs
+            * restating. The three layout props do — gui bakes `width: 288`,
+            * `p: '$4'` and `alignItems: 'center'` ahead of caller props, and
+            * this panel is a shrink-to-fit column of full-width rows that carry
+            * their own padding. `trapFocus={false}` matches Radix's non-modal
+            * content, which does not trap focus. */}
+          <PopoverContent
+            trapFocus={false}
+            width="auto"
+            padding={0}
+            alignItems="stretch"
+            className={cn(
+              'mt-2 max-h-[52vh] min-w-full overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white',
+              hasSearchRender && 'relative',
+            )}
+          >
+            {searchRender}
+            {options.map((option) => {
+              if (!option) {
+                return null;
+              }
+              const selected = isSelected(option[optionValueKey]);
+              return (
+                <MenuItem
+                  key={`${option[optionValueKey]}`}
+                  title={option.name}
+                  value={option[optionValueKey]}
+                  selected={selected}
+                  onClick={() => setSelected(option.pluginKey)}
+                  icon={
+                    option.icon ? (
+                      <img
+                        src={option.icon}
+                        alt={`${option.name} logo`}
+                        className="icon-sm mr-1 rounded-sm bg-cover"
+                      />
+                    ) : (
+                      <Wrench className="icon-sm mr-1 rounded-sm bg-white bg-cover dark:bg-gray-800" />
+                    )
+                  }
+                />
+              );
+            })}
+          </PopoverContent>
         </div>
       </div>
-    </Root>
+    </Popover>
   );
 }
 

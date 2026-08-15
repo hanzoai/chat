@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import * as RadioGroup from '@radix-ui/react-radio-group';
+import { RadioGroup } from '@hanzo/ui/primitives/RadioGroup';
+import { RadioGroupItem } from '@hanzo/ui/primitives/RadioGroupItem';
 import {
   AuthTypeEnum,
   AuthorizationTypeEnum,
@@ -17,11 +18,17 @@ import {
 import { TranslationKeys, useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
+/** The control's box, held at the 20px this dialog has always drawn. */
+const RADIO = 20;
+
 export default function ActionsAuth({ disableOAuth }: { disableOAuth?: boolean }) {
   const localize = useLocalize();
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const { watch, setValue, trigger } = useFormContext();
   const type = watch('type');
+  const noneId = useId();
+  const apiKeyId = useId();
+  const oauthId = useId();
 
   return (
     <OGDialog open={openAuthDialog} onOpenChange={setOpenAuthDialog}>
@@ -65,76 +72,58 @@ export default function ActionsAuth({ disableOAuth }: { disableOAuth?: boolean }
             <label className="mb-1 block text-sm font-medium">
               {localize('com_ui_authentication_type')}
             </label>
-            <RadioGroup.Root
+            <RadioGroup
               defaultValue={AuthTypeEnum.None}
               onValueChange={(value) => setValue('type', value)}
               value={type}
-              role="radiogroup"
-              aria-required="false"
-              dir="ltr"
-              className="flex gap-4"
-              style={{ outline: 'none' }}
+              orientation="horizontal"
+              gap={16}
+              outline="none"
             >
               <div className="flex items-center gap-2">
-                <label htmlFor=":rf8:" className="flex cursor-pointer items-center gap-1">
-                  <RadioGroup.Item
-                    type="button"
-                    role="radio"
+                <label htmlFor={noneId} className="flex cursor-pointer items-center gap-1">
+                  <RadioGroupItem
                     value={AuthTypeEnum.None}
-                    id=":rf8:"
-                    className={cn(
-                      'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                      'border-border-heavy bg-surface-primary',
-                    )}
-                  >
-                    <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-                  </RadioGroup.Item>
+                    id={noneId}
+                    width={RADIO}
+                    height={RADIO}
+                    className="mr-1"
+                  />
                   {localize('com_ui_none')}
                 </label>
               </div>
               <div className="flex items-center gap-2">
-                <label htmlFor=":rfa:" className="flex cursor-pointer items-center gap-1">
-                  <RadioGroup.Item
-                    type="button"
-                    role="radio"
+                <label htmlFor={apiKeyId} className="flex cursor-pointer items-center gap-1">
+                  <RadioGroupItem
                     value={AuthTypeEnum.ServiceHttp}
-                    id=":rfa:"
-                    className={cn(
-                      'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                      'border-border-heavy bg-surface-primary',
-                    )}
-                  >
-                    <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-                  </RadioGroup.Item>
+                    id={apiKeyId}
+                    width={RADIO}
+                    height={RADIO}
+                    className="mr-1"
+                  />
                   {localize('com_ui_api_key')}
                 </label>
               </div>
               <div className="flex items-center gap-2">
                 <label
-                  htmlFor=":rfc:"
+                  htmlFor={oauthId}
                   className={cn(
                     'flex items-center gap-1',
                     disableOAuth === true ? 'cursor-not-allowed' : 'cursor-pointer',
                   )}
                 >
-                  <RadioGroup.Item
-                    type="button"
-                    role="radio"
+                  <RadioGroupItem
                     disabled={disableOAuth}
                     value={AuthTypeEnum.OAuth}
-                    id=":rfc:"
-                    className={cn(
-                      'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                      'border-border-heavy bg-surface-primary',
-                      disableOAuth === true ? 'cursor-not-allowed' : '',
-                    )}
-                  >
-                    <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-                  </RadioGroup.Item>
+                    id={oauthId}
+                    width={RADIO}
+                    height={RADIO}
+                    className="mr-1"
+                  />
                   {localize('com_ui_oauth')}
                 </label>
               </div>
-            </RadioGroup.Root>
+            </RadioGroup>
           </div>
           {type === 'none' ? null : type === 'service_http' ? <ApiKey /> : <OAuth />}
           {/* Cancel/Save */}
@@ -168,6 +157,9 @@ const ApiKey = () => {
   const { register, watch, setValue } = useFormContext();
   const authorization_type = watch('authorization_type');
   const type = watch('type');
+  const basicId = useId();
+  const bearerId = useId();
+  const customId = useId();
   return (
     <>
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_api_key')}</label>
@@ -183,68 +175,53 @@ const ApiKey = () => {
         {...register('api_key', { required: type === AuthTypeEnum.ServiceHttp })}
       />
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_auth_type')}</label>
-      <RadioGroup.Root
+      <RadioGroup
         defaultValue={AuthorizationTypeEnum.Basic}
         onValueChange={(value) => setValue('authorization_type', value)}
         value={authorization_type}
-        role="radiogroup"
-        aria-required="true"
-        dir="ltr"
-        className="mb-2 flex gap-6 overflow-hidden rounded-lg"
-        style={{ outline: 'none' }}
+        required
+        orientation="horizontal"
+        gap={24}
+        outline="none"
+        className="mb-2 overflow-hidden rounded-lg"
       >
         <div className="flex items-center gap-2">
-          <label htmlFor=":rfu:" className="flex cursor-pointer items-center gap-1">
-            <RadioGroup.Item
-              type="button"
-              role="radio"
+          <label htmlFor={basicId} className="flex cursor-pointer items-center gap-1">
+            <RadioGroupItem
               value={AuthorizationTypeEnum.Basic}
-              id=":rfu:"
-              className={cn(
-                'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                'border-border-heavy bg-surface-primary',
-              )}
-            >
-              <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-            </RadioGroup.Item>
+              id={basicId}
+              width={RADIO}
+              height={RADIO}
+              className="mr-1"
+            />
             {localize('com_ui_basic')}
           </label>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor=":rg0:" className="flex cursor-pointer items-center gap-1">
-            <RadioGroup.Item
-              type="button"
-              role="radio"
+          <label htmlFor={bearerId} className="flex cursor-pointer items-center gap-1">
+            <RadioGroupItem
               value={AuthorizationTypeEnum.Bearer}
-              id=":rg0:"
-              className={cn(
-                'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                'border-border-heavy bg-surface-primary',
-              )}
-            >
-              <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-            </RadioGroup.Item>
+              id={bearerId}
+              width={RADIO}
+              height={RADIO}
+              className="mr-1"
+            />
             {localize('com_ui_bearer')}
           </label>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor=":rg2:" className="flex cursor-pointer items-center gap-1">
-            <RadioGroup.Item
-              type="button"
-              role="radio"
+          <label htmlFor={customId} className="flex cursor-pointer items-center gap-1">
+            <RadioGroupItem
               value={AuthorizationTypeEnum.Custom}
-              id=":rg2:"
-              className={cn(
-                'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                'border-border-heavy bg-surface-primary',
-              )}
-            >
-              <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-            </RadioGroup.Item>
+              id={customId}
+              width={RADIO}
+              height={RADIO}
+              className="mr-1"
+            />
             {localize('com_ui_custom')}
           </label>
         </div>
-      </RadioGroup.Root>
+      </RadioGroup>
       {authorization_type === AuthorizationTypeEnum.Custom && (
         <div className="mt-2">
           <label className="mb-1 block text-sm font-medium">
@@ -284,6 +261,8 @@ const OAuth = () => {
   const { register, watch, setValue } = useFormContext();
   const token_exchange_method = watch('token_exchange_method');
   const type = watch('type');
+  const postId = useId();
+  const headerId = useId();
 
   const inputClasses = cn(
     'mb-2 h-9 w-full resize-none overflow-y-auto rounded-lg border px-3 py-2 text-sm',
@@ -327,50 +306,39 @@ const OAuth = () => {
       <label className="mb-1 block text-sm font-medium">
         {localize('com_ui_token_exchange_method')}
       </label>
-      <RadioGroup.Root
+      <RadioGroup
         defaultValue={AuthorizationTypeEnum.Basic}
         onValueChange={(value) => setValue('token_exchange_method', value)}
         value={token_exchange_method}
-        role="radiogroup"
-        aria-required="true"
-        dir="ltr"
-        style={{ outline: 'none' }}
+        required
+        gap={0}
+        outline="none"
       >
         <div className="flex items-center gap-2">
-          <label htmlFor=":rj1:" className="flex cursor-pointer items-center gap-1">
-            <RadioGroup.Item
-              type="button"
-              role="radio"
+          <label htmlFor={postId} className="flex cursor-pointer items-center gap-1">
+            <RadioGroupItem
               value={TokenExchangeMethodEnum.DefaultPost}
-              id=":rj1:"
-              className={cn(
-                'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                'border-border-heavy bg-surface-primary',
-              )}
-            >
-              <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-            </RadioGroup.Item>
+              id={postId}
+              width={RADIO}
+              height={RADIO}
+              className="mr-1"
+            />
             {localize('com_ui_default_post_request')}
           </label>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor=":rj3:" className="flex cursor-pointer items-center gap-1">
-            <RadioGroup.Item
-              type="button"
-              role="radio"
+          <label htmlFor={headerId} className="flex cursor-pointer items-center gap-1">
+            <RadioGroupItem
               value={TokenExchangeMethodEnum.BasicAuthHeader}
-              id=":rj3:"
-              className={cn(
-                'mr-1 flex h-5 w-5 items-center justify-center rounded-full border',
-                'border-border-heavy bg-surface-primary',
-              )}
-            >
-              <RadioGroup.Indicator className="h-2 w-2 rounded-full bg-text-primary" />
-            </RadioGroup.Item>
+              id={headerId}
+              width={RADIO}
+              height={RADIO}
+              className="mr-1"
+            />
             {localize('com_ui_basic_auth_header')}
           </label>
         </div>
-      </RadioGroup.Root>
+      </RadioGroup>
     </>
   );
 };

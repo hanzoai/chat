@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react';
-import * as Tabs from '@radix-ui/react-tabs';
+import { Tabs } from '@hanzo/ui/primitives/Tabs';
+import { TabsList } from '@hanzo/ui/primitives/TabsList';
+import { TabsTrigger } from '@hanzo/ui/primitives/TabsTrigger';
+import { TabsContent } from '@hanzo/ui/primitives/TabsContent';
 import { SettingsTabValues, balanceOn } from '@hanzochat/data-provider';
 import { MessageSquare, Command, DollarSign, BarChart3 } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
@@ -194,13 +197,24 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                 </button>
               </DialogTitle>
               <div className="max-h-[calc(90vh-120px)] overflow-auto px-6 md:w-[680px]">
-                <Tabs.Root
+                <Tabs
                   value={activeTab}
                   onValueChange={handleTabChange}
                   className="flex flex-col gap-10 md:flex-row"
                   orientation="vertical"
+                  flexDirection={isSmallScreen ? 'column' : 'row'}
+                  gap={40}
                 >
-                  <Tabs.List
+                  {/* TabsList and TabsTrigger paint a pill before they spread,
+                      and gui's runtime sheet is appended after the Tailwind
+                      sheet, so at equal specificity its values beat the classes
+                      below. Each style prop here restates the class it would
+                      otherwise silently replace; the ones set to 0/auto undo a
+                      value this rail never asked for. flexDirection is the one
+                      that cannot be dropped — Group takes it from the tabs
+                      orientation, which is vertical, so the phone's flex-row
+                      would never land. */}
+                  <TabsList
                     aria-label="Settings"
                     className={cn(
                       'min-w-auto max-w-auto relative -ml-[8px] flex flex-shrink-0 flex-col flex-nowrap overflow-auto sm:max-w-none',
@@ -209,9 +223,18 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                         : 'sticky top-0 h-full',
                     )}
                     onKeyDown={handleKeyDown}
+                    flexDirection={isSmallScreen ? 'row' : 'column'}
+                    alignItems="stretch"
+                    justifyContent="flex-start"
+                    alignSelf="stretch"
+                    height={isSmallScreen ? 'auto' : '100%'}
+                    padding={0}
+                    gap={0}
+                    borderRadius={isSmallScreen ? 12 : 0}
+                    backgroundColor={isSmallScreen ? 'var(--surface-secondary)' : 'transparent'}
                   >
                     {settingsTabs.map(({ value, icon, label }) => (
-                      <Tabs.Trigger
+                      <TabsTrigger
                         key={value}
                         className={cn(
                           'group relative z-10 m-1 flex items-center justify-start gap-2 rounded-xl px-2 py-1.5 transition-all duration-200 ease-in-out',
@@ -223,51 +246,59 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                         ref={(el) => {
                           tabRefs.current[value] = el;
                         }}
+                        flexDirection="row"
+                        height="auto"
+                        justifyContent={isSmallScreen ? 'center' : 'flex-start'}
+                        paddingHorizontal={isSmallScreen ? 12 : 8}
+                        gap={8}
+                        borderRadius={12}
+                        hoverStyle={{}}
+                        focusStyle={{}}
                       >
                         {icon}
-                        {localize(label)}
-                      </Tabs.Trigger>
+                        <span>{localize(label)}</span>
+                      </TabsTrigger>
                     ))}
-                  </Tabs.List>
+                  </TabsList>
                   <div className="overflow-auto sm:w-full sm:max-w-none md:pr-0.5 md:pt-0.5">
-                    <Tabs.Content value={SettingsTabValues.GENERAL} tabIndex={-1}>
+                    <TabsContent value={SettingsTabValues.GENERAL} tabIndex={-1}>
                       <General />
-                    </Tabs.Content>
-                    <Tabs.Content value={SettingsTabValues.CHAT} tabIndex={-1}>
+                    </TabsContent>
+                    <TabsContent value={SettingsTabValues.CHAT} tabIndex={-1}>
                       <Chat />
-                    </Tabs.Content>
-                    <Tabs.Content value={SettingsTabValues.COMMANDS} tabIndex={-1}>
+                    </TabsContent>
+                    <TabsContent value={SettingsTabValues.COMMANDS} tabIndex={-1}>
                       <Commands />
-                    </Tabs.Content>
-                    <Tabs.Content value={SettingsTabValues.SPEECH} tabIndex={-1}>
+                    </TabsContent>
+                    <TabsContent value={SettingsTabValues.SPEECH} tabIndex={-1}>
                       <Speech />
-                    </Tabs.Content>
+                    </TabsContent>
                     {hasAnyPersonalizationFeature && (
-                      <Tabs.Content value={SettingsTabValues.PERSONALIZATION} tabIndex={-1}>
+                      <TabsContent value={SettingsTabValues.PERSONALIZATION} tabIndex={-1}>
                         <Personalization
                           hasMemoryOptOut={hasMemoryOptOut}
                           hasAnyPersonalizationFeature={hasAnyPersonalizationFeature}
                         />
-                      </Tabs.Content>
+                      </TabsContent>
                     )}
-                    <Tabs.Content value={SettingsTabValues.DATA} tabIndex={-1}>
+                    <TabsContent value={SettingsTabValues.DATA} tabIndex={-1}>
                       <Data />
-                    </Tabs.Content>
+                    </TabsContent>
                     {balanceOn(startupConfig) && (
-                      <Tabs.Content value={SettingsTabValues.BALANCE} tabIndex={-1}>
+                      <TabsContent value={SettingsTabValues.BALANCE} tabIndex={-1}>
                         <Balance />
-                      </Tabs.Content>
+                      </TabsContent>
                     )}
                     {balanceOn(startupConfig) && (
-                      <Tabs.Content value={SettingsTabValues.USAGE} tabIndex={-1}>
+                      <TabsContent value={SettingsTabValues.USAGE} tabIndex={-1}>
                         <Usage />
-                      </Tabs.Content>
+                      </TabsContent>
                     )}
-                    <Tabs.Content value={SettingsTabValues.ACCOUNT} tabIndex={-1}>
+                    <TabsContent value={SettingsTabValues.ACCOUNT} tabIndex={-1}>
                       <Account />
-                    </Tabs.Content>
+                    </TabsContent>
                   </div>
-                </Tabs.Root>
+                </Tabs>
               </div>
             </DialogPanel>
           </div>

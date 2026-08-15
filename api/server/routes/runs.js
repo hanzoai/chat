@@ -1,8 +1,7 @@
 const express = require('express');
 const { Readable, pipeline } = require('stream');
 const { logger } = require('@hanzochat/data-schemas');
-const { resolveActiveOrg } = require('@hanzochat/api');
-const { currentBearer } = require('~/server/services/iamBearerRefresh');
+const { resolveActiveOrg, resolveTenantBearer } = require('@hanzochat/api');
 const { requireJwtAuth } = require('~/server/middleware');
 
 /**
@@ -37,12 +36,11 @@ function cloudBaseUrl() {
 /**
  * The credential for the on-behalf-of call, or null when the caller has none.
  *
- * Select-then-renew is `currentBearer`, the ONE composition every cloud-facing
- * surface in chat shares. Reading the raw selector instead is what broke the
- * completion path at the ~1h id_token expiry while `/v1/chat/ask` kept working.
+ * `resolveTenantBearer` is the ONE selector every cloud-facing surface in chat
+ * shares: the caller's own token, as presented on this request.
  */
-async function credential(req) {
-  const bearer = await currentBearer(req);
+function credential(req) {
+  const bearer = resolveTenantBearer(req);
   return bearer ? { bearer, org: resolveActiveOrg(req) } : null;
 }
 

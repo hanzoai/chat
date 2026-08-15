@@ -20,12 +20,14 @@ export * from './AuthContext';
 export * from './ScreenshotContext';
 export * from './ApiErrorBoundaryContext';
 export * from './Endpoint';
+export * from './Skills';
 
 export type { TranslationKeys } from './useLocalize';
 
 export { default as useTimeout } from './useTimeout';
 export { default as useNewConvo } from './useNewConvo';
 export { default as useLocalize } from './useLocalize';
+export { default as useActive } from './useActive';
 export { default as useFavorites } from './useFavorites';
 export { default as useChatBadges } from './useChatBadges';
 export { default as useScrollToRef } from './useScrollToRef';
@@ -35,3 +37,5 @@ export { default as useTextToSpeech } from './Input/useTextToSpeech';
 export { default as useGenerationsByLatest } from './useGenerationsByLatest';
 export { default as useLocalizedConfig } from './useLocalizedConfig';
 export { default as useResourcePermissions } from './useResourcePermissions';
+export { default as useFocusTrap } from './useFocusTrap';
+export { default as useSkillFavorites } from './useSkillFavorites';

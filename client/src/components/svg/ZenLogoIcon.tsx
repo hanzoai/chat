@@ -1,40 +1,48 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 export interface ZenLogoIconProps extends React.SVGProps<SVGSVGElement> {
   /** Pixel size; when set, applies to width and height. */
   size?: number | string;
-  /** Stroke width in the 100-unit viewBox (canonical mark = 11). Accepted for drop-in parity with lucide icons. */
-  strokeWidth?: number;
 }
 
 /**
- * Zen mark — the ensō (円相): a single brush-drawn arc with a gap, the canonical
- * Zen symbol. Geometry matches the canonical asset in github.com/zenlm/logo (the
- * `ENSO` path on a 0 0 100 100 viewBox, stroke-width 11). Monochrome,
- * `currentColor` stroke, round-capped. Used as the avatar for the Zen (Hanzo AI)
- * model family in place of the generic Chat "custom" glyph.
+ * Zen mark — Zoo Labs Foundation's three overlapping circles, cut to a disc.
+ *
+ * Zen is Zoo Labs Foundation's model family; the gateway reports every `zen*` id
+ * as `owned_by: zenlm`, and Hanzo serves and routes them. So the mark is Zoo's.
+ * The ensō belongs to Enso and stays on EnsoLogoIcon.
+ *
+ * The cut is an SVG clipPath, in user units. A CSS `clip-path: circle(11.5px …)`
+ * resolves against the RENDERED box rather than the viewBox, so at an 18px icon
+ * it cuts nothing and the venn squares off into a scribble.
  */
-export default function ZenLogoIcon({
-  className = '',
-  size,
-  strokeWidth = 11,
-  ...props
-}: ZenLogoIconProps) {
+export default function ZenLogoIcon({ className = '', size, ...props }: ZenLogoIconProps) {
+  // One clip id per instance: the model picker paints this mark on every row at
+  // once, and a shared DOM id ties all of them to whichever mounted first.
+  const cut = `zen-cut-${useId().replace(/[^a-z0-9]/gi, '')}`;
+
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 24 24"
       className={className}
       {...(size != null ? { width: size, height: size } : {})}
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
+      fill="currentColor"
       role="img"
       aria-label="Zen"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      {/* ensō: single open arc with a gap — the canonical zenlm/logo mark */}
-      <path d="M66.22 83.26 A37 37 0 1 1 85.57 60.20" strokeWidth={strokeWidth} />
+      <defs>
+        <clipPath id={cut}>
+          <circle cx="12" cy="12" r="11.5" />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${cut})`} fill="none" stroke="currentColor">
+        <circle cx="12.203" cy="6.27" r="9.509" strokeWidth="1.341" />
+        <circle cx="6.189" cy="15.454" r="9.509" strokeWidth="1.341" />
+        <circle cx="17.486" cy="15.454" r="9.509" strokeWidth="1.341" />
+        <circle cx="12" cy="12" r="10.769" strokeWidth="1.463" />
+      </g>
     </svg>
   );
 }

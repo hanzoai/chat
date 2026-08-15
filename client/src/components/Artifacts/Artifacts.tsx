@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import * as Tabs from '@radix-ui/react-tabs';
+import { Tabs } from '@hanzo/ui/primitives/Tabs';
 import { Code, Play, RefreshCw, X } from 'lucide-react';
 import { useSetAtom } from 'jotai';
 import { useResetAtom } from 'jotai/utils';
@@ -162,7 +162,12 @@ export default function Artifacts() {
       : 0;
 
   return (
-    <Tabs.Root value={activeTab} onValueChange={setActiveTab} asChild>
+    // `except-style` and not a bare `asChild`: Tabs paints `flexDirection:
+    // column` and `gap: $2` before it spreads, and under a plain `asChild`
+    // those merge onto the child and open 8px between the toolbar and the
+    // panel. `except-style` passes the tab state and drops the paint, which is
+    // what Radix's asChild did — it had no styles of its own to pass.
+    <Tabs value={activeTab} onValueChange={setActiveTab} asChild="except-style">
       <div className="flex h-full w-full flex-col">
         {/* Mobile backdrop with dynamic blur */}
         {isMobile && (
@@ -336,6 +341,6 @@ export default function Artifacts() {
           )}
         </div>
       </div>
-    </Tabs.Root>
+    </Tabs>
   );
 }

@@ -3,7 +3,6 @@ const { isEnabled } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
 const { CacheKeys } = require('@hanzochat/data-provider');
 const { Client } = require('@microsoft/microsoft-graph-client');
-const { getOpenIdConfig } = require('~/strategies/openidStrategy');
 const getLogStores = require('~/cache/getLogStores');
 
 /**
@@ -32,11 +31,38 @@ const entraIdPrincipalFeatureEnabled = (user) => {
  * @param {string} sub - Subject identifier from token claims
  * @returns {Promise<Client>} Authenticated Graph API client
  */
+let entraConfig;
+
+/**
+ * The OAuth client Microsoft's on-behalf-of grant is exchanged at.
+ *
+ * The grant swaps a token the caller already holds for a Graph one, so it runs
+ * against the issuer that minted theirs — which means this feature only works
+ * where Entra is the identity provider people sign in with. That is what
+ * `entraIdPrincipalFeatureEnabled` gates on, and it is why the configuration is
+ * discovered here from the issuer rather than borrowed from sign-in: signing in
+ * with Hanzo IAM verifies a token against JWKS and needs no OAuth client at all.
+ *
+ * Discovered once, on the first search that gets past the gate.
+ */
+const graphExchangeClient = async () => {
+  if (!entraConfig) {
+    entraConfig = await client.discovery(
+      new URL(process.env.OPENID_ISSUER),
+      process.env.OPENID_CLIENT_ID,
+      process.env.OPENID_CLIENT_SECRET,
+    );
+  }
+  return entraConfig;
+};
+
 const createGraphClient = async (accessToken, sub) => {
   try {
-    // Reason: Use existing OpenID configuration and token exchange pattern from openidStrategy.js
-    const openidConfig = getOpenIdConfig();
-    const exchangedToken = await exchangeTokenForGraphAccess(openidConfig, accessToken, sub);
+    const exchangedToken = await exchangeTokenForGraphAccess(
+      await graphExchangeClient(),
+      accessToken,
+      sub,
+    );
 
     const graphClient = Client.init({
       authProvider: (done) => {

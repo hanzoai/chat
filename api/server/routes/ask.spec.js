@@ -10,12 +10,11 @@ const { upstreamMessage, needsSignIn } = require('./askMessage');
  * refreshing — reload the page", because a reload really did re-authenticate from
  * scratch.
  *
- * Durable refresh has since landed (services/iamBearerRefresh.js). Renewal now runs
- * BEFORE any of these refusals — `currentBearer` on the way into this route and the
- * agents router — and a refused renewal DELETES the refresh credential from the
- * session. So a 401 that still reaches this policy is a session that has already
- * failed to heal itself, and "reload the page" became advice that cannot work: the
- * reload replays a session with nothing left to spend, forever.
+ * Renewal has since moved to where the credential lives: the browser renews its
+ * own token with IAM's refresh grant before a request is sent. So a 401 that
+ * still reaches this policy is a token that has already failed to heal itself,
+ * and "reload the page" became advice that cannot work: the reload replays a
+ * token with nothing left to spend, forever.
  *
  * The invariant across both eras is the same — never give someone advice they cannot
  * act on — and it now points the other way for a signed-in 401.

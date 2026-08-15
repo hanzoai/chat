@@ -1,4 +1,4 @@
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
+import { useId } from 'react';
 import {
   AccordionContent,
   AccordionItem,
@@ -15,6 +15,12 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
   const localize = useLocalize();
   const { active, setActive } = useActivePanel();
   const getVariant = (link: NavLink) => (link.id === active ? 'default' : 'ghost');
+  /* One accordion per link, so each button and its panel have to name each
+     other themselves. The accordion's own ids for that pair are reachable only
+     from a Trigger, and a Trigger renders its own button — which would drop the
+     `Button` this row is drawn with. `link.id` is unique within a Nav and the
+     prefix keeps two Navs on one page apart. */
+  const uid = useId();
 
   return (
     /* `h-full` is what makes the fill a SURFACE. Without it this div sized to
@@ -43,6 +49,9 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
               <div className="flex h-full w-full flex-col gap-1 px-3 py-2.5 group-[[data-collapsed=true]]:items-center group-[[data-collapsed=true]]:px-2">
                 {links.map((link, index) => {
                   const variant = getVariant(link);
+                  const isOpen = active === link.id;
+                  const triggerId = `${uid}-${link.id}-trigger`;
+                  const contentId = `${uid}-${link.id}-content`;
                   return isCollapsed ? (
                     <TooltipAnchor
                       description={localize(link.title)}
@@ -76,36 +85,40 @@ function NavContent({ links, isCollapsed, resize }: Omit<NavProps, 'defaultActiv
                       collapsible
                     >
                       <AccordionItem value={link.id} className="w-full border-none">
-                        <AccordionPrimitive.Header asChild>
-                          <AccordionPrimitive.Trigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start bg-transparent text-text-secondary data-[state=open]:bg-surface-secondary data-[state=open]:text-text-primary"
-                              onClick={(e) => {
-                                if (link.onClick) {
-                                  link.onClick(e);
-                                  setActive('');
-                                }
-                              }}
-                            >
-                              <link.icon className="mr-2 h-4 w-4" aria-hidden="true" />
-                              {localize(link.title)}
-                              {link.label != null && link.label && (
-                                <span
-                                  className={cn(
-                                    'ml-auto opacity-100 transition-all duration-300 ease-in-out',
-                                    variant === 'default' ? 'text-text-primary' : '',
-                                  )}
-                                >
-                                  {link.label}
-                                </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          id={triggerId}
+                          aria-expanded={isOpen}
+                          aria-controls={contentId}
+                          className={cn(
+                            'w-full justify-start bg-transparent text-text-secondary',
+                            isOpen && 'bg-surface-secondary text-text-primary',
+                          )}
+                          onClick={(e) => {
+                            link.onClick?.(e);
+                            setActive(isOpen ? '' : link.id);
+                          }}
+                        >
+                          <link.icon className="mr-2 h-4 w-4" aria-hidden="true" />
+                          {localize(link.title)}
+                          {link.label != null && link.label && (
+                            <span
+                              className={cn(
+                                'ml-auto opacity-100 transition-all duration-300 ease-in-out',
+                                variant === 'default' ? 'text-text-primary' : '',
                               )}
-                            </Button>
-                          </AccordionPrimitive.Trigger>
-                        </AccordionPrimitive.Header>
+                            >
+                              {link.label}
+                            </span>
+                          )}
+                        </Button>
 
-                        <AccordionContent className="bg-surface-primary-alt w-full text-text-primary">
+                        <AccordionContent
+                          id={contentId}
+                          aria-labelledby={triggerId}
+                          className="bg-surface-primary-alt w-full text-text-primary"
+                        >
                           {link.Component && <link.Component />}
                         </AccordionContent>
                       </AccordionItem>

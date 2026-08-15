@@ -13,8 +13,12 @@ import { ROW } from '~/components/chrome';
  * Collapsed the rows narrow to their icon and the label moves to the native
  * tooltip. One component renders both states, so a destination added here
  * appears in both without anyone remembering to add it twice.
+ *
+ * Exported because the ⌘K palette offers the same destinations. Two lists would
+ * be two lists to remember: the day one grows a row, the other silently stops
+ * being able to reach it.
  */
-const PLACES = [
+export const PLACES = [
   { path: '/projects', label: 'com_nav_projects', Icon: Folder },
   { path: '/sites', label: 'com_nav_sites', Icon: Globe },
   { path: '/scheduled', label: 'com_nav_scheduled', Icon: Clock },
