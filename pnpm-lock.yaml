@@ -391,8 +391,8 @@ importers:
         specifier: ^9.2.2
         version: 9.4.2
       '@hanzo/ai':
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       '@hanzo/appearance':
         specifier: ^0.1.2
         version: 0.1.2(react@19.2.4)
@@ -3539,8 +3539,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hanzo/ai@0.3.3':
-    resolution: {integrity: sha512-dxA1sH4vyeknMhXWBSIL/7HeGwoqmw1Amx8+WwARxZo7vJXRPdMPdSPe2fb8W5V53XCyygBZ1F2Z6saIV+CSoA==}
+  '@hanzo/ai@0.3.4':
+    resolution: {integrity: sha512-jWTkN20ql2SWjtA/tzY4rcB4Ypks9TJmMPQSWUZ/oRa7LE+hmcgl5zq5825r4on5BsQYaArLmwhD/X9ufQA0Ag==}
     engines: {node: '>=18'}
 
   '@hanzo/appearance@0.1.2':
@@ -17627,7 +17627,7 @@ snapshots:
       protobufjs: 7.5.9
       yargs: 17.7.2
 
-  '@hanzo/ai@0.3.3': {}
+  '@hanzo/ai@0.3.4': {}
 
   '@hanzo/appearance@0.1.2(react@19.2.4)':
     dependencies:

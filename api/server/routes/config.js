@@ -125,6 +125,11 @@ router.get('/', async function (req, res) {
       sharePointPickerSharePointScope: process.env.SHAREPOINT_PICKER_SHAREPOINT_SCOPE,
       allowGuestChat: guestConfig.enabled,
       guestMessageMax: guestConfig.enabled ? guestConfig.messageMax : undefined,
+      // The free model a guest is served, so the client can open the guest
+      // conversation on it and name it, rather than a stale default the server
+      // would only override.
+      guestEndpoint: guestConfig.enabled ? guestConfig.endpoint : undefined,
+      guestModel: guestConfig.enabled ? guestConfig.model : undefined,
       conversationImportMaxFileSize: process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES
         ? parseInt(process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES, 10)
         : 0,
