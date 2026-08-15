@@ -779,6 +779,9 @@ export type TStartupConfig = {
   sharePointPickerSharePointScope?: string;
   allowGuestChat?: boolean;
   guestMessageMax?: number;
+  /** The endpoint and model a guest is served, pinned by the server. */
+  guestEndpoint?: string;
+  guestModel?: string;
   minPasswordLength?: number;
   webSearch?: {
     searchProvider?: SearchProviders;

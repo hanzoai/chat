@@ -1,3 +1,4 @@
+import { FREE_MODEL, FREE_MODEL_LABEL } from '@hanzo/ai';
 import type { Endpoint, SelectedValues } from '~/common';
 import { getDisplayValue } from '../utils';
 import { label } from '~/utils';
@@ -55,6 +56,12 @@ describe('getDisplayValue', () => {
         selectedValues: { endpoint: 'openai', model: 'gpt-5.2', modelSpec: null } as SelectedValues,
       }),
     ).toBe('gpt-5.2');
+  });
+
+  it('names the free route a guest is served', () => {
+    // A guest's conversation opens on the server's pin, so this chip is the
+    // only model name they ever read.
+    expect(chip({ endpoint: 'hanzo', model: FREE_MODEL })).toBe(FREE_MODEL_LABEL);
   });
 
   it('still asks for a model when nothing is chosen', () => {
