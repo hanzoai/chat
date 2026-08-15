@@ -1,4 +1,5 @@
 import { hasConsent, isFree, paidUnavailable, servedByFallback } from '@hanzo/ai';
+import { extractJson, isJson } from '~/utils/json';
 
 /**
  * The free route costs nothing and, in exchange, shares data with the model
@@ -59,19 +60,66 @@ function raise(offer: Offer): void {
 }
 
 /**
+ * The refusal, wherever the producer put it. A gateway body carries its reason
+ * at the top level or under `error`; this server's own refusals arrive as JSON
+ * inside a text field, which is why `Error` extracts before it reads and this
+ * has to as well.
+ */
+function refusal(body: unknown): Record<string, unknown> | null {
+  if (typeof body === 'string') {
+    const json = extractJson(body);
+    return isJson(json) ? (JSON.parse(json) as Record<string, unknown>) : null;
+  }
+  if (body == null || typeof body !== 'object') {
+    return null;
+  }
+  const held = body as Record<string, unknown>;
+  for (const field of ['text', 'message'] as const) {
+    if (typeof held[field] === 'string') {
+      const inner = refusal(held[field]);
+      if (inner) {
+        return inner;
+      }
+    }
+  }
+  return held;
+}
+
+/**
+ * This server's own answer to a request it cannot bill: `checkBalance` throws
+ * `{type:'token_balance', …}`, and the commerce check adds a `reason`. Free
+ * costs nothing, so a spent balance has a way forward — which is the whole
+ * point of the offer, and the shape that was missing it.
+ *
+ * `@hanzo/ai` deliberately knows only the codes the GATEWAY returns; this name
+ * is this repo's vocabulary, so it is read here rather than pushed into the
+ * shared predicate.
+ *
+ * `commerce_unavailable` is excluded: it means the balance could not be READ,
+ * not that it is empty, and a model swap is not the answer to that.
+ */
+function spent(body: unknown): boolean {
+  const json = refusal(body);
+  const nested = json?.error as { type?: string } | undefined;
+  const type = json?.type ?? nested?.type;
+  return type === 'token_balance' && json?.reason !== 'commerce_unavailable';
+}
+
+/**
  * Offer to switch when the paid route FAILED and free would have served. A spent
  * guest quota (`GUEST_LIMIT`) and a missing session (401) are not that — they
  * want a sign-in, not a cheaper model.
  *
  * This is the second of the two shapes a paid outage takes: the typed error the
- * gateway returns for a model family with no free route of its own.
+ * gateway returns for a model family with no free route of its own, and the
+ * refusal this server writes when the balance will not cover the turn.
  */
 export function offerSwitch(status: number | undefined, body: unknown): void {
   const reason = (body ?? {}) as { type?: string };
   if (status === 401 || reason.type === 'GUEST_LIMIT') {
     return;
   }
-  if (!paidUnavailable({ status, ...reason })) {
+  if (!paidUnavailable({ status, ...reason }) && !spent(body)) {
     return;
   }
   raise('switch');

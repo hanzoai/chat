@@ -60,6 +60,48 @@ describe('the offer', () => {
       expect(kinds()).toEqual(['switch']);
     });
 
+    /* What `checkBalance` throws when the balance will not cover the turn. It
+       carries no gateway code and, on the pre-stream path, no status either, so
+       the shared predicate cannot see it — and this is the case a signed-in
+       visitor actually meets. */
+    it('offers to switch on a spent balance this server refused', () => {
+      offerSwitch(undefined, {
+        type: 'token_balance',
+        balance: 0,
+        tokenCost: 1200,
+        promptTokens: 300,
+      });
+      expect(kinds()).toEqual(['switch']);
+    });
+
+    it('offers to switch when commerce says the balance is short', () => {
+      offerSwitch(402, { type: 'token_balance', reason: 'commerce_insufficient' });
+      expect(kinds()).toEqual(['switch']);
+    });
+
+    it('offers to switch when the tier forbids the model — free is one it allows', () => {
+      offerSwitch(402, { type: 'token_balance', reason: 'model_not_allowed', tier: 'free' });
+      expect(kinds()).toEqual(['switch']);
+    });
+
+    /* The refusal reaches the errored-reply path as JSON inside text, which is
+       the form `Error` renders. Same refusal, so the same offer. */
+    it('reads the refusal out of a text body', () => {
+      offerSwitch(undefined, {
+        text: JSON.stringify({ type: 'token_balance', balance: 0, tokenCost: 900 }),
+      });
+      expect(kinds()).toEqual(['switch']);
+    });
+
+    /* A statusless refusal is read here, so this is where the distinction lives:
+       commerce being unreachable means the balance could not be READ, not that
+       it is empty, and a model swap is not the answer to that. A 402 is a
+       different claim and `paidUnavailable` answers it on the status alone. */
+    it('stays quiet when the balance could not be read — that is not a spent one', () => {
+      offerSwitch(undefined, { type: 'token_balance', reason: 'commerce_unavailable' });
+      expect(offered).not.toHaveBeenCalled();
+    });
+
     it('stays quiet on a spent guest quota — that wants a sign-in', () => {
       offerSwitch(402, { type: 'GUEST_LIMIT' });
       expect(offered).not.toHaveBeenCalled();
