@@ -101,7 +101,7 @@
     "url": "git+https://github.com/hanzoai/chat.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/hanzoai/chat/issues"
   },
