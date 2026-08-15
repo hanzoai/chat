@@ -43,9 +43,12 @@ export default function ComposerShell({
   onClick,
   temporary = false,
 }: ComposerShellProps) {
+  // The PANEL's corner. The host's is @hanzo/composer's `--hz-composer-radius`
+  // (style.css sets it to this same 1.5rem), because the halo derives its own
+  // wider corner from that property and cannot follow a utility class.
   const radius = 'rounded-3xl';
   return (
-    <div className={cn('hz-composer w-full', radius, temporary && 'opacity-90')}>
+    <div className={cn('hz-composer w-full', temporary && 'opacity-90')}>
       <div
         onClick={onClick}
         className={cn(

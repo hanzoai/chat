@@ -36,6 +36,7 @@
     "@dicebear/core": "^9.2.2",
     "@hanzo/ai": "^0.3.8",
     "@hanzo/appearance": "^0.1.2",
+    "@hanzo/composer": "^0.1.0",
     "@hanzo/design": "^0.4.12",
     "@hanzo/event": "^0.3.21",
     "@hanzo/gui": "^8.1.1",

@@ -399,6 +399,9 @@ importers:
       '@hanzo/appearance':
         specifier: ^0.1.2
         version: 0.1.2(react@19.2.4)
+      '@hanzo/composer':
+        specifier: ^0.1.0
+        version: 0.1.1
       '@hanzo/design':
         specifier: ^0.4.12
         version: 0.4.12
@@ -3555,6 +3558,9 @@ packages:
     resolution: {integrity: sha512-JBsre5oDxjo0iRpXvt0ME2NKklXdNsB7dJwBoZouGzSHAbQldxFF7LLNuSuk6w1a6TYCIftoooYGmw0ynQsclA==}
     peerDependencies:
       react: '>=19'
+
+  '@hanzo/composer@0.1.1':
+    resolution: {integrity: sha512-+eC1gbT872zcKMoD+JD4tb4CVBQBq7dv6G0NRCT5d+PAfD2dAuqlDF3J5zzywQi55LZazbsip5zWOcbs31uJZg==}
 
   '@hanzo/data@1.2.2':
     resolution: {integrity: sha512-hgLGGnsfZqyBmSzCPL2nsnON6jXbUKVNKDnzeIAPCJEkF5SXw4lzCTEtJRHYmrRb01lU0LlQfZxZXrvBd85ZMA==}
@@ -17641,6 +17647,8 @@ snapshots:
     dependencies:
       '@hanzo/design': 0.5.1
       react: 19.2.4
+
+  '@hanzo/composer@0.1.1': {}
 
   '@hanzo/data@1.2.2(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     dependencies:
