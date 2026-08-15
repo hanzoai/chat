@@ -3,15 +3,16 @@
  * HTTP request layer for the Hanzo Chat (Chat-native) backend.
  *
  * - Talks to the same-origin `/v1/chat/*` REST surface.
- * - Auth is JWT Bearer (set via setTokenHeader) plus the httpOnly `refreshToken`
- *   cookie; `withCredentials: true` ensures that cookie is sent so the silent
- *   refresh against `POST /v1/chat/auth/refresh` can mint a fresh access token.
- * - On a 401 the interceptor refreshes once and replays the original request.
+ * - Auth is the caller's Hanzo IAM access token, carried as a Bearer (set via
+ *   setTokenHeader). This server issues no credential of its own, so there is no
+ *   session cookie behind it and nothing to keep in step.
+ * - On a 401 the interceptor renews the token through IAM once (`renewBearer`)
+ *   and replays the original request.
  * - pk- key support is retained for unauthenticated access (model listing, etc.).
  */
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import * as endpoints from './api-endpoints';
-import { setTokenHeader } from './headers-helpers';
+import { setTokenHeader, renewBearer } from './headers-helpers';
 import type * as t from './types';
 
 async function _get<T>(url: string, options?: AxiosRequestConfig): Promise<T> {
@@ -83,9 +84,6 @@ async function _patch(url: string, data?: any) {
 let isRefreshing = false;
 let failedQueue: { resolve: (value?: any) => void; reject: (reason?: any) => void }[] = [];
 
-const refreshToken = (retry?: boolean): Promise<t.TRefreshTokenResponse | undefined> =>
-  _post(endpoints.refreshToken(retry));
-
 const dispatchTokenUpdatedEvent = (token: string) => {
   setTokenHeader(token);
   window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: token }));
@@ -108,26 +106,6 @@ function currentBearer(): string | null {
   return typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7) : null;
 }
 
-/**
- * A guest (anonymous preview) session carries a `{ guest: true }` JWT that is
- * only valid on the chat-completion route; every other endpoint answers 401 by
- * design. Those expected 401s must NOT hard-redirect the guest to /login — that
- * wipes the guest session and loops. Derive guest-ness from the active bearer so
- * the interceptor leaves guests on the chat surface.
- */
-function isGuestSession(): boolean {
-  const tok = currentBearer();
-  if (tok == null) {
-    return false;
-  }
-  try {
-    const b64 = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(atob(b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=')));
-    return payload?.guest === true;
-  } catch {
-    return false;
-  }
-}
 
 // Every axios this module copy sees arms itself from the page-global bearer
 // (set by setTokenHeader). Belt to the defaults' braces: whichever bundled
@@ -153,23 +131,6 @@ if (typeof window !== 'undefined') {
         return Promise.reject(error);
       }
 
-      // Don't retry auth endpoints that legitimately 401.
-      if (originalRequest.url?.includes('/v1/chat/auth/2fa') === true) {
-        return Promise.reject(error);
-      }
-      if (originalRequest.url?.includes('/v1/chat/auth/logout') === true) {
-        return Promise.reject(error);
-      }
-      // A 401 from the refresh endpoint IS the refresh failing — terminal,
-      // like 2fa and logout above. Routing it through the retry machinery
-      // issues a second refresh whose own 401 queues behind `isRefreshing`,
-      // which only clears when that second call settles: a deadlock that
-      // strands every caller and the auth state machine with it. Reject so
-      // the AuthContext mutation's onError takes the guest/login fallback.
-      if (originalRequest.url?.includes('auth/refresh') === true) {
-        return Promise.reject(error);
-      }
-
       if (error.response.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
@@ -188,11 +149,13 @@ if (typeof window !== 'undefined') {
         isRefreshing = true;
 
         try {
-          // Refresh originals never reach here (rejected above), so this call
-          // is always on behalf of some other 401'd request.
-          const response = await refreshToken(false);
-
-          const token = response?.token ?? '';
+          /**
+           * Renewal happens at IAM, through the SDK the app installed. It spends
+           * the refresh token IAM issued this browser; nothing is asked of this
+           * server, which is why there is no endpoint here that can itself 401
+           * and deadlock the queue behind it.
+           */
+          const token = (await renewBearer()) ?? '';
 
           if (token) {
             originalRequest.headers['Authorization'] = 'Bearer ' + token;
@@ -203,20 +166,20 @@ if (typeof window !== 'undefined') {
 
           // No new token. Every queued caller must still be answered, or its
           // promise never settles: a guest whose chat POST queued behind another
-          // 401's refresh would spin forever instead of being told it is not
+          // 401's renewal would spin forever instead of being told it is not
           // signed in. Reject with the original 401 so each caller sees the real
           // status (the chat submit path turns that into the login gate).
           processQueue(error as AxiosError, null);
 
           if (window.location.href.includes('share/')) {
             console.log(
-              `Refresh token failed from shared link, attempting request to ${originalRequest.url}`,
+              `Token renewal failed from shared link, attempting request to ${originalRequest.url}`,
             );
-          } else if (currentBearer() != null && !isGuestSession()) {
-            // Only hard-redirect a genuinely expired *session* bearer. An
-            // anonymous cold-start (no bearer yet, guest token still in flight)
-            // must never be bounced to /login — that races the guest-acquire and
-            // strands the visitor. Routing/login-gate handles the no-bearer case.
+          } else if (currentBearer() != null) {
+            // Only hard-redirect a bearer that IAM has actually refused. A guest
+            // carries none at all, and bouncing them to /login on the 401s that
+            // are their normal experience would strand the visitor the anonymous
+            // preview exists to serve.
             window.location.href = endpoints.loginPage();
           }
         } catch (err) {
@@ -267,7 +230,6 @@ export default {
   delete: _delete,
   deleteWithOptions: _deleteWithOptions,
   patch: _patch,
-  refreshToken,
   dispatchTokenUpdatedEvent,
   setPublishableKey,
   getWithPk,

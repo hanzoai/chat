@@ -12,9 +12,9 @@ const removePorts = require('./removePorts');
  * the CF edge. Prefer it; fall back to the trust-proxy-resolved `req.ip` when the
  * request did not transit Cloudflare (e.g. in-cluster/local).
  *
- * The returned string is the SOLE identity the guest quota keys on, so it must be
- * stable across guest tokens, cookie clears, and incognito sessions from the same
- * network origin.
+ * The returned string is the SOLE identity an anonymous visitor has — the guest
+ * quota keys on it and so does the guest principal — so it must be stable across
+ * cookie clears and incognito sessions from the same network origin.
  *
  * @param {import('express').Request} req
  * @returns {string}
@@ -24,7 +24,10 @@ const guestClientIp = (req) => {
   if (typeof cf === 'string' && cf.trim()) {
     return cf.trim();
   }
-  return removePorts(req);
+  /* Always a string. A request with no address the server can resolve is not an
+     error — it is one more anonymous visitor, and they all share this bucket
+     rather than crashing the request or each getting a free quota. */
+  return removePorts(req) || 'unknown';
 };
 
 module.exports = guestClientIp;

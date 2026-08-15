@@ -1,4 +1,4 @@
-import * as Popover from '@radix-ui/react-popover';
+import { PopoverTrigger } from '@hanzo/ui/primitives/PopoverTrigger';
 import { Spinner } from '@hanzochat/client';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import CancelledIcon from './CancelledIcon';
@@ -12,7 +12,10 @@ const Wrapper = ({ popover, children }: { popover: boolean; children: React.Reac
   if (popover) {
     return (
       <div className={wrapperClass}>
-        <Popover.Trigger asChild>
+        {/* `except-style`: gui would otherwise merge its View styles onto this
+         * div and make it a flex column, which the absolute positioning below
+         * does not expect. Radix's trigger styled nothing either. */}
+        <PopoverTrigger asChild="except-style">
           <div
             className="progress-text-content absolute left-0 top-0 overflow-visible whitespace-nowrap"
             style={{ opacity: 1, transform: 'none' }}
@@ -20,7 +23,7 @@ const Wrapper = ({ popover, children }: { popover: boolean; children: React.Reac
           >
             {children}
           </div>
-        </Popover.Trigger>
+        </PopoverTrigger>
       </div>
     );
   }

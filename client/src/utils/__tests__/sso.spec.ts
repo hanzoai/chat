@@ -6,6 +6,7 @@
  * hanzo.id, comes back, and leaves again. So the first four cases here are all
  * one question asked from different sides: can the probe ever run twice?
  */
+import { SESSION_KEY } from '../redirect';
 import { exchanging, meansNoSession, probed, probeSession } from '../sso';
 
 const mockSigninRedirect = jest.fn();
@@ -29,6 +30,21 @@ describe('probeSession', () => {
   it('asks the issuer to answer from the session alone, and to render nothing', async () => {
     expect(await probeSession()).toBe(true);
     expect(mockSigninRedirect).toHaveBeenCalledWith({ additionalParams: { prompt: 'none' } });
+  });
+
+  it('records where it was, so the round trip does not spend the prompt the visitor arrived with', async () => {
+    // hanzo.ai's composer hands its prompt over as `/?q=…&submit=true`, and this
+    // takes the document to the issuer before anything has read it. Written
+    // BEFORE the navigation, because the navigation is what ends this document.
+    at('/?q=hi&submit=true&hz_ref=site');
+    let recorded: string | null = null;
+    mockSigninRedirect.mockImplementation(() => {
+      recorded = sessionStorage.getItem(SESSION_KEY);
+      return Promise.resolve(undefined);
+    });
+
+    expect(await probeSession()).toBe(true);
+    expect(recorded).toBe('/?q=hi&submit=true&hz_ref=site');
   });
 
   it('runs once per visit — a second call does not navigate', async () => {

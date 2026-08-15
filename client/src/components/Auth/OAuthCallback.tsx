@@ -1,24 +1,22 @@
 /**
- * OAuth Callback Handler for Hanzo IAM (hanzo.id) — the @hanzo/iam session-bridge.
+ * Where a sign-in lands on the way back from Hanzo IAM (hanzo.id).
  *
- * Flow:
- * 1. User clicks "Log in with Hanzo" -> @hanzo/iam redirects to hanzo.id (PKCE).
- * 2. hanzo.id redirects back here with ?code=xxx&state=yyy.
- * 3. IAM.handleCallback() exchanges the code for the IAM tokens (PKCE).
- * 4. We POST { accessToken, idToken } to the backend session-bridge
- *    (/v1/chat/auth/iam/session), which JWKS-validates the token, reconciles the user,
- *    and issues the Chat session (refresh cookie + Mongo Session + Chat JWT) plus
- *    persists the id_token server-side for on-behalf-of cloud calls.
- * 5. We set the returned Chat JWT as the app bearer and redirect to /c/new.
+ * 1. "Log in with Hanzo" hands the browser to hanzo.id (Authorization Code + PKCE).
+ * 2. hanzo.id returns here with ?code=xxx&state=yyy.
+ * 3. `IAM#handleCallback()` verifies state, spends the code, and stores the tokens.
+ * 4. The access token becomes the app bearer.
  *
- * The IAM token is never used as the app bearer — the JWKS-issued Chat JWT is;
- * the id_token stays server-side for OBO.
+ * There is no fourth party and no exchange: the token IAM just issued is the one
+ * every request carries and the one the server verifies against IAM's JWKS.
+ * Trading it for a second, app-issued token would put a credential of our own
+ * back in the middle of a flow whose whole point is that IAM owns the session.
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { request, iamSession } from '@hanzochat/data-provider';
+import { request } from '@hanzochat/data-provider';
 import { Spinner } from '@hanzochat/client';
 import { getHanzoIamSdk } from '~/utils/iam';
+import { getPostLoginRedirect } from '~/utils/redirect';
 import { meansNoSession } from '~/utils/sso';
 
 export default function OAuthCallback() {
@@ -32,6 +30,16 @@ export default function OAuthCallback() {
     exchangedRef.current = true;
 
     /**
+     * Where the visitor was before the round trip. The silent probe records the
+     * deep link it is about to navigate away from, so someone who arrived at
+     * `/?q=…&submit=true` — hanzo.ai's composer handing over a prompt — is
+     * returned to that URL rather than to a bare `/`, where the params it carried
+     * would simply be gone. Reading it consumes it, so it is spent on this
+     * landing and cannot replay on the next one.
+     */
+    const back = getPostLoginRedirect(new URLSearchParams(window.location.search)) ?? '/';
+
+    /**
      * "Nobody is signed in" is an ANSWER, not a failure.
      *
      * The silent probe (`utils/sso.ts`) asks the issuer `prompt=none`, and the
@@ -43,7 +51,7 @@ export default function OAuthCallback() {
      */
     const answered = new URLSearchParams(window.location.search).get('error');
     if (meansNoSession(answered)) {
-      navigate('/', { replace: true });
+      navigate(back, { replace: true });
       return;
     }
 
@@ -57,27 +65,20 @@ export default function OAuthCallback() {
     const exchangeCode = async () => {
       try {
         const tokens = await iamSdk.handleCallback();
-
-        /** Trade the IAM token for a Chat session via the backend bridge. */
-        const { token } = await request.post(iamSession(), {
-          accessToken: tokens.accessToken,
-          idToken: tokens.idToken,
-        });
-
-        if (!token) {
-          throw new Error('session bridge returned no token');
+        if (!tokens.accessToken) {
+          throw new Error('IAM returned no access token');
         }
 
         /**
-         * Set the Chat JWT as the app bearer and notify AuthContext (which then
-         * fetches the user). The refresh cookie the bridge set drives reload
-         * persistence via the silent-refresh path.
+         * Install the bearer and tell AuthContext, which then reads the user.
+         * The SDK has already stored the tokens, so a reload asks it again
+         * rather than asking this server for a session it does not keep.
          */
-        request.dispatchTokenUpdatedEvent(token);
+        request.dispatchTokenUpdatedEvent(tokens.accessToken);
 
-        navigate('/', { replace: true });
+        navigate(back, { replace: true });
       } catch (err) {
-        console.error('IAM session bridge failed:', err);
+        console.error('IAM sign-in failed:', err);
         navigate('/login?error=auth_failed', { replace: true });
       }
     };

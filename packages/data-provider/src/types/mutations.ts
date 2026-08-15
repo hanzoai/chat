@@ -252,19 +252,6 @@ export type MakePromptProductionOptions = MutationOptions<
   TUpdatePromptContext
 >;
 
-/* Auth mutations */
-export type VerifyEmailOptions = MutationOptions<types.VerifyEmailResponse, types.TVerifyEmail>;
-export type ResendVerifcationOptions = MutationOptions<
-  types.VerifyEmailResponse,
-  types.TResendVerificationEmail
->;
-export type RegistrationOptions = MutationOptions<
-  types.TRegisterUserResponse,
-  types.TRegisterUser,
-  unknown,
-  types.TError
->;
-
 export type UpdatePermVars<T> = {
   roleName: string;
   updates: Partial<T>;
@@ -403,13 +390,6 @@ export type BranchMessageOptions = MutationOptions<
   unknown,
   Error
 >;
-
-export type TLogoutResponse = {
-  message: string;
-  redirect?: string;
-};
-
-export type LogoutOptions = MutationOptions<TLogoutResponse, undefined>;
 
 export interface AssistantInitialize {
   message: string;

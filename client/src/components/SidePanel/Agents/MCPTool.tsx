@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Constants } from '@hanzochat/data-provider';
 import { ChevronDown, Clock, Code2 } from 'lucide-react';
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import {
   Label,
   Checkbox,
@@ -53,6 +52,14 @@ export default function MCPTool({ serverInfo }: { serverInfo?: MCPServerInfo }) 
   const [isFocused, setIsFocused] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [accordionValue, setAccordionValue] = useState<string>('');
+  /* The chevron and the panel name each other. The accordion generates ids of
+     its own for that pair, and they are only reachable from a Trigger this row
+     cannot use — the row is a toolbar of its own controls, and a Trigger is a
+     button, so the checkbox and the delete button would be buttons inside a
+     button. Naming both ends here keeps `aria-controls`/`aria-labelledby`
+     pointing at real elements. */
+  const triggerId = useId();
+  const contentId = useId();
 
   if (!serverInfo) {
     return null;
@@ -79,6 +86,8 @@ export default function MCPTool({ serverInfo }: { serverInfo?: MCPServerInfo }) 
       : [...selectedTools, toolId];
     updateFormTools(newSelectedTools);
   };
+
+  const toggleExpanded = () => setAccordionValue((prev) => (prev ? '' : currentServerName));
 
   const selectedTools = getSelectedTools();
   const isExpanded = accordionValue === currentServerName;
@@ -112,218 +121,223 @@ export default function MCPTool({ serverInfo }: { serverInfo?: MCPServerInfo }) 
               }
             }}
           >
-            <AccordionPrimitive.Header asChild>
-              <div
-                className="flex grow cursor-pointer select-none items-center gap-1 rounded bg-transparent p-0 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                onClick={() => setAccordionValue((prev) => (prev ? '' : currentServerName))}
-              >
-                {statusIcon && <div className="flex items-center">{statusIcon}</div>}
+            <div
+              className="flex grow cursor-pointer select-none items-center gap-1 rounded bg-transparent p-0 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              onClick={toggleExpanded}
+            >
+              {statusIcon && <div className="flex items-center">{statusIcon}</div>}
 
-                {serverInfo.metadata.icon && (
-                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full">
-                    <div
-                      className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-center bg-no-repeat dark:bg-white/20"
-                      style={{
-                        backgroundImage: `url(${serverInfo.metadata.icon})`,
-                        backgroundSize: 'cover',
-                      }}
-                    />
-                  </div>
-                )}
-                <div
-                  className="grow px-2 py-1.5"
-                  style={{ textOverflow: 'ellipsis', wordBreak: 'break-all', overflow: 'hidden' }}
-                >
-                  {currentServerName}
+              {serverInfo.metadata.icon && (
+                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full">
+                  <div
+                    className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-center bg-no-repeat dark:bg-white/20"
+                    style={{
+                      backgroundImage: `url(${serverInfo.metadata.icon})`,
+                      backgroundSize: 'cover',
+                    }}
+                  />
                 </div>
-                <div className="flex items-center">
-                  <div className="relative flex items-center">
-                    <div
-                      className={cn(
-                        'absolute right-0 transition-all duration-300',
-                        isHovering || isFocused
-                          ? 'translate-x-0 opacity-100'
-                          : 'translate-x-8 opacity-0',
-                      )}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          data-checkbox-container
+              )}
+              <div
+                className="grow px-2 py-1.5"
+                style={{ textOverflow: 'ellipsis', wordBreak: 'break-all', overflow: 'hidden' }}
+              >
+                {currentServerName}
+              </div>
+              <div className="flex items-center">
+                <div className="relative flex items-center">
+                  <div
+                    className={cn(
+                      'absolute right-0 transition-all duration-300',
+                      isHovering || isFocused
+                        ? 'translate-x-0 opacity-100'
+                        : 'translate-x-8 opacity-0',
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        data-checkbox-container
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-1"
+                      >
+                        <Checkbox
+                          id={`select-all-${currentServerName}`}
+                          checked={
+                            selectedTools.length === tools.length && selectedTools.length > 0
+                          }
+                          onCheckedChange={(checked) => {
+                            const newSelectedTools = checked
+                              ? tools.map((t) => t.tool_id)
+                              : [
+                                  `${Constants.mcp_server}${Constants.mcp_delimiter}${currentServerName}`,
+                                ];
+                            updateFormTools(newSelectedTools);
+                          }}
+                          className={cn(
+                            'h-4 w-4 rounded border border-border-medium transition-all duration-200 hover:border-border-heavy',
+                            isExpanded ? 'visible' : 'pointer-events-none invisible',
+                          )}
                           onClick={(e) => e.stopPropagation()}
-                          className="mt-1"
-                        >
-                          <Checkbox
-                            id={`select-all-${currentServerName}`}
-                            checked={
-                              selectedTools.length === tools.length && selectedTools.length > 0
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // `.click()` is HTMLElement's, so no cast: the
+                              // 8.x checkbox is not the Radix <button> the old
+                              // `as HTMLButtonElement` assumed.
+                              e.currentTarget.click();
                             }
-                            onCheckedChange={(checked) => {
-                              const newSelectedTools = checked
-                                ? tools.map((t) => t.tool_id)
-                                : [
-                                    `${Constants.mcp_server}${Constants.mcp_delimiter}${currentServerName}`,
-                                  ];
-                              updateFormTools(newSelectedTools);
-                            }}
-                            className={cn(
-                              'h-4 w-4 rounded border border-border-medium transition-all duration-200 hover:border-border-heavy',
-                              isExpanded ? 'visible' : 'pointer-events-none invisible',
-                            )}
-                            onClick={(e) => e.stopPropagation()}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                // `.click()` is HTMLElement's, so no cast: the
-                                // 8.x checkbox is not the Radix <button> the old
-                                // `as HTMLButtonElement` assumed.
-                                e.currentTarget.click();
-                              }
-                            }}
-                            tabIndex={isExpanded ? 0 : -1}
-                            aria-label={
-                              selectedTools.length === tools.length && selectedTools.length > 0
-                                ? localize('com_ui_deselect_all')
-                                : localize('com_ui_select_all')
-                            }
-                          />
-                        </div>
+                          }}
+                          tabIndex={isExpanded ? 0 : -1}
+                          aria-label={
+                            selectedTools.length === tools.length && selectedTools.length > 0
+                              ? localize('com_ui_deselect_all')
+                              : localize('com_ui_select_all')
+                          }
+                        />
+                      </div>
 
-                        {deferredToolsEnabled && (
-                          <TooltipAnchor
-                            description={
-                              allDeferred
-                                ? localize('com_ui_mcp_undefer_all')
-                                : localize('com_ui_mcp_defer_all')
-                            }
-                            side="top"
-                            role="button"
-                            tabIndex={isExpanded ? 0 : -1}
-                            aria-label={
-                              allDeferred
-                                ? localize('com_ui_mcp_undefer_all')
-                                : localize('com_ui_mcp_defer_all')
-                            }
-                            aria-pressed={allDeferred}
-                            className={cn(
-                              'flex h-7 w-7 items-center justify-center rounded transition-colors duration-200',
-                              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
-                              isExpanded ? 'visible' : 'pointer-events-none invisible',
-                              allDeferred
-                                ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30'
-                                : 'text-text-tertiary hover:bg-surface-hover hover:text-text-primary',
-                            )}
-                            onClick={(e) => {
+                      {deferredToolsEnabled && (
+                        <TooltipAnchor
+                          description={
+                            allDeferred
+                              ? localize('com_ui_mcp_undefer_all')
+                              : localize('com_ui_mcp_defer_all')
+                          }
+                          side="top"
+                          role="button"
+                          tabIndex={isExpanded ? 0 : -1}
+                          aria-label={
+                            allDeferred
+                              ? localize('com_ui_mcp_undefer_all')
+                              : localize('com_ui_mcp_defer_all')
+                          }
+                          aria-pressed={allDeferred}
+                          className={cn(
+                            'flex h-7 w-7 items-center justify-center rounded transition-colors duration-200',
+                            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+                            isExpanded ? 'visible' : 'pointer-events-none invisible',
+                            allDeferred
+                              ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30'
+                              : 'text-text-tertiary hover:bg-surface-hover hover:text-text-primary',
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleDeferAll(tools);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
                               e.stopPropagation();
                               toggleDeferAll(tools);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleDeferAll(tools);
-                              }
-                            }}
-                          >
-                            <Clock className={cn('h-4 w-4', allDeferred && 'fill-amber-500/30')} />
-                          </TooltipAnchor>
-                        )}
+                            }
+                          }}
+                        >
+                          <Clock className={cn('h-4 w-4', allDeferred && 'fill-amber-500/30')} />
+                        </TooltipAnchor>
+                      )}
 
-                        {programmaticToolsEnabled && (
-                          <TooltipAnchor
-                            description={
-                              allProgrammatic
-                                ? localize('com_ui_mcp_unprogrammatic_all')
-                                : localize('com_ui_mcp_programmatic_all')
-                            }
-                            side="top"
-                            role="button"
-                            tabIndex={isExpanded ? 0 : -1}
-                            aria-label={
-                              allProgrammatic
-                                ? localize('com_ui_mcp_unprogrammatic_all')
-                                : localize('com_ui_mcp_programmatic_all')
-                            }
-                            aria-pressed={allProgrammatic}
-                            className={cn(
-                              'flex h-7 w-7 items-center justify-center rounded transition-colors duration-200',
-                              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
-                              isExpanded ? 'visible' : 'pointer-events-none invisible',
-                              allProgrammatic
-                                ? 'bg-violet-500/20 text-violet-500 hover:bg-violet-500/30'
-                                : 'text-text-tertiary hover:bg-surface-hover hover:text-text-primary',
-                            )}
-                            onClick={(e) => {
+                      {programmaticToolsEnabled && (
+                        <TooltipAnchor
+                          description={
+                            allProgrammatic
+                              ? localize('com_ui_mcp_unprogrammatic_all')
+                              : localize('com_ui_mcp_programmatic_all')
+                          }
+                          side="top"
+                          role="button"
+                          tabIndex={isExpanded ? 0 : -1}
+                          aria-label={
+                            allProgrammatic
+                              ? localize('com_ui_mcp_unprogrammatic_all')
+                              : localize('com_ui_mcp_programmatic_all')
+                          }
+                          aria-pressed={allProgrammatic}
+                          className={cn(
+                            'flex h-7 w-7 items-center justify-center rounded transition-colors duration-200',
+                            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+                            isExpanded ? 'visible' : 'pointer-events-none invisible',
+                            allProgrammatic
+                              ? 'bg-violet-500/20 text-violet-500 hover:bg-violet-500/30'
+                              : 'text-text-tertiary hover:bg-surface-hover hover:text-text-primary',
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProgrammaticAll(tools);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
                               e.stopPropagation();
                               toggleProgrammaticAll(tools);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleProgrammaticAll(tools);
-                              }
-                            }}
+                            }
+                          }}
+                        >
+                          <Code2
+                            className={cn('h-4 w-4', allProgrammatic && 'fill-violet-500/30')}
+                          />
+                        </TooltipAnchor>
+                      )}
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          id={triggerId}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpanded();
+                          }}
+                          className={cn(
+                            'flex h-7 w-7 items-center justify-center rounded transition-colors duration-200 hover:bg-surface-active-alt focus:translate-x-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+                            isExpanded && 'bg-surface-active-alt',
+                          )}
+                          aria-label={
+                            isExpanded
+                              ? localize('com_ui_tool_list_collapse', {
+                                  serverName: currentServerName,
+                                })
+                              : localize('com_ui_tool_list_expand', {
+                                  serverName: currentServerName,
+                                })
+                          }
+                          aria-expanded={isExpanded}
+                          aria-controls={contentId}
+                          tabIndex={0}
+                          onFocus={() => setIsFocused(true)}
+                        >
+                          <ChevronDown
+                            className={cn(
+                              'h-4 w-4 transition-transform duration-200',
+                              isExpanded && 'rotate-180',
+                            )}
+                          />
+                        </button>
+
+                        <OGDialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex h-7 w-7 items-center justify-center rounded transition-colors duration-200 hover:bg-surface-active-alt focus:translate-x-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Delete ${currentServerName}`}
+                            tabIndex={0}
+                            onFocus={() => setIsFocused(true)}
                           >
-                            <Code2
-                              className={cn('h-4 w-4', allProgrammatic && 'fill-violet-500/30')}
-                            />
-                          </TooltipAnchor>
-                        )}
-
-                        <div className="flex items-center gap-1">
-                          <AccordionPrimitive.Trigger asChild>
-                            <button
-                              type="button"
-                              onClick={(e) => e.stopPropagation()}
-                              className={cn(
-                                'flex h-7 w-7 items-center justify-center rounded transition-colors duration-200 hover:bg-surface-active-alt focus:translate-x-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
-                                isExpanded && 'bg-surface-active-alt',
-                              )}
-                              aria-label={
-                                isExpanded
-                                  ? localize('com_ui_tool_list_collapse', {
-                                      serverName: currentServerName,
-                                    })
-                                  : localize('com_ui_tool_list_expand', {
-                                      serverName: currentServerName,
-                                    })
-                              }
-                              aria-expanded={isExpanded}
-                              tabIndex={0}
-                              onFocus={() => setIsFocused(true)}
-                            >
-                              <ChevronDown
-                                className={cn(
-                                  'h-4 w-4 transition-transform duration-200',
-                                  isExpanded && 'rotate-180',
-                                )}
-                              />
-                            </button>
-                          </AccordionPrimitive.Trigger>
-
-                          <OGDialogTrigger asChild>
-                            <button
-                              type="button"
-                              className="flex h-7 w-7 items-center justify-center rounded transition-colors duration-200 hover:bg-surface-active-alt focus:translate-x-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                              onClick={(e) => e.stopPropagation()}
-                              aria-label={`Delete ${currentServerName}`}
-                              tabIndex={0}
-                              onFocus={() => setIsFocused(true)}
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </button>
-                          </OGDialogTrigger>
-                        </div>
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </OGDialogTrigger>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </AccordionPrimitive.Header>
+            </div>
           </div>
 
-          <AccordionContent className="relative ml-1 pt-1 before:absolute before:bottom-2 before:left-0 before:top-0 before:w-0.5 before:bg-border-medium">
+          <AccordionContent
+            id={contentId}
+            aria-labelledby={triggerId}
+            className="relative ml-1 pt-1 before:absolute before:bottom-2 before:left-0 before:top-0 before:w-0.5 before:bg-border-medium"
+          >
             <div className="space-y-1">
               {tools.map((tool) => (
                 <MCPToolItem

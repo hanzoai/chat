@@ -2,51 +2,38 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 /**
- * The phone's top bar owns the app's top-left corner on this width.
+ * The phone's top bar, kept to what a thumb needs.
  *
- * Both auth states anchor the left with the same two controls, because they mean
- * the same thing in both: the menu button opens the drawer, and the mark is the
- * app switcher — the same `BrandCorner` as everywhere else, one tap from
- * anywhere. The mark used to BE the drawer toggle when signed out, which left
- * the switcher reachable only through the drawer (its only button sat off-canvas
- * at x=-310 on a 390px viewport) and gave the brand glyph a second meaning.
+ * Left is ONE control: the Hanzo mark, which opens the drawer on tap and swaps
+ * to the sidebar-expand glyph on hover. It replaced the old hamburger-beside-the-
+ * mark pair — two affordances for one idea — so the mark now lives INSIDE the
+ * menu button rather than in a separate app-launcher.
  *
- * Signed in the bar adds the conversation title and compose; signed out it adds
- * the two ways in. The signed-in half is asserted here because the headless
- * browser cannot reach it — signing in needs a real hanzo.id session.
+ * Right, signed in, is the one control the phone keeps up here: temporary
+ * ("incognito") chat. Signed out it is the two ways in. The signed-in half is
+ * asserted here because a headless browser cannot reach it — signing in needs a
+ * real hanzo.id session.
  */
 
 let mockAuthenticated = false;
 const mockLogin = jest.fn();
-const mockNewConversation = jest.fn();
 
 jest.mock('@hanzogui/shell', () => ({
   HanzoMark: () => <div data-testid="mark" />,
-  HanzoAppLauncher: ({
-    label,
-    trigger,
-  }: {
-    label: string;
-    trigger: () => React.ReactNode;
-  }) => (
-    <button type="button" aria-label={label}>
-      {trigger()}
-    </button>
-  ),
+}));
+jest.mock('lucide-react', () => ({
+  PanelLeft: () => <div data-testid="panel-left" />,
+}));
+jest.mock('~/components/Chat/TemporaryChat', () => ({
+  TemporaryChat: () => <button type="button" aria-label="com_ui_temporary" />,
 }));
 
 jest.mock('~/hooks', () => ({
   useLocalize: () => (key: string) => key,
-  useNewConvo: () => ({ newConversation: mockNewConversation }),
   useAuthContext: () => ({ isAuthenticated: mockAuthenticated }),
 }));
 
 jest.mock('~/utils/login', () => ({ startHanzoLogin: () => mockLogin() }));
-jest.mock('~/utils', () => ({ clearMessagesCache: jest.fn() }));
-jest.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
-}));
-jest.mock('@hanzochat/data-provider', () => ({ QueryKeys: { messages: 'messages' } }));
 jest.mock('jotai', () => ({ useAtomValue: () => ({ title: 'A thread' }) }));
 jest.mock('~/store', () => ({ __esModule: true, default: { conversationByIndex: () => ({}) } }));
 
@@ -61,21 +48,19 @@ describe('the phone bar, signed out', () => {
     mount();
   });
 
-  it('is the menu, the mark and the two ways in, and nothing else', () => {
+  it('is the mark-as-drawer-toggle and the two ways in, and nothing else', () => {
     expect(screen.getByRole('button', { name: 'com_nav_open_sidebar' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'com_nav_hanzo_apps' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'com_nav_log_in' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'com_auth_sign_up' })).toBeInTheDocument();
     expect(screen.queryByText('A thread')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'com_ui_new_chat' })).not.toBeInTheDocument();
+    // The mark no longer sits in its own app-launcher button.
+    expect(screen.queryByRole('button', { name: 'com_nav_hanzo_apps' })).not.toBeInTheDocument();
   });
 
-  it('makes the mark the switcher, not the drawer toggle', () => {
-    const launcher = screen.getByRole('button', { name: 'com_nav_hanzo_apps' });
-    expect(launcher).toContainElement(screen.getByTestId('mark'));
-    expect(screen.getByRole('button', { name: 'com_nav_open_sidebar' })).not.toContainElement(
-      screen.getByTestId('mark'),
-    );
+  it('makes the mark the drawer toggle — the mark AND the expand glyph live inside the menu button', () => {
+    const menu = screen.getByRole('button', { name: 'com_nav_open_sidebar' });
+    expect(menu).toContainElement(screen.getByTestId('mark'));
+    expect(menu).toContainElement(screen.getByTestId('panel-left'));
   });
 
   it('names the drawer it controls', () => {
@@ -108,11 +93,11 @@ describe('the phone bar, signed in', () => {
     mount();
   });
 
-  it('keeps the same corner and adds the conversation', () => {
+  it('keeps the mark corner, titles the conversation, and adds temporary chat', () => {
     expect(screen.getByRole('button', { name: 'com_nav_open_sidebar' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'com_nav_hanzo_apps' })).toBeInTheDocument();
+    expect(screen.getByTestId('mark')).toBeInTheDocument();
     expect(screen.getByText('A thread')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'com_ui_new_chat' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'com_ui_temporary' })).toBeInTheDocument();
   });
 
   it('drops the arrival controls', () => {

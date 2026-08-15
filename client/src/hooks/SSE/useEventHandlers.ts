@@ -32,6 +32,7 @@ import {
   removeConvoFromAllQueries,
   findConversationInInfinite,
 } from '~/utils';
+import { offerKeep } from '~/utils/free';
 import { queueTitleGeneration } from '~/data-provider/SSE/queries';
 import useAttachmentHandler from '~/hooks/SSE/useAttachmentHandler';
 import useContentHandler from '~/hooks/SSE/useContentHandler';
@@ -495,6 +496,12 @@ export default function useEventHandlers({
           }
           return;
         }
+
+        // A reply whose model is not the one asked for: during a paid outage the
+        // gateway serves a paid route free and says so here, in a 200, rather
+        // than by refusing. This is the shape the visitor meets first, so it is
+        // where the offer to stay on free usually comes from.
+        offerKeep(submissionConvo?.model, responseMessage?.model);
 
         if (responseMessage?.attachments && responseMessage.attachments.length > 0) {
           // Process each attachment through the attachmentHandler

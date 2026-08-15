@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useMultiSearch } from '@hanzochat/client';
-import { Root, Trigger, Content, Portal } from '@radix-ui/react-popover';
+import { Popover } from '@hanzo/ui/primitives/Popover';
+import { PopoverContent } from '@hanzo/ui/primitives/PopoverContent';
+import { PopoverTrigger } from '@hanzo/ui/primitives/PopoverTrigger';
 import type { Option } from '~/common';
 import MenuItem from '~/components/Chat/Menus/UI/MenuItem';
 import { useLocalize } from '~/hooks';
@@ -61,10 +63,19 @@ function SelectDropDownPop({
   };
 
   return (
-    <Root open={open} onOpenChange={setOpen}>
+    /* `allowFlip` restates Radix's default: `avoidCollisions` is on unless a
+     * caller turns it off, while gui's flip middleware is opt-in. Without it a
+     * model list opened low in the window runs off the bottom. gui calls
+     * `onOpenChange(open, via)`; the extra argument is ignored by `setOpen`. */
+    <Popover open={open} onOpenChange={setOpen} allowFlip>
       <div className={'flex items-center justify-center gap-2'}>
         <div className={'relative w-full'}>
-          <Trigger asChild>
+          {/* `except-style`: gui merges its View styles onto a slotted child,
+            * and the View is a flex COLUMN — this trigger's label and value
+            * would stop stacking the way the markup lays them out. Radix's
+            * trigger styled nothing. `data-state` still lands, so
+            * `radix-state-open:bg-gray-50` keeps matching. */}
+          <PopoverTrigger asChild="except-style">
             <button
               data-testid="select-dropdown-button"
               className={cn(
@@ -108,47 +119,56 @@ function SelectDropDownPop({
                 </svg>
               </span>
             </button>
-          </Trigger>
-          <Portal>
-            <Content
-              side="bottom"
-              align="start"
-              className={cn(
-                'z-50 mr-3 mt-2 max-h-[52vh] w-full max-w-[85vw] overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white sm:max-w-full lg:max-h-[52vh]',
-                hasSearchRender && 'relative',
-              )}
-            >
-              {searchRender}
-              {options.map((option) => {
-                if (typeof option === 'string') {
-                  return (
-                    <MenuItem
-                      key={option}
-                      title={option}
-                      value={option}
-                      selected={!!(value && value === option)}
-                      onClick={() => handleSelect(option)}
-                    />
-                  );
-                }
+          </PopoverTrigger>
+          {/* No `Portal` wrapper: PopoverContent mounts its own. `side="bottom"`
+            * is gui's default so it moves to nothing; `align="start"` stays and
+            * is honoured from 8.0.73, where Content publishes it into the
+            * popper root's placement. The layout props restate what this panel
+            * already had, against gui's baked `width: 288`, `p: '$4'` and
+            * `alignItems: 'center'`: `width="100%"` IS `w-full`, the rows carry
+            * their own padding, and they run full-bleed rather than centred.
+            * `trapFocus={false}` matches Radix's non-modal content. */}
+          <PopoverContent
+            align="start"
+            trapFocus={false}
+            width="100%"
+            padding={0}
+            alignItems="stretch"
+            className={cn(
+              'z-50 mr-3 mt-2 max-h-[52vh] w-full max-w-[85vw] overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white sm:max-w-full lg:max-h-[52vh]',
+              hasSearchRender && 'relative',
+            )}
+          >
+            {searchRender}
+            {options.map((option) => {
+              if (typeof option === 'string') {
                 return (
                   <MenuItem
-                    key={option.value}
-                    title={option.label}
-                    description={option.description}
-                    value={option.value}
-                    icon={option.icon}
-                    selected={!!(value && value === option.value)}
-                    onClick={() => handleSelect(option.value)}
+                    key={option}
+                    title={option}
+                    value={option}
+                    selected={!!(value && value === option)}
+                    onClick={() => handleSelect(option)}
                   />
                 );
-              })}
-              {footer}
-            </Content>
-          </Portal>
+              }
+              return (
+                <MenuItem
+                  key={option.value}
+                  title={option.label}
+                  description={option.description}
+                  value={option.value}
+                  icon={option.icon}
+                  selected={!!(value && value === option.value)}
+                  onClick={() => handleSelect(option.value)}
+                />
+              );
+            })}
+            {footer}
+          </PopoverContent>
         </div>
       </div>
-    </Root>
+    </Popover>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
-import { Maximize2, Minimize2, PanelRight, PanelRightClose } from 'lucide-react';
+import { PanelRight, PanelRightClose } from 'lucide-react';
 import { Button, TooltipAnchor } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import { CONTROL } from '~/components/chrome';
@@ -10,9 +10,14 @@ import store from '~/store';
 const buttonClass = CONTROL;
 
 /**
- * The window controls at the right end of the header: maximize width, and the
- * right panel. Each owns a persisted atom the panel itself reads too, so a
- * toggle here and a toggle inside the panel are one control.
+ * The window control at the right end of the header: the right panel. It owns a
+ * persisted atom the panel itself reads too, so a toggle here and a toggle
+ * inside the panel are one control.
+ *
+ * Maximize is no longer one of them. `maximizeChatSpace` already had a switch in
+ * Settings → Chat and a row in the backdrop menu, so the header button was the
+ * third control for one boolean — and the only one of the three that spent a
+ * seat in the row.
  *
  * The right panel wears `PanelRight` — the mirror of the left sidebar's
  * `PanelLeft`. One rail on each edge, one glyph pointing at each, so the two
@@ -26,7 +31,6 @@ const buttonClass = CONTROL;
  */
 export default function PanelControls() {
   const localize = useLocalize();
-  const [maximized, setMaximized] = useAtom(store.maximizeChatSpace);
   const [sidePanelOpen, setSidePanelOpen] = useAtom(store.sidePanelOpen);
   const openBottomBarTab = useSetAtom(store.openBottomBarTab);
 
@@ -56,50 +60,27 @@ export default function PanelControls() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [toggleSideChat, newBottomBarTab]);
 
-  const maximizeLabel = localize('com_nav_maximize_chat_space');
   const sidePanelLabel = localize(sidePanelOpen ? 'com_ui_close_var' : 'com_ui_open_var', {
     0: localize('com_nav_control_panel'),
   });
 
   return (
-    <>
-      <TooltipAnchor
-        description={maximizeLabel}
-        render={
-          <Button
-            size="icon"
-            variant="outline"
-            data-testid="maximize-chat-space"
-            aria-label={maximizeLabel}
-            aria-pressed={maximized}
-            className={cn(buttonClass, maximized && 'bg-surface-active-alt')}
-            onClick={() => setMaximized(!maximized)}
-          >
-            {maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
-          </Button>
-        }
-      />
-      <TooltipAnchor
-        description={sidePanelLabel}
-        render={
-          <Button
-            size="icon"
-            variant="outline"
-            data-testid="toggle-side-panel"
-            aria-label={sidePanelLabel}
-            aria-expanded={sidePanelOpen}
-            aria-controls="controls-nav"
-            className={cn(buttonClass, sidePanelOpen && 'bg-surface-active-alt')}
-            onClick={toggleSideChat}
-          >
-            {sidePanelOpen ? (
-              <PanelRightClose aria-hidden="true" />
-            ) : (
-              <PanelRight aria-hidden="true" />
-            )}
-          </Button>
-        }
-      />
-    </>
+    <TooltipAnchor
+      description={sidePanelLabel}
+      render={
+        <Button
+          size="icon"
+          variant="outline"
+          data-testid="toggle-side-panel"
+          aria-label={sidePanelLabel}
+          aria-expanded={sidePanelOpen}
+          aria-controls="controls-nav"
+          className={cn(buttonClass, sidePanelOpen && 'bg-surface-active-alt')}
+          onClick={toggleSideChat}
+        >
+          {sidePanelOpen ? <PanelRightClose aria-hidden="true" /> : <PanelRight aria-hidden="true" />}
+        </Button>
+      }
+    />
   );
 }

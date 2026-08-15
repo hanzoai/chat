@@ -4,8 +4,16 @@ import { useToastContext } from '@hanzochat/client';
 import type { SPPickerConfig } from '~/components/SidePanel/Agents/config';
 import { useLocalize, useAuthContext } from '~/hooks';
 import { useGetStartupConfig } from '~/data-provider';
-import useSharePointToken from './useSharePointToken';
 import store from '~/store';
+
+/**
+ * The picker signs in by posting a Microsoft Graph access token into the
+ * SharePoint FilePicker form. Chat has no source for one, so the picker opens
+ * without a token and reports that instead.
+ */
+const graphToken:
+  | { access_token: string; token_type: string; expires_in: number; scope: string }
+  | undefined = undefined;
 
 interface UseSharePointPickerProps {
   containerNode: HTMLDivElement | null;
@@ -43,15 +51,6 @@ export default function useSharePointPicker({
   const sharePointBaseUrl = startupConfig?.sharePointBaseUrl;
   const isEntraIdUser = user?.provider === 'openid';
 
-  const {
-    token,
-    isLoading: isTokenLoading,
-    error: tokenError,
-  } = useSharePointToken({
-    enabled: isEntraIdUser && !disabled && !!sharePointBaseUrl,
-    purpose: 'Pick',
-  });
-
   const generateChannelId = useCallback(() => {
     return `sharepoint-picker-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }, []);
@@ -84,14 +83,14 @@ export default function useSharePointPicker({
               case 'authenticate':
                 console.log('Authentication requested, providing token');
                 console.log('Command details:', command); // Add this line
-                console.log('Token available:', !!token?.access_token); // Add this line
-                if (token?.access_token) {
+                console.log('Token available:', !!graphToken?.access_token);
+                if (graphToken?.access_token) {
                   port.postMessage({
                     type: 'result',
                     id: message.data.id,
                     data: {
                       result: 'token',
-                      token: token.access_token,
+                      token: graphToken.access_token,
                     },
                   });
                 } else {
@@ -192,7 +191,7 @@ export default function useSharePointPicker({
         console.error('Error processing port message:', error);
       }
     },
-    [token, onFilesSelected, showToast, onClose],
+    [onFilesSelected, showToast, onClose],
   );
 
   // Initialization message handler - establishes MessagePort communication
@@ -234,7 +233,7 @@ export default function useSharePointPicker({
   );
 
   const openSharePointPicker = async () => {
-    if (!token) {
+    if (!graphToken) {
       showToast({
         message: 'Unable to access SharePoint. Please ensure you are logged in with Microsoft.',
         status: 'error',
@@ -253,10 +252,10 @@ export default function useSharePointPicker({
 
       console.log('=== SharePoint File Picker v8 (MessagePort) ===');
       console.log('Token available:', {
-        hasToken: !!token.access_token,
-        tokenType: token.token_type,
-        expiresIn: token.expires_in,
-        scopes: token.scope,
+        hasToken: !!graphToken.access_token,
+        tokenType: graphToken.token_type,
+        expiresIn: graphToken.expires_in,
+        scopes: graphToken.scope,
       });
       console.log('Channel ID:', channelId);
 
@@ -336,7 +335,7 @@ export default function useSharePointPicker({
         const tokenInput = win.document.createElement('input');
         tokenInput.setAttribute('type', 'hidden');
         tokenInput.setAttribute('name', 'access_token');
-        tokenInput.setAttribute('value', token.access_token);
+        tokenInput.setAttribute('value', graphToken.access_token);
         form.appendChild(tokenInput);
 
         win.document.body.appendChild(form);
@@ -371,13 +370,14 @@ export default function useSharePointPicker({
     cleanup();
   }, [cleanup]);
 
-  const isAvailable = startupConfig?.sharePointFilePickerEnabled && isEntraIdUser && !tokenError;
+  const isAvailable =
+    startupConfig?.sharePointFilePickerEnabled === true && isEntraIdUser && !disabled;
 
   return {
     openSharePointPicker: isAvailable ? openSharePointPicker : () => {},
     closeSharePointPicker: handleDialogClose,
-    error: tokenError ? 'Failed to authenticate with SharePoint' : null,
+    error: null,
     cleanup,
-    isTokenLoading,
+    isTokenLoading: false,
   };
 }

@@ -10,6 +10,23 @@ const makeResponse = (
     headers: contentType ? { 'content-type': contentType } : {},
   });
 
+/** Build a text/event-stream Response whose body emits `chunks` in order. */
+const makeStream = (chunks: string[]): Response => {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const chunk of chunks) {
+        controller.enqueue(encoder.encode(chunk));
+      }
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    status: 200,
+    headers: { 'content-type': 'text/event-stream' },
+  });
+};
+
 describe('wrapHanzoGatewayFetch', () => {
   it('rewrites the gateway 200 error envelope into a 402 carrying the actionable msg', async () => {
     const envelope = JSON.stringify({
@@ -47,15 +64,77 @@ describe('wrapHanzoGatewayFetch', () => {
     expect(parsed.choices[0].message.content).toBe('hi there');
   });
 
-  it('never touches a live SSE stream (text/event-stream)', async () => {
-    const sse = 'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n';
-    const passthrough = makeResponse(sse, { contentType: 'text/event-stream' });
-    const cloneSpy = jest.spyOn(passthrough, 'clone');
-    const wrapped = wrapHanzoGatewayFetch(async () => passthrough);
+  it('forwards a successful SSE stream byte-for-byte (choices present)', async () => {
+    const sse =
+      'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n' +
+      'data: {"choices":[{"delta":{"reasoning":"thinking"}}]}\n\n' +
+      'data: {"choices":[{"delta":{"content":"hi there"}}]}\n\n' +
+      'data: [DONE]\n\n';
+    // split mid-event to exercise the cross-chunk buffer
+    const wrapped = wrapHanzoGatewayFetch(async () => makeStream([sse.slice(0, 40), sse.slice(40)]));
 
     const res = await wrapped('https://api.hanzo.ai/v1/chat/completions');
-    expect(res).toBe(passthrough);
-    expect(cloneSpy).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/event-stream');
+    expect(await res.text()).toBe(sse);
+  });
+
+  it('surfaces a MID-STREAM error envelope as a standard error event, keeping prior events', async () => {
+    // The gateway commits to text/event-stream, streams a reasoning model's
+    // thinking, THEN an upstream route drops and it emits {status:"error"}.
+    const sse =
+      'data: {"choices":[{"delta":{"reasoning":"weighing options"}}]}\n\n' +
+      'data: {"status":"error","msg":"upstream route closed"}\n\n';
+    const wrapped = wrapHanzoGatewayFetch(async () => makeStream([sse]));
+
+    const res = await wrapped('https://api.hanzo.ai/v1/chat/completions');
+    const text = await res.text();
+    // the reasoning that already streamed is preserved
+    expect(text).toContain('"reasoning":"weighing options"');
+    // the crash-shaped envelope is gone, replaced by an OpenAI error event
+    expect(text).not.toContain('"status":"error"');
+    expect(text).toContain('"error":{"message":"upstream route closed"');
+    // a mid-stream drop is retryable, NOT the add-credit paywall
+    expect(text).toContain('"code":"upstream_error"');
+    expect(text).not.toContain('insufficient_quota');
+  });
+
+  it('preserves an explicit gateway code on a streamed envelope (a real mid-stream paywall)', async () => {
+    const sse = 'data: {"status":"error","code":"insufficient_quota","msg":"balance spent"}\n\n';
+    const wrapped = wrapHanzoGatewayFetch(async () => makeStream([sse]));
+
+    const res = await wrapped('https://api.hanzo.ai/v1/chat/completions');
+    const text = await res.text();
+    expect(text).toContain('"error":{"message":"balance spent"');
+    expect(text).toContain('"code":"insufficient_quota"');
+    expect(text).not.toContain('upstream_error');
+  });
+
+  it('surfaces an error envelope split across chunk boundaries', async () => {
+    const evt = 'data: {"status":"error","msg":"insufficient credits"}\n\n';
+    const wrapped = wrapHanzoGatewayFetch(async () => makeStream([evt.slice(0, 20), evt.slice(20)]));
+
+    const res = await wrapped('https://api.hanzo.ai/v1/chat/completions');
+    const text = await res.text();
+    expect(text).toContain('"error":{"message":"insufficient credits"');
+    expect(text).not.toContain('"status":"error"');
+  });
+
+  it('surfaces a trailing error envelope that has no final blank line', async () => {
+    const wrapped = wrapHanzoGatewayFetch(async () =>
+      makeStream(['data: {"status":"error","msg":"dead key"}']),
+    );
+
+    const res = await wrapped('https://api.hanzo.ai/v1/chat/completions');
+    expect(await res.text()).toContain('"error":{"message":"dead key"');
+  });
+
+  it('leaves a standard OpenAI SSE error event untouched (the SDK already handles it)', async () => {
+    const sse = 'data: {"error":{"message":"rate limited","type":"rate_limit"}}\n\n';
+    const wrapped = wrapHanzoGatewayFetch(async () => makeStream([sse]));
+
+    const res = await wrapped('https://api.hanzo.ai/v1/chat/completions');
+    expect(await res.text()).toBe(sse);
   });
 
   it('passes non-JSON bodies through without throwing', async () => {

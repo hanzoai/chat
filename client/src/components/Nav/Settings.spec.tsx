@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { GuiTestProvider } from 'test/gui-provider';
 import Settings from './Settings';
 
 const mockUseGetStartupConfig = jest.fn();
@@ -43,7 +44,13 @@ jest.mock('./SettingsTabs', () => ({
 }));
 
 function renderSettings() {
-  return render(<Settings open={true} onOpenChange={jest.fn()} />);
+  // The tab strip is a @hanzo/ui primitive now, and those read their theme from
+  // GuiProvider — bare `render` reproduces a configuration the app never ships.
+  return render(
+    <GuiTestProvider>
+      <Settings open={true} onOpenChange={jest.fn()} />
+    </GuiTestProvider>,
+  );
 }
 
 beforeEach(() => {

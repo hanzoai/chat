@@ -5,9 +5,9 @@ const {
   MCPTokenStorage,
   normalizeHttpError,
   extractWebSearchEnvVars,
+  resolveTenantBearer,
 } = require('@hanzochat/api');
 const {
-  deleteAllUserSessions,
   deleteAllSharedLinks,
   updateUserPlugins,
   deleteUserById,
@@ -18,7 +18,6 @@ const {
   deleteFiles,
   deleteAllAgentApiKeys,
   updateUser,
-  getUserById,
   findToken,
   getFiles,
 } = require('~/models');
@@ -35,8 +34,6 @@ const {
   User,
 } = require('~/db/models');
 const { updateUserPluginAuth, deleteUserPluginAuth } = require('~/server/services/PluginService');
-const { verifyEmail, resendVerificationEmail } = require('~/server/services/AuthService');
-const { verifyOTPOrBackupCode } = require('~/server/services/twoFactorService');
 const { getMCPManager, getFlowStateManager, getMCPServersRegistry } = require('~/config');
 const { invalidateCachedTools } = require('~/server/services/Config/getCachedTools');
 const { needsRefresh, getNewS3URL } = require('~/server/services/Files/S3/crud');
@@ -44,8 +41,7 @@ const { processDeleteRequest } = require('~/server/services/Files/process');
 const { getAppConfig } = require('~/server/services/Config');
 const { buildGuestUser } = require('~/server/services/guestConfig');
 const { publicUser } = require('~/server/services/publicUser');
-const { pictureFromUserinfo } = require('~/server/controllers/auth/iamSession');
-const { currentBearer } = require('~/server/services/iamBearerRefresh');
+const { pictureFromUserinfo } = require('~/server/services/iamUser');
 const { deleteToolCalls } = require('~/models/ToolCall');
 const { deleteUserPrompts } = require('~/models/Prompt');
 const { deleteUserAgents } = require('~/models/Agent');
@@ -54,12 +50,12 @@ const { getLogStores } = require('~/cache');
 /**
  * Adopt the visitor's hanzo.id photo, for a session that already existed.
  *
- * The avatar is reconciled at LOGIN (controllers/auth/iamSession), which is the
- * right place for it and the only place that needs to run for anyone signing in
- * from here on. It leaves out exactly one group: everybody already signed in
- * when that shipped, who would have had to sign out and back in to see their own
- * face. Telling a signed-in person to re-authenticate to collect a photo the
- * platform already holds is a workaround, not a fix.
+ * The avatar is adopted when the account is first seen (services/iamUser), which
+ * is the right place for it and the only place that needs to run for anyone
+ * arriving from here on. It leaves out exactly one group: everybody who already
+ * had an account when that shipped, who would have had to sign out and back in
+ * to see their own face. Telling a signed-in person to re-authenticate to
+ * collect a photo the platform already holds is a workaround, not a fix.
  *
  * So this reads the SAME userinfo endpoint, through the SAME
  * `pictureFromUserinfo` — never a second copy of the discovery-and-fetch dance,
@@ -71,26 +67,24 @@ const { getLogStores } = require('~/cache');
  * - It runs ONLY when the record has no avatar. A photo already here — uploaded
  *   by hand, or adopted on a previous pass — is the visitor's own and is never
  *   overwritten from upstream.
- * - It runs at most ONCE per session, marked whether or not a photo came back.
- *   Without that, an account with no picture at hanzo.id would pay two HTTP
- *   round-trips on EVERY identity read, forever, to be told "still none".
- * - It cannot fail the read. `currentBearer` yields null for a local login or a
- *   lapsed session and `pictureFromUserinfo` resolves to '' on every error, so
- *   the worst case is the response this function was never called for.
+ * - It runs only from HERE, the one endpoint that renders a person's identity,
+ *   rather than from the per-request identification every API call goes through.
+ *   That is the difference between a couple of round-trips a session and two in
+ *   front of every call an account without a photo ever makes.
+ * - It cannot fail the read. A guest carries no bearer and
+ *   `pictureFromUserinfo` resolves to '' on every error, so the worst case is
+ *   the response this function was never called for.
  *
  * It runs AFTER the S3 branch above, and that order is load-bearing: that branch
  * is gated on an avatar EXISTING and treats it as an S3 key to re-sign. Adopting
  * first would hand it a hanzo.id data URI to refresh as one.
  */
 async function adoptIamPhoto(req, userData) {
-  if (userData.avatar || req.session?.iamPhotoTried) {
+  if (userData.avatar) {
     return;
   }
   try {
-    if (req.session) {
-      req.session.iamPhotoTried = true;
-    }
-    const bearer = await currentBearer(req);
+    const bearer = resolveTenantBearer(req);
     if (!bearer) {
       return;
     }
@@ -305,30 +299,7 @@ const deleteUserController = async (req, res) => {
   const { user } = req;
 
   try {
-    /**
-     * Deleting an account is irreversible, so a live session is not enough on
-     * its own: someone holding a stolen token could erase everything the
-     * account owns without ever passing the second factor. Anyone who has
-     * turned 2FA on proves it again here.
-     *
-     * Only for accounts that HAVE a second factor — the record is read fresh
-     * because `req.user` carries neither `totpSecret` nor `backupCodes`
-     * (`select: false`, deliberately).
-     */
-    const record = await getUserById(user.id, '+totpSecret +backupCodes');
-    if (record?.twoFactorEnabled) {
-      const { verified, status, message } = await verifyOTPOrBackupCode({
-        user: record,
-        token: req.body?.token,
-        backupCode: req.body?.backupCode,
-      });
-      if (!verified) {
-        return res.status(status).json({ message });
-      }
-    }
-
     await deleteMessages({ user: user.id }); // delete user messages
-    await deleteAllUserSessions({ userId: user.id }); // delete user sessions
     await Transaction.deleteMany({ user: user.id }); // delete user transactions
     await deleteUserKey({ userId: user.id, all: true }); // delete user keys
     await Balance.deleteMany({ user: user._id }); // delete user balances
@@ -377,34 +348,6 @@ const deleteUserController = async (req, res) => {
     res.status(200).send({ message: 'User deleted' });
   } catch (err) {
     logger.error('[deleteUserController]', err);
-    return res.status(500).json({ message: 'Something went wrong.' });
-  }
-};
-
-const verifyEmailController = async (req, res) => {
-  try {
-    const verifyEmailService = await verifyEmail(req);
-    if (verifyEmailService instanceof Error) {
-      return res.status(400).json(verifyEmailService);
-    } else {
-      return res.status(200).json(verifyEmailService);
-    }
-  } catch (e) {
-    logger.error('[verifyEmailController]', e);
-    return res.status(500).json({ message: 'Something went wrong.' });
-  }
-};
-
-const resendVerificationController = async (req, res) => {
-  try {
-    const result = await resendVerificationEmail(req);
-    if (result instanceof Error) {
-      return res.status(400).json(result);
-    } else {
-      return res.status(200).json(result);
-    }
-  } catch (e) {
-    logger.error('[verifyEmailController]', e);
     return res.status(500).json({ message: 'Something went wrong.' });
   }
 };
@@ -561,10 +504,8 @@ module.exports = {
   getTermsStatusController,
   acceptTermsController,
   deleteUserController,
-  verifyEmailController,
   /** Not a route — uninstalling an MCP plugin revokes its OAuth tokens at the
    * provider, and `maybeUninstallOAuthMCP.spec.js` tests that directly. */
   maybeUninstallOAuthMCP,
   updateUserPluginsController,
-  resendVerificationController,
 };

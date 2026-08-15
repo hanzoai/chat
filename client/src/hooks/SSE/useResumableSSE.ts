@@ -14,6 +14,7 @@ import {
   ViolationTypes,
   LocalStorageKeys,
   removeNullishValues,
+  renewBearer,
 } from '@hanzochat/data-provider';
 import type { TMessage, TPayload, TSubmission, EventSubmission } from '@hanzochat/data-provider';
 import type { EventHandlerParams } from './useEventHandlers';
@@ -22,6 +23,7 @@ import type { ActiveJobsResponse } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
 import { requireLogin } from '~/utils/login';
+import { offerSwitch } from '~/utils/free';
 import store from '~/store';
 
 const clearDraft = (conversationId?: string | null) => {
@@ -153,8 +155,12 @@ export default function useResumableSSE(
       const url = isResume ? `${baseUrl}?resume=true` : baseUrl;
       console.log('[ResumableSSE] Subscribing to stream:', url, { isResume });
 
+      /* A guest carries no credential, and `Bearer undefined` is not the same
+         thing as no header: the server reads any bearer as a claim to be
+         somebody and refuses it, which is a guest locked out of reading back
+         their own reply. Send the header only when there is a token. */
       const sse = new SSE(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         method: 'GET',
       });
       sseRef.current = sse;
@@ -362,13 +368,12 @@ export default function useResumableSSE(
           return;
         }
 
-        // Check for 401 and try to refresh token (same pattern as useSSE)
+        // A 401 means IAM refused the token; ask it for a fresh one and retry.
         if (responseCode === 401) {
           try {
-            const refreshResponse = await request.refreshToken();
-            const newToken = refreshResponse?.token ?? '';
+            const newToken = (await renewBearer()) ?? '';
             if (!newToken) {
-              throw new Error('Token refresh failed.');
+              throw new Error('Nothing left to renew.');
             }
             sse.headers = {
               Authorization: `Bearer ${newToken}`,
@@ -636,6 +641,11 @@ export default function useResumableSSE(
         setIsSubmitting(false);
         return null;
       }
+
+      // The paid route could not serve and free would. An offer, not a move:
+      // the refusal still lands as an errored reply below, so the notice adds a
+      // way forward rather than replacing what happened.
+      offerSwitch(status, errorData);
 
       if (errorData) {
         errorHandler({

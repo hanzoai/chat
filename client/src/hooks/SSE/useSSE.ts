@@ -10,6 +10,7 @@ import {
   createPayload,
   LocalStorageKeys,
   removeNullishValues,
+  renewBearer,
 } from '@hanzochat/data-provider';
 import type { TMessage, TPayload, TSubmission, EventSubmission } from '@hanzochat/data-provider';
 import { useAnalytics } from '@hanzo/event/react';
@@ -20,6 +21,7 @@ import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
 import { requireLogin } from '~/utils/login';
+import { offerSwitch } from '~/utils/free';
 import store from '~/store';
 
 const clearDraft = (conversationId?: string | null) => {
@@ -120,7 +122,11 @@ export default function useSSE(
 
     const sse = new SSE(payloadData.server, {
       payload: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      /* Only claim an identity when there is one — see useResumableSSE. */
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
 
     sse.addEventListener('attachment', (e: MessageEvent) => {
@@ -227,12 +233,11 @@ export default function useSSE(
       const responseCode = e.responseCode as number | undefined;
 
       if (responseCode === 401) {
-        /* token expired, refresh and retry */
+        /* IAM refused the token; ask it for a fresh one and retry */
         try {
-          const refreshResponse = await request.refreshToken();
-          const token = refreshResponse?.token ?? '';
+          const token = (await renewBearer()) ?? '';
           if (!token) {
-            throw new Error('Token refresh failed.');
+            throw new Error('Nothing left to renew.');
           }
           sse.headers = {
             'Content-Type': 'application/json',
@@ -270,6 +275,9 @@ export default function useSSE(
         console.log(e);
         setIsSubmitting(false);
       }
+
+      // Same offer the resumable path makes, at the other place a refusal lands.
+      offerSwitch(responseCode, data);
 
       errorHandler({ data, submission: { ...submission, userMessage } as EventSubmission });
     });

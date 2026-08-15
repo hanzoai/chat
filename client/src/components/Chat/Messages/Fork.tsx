@@ -205,12 +205,18 @@ export default function Fork({
   forkingSupported = false,
   latestMessageId,
   isLast = false,
+  label,
+  className,
 }: {
   messageId: string;
   conversationId: string | null;
   forkingSupported?: boolean;
   latestMessageId?: string;
   isLast?: boolean;
+  /** The action's name, printed beside the glyph where the row's controls fold
+   *  into the ⋯ popover on a phone. */
+  label?: string;
+  className?: string;
 }) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
@@ -233,6 +239,7 @@ export default function Fork({
     !isLast && 'md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100',
     'focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:outline-none',
     isActive && 'active text-text-primary bg-surface-hover',
+    className,
   );
 
   const forkConvo = useForkConvoMutation({
@@ -350,6 +357,7 @@ export default function Fork({
             aria-label={localize('com_ui_fork_open_menu')}
           >
             <GitFork size="19" aria-hidden="true" />
+            {label != null && <span className="truncate">{label}</span>}
           </button>
         }
       />

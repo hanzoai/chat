@@ -367,7 +367,10 @@ export function getModelSpecPreset(modelSpec?: t.TModelSpec) {
  * First, the admin defined default, then last selected spec, followed by first spec
  */
 export function getModelSpecIconURL(modelSpec: t.TModelSpec) {
-  return modelSpec.iconURL ?? modelSpec.preset.iconURL ?? modelSpec.preset.endpoint ?? '';
+  // `preset` is required by the type and absent in real config: a spec written
+  // in YAML with only a name, label and iconURL parses fine and reaches here
+  // with nothing to destructure, which threw before the icon could fall back.
+  return modelSpec.iconURL ?? modelSpec.preset?.iconURL ?? modelSpec.preset?.endpoint ?? '';
 }
 
 /** Gets the default frontend-facing endpoint, dependent on iconURL definition.

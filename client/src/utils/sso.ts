@@ -1,4 +1,5 @@
 import { getHanzoIamSdk } from '~/utils/iam';
+import { persistRedirectToSession } from '~/utils/redirect';
 
 /**
  * Ask hanzo.id, once per visit, whether this browser is already signed in.
@@ -50,12 +51,11 @@ import { getHanzoIamSdk } from '~/utils/iam';
 const PROBED = 'hanzo.sso.probed';
 
 /**
- * `sessionStorage`, matching the scope `useGuestAuth` already uses: the tab is
- * the visit. "Is anyone signed in?" is a question whose answer CHANGES — someone
- * signs in at hanzo.id in another tab and comes back — so pinning the first
- * answer in `localStorage` would mean a browser that answered "no" once answers
- * "no" forever, which is the bug this file exists to fix, merely deferred. Per
- * visit it costs one redirect and then self-heals.
+ * `sessionStorage`: the tab is the visit. "Is anyone signed in?" is a question
+ * whose answer CHANGES — someone signs in at hanzo.id in another tab and comes
+ * back — so pinning the first answer in `localStorage` would mean a browser that
+ * answered "no" once answers "no" forever, which is the bug this file exists to
+ * fix, merely deferred. Per visit it costs one redirect and then self-heals.
  */
 function store(): Storage | null {
   try {
@@ -140,6 +140,13 @@ export async function probeSession(): Promise<boolean> {
     // the visitor stays a guest for this visit. Losing the bound is the
     // expensive one.
     storage.setItem(PROBED, '1');
+    // Where they were, kept for the way back. This takes the whole document to
+    // the issuer, and the issuer returns it to the callback — so a visitor who
+    // arrived on a deep link is holding a URL nobody has read yet. hanzo.ai's
+    // composer hands its prompt over as `/?q=…&submit=true`, and without this the
+    // probe spends it: the callback lands on a bare path and the question the
+    // visitor typed is gone. `OAuthCallback` reads this and puts them back.
+    persistRedirectToSession(window.location.pathname + window.location.search);
     await getHanzoIamSdk().signinRedirect({ additionalParams: { prompt: 'none' } });
     return true;
   } catch {

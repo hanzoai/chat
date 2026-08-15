@@ -11,6 +11,7 @@ overrides:
   zod@3.24.4: 3.25.76
   '@hanzogui/web': 8.1.1
   '@hanzogui/telemetry': 8.1.3
+  '@hanzo/ui': 8.0.76
 
 packageExtensionsChecksum: sha256-KRcHO/rfpZQpR4e1OSyakREdNyw3kYQIMiHnorEgMSw=
 
@@ -148,6 +149,9 @@ importers:
       '@google/genai':
         specifier: ^1.19.0
         version: 1.46.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))
+      '@hanzo/ai':
+        specifier: ^0.3.8
+        version: 0.3.8
       '@hanzo/kv':
         specifier: ^0.4.1
         version: 0.4.1
@@ -361,7 +365,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@25.5.0)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@25.5.0)(typescript@7.0.2))
+        version: 30.3.0(@types/node@20.19.37)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@20.19.37)(typescript@7.0.2))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -390,11 +394,14 @@ importers:
         specifier: ^9.2.2
         version: 9.4.2
       '@hanzo/ai':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.3.8
+        version: 0.3.8
       '@hanzo/appearance':
         specifier: ^0.1.2
         version: 0.1.2(react@19.2.4)
+      '@hanzo/composer':
+        specifier: ^0.1.0
+        version: 0.1.1
       '@hanzo/design':
         specifier: ^0.4.12
         version: 0.4.12
@@ -405,8 +412,8 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4)
       '@hanzo/iam':
-        specifier: ^0.21.8
-        version: 0.21.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^0.21.10
+        version: 0.21.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@hanzo/logo':
         specifier: ^1.0.13
         version: 1.0.13(react@19.2.4)
@@ -417,8 +424,8 @@ importers:
         specifier: 1.4.12
         version: 1.4.12
       '@hanzo/ui':
-        specifier: ^8.0.69
-        version: 8.0.69(106aa0b04851e9ed43e56393f52814f2)
+        specifier: 8.0.76
+        version: 8.0.76(106aa0b04851e9ed43e56393f52814f2)
       '@hanzo/usage':
         specifier: ^0.1.6
         version: 0.1.6(@hanzo/gui@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -452,12 +459,6 @@ importers:
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-alert-dialog':
-        specifier: 1.0.2
-        version: 1.0.2(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-collapsible':
-        specifier: ^1.0.3
-        version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-dialog':
         specifier: 1.0.2
         version: 1.0.2(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -473,9 +474,6 @@ importers:
       '@radix-ui/react-radio-group':
         specifier: ^1.1.3
         version: 1.3.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-select':
-        specifier: ^2.0.0
-        version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-slider':
         specifier: ^1.1.1
         version: 1.3.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1025,20 +1023,14 @@ importers:
         specifier: '>=8.0.1'
         version: 8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4)
       '@hanzo/ui':
-        specifier: '>=8.0.48'
-        version: 8.0.50(75c8e17981595731d821effd1badca6d)
+        specifier: 8.0.76
+        version: 8.0.76(05e093f2e8350072ab4feeeaa697b349)
       '@headlessui/react':
         specifier: ^2.1.2
         version: 2.2.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-accordion':
         specifier: ^1.2.11
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-alert-dialog':
-        specifier: 1.0.2
-        version: 1.0.2(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-collapsible':
-        specifier: ^1.1.11
-        version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-dialog':
         specifier: 1.0.2
         version: 1.0.2(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1051,9 +1043,6 @@ importers:
       '@radix-ui/react-radio-group':
         specifier: ^1.3.7
         version: 1.3.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-select':
-        specifier: ^2.2.5
-        version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-slider':
         specifier: ^1.3.5
         version: 1.3.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3556,14 +3545,22 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hanzo/ai@0.3.0':
-    resolution: {integrity: sha512-nHj5rgSu5WD1fttfWv65HQ3WG65iztLFrwjb5B5BKSVwLVt7ZSLbioOZ6Of7GnFRG4PxtD0Sy961NnEA2FkaYA==}
+  '@hanzo/ai@0.3.8':
+    resolution: {integrity: sha512-kSaDUBIEwbnERfodjr4MsoTe/5LQiNyP/CnmMKpqA2T1pW7o2Wc38rsnvApOcI/SAmqhK0kLNRKBn9zbkxxQYQ==}
     engines: {node: '>=18'}
 
   '@hanzo/appearance@0.1.2':
     resolution: {integrity: sha512-Oc67xzdurgX0dTz4GM5IBGjKD7mOOeVfDU6VvjTABU6hjT6rKfwrEPbSaVNCVK1ZGyJ5qdHHzwYmjFU1GTmLpw==}
     peerDependencies:
       react: '>=19'
+
+  '@hanzo/appearance@0.1.4':
+    resolution: {integrity: sha512-JBsre5oDxjo0iRpXvt0ME2NKklXdNsB7dJwBoZouGzSHAbQldxFF7LLNuSuk6w1a6TYCIftoooYGmw0ynQsclA==}
+    peerDependencies:
+      react: '>=19'
+
+  '@hanzo/composer@0.1.1':
+    resolution: {integrity: sha512-+eC1gbT872zcKMoD+JD4tb4CVBQBq7dv6G0NRCT5d+PAfD2dAuqlDF3J5zzywQi55LZazbsip5zWOcbs31uJZg==}
 
   '@hanzo/data@1.2.2':
     resolution: {integrity: sha512-hgLGGnsfZqyBmSzCPL2nsnON6jXbUKVNKDnzeIAPCJEkF5SXw4lzCTEtJRHYmrRb01lU0LlQfZxZXrvBd85ZMA==}
@@ -3573,6 +3570,10 @@ packages:
 
   '@hanzo/design@0.4.12':
     resolution: {integrity: sha512-lE1UxUL10FLrETj7VjfMqTkbUF+qlOTTwN2zXKJIhUwHyr0isKWfFPigdjoxy2YK+/t7aY/zE9C/Y5s3DoTKQA==}
+    hasBin: true
+
+  '@hanzo/design@0.5.1':
+    resolution: {integrity: sha512-PMbjWSSTFUF6EdDEIm05eq4tEoyhSP6cKYTQRqshsOZC71rqCjb4Raelz+ixL1d15K4L0LsIMpx2aS/EVctzgg==}
     hasBin: true
 
   '@hanzo/event@0.3.21':
@@ -3594,8 +3595,8 @@ packages:
     peerDependencies:
       react: '>=19'
 
-  '@hanzo/iam@0.21.8':
-    resolution: {integrity: sha512-iumPA4chkxcoVZeoZTrLUFmxUwuZbGdM8Fy8J/mP+EvEHPZIrffNTH4Q2sCp0WClR9wKSQMOhkfVMyZ9VNZ2gw==}
+  '@hanzo/iam@0.21.10':
+    resolution: {integrity: sha512-HuEUw3t12DB5NZEHOUgqEbzw+kh6YLzX0Lue54OzIFNeCAtZMHJIS5R+CajDPBYZ4S9/JkmwXOL+u6K23EPAPg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=17'
@@ -3649,39 +3650,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/ui@8.0.50':
-    resolution: {integrity: sha512-vqzqsp+1FLRcnj3MOOGfFqAdDqvXsBn7enh12xiiFr/SApHfyddHrrijpwrfj1k6zL7DfUC9nZoZh6ZAYfgJ9A==}
-    peerDependencies:
-      '@hanzo/canvas': '>=0.1.0'
-      '@hanzo/cd': '>=0.1.0'
-      '@hanzo/dashboard': '>=0.1.0'
-      '@hanzo/data': '>=1.2.0'
-      '@hanzo/gui': '>=8.0.0'
-      '@hanzo/usage': '>=0.1.0'
-      '@hanzogui/config': '>=8.0.0'
-      '@hanzogui/next-theme': '>=8.0.0'
-      next-themes: '>=0.2.1'
-      react: '>=19'
-      react-dom: '>=19'
-      react-native-web: '>=0.21'
-    peerDependenciesMeta:
-      '@hanzo/canvas':
-        optional: true
-      '@hanzo/cd':
-        optional: true
-      '@hanzo/dashboard':
-        optional: true
-      '@hanzo/usage':
-        optional: true
-      '@hanzogui/next-theme':
-        optional: true
-      next-themes:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@hanzo/ui@8.0.69':
-    resolution: {integrity: sha512-/s3jRw7supMWkkThQFp7P3wRWT3eIyPj2f1lgorDDEQll04z7gPe29oOndEkP91SValBjoWguAmyYmk0V1qKNg==}
+  '@hanzo/ui@8.0.76':
+    resolution: {integrity: sha512-L7ZF0dqpraesU0ZD9HDB5tCELYvoUEhIHxthprLCyFV0mlqkHqvz6zc3im/yhm7lFZllbwcHgZVfkiFIqmeg5g==}
     peerDependencies:
       '@hanzo/canvas': '>=0.1.0'
       '@hanzo/cd': '>=0.1.0'
@@ -4161,11 +4131,6 @@ packages:
     peerDependencies:
       react: '>=19'
 
-  '@hanzogui/helpers-icon@8.0.1':
-    resolution: {integrity: sha512-6tJMjA6eyZWVmt2jTUL0X6nIxXW71Es7zWuAQe6SOlxcAv6ISuqTwCv+2BpKTvw13gJEnP1rRqe7PPKAMuWY+w==}
-    peerDependencies:
-      react: '>=19'
-
   '@hanzogui/helpers-icon@8.1.1':
     resolution: {integrity: sha512-s7ubV4qsD/hlfy62h6kb5Q0bFfJ5MOqVTuYOEgNpHtDaBONa2hLbmrCAW6NzOqd/CJk62Kpwp+uVqkQwN7Z+aA==}
     peerDependencies:
@@ -4241,11 +4206,6 @@ packages:
 
   '@hanzogui/list-item@8.1.1':
     resolution: {integrity: sha512-CaGvr6hqovoejsoS7uIxlo6gb9CpLk0fAWAAZfjRprp03unmQg4ZQFcQmUP+n+Ao1asaoh6OkQEhLgaUtd6YAg==}
-    peerDependencies:
-      react: '>=19'
-
-  '@hanzogui/lucide-icons-2@8.0.1':
-    resolution: {integrity: sha512-j3Bm0pWYJAW1oMdjR64fPrI0TsBPV3vL7+x70n0qGtaov6zjzIoRPglUi8cFfftt1jL1faJePcAyx+iTwv+Vmg==}
     peerDependencies:
       react: '>=19'
 
@@ -5927,12 +5887,6 @@ packages:
       '@types/react-dom':
         optional: true
 
-  '@radix-ui/react-alert-dialog@1.0.2':
-    resolution: {integrity: sha512-0MtxV53FaEEBOKRgyLnEqHZKKDS5BldQ9oUBsKVXWI5FHbl2jp35qs+0aJET+K5hJDsc40kQUzP7g+wC7tqrqA==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-
   '@radix-ui/react-arrow@1.1.7':
     resolution: {integrity: sha512-F+M1tLhO+mlQaOWspE8Wstg+z6PwxwRd8oQ8IXceWz92kfAmalTRf0EjrouQeo7QssEPfCn05B4Ihs1K9WQ/7w==}
     peerDependencies:
@@ -6218,19 +6172,6 @@ packages:
 
   '@radix-ui/react-roving-focus@1.1.11':
     resolution: {integrity: sha512-7A6S9jSgm/S+7MdtNDSb+IU859vQqJ/QAtcYQcfFC6W8RS4IxIZDldLR0xqCFZ6DCyrQLjLPsxtTNch5jVA4lA==}
-    peerDependencies:
-      '@types/react': '*'
-      '@types/react-dom': '*'
-      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      '@types/react-dom':
-        optional: true
-
-  '@radix-ui/react-select@2.2.6':
-    resolution: {integrity: sha512-I30RydO+bnn2PQztvo25tswPH+wFBjehVGtmagkU78yMdwTwVf12wnAOF+AeP8S2N8xD+5UPbGhkUfPyvT+mwQ==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -17695,12 +17636,19 @@ snapshots:
       protobufjs: 7.5.9
       yargs: 17.7.2
 
-  '@hanzo/ai@0.3.0': {}
+  '@hanzo/ai@0.3.8': {}
 
   '@hanzo/appearance@0.1.2(react@19.2.4)':
     dependencies:
       '@hanzo/design': 0.4.12
       react: 19.2.4
+
+  '@hanzo/appearance@0.1.4(react@19.2.4)':
+    dependencies:
+      '@hanzo/design': 0.5.1
+      react: 19.2.4
+
+  '@hanzo/composer@0.1.1': {}
 
   '@hanzo/data@1.2.2(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -17713,6 +17661,8 @@ snapshots:
       react: 19.2.4
 
   '@hanzo/design@0.4.12': {}
+
+  '@hanzo/design@0.5.1': {}
 
   '@hanzo/event@0.3.21(react@19.2.4)':
     optionalDependencies:
@@ -17860,7 +17810,7 @@ snapshots:
       - react-dom
       - react-native
 
-  '@hanzo/iam@0.21.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@hanzo/iam@0.21.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       jose: 6.2.2
       libphonenumber-js: 1.13.7
@@ -17903,38 +17853,37 @@ snapshots:
 
   '@hanzo/plans@1.4.12': {}
 
-  '@hanzo/products@0.2.0(@hanzogui/lucide-icons-2@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
-    optionalDependencies:
-      '@hanzogui/lucide-icons-2': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react: 19.2.4
-
   '@hanzo/products@0.2.0(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     optionalDependencies:
       '@hanzogui/lucide-icons-2': 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)
       react: 19.2.4
 
-  '@hanzo/ui@8.0.50(75c8e17981595731d821effd1badca6d)':
+  '@hanzo/ui@8.0.76(05e093f2e8350072ab4feeeaa697b349)':
     dependencies:
+      '@hanzo/appearance': 0.1.4(react@19.2.4)
       '@hanzo/data': 1.2.2(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)
-      '@hanzo/design': 0.4.12
+      '@hanzo/design': 0.5.1
       '@hanzo/gui': 8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4)
       '@hanzo/logo': 1.0.13(react@19.2.4)
-      '@hanzo/products': 0.2.0(@hanzogui/lucide-icons-2@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@hanzo/products': 0.2.0(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@hanzogui/config': 8.0.1(react-dom@19.2.4(react@19.2.4))(react-native-reanimated@4.5.3(react-native-worklets@0.11.3(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)
-      '@hanzogui/lucide-icons-2': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@hanzogui/lucide-icons-2': 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@hanzogui/telemetry': 8.1.3(react@19.2.4)
-      '@hanzogui/toast': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@hanzogui/toast': 8.1.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       clsx: 2.1.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
     optionalDependencies:
-      '@hanzo/usage': 0.1.6(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(@hanzogui/lucide-icons-2@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@hanzo/usage': 0.1.6(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)
       react-native-web: 0.21.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+    transitivePeerDependencies:
+      - react-native-svg
 
-  '@hanzo/ui@8.0.69(106aa0b04851e9ed43e56393f52814f2)':
+  '@hanzo/ui@8.0.76(106aa0b04851e9ed43e56393f52814f2)':
     dependencies:
+      '@hanzo/appearance': 0.1.4(react@19.2.4)
       '@hanzo/data': 1.2.2(@hanzo/gui@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)
-      '@hanzo/design': 0.4.12
+      '@hanzo/design': 0.5.1
       '@hanzo/gui': 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4)
       '@hanzo/logo': 1.0.13(react@19.2.4)
       '@hanzo/products': 0.2.0(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -17951,10 +17900,10 @@ snapshots:
     transitivePeerDependencies:
       - react-native-svg
 
-  '@hanzo/usage@0.1.6(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(@hanzogui/lucide-icons-2@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
+  '@hanzo/usage@0.1.6(@hanzo/gui@8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     optionalDependencies:
       '@hanzo/gui': 8.0.1(react-dom@19.2.4(react@19.2.4))(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4)
-      '@hanzogui/lucide-icons-2': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@hanzogui/lucide-icons-2': 8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4)
       react: 19.2.4
     optional: true
 
@@ -18946,14 +18895,6 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@hanzogui/helpers-icon@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@hanzogui/core': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@hanzogui/sizable-context': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react: 19.2.4
-    transitivePeerDependencies:
-      - react-dom
-
   '@hanzogui/helpers-icon@8.1.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@hanzogui/core': 8.1.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -19111,14 +19052,6 @@ snapshots:
       '@hanzogui/stacks': 8.1.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@hanzogui/text': 8.1.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@hanzogui/web': 8.1.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react: 19.2.4
-    transitivePeerDependencies:
-      - react-dom
-
-  '@hanzogui/lucide-icons-2@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@hanzogui/core': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@hanzogui/helpers-icon': 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
     transitivePeerDependencies:
       - react-dom
@@ -21819,20 +21752,6 @@ snapshots:
       '@types/react': 19.2.17
       '@types/react-dom': 19.2.3(@types/react@19.2.17)
 
-  '@radix-ui/react-alert-dialog@1.0.2(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@babel/runtime': 7.29.2
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-compose-refs': 1.0.0(react@19.2.4)
-      '@radix-ui/react-context': 1.0.0(react@19.2.4)
-      '@radix-ui/react-dialog': 1.0.2(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-primitive': 1.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-slot': 1.0.1(react@19.2.4)
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-    transitivePeerDependencies:
-      - '@types/react'
-
   '@radix-ui/react-arrow@1.1.7(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -22169,35 +22088,6 @@ snapshots:
       '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.17)(react@19.2.4)
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-    optionalDependencies:
-      '@types/react': 19.2.17
-      '@types/react-dom': 19.2.3(@types/react@19.2.17)
-
-  '@radix-ui/react-select@2.2.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@radix-ui/number': 1.1.1
-      '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-popper': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-use-previous': 1.1.1(@types/react@19.2.17)(react@19.2.4)
-      '@radix-ui/react-visually-hidden': 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      aria-hidden: 1.2.6
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-      react-remove-scroll: 2.7.2(@types/react@19.2.17)(react@19.2.4)
     optionalDependencies:
       '@types/react': 19.2.17
       '@types/react-dom': 19.2.3(@types/react@19.2.17)

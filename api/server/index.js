@@ -23,13 +23,13 @@ const { connectDb, indexSync } = require('~/db');
 const { contentSecurityPolicy } = require('./csp');
 const initializeOAuthReconnectManager = require('./services/initializeOAuthReconnectManager');
 const createValidateImageRequest = require('./middleware/validateImageRequest');
-const { jwtLogin } = require('~/strategies');
+const { iamStrategy } = require('~/strategies');
 const { updateInterfacePermissions } = require('~/models/interface');
 const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
-const configureIamLogin = require('./iamLogin');
 const { injectIamConfig } = require('./iamConfig');
 const { injectIcons, mountIcons, mountManifest } = require('./icons');
+const { injectCard } = require('./card');
 const { getAppConfig } = require('./services/Config');
 const { resolveAllowedOrigin } = require('./utils/allowedOrigins');
 const staticCache = require('./utils/staticCache');
@@ -105,6 +105,12 @@ const startServer = async () => {
      painted before the first byte of script and survives in a bookmark long
      after — see api/server/icons.js. */
   indexHTML = injectIcons(indexHTML, appConfig.paths.dist, process.env.OPENID_ORG);
+
+  /* What a SHARE of this app shows. The shell carried no og:/twitter: tags, so
+     every link to it unfurled as a bare URL. Composed after the marks above
+     because the card's image is the mark those links now point at — see
+     api/server/card.js. */
+  indexHTML = injectCard(indexHTML, process.env.APP_TITLE, process.env.DOMAIN_CLIENT);
 
   /* The browser's IAM identity travels in the shell, not in the bundle. Vite
      inlines `import.meta.env.VITE_*` at BUILD time, so without this the login
@@ -195,14 +201,12 @@ const startServer = async () => {
   app.use(staticCache(appConfig.paths.fonts));
   app.use(staticCache(appConfig.paths.assets));
 
-  /* Auth: Hanzo IAM is the one identity provider. */
+  /* Auth: Hanzo IAM is the one identity provider, and its token — verified per
+     request against IAM's JWKS — is the only credential this server reads. */
   app.use(passport.initialize());
-  passport.use(jwtLogin());
-  await configureIamLogin(app);
+  passport.use(iamStrategy());
 
   /* API Endpoints */
-  app.use('/v1/chat/auth', routes.auth);
-  app.use('/v1/chat/admin', routes.adminAuth);
   app.use('/v1/chat/actions', routes.actions);
   app.use('/v1/chat/keys', routes.keys);
   app.use('/v1/chat/api-keys', routes.apiKeys);

@@ -131,7 +131,7 @@ describe('FavoritesController', () => {
       await updateFavoritesController(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Each favorite must have either agentId, model+endpoint, or spec',
+        message: 'Each favorite must have one of: agentId, skillId, model+endpoint, or spec',
       });
     });
 
@@ -143,7 +143,7 @@ describe('FavoritesController', () => {
       await updateFavoritesController(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Favorite cannot have multiple types (agentId, model/endpoint, or spec)',
+        message: 'Favorite cannot have multiple types (agentId, skillId, model+endpoint, or spec)',
       });
     });
 
@@ -153,7 +153,7 @@ describe('FavoritesController', () => {
       await updateFavoritesController(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Favorite cannot have multiple types (agentId, model/endpoint, or spec)',
+        message: 'Favorite cannot have multiple types (agentId, skillId, model+endpoint, or spec)',
       });
     });
 
@@ -172,7 +172,7 @@ describe('FavoritesController', () => {
       await updateFavoritesController(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'spec cannot be combined with agentId, model, or endpoint',
+        message: 'spec cannot be combined with agentId, skillId, model, or endpoint',
       });
     });
 
@@ -182,7 +182,7 @@ describe('FavoritesController', () => {
       await updateFavoritesController(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'spec cannot be combined with agentId, model, or endpoint',
+        message: 'spec cannot be combined with agentId, skillId, model, or endpoint',
       });
     });
 

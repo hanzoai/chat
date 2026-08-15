@@ -27,10 +27,12 @@ import type {
 } from '@hanzochat/data-provider';
 import { useAnalytics } from '@hanzo/event/react';
 import { EVENTS } from '@hanzo/event';
+import { hasConsent } from '@hanzo/ai';
 import type { Setter, TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';
 import useGetSender from '~/hooks/Conversations/useGetSender';
 import { logger, createDualMessageContent, referrerProduct } from '~/utils';
+import { askConsent } from '~/utils/free';
 import store, { useGetEphemeralAgent } from '~/store';
 import useUserKey from '~/hooks/Input/useUserKey';
 import { useAuthContext } from '~/hooks';
@@ -68,7 +70,7 @@ export default function useChatFunctions({
   const navigate = useNavigate();
   const getSender = useGetSender();
   const analytics = useAnalytics();
-  const { user } = useAuthContext();
+  const { user, isGuest } = useAuthContext();
   const queryClient = useQueryClient();
   const setFilesToDelete = useSetFilesToDelete();
   const getEphemeralAgent = useGetEphemeralAgent();
@@ -78,7 +80,7 @@ export default function useChatFunctions({
   const setShowStopButton = useSetAtom(store.showStopButtonByIndex(index));
   const resetLatestMultiMessage = useResetAtom(store.latestMessageFamily(index + 1));
 
-  const ask: TAskFunction = (
+  const send: TAskFunction = (
     {
       text,
       overrideConvoId,
@@ -363,6 +365,20 @@ export default function useChatFunctions({
 
     setSubmission(submission);
     logger.dir('message_stream', submission, { depth: null });
+  };
+
+  /**
+   * Every send passes here, which makes it the one place free-tier consent can
+   * be taken before anything is served free. A guest is pinned to the free route
+   * by the server, so their first send waits on consent and runs the moment it is
+   * given; a signed-in visitor sends paid and is asked nothing.
+   */
+  const ask: TAskFunction = (...args) => {
+    if (isGuest && !hasConsent(window.localStorage)) {
+      askConsent(() => send(...args));
+      return;
+    }
+    send(...args);
   };
 
   const regenerate = ({ parentMessageId }, options?: { addedConvo?: TConversation | null }) => {

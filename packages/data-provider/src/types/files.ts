@@ -197,3 +197,28 @@ export type DeleteMutationOptions = {
   onMutate?: (variables: DeleteFilesBody) => void | Promise<unknown>;
   onError?: (error: unknown, variables: DeleteFilesBody, context?: unknown) => void;
 };
+
+/**
+ * One file a file search matched, and where in it.
+ *
+ * Not `FileCitation` — that name is taken by the Assistants API's annotation,
+ * a different thing entirely (an index range inside a reply).
+ *
+ * The client declared this shape privately while the attachment map typed a
+ * file-search result as SearchResultData — the WEB search shape, which has no
+ * `sources` at all. Reading the field the tool actually returns was therefore
+ * a type error, and the shape had no home the two sides could agree on.
+ */
+export interface FileMatch {
+  fileId: string;
+  fileName: string;
+  pages?: number[];
+  relevance?: number;
+  pageRelevance?: Record<string, number>;
+  metadata?: any;
+}
+
+/** What a file-search tool call attaches to a message. */
+export interface FileSearchData {
+  sources: FileMatch[];
+}

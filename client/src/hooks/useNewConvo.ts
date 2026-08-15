@@ -4,6 +4,7 @@ import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
   Constants,
+  SystemRoles,
   FileSources,
   Permissions,
   EModelEndpoint,
@@ -56,6 +57,7 @@ const useNewConvo = (index = 0) => {
   const { data: startupConfig } = useGetStartupConfig();
   const applyModelSpecEffects = useApplyModelSpecEffects();
   const clearAllConversations = store.useClearConvoState();
+  const isGuest = useAtomValue(store.user)?.role === SystemRoles.GUEST;
   const defaultPreset = useAtomValue(store.defaultPreset);
   const { setConversation } = store.useCreateConversationAtom(index);
   const [files, setFiles] = useAtom(store.filesByIndex(index));
@@ -323,11 +325,30 @@ const useNewConvo = (index = 0) => {
           ? { endpoint: _template.endpoint }
           : _template;
 
+      /**
+       * A guest is served one model — the free route the server pins them to —
+       * so every conversation they open is on it, and the model chip names what
+       * will actually answer rather than a default the server overrides.
+       *
+       * The pin is taken as given, not resolved: a new conversation otherwise
+       * settles its model against the endpoint's catalog, and the free route is
+       * not in that catalog, so resolving would drop it.
+       */
+      const guestSetup =
+        isGuest && startupConfig?.guestEndpoint != null && startupConfig.guestModel != null
+          ? {
+              endpoint: startupConfig.guestEndpoint as EModelEndpoint,
+              endpointType: EModelEndpoint.custom,
+              model: startupConfig.guestModel,
+            }
+          : undefined;
+
       const conversation = {
         conversationId: Constants.NEW_CONVO as string,
         title: 'New Chat',
         endpoint: null,
         ...template,
+        ...guestSetup,
         createdAt: '',
         updatedAt: '',
       };
@@ -381,7 +402,7 @@ const useNewConvo = (index = 0) => {
         conversation,
         preset,
         modelsData,
-        buildDefault,
+        guestSetup ? false : buildDefault,
         keepLatestMessage,
         keepAddedConvos,
         disableFocus,
@@ -390,6 +411,7 @@ const useNewConvo = (index = 0) => {
     },
     [
       files,
+      isGuest,
       setFiles,
       saveDrafts,
       mutateAsync,

@@ -1,20 +1,17 @@
-const cookies = require('cookie');
 const passport = require('passport');
-const { isEnabled } = require('@hanzochat/api');
 
 /**
- * Custom Middleware to handle JWT authentication, with support for OpenID token reuse
- * Switches between JWT and OpenID authentication based on cookies and environment settings
+ * Require a Hanzo IAM identity.
+ *
+ * The caller presents the access token IAM gave their browser; it is verified
+ * against IAM's JWKS on the spot and thrown away. There is nothing to consult —
+ * no cookie naming a provider, no session row, no second strategy — because chat
+ * issues no credential of its own. IAM is the only thing that can say who is
+ * calling, so asking it is the whole of authentication here.
+ *
+ * @type {import('express').RequestHandler}
  */
-const requireJwtAuth = (req, res, next) => {
-  const cookieHeader = req.headers.cookie;
-  const tokenProvider = cookieHeader ? cookies.parse(cookieHeader).token_provider : null;
-
-  if (tokenProvider === 'openid' && isEnabled(process.env.OPENID_REUSE_TOKENS)) {
-    return passport.authenticate('openidJwt', { session: false })(req, res, next);
-  }
-
-  return passport.authenticate('jwt', { session: false })(req, res, next);
-};
+const requireJwtAuth = (req, res, next) =>
+  passport.authenticate('iam', { session: false })(req, res, next);
 
 module.exports = requireJwtAuth;

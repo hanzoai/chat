@@ -34,7 +34,6 @@ const STATIC_PATHS = new Set([
   '/',
   '/v1/chat/health',
   '/metrics',
-  '/v1/chat/auth/login',
   '/v1/chat/config',
   '/v1/chat/agents/chat/abort',
   '/v1/chat/agents/chat/active',

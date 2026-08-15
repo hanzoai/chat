@@ -1,12 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { VisuallyHidden } from '@ariakit/react';
 import { CheckCircle2, EarthIcon, Pin, PinOff } from 'lucide-react';
 import { isAgentsEndpoint, isAssistantsEndpoint } from '@hanzochat/data-provider';
 import { useModelSelectorContext } from '../ModelSelectorContext';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
-import { useFavorites, useLocalize } from '~/hooks';
+import { useActive, useFavorites, useLocalize } from '~/hooks';
 import type { Endpoint } from '~/common';
-import { cn } from '~/utils';
+import { cn, label } from '~/utils';
 
 interface EndpointModelItemProps {
   modelId: string | null;
@@ -20,24 +20,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
   const { isFavoriteModel, toggleFavoriteModel, isFavoriteAgent, toggleFavoriteAgent } =
     useFavorites();
 
-  const itemRef = useRef<HTMLDivElement>(null);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    const element = itemRef.current;
-    if (!element) {
-      return;
-    }
-
-    const observer = new MutationObserver(() => {
-      setIsActive(element.hasAttribute('data-active-item'));
-    });
-
-    observer.observe(element, { attributes: true, attributeFilter: ['data-active-item'] });
-    setIsActive(element.hasAttribute('data-active-item'));
-
-    return () => observer.disconnect();
-  }, []);
+  const { ref: itemRef, isActive } = useActive<HTMLDivElement>();
 
   let isGlobal = false;
   let modelName = modelId;
@@ -116,7 +99,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
     >
       <div className="flex w-full min-w-0 items-center gap-2 px-1 py-1">
         {renderAvatar()}
-        <span className="truncate">{modelName}</span>
+        <span className="truncate">{label(modelName)}</span>
         {isGlobal && <EarthIcon className="ml-1 size-4 text-surface-submit" />}
       </div>
       <button
@@ -144,10 +127,30 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
   );
 }
 
+/**
+ * Whether this row is the current choice. Three conditions, and dropping any
+ * one of them puts a second checkmark in the menu:
+ *
+ * - a spec outranks a model. When one is active it IS the selection, and the
+ *   model underneath it must not claim the mark as well.
+ * - the endpoint has to match. Two endpoints can offer the same model id, and
+ *   an id-only test lights up every one of them.
+ * - the model has to match.
+ */
+export function isCurrent(
+  endpoint: Endpoint | null,
+  modelId: string,
+  selected: { endpoint: string | null; model: string | null; modelSpec?: string | null },
+): boolean {
+  return (
+    !selected.modelSpec && selected.endpoint === endpoint?.value && selected.model === modelId
+  );
+}
+
 export function renderEndpointModels(
   endpoint: Endpoint | null,
   models: Array<{ name: string; isGlobal?: boolean }>,
-  selectedModel: string | null,
+  selected: { endpoint: string | null; model: string | null; modelSpec?: string | null },
   filteredModels?: string[],
   endpointIndex?: number,
 ) {
@@ -161,7 +164,7 @@ export function renderEndpointModels(
           key={`${endpoint.value}${indexSuffix}-${modelId}-${modelIndex}`}
           modelId={modelId}
           endpoint={endpoint}
-          isSelected={selectedModel === modelId}
+          isSelected={isCurrent(endpoint, modelId, selected)}
         />
       ),
   );

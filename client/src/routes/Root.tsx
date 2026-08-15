@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useIsSmallScreen } from '@hanzochat/client';
 import { useAtom } from 'jotai';
@@ -26,8 +26,15 @@ import Backdrop from '~/components/Chat/Backdrop';
 import LandingPage from '~/components/Landing/LandingPage';
 import { IAM_ORG } from '~/utils/iam';
 import LoginGate from '~/components/Auth/LoginGate';
+import { Consent } from '~/components/Free';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
+import Palette from '~/components/Palette';
 import store from '~/store';
+
+/** Two controls open Settings — the account menu and the palette — so the dialog
+    stands here, above both, rather than inside either. Lazy because its tab tree
+    is large and it arrived here from a block that was itself lazy-loaded. */
+const Settings = lazy(() => import('~/components/Nav/Settings'));
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
@@ -36,6 +43,7 @@ export default function Root() {
   // (canvas on desktop, chrome on a phone) and its persistence. Root reads it
   // like any other consumer instead of being the place it lives.
   const [navVisible, setNavVisible] = useAtom(store.navVisible);
+  const [showSettings, setShowSettings] = useAtom(store.showSettings);
 
   const { isAuthenticated, isGuest, logout, token } = useAuthContext();
   const [authChecked, setAuthChecked] = useState(false);
@@ -56,6 +64,20 @@ export default function Root() {
   }, [isAuthenticated, token]);
   const isSmallScreen = useIsSmallScreen();
   const location = useLocation();
+
+  // A phone opens with the drawer SHUT every load, not only on first visit. The
+  // atom owns the correct first-visit default (chrome on a phone), but its
+  // PERSISTED value can carry a `true` from a wider session and would then drop
+  // the drawer over the chat on a phone. The viewport is the authority here, so
+  // close it once on mount when the screen is small. `useIsSmallScreen` reads
+  // matchMedia synchronously, so its mount value is real; a mid-session resize
+  // is deliberately left alone so an open drawer is never yanked shut mid-use.
+  useEffect(() => {
+    if (isSmallScreen) {
+      setNavVisible(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // No offer on arrival. The gate opens only for a REFUSAL (quota spent, session
   // lapsed, preview unavailable) — a signed-out visitor lands in the product and
@@ -191,6 +213,10 @@ export default function Root() {
                   a lapsed or unminted guest token is exactly the case that needs
                   the gate. */}
               {!isAuthenticated && <LoginGate />}
+              {/* Mounted for everyone: a guest is served free on their first
+                  send, and a signed-in visitor is offered free when the paid
+                  route cannot serve. Both wait on the same consent. */}
+              <Consent />
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
@@ -218,6 +244,14 @@ export default function Root() {
                   </div>
                 </div>
               </div>
+              {/* ⌘K, from any screen and at any width — which is why it hangs
+                  here rather than off the sidebar that used to own the key. */}
+              <Palette />
+              {showSettings && (
+                <Suspense fallback={null}>
+                  <Settings open={showSettings} onOpenChange={setShowSettings} />
+                </Suspense>
+              )}
             </PromptGroupsProvider>
           </AgentsMapContext.Provider>
           {config?.interface?.termsOfService?.modalAcceptance === true && (

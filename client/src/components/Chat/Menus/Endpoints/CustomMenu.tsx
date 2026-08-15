@@ -46,7 +46,7 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
         {...props}
         className={cn(
           !parent &&
-            'flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border-light px-3 py-2 text-sm text-text-primary',
+            'flex h-10 w-full items-center gap-2 rounded-xl border border-border-light px-3 py-2 text-sm text-text-primary',
           menuStore.useState('open')
             ? 'bg-surface-active-alt hover:bg-surface-active-alt'
             : 'bg-presentation hover:bg-surface-active-alt',
@@ -65,7 +65,14 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
         gutter={parent ? -4 : 4}
         className={cn(
           parent ? 'animate-popover-left ml-3' : 'animate-popover',
-          'outline-none! z-40 flex max-h-[min(450px,var(--popover-available-height))] w-full',
+          /* Above the modal layer, because this menu is opened from inside one:
+             the model picker lives in the Settings dialog, which is `z-50`. At
+             `z-40` the menu still opened, still measured 300x80, and still
+             answered `elementFromPoint` with the dialog — a popup painted under
+             the surface that owns it, so every model was one pixel out of reach.
+             `z-[100]` is the value this app already uses for the layer over a
+             dialog. */
+          'outline-none! z-[100] flex max-h-[min(450px,var(--popover-available-height))] w-full',
           'w-[var(--menu-width,auto)] min-w-[300px] flex-col overflow-auto rounded-xl border border-border-light',
           'bg-presentation px-3 py-2 text-sm text-text-primary shadow-lg',
           'max-w-[calc(100vw-4rem)] sm:max-h-[calc(65vh)] sm:max-w-[400px]',

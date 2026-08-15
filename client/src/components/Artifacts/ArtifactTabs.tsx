@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
-import * as Tabs from '@radix-ui/react-tabs';
+import type { ComponentProps } from 'react';
+import { TabsContent } from '@hanzo/ui/primitives/TabsContent';
 import type { SandpackPreviewRef } from '@codesandbox/sandpack-react/unstyled';
 import type { CodeEditorRef } from '@codesandbox/sandpack-react';
 import type { Artifact } from '~/common';
@@ -42,8 +43,10 @@ export default function ArtifactTabs({
 
   return (
     <div className="flex h-full w-full flex-col">
-      <Tabs.Content
-        ref={contentRef}
+      <TabsContent
+        // gui types the ref as its cross-platform element; on web it hands back
+        // the div, which is the scroll container useAutoScroll listens to.
+        ref={contentRef as ComponentProps<typeof TabsContent>['ref']}
         value="code"
         id="artifacts-code"
         className="h-full w-full flex-grow overflow-auto"
@@ -58,9 +61,9 @@ export default function ArtifactTabs({
           sharedProps={sharedProps}
           readOnly={isSharedConvo}
         />
-      </Tabs.Content>
+      </TabsContent>
 
-      <Tabs.Content value="preview" className="h-full w-full flex-grow overflow-auto" tabIndex={-1}>
+      <TabsContent value="preview" className="h-full w-full flex-grow overflow-auto" tabIndex={-1}>
         <ArtifactPreview
           files={files}
           fileKey={fileKey}
@@ -70,7 +73,7 @@ export default function ArtifactTabs({
           currentCode={currentCode}
           startupConfig={startupConfig}
         />
-      </Tabs.Content>
+      </TabsContent>
     </div>
   );
 }

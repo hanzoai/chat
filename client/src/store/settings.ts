@@ -68,11 +68,30 @@ const staticAtoms = {
   optionSettings: atom<TOptionSettings>({}),
   currentSettingsView: atom<SettingsViews>(SettingsViews.default),
   showPopover: atom<boolean>(false),
+  /**
+   * Whether the Settings dialog is on screen. Two controls open it — the account
+   * menu and the ⌘K palette — and a boolean each would let both be true at once.
+   * It lives here rather than in the account block because that block unmounts
+   * with the collapsed rail, which would have made the palette's Settings row do
+   * nothing at exactly the width where the menu holding it is also gone. Root
+   * mounts the dialog; anyone may flip this.
+   */
+  showSettings: atom<boolean>(false),
 };
 
 const localStorageAtoms = {
   // General settings
   autoScroll: atomWithLocalStorage('autoScroll', false),
+  // Whether a tool call opens showing its input and output, or collapsed to its
+  // header. False keeps a run of completed calls out of the way; a reader opens
+  // the one they care about.
+  //
+  // This atom was REFERENCED before it existed. ToolCallGroup and
+  // useToolCallState both read store.autoExpandTools, which resolved to
+  // undefined, and useAtomValue(undefined) throws "Atom is undefined or null" —
+  // so every message carrying a tool call died on render. tsc had been saying so
+  // in a pile of 814 errors nobody could act on.
+  autoExpandTools: atomWithLocalStorage('autoExpandTools', false),
   // Smart routing user OVERRIDE. `null` (never touched) === follow the org's
   // server-driven default; `true`/`false` === an explicit user choice that wins.
   // When on, new conversations on the Hanzo endpoint default to model "auto" (the

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import * as Popover from '@radix-ui/react-popover';
+import { PopoverContent } from '@hanzo/ui/primitives/PopoverContent';
 
 export function NoImage() {
   return (
@@ -96,38 +96,40 @@ export function AvatarMenu({
   };
 
   return (
-    <Popover.Portal>
-      <Popover.Content
-        className="flex min-w-[100px] max-w-xs flex-col rounded-xl border border-gray-400 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-850 dark:text-white"
-        sideOffset={5}
+    /* The Root and Trigger live in `./AssistantAvatar` — one popover across two
+     * files. No `Portal` wrapper: PopoverContent mounts its own. `sideOffset={5}`
+     * survives and publishes into the popper root's offset. The layout props
+     * restate what this menu already had against gui's baked `width: 288`,
+     * `p: '$4'` and `alignItems: 'center'` — no width of its own (just
+     * `min-w`/`max-w`), no padding on the panel, rows that run full-bleed.
+     * `trapFocus={false}` matches Radix's non-modal content, which does not
+     * trap focus. */
+    <PopoverContent
+      className="flex min-w-[100px] max-w-xs flex-col rounded-xl border border-gray-400 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-850 dark:text-white"
+      sideOffset={5}
+      trapFocus={false}
+      width="auto"
+      padding={0}
+      alignItems="stretch"
+    >
+      <div
+        role="menuitem"
+        className="group m-1.5 flex cursor-pointer gap-2 rounded p-2.5 text-sm hover:bg-gray-100 focus:ring-0 dark:hover:bg-gray-800 dark:hover:bg-white/5"
+        tabIndex={-1}
+        data-orientation="vertical"
+        onClick={onItemClick}
       >
-        <div
-          role="menuitem"
-          className="group m-1.5 flex cursor-pointer gap-2 rounded p-2.5 text-sm hover:bg-gray-100 focus:ring-0 radix-disabled:pointer-events-none radix-disabled:opacity-50 dark:hover:bg-gray-800 dark:hover:bg-white/5"
-          tabIndex={-1}
-          data-orientation="vertical"
-          onClick={onItemClick}
-        >
-          Upload Photo
-        </div>
-        {/* <Popover.Close
-          role="menuitem"
-          className="group m-1.5 flex cursor-pointer gap-2 rounded p-2.5 text-sm hover:bg-black/5 focus:ring-0 radix-disabled:pointer-events-none radix-disabled:opacity-50 dark:hover:bg-white/5"
-          tabIndex={-1}
-          data-orientation="vertical"
-        >
-          Use DALL·E
-        </Popover.Close> */}
-        <input
-          accept="image/png,.png,image/jpeg,.jpg,.jpeg,image/gif,.gif,image/webp,.webp"
-          multiple={false}
-          type="file"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-          ref={fileInputRef}
-          tabIndex={-1}
-        />
-      </Popover.Content>
-    </Popover.Portal>
+        Upload Photo
+      </div>
+      <input
+        accept="image/png,.png,image/jpeg,.jpg,.jpeg,image/gif,.gif,image/webp,.webp"
+        multiple={false}
+        type="file"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+        ref={fileInputRef}
+        tabIndex={-1}
+      />
+    </PopoverContent>
   );
 }

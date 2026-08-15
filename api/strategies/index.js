@@ -1,10 +1,3 @@
-const { setupOpenId, getOpenIdConfig } = require('./openidStrategy');
-const openIdJwtLogin = require('./openIdJwtStrategy');
-const jwtLogin = require('./jwtStrategy');
+const iamStrategy = require('./iam');
 
-module.exports = {
-  jwtLogin,
-  setupOpenId,
-  getOpenIdConfig,
-  openIdJwtLogin,
-};
+module.exports = { iamStrategy };

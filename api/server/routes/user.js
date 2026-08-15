@@ -1,15 +1,12 @@
 const express = require('express');
 const {
   updateUserPluginsController,
-  resendVerificationController,
   getTermsStatusController,
   acceptTermsController,
-  verifyEmailController,
   deleteUserController,
   getUserController,
 } = require('~/server/controllers/UserController');
 const {
-  verifyEmailLimiter,
   configMiddleware,
   canDeleteAccount,
   requireJwtAuth,
@@ -43,7 +40,5 @@ router.post('/active-org', requireJwtAuth, (req, res) => {
   return res.json({ organization: requested });
 });
 router.delete('/delete', requireJwtAuth, canDeleteAccount, configMiddleware, deleteUserController);
-router.post('/verify', verifyEmailController);
-router.post('/verify/resend', verifyEmailLimiter, resendVerificationController);
 
 module.exports = router;

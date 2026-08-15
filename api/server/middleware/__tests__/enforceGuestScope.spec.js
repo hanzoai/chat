@@ -35,22 +35,25 @@ describe('enforceGuestScope', () => {
     expect(req.body.model).toBe('gpt-4o');
   });
 
-  it('rejects a guest naming a different endpoint (403)', () => {
+  it('overrides a guest naming a different endpoint to the free one', () => {
     const req = { user: { id: 'g1', guest: true }, body: { endpoint: 'OpenAI' } };
     const res = mockRes();
     const next = jest.fn();
     enforceGuestScope(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(next).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith();
+    expect(res.status).not.toHaveBeenCalled();
+    expect(req.body.endpoint).toBe('Hanzo');
+    expect(req.body.model).toBe('zen3-nano');
   });
 
-  it('rejects a guest naming a different (paid) model (403)', () => {
+  it('overrides a guest naming a paid model to the free one (never reaches paid)', () => {
     const req = { user: { id: 'g1', guest: true }, body: { endpoint: 'Hanzo', model: 'zen4-max' } };
     const res = mockRes();
     const next = jest.fn();
     enforceGuestScope(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(next).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith();
+    expect(res.status).not.toHaveBeenCalled();
+    expect(req.body.model).toBe('zen3-nano');
   });
 
   it('pins endpoint, type, and model for a compliant guest request', () => {

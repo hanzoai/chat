@@ -5,6 +5,7 @@ import FontSizeSelector from './FontSizeSelector';
 import { ForkSettings } from './ForkSettings';
 import ChatDirection from './ChatDirection';
 import ToggleSwitch from '../ToggleSwitch';
+import Model from './Model';
 import store from '~/store';
 
 const toggleSwitchConfigs = [
@@ -90,6 +91,11 @@ const toggleSwitchConfigs = [
 function Chat() {
   return (
     <div className="flex flex-col gap-3 p-1 text-sm text-text-primary">
+      {/* First row in the tab: the model is the setting that decides what the
+          answers are, and every other row here decides how they look. */}
+      <div className="pb-3">
+        <Model />
+      </div>
       <div className="pb-3">
         <FontSizeSelector />
       </div>
