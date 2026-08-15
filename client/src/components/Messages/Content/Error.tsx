@@ -188,7 +188,7 @@ const errorMessages = {
       if (isAuthenticated !== true) {
         return (
           <>
-            {'Sign up to start chatting with Hanzo — every account comes with credits.'}
+            {'Sign up to start chatting with Hanzo on the free models.'}
             <br />
             <br />
             <a
