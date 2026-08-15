@@ -7,7 +7,11 @@ const GUEST_ROLE = 'GUEST';
 const GUEST_NAME = 'Guest';
 const DEFAULT_GUEST_MESSAGE_MAX = 3;
 const DEFAULT_GUEST_ENDPOINT = 'Hanzo';
-const DEFAULT_GUEST_MODEL = 'zen5-flash';
+// A guest pays nothing and holds no balance, so the guest model must be one that
+// serves at zero cost: a free route (`:free`), not a paid house SKU that draws on
+// the deployment's balance. This is the same verified free model @hanzo/ai's
+// FREE_MODEL names for a signed-in fallback, so both paths land on one free id.
+const DEFAULT_GUEST_MODEL = 'nvidia/nemotron-nano-9b-v2:free';
 
 /**
  * Resolves the guest-chat configuration from the environment.
