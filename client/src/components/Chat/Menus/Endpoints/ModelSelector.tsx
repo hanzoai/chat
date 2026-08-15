@@ -15,11 +15,9 @@ import { getSelectedIcon, getDisplayValue } from './utils';
 import { CustomMenu as Menu } from './CustomMenu';
 import DialogManager from './DialogManager';
 import { useLocalize } from '~/hooks';
-import { cn } from '~/utils';
 
-function ModelSelectorContent({ variant }: { variant: 'block' | 'inline' }) {
+function ModelSelectorContent() {
   const localize = useLocalize();
-  const isInline = variant === 'inline';
 
   const {
     // Chat
@@ -62,54 +60,35 @@ function ModelSelectorContent({ variant }: { variant: 'block' | 'inline' }) {
     [localize, agentsMap, modelSpecs, selectedValues, mappedEndpoints],
   );
 
+  /* One shape, and one owner for each part of it. The box — height, border,
+     radius, ground — belongs to `CustomMenu`, which paints it for every root
+     trigger; this button carries only what is inside it. Restating the box here
+     is how a control ends up with two answers for one border.
+     The chevron is inside, not outside: Ariakit renders a `MenuButtonArrow`
+     of its own, and a trigger passed through `render` with its own children
+     replaces them — so that arrow never paints for this call site, and the
+     control read as a field you could not open. */
   const trigger = (
     <TooltipAnchor
       aria-label={localize('com_ui_select_model')}
       description={localize('com_ui_select_model')}
       render={
-        <button
-          className={cn(
-            'flex items-center gap-2 text-sm text-text-primary hover:bg-surface-active-alt',
-            isInline
-              ? // A ghost pill on the composer's action row: transparent at rest,
-                // a ground only under the pointer — the "no plate until you point"
-                // law the chrome row already wears. It sizes to its label, caps
-                // its width, and truncates a long model name.
-                'h-9 max-w-[45vw] rounded-lg px-2 text-text-secondary hover:text-text-primary'
-              : 'my-1 h-10 w-full max-w-[70vw] justify-center rounded-xl border border-border-light bg-presentation px-3 py-2',
-          )}
-          aria-label={localize('com_ui_select_model')}
-        >
+        <button aria-label={localize('com_ui_select_model')}>
           {selectedIcon && React.isValidElement(selectedIcon) && (
-            <div
-              className={cn(
-                'flex flex-shrink-0 items-center justify-center overflow-hidden',
-                isInline && '[&_svg]:size-4',
-              )}
-            >
+            <div className="flex flex-shrink-0 items-center justify-center overflow-hidden [&_svg]:size-4">
               {selectedIcon}
             </div>
           )}
-          <span className={cn('truncate text-left', !isInline && 'flex-grow')}>
-            {selectedDisplayValue}
-          </span>
-          {isInline && (
-            <ChevronDown className="size-4 flex-shrink-0 opacity-60" aria-hidden="true" />
-          )}
+          <span className="flex-grow truncate text-left">{selectedDisplayValue}</span>
+          <ChevronDown className="size-4 flex-shrink-0 opacity-60" aria-hidden="true" />
         </button>
       }
     />
   );
 
   return (
-    <div
-      className={cn(
-        'relative flex',
-        isInline ? 'items-center' : 'w-full max-w-md flex-col items-center gap-2',
-      )}
-    >
+    <div className="relative flex w-full flex-col">
       <Menu
-        bare={isInline}
         values={selectedValues}
         onValuesChange={(values: Record<string, any>) => {
           setSelectedValues({
@@ -149,7 +128,7 @@ function ModelSelectorContent({ variant }: { variant: 'block' | 'inline' }) {
   );
 }
 
-export default function ModelSelector({ startupConfig, variant = 'block' }: ModelSelectorProps) {
+export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
   const interfaceConfig = startupConfig?.interface ?? getConfigDefaults().interface;
   const modelSpecs = startupConfig?.modelSpecs?.list ?? [];
 
@@ -161,7 +140,7 @@ export default function ModelSelector({ startupConfig, variant = 'block' }: Mode
   return (
     <ModelSelectorChatProvider>
       <ModelSelectorProvider startupConfig={startupConfig}>
-        <ModelSelectorContent variant={variant} />
+        <ModelSelectorContent />
       </ModelSelectorProvider>
     </ModelSelectorChatProvider>
   );

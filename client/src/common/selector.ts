@@ -20,10 +20,4 @@ export interface SelectedValues {
 
 export interface ModelSelectorProps {
   startupConfig: TStartupConfig | undefined;
-  /**
-   * `block` (default) is the standalone, full-width picker. `inline` is the
-   * compact ghost chip that rides the composer's action row beside the "+", so
-   * the model you are on shows and is switchable mid-conversation.
-   */
-  variant?: 'block' | 'inline';
 }
