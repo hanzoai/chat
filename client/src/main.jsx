@@ -14,6 +14,7 @@ import { ApiErrorBoundaryProvider } from './hooks/ApiErrorBoundaryContext';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/contrib/copy-tex.js';
 import { apply as applyAppearance, read as readAppearance } from '@hanzo/appearance/state';
+import { referrerProduct } from './utils/referrerProduct';
 
 // A person's text size and density, on the document before React renders.
 //
@@ -24,6 +25,15 @@ import { apply as applyAppearance, read as readAppearance } from '@hanzo/appeara
 // into index.html beside the theme one. Two copies of one rule is how they
 // drift, and this file is where the bundle first gets to speak.
 applyAppearance(readAppearance());
+
+// Which Hanzo surface sent this visitor, read while the URL still says so.
+//
+// `?hz_ref=` is stamped on chat_started, and that is the LAST thing to happen:
+// the composer clears the query string within ~100ms of mounting, and the silent
+// SSO probe can take the document to hanzo.id before even that. By send time
+// there is nothing left to read. The call pins it to the session, so it survives
+// both, and reading it early is the whole of what it needs.
+referrerProduct();
 
 const container = document.getElementById('root');
 const root = createRoot(container);

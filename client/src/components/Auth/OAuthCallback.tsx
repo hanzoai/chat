@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { request } from '@hanzochat/data-provider';
 import { Spinner } from '@hanzochat/client';
 import { getHanzoIamSdk } from '~/utils/iam';
+import { getPostLoginRedirect } from '~/utils/redirect';
 import { meansNoSession } from '~/utils/sso';
 
 export default function OAuthCallback() {
@@ -29,6 +30,16 @@ export default function OAuthCallback() {
     exchangedRef.current = true;
 
     /**
+     * Where the visitor was before the round trip. The silent probe records the
+     * deep link it is about to navigate away from, so someone who arrived at
+     * `/?q=…&submit=true` — hanzo.ai's composer handing over a prompt — is
+     * returned to that URL rather than to a bare `/`, where the params it carried
+     * would simply be gone. Reading it consumes it, so it is spent on this
+     * landing and cannot replay on the next one.
+     */
+    const back = getPostLoginRedirect(new URLSearchParams(window.location.search)) ?? '/';
+
+    /**
      * "Nobody is signed in" is an ANSWER, not a failure.
      *
      * The silent probe (`utils/sso.ts`) asks the issuer `prompt=none`, and the
@@ -40,7 +51,7 @@ export default function OAuthCallback() {
      */
     const answered = new URLSearchParams(window.location.search).get('error');
     if (meansNoSession(answered)) {
-      navigate('/', { replace: true });
+      navigate(back, { replace: true });
       return;
     }
 
@@ -65,7 +76,7 @@ export default function OAuthCallback() {
          */
         request.dispatchTokenUpdatedEvent(tokens.accessToken);
 
-        navigate('/', { replace: true });
+        navigate(back, { replace: true });
       } catch (err) {
         console.error('IAM sign-in failed:', err);
         navigate('/login?error=auth_failed', { replace: true });
