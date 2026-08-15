@@ -1,4 +1,5 @@
 import { getHanzoIamSdk } from '~/utils/iam';
+import { persistRedirectToSession } from '~/utils/redirect';
 
 /**
  * Ask hanzo.id, once per visit, whether this browser is already signed in.
@@ -139,6 +140,13 @@ export async function probeSession(): Promise<boolean> {
     // the visitor stays a guest for this visit. Losing the bound is the
     // expensive one.
     storage.setItem(PROBED, '1');
+    // Where they were, kept for the way back. This takes the whole document to
+    // the issuer, and the issuer returns it to the callback — so a visitor who
+    // arrived on a deep link is holding a URL nobody has read yet. hanzo.ai's
+    // composer hands its prompt over as `/?q=…&submit=true`, and without this the
+    // probe spends it: the callback lands on a bare path and the question the
+    // visitor typed is gone. `OAuthCallback` reads this and puts them back.
+    persistRedirectToSession(window.location.pathname + window.location.search);
     await getHanzoIamSdk().signinRedirect({ additionalParams: { prompt: 'none' } });
     return true;
   } catch {
