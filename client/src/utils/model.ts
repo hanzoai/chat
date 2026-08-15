@@ -1,3 +1,5 @@
+import { FREE_MODEL, FREE_MODEL_LABEL } from '@hanzo/ai';
+
 /**
  * Two questions about a model id: which mark it wears, and how it is written.
  *
@@ -45,6 +47,11 @@ const SHORT = new Set(['vl', 'tts', 'asr', 'ocr']);
  */
 export function label(model?: string | null): string {
   const id = (model ?? '').trim();
+  /* The free route is a provider id, not a product name — `@hanzo/ai` holds the
+     name every Hanzo surface writes for it. A guest reads this one. */
+  if (id === FREE_MODEL) {
+    return FREE_MODEL_LABEL;
+  }
   if (!TITLED.test(id.toLowerCase())) {
     return id;
   }

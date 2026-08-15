@@ -1,3 +1,4 @@
+import { FREE_MODEL, FREE_MODEL_LABEL } from '@hanzo/ai';
 import { isEnso, label } from './model';
 
 /**
@@ -79,6 +80,13 @@ describe('label', () => {
   it('does not title a model that merely CONTAINS a titled name', () => {
     expect(label('super-enso')).toBe('super-enso');
     expect(label('zenith')).toBe('zenith');
+  });
+
+  it('names the free route, which a guest is the one to read', () => {
+    // A guest is served this id and no other, so it is the only model name on
+    // their screen — and `nvidia/nemotron-nano-9b-v2:free` names the provider
+    // that happens to serve it, not the thing being offered.
+    expect(label(FREE_MODEL)).toBe(FREE_MODEL_LABEL);
   });
 
   it('is total — absent input yields an empty string, never a crash', () => {
