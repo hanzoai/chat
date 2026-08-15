@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CreditCard, CircleHelp } from 'lucide-react';
-import { GearIcon, Button } from '@hanzochat/client';
+import { GearIcon } from '@hanzochat/client';
 import { useGetStartupConfig } from '~/data-provider';
 import { startHanzoLogin } from '~/utils/login';
 import { IAM_ORG, IAM_SIGNUP_URL } from '~/utils/iam';
@@ -78,16 +78,24 @@ export default function Visitor() {
             primary pushbutton look directly (the submit variant's tokens) rather
             than through asChild, which the resolved Button does not honor in
             every context. Log in triggers the OAuth redirect in JS, so it is a
-            real button; outline keeps it the quieter second path underneath. */}
+            real button. */}
         <a
           href={IAM_SIGNUP_URL}
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-submit-hover bg-surface-submit px-2 text-sm font-medium text-white transition-colors hover:bg-surface-submit-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
         >
           {localize('com_auth_sign_up')}
         </a>
-        <Button variant="outline" className="w-full" onClick={startHanzoLogin}>
+        {/* Log in is a quiet second path, not a second slab. An outline button
+            the same width and height as the primary made two competing blocks
+            in the corner and neither read as the thing to do; a returning user
+            is looking for this word rather than for a button. */}
+        <button
+          type="button"
+          onClick={startHanzoLogin}
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg px-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
+        >
           {localize('com_nav_log_in')}
-        </Button>
+        </button>
       </div>
 
       {showSettings && <Settings open={showSettings} onOpenChange={setShowSettings} />}
