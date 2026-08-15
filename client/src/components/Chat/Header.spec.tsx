@@ -9,6 +9,14 @@ import Header from './Header';
  * to be written twice under opposite `isSmallScreen` conditions, which is how
  * they drifted to opposite ends of the same header.
  *
+ * A control also belongs here only if this is its ONE home. Bookmarking is not:
+ * the conversation's own row menu offers it under the same permission with the
+ * same tags. Neither is maximize: it is a switch in Settings → Chat and a row in
+ * the backdrop menu. Neither is the model, which is a setting and lives in
+ * Settings → Chat with the other settings — the chat view names no model at all,
+ * because a picker under the cursor asks "which model?" on every turn and the
+ * house answer is already the default.
+ *
  * The left edge carries COMPOSE, and only compose. The mark and the sidebar
  * toggle belong to the sidebar, which is a rail when collapsed and so never
  * gives its corner up; a copy of either here would be the duplication this
@@ -61,7 +69,6 @@ jest.mock('~/data-provider', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
-  useHasAccess: () => true,
   useLocalize: () => (key: string) => key,
   useAuthContext: () => ({ isAuthenticated: true }),
 }));
@@ -83,7 +90,6 @@ jest.mock('./Menus/Endpoints/ModelSelector', () => ({
   __esModule: true,
   default: mockMarker('model'),
 }));
-jest.mock('./Menus/BookmarkMenu', () => ({ __esModule: true, default: mockMarker('bookmarks') }));
 jest.mock('./Menus/CanvasToggle', () => ({ __esModule: true, default: mockMarker('canvas') }));
 jest.mock('./ExportAndShareMenu', () => ({ __esModule: true, default: mockMarker('share') }));
 jest.mock('./TemporaryChat', () => ({ TemporaryChat: mockMarker('temporary') }));
@@ -109,9 +115,8 @@ describe.each([
     render(<Header />);
   });
 
-  it('keeps bookmarks, share and temporary chat at the right end, in one copy', () => {
+  it('keeps share and temporary chat at the right end, in one copy', () => {
     const actions = screen.getByTestId('header-actions');
-    expect(within(actions).getByTestId('bookmarks')).toBeInTheDocument();
     expect(within(actions).getByTestId('share')).toBeInTheDocument();
     expect(within(actions).getByTestId('temporary')).toBeInTheDocument();
     expect(screen.getAllByTestId('share')).toHaveLength(1);
@@ -130,6 +135,21 @@ describe.each([
   it('names no model and offers no preset', () => {
     expect(screen.queryByTestId('model')).not.toBeInTheDocument();
     expect(screen.queryByTestId('presets')).not.toBeInTheDocument();
+  });
+
+  // The membership of the group, not just its order. A `queryByTestId` for a
+  // control this file no longer mocks can never fail — the module is gone, so
+  // the marker was never going to render either way. Reading the group's actual
+  // children is what refuses a bookmark button, a maximize button, or anything
+  // else growing back into the row.
+  it('carries these four actions and nothing else', () => {
+    const actions = screen.getByTestId('header-actions');
+    expect([...actions.children].map((c) => c.getAttribute('data-testid'))).toEqual([
+      'share',
+      'temporary',
+      'canvas',
+      'panel-controls',
+    ]);
   });
 
   // The window controls (width, companions, right panel) are chrome for the
