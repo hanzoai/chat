@@ -91,6 +91,19 @@ describe('the sidebar foot, signed out', () => {
     expect(href).toContain('redirect_uri=https%3A%2F%2Fhanzo.chat%2Fauth%2Fcallback');
     expect(href).toContain('code_challenge=');
   });
+
+  /**
+   * Log in above, sign-up last against the foot of the column. Which of the two
+   * comes first is the whole of this control's design and nothing else in the
+   * file decides it, so it is asserted rather than left to whoever edits the JSX
+   * next. `compareDocumentPosition` reads the rendered document, so it holds
+   * however the two end up laid out.
+   */
+  it('puts log in above sign-up', () => {
+    const login = screen.getByRole('button', { name: 'com_nav_log_in' });
+    const signup = screen.getByRole('link', { name: 'com_auth_sign_up' });
+    expect(login.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
 
 /**

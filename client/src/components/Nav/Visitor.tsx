@@ -68,28 +68,21 @@ export default function Visitor() {
       )}
 
       {/* The offer, at the bottom-left corner the account block occupies once it
-          is taken up. Sign-up leads — a visitor's most likely next step is to
-          make an account, so it is the raised primary on TOP; log in sits under
-          it, quieter, for the returning user who already knows to look. Both go
-          to whichever issuer this deployment signs into; chat implements no
-          account creation of its own. */}
+          is taken up. Sign-up is the RAISED one and it sits LAST, against the
+          foot of the column: the eye arrives at the bottom of a sidebar, and the
+          thing being offered should be what it lands on. Log in reads above it,
+          quiet, for whoever already has an account and is only looking for the
+          word. Both go to whichever issuer this deployment signs into; chat
+          implements no account creation of its own.
+
+          Order and weight are separate decisions here. Reading order puts the
+          returning visitor's path first because it is the shorter errand;
+          weight puts the offer last because that is what a corner is for. */}
       <div className="mt-2 flex flex-col gap-1">
-        {/* Sign-up leads and is a real navigation (the issuer's app-scoped form),
-            so it stays an anchor — right-click-open, crawlable — wearing the
-            primary pushbutton look directly (the submit variant's tokens) rather
-            than through asChild, which the resolved Button does not honor in
-            every context. Log in triggers the OAuth redirect in JS, so it is a
-            real button. */}
-        <a
-          href={signup}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-submit-hover bg-surface-submit px-2 text-sm font-medium text-white transition-colors hover:bg-surface-submit-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
-        >
-          {localize('com_auth_sign_up')}
-        </a>
-        {/* Log in is a quiet second path, not a second slab. An outline button
-            the same width and height as the primary made two competing blocks
-            in the corner and neither read as the thing to do; a returning user
-            is looking for this word rather than for a button. */}
+        {/* Log in is a quiet path, not a second slab. An outline button the same
+            width and height as the primary made two competing blocks in the
+            corner and neither read as the thing to do. It triggers the OAuth
+            redirect in JS, so it is a real button. */}
         <button
           type="button"
           onClick={startHanzoLogin}
@@ -97,6 +90,17 @@ export default function Visitor() {
         >
           {localize('com_nav_log_in')}
         </button>
+        {/* Sign-up is a real navigation (the issuer's app-scoped form), so it
+            stays an anchor — right-click-open, crawlable — wearing the primary
+            pushbutton look directly (the submit variant's tokens) rather than
+            through asChild, which the resolved Button does not honor in every
+            context. */}
+        <a
+          href={signup}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-submit-hover bg-surface-submit px-2 text-sm font-medium text-white transition-colors hover:bg-surface-submit-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
+        >
+          {localize('com_auth_sign_up')}
+        </a>
       </div>
 
       {showSettings && <Settings open={showSettings} onOpenChange={setShowSettings} />}
