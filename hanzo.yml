@@ -78,7 +78,8 @@ test:
         server/controllers/AuthController.spec.js \
         server/controllers/__tests__/deleteUserFilters.spec.js \
         server/controllers/agents/mcpAuthorizationGuard.spec.js \
-        server/middleware/__tests__/requireJwtAuth.spec.js
+        server/middleware/__tests__/requireJwtAuth.spec.js \
+        server/services/iamUser.spec.js
       cd ../packages/data-schemas
       npx jest src/schema/user.spec.ts
 

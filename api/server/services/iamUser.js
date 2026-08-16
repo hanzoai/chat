@@ -162,7 +162,7 @@ function changes(user, claims, openidId) {
  * @param {string} [accessToken] - the caller's token, for the one userinfo read
  * @returns {Promise<import('@hanzochat/data-schemas').IUser>}
  */
-async function reconcileUser(claims, accessToken) {
+async function reconcile(claims, accessToken) {
   const openidId = claimStr(claims.sub);
   const email = claimStr(claims.email);
   const { user: found, error } = await findOpenIDUser({
@@ -194,21 +194,62 @@ async function reconcileUser(claims, accessToken) {
 
   const appConfig = await getAppConfig();
   const isFirstRegisteredUser = (await countUsers()) === 0;
-  return createUser(
-    {
-      provider: 'openid',
-      openidId,
-      email: email || '',
-      emailVerified: claims.email_verified === true,
-      avatar: claimStr(claims.picture) || (await pictureFromUserinfo(accessToken)),
-      idOnTheSource: claimStr(claims.oid),
-      role: isFirstRegisteredUser ? SystemRoles.ADMIN : SystemRoles.USER,
-      ...projection(claims),
-    },
-    getBalanceConfig(appConfig),
-    true,
-    true,
-  );
+  try {
+    return await createUser(
+      {
+        provider: 'openid',
+        openidId,
+        email: email || '',
+        emailVerified: claims.email_verified === true,
+        avatar: claimStr(claims.picture) || (await pictureFromUserinfo(accessToken)),
+        idOnTheSource: claimStr(claims.oid),
+        role: isFirstRegisteredUser ? SystemRoles.ADMIN : SystemRoles.USER,
+        ...projection(claims),
+      },
+      getBalanceConfig(appConfig),
+      true,
+      true,
+    );
+  } catch (err) {
+    // An identity has exactly one record, and the unique index is what settles
+    // who writes it. Whoever does not write reads what was written — the record
+    // is the outcome either way, so losing the insert is not losing the session.
+    const written = await findUser({ openidId });
+    if (written) {
+      return written;
+    }
+    throw err;
+  }
+}
+
+/** Reconciles running right now, by IAM subject. See `reconcileUser` below. */
+const pending = new Map();
+
+/**
+ * One reconcile in flight per identity.
+ *
+ * A first sign-in arrives as a burst — the app opens with a dozen authenticated
+ * requests at once, all carrying the same freshly minted token, none of which
+ * has a record to read yet. Sharing one reconcile creates the record once and
+ * lets every request in the burst read it, so which request happens to arrive
+ * first stops deciding whether the visitor is signed in.
+ *
+ * Keyed by the IAM subject and dropped the moment it settles: this holds the
+ * identity's reconcile WHILE IT RUNS, and is never a cache of its answer.
+ *
+ * @param {Record<string, any>} claims - verified IAM token claims
+ * @param {string} [accessToken] - the caller's token, for the one userinfo read
+ * @returns {Promise<import('@hanzochat/data-schemas').IUser>}
+ */
+function reconcileUser(claims, accessToken) {
+  const subject = claimStr(claims.sub);
+  const running = pending.get(subject);
+  if (running) {
+    return running;
+  }
+  const settling = reconcile(claims, accessToken).finally(() => pending.delete(subject));
+  pending.set(subject, settling);
+  return settling;
 }
 
 module.exports = { reconcileUser, pictureFromUserinfo, claimStr, fullNameFromClaims };
