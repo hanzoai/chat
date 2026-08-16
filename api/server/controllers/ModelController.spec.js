@@ -42,6 +42,15 @@ describe('leadFree', () => {
   it('leaves an endpoint that has no free route exactly as it was', () => {
     expect(leadFree(CATALOG).Anthropic).toEqual(['claude-sonnet']);
   });
+
+  // The catalog it reorders is the CACHED one, shared by every caller. Reordering
+  // it in place would let one free caller's request move the default for
+  // everybody, paying callers included.
+  it('does not touch the catalog it was given', () => {
+    const before = JSON.stringify(CATALOG);
+    leadFree(CATALOG);
+    expect(JSON.stringify(CATALOG)).toBe(before);
+  });
 });
 
 describe('modelController', () => {
