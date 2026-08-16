@@ -1,54 +1,49 @@
 const { Balance } = require('~/db/models');
-const { getCommerceClient, billingSubject } = require('~/server/services/CommerceClient');
+const { resolveTenantBearer } = require('@hanzochat/api');
+
+/** How long to wait on cloud before falling back to the local record. */
+const READ_TIMEOUT_MS = 5000;
 
 /**
- * The balance a user SEES — Commerce-first, and read at the account that PAYS.
+ * The balance a user SEES, read AS THAT USER.
  *
- * The subject is `billingSubject`: the same account cloud debits, which in the
- * signup org is the member's own and everywhere else is the tenant's pool.
- * Reading the bare org instead reported the pool to every member of it, so a
- * stranger who had just signed up was shown the platform's own balance — a
- * six-figure number belonging to somebody else, on an account that could not
- * spend a cent of it.
+ * cloud answers `/v1/billing/balance` from the caller's own validated principal,
+ * by the same rule its spend gate uses (`apps/billing/balance.go` subjectFor →
+ * `principal.Subject`), so the number shown and the number that admits or refuses
+ * a request cannot drift apart.
  *
- * The local record behind it is the legacy tokenCredits ledger, which production
- * does not fund (balance.enabled=false). Commerce cents → tokenCredits at
- * ×10,000 (1¢ = 10,000; 1,000,000 = $1) keeps the client contract unchanged.
+ * Reading it with chat's shared service token asked as a MACHINE instead, and a
+ * machine resolves to the org's POOLED account. In the signup org — where every
+ * self-serve signup lands — that pool is the platform's own, so each new member
+ * was shown a six-figure balance while the gateway refused their first message at
+ * zero. Their own read answers $0 on their own account, which is the truth.
  *
- * Display is NOT the money path: the gate fails closed, this read falls
- * through to the local record instead — a stale number beats a blocked page.
- * Tier and credit breakdown are keyed on the SAME subject, so all three
- * describe one account.
+ * There is no subject to compute here, and that is the point: who pays is cloud's
+ * rule and cloud's alone. chat forwards the credential the caller already
+ * presented and renders the answer.
+ *
+ * Commerce cents → tokenCredits at ×10,000 (1¢ = 10,000; 1,000,000 = $1) keeps
+ * the client contract unchanged.
+ *
+ * Display is NOT the money path: the gate fails closed, this read falls through
+ * to the local record instead — a stale number beats a blocked page.
  */
 async function balanceController(req, res) {
-  const commerceClient = getCommerceClient();
-  const subject = billingSubject(req.user);
+  const bearer = resolveTenantBearer(req);
+  const cloudUrl = (process.env.HANZO_CLOUD_URL || '').replace(/\/+$/, '');
 
-  if (commerceClient && subject) {
+  if (bearer && cloudUrl) {
     try {
-      const { available } = await commerceClient.checkBalance(subject);
-      const balanceData = { tokenCredits: Math.round((available || 0) * 10000) };
-
-      try {
-        const [tierConfig, breakdown] = await Promise.all([
-          commerceClient.getTierConfig(subject),
-          commerceClient.getCreditBreakdown(subject),
-        ]);
-        if (tierConfig) {
-          balanceData.tierId = tierConfig.name;
-          balanceData.allowedModels = tierConfig.allowedModels || ['*'];
-        }
-        if (breakdown) {
-          balanceData.trialCredits = breakdown.trial?.cents || 0;
-          balanceData.paidCredits = breakdown.paid?.cents || 0;
-        }
-      } catch (err) {
-        // Fail-open: the balance stands on its own without enrichment.
+      const resp = await fetch(`${cloudUrl}/v1/billing/balance?currency=usd`, {
+        headers: { Authorization: `Bearer ${bearer}` },
+        signal: AbortSignal.timeout(READ_TIMEOUT_MS),
+      });
+      if (resp.ok) {
+        const { available } = await resp.json();
+        return res.status(200).json({ tokenCredits: Math.round((available || 0) * 10000) });
       }
-
-      return res.status(200).json(balanceData);
     } catch (err) {
-      // Commerce unreachable — fall through to the local record.
+      // cloud unreachable — fall through to the local record.
     }
   }
 
