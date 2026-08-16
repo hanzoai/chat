@@ -87,6 +87,27 @@ export const IAM_ORG = ORGANIZATION;
 export const IAM_SIGNUP_URL = `${SERVER_URL}/signup/${CLIENT_ID}`;
 
 /**
+ * The sign-up address carrying THIS app's authorize request.
+ *
+ * Registration is a way IN, so it ends where signing in ends: the issuer's
+ * sign-up screen accepts the same `redirect_uri`, `state` and PKCE challenge the
+ * authorize endpoint does, and answers a completed registration by sending the
+ * browser to `/auth/callback` with a code. The account is therefore signed in
+ * here the moment it exists, on the surface it was created for, rather than left
+ * at the issuer for the visitor to find their own way back from.
+ *
+ * Address and request come from the two places that own them: `IAM_SIGNUP_URL`
+ * is where this deployment's issuer registers accounts, and the SDK mints and
+ * stores the one-shot verifier the callback spends.
+ */
+export async function signupUrl(): Promise<string> {
+  const authorize = new URL(await getHanzoIamSdk().getSigninUrl());
+  const signup = new URL(IAM_SIGNUP_URL);
+  signup.search = authorize.search;
+  return signup.toString();
+}
+
+/**
  * Where a person manages the account itself — profile, password, sessions.
  *
  * Composed from the SAME issuer the SDK signs in against, for the same reason

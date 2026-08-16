@@ -3,9 +3,8 @@ import { useAtomValue } from 'jotai';
 import type { Dispatch, SetStateAction } from 'react';
 import { PanelLeft } from 'lucide-react';
 import { HanzoMark } from '@hanzogui/shell';
-import { useLocalize, useAuthContext } from '~/hooks';
+import { useLocalize, useAuthContext, useSignupUrl } from '~/hooks';
 import { startHanzoLogin } from '~/utils/login';
-import { IAM_SIGNUP_URL } from '~/utils/iam';
 import { TemporaryChat } from '~/components/Chat/TemporaryChat';
 import store from '~/store';
 
@@ -34,6 +33,7 @@ export default function MobileNav({
   setNavVisible: Dispatch<SetStateAction<boolean>>;
 }) {
   const localize = useLocalize();
+  const signup = useSignupUrl();
   const { isAuthenticated } = useAuthContext();
   const conversation = useAtomValue(store.conversationByIndex(0));
   const { title = 'New Chat' } = conversation || {};
@@ -89,7 +89,7 @@ export default function MobileNav({
             {localize('com_nav_log_in')}
           </button>
           <a
-            href={IAM_SIGNUP_URL}
+            href={signup}
             className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-text-secondary hover:text-text-primary"
           >
             {localize('com_auth_sign_up')}
