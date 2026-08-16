@@ -49,6 +49,14 @@ jest.mock('~/server/middleware', () => {
       req.user = { id: 'test-user-123' };
       next();
     },
+    /* status and abort authenticate through this one, because a guest owns a
+       generation too. Named for the same reason its sibling is: it decides WHO
+       is asking, and a pass-through leaves the handler with no caller to
+       compare the job against. */
+    requireGuestOrJwtAuth: (req, res, next) => {
+      req.user = { id: 'test-user-123' };
+      next();
+    },
   };
   return new Proxy(named, {
     get: (target, key) => {
