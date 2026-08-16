@@ -27,7 +27,7 @@ import type {
 } from '@hanzochat/data-provider';
 import { useAnalytics } from '@hanzo/event/react';
 import { EVENTS } from '@hanzo/event';
-import { hasConsent } from '@hanzo/ai';
+import { hasConsent, isFree } from '@hanzo/ai';
 import type { Setter, TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';
 import useGetSender from '~/hooks/Conversations/useGetSender';
@@ -369,12 +369,18 @@ export default function useChatFunctions({
 
   /**
    * Every send passes here, which makes it the one place free-tier consent can
-   * be taken before anything is served free. A guest is pinned to the free route
-   * by the server, so their first send waits on consent and runs the moment it is
-   * given; a signed-in visitor sends paid and is asked nothing.
+   * be taken before anything is served free.
+   *
+   * Consent is owed for the ROUTE, not for who is asking: the free models cost
+   * nothing and share data in exchange, and that is as true of an account on the
+   * free plan — whose default IS the free route — as of a guest. A guest is
+   * asked whatever their conversation says, because the server pins them to the
+   * free route regardless (`enforceGuestScope`). A send on a priced model is
+   * asked nothing.
    */
+  const servedFree = isGuest || isFree(immutableConversation?.model);
   const ask: TAskFunction = (...args) => {
-    if (isGuest && !hasConsent(window.localStorage)) {
+    if (servedFree && !hasConsent(window.localStorage)) {
       askConsent(() => send(...args));
       return;
     }
