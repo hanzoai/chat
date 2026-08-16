@@ -362,6 +362,14 @@ export type TOptions = {
   overrideFiles?: t.TMessage['files'];
   /** Added conversation for multi-convo feature - sent to server as part of submission payload */
   addedConvo?: t.TConversation;
+  /**
+   * Run once the message is on its way, and not when it is merely asked for.
+   * A send can be HELD — free-tier consent is taken before anything is served
+   * free — and it can be refused outright by the guard at the top of `send`.
+   * The composer empties here for that reason: emptying it on the request lost
+   * the visitor's words to a dialog they had not answered yet.
+   */
+  sent?: () => void;
 };
 
 export type TAskFunction = (props: TAskProps, options?: TOptions) => void;

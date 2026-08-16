@@ -19,6 +19,7 @@ import useSubmitMessage from '../useSubmitMessage';
 import store from '~/store';
 
 const mockAsk = jest.fn();
+const mockReset = jest.fn();
 
 jest.mock('~/Providers', () => ({
   useChatContext: () => ({
@@ -28,7 +29,7 @@ jest.mock('~/Providers', () => ({
     setMessages: jest.fn(),
     latestMessage: null,
   }),
-  useChatFormContext: () => ({ reset: jest.fn(), getValues: () => '' }),
+  useChatFormContext: () => ({ reset: mockReset, getValues: () => '' }),
   useAddedChatContext: () => ({ conversation: null }),
 }));
 
@@ -55,6 +56,37 @@ function send(text: string) {
   result.current.submitMessage({ text });
   return jotai.get(store.backdrop);
 }
+
+/**
+ * The composer empties when the message LEAVES.
+ *
+ * `ask` does not always send what it is given: a free-tier send is held until
+ * consent is given, and the guard at the top of `send` refuses an empty line or
+ * one arriving mid-stream. Clearing on the request emptied the box for a message
+ * that had not gone — and a link like `hanzo.chat/?q=…&submit=true` submits on
+ * arrival, so a first-time visitor read their question vanish behind a dialog
+ * they had not answered yet, and lost it outright by declining.
+ */
+describe('the composer', () => {
+  beforeEach(() => {
+    mockAsk.mockReset();
+    mockReset.mockClear();
+  });
+
+  it('keeps what you wrote while the send is held', () => {
+    mockAsk.mockImplementation(() => {
+      /* consent pending: nothing left, so nothing to clear */
+    });
+    send('hi');
+    expect(mockReset).not.toHaveBeenCalled();
+  });
+
+  it('empties once the message is on its way', () => {
+    mockAsk.mockImplementation((_props, options) => options?.sent?.());
+    send('hi');
+    expect(mockReset).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('useSubmitMessage', () => {
   beforeEach(() => mockAsk.mockClear());
