@@ -447,16 +447,34 @@ describe('abortMiddleware - handleAbortError carries the refusal', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('stores a gateway 402 as the add-credit refusal, not as prose', async () => {
+    // The shape api.hanzo.ai actually returns for a spent balance. It says
+    // `insufficient_balance`; the renderer draws the paywall from
+    // `insufficient_quota`, and `refusal.js` is where the two become one name.
     await handleAbortError(
       res,
       req,
-      Object.assign(new Error('402 invalid API key'), {
+      Object.assign(new Error('Insufficient balance. Add credits to your wallet.'), {
         status: 402,
+        code: 'insufficient_balance',
+        type: 'billing_error',
       }),
       data,
     );
 
     expect(JSON.parse(storedText())).toMatchObject({ code: 'insufficient_quota' });
+  });
+
+  it('keeps a broken credential apart from a spent balance', async () => {
+    // Both arrive as 402 and lead the reader to opposite places: one to a
+    // payment, one to an operator. A key failure must never render the paywall.
+    await handleAbortError(
+      res,
+      req,
+      Object.assign(new Error('402 invalid API key'), { status: 402 }),
+      data,
+    );
+
+    expect(JSON.parse(storedText())).toMatchObject({ code: 'key_unknown' });
   });
 
   it('still stores the generic sentence for a failure that names nothing', async () => {

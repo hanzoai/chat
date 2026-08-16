@@ -30,6 +30,26 @@ const PAYMENT_REQUIRED = 402;
 const INSUFFICIENT_QUOTA = 'insufficient_quota';
 
 /**
+ * The gateway's own names for the same refusal.
+ *
+ * A spent balance arrives from api.hanzo.ai as a real 402 carrying
+ * `code:"insufficient_balance"`, and `@hanzo/ai` lists the family it belongs to
+ * (`FREEABLE_CODES`). This repo already calls that refusal `insufficient_quota`
+ * — the key `Messages/Content/Error.tsx` draws the add-credit paywall from — so
+ * an untranslated name reached the renderer as a code it knows nothing about and
+ * rendered as "Something went wrong on our side": a paywall shown as an outage,
+ * to the one reader who could have fixed it by paying.
+ *
+ * One refusal, one name. The foreign spellings are folded here, at the boundary
+ * they enter, rather than taught to every reader downstream.
+ */
+const SPENT = new Set([
+  'insufficient_balance',
+  'insufficient_funds',
+  'insufficient_quota',
+]);
+
+/**
  * IAM's own name for a key it does not hold, relayed by the gateway since
  * hanzoai/ai v1.832.44 (`iam: relay the reason IAM named`).
  *
@@ -79,7 +99,7 @@ function refusalCode(error) {
   }
   const code = error?.code ?? error?.type ?? error?.error?.code ?? error?.error?.type;
   if (typeof code === 'string' && code.length > 0) {
-    return code;
+    return SPENT.has(code) ? INSUFFICIENT_QUOTA : code;
   }
   return statusOf(error) === PAYMENT_REQUIRED ? INSUFFICIENT_QUOTA : null;
 }
