@@ -98,6 +98,7 @@ export default function useChatFunctions({
       overrideMessages,
       overrideFiles,
       addedConvo,
+      sent,
     } = {},
   ) => {
     setShowStopButton(false);
@@ -364,6 +365,7 @@ export default function useChatFunctions({
     }
 
     setSubmission(submission);
+    sent?.();
     logger.dir('message_stream', submission, { depth: null });
   };
 

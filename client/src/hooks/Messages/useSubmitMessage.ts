@@ -37,15 +37,20 @@ export default function useSubmitMessage() {
         setMessages([...(rootMessages || []), latestMessage]);
       }
 
+      /* The composer empties when the message LEAVES, never when it is asked
+         for. `ask` holds a free-tier send until consent is given, and a link
+         like `hanzo.chat/?q=…&submit=true` submits on arrival — so clearing
+         here left a first-time visitor looking at an empty box behind a dialog
+         they had not answered, and threw their question away if they declined. */
       ask(
         {
           text: data.text,
         },
         {
           addedConvo: addedConvo ?? undefined,
+          sent: () => methods.reset(),
         },
       );
-      methods.reset();
     },
     [ask, methods, addedConvo, setMessages, getMessages, latestMessage],
   );
