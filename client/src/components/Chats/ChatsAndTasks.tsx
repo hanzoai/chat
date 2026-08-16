@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useId, memo } from 'react';
 import * as Ariakit from '@ariakit/react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Pin, ListFilter, Plus, Archive, Check } from 'lucide-react';
-import { Button, DropdownPopup, Spinner } from '@hanzochat/client';
+import { Button, Checkbox, DropdownPopup, Spinner } from '@hanzochat/client';
 import type { TConversation } from '@hanzochat/data-provider';
 import type * as t from '~/common';
 import { useConversationsInfiniteQuery, useArchiveConvoMutation } from '~/data-provider';
@@ -106,18 +106,14 @@ const ChatRow = memo(function ChatRow({
       }}
     >
       {selecting && (
-        /* A native input, not `@hanzochat/client`'s Checkbox: that one is an
-           @hanzo/ui primitive backed by @hanzo/gui, and this tree resolves TWO
-           gui copies (root 8.1.0, packages/client 8.0.1), so it renders against
-           a different context than App.jsx's GuiProvider and throws "Can't find
-           Gui configuration". Swap it back once the copies are deduped. */
-        <input
-          type="checkbox"
+        /* The ROW is a toggle too (`activate()` selects while `selecting`), so a
+           click that reaches both controls toggles twice and nets nothing. The
+           box owns the click; the row keeps every other point on it. */
+        <Checkbox
           checked={selected}
-          className="chats-pane__check"
           aria-label={localize('com_ui_select')}
-          onClick={(e) => e.stopPropagation()}
-          onChange={() => onToggleSelect(conversationId)}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          onCheckedChange={() => onToggleSelect(conversationId)}
         />
       )}
       {renaming ? (
