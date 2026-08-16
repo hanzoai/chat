@@ -94,4 +94,24 @@ describe('LoginGate', () => {
 
     expect(mockStartHanzoLogin).toHaveBeenCalled();
   });
+
+  it('offers the plans to a visitor who spent the preview', () => {
+    render(<LoginGate />);
+
+    act(() => requireLogin('limit'));
+
+    expect(screen.getByRole('link', { name: 'com_auth_login_plans' })).toHaveAttribute(
+      'href',
+      'https://hanzo.ai/pricing',
+    );
+  });
+
+  /** Someone who never got a reply has no way to judge a plan, so is not asked. */
+  it('does not offer the plans before the product has answered', () => {
+    render(<LoginGate />);
+
+    act(() => requireLogin('anonymous'));
+
+    expect(screen.queryByRole('link', { name: 'com_auth_login_plans' })).not.toBeInTheDocument();
+  });
 });
