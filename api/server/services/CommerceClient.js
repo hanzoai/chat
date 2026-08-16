@@ -18,6 +18,39 @@ const { logger } = require('@hanzochat/data-schemas');
  *   });
  *   const { sufficient } = await client.checkBalance('hanzo/alice');
  */
+/**
+ * The org self-serve signups land in. Mirrors `account.SignupOrg` in cloud, which
+ * is the authority; it is named here so the subject below can be spelled without
+ * a round trip.
+ */
+const SIGNUP_ORG = 'hanzo';
+
+/**
+ * The Commerce account a signed-in caller spends from.
+ *
+ * Most orgs POOL: one balance for the tenant, every member draws on it, and the
+ * subject is the bare org. The signup org is the exception, and it is the one
+ * that matters here because it is where self-serve strangers land: the account
+ * sitting beside its members is the PLATFORM's own, so a member is their own
+ * account (`<org>/<name>`) and never the pool. Reading the pool there reports one
+ * person's balance to everybody who ever signed up.
+ *
+ * Cloud decides this with `account.Payer` and debits what it decides
+ * (apps/principal/wallet.go). This is that rule spelled where chat reads it, so
+ * the number shown is the number that pays.
+ *
+ * @param {{organization?: string, username?: string}} user
+ * @returns {string} the billing subject, or '' when the caller has no org
+ */
+function billingSubject(user) {
+  const org = (user?.organization ?? '').toString().trim();
+  if (!org) {
+    return '';
+  }
+  const name = (user?.username ?? '').toString().trim();
+  return org.toLowerCase() === SIGNUP_ORG && name ? `${org}/${name}` : org;
+}
+
 class CommerceClient {
   /**
    * @param {Object} opts
@@ -311,4 +344,4 @@ function getCommerceClient() {
   return _instance;
 }
 
-module.exports = { CommerceClient, getCommerceClient };
+module.exports = { CommerceClient, getCommerceClient, billingSubject };

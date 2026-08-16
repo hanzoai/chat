@@ -1,7 +1,10 @@
 jest.mock('~/db/models', () => ({
   Balance: { findOne: jest.fn() },
 }));
+// The client is mocked; the SUBJECT RULE is not. Which account a caller is shown
+// is the thing under test here, so it runs for real.
 jest.mock('~/server/services/CommerceClient', () => ({
+  ...jest.requireActual('~/server/services/CommerceClient'),
   getCommerceClient: jest.fn(),
 }));
 
@@ -45,6 +48,42 @@ describe('balanceController', () => {
       trialCredits: 234,
       paidCredits: 1000,
     });
+  });
+
+  it('reads a signup-org member OWN account, never the pool beside them', async () => {
+    // The pool in the signup org is the platform's own. Reading it here showed
+    // everyone who had just signed up a six-figure balance they could not spend,
+    // while the gateway debited `hanzo/<name>` and refused them at zero.
+    const checkBalance = jest.fn().mockResolvedValue({ sufficient: false, available: 0 });
+    const getTierConfig = jest.fn().mockResolvedValue(null);
+    const getCreditBreakdown = jest.fn().mockResolvedValue(null);
+    getCommerceClient.mockReturnValue({ checkBalance, getTierConfig, getCreditBreakdown });
+    const req = { user: { id: 'user-1', organization: 'hanzo', username: 'carol' } };
+    const res = createResponse();
+
+    await balanceController(req, res);
+
+    expect(checkBalance).toHaveBeenCalledWith('hanzo/carol');
+    // Tier and breakdown describe the same account, not a different one.
+    expect(getTierConfig).toHaveBeenCalledWith('hanzo/carol');
+    expect(getCreditBreakdown).toHaveBeenCalledWith('hanzo/carol');
+    expect(res.json).toHaveBeenCalledWith({ tokenCredits: 0 });
+  });
+
+  it('reads the POOL for a tenant org, where members share one balance', async () => {
+    const checkBalance = jest.fn().mockResolvedValue({ sufficient: true, available: 900 });
+    getCommerceClient.mockReturnValue({
+      checkBalance,
+      getTierConfig: jest.fn().mockResolvedValue(null),
+      getCreditBreakdown: jest.fn().mockResolvedValue(null),
+    });
+    const req = { user: { id: 'user-1', organization: 'acme', username: 'carol' } };
+    const res = createResponse();
+
+    await balanceController(req, res);
+
+    expect(checkBalance).toHaveBeenCalledWith('acme');
+    expect(res.json).toHaveBeenCalledWith({ tokenCredits: 9000000 });
   });
 
   it('still answers the balance when tier/breakdown enrichment fails', async () => {
