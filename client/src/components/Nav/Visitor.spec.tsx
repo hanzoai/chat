@@ -12,7 +12,15 @@ import userEvent from '@testing-library/user-event';
 
 const mockLogin = jest.fn();
 
-jest.mock('~/hooks', () => ({ useLocalize: () => (key: string) => key }));
+jest.mock('~/hooks', () => ({
+  useLocalize: () => (key: string) => key,
+  /* The sign-up address as the hook resolves it: this deployment's issuer, and
+     the authorize request that brings the new account back here with a code. */
+  useSignupUrl: () =>
+    mockOrg === 'hanzo'
+      ? 'https://hanzo.id/signup/hanzo-chat?client_id=hanzo-chat&redirect_uri=https%3A%2F%2Fhanzo.chat%2Fauth%2Fcallback&state=s&code_challenge=c'
+      : `https://${mockOrg}.id/signup/${mockOrg}-chat?client_id=${mockOrg}-chat&state=s&code_challenge=c`,
+}));
 jest.mock('~/data-provider', () => ({
   useGetStartupConfig: () => ({ data: { helpAndFaqURL: 'https://docs.hanzo.ai' } }),
 }));
@@ -23,11 +31,6 @@ let mockOrg = 'hanzo';
 jest.mock('~/utils/iam', () => ({
   get IAM_ORG() {
     return mockOrg;
-  },
-  get IAM_SIGNUP_URL() {
-    return mockOrg === 'hanzo'
-      ? 'https://hanzo.id/signup/hanzo-chat'
-      : `https://${mockOrg}.id/signup/${mockOrg}-chat`;
   },
 }));
 jest.mock('./Settings', () => ({ __esModule: true, default: () => <div data-testid="settings" /> }));
@@ -80,10 +83,13 @@ describe('the sidebar foot, signed out', () => {
    * be exactly the custom auth this codebase does not build.
    */
   it('sends sign-up to hanzo.id, not to a route of its own', () => {
-    expect(screen.getByRole('link', { name: 'com_auth_sign_up' })).toHaveAttribute(
-      'href',
-      'https://hanzo.id/signup/hanzo-chat',
-    );
+    const href = screen.getByRole('link', { name: 'com_auth_sign_up' }).getAttribute('href') ?? '';
+    expect(href).toContain('https://hanzo.id/signup/hanzo-chat');
+    /* Carrying this app's own authorize request is what makes the account
+       usable the moment it exists: the issuer answers registration with a code
+       on chat's callback, so there is no second trip to sign in. */
+    expect(href).toContain('redirect_uri=https%3A%2F%2Fhanzo.chat%2Fauth%2Fcallback');
+    expect(href).toContain('code_challenge=');
   });
 });
 
@@ -112,8 +118,7 @@ describe('the sidebar foot on another tenant', () => {
   });
 
   it("sends sign-up to this tenant's issuer", () => {
-    expect(screen.getByRole('link', { name: 'com_auth_sign_up' })).toHaveAttribute(
-      'href',
+    expect(screen.getByRole('link', { name: 'com_auth_sign_up' }).getAttribute('href')).toContain(
       'https://lux.id/signup/lux-chat',
     );
   });

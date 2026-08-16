@@ -3,8 +3,8 @@ import { CreditCard, CircleHelp } from 'lucide-react';
 import { GearIcon } from '@hanzochat/client';
 import { useGetStartupConfig } from '~/data-provider';
 import { startHanzoLogin } from '~/utils/login';
-import { IAM_ORG, IAM_SIGNUP_URL } from '~/utils/iam';
-import { useLocalize } from '~/hooks';
+import { IAM_ORG } from '~/utils/iam';
+import { useLocalize, useSignupUrl } from '~/hooks';
 import { ROW } from '~/components/chrome';
 import Settings from './Settings';
 
@@ -30,6 +30,7 @@ import Settings from './Settings';
 
 export default function Visitor() {
   const localize = useLocalize();
+  const signup = useSignupUrl();
   const { data: startupConfig } = useGetStartupConfig();
   const [showSettings, setShowSettings] = useState(false);
 
@@ -80,7 +81,7 @@ export default function Visitor() {
             every context. Log in triggers the OAuth redirect in JS, so it is a
             real button. */}
         <a
-          href={IAM_SIGNUP_URL}
+          href={signup}
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-submit-hover bg-surface-submit px-2 text-sm font-medium text-white transition-colors hover:bg-surface-submit-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy"
         >
           {localize('com_auth_sign_up')}
