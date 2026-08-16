@@ -1,24 +1,28 @@
 const { Balance } = require('~/db/models');
-const { getCommerceClient } = require('~/server/services/CommerceClient');
+const { getCommerceClient, billingSubject } = require('~/server/services/CommerceClient');
 
 /**
- * The balance a user SEES — Commerce-first, exactly like the money gate
- * (balanceMethods.checkBalanceRecord): when Commerce is configured and the
- * user has a billing org, the org's Commerce balance IS the balance. Cloud
- * debits that account, so it is the only truthful number; the local Mongo
- * record is the legacy tokenCredits ledger, which production does not fund
- * (balance.enabled=false), and reading it first showed a signed-in, funded
- * user nothing at all. Commerce cents → tokenCredits at ×10,000 (1¢ =
- * 10,000; 1,000,000 = $1) keeps the client contract unchanged.
+ * The balance a user SEES — Commerce-first, and read at the account that PAYS.
+ *
+ * The subject is `billingSubject`: the same account cloud debits, which in the
+ * signup org is the member's own and everywhere else is the tenant's pool.
+ * Reading the bare org instead reported the pool to every member of it, so a
+ * stranger who had just signed up was shown the platform's own balance — a
+ * six-figure number belonging to somebody else, on an account that could not
+ * spend a cent of it.
+ *
+ * The local record behind it is the legacy tokenCredits ledger, which production
+ * does not fund (balance.enabled=false). Commerce cents → tokenCredits at
+ * ×10,000 (1¢ = 10,000; 1,000,000 = $1) keeps the client contract unchanged.
  *
  * Display is NOT the money path: the gate fails closed, this read falls
  * through to the local record instead — a stale number beats a blocked page.
- * Tier and credit breakdown are garnish keyed on the SAME subject as the
- * gate (the org), never on `commerceUserId`, which nothing ever wrote.
+ * Tier and credit breakdown are keyed on the SAME subject, so all three
+ * describe one account.
  */
 async function balanceController(req, res) {
   const commerceClient = getCommerceClient();
-  const subject = (req.user?.organization ?? '').toString().trim();
+  const subject = billingSubject(req.user);
 
   if (commerceClient && subject) {
     try {
