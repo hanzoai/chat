@@ -30,9 +30,9 @@ const API = `${import.meta.env.VITE_HANZO_API_URL || 'https://api.hanzo.ai'}/v1/
 /** Blurbs are marketing copy, not catalog data — keyed by slug so a new tier
  *  still renders (with the catalog's own description) rather than vanishing. */
 const BLURBS: Record<string, string> = {
+  free: 'To try it properly',
   go: 'To get started',
-  dev: 'For everyday building',
-  pro: 'For everyday chat',
+  pro: 'For everyday building',
   max: 'For power users & teams',
 };
 

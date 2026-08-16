@@ -366,7 +366,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.2.0
-        version: 30.3.0(@types/node@20.19.37)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@20.19.37)(typescript@7.0.2))
+        version: 30.3.0(@types/node@25.5.0)(esbuild-register@3.6.0(esbuild@0.27.7))(ts-node@10.9.2(@types/node@25.5.0)(typescript@7.0.2))
       mongodb-memory-server:
         specifier: ^10.1.4
         version: 10.4.3
@@ -422,8 +422,8 @@ importers:
         specifier: ^0.1.6
         version: 0.1.6(react@19.2.4)
       '@hanzo/plans':
-        specifier: 1.4.12
-        version: 1.4.12
+        specifier: 1.4.16
+        version: 1.4.16
       '@hanzo/ui':
         specifier: 8.0.76
         version: 8.0.76(106aa0b04851e9ed43e56393f52814f2)
@@ -3635,8 +3635,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/plans@1.4.12':
-    resolution: {integrity: sha512-jufyhOTaCyPAVUIb+kZuz42LvrDksSrkAev3gMoVSID2Dj4kOwpf9/rvxpUs2z1RhPwJjDH6cSeLHSzuTgqxvA==}
+  '@hanzo/plans@1.4.16':
+    resolution: {integrity: sha512-/YEJx8/bD3C7A8NZVG2Nck623uEi7NuHq2GIQWrdMy5OSoEhzHcv8EA1KocrEaiYiSNJdgFfHnzQXsACiZrqMw==}
 
   '@hanzo/products@0.2.0':
     resolution: {integrity: sha512-SGVBJvJOyN5a7DXacwlRpLOoDjNXGx5ucWMkRAp/ZUP7DOqm9lZlypGG+uXvLmURIUr3SQ152jVgSugm0vXIjw==}
@@ -17378,7 +17378,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.4
 
-  '@hanzo/plans@1.4.12': {}
+  '@hanzo/plans@1.4.16': {}
 
   '@hanzo/products@0.2.0(@hanzogui/lucide-icons-2@8.1.1(react-dom@19.2.4(react@19.2.4))(react-native-svg@15.15.5(react-native@0.86.2(@babel/core@7.29.0)(@react-native/metro-config@0.86.2(@babel/core@7.29.0))(@types/react@19.2.17)(react@19.2.4))(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     optionalDependencies:
@@ -21049,9 +21049,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-color@2.1.0': {}
 
