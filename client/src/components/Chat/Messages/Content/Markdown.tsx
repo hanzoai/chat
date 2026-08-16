@@ -4,6 +4,7 @@ import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
 import rehypeKatex from 'rehype-katex';
 import { useAtomValue } from 'jotai';
+import { Quip } from './Parts/EmptyText';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import remarkDirective from 'remark-directive';
@@ -64,13 +65,9 @@ const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
   ];
 
   if (isInitializing) {
-    return (
-      <div className="absolute">
-        <p className="relative">
-          <span className={isLatestMessage ? 'result-thinking' : ''} />
-        </p>
-      </div>
-    );
+    // Only the latest message is still being written; an older empty one is
+    // finished and has nothing to say.
+    return isLatestMessage ? <Quip /> : null;
   }
 
   return (

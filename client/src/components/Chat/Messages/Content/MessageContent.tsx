@@ -8,6 +8,7 @@ import { useMessageContext } from '~/Providers';
 import MarkdownLite from './MarkdownLite';
 import EditMessage from './EditMessage';
 import Thinking from './Parts/Thinking';
+import EmptyText from './Parts/EmptyText';
 import { useLocalize } from '~/hooks';
 import Container from './Container';
 import Markdown from './Markdown';
@@ -25,18 +26,6 @@ const parseThinkingContent = (text: string) => {
     regularContent: thinkingMatch ? text.replace(/:::thinking[\s\S]*?:::/, '').trim() : text,
   };
 };
-
-const LoadingFallback = () => (
-  <div className="text-message mb-[0.625rem] flex min-h-[20px] flex-col items-start gap-3 overflow-visible">
-    <div className="markdown prose dark:prose-invert light w-full break-words dark:text-gray-100">
-      <div className="absolute">
-        <p className="submitting relative">
-          <span className="result-thinking" />
-        </p>
-      </div>
-    </div>
-  </div>
-);
 
 const ErrorBox = ({
   children,
@@ -61,7 +50,7 @@ const ConnectionError = ({ message }: { message?: TMessage }) => {
   const localize = useLocalize();
 
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={<EmptyText />}>
       <DelayedRender delay={DELAYED_ERROR_TIMEOUT}>
         <Container message={message}>
           <div className="mt-2 rounded-xl border border-red-500/20 bg-red-50/50 px-4 py-3 text-sm text-red-700 shadow-sm transition-all dark:bg-red-950/30 dark:text-red-100">
