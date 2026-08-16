@@ -12,6 +12,7 @@ import HoverButtons from './HoverButtons';
 import SubRow from './SubRow';
 import { cn, getMessageAriaLabel } from '~/utils';
 import store from '~/store';
+import { USER_TURN } from '~/common/turn';
 
 export default function Message(props: TMessageProps) {
   const localize = useLocalize();
@@ -120,7 +121,7 @@ export default function Message(props: TMessageProps) {
                 <div
                   className={cn(
                     'flex max-w-full flex-grow flex-col gap-0',
-                    isCreatedByUser && 'glass w-fit max-w-[85%] rounded-2xl px-4 py-2.5',
+                    isCreatedByUser && USER_TURN,
                   )}
                 >
                   <ContentParts
