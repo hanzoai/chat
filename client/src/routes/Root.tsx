@@ -26,6 +26,7 @@ import Backdrop from '~/components/Chat/Backdrop';
 import LandingPage from '~/components/Landing/LandingPage';
 import { IAM_ORG } from '~/utils/iam';
 import LoginGate from '~/components/Auth/LoginGate';
+import CommandPalette from '~/components/Nav/CommandPalette';
 import { Consent } from '~/components/Free';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
 import Palette from '~/components/Palette';
@@ -217,6 +218,11 @@ export default function Root() {
                   send, and a signed-in visitor is offered free when the paid
                   route cannot serve. Both wait on the same consent. */}
               <Consent />
+              {/* ⌘K, on every route the app answers. It mounts here rather than
+                  in the header because the chord is the surface — a palette
+                  that only exists where a particular bar renders is a palette
+                  people learn not to trust. Nothing paints until summoned. */}
+              <CommandPalette />
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">

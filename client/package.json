@@ -50,7 +50,7 @@
     "@hanzochat/client": "workspace:*",
     "@hanzochat/data-provider": "workspace:*",
     "@hanzogui/config": "^8.0.1",
-    "@hanzogui/shell": "^8.1.5",
+    "@hanzogui/shell": "^8.1.31",
     "@headlessui/react": "^2.1.2",
     "@hyperdx/browser": "^0.24.0",
     "@marsidev/react-turnstile": "^1.1.0",
