@@ -157,6 +157,36 @@ neither is an API: the built assets (`/assets`, `/fonts`, `/manifest.json`,
 - `uv` bundled for MCP server support
 - `dompurify` must be in `client/package.json` (externalized by bundler)
 
+## Signing in, and the first sign-in in particular
+
+Two facts decide whether someone who has just created an account can use it.
+
+**The record is provisioned on the request path, once.** `api/strategies/iam.js`
+verifies the bearer and hands the claims to `reconcileUser`
+(`api/server/services/iamUser.js`), which finds or creates the local record for
+that IAM subject. The app opens with roughly a dozen authenticated requests at
+once, so on a first sign-in a dozen callers all reach a record that does not
+exist yet. `reconcileUser` shares ONE reconcile per subject while it runs, and a
+caller that loses the insert to the unique index reads what won. Without that,
+one insert succeeds and the rest are refused, and whether the app renders signed
+in comes down to whether `/v1/chat/user` happened to be the winner —
+`AuthContext` navigates to `/login` on that query erroring. `iamUser.spec.js`
+pins it and is listed in the `credentials` gate in `hanzo.yml`.
+
+**Sign up is a way in, so it carries an authorize request.** `signupUrl()`
+(`client/src/utils/iam.ts`, read through `useSignupUrl`) puts this app's own
+authorize query — client, `redirect_uri`, `state`, PKCE challenge — on the
+issuer's `/signup/<clientId>` address. IAM answers a completed registration the
+way it answers a sign-in: `/auth/callback` with a code. Addressing that screen
+with a bare URL instead leaves the new account at the issuer, and chat spends its
+one silent session probe (`hanzo.sso.probed`, sessionStorage, `utils/sso.ts`) on
+arrival — so a visitor coming back under their own steam is served the guest
+landing and offered Sign up again.
+
+`components/Messages/Content/Error.tsx` still uses the bare `IAM_SIGNUP_URL`: its
+sign-up link is rendered from a plain map entry rather than a component, so no
+hook can reach it. That path costs one extra redirect through the issuer.
+
 ## Guest Chat (anonymous preview)
 
 Off by default (`ALLOW_GUEST_CHAT=false`). When enabled, the landing IS the chat
