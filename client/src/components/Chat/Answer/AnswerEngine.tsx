@@ -166,6 +166,21 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
           <h1 className="text-balance px-2 text-center text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
             {localize('com_ui_landing_title')}
           </h1>
+          {/* The one fact a signed-out reader cannot see from the composer: that
+              typing in it costs nothing and asks for no account. The preview has
+              worked this way the whole time and the page never said so, which
+              leaves every visitor to guess whether the box will stop and demand
+              a card.
+
+              No message count. The allowance is `GUEST_MESSAGE_MAX` and moves
+              with the deployment, so a number written here is a promise this
+              line has no way to keep. Signed in, the sentence is not true of
+              them and is not shown. */}
+          {!isAuthenticated && (
+            <p className="mt-3 px-2 text-center text-sm text-text-secondary">
+              {localize('com_ui_landing_free')}
+            </p>
+          )}
         </div>
       )}
 
