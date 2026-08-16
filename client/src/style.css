@@ -344,6 +344,21 @@
    translucent and blurred, only less see-through. */
 .hz-composer > .glass {
   background-color: color-mix(in oklab, var(--background) 84%, transparent) !important;
+  /* ONE edge, and it is the ring.
+
+     `elevation-2` bundles a wide dark DROP with an inset top HIGHLIGHT
+     (`inset 0 1px 0 rgb(255 255 255 / .10)`). That highlight is what makes an
+     ordinary dark panel read as catching the light from above — and it is
+     exactly wrong on this one, because the panel is already edged by the conic
+     sweep 1px outside it. Measured at 3x on the live page: two parallel 1px arcs
+     a pixel apart, both curving at the same 24px. That is the double.
+
+     The elevation ladder documents the fix in its own words — the parts are
+     separate tokens so "a component composes the ones it needs", and "a card
+     that wants the highlight without the drop should not have to accept both"
+     read the other way round is this. Compose the drop alone: depth kept, second
+     contour gone. */
+  box-shadow: var(--shadow-floating);
 }
 
 .hz-composer:hover > .glass,
