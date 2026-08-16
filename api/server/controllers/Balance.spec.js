@@ -1,18 +1,19 @@
 jest.mock('~/db/models', () => ({
   Balance: { findOne: jest.fn() },
 }));
-// The client is mocked; the SUBJECT RULE is not. Which account a caller is shown
-// is the thing under test here, so it runs for real.
-jest.mock('~/server/services/CommerceClient', () => ({
-  ...jest.requireActual('~/server/services/CommerceClient'),
-  getCommerceClient: jest.fn(),
+jest.mock('@hanzochat/api', () => ({
+  resolveTenantBearer: jest.fn(),
 }));
 
 const { Balance } = require('~/db/models');
-const { getCommerceClient } = require('~/server/services/CommerceClient');
+const { resolveTenantBearer } = require('@hanzochat/api');
 const balanceController = require('./Balance');
 
 const localRecord = (doc) => Balance.findOne.mockReturnValue({ lean: () => Promise.resolve(doc) });
+
+/** cloud's answer to the caller's own read. `available` is cents. */
+const cloudSays = (body, ok = true) =>
+  jest.fn().mockResolvedValue({ ok, json: () => Promise.resolve(body) });
 
 describe('balanceController', () => {
   const createResponse = () => ({
@@ -22,89 +23,48 @@ describe('balanceController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.HANZO_CLOUD_URL = 'http://cloud.test:8000';
+    resolveTenantBearer.mockReturnValue('user-jwt');
   });
 
-  it('answers with the Commerce org balance, in tokenCredits, without reading the local record', async () => {
-    getCommerceClient.mockReturnValue({
-      // $12.34 in cents → 12,340,000 tokenCredits ($1 = 1,000,000).
-      checkBalance: jest.fn().mockResolvedValue({ sufficient: true, available: 1234 }),
-      getTierConfig: jest.fn().mockResolvedValue({ name: 'pro', allowedModels: ['*'] }),
-      getCreditBreakdown: jest.fn().mockResolvedValue({
-        trial: { cents: 234 },
-        paid: { cents: 1000 },
-      }),
-    });
+  afterEach(() => {
+    delete global.fetch;
+  });
+
+  it("reads the balance AS THE USER, and reports what cloud says they hold", async () => {
+    // $12.34 in cents → 12,340,000 tokenCredits ($1 = 1,000,000).
+    global.fetch = cloudSays({ balance: 1234, holds: 0, available: 1234 });
     const req = { user: { id: 'user-1', organization: 'hanzo' } };
     const res = createResponse();
 
     await balanceController(req, res);
 
+    const [url, init] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://cloud.test:8000/v1/billing/balance?currency=usd');
+    // The caller's OWN credential. cloud resolves who pays from it; nothing here
+    // computes a subject, so this view cannot drift from the gate that spends it.
+    expect(init.headers.Authorization).toBe('Bearer user-jwt');
     expect(Balance.findOne).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      tokenCredits: 12340000,
-      tierId: 'pro',
-      allowedModels: ['*'],
-      trialCredits: 234,
-      paidCredits: 1000,
-    });
+    expect(res.json).toHaveBeenCalledWith({ tokenCredits: 12340000 });
   });
 
-  it('reads a signup-org member OWN account, never the pool beside them', async () => {
-    // The pool in the signup org is the platform's own. Reading it here showed
-    // everyone who had just signed up a six-figure balance they could not spend,
-    // while the gateway debited `hanzo/<name>` and refused them at zero.
-    const checkBalance = jest.fn().mockResolvedValue({ sufficient: false, available: 0 });
-    const getTierConfig = jest.fn().mockResolvedValue(null);
-    const getCreditBreakdown = jest.fn().mockResolvedValue(null);
-    getCommerceClient.mockReturnValue({ checkBalance, getTierConfig, getCreditBreakdown });
-    const req = { user: { id: 'user-1', organization: 'hanzo', username: 'carol' } };
+  it('shows a new signup their own zero, never the pool beside them', async () => {
+    // Read as a MACHINE, this answered with the signup org's pooled account — the
+    // platform's own balance — so every new member saw six figures they could not
+    // spend while their first message was refused at zero. Read as themselves,
+    // cloud answers on their own account.
+    global.fetch = cloudSays({ balance: 0, holds: 0, available: 0, account: 'newcomer' });
+    const req = { user: { id: 'user-1', organization: 'hanzo', username: 'newcomer' } };
     const res = createResponse();
 
     await balanceController(req, res);
 
-    expect(checkBalance).toHaveBeenCalledWith('hanzo/carol');
-    // Tier and breakdown describe the same account, not a different one.
-    expect(getTierConfig).toHaveBeenCalledWith('hanzo/carol');
-    expect(getCreditBreakdown).toHaveBeenCalledWith('hanzo/carol');
     expect(res.json).toHaveBeenCalledWith({ tokenCredits: 0 });
   });
 
-  it('reads the POOL for a tenant org, where members share one balance', async () => {
-    const checkBalance = jest.fn().mockResolvedValue({ sufficient: true, available: 900 });
-    getCommerceClient.mockReturnValue({
-      checkBalance,
-      getTierConfig: jest.fn().mockResolvedValue(null),
-      getCreditBreakdown: jest.fn().mockResolvedValue(null),
-    });
-    const req = { user: { id: 'user-1', organization: 'acme', username: 'carol' } };
-    const res = createResponse();
-
-    await balanceController(req, res);
-
-    expect(checkBalance).toHaveBeenCalledWith('acme');
-    expect(res.json).toHaveBeenCalledWith({ tokenCredits: 9000000 });
-  });
-
-  it('still answers the balance when tier/breakdown enrichment fails', async () => {
-    getCommerceClient.mockReturnValue({
-      checkBalance: jest.fn().mockResolvedValue({ sufficient: true, available: 500 }),
-      getTierConfig: jest.fn().mockRejectedValue(new Error('tier down')),
-      getCreditBreakdown: jest.fn().mockRejectedValue(new Error('breakdown down')),
-    });
-    const req = { user: { id: 'user-1', organization: 'hanzo' } };
-    const res = createResponse();
-
-    await balanceController(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ tokenCredits: 5000000 });
-  });
-
-  it('falls through to the local record when Commerce is unreachable — display is not the money path', async () => {
-    getCommerceClient.mockReturnValue({
-      checkBalance: jest.fn().mockRejectedValue(new Error('commerce down')),
-    });
+  it('falls through to the local record when cloud is unreachable — display is not the money path', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('cloud down'));
     localRecord({ tokenCredits: 100, autoRefillEnabled: false });
     const req = { user: { id: 'user-1', organization: 'hanzo' } };
     const res = createResponse();
@@ -115,20 +75,33 @@ describe('balanceController', () => {
     expect(res.json).toHaveBeenCalledWith({ tokenCredits: 100, autoRefillEnabled: false });
   });
 
-  it('reads the local record when the user has no billing org', async () => {
-    getCommerceClient.mockReturnValue({ checkBalance: jest.fn() });
+  it('falls through to the local record when cloud refuses the read', async () => {
+    global.fetch = cloudSays({}, false);
+    localRecord({ tokenCredits: 7, autoRefillEnabled: false });
+    const req = { user: { id: 'user-1', organization: 'hanzo' } };
+    const res = createResponse();
+
+    await balanceController(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({ tokenCredits: 7, autoRefillEnabled: false });
+  });
+
+  it('reads the local record when the caller presented no bearer', async () => {
+    resolveTenantBearer.mockReturnValue(null);
+    global.fetch = jest.fn();
     localRecord({ tokenCredits: 42, autoRefillEnabled: false });
     const req = { user: { id: 'user-1' } };
     const res = createResponse();
 
     await balanceController(req, res);
 
+    expect(global.fetch).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ tokenCredits: 42, autoRefillEnabled: false });
   });
 
-  it('returns not found when Commerce is off and no record exists', async () => {
-    getCommerceClient.mockReturnValue(null);
+  it('returns not found when there is no cloud answer and no record', async () => {
+    resolveTenantBearer.mockReturnValue(null);
     localRecord(null);
     const req = { user: { id: 'user-1', organization: 'hanzo' } };
     const res = createResponse();
@@ -140,7 +113,7 @@ describe('balanceController', () => {
   });
 
   it('reports expired local credits as zero', async () => {
-    getCommerceClient.mockReturnValue(null);
+    resolveTenantBearer.mockReturnValue(null);
     localRecord({
       tokenCredits: 900,
       autoRefillEnabled: false,
@@ -152,8 +125,6 @@ describe('balanceController', () => {
     await balanceController(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ tokenCredits: 0 }),
-    );
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ tokenCredits: 0 }));
   });
 });
