@@ -106,17 +106,29 @@ function spent(body: unknown): boolean {
 }
 
 /**
+ * The free lane's own ceiling: the plan's daily count of free calls is spent
+ * (gateway `filter_balance.go`). It arrives as the same 402 a paid outage does
+ * and means the opposite — the caller is ALREADY on free and has used the day.
+ */
+const SPENT_TODAY = 'allowance_spent';
+
+/**
  * Offer to switch when the paid route FAILED and free would have served. A spent
- * guest quota (`GUEST_LIMIT`) and a missing session (401) are not that — they
- * want a sign-in, not a cheaper model.
+ * guest quota (`GUEST_LIMIT`), a spent day of free calls (`allowance_spent`) and
+ * a missing session (401) are not that — they want a sign-in or a plan, not a
+ * cheaper model. Offering free to someone refused BY free is a loop: the switch
+ * resends on the route that just said no.
  *
  * This is the second of the two shapes a paid outage takes: the typed error the
  * gateway returns for a model family with no free route of its own, and the
  * refusal this server writes when the balance will not cover the turn.
  */
 export function offerSwitch(status: number | undefined, body: unknown): void {
-  const reason = (body ?? {}) as { type?: string };
+  const reason = (body ?? {}) as { type?: string; code?: string; error?: { code?: string } };
   if (status === 401 || reason.type === 'GUEST_LIMIT') {
+    return;
+  }
+  if (reason.code === SPENT_TODAY || reason.error?.code === SPENT_TODAY) {
     return;
   }
   if (!paidUnavailable({ status, ...reason }) && !spent(body)) {

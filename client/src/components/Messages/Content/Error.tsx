@@ -141,6 +141,33 @@ const errorMessages = {
       </a>
     </>
   ),
+  /**
+   * A LIMIT, not a paywall. The free plan's day of free calls is spent, which the
+   * gateway names `allowance_spent` beside the same 402 an empty wallet gets.
+   * Nothing is owed and credit buys nothing here — the count turns over at
+   * midnight UTC on its own — so this says when it returns and offers the plan
+   * that lifts it, rather than asking for money against a debt that isn't one.
+   *
+   * It has to be told apart from `insufficient_quota`, which is where an
+   * unmapped code left it: the reader was shown "something went wrong on our
+   * side" for a working limit doing its job, at the one moment a free account is
+   * most ready to buy.
+   */
+  allowance_spent: (_json: unknown, localize: LocalizeFunction) => (
+    <>
+      {localize('com_error_allowance_spent')}
+      <br />
+      <br />
+      <a
+        href="https://billing.hanzo.ai"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-hanzo-red underline"
+      >
+        {localize('com_error_choose_plan')}
+      </a>
+    </>
+  ),
   concurrent: (json: TConcurrent) => {
     const { limit } = json;
     const plural = limit > 1 ? 's' : '';

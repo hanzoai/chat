@@ -107,6 +107,19 @@ describe('the offer', () => {
       expect(offered).not.toHaveBeenCalled();
     });
 
+    /* The free lane's own ceiling, which arrives as the same 402 a paid outage
+       does. Offering free to someone refused BY free resends on the route that
+       just said no; what they are owed is the plan that lifts the limit. */
+    it('stays quiet when the day of free calls is spent — free is what refused', () => {
+      offerSwitch(402, { type: 'insufficient_quota', code: 'allowance_spent' });
+      expect(offered).not.toHaveBeenCalled();
+    });
+
+    it('stays quiet on a spent day nested under error, the shape the gateway sends', () => {
+      offerSwitch(402, { error: { message: 'used for today', code: 'allowance_spent' } });
+      expect(offered).not.toHaveBeenCalled();
+    });
+
     it('stays quiet on a missing session', () => {
       offerSwitch(401, { message: 'Unauthorized' });
       expect(offered).not.toHaveBeenCalled();
