@@ -1,3 +1,4 @@
+const { FREE_MODEL } = require('@hanzo/ai');
 const { Providers } = require('@hanzochat/agents');
 const { Constants, EModelEndpoint } = require('@hanzochat/data-provider');
 const AgentClient = require('./client');
@@ -163,6 +164,21 @@ describe('AgentClient - titleConvo', () => {
       // Check that generateTitle was called with correct clientOptions
       const generateTitleCall = mockRun.generateTitle.mock.calls[0][0];
       expect(generateTitleCall.clientOptions.model).toBe('gpt-3.5-turbo');
+    });
+
+    // The configured title model is priced. An account whose conversation opens
+    // on the free route holds no balance to pay for one, so titling it that way
+    // is refused and the chat is left unnamed — it keeps its own model instead.
+    it('should title a free conversation on the route it is already using', async () => {
+      client.options.agent = {
+        ...mockAgent,
+        model: undefined,
+        model_parameters: { model: FREE_MODEL },
+      };
+
+      await client.titleConvo({ text: 'Test conversation text', abortController: new AbortController() });
+
+      expect(mockRun.generateTitle.mock.calls[0][0].clientOptions.model).toBe(FREE_MODEL);
     });
 
     it('should handle missing endpoint config gracefully', async () => {

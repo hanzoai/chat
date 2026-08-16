@@ -1,4 +1,5 @@
 require('events').EventEmitter.defaultMaxListeners = 100;
+const { isFree } = require('@hanzo/ai');
 const { logger } = require('@hanzochat/data-schemas');
 const { getBufferString, HumanMessage } = require('@langchain/core/messages');
 const {
@@ -1063,10 +1064,16 @@ class AgentClient extends BaseClient {
       }
     }
 
+    // A conversation on the free route is titled ON that route. The configured
+    // title model is priced, and an account that opens on free holds no balance
+    // to pay for one — so titling it that way is refused and the chat keeps the
+    // name it was born with. `clientOptions.model` is already the conversation's
+    // own model; for a free one, leaving it is the answer.
     if (
       endpointConfig &&
       endpointConfig.titleModel &&
-      endpointConfig.titleModel !== Constants.CURRENT_MODEL
+      endpointConfig.titleModel !== Constants.CURRENT_MODEL &&
+      !isFree(clientOptions.model)
     ) {
       clientOptions.model = endpointConfig.titleModel;
     }
