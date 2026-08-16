@@ -12,6 +12,7 @@ import SubRow from '~/components/Chat/Messages/SubRow';
 import { cn, getMessageAriaLabel } from '~/utils';
 import { fontSizeAtom } from '~/store/fontSize';
 import store from '~/store';
+import { USER_TURN } from '~/common/turn';
 
 type ContentRenderProps = {
   message?: TMessage;
@@ -137,7 +138,7 @@ const ContentRender = memo(
             <div
               className={cn(
                 'flex max-w-full flex-grow flex-col gap-0',
-                msg.isCreatedByUser && 'glass w-fit max-w-[85%] rounded-2xl px-4 py-2.5',
+                msg.isCreatedByUser && USER_TURN,
               )}
             >
               <ContentParts
