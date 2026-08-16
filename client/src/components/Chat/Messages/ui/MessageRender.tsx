@@ -13,7 +13,7 @@ import { cn, getMessageAriaLabel, SMART_ROUTING_MODEL } from '~/utils';
 import { fontSizeAtom } from '~/store/fontSize';
 import { MessageContext } from '~/Providers';
 import store from '~/store';
-import { USER_TURN } from '~/common/turn';
+import { USER_TURN, chatWidth } from '~/common/turn';
 
 type MessageRenderProps = {
   message?: TMessage;
@@ -107,19 +107,10 @@ const MessageRender = memo(
       return null;
     }
 
-    const getChatWidthClass = () => {
-      if (maximizeChatSpace) {
-        return 'w-full max-w-full md:px-5 lg:px-1 xl:px-5';
-      }
-      if (hasParallelContent) {
-        return 'md:max-w-[58rem] xl:max-w-[70rem]';
-      }
-      return 'md:max-w-[47rem] xl:max-w-[55rem]';
-    };
 
     const baseClasses = {
       common: 'group mx-auto flex flex-1 gap-3 transition-all duration-300 transform-gpu ',
-      chat: getChatWidthClass(),
+      chat: chatWidth({ maximize: maximizeChatSpace, parallel: hasParallelContent }),
     };
 
     const conditionalClasses = {
