@@ -1,6 +1,6 @@
 import { useState, memo, useCallback, useContext } from 'react';
 import { useSetAtom } from 'jotai';
-import { FileText, UserCog, LayoutDashboard } from 'lucide-react';
+import { FileText, UserCog, LayoutDashboard, CreditCard } from 'lucide-react';
 import {
   UserMenu,
   resolveIdentity,
@@ -135,6 +135,26 @@ function AccountSettings() {
             icon: <LayoutDashboard className="icon-md" aria-hidden="true" />,
             href: 'https://console.hanzo.ai',
             external: true,
+          },
+          /* The prices, offered to the people using the product.
+
+             Nav/Visitor shows this row to a visitor who is not signed in, and
+             this menu did not show it to anyone who was — so the reader with no
+             account was told what it costs and the reader with one, who had
+             actually used it, was not. The balance block below is not that row
+             either: it renders only where balance is ON, which on hanzo.chat it
+             is not, so a signed-in reader met no path to a plan at all.
+
+             Same destination, string and icon as the visitor row: one price
+             list, named once. `accent` because it is the only call to action in
+             a menu of settings, and an anchor rather than `onSelect` so that
+             cmd-click, middle-click and copy-link keep working. */
+          {
+            label: localize('com_nav_plans'),
+            icon: <CreditCard className="icon-md" aria-hidden="true" />,
+            href: 'https://hanzo.ai/pricing',
+            external: true,
+            variant: 'accent',
           },
         ] as UserMenuItem[])
       : []),
