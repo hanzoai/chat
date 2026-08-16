@@ -111,6 +111,23 @@ router.get('/chat/active', requireGuestOrJwtAuth, async (req, res, next) => {
  */
 router.get('/chat/stream/:streamId', requireGuestOrJwtAuth, streamHandler);
 
+/**
+ * The other two halves of reading and stopping one's OWN generation, on the same
+ * terms as the stream above.
+ *
+ * All four reserved subpaths are deferred out of the guest-capable chatRouter,
+ * but only `active` and `stream` were given a handler above the strict guard, so
+ * `status` and `abort` reached `requireJwtAuth` and answered a guest 401. That is
+ * a guest who cannot learn whether their own reply is still running — so
+ * resuming after a reload never worked for them — and cannot stop it once it is.
+ *
+ * Both handlers already pin every caller to their own job by the same test the
+ * stream uses (`job.metadata.userId !== req.user.id` → 403), and a guest's id is
+ * stable for the length of an exchange, so admitting them here widens no scope.
+ */
+router.get('/chat/status/:conversationId', requireGuestOrJwtAuth, statusHandler);
+router.post('/chat/abort', requireGuestOrJwtAuth, abortHandler);
+
 router.use(requireJwtAuth);
 router.use(checkBan);
 router.use(uaParser);
@@ -236,7 +253,7 @@ router.get('/chat/active', async (req, res) => {
  * @access Private
  * @returns { active, streamId, status, aggregatedContent, createdAt, resumeState }
  */
-router.get('/chat/status/:conversationId', async (req, res) => {
+async function statusHandler(req, res) {
   const { conversationId } = req.params;
 
   // streamId === conversationId, so we can use getJob directly
@@ -263,7 +280,7 @@ router.get('/chat/status/:conversationId', async (req, res) => {
     createdAt: job.createdAt,
     resumeState,
   });
-});
+}
 
 /**
  * @route POST /chat/abort
@@ -271,7 +288,7 @@ router.get('/chat/status/:conversationId', async (req, res) => {
  * @access Private
  * @description Mounted before chatRouter to bypass buildEndpointOption middleware
  */
-router.post('/chat/abort', async (req, res) => {
+async function abortHandler(req, res) {
   logger.debug(`[AgentStream] ========== ABORT ENDPOINT HIT ==========`);
   logger.debug(`[AgentStream] Method: ${req.method}, Path: ${req.path}`);
   logger.debug(`[AgentStream] Body:`, req.body);
@@ -353,6 +370,6 @@ router.post('/chat/abort', async (req, res) => {
 
   logger.warn(`[AgentStream] Job not found for streamId: ${jobStreamId}`);
   return res.status(404).json({ error: 'Job not found', streamId: jobStreamId });
-});
+}
 
 module.exports = router;
