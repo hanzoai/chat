@@ -1228,6 +1228,7 @@
   "com_ui_key": "Key",
   "com_ui_key_required": "API key is required",
   "com_ui_landing_title": "Explore new worlds.",
+  "com_ui_landing_lead": "It searches the web, runs the code it writes, reads the files you drop in and makes pictures — in one conversation.",
   "com_ui_landing_free": "Free to try — no account needed.",
   "com_ui_last_used": "Last used",
   "com_ui_late_night": "Happy late night",

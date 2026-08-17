@@ -166,6 +166,22 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
           <h1 className="text-balance px-2 text-center text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
             {localize('com_ui_landing_title')}
           </h1>
+          {/* WHAT IT IS, on the surface two other properties' primary action
+              lands on. The page opened with "Explore new worlds." and then went
+              straight to the terms — atmosphere, then price, and nothing in
+              between saying what happens if you type here. hanzo.ai/chat already
+              publishes this exact sentence, so the product and the page selling
+              it stop describing different things.
+
+              Shown to EVERYONE, unlike the line below it: what the thing does is
+              true of a signed-in reader too, and it is the sentence a shared link
+              arrives on.
+
+              Above the terms, because "what is this" is the question a stranger
+              has first; free-and-no-account is the answer to their second. */}
+          <p className="mt-3 max-w-xl text-balance px-4 text-center text-sm text-text-secondary sm:text-base">
+            {localize('com_ui_landing_lead')}
+          </p>
           {/* The one fact a signed-out reader cannot see from the composer: that
               typing in it costs nothing and asks for no account. The preview has
               worked this way the whole time and the page never said so, which
