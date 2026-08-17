@@ -14,7 +14,7 @@
  * An assistant turn deliberately has no bubble. It is the page's main content,
  * and wrapping it would make the reply look like a quotation of itself.
  */
-export const USER_TURN = 'glass w-fit max-w-[85%] rounded-2xl px-4 py-2.5';
+export const USER_TURN = 'glass hz-turn w-fit max-w-[85%] rounded-3xl px-3.5 py-2';
 
 /**
  * How wide the message column runs, stated once.

@@ -343,7 +343,17 @@
    scoped to the composer so no other glass surface moves. Still liquid glass:
    translucent and blurred, only less see-through. */
 .hz-composer > .glass {
-  background-color: color-mix(in oklab, var(--background) 84%, transparent) !important;
+  /* The fill is LIFTED off the page, not just made less see-through. At rest
+     this was the page's own tone, so on a dark backdrop the composer read as an
+     absence — you could tell where to type only by the ring around it. Raising
+     the opacity does not fix that: a darker box is still a dark box, and it
+     spends the translucency that makes it glass. So the mix lifts toward the
+     foreground FIRST and takes its transparency after. */
+  background-color: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--background) 91%, var(--foreground)) 86%,
+    transparent
+  ) !important;
   /* ONE edge, and it is the ring.
 
      `elevation-2` bundles a wide dark DROP with an inset top HIGHLIGHT
@@ -363,7 +373,26 @@
 
 .hz-composer:hover > .glass,
 .hz-composer:focus-within > .glass {
-  background-color: color-mix(in oklab, var(--background) 93%, transparent) !important;
+  /* Firmer while you point at it or type into it — the same lift, less
+     see-through, so the step reads as solidity rather than a colour change. */
+  background-color: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--background) 91%, var(--foreground)) 94%,
+    transparent
+  ) !important;
+}
+
+/* The user's turn wears the composer's material, stated here so the two cannot
+   drift. What you typed and the box you typed it in are the same object a
+   moment apart; different fills make the message read as a foreign surface
+   rather than as your own words moving up the page. */
+.glass.hz-turn {
+  background-color: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--background) 91%, var(--foreground)) 86%,
+    transparent
+  ) !important;
+  box-shadow: var(--shadow-floating);
 }
 
 /* The conversation-starter chips are liquid glass over the landing video: a much
