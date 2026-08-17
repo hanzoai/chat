@@ -15,8 +15,22 @@ import { cn } from '~/utils';
  *
  * `pointer-events-auto` re-arms the links against the strip's
  * `pointer-events-none` — see the note on the container below.
+ *
+ * The padding is the target, and the negative margin is what keeps it honest.
+ * These are the two links a visitor is entitled to reach before they type, and
+ * they measured 16px tall at 390 — the line box of 12px text, nothing more,
+ * where hanzo.ai gives the same two links 44px and hanzo.id gives them 45. On a
+ * phone that is a legal link you aim at and miss. Vertical padding on an inline
+ * box is hit-tested but does not enter the line box, so 14 + 16 + 14 = 44 buys
+ * the target out of space the line box never reports.
+ *
+ * The margin is not decoration: without it the target grows past the strip and
+ * floats over whatever is above, which is the pointer theft this file already
+ * fixed once by leaving `absolute`. Cancelled, the hit area lands exactly
+ * inside the strip's own padding — measured escape above and below: 0.
  */
-const LINK = 'pointer-events-auto text-text-secondary hover:text-text-primary';
+const LINK =
+  'pointer-events-auto -my-3.5 py-3.5 text-text-secondary hover:text-text-primary';
 
 export default function Footer({ className }: { className?: string }) {
   const { data: config } = useGetStartupConfig();
@@ -100,7 +114,12 @@ export default function Footer({ className }: { className?: string }) {
             // policy and the terms — the two links a visitor is entitled to
             // reach before they type anything — existed only on a desktop. They
             // are one line of 12px text; a phone can afford them.
-            'flex w-full flex-wrap items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary md:px-[60px]',
+            //
+            // `py-3.5`, not `py-2`, because the links inside reach 44px and the
+            // strip has to be tall enough to hold them: at 8px the target
+            // overhung the strip by 6px on each side and was back to floating
+            // over its neighbours. 14 + 16 + 14 is the same 44 on both.
+            'flex w-full flex-wrap items-center justify-center gap-2 px-2 py-3.5 text-center text-xs text-text-primary md:px-[60px]',
           'pointer-events-none',
         )}
         role="contentinfo"
