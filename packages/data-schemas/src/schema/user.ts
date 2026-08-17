@@ -155,6 +155,19 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    /**
+     * Whether this account has been shown the welcome card.
+     *
+     * NO DEFAULT, deliberately. `false` means "show it"; ABSENT means the
+     * account predates the card and never sees one. A default of `false` would
+     * hand every existing user a first-run greeting on the deploy that shipped
+     * it. `reconcileUser` writes `false` at creation, so exactly the accounts
+     * born from here on qualify — which is what "when users first sign up"
+     * means. The client tests `=== false` for the same reason.
+     */
+    toured: {
+      type: Boolean,
+    },
     personalization: {
       type: {
         memories: {

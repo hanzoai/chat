@@ -410,6 +410,7 @@ export const addTagToConversation = (conversationId: string) =>
 
 export const userTerms = () => `${BASE_URL}/v1/chat/user/terms`;
 export const acceptUserTerms = () => `${BASE_URL}/v1/chat/user/terms/accept`;
+export const userTour = () => `${BASE_URL}/v1/chat/user/tour`;
 export const banner = () => `${BASE_URL}/v1/chat/banner`;
 
 // Message Feedback

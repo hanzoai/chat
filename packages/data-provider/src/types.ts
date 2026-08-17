@@ -209,6 +209,12 @@ export type TUser = {
   provider: string;
   plugins?: string[];
   twoFactorEnabled?: boolean;
+  /**
+   * Whether the welcome card has been shown. Three-valued on purpose: `false`
+   * shows it, `true` has seen it, and ABSENT is an account older than the card,
+   * which never gets one. Test `=== false`, never falsiness.
+   */
+  toured?: boolean;
   personalization?: {
     memories?: boolean;
   };
@@ -567,6 +573,10 @@ export type TUserTermsResponse = {
 
 export type TAcceptTermsResponse = {
   success: boolean;
+};
+
+export type TTourResponse = {
+  toured: boolean;
 };
 
 export type TBannerResponse = TBanner | null;

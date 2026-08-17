@@ -956,6 +956,10 @@ export function acceptTerms(): Promise<t.TAcceptTermsResponse> {
   return request.post(endpoints.acceptUserTerms());
 }
 
+export function dismissTour(): Promise<t.TTourResponse> {
+  return request.post(endpoints.userTour());
+}
+
 export function getBanner(): Promise<t.TBannerResponse> {
   return request.get(endpoints.banner());
 }

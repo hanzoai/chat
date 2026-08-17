@@ -15,6 +15,7 @@ import Presentation from './Presentation';
 import SelectionAsk from './SelectionAsk';
 import ChatForm from './Input/ChatForm';
 import AnswerEngine from './Answer/AnswerEngine';
+import Tour from './Tour';
 import { Notice } from '~/components/Free';
 import Header from './Header';
 import Footer from './Footer';
@@ -105,6 +106,10 @@ function ChatView({ index = 0 }: { index?: number }) {
           <div className="flex min-h-0 flex-1 flex-col">
             <AnswerEngine index={index} />
           </div>
+          {/* Only on the empty chat, and only for an account that has never seen
+              it. Between the composer and the footer, so it greets the product
+              without covering it. */}
+          <Tour />
           <Footer />
         </>
       ) : (
