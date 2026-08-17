@@ -395,6 +395,40 @@
   box-shadow: var(--shadow-floating);
 }
 
+/* How much room a turn gets above and below — the whole rhythm of a
+   conversation, in one place. `TURN_ROW` in common/turn.ts carries the class and
+   the horizontal padding; the vertical is here because it depends on the POINTER
+   and tailwind 3.4 has no variant to write that with, the same reason `.hz-row`
+   further down states its own floor.
+
+   The room is sized to the action strip, because from `md` up SubRow takes that
+   strip out of flow and hangs it here. Measured on production before it did:
+   55px from the bottom of a user's bubble to the top of the reply at 1440, of
+   which 39 were a strip at `opacity-0` — a hole that reads as the conversation
+   having stopped, and it grew rather than shrank on a tablet.
+
+   A strip is as tall as its buttons, and its buttons are as tall as the pointer
+   needs: the estate's tap floor gives every button 44px on a coarse pointer, 31
+   with a mouse. So the base is the SAFE one — 24px each side clears a finger's
+   strip — and a fine pointer opts down to 16, which clears a mouse's with a
+   pixel to spare. Getting this backwards is what a width test would do.
+
+   Below `md` the strip is painted and sits in the flow, so it spaces itself and
+   the row adds only its own 8. */
+.hz-turn-row {
+  padding-block: 0.5rem;
+}
+@media (min-width: 768px) {
+  .hz-turn-row {
+    padding-block: 1.5rem;
+  }
+}
+@media (min-width: 768px) and (pointer: fine) {
+  .hz-turn-row {
+    padding-block: 1rem;
+  }
+}
+
 /* The conversation-starter chips are liquid glass over the landing video: a much
    LIGHTER fill than the composer, so the footage reads THROUGH them instead of
    the chips sitting on the hero as dark slabs. The base `.glass` (72% ground)

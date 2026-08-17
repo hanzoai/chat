@@ -13,7 +13,7 @@ import { cn, getMessageAriaLabel, SMART_ROUTING_MODEL } from '~/utils';
 import { fontSizeAtom } from '~/store/fontSize';
 import { MessageContext } from '~/Providers';
 import store from '~/store';
-import { USER_TURN, chatWidth } from '~/common/turn';
+import { USER_TURN, chatWidth, turnColumn } from '~/common/turn';
 
 type MessageRenderProps = {
   message?: TMessage;
@@ -134,10 +134,10 @@ const MessageRender = memo(
         <div
           className={cn(
             'relative flex w-full flex-col',
-            msg.isCreatedByUser ? 'user-turn items-end' : 'agent-turn',
+            msg.isCreatedByUser ? 'user-turn' : 'agent-turn',
           )}
         >
-          <div className="flex w-full flex-col gap-1">
+          <div className={turnColumn(msg.isCreatedByUser)}>
             <div
               className={cn(
                 'flex max-w-full flex-grow flex-col gap-0',
@@ -172,7 +172,7 @@ const MessageRender = memo(
             {hasNoChildren && effectiveIsSubmitting ? (
               <PlaceholderRow />
             ) : (
-              <SubRow classes="text-xs">
+              <SubRow classes="text-xs" pinned={isLast}>
                 <SiblingSwitch
                   siblingIdx={siblingIdx}
                   siblingCount={siblingCount}

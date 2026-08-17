@@ -4,6 +4,7 @@ import type { TMessageContentParts } from '@hanzochat/data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import { useMessageHelpers, useLocalize, useAttachments, useContentMetadata } from '~/hooks';
 import MessageIcon from '~/components/Chat/Messages/MessageIcon';
+import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
 import ContentParts from './Content/ContentParts';
 import { fontSizeAtom } from '~/store/fontSize';
 import SiblingSwitch from './SiblingSwitch';
@@ -12,7 +13,7 @@ import HoverButtons from './HoverButtons';
 import SubRow from './SubRow';
 import { cn, getMessageAriaLabel } from '~/utils';
 import store from '~/store';
-import { USER_TURN, chatWidth } from '~/common/turn';
+import { USER_TURN, TURN_ROW, chatWidth, turnColumn } from '~/common/turn';
 
 export default function Message(props: TMessageProps) {
   const localize = useLocalize();
@@ -94,7 +95,7 @@ export default function Message(props: TMessageProps) {
         onWheel={handleScroll}
         onTouchMove={handleScroll}
       >
-        <div className="m-auto justify-center p-4 py-2 md:gap-6">
+        <div className={TURN_ROW}>
           <div
             id={messageId ?? ''}
             aria-label={getMessageAriaLabel(message, localize)}
@@ -105,10 +106,10 @@ export default function Message(props: TMessageProps) {
             <div
               className={cn(
                 'relative flex w-full flex-col',
-                isCreatedByUser ? 'user-turn items-end' : 'agent-turn',
+                isCreatedByUser ? 'user-turn' : 'agent-turn',
               )}
             >
-              <div className="flex w-full flex-col gap-1">
+              <div className={turnColumn(isCreatedByUser)}>
                 <div
                   className={cn(
                     'flex max-w-full flex-grow flex-col gap-0',
@@ -132,9 +133,9 @@ export default function Message(props: TMessageProps) {
                   />
                 </div>
                 {isLast && isSubmitting ? (
-                  <div className="mt-1 h-[27px] bg-transparent" />
+                  <PlaceholderRow />
                 ) : (
-                  <SubRow classes="text-xs">
+                  <SubRow classes="text-xs" pinned={isLast}>
                     <SiblingSwitch
                       siblingIdx={siblingIdx}
                       siblingCount={siblingCount}

@@ -17,6 +17,39 @@
 export const USER_TURN = 'glass hz-turn w-fit max-w-[85%] rounded-3xl px-3.5 py-2';
 
 /**
+ * The row a turn sits in, stated once.
+ *
+ * Four files carried this literal — Message, MessageContent, MessageParts and
+ * the shared transcript's Message — so the space between any two turns had four
+ * definitions and no way to change them together.
+ *
+ * Only the horizontal padding is spelled here. How much room a turn gets above
+ * and below is `.hz-turn-row` in style.css, because it depends on the pointer
+ * and tailwind 3.4 has no variant for that. What the two say together: the room
+ * between turns is the room the action strip needs, since from `md` up SubRow
+ * hangs that strip in it rather than stacking on top of it.
+ *
+ * `justify-center` and `md:gap-6` used to ride along in these copies. The box is
+ * a block, so neither ever did anything.
+ */
+export const TURN_ROW = 'hz-turn-row m-auto px-4';
+
+/**
+ * The column a turn's parts stack in: what was said, and the action strip under
+ * it. Written out three times, like everything else in this file used to be.
+ *
+ * `items-end` belongs here and not on the wrapper outside, which is where it was
+ * written and where it never bit — this column is `w-full`, and a declared width
+ * is not something the parent's cross-axis alignment can override. So the user's
+ * bubble came out flush left, at the same x as the reply, and position said
+ * nothing at all about who was speaking. That left the gap to say it alone,
+ * which is a lot to ask of empty space.
+ */
+export function turnColumn(isUser?: boolean): string {
+  return isUser === true ? 'flex w-full flex-col items-end gap-1' : 'flex w-full flex-col gap-1';
+}
+
+/**
  * How wide the message column runs, stated once.
  *
  * This was the same function written out three times — MessageRender,
