@@ -4,6 +4,7 @@ import type { TMessageProps } from '~/common';
 
 import MultiMessage from '~/components/Chat/Messages/MultiMessage';
 import ContentRender from './ContentRender';
+import { TURN_ROW } from '~/common/turn';
 
 const MessageContainer = React.memo(
   ({
@@ -40,7 +41,7 @@ export default function MessageContent(props: TMessageProps) {
   return (
     <>
       <MessageContainer handleScroll={handleScroll}>
-        <div className="m-auto justify-center p-4 py-2 md:gap-6">
+        <div className={TURN_ROW}>
           <ContentRender {...props} isSubmitting={isSubmitting} />
         </div>
       </MessageContainer>

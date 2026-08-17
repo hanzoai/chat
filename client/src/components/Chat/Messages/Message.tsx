@@ -2,6 +2,7 @@ import React from 'react';
 import { useMessageProcess } from '~/hooks';
 import type { TMessageProps } from '~/common';
 import MessageRender from './ui/MessageRender';
+import { TURN_ROW } from '~/common/turn';
 import MultiMessage from './MultiMessage';
 
 const MessageContainer = React.memo(
@@ -39,7 +40,7 @@ export default function Message(props: TMessageProps) {
   return (
     <>
       <MessageContainer handleScroll={handleScroll}>
-        <div className="m-auto justify-center p-4 py-2 md:gap-6">
+        <div className={TURN_ROW}>
           <MessageRender {...props} />
         </div>
       </MessageContainer>
