@@ -60,6 +60,7 @@ const PUBLIC = [
   'plugins',
   'twoFactorEnabled',
   'termsAccepted',
+  'toured',
   'personalization',
   'favorites',
   'skillStates',

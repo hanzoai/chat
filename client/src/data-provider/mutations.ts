@@ -1025,3 +1025,29 @@ export const useAcceptTermsMutation = (
     onMutate: options?.onMutate,
   });
 };
+
+/**
+ * Closes the welcome card for good.
+ *
+ * The cached user is written in `onMutate`, so the card goes the moment it is
+ * clicked rather than a round-trip later — a greeting that lingers after you
+ * dismiss it reads as broken. There is no rollback on failure: bringing a
+ * dismissed greeting back is worse than showing it again on the next visit,
+ * which is what an unwritten flag does anyway.
+ */
+export const useDismissTourMutation = (): UseMutationResult<
+  t.TTourResponse,
+  unknown,
+  void,
+  unknown
+> => {
+  const queryClient = useQueryClient();
+  return useMutation(() => dataService.dismissTour(), {
+    onMutate: () => {
+      const user = queryClient.getQueryData<t.TUser>([QueryKeys.user]);
+      if (user) {
+        queryClient.setQueryData<t.TUser>([QueryKeys.user], { ...user, toured: true });
+      }
+    },
+  });
+};

@@ -3,6 +3,7 @@ const {
   updateUserPluginsController,
   getTermsStatusController,
   acceptTermsController,
+  tourController,
   deleteUserController,
   getUserController,
 } = require('~/server/controllers/UserController');
@@ -21,6 +22,7 @@ router.use('/settings', settings);
 router.get('/', requireGuestOrJwtAuth, getUserController);
 router.get('/terms', requireJwtAuth, getTermsStatusController);
 router.post('/terms/accept', requireJwtAuth, acceptTermsController);
+router.post('/tour', requireJwtAuth, tourController);
 router.post('/plugins', requireJwtAuth, updateUserPluginsController);
 router.post('/active-org', requireJwtAuth, (req, res) => {
   // Pin the active org for downstream api.hanzo.ai calls. Fail closed: the org must

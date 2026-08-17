@@ -56,6 +56,24 @@ describe('the local record behind an IAM identity', () => {
   });
 
   /**
+   * The welcome card is for accounts that start here, so the flag is written at
+   * creation rather than defaulted on the schema — a default reaches every
+   * record that lacks the field, which is every account that already exists.
+   */
+  it('marks a new record as never having seen the welcome card', async () => {
+    mockCreateUser.mockImplementation(async (fields) => ({ _id: 'user-1', ...fields }));
+
+    await reconcileUser(claims, 'token');
+
+    expect(mockCreateUser).toHaveBeenCalledWith(
+      expect.objectContaining({ toured: false }),
+      expect.anything(),
+      true,
+      true,
+    );
+  });
+
+  /**
    * An identity has exactly one record and the unique index decides who writes
    * it, so a caller that loses the insert reads what won rather than failing.
    */

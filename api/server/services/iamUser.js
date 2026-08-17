@@ -204,6 +204,11 @@ async function reconcile(claims, accessToken) {
         avatar: claimStr(claims.picture) || (await pictureFromUserinfo(accessToken)),
         idOnTheSource: claimStr(claims.oid),
         role: isFirstRegisteredUser ? SystemRoles.ADMIN : SystemRoles.USER,
+        // The account is new, so the welcome card has not been shown. Written
+        // here rather than defaulted on the schema: a default applies to every
+        // record that lacks the field, which is every account that already
+        // exists. See the field's own note.
+        toured: false,
         ...projection(claims),
       },
       getBalanceConfig(appConfig),

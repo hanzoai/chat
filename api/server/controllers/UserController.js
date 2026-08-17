@@ -157,6 +157,24 @@ const acceptTermsController = async (req, res) => {
   }
 };
 
+/**
+ * Records that this account has seen the welcome card, so it is shown once and
+ * not once per device. There is no matching GET: `toured` rides the projected
+ * user document out of `GET /v1/chat/user`, which the client already holds.
+ */
+const tourController = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user.id, { toured: true }, { new: true });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ toured: true });
+  } catch (error) {
+    logger.error('Error recording tour:', error);
+    res.status(500).json({ message: 'Error recording tour' });
+  }
+};
+
 const deleteUserFiles = async (req) => {
   try {
     const userFiles = await getFiles({ user: req.user.id });
@@ -503,6 +521,7 @@ module.exports = {
   getUserController,
   getTermsStatusController,
   acceptTermsController,
+  tourController,
   deleteUserController,
   /** Not a route — uninstalling an MCP plugin revokes its OAuth tokens at the
    * provider, and `maybeUninstallOAuthMCP.spec.js` tests that directly. */
