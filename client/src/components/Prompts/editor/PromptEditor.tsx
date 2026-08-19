@@ -119,7 +119,7 @@ const PromptEditor: React.FC<Props> = ({ name, isEditing, setIsEditing }) => {
                     rehypePlugins={rehypePlugins}
                     /** @ts-ignore */
                     components={{ p: PromptVariableGfm, code: codeNoExecution }}
-                    className="markdown prose dark:prose-invert light w-full break-words text-text-primary"
+                    className="markdown prose dark:prose-invert w-full break-words text-text-primary"
                   >
                     {field.value}
                   </ReactMarkdown>

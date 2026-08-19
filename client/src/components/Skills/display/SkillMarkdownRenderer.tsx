@@ -44,7 +44,7 @@ function SkillMarkdownRenderer({ content, className }: SkillMarkdownRendererProp
       components={MARKDOWN_COMPONENTS as unknown as Record<string, React.ElementType>}
       className={
         className ??
-        'markdown prose dark:prose-invert light w-full break-words leading-[1.65rem] text-text-primary'
+        'markdown prose dark:prose-invert w-full break-words leading-[1.65rem] text-text-primary'
       }
     >
       {content}

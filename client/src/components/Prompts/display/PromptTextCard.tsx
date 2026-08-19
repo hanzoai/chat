@@ -92,7 +92,7 @@ const PromptTextCard = ({ mainText }: PromptTextCardProps) => {
           ]}
           /** @ts-ignore */
           components={{ p: PromptVariableGfm, code: codeNoExecution }}
-          className="markdown prose dark:prose-invert light my-1 max-w-none break-words text-text-primary"
+          className="markdown prose dark:prose-invert my-1 max-w-none break-words text-text-primary"
         >
           {mainText}
         </ReactMarkdown>

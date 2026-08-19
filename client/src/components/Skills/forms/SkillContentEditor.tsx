@@ -126,7 +126,7 @@ const SkillContentEditor: React.FC<SkillContentEditorProps> = ({
                     /** @ts-ignore - PluggableList vs Pluggable[] shape drift */
                     rehypePlugins={REHYPE_PLUGINS}
                     components={MARKDOWN_COMPONENTS as unknown as Record<string, React.ElementType>}
-                    className="markdown prose dark:prose-invert light w-full break-words text-text-primary"
+                    className="markdown prose dark:prose-invert w-full break-words text-text-primary"
                   >
                     {field.value}
                   </ReactMarkdown>
