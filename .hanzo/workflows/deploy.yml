@@ -43,6 +43,55 @@ permissions:
   packages: write
 
 jobs:
+  # Measures whether the multi-stage build still works, and what it would save.
+  # Dispatch only: it never runs on a normal deploy, so it costs nothing and
+  # cannot affect what ships.
+  #
+  # Why it exists: chat mounts an RWO volume holding a SQLite database with an
+  # in-process writer, so `strategy: Recreate` is correct and every roll is a
+  # real outage. Most of that window is the pull — 658 MB took 89 seconds on the
+  # last roll. The single-stage Dockerfile ships pnpm, python3, pip, uv and every
+  # devDependency into the runtime image, and Dockerfile.multi was written to fix
+  # exactly that but has drifted eight commits behind and is wired to nothing.
+  #
+  # This answers the two questions that decide whether closing that gap is worth
+  # anyone's afternoon: does it still build, and how much smaller is it. It does
+  # NOT push, and nothing deploys from it — a red run here means the multi-stage
+  # file needs work, not that chat is broken.
+  multi-stage-size:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: [hanzo-build-linux-amd64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # No PUBLISHABLE_KEY: this image is measured and discarded, never served.
+      # Dockerfile.multi predates the key gate, so it will build without one —
+      # that gap is part of what the port has to close.
+      - name: Build Dockerfile.multi
+        continue-on-error: true
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.multi
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: chat-multi:measure
+
+      - name: Report the size, against what runs today
+        run: |
+          set -uo pipefail
+          if ! docker image inspect chat-multi:measure >/dev/null 2>&1; then
+            echo "::warning::Dockerfile.multi did not build — it is eight commits behind Dockerfile and needs the port before it can replace it"
+            exit 0
+          fi
+          multi=$(docker image inspect chat-multi:measure --format '{{.Size}}')
+          echo "Dockerfile.multi: $((multi / 1000000)) MB"
+          echo "shipping today:   658 MB (measured from the 1.0.220 pull)"
+          echo "pull time is the outage: every roll tears the only pod down before the new one starts."
+
   build:
     # Must name a label a runner ACTUALLY advertises. The git-runners offer
     # hanzo-build-linux-amd64; a label nothing offers does not fail, it queues
