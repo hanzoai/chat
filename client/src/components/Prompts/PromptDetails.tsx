@@ -65,7 +65,7 @@ const PromptDetails = ({ group }: { group?: TPromptGroup }) => {
                 ]}
                 /** @ts-ignore */
                 components={{ p: PromptVariableGfm, code: codeNoExecution }}
-                className="markdown prose dark:prose-invert light dark:text-gray-70 my-1 break-words"
+                className="markdown prose dark:prose-invert dark:text-gray-70 my-1 break-words"
               >
                 {mainText}
               </ReactMarkdown>

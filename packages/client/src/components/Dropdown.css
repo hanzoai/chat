@@ -14,7 +14,12 @@
   flex-direction: column;
   overflow: auto;
   overscroll-behavior: contain;
-  border-radius: 1rem;
+  /* 12px is the fleet's panel radius — the same number `hanzo-desktop`'s
+     `theme.ts` calls PANEL_RADIUS, and one rung rounder than the 10px on the
+     chrome squares and menu rows inside it, which is the relationship a panel
+     and its contents are supposed to have. It was 16, which read as a third
+     radius in a chrome that only has two. */
+  border-radius: 0.75rem;
   border-width: 1px;
   border-style: solid;
   border-color: var(--border-light);
@@ -45,10 +50,16 @@
    indicator at all. Caught by e2e/specs/tokens.spec.ts against the served image,
    not by reading the source. --ring is the system's focus colour and clears 3:1
    in both themes. */
+/* `outline-offset: 2px`, not `-1px`. The negative offset drew the ring INSIDE
+   the panel's own border, which is a fourth focus appearance in a chrome that
+   is supposed to have one: the cluster, the menu rows, the strip and the seam
+   all paint `2px solid var(--ring)` at `offset 2` (`Chat/chrome.ts`
+   FOCUS_RING), and a panel is not a special case. Nothing clips it — the panel
+   is portalled, so the ring has room to sit outside the box. */
 .popover-ui:focus-visible,
 .popover-ui[data-focus-visible] {
   outline: 2px solid var(--ring);
-  outline-offset: -1px;
+  outline-offset: 2px;
 }
 
 .popover-ui:where(.dark, .dark *) {

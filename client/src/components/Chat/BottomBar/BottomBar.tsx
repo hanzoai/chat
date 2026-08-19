@@ -5,6 +5,7 @@ import { Globe, Plus, X } from 'lucide-react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import Preview from '~/components/SidePanel/Preview/Panel';
+import { CHROME_RADIUS, FOCUS_RING, STRIP_BUTTON, TAB_CLOSE } from '../chrome';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -47,7 +48,8 @@ const BottomBarTab = memo(function BottomBarTab({ id, active }: { id: string; ac
   return (
     <div
       className={cn(
-        'flex max-w-44 shrink items-center gap-1 rounded-lg pr-1 text-sm',
+        'flex max-w-44 shrink items-center gap-1 pr-1 text-sm',
+        CHROME_RADIUS,
         active ? 'bg-surface-active-alt' : 'hover:bg-surface-hover',
       )}
     >
@@ -59,7 +61,11 @@ const BottomBarTab = memo(function BottomBarTab({ id, active }: { id: string; ac
         aria-controls="bottom-bar-tabpanel"
         tabIndex={active ? 0 : -1}
         onClick={() => setActive(id)}
-        className="flex min-w-0 items-center gap-1.5 rounded-lg py-1.5 pl-2 text-text-primary"
+        className={cn(
+          'flex min-w-0 items-center gap-1.5 py-1.5 pl-2 text-text-primary',
+          CHROME_RADIUS,
+          FOCUS_RING,
+        )}
       >
         <Globe className="size-4 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
@@ -71,8 +77,12 @@ const BottomBarTab = memo(function BottomBarTab({ id, active }: { id: string; ac
       <button
         type="button"
         onClick={() => closeTab(id)}
+        data-testid={`bottom-bar-tab-close-${id}`}
         aria-label={localize('com_ui_close_var', { 0: label })}
-        className="-mx-0.5 flex size-6 shrink-0 items-center justify-center rounded text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+        className={cn(
+          'flex shrink-0 items-center justify-center text-text-secondary hover:bg-surface-hover hover:text-text-primary',
+          TAB_CLOSE,
+        )}
       >
         <X className="size-3.5" aria-hidden="true" />
       </button>
@@ -118,7 +128,10 @@ const BottomBar = memo(function BottomBar() {
           onClick={() => openTab()}
           data-testid="bottom-bar-new-tab"
           aria-label={localize('com_ui_bottom_bar_new_tab')}
-          className="-my-1 flex size-10 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+          className={cn(
+            'flex shrink-0 items-center justify-center text-text-secondary hover:bg-surface-hover hover:text-text-primary',
+            STRIP_BUTTON,
+          )}
         >
           <Plus className="size-4" aria-hidden="true" />
         </button>
@@ -130,7 +143,10 @@ const BottomBar = memo(function BottomBar() {
           aria-label={localize('com_ui_bottom_bar_close')}
           aria-expanded={true}
           aria-controls="bottom-bar"
-          className="-my-1 flex size-10 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+          className={cn(
+            'flex shrink-0 items-center justify-center text-text-secondary hover:bg-surface-hover hover:text-text-primary',
+            STRIP_BUTTON,
+          )}
         >
           <X className="size-4" aria-hidden="true" />
         </button>
@@ -186,7 +202,16 @@ function BottomBarGroup({ children }: { children: React.ReactNode }) {
       <ResizablePanel id="chat-column" order={1} minSize={MIN_CHAT}>
         {children}
       </ResizablePanel>
-      {open && <ResizableHandle withHandle />}
+      {/* The seam paints ONE rule — the handle's own 1px line — under an 8px
+          grab band centred on it, and carries no mark of its own. No
+          `withHandle`: the grip chip it renders sits in the middle of that
+          band, so `elementFromPoint` across the seam returned the chip's
+          `<svg>`/`<circle>` at three of five probes rather than the handle. A
+          1px rule does not need a second thing to aim at on top of it.
+          `FOCUS_RING` because the handle is focusable and its own
+          `ring-1 ring-offset-1` computed to a fully transparent, zero-width
+          shadow — a keyboard user resizing the bar had no indicator at all. */}
+      {open && <ResizableHandle className={FOCUS_RING} />}
       {open && <BottomBar />}
     </ResizablePanelGroup>
   );

@@ -1458,8 +1458,9 @@ Three more, all measured rather than reviewed, and all now fixed:
 
 **Measured in real Chromium at 1440×900**, signed in: the cluster is three 44×44
 boxes (1283/1335/1387) carrying ONE focus indicator between them — the Ariakit
-trigger is hand-rolled, so it restates `size-11` and the ring classes or it falls
-back to the UA outline; menu `role=menu` with 1 `menuitem` at 44.0px, right edge
+trigger is hand-rolled, so it restates `CHROME_CONTROL` and `FOCUS_RING` from
+`Chat/chrome.ts` or it falls back to the UA outline (see "The chrome spec is ONE
+file" below); menu `role=menu` with 1 `menuitem` at 44.0px, right edge
 1379 = trigger right 1379; Escape unmounts it and returns `aria-expanded=false`;
 right panel 0 → 352 → 0; bar tabs 1 →2 via `+` →3 via ⌘T →2 via a tab's ×; drag
 315.3 → 475.0px and the floor holds at 135.7px (15.1% of a 900px column);
@@ -1480,7 +1481,136 @@ returns the resize handle at all six probes across the seam — on the rule, abo
 and below it, in open strip AND directly over the `+` — and a drag started 3px
 above the rule resizes the bar (435 → 372.1px), which the old 4px grab area could
 not reach. The seam also paints ONE rule now, not two: the bar panel's `border-t`
-duplicated the handle's own hairline.
+duplicated the handle's own hairline. (Those six probes were all off-centre. At
+the seam's horizontal MIDPOINT the answer was different — the grip chip, not the
+handle — which is why `withHandle` is gone; see below. Those numbers live in
+`Chat/chrome.ts` now, and the spec below is what holds them.)
+
+### The chrome spec is ONE file, and it is `Chat/chrome.ts`
+
+`client/src/components/Chat/chrome.ts` is chat's expression of `hanzo-desktop`'s
+`apps/hanzo-desktop/src/hanzo/theme.ts`. Desktop is gui-native and loads no
+Tailwind, so no class transfers between them — the DECISIONS do, and both files
+now state the same ones with the same numbers. `PanelControls`, `BottomBar` and
+`Header` import from it; nothing writes a second copy of a chrome number.
+
+What converging on desktop actually changed, measured at 1440×900 in Chromium
+against the BUILT client, before → after:
+
+| | before | after | desktop |
+|---|---|---|---|
+| chrome square | 44×44 | 44×44 | `CHROME_CONTROL` 44 |
+| chrome square radius | 12 | **10** | `CHROME_RADIUS` 10 |
+| header row / its padding box | 56 / **40** | 56 / **44** | `CHROME_ROW` 52 / 44 |
+| distinct focus indicators in the chrome | **3** | **1** | 1 (`FOCUS_RING`) |
+| menu row height | 44 | 44 | `CHROME_CONTROL` 44 |
+| menu row radius | 8 | **10** | `CHROME_RADIUS` 10 |
+| menu panel radius | 16 | **12** | `PANEL_RADIUS` 12 |
+| menu right edge vs trigger right | 1379 / 1379 | 1379 / 1379 | aligned |
+| strip `+`/`×` | 40×40, mbox 32, r8 | 40×40, mbox 32, **r10** | 40 bled 4, r10 |
+| tab / tab close | r8 / 24×24 r4 | **r10** / 24×24 **r6** | r10 / 24 bled 2 r6 |
+| seam | 1px rule, 8px band, **grip chip** | 1px rule, 8px band, **no chip** | 1px rule, 8px band |
+| shortcut | 12px, 7.16:1 | 12px, 7.16:1 | 12px, muted rung |
+
+Three of those are worth their own sentence:
+
+- **The chrome painted THREE focus indicators, and two of them were nobody's
+  choice.** The cluster had Tailwind's `ring-2 ring-offset-2` — a box-shadow.
+  Every control in the bottom bar strip (the `+`, the panel `×`, a tab and its
+  `×`) carried no focus class at all and fell back to the UA's `2px solid
+  rgb(255,255,255)`. The resize handle asked for `ring-1 ring-offset-1` and
+  computed to `rgba(0,0,0,0) 0 0 0 0` — a keyboard user resizing the bar had NO
+  indicator. `FOCUS_RING` is now spread into all nine and every one of them
+  reads `2px solid rgba(255,255,255,0.4) offset 2px`, box-shadow `none`. It is
+  an OUTLINE, not a `ring-*`, for the reason desktop gives: a box-shadow ring is
+  clipped by an ancestor that scrolls, and both the header and the strip are
+  inside one. Contrast of the ring itself against the page: **3.66:1** (WCAG
+  1.4.11 wants 3). `.popover-ui`'s own `outline-offset: -1px` went to `2px` in
+  the same pass, so the panel is not a fourth appearance.
+- **`p-2` on the header was decoration, not space.** The row is 56 and its
+  squares are 44, so 8px of vertical padding left a 40px padding box the cluster
+  overhung by 2px on each side. `py-1.5` makes it 44 — the row now actually
+  contains what it carries. The row itself stays 56 rather than desktop's 52:
+  `MessagesView`'s `pt-14` is upstream and pays for exactly this height, and
+  desktop is shorter only because it also has to clear the traffic lights.
+- **The seam's grip chip was the thing the pointer hit.** `withHandle` renders a
+  visible `GripVertical` chip in the middle of the 8px band, and
+  `elementFromPoint` across the seam returned its `<svg>`/`<circle>` at three of
+  five probes rather than the handle. It is gone; all five probes return the
+  handle, and the drag still works (bar 314.7 → 434.5px). This also makes chat
+  internally consistent: the other three seams use `ResizableHandleAlt`, whose
+  chip is `invisible` until hover — the bottom bar was the only one showing a
+  permanent mark on a 1px rule.
+
+**What deliberately did NOT converge**, because copying desktop would make chat
+worse rather than better:
+
+- **Glyph sizes.** Desktop runs 17/16/15/14/13 by prop; chat runs `icon-md`
+  (18px, stroke 1.5) by CSS class, and the cluster sits in a header row beside
+  five other `icon-md` controls (bookmarks, share, temporary, canvas). Dropping
+  the cluster to 17 would trade fleet consistency for a visible mismatch inside
+  one row — desktop's own "a row where one is 40 reads as a mistake" argument,
+  pointing the other way.
+- **The right-panel glyph.** `SlidersHorizontal`, not desktop's `PanelRight`,
+  because `Chat/Menus/CanvasToggle` already owns `PanelRight` for the artifacts
+  panel. Desktop has no artifacts panel and so no collision.
+- **The sidebar toggle's home.** Desktop puts it at the left end of the chrome
+  row; chat's lives in the rail (`Nav/NewChat.tsx`) and `Header.spec.tsx` holds
+  the header's left edge empty.
+- **Menu CONTENT.** Desktop's companions menu has five rows from a shared
+  `sections.ts` catalog (⌘1…⌘5) that four surfaces read. Chat has one row
+  (Browser, ⌘T) and no section catalog. Adding one is a product decision.
+- **The menu's width mechanism.** Desktop pins `MENU_WIDTH` 232 because a fixed
+  width is HOW it right-aligns (it hands `FloatingMenu` a synthetic anchor rect
+  at `right - 232`). Ariakit's `placement="bottom-end"` aligns for free, so chat
+  keeps `min-w-52` and shrink-to-fit. Same outcome, measured: 1379 = 1379.
+- **Panel padding.** `.popover-ui` keeps `0.5rem`; desktop's `PANEL_PAD` is 4.
+  That is a different-but-valid density inside one system, not a broken rule.
+
+### Measuring the chrome: `e2e/playwright.config.chrome.ts`
+
+`e2e/specs/chrome/window-chrome.spec.ts`, 6 specs, ~9s, green:
+
+```bash
+pnpm install && npm run build:packages && (cd client && npm run build)
+npx playwright test --config=e2e/playwright.config.chrome.ts
+```
+
+It signs NOBODY in, and that is the point: this fork has no local login route, so
+the UI-registration `global-setup` the other four playwright configs share cannot
+complete here — it clicks a "Sign up" link that does not exist and the whole run
+dies in globalSetup. It does not need to. `ALLOW_GUEST_CHAT=true` renders the
+real chat shell — header, cluster, panels, composer — for an anonymous visitor,
+and the chrome is byte-identical, so the suite runs the guest path and stays a
+pure geometry gate with no identity to mint or clean up.
+
+Four things about this loop are measured facts and cost a run each to learn:
+
+- **The server caches `index.html` at boot.** Rebuild `client/dist` under a
+  running server and every asset URL in the served HTML 404s: blank page, no
+  `pageerror`, no console error, and six specs failing on `header-actions` not
+  found. Restart the server after a build. `reuseExistingServer` is off in CI
+  for exactly this.
+- **The menu opens through a 150ms transition from `scale: 0.95`**, so a
+  measurement taken the moment `[role=menu]` is visible reads every number 5%
+  small: panel 197.6 (208×0.95), row 41.8 (44×0.95), icon slot 15.2 (16×0.95),
+  and a right edge 5.2px inside the trigger's — a misalignment that does not
+  exist. `openMenu()` waits for `opacity: 1` and `scale: 1`.
+- **`:focus-visible` needs keyboard modality.** `el.focus()` is script focus and
+  only matches after a keypress, so an Ariakit menu row reached by CLICKING the
+  trigger reports no focus state at all and you measure an unfocused row. The
+  row probe opens the menu with Enter and reads `document.activeElement`.
+- **A zero-length box-shadow paints nothing but does not compare equal.**
+  Tailwind leaves the stood-down `--tw-ring-*` colours in the computed value, so
+  three controls wearing ONE visible indicator still read as three distinct
+  strings. `readRing` normalises any shadow whose every length is `0px` to
+  `none`. Also: `outline-color` on an UNFOCUSED control is `currentColor`, i.e.
+  the label — reading it reported the ring at 17.78:1 instead of 3.66:1.
+
+It is deliberately NOT in `hanzo.yml`. The gate needs `playwright install
+chromium` and `mongodb-memory-server`'s mongod download, and a lane that can go
+red on a cold runner is exactly what that file refuses to ship. Run it by hand
+after any chrome change; nothing else in this repo will catch one.
 
 **Two upstream defects were measured on clean `origin/main` and are NOT from this
 work** — do not attribute them to the chrome:
@@ -1505,3 +1635,48 @@ server (both write the same SQLite file and the store is an in-process writer),
 then hand Playwright the returned `refreshToken` cookie. Also pre-set
 `sessionStorage['hanzo.sso.probed'] = '1'` in an init script, or the signed-out
 SSO probe navigates the document to hanzo.id mid-run.
+
+### `light` is a THEME class here, and every markdown block was claiming it
+
+Every markdown container in this app carried a bare `light` in its class string
+— `markdown prose dark:prose-invert light w-full break-words` — inherited from
+upstream, where it is inert: `@tailwindcss/typography` has no `light` modifier
+and upstream defines no `.light` rule, so the token styled nothing.
+
+It is not inert here. `@hanzo/design` owns the semantic colours and splits them
+`:root` (dark) / `.light` (light), which is the whole mechanism described at
+`style.css:178` — the class matches what the ThemeProvider writes on `<html>`,
+so the theme follows with no mapping. A markdown container spelling `light`
+therefore declared its subtree to be the light theme, and custom properties
+inherit, so every `--text-*` token inside every message was redefined to the
+light palette while the page stayed black.
+
+The reply text survived only by accident: those same containers carry an
+explicit `dark:text-gray-100`, so the prose body was coloured directly and never
+read the shadowed token. Anything that DID read one was painted for a white
+background it was not on. Measured on production, `rgba(10,10,10,.78)` — which
+is `@hanzo/design`'s light `--foreground` `#0a0a0a` — on `rgb(0,0,0)`:
+
+| | contrast |
+|---|---|
+| `Thinking...` (`text-text-secondary`, 14px Geist) | **1.06:1** |
+| the reasoning body under it | **1.06:1** |
+| the finished reply beside it (`dark:text-gray-100`) | 17.78:1 |
+
+1.06:1 is not low contrast, it is invisible, and it is what "I can't see the AI
+working" actually was: the indicator had been rendering the whole time. The 14px
+next to the body's 16px is why it read as a different font on the rare occasion
+a glyph was visible at all.
+
+Removed from all 16 sites (15 files: message content, parts, search, edit,
+prompts, skills). `AccountSettings.tsx`'s `light` is a theme-mode **id** and
+stays. Two things this leaves behind:
+
+- **A token that resolves is not a token that reaches the element.** The root
+  values were correct throughout (`--text-secondary: #cdcdcd`) and a probe
+  appended to `body` computed correctly, which is why reading the stylesheet
+  found nothing. The defect only appears by walking the ANCESTOR chain and
+  watching where the value changes — the shadowing element is four levels above
+  the text.
+- **Grep for a bare `light` before adding a class string from upstream.** It is
+  the one upstream token whose meaning this fork reverses.

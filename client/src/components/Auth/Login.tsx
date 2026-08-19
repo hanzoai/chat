@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { ErrorTypes } from '@hanzochat/data-provider';
 import { useToastContext } from '@hanzochat/client';
 import { useSearchParams } from 'react-router-dom';
-import { getHanzoIamSdk } from '~/utils/iam';
+import { getHanzoIamSdk, IAM_PROVIDER_NAME } from '~/utils/iam';
 import { useLocalize } from '~/hooks';
 
 /**
@@ -59,7 +59,9 @@ function Login() {
   if (shouldAutoRedirect) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
-        <p className="text-lg font-semibold">Redirecting to Hanzo...</p>
+        <p className="text-lg font-semibold">
+          {localize('com_ui_redirecting_to_provider', { 0: IAM_PROVIDER_NAME })}
+        </p>
       </div>
     );
   }

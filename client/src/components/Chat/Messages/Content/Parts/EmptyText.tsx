@@ -68,7 +68,7 @@ export const Quip = memo(() => {
 /** The indicator in the place a content part would have been. */
 const EmptyTextPart = memo(() => (
   <div className="text-message mb-[0.625rem] flex min-h-[20px] flex-col items-start gap-3 overflow-visible">
-    <div className="markdown prose dark:prose-invert light w-full break-words dark:text-gray-100">
+    <div className="markdown prose dark:prose-invert w-full break-words dark:text-gray-100">
       <Quip />
     </div>
   </div>
