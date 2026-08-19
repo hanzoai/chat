@@ -784,6 +784,25 @@ export const tPresetSchema = tConversationSchema
     createdAt: true,
     updatedAt: true,
     title: true,
+    /**
+     * A preset is the SETTINGS a conversation runs under, so it has no
+     * messages — nothing reads `preset.messages` anywhere in this tree.
+     *
+     * Omitting it is also what stops this schema throwing on a live
+     * conversation. `tConversationSchema.messages` is `z.array(z.string())`,
+     * the message IDS a stored conversation carries, but the conversation the
+     * client holds while a thread is open has them POPULATED as objects. Every
+     * `tPresetSchema.parse(submission.conversation)` therefore threw
+     * `Expected string, received object` from the second turn onward — and all
+     * five call sites are error handlers that clear the spinner AFTER the
+     * parse, so the throw skipped `setIsSubmitting(false)` and the composer
+     * stayed locked with the thinking indicator spinning: an error that could
+     * never be read, on a thread that could not be typed in again.
+     *
+     * Zod strips what a schema does not declare, so a conversation passed here
+     * now yields a preset without messages instead of an exception.
+     */
+    messages: true,
   })
   .merge(
     z.object({

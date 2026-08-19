@@ -1680,3 +1680,50 @@ stays. Two things this leaves behind:
   the text.
 - **Grep for a bare `light` before adding a class string from upstream.** It is
   the one upstream token whose meaning this fork reverses.
+
+### A conversation's `messages` are ids in the schema and objects in the client
+
+`tConversationSchema.messages` is `z.array(z.string())` — the message IDS a
+STORED conversation carries. The conversation the client holds while a thread is
+OPEN has them populated as objects. Every schema derived from it therefore threw
+`Expected string, received object` at `messages.0` from the second turn onward,
+and both places that parsed a live conversation did it where a throw could not be
+seen:
+
+- **`createPayload` (data-provider) parsed a whole conversation to destructure
+  one string.** `useResumableSSE.startGeneration` calls it OUTSIDE its `try`, so
+  the rejection escaped unhandled: **no request was ever sent**, no error path
+  ran, the message was never stored, and `setIsSubmitting(false)` never fired.
+- **Five `tPresetSchema.parse(submission.conversation)` calls in
+  `useEventHandlers` are error handlers that clear the spinner AFTER the parse**,
+  so a real failure — a gateway 402, say — hung in exactly the same way instead
+  of rendering its message.
+
+One root cause, two failures, and the same symptom for both: the thinking
+indicator spinning forever, the composer disabled, nothing in the server log,
+nothing persisted, recoverable only by reload. Measured on production before the
+fix: a first message in a fresh conversation always succeeded and **every
+follow-up hung**, which is most of what using this product is.
+
+The repairs are the two halves of the same idea — do not validate what you do not
+need, and do not let a schema describe a shape the caller does not have:
+
+- `createPayload` READS `conversation?.conversationId`. That field is
+  `z.string().nullable()` with no default and no transform, so parsing it and
+  reading it are the same value, and the parse had no other consumer.
+- `messages` is omitted from `tPresetSchema`. A preset is the SETTINGS a
+  conversation runs under and has none — nothing in this tree reads
+  `preset.messages` — and Zod strips what a schema does not declare, so a live
+  conversation now yields a preset instead of an exception. That fixes all five
+  call sites at once rather than patching each.
+
+`createPayload.spec.ts` holds both, and both were mutation-checked (restore
+either and exactly one test fails). It deliberately leaves `tConvoUpdateSchema`
+throwing on a live conversation — that schema describes a STORED conversation and
+is correct about it; the defect was calling it on one that is open.
+
+Two things worth carrying forward. **A validation whose only failure mode is an
+unreadable hang is worse than no validation**, and both sites were that shape.
+And the reason this survived so long is that it is invisible from the server:
+the request is never made, so the logs are clean, the pod is healthy, and every
+dashboard says the product works.
