@@ -499,4 +499,70 @@ test.describe('window chrome', () => {
     console.log('DRAG', JSON.stringify({ from: before.h, to: after.h }));
     expect(after.h).toBeGreaterThan(before.h + 100);
   });
+  /**
+   * The rail holds 56 and DRAWS 260, and those are two different measurements.
+   *
+   * This is the whole reason hover-to-open is allowed here. A rail that widens
+   * IN FLOW slides the page sideways because a pointer crossed it — out from
+   * under whatever that pointer was reaching for — and this repo threw one of
+   * those away for exactly that reason. Floating the peek over the conversation
+   * costs the page no motion, so the objection is answered rather than
+   * overruled, and the composer's centre is what proves it: it must not move by
+   * a single pixel between rest and peek.
+   *
+   * Pinning is the opposite and must stay so. It reflows, live, without a
+   * reload — a deliberate act, whose feedback is the movement.
+   */
+  test('the rail peeks over the conversation and pins into it', async ({ page }) => {
+    await page.goto('/c/new');
+    await page.waitForSelector('[data-testid="nav"]');
+
+    const read = () =>
+      page.evaluate(() => {
+        const nav = document.querySelector('[data-testid="nav"]') as HTMLElement;
+        const held = nav.parentElement as HTMLElement;
+        const ta = document.querySelector('textarea') as HTMLElement;
+        const mid = (el: HTMLElement) => {
+          const r = el.getBoundingClientRect();
+          return Math.round(r.x + r.width / 2);
+        };
+        return {
+          shown: Math.round(nav.getBoundingClientRect().width),
+          held: Math.round(held.getBoundingClientRect().width),
+          composer: mid(ta),
+        };
+      });
+
+    /* Shut on the first visit, at every width — the rail, not the column. */
+    const rest = await read();
+    expect(rest.shown).toBe(56);
+    expect(rest.held).toBe(56);
+
+    await page.mouse.move(28, 450);
+    await expect
+      .poll(async () => (await read()).shown, { timeout: 2000 })
+      .toBe(260);
+    const peek = await read();
+    console.log('RAIL', JSON.stringify({ rest, peek }));
+
+    /* Drawn wide, holding narrow — and the page did not move. */
+    expect(peek.held).toBe(56);
+    expect(peek.composer).toBe(rest.composer);
+
+    await page.mouse.move(1000, 450);
+    await expect
+      .poll(async () => (await read()).shown, { timeout: 2000 })
+      .toBe(56);
+
+    /* Pinning reflows, live. The toggle sits INSIDE the nav, so the pointer has
+       to leave afterwards or a peek reads as a pin and the test proves nothing. */
+    await page.getByTestId('open-sidebar-button').click();
+    await page.mouse.move(1000, 450);
+    await expect
+      .poll(async () => (await read()).held, { timeout: 2000 })
+      .toBe(260);
+    const pinned = await read();
+    console.log('PINNED', JSON.stringify(pinned));
+    expect(pinned.composer).toBeGreaterThan(rest.composer);
+  });
 });
