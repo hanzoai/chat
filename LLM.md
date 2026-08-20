@@ -1258,9 +1258,10 @@ reintroduce an unprompted modal over the signed-out product.
 ### Ambient backdrop (2026-08-05)
 
 The chat canvas plays a muted, looping YouTube embed behind everything
-(`Chat/Backdrop.tsx`, mounted first in `Presentation`; content sits in an
-explicit `z-10` wrapper because a cross-origin iframe composites above z-auto
-siblings). Facts that took a day to learn, kept here so they stay learned:
+(`Chat/Backdrop.tsx`, mounted at the app root in `routes/Root.tsx` so it paints
+behind the sidebar too; content sits in an explicit `z-10` wrapper because a
+cross-origin iframe composites above z-auto siblings). Facts that took a day to
+learn, kept here so they stay learned:
 
 - Host is `www.youtube.com` — the nocookie host answers embeds with
   "video player configuration error" (153). CSP `frame-src` allows exactly
@@ -1275,8 +1276,23 @@ siblings). Facts that took a day to learn, kept here so they stay learned:
   (quality cannot be forced; embeds ignore every quality API). A video
   YouTube refuses never reveals — clean canvas, not an error card. Verified
   by aborting `*.youtube.com` at the network layer.
-- `showBackdrop` (Settings → Chat, default on) unmounts the embed entirely —
-  off means the third-party stream stops, not `opacity: 0`.
+- **ONE switch: `store.backdrop.source`.** `showBackdrop` is retired and folded
+  into it (`store/settings.ts`, `utils/backdrop.ts`) — a pair of flags makes two
+  states that render the same nothing, which is where a bug grows. `off` means
+  UNMOUNTED, not `opacity: 0`: leaving a third-party iframe mounted behind a
+  setting that says off would keep it streaming.
+- **It PLAYS by default, for every visitor including one who has not signed in**,
+  and that default is pinned by `store/__tests__/backdrop.spec.ts`. It has
+  flipped twice, and it fails silently in both directions — an `off` default is a
+  black canvas that reads as a backdrop nobody configured, and an `on` default
+  that ignores a stored `off` reads as a setting that does not work. The seed
+  reads the retired `showBackdrop` with `true`, which is what makes it go both
+  ways: that switch defaulted ON, so never-touched means play and an explicit off
+  stays off.
+  The cost is real and belongs stated, not hidden: the embed tells YouTube the
+  visitor's address and that they opened this product, before they asked us for
+  anything, and it decodes video for as long as the tab is open. `sound` stays
+  false — the scene arrives silent.
 - `ResizablePanelGroup` in `SidePanelGroup.tsx` must NOT paint
   `bg-presentation`; that opaque sheet sits above the backdrop and was
   exactly what hid it.
