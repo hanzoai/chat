@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { CreditCard, CircleHelp } from 'lucide-react';
+import { CreditCard, CircleHelp, LogIn } from 'lucide-react';
 import { GearIcon } from '@hanzochat/client';
 import { useGetStartupConfig } from '~/data-provider';
 import { startHanzoLogin } from '~/utils/login';
 import { IAM_ORG } from '~/utils/iam';
 import { useLocalize, useSignupUrl } from '~/hooks';
 import { ROW } from '~/components/chrome';
+import { cn } from '~/utils';
 import Settings from './Settings';
 
 /**
@@ -28,13 +29,40 @@ import Settings from './Settings';
  * no account creation of its own.
  */
 
-export default function Visitor() {
+export default function Visitor({ collapsed = false }: { collapsed?: boolean }) {
   const localize = useLocalize();
   const signup = useSignupUrl();
   const { data: startupConfig } = useGetStartupConfig();
   const [showSettings, setShowSettings] = useState(false);
 
   const helpUrl = startupConfig?.helpAndFaqURL;
+
+  // THE RAIL SAYS WHO YOU ARE, OR THAT YOU ARE NOBODY. Signed in it carries an
+  // avatar; signed out it carried NOTHING, so the corner read the same at 56px
+  // whether or not there was a session behind it — the one question a person
+  // asks of a chat surface before they type into it.
+  //
+  // What renders here is the LOG IN row alone, not this column squeezed. Plans,
+  // Settings and Help are errands a visitor chooses; being signed out is a state
+  // they need told. The rest of the column is one click away — the mark above
+  // opens the sidebar — so nothing is unreachable, it is just not shouted at a
+  // width that cannot hold it.
+  if (collapsed) {
+    return (
+      <div className="flex flex-col gap-0.5 pt-2">
+        <button
+          type="button"
+          onClick={startHanzoLogin}
+          title={localize('com_nav_log_in')}
+          aria-label={localize('com_nav_log_in')}
+          data-testid="rail-log-in"
+          className={cn(ROW, 'justify-center')}
+        >
+          <LogIn aria-hidden="true" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-0.5 pt-2">

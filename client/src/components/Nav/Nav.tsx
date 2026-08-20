@@ -296,15 +296,27 @@ const Nav = memo(
           </div>
           {/* One foot, two states. The account block belongs to a session; the
               visitor block belongs to everyone else, and they are exclusive so
-              the corner never shows an account menu with no account behind it. */}
-          {!collapsed && (
-            <>
-              <Suspense fallback={<Skeleton className="mt-1 h-12 w-full rounded-xl" />}>
-                {isAuthenticated ? <AccountSettings /> : <Visitor />}
-              </Suspense>
-              <Signature />
-            </>
-          )}
+              the corner never shows an account menu with no account behind it.
+
+              IT RENDERS AT THE RAIL TOO, and that is the whole point of it. The
+              foot used to be gated on `!collapsed` alongside the conversation
+              list, which reads as one rule and is two: a list of titles genuinely
+              cannot be shown at 56px, but WHO YOU ARE is exactly one avatar wide.
+              Collapsed, the corner was empty in both states — so a visitor and a
+              signed-in customer saw an identical sidebar, and the one question a
+              person asks before typing into a chat surface had no answer on the
+              screen. Each half renders its own 56px form; neither is this column
+              squeezed. */}
+          <Suspense fallback={<Skeleton className="mt-1 h-12 w-full rounded-xl" />}>
+            {isAuthenticated ? (
+              <AccountSettings collapsed={collapsed} />
+            ) : (
+              <Visitor collapsed={collapsed} />
+            )}
+          </Suspense>
+          {/* The signature is a SENTENCE ("Powered by Hanzo AI"), so it is the one
+              part of the foot that really has nowhere to go at 56px. */}
+          {!collapsed && <Signature />}
         </nav>
       </div>
     );
