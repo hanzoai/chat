@@ -6,33 +6,33 @@ import type { TOptionSettings } from '~/common';
 import type { Backdrop } from '~/utils/backdrop';
 
 /**
- * What the canvas paints when nobody has chosen anything: NOTHING. Black ground,
- * no third-party media, until someone asks for scenery.
+ * What the canvas paints when nobody has chosen anything: the reef, playing.
+ * Every visitor, signed in or not, on the first paint of the first visit.
  *
- * OFF FOR EVERY BRAND, not just Lux, because the reason is not taste. Playing
- * the backdrop hands a third party — YouTube — the visitor's address, user agent
- * and the fact that they opened this product, on first paint, before a stranger
- * has asked us for anything at all. That is a disclosure to make on request, and
- * a default is not a request. It also runs a video decode forever behind
- * somebody's reading, on an entry graph that was deliberately cut by a third to
- * put the composer on screen sooner. A per-brand default was the alternative and
- * is worse on its own terms: it would put brand inside a stored preference,
- * where nothing brand-shaped otherwise lives, to answer a question that was
- * never about brand.
+ * The backdrop is what this product looks like — a stranger who has not signed
+ * in is exactly the person who has to see it, and a scene nobody arrives at is
+ * a scene nobody has. So it is on, for every brand, because brand has nothing
+ * to do with it: putting brand inside a stored preference would answer a
+ * question that was never about brand.
  *
- * Nothing is removed — the source selector still offers video, playlist and
- * photo, and the reef stays as the video FIELD's default so choosing "Video"
- * has something to play. What changed is that nobody arrives there.
+ * State the cost rather than hide it. Playing on arrival tells YouTube the
+ * visitor's address, user agent and that they opened this product, before they
+ * have asked us for anything; and it decodes video behind someone's reading for
+ * as long as the tab is open. Both are real, both are the price of the front
+ * door looking like the product, and both are one click from off — the source
+ * selector, or right-click on the canvas.
+ *
+ * Muted, and that is not negotiable here: `sound` below stays false, so the
+ * scene arrives silent and makes noise only when somebody asks it to.
  *
  * Seeded from the two settings this one replaces, so an upgrade keeps what the
- * visitor already chose. `showBackdrop` was how someone said "yes, play it", so
- * anyone who had it on still starts at `video` — flipping the default must not
- * silently take the backdrop away from someone who went and asked for it;
- * `backdropVideo` held their footage, as a bare id or a URL, and `videoId`
- * reads both.
+ * visitor already chose, in BOTH directions. `showBackdrop` was the old on/off
+ * and defaulted on, so reading it with `true` reproduces it exactly: never
+ * touched means play, explicitly turned off stays off. `backdropVideo` held
+ * their footage, as a bare id or a URL, and `videoId` reads both.
  */
 const DEFAULT_BACKDROP: Backdrop = {
-  source: readStorage('showBackdrop', false) ? 'video' : 'off',
+  source: readStorage('showBackdrop', true) ? 'video' : 'off',
   photo: '',
   video: readStorage('backdropVideo', 'https://www.youtube.com/watch?v=6lZ3CookYNg'),
   playlist: [],
@@ -44,10 +44,9 @@ const DEFAULT_BACKDROP: Backdrop = {
 
 /**
  * The canvas's ambient backdrop — what it shows, and whether it shows at all.
- * Scenery, so it is the visitor's call: it costs a third-party embed and
- * constant motion behind the text, and neither is something to impose on
- * someone who just wants to read their thread. `source: 'off'` is the whole
- * off switch; there is no second flag beside it. See utils/backdrop.
+ * It starts playing (see DEFAULT above) and it is the visitor's to stop:
+ * `source: 'off'` is the whole off switch, and there is no second flag beside
+ * it. See utils/backdrop.
  *
  * `merge` guards the way OUT of storage as well as the way in, so the same one
  * rule decides what the canvas may paint whether the value was just typed or
