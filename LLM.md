@@ -1628,13 +1628,20 @@ work** — do not attribute them to the chrome:
   `MessageParts`); it is the landing that is capped upstream.
 
 **Verifying this locally is not a `curl`.** There is no local login route in this
-fork (IAM OIDC or guest, nothing else). Mint a principal instead: with
-`CHAT_STORE_SQLITE` set and `MONGO_URI` unset, run `registerUser` + `setAuthTokens`
-from `api/server/services/AuthService` in a short script BEFORE starting the
-server (both write the same SQLite file and the store is an in-process writer),
-then hand Playwright the returned `refreshToken` cookie. Also pre-set
-`sessionStorage['hanzo.sso.probed'] = '1'` in an init script, or the signed-out
-SSO probe navigates the document to hanzo.id mid-run.
+fork (IAM OIDC or guest, nothing else). **And there is no principal to mint any
+more.** This paragraph used to say to run `registerUser` + `setAuthTokens` from
+`api/server/services/AuthService`; `70196c49a1` deleted that module along with
+`twoFactorService` and `AuthController`, because chat now VERIFIES the caller's
+IAM token instead of issuing a credential of its own. There is nothing left here
+that can mint a session, by design — the bearer has to come from hanzo.id.
+
+So a signed-in run needs a real hanzo.id token, and what can be checked without
+one is: the guest surface, which needs no bearer; a route's REGISTRATION, which
+answers 401 where an unrouted path answers `200 text/html` from the SPA
+catch-all (that contrast is the only reliable probe — a 200 proves nothing); and
+anything below the HTTP layer, driven against the models directly. Pre-set
+`sessionStorage['hanzo.sso.probed'] = '1'` in an init script either way, or the
+signed-out SSO probe navigates the document to hanzo.id mid-run.
 
 ### `light` is a THEME class here, and every markdown block was claiming it
 

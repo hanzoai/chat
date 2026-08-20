@@ -47,7 +47,7 @@ test:
       node scripts/check-barrel.cjs
 
   # What a user document is allowed to carry out of this process, and who is
-  # allowed to ask — and whether erasure erases. Thirty-nine tests over the two
+  # allowed to ask — and whether erasure erases. Forty-one tests over the two
   # hops where a credential escapes: the projection every user-returning route sends through
   # (services/publicUser — an allow-list, because a deny-list only covers the
   # fields somebody thought of), and the schema's own default projection under
@@ -72,7 +72,7 @@ test:
   # The names are checked before they are run. Jest reads its arguments as
   # PATTERNS, so a listed file that is not there contributes nothing and the run
   # is green on what is left: this lane named ten files and ran six for a while,
-  # reporting 29 tests where the paragraph above says seventy-five. Three of the
+  # reporting 29 tests where its own note claimed seventy-five. Three of the
   # missing four were right to go — 70196c49a1 handed two-factor, verification,
   # reset and session issuance to IAM and deleted those subjects — but the lane
   # never said so, and the fourth (UserController) was still live and had simply
@@ -122,7 +122,7 @@ test:
         src/components/chrome.spec.ts \
         src/components/Chat/Header.spec.tsx
 
-# NO WHOLE jest suite is gated — the `credentials` gate above names ten files,
+# NO WHOLE jest suite is gated — the `credentials` gate above names eight files,
 # one at a time — and that is a measurement rather than an oversight. All five
 # suites are red on this commit — cb653548, node 22, pnpm 10.27.0, one full
 # local run each:

@@ -45,4 +45,35 @@ describe('user schema — default projection', () => {
       expect(optionsFor(field).select).not.toBe(false);
     }
   });
+
+  /**
+   * `toured` decides whether a new account is greeted, and it is read straight
+   * off the projected user document. Withheld, the client sees it absent, reads
+   * that as "this account predates the card" and greets nobody — a silent
+   * failure with nothing to catch it, which is the shape the counterweight
+   * above exists to prevent.
+   */
+  it('returns the welcome flag, which the client reads to decide', () => {
+    expect(userSchema.path('toured')).toBeDefined();
+    expect(optionsFor('toured').select).not.toBe(false);
+  });
+
+  /**
+   * And it carries NO default. A default applies to every record that lacks the
+   * field, which is every account that already exists, so `default: false` here
+   * greets the entire user base on the deploy that ships it. `reconcileUser`
+   * writes `false` at creation instead; absent means "older than the card".
+   */
+  it('leaves the welcome flag unset, so only new accounts qualify', () => {
+    // The resolved default, not the options bag. `'default' in options` is true
+    // for EVERY path — mongoose carries it on SchemaTypeOptions' prototype, so
+    // `in` walks past the declaration and finds it there while Object.keys
+    // shows only ['type']. `termsAccepted` is the control: it declares
+    // `default: false`, so a test that cannot tell them apart is vacuous.
+    const resolved = (path: string) =>
+      (userSchema.path(path) as unknown as { getDefault: () => unknown }).getDefault();
+
+    expect(resolved('toured')).toBeUndefined();
+    expect(resolved('termsAccepted')).toBe(false);
+  });
 });
