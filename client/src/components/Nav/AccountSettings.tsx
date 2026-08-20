@@ -31,7 +31,7 @@ import store from '~/store';
  * through @hanzo/iam but the resulting session is a chat JWT owned by its own
  * AuthContext, and two providers for one session would be two sources of truth.
  */
-function AccountSettings() {
+function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
   const localize = useLocalize();
   const { user, isAuthenticated, logout } = useAuthContext();
   const { data: startupConfig } = useGetStartupConfig();
@@ -240,7 +240,20 @@ function AccountSettings() {
           // into a line that reads as a caption rather than as the account.
           // 44 at every width, which is what it was before it was folded into
           // the shared row by mistake.
-          trigger: cn(ROW, 'min-h-11 md:min-h-11', 'aria-[expanded=true]:bg-surface-active-alt'),
+          trigger: cn(
+            ROW,
+            'min-h-11 md:min-h-11',
+            'aria-[expanded=true]:bg-surface-active-alt',
+            // At the rail the avatar IS the control: 56px has no room for a
+            // name, and the name is not what the reader needs there — they
+            // need to know a face is present at all.
+            collapsed && 'justify-center px-0',
+          ),
+          // The label goes, the avatar stays. `triggerLabel` exists on the
+          // shared control precisely for a trigger with no room for its text,
+          // so the rail spends the package's own seam rather than a second
+          // account control of chat's own.
+          triggerLabel: collapsed ? 'sr-only' : undefined,
           item: 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-surface-hover',
         }}
       />
