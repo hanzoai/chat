@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 # `contents: write` is for the release TAG. It is not enough for a commit to
-# main and never was — the forge refuses an Actions-token push to a protected
+# main and never was — Hanzo Git refuses an Actions-token push to a protected
 # branch whatever this says, which is why the write-back is gone.
 permissions:
   contents: write
@@ -331,13 +331,13 @@ jobs:
       # deliberate jump to, say, 1.1.0 — is a human editing that file, which max()
       # still honours. So the write-back kept a redundant copy in sync.
       #
-      # It could not do even that: the forge refuses an Actions-token push to a
+      # It could not do even that: Hanzo Git refuses an Actions-token push to a
       # protected branch, so the five-attempt loop below retried a race it was
       # never losing, then failed the job. The image had already shipped, been
       # tagged and been pinned by then — a RED run that meant "released fine", the
       # same shape hanzo-apps/app resolved by deleting its write-back.
       #
-      # The tag stays: `git push origin v${v}` succeeds (v1.0.150 is on the forge),
+      # The tag stays: `git push origin v${v}` succeeds (v1.0.150 is on Hanzo Git),
       # and the pre-build stamp stays too, so the tree that gets tagged is still
       # byte-identical to the tree that was built.
       - name: Tag the version this image ships

@@ -9,7 +9,7 @@
 # nothing errors, and the pod reports one version while serving another.
 #
 # deploy.yml is the lane that stays, because it is the lane that has been
-# building. Forge runs #90-#97 are green and #97 is this exact commit. It also
+# building. Hanzo Git runs #90-#97 are green and #97 is this exact commit. It also
 # carries the two things the image cannot ship without: PUBLISHABLE_KEY read
 # from KMS (Vite inlines it at BUILD, so a runtime value cannot reach a compiled
 # bundle, and the Dockerfile refuses a blank one) and the post-push check that

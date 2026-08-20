@@ -4,7 +4,7 @@ name: CI/CD
 # config — the test gates — is the root hanzo.yml beside it.
 #
 # `.hanzo/workflows`, and the `.hanzo` path of the reusable, because THIS is the
-# forge that runs it. git.hanzo.ai's runner fleet is the only pool serving
+# Hanzo Git that runs it. git.hanzo.ai's runner fleet is the only pool serving
 # `hanzo-build-linux-amd64`; github.com has zero self-hosted runners, so the same
 # file under .github/workflows would queue forever and never go green.
 #
