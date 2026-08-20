@@ -1,4 +1,4 @@
-import { sanitizeTitle } from './sanitizeTitle';
+import { opening, sanitizeTitle } from './sanitizeTitle';
 
 describe('sanitizeTitle', () => {
   describe('Happy Path', () => {
@@ -211,5 +211,42 @@ describe('sanitizeTitle', () => {
       expect(sanitizeTitle('')).not.toBeNull();
       expect(sanitizeTitle('')).not.toBeUndefined();
     });
+  });
+});
+
+describe('opening', () => {
+  it('uses the line as-is when it fits', () => {
+    expect(opening('How do I deploy this?')).toBe('How do I deploy this?');
+  });
+
+  it('collapses the whitespace a paste brings with it', () => {
+    expect(opening('  hello\n\n  world  ')).toBe('hello world');
+  });
+
+  it('clips a long line at a word, not mid-word', () => {
+    const line =
+      'I would like to understand how the threshold signing ceremony reaches a quorum';
+    const got = opening(line);
+    expect(got.length).toBeLessThanOrEqual(61);
+    expect(got.endsWith('…')).toBe(true);
+    expect(got.slice(0, -1)).toBe(line.slice(0, got.length - 1));
+    expect(got).not.toMatch(/\s…$/);
+  });
+
+  it('clips mid-word only when the first word is longer than the limit', () => {
+    const got = opening('x'.repeat(200));
+    expect(got).toBe('x'.repeat(60) + '…');
+  });
+
+  it('is empty when the conversation opened without text', () => {
+    expect(opening('')).toBe('');
+    expect(opening('   \n  ')).toBe('');
+    expect(opening(undefined as unknown as string)).toBe('');
+    expect(opening(null as unknown as string)).toBe('');
+    expect(opening(42 as unknown as string)).toBe('');
+  });
+
+  it('never returns the word this whole change exists to remove', () => {
+    expect(opening('what is 2+2')).not.toMatch(/untitled/i);
   });
 });

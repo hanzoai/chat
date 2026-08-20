@@ -1,4 +1,4 @@
-const { isEnabled, sanitizeTitle } = require('@hanzochat/api');
+const { isEnabled, opening, sanitizeTitle } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
 const { CacheKeys } = require('@hanzochat/data-provider');
 const { saveConvo } = require('~/models/Conversation');
@@ -73,7 +73,7 @@ const addTitle = async (req, { text, responseText, conversationId }) => {
     );
   } catch (error) {
     logger.error('[addTitle] Error generating title:', error);
-    const fallbackTitle = text.length > 40 ? text.substring(0, 37) + '...' : text;
+    const fallbackTitle = opening(text);
     await titleCache.set(key, fallbackTitle, 120000);
     await saveConvo(
       req,
