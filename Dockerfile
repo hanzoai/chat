@@ -44,23 +44,11 @@ RUN \
 
 COPY --chown=node:node . .
 
-# Bake the publishable ingest key into the client bundle. Build-time by necessity:
-# Vite inlines import.meta.env at build, so a value delivered at runtime cannot
-# reach an already-compiled bundle.
-#
-# Without it every beacon reaches cloud unkeyed, takes the anonymous lane, and has
-# its track/identify/group dropped — answered 200, so nothing surfaces the loss.
-#
-# EVENT_INGEST_KEY is the name in KMS and on the --build-arg; VITE_ is added here
-# because Vite's envPrefix is what makes a var inlinable. The prefix is a property
-# of this build, so it is applied in this build file and the secret store keeps the
-# ONE plain name. No default: a credential is supplied or it is absent, never
-# hardcoded. Absent → the anonymous lane, same as before.
-#
-# (This slot previously carried a Umami VITE_ANALYTICS_SITE_ID whose index.html
-# placeholder no longer exists — telemetry is the ONE @hanzo/event client.)
-ARG EVENT_INGEST_KEY
-ENV VITE_EVENT_INGEST_KEY=$EVENT_INGEST_KEY
+# No ingest key is baked, and that is deliberate — see client/src/Providers/
+# AnalyticsProvider.tsx. Chat is multi-org: @hanzo/event resolves the outgoing
+# credential as `ingestKey ?? token`, so a baked key would REPLACE every signed-in
+# user's own bearer and file all of their events under the key's single org.
+# The user's IAM bearer is the credential here, and it needs no build arg.
 
 # `&&`, not `;`. With `;` the RUN exits with the status of the LAST command, so a
 # failed `pnpm run frontend` was masked by a successful `pnpm store prune` and the
