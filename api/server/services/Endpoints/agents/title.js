@@ -1,4 +1,4 @@
-const { isEnabled } = require('@hanzochat/api');
+const { isEnabled, opening } = require('@hanzochat/api');
 const { logger } = require('@hanzochat/data-schemas');
 const { CacheKeys } = require('@hanzochat/data-provider');
 const getLogStores = require('~/cache/getLogStores');
@@ -51,7 +51,11 @@ const addTitle = async (req, { text, response, client }) => {
       return;
     }
 
-    const title = await titlePromise;
+    // A conversation is named by the model when the model answers, and by the
+    // line the user opened with when it does not. Titling is a second model
+    // call: it times out, it is refused on a free route, the gateway answers it
+    // with an envelope. None of that is a reason for a chat to have no name.
+    const title = (await titlePromise) || opening(text);
     if (!abortController.signal.aborted) {
       abortController.abort();
     }

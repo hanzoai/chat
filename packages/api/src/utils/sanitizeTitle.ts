@@ -28,3 +28,33 @@ export function sanitizeTitle(rawTitle: string): string {
   // Step 5: Return trimmed result or fallback if empty
   return trimmed.length > 0 ? trimmed : DEFAULT_FALLBACK;
 }
+
+/**
+ * The name a conversation carries when the model did not give it one: the
+ * opening line the user typed, clipped to fit a sidebar.
+ *
+ * Titling is a model call and model calls fail. When one does, the conversation
+ * has to be called something, and the opening line is the one name that is
+ * always already there — no second call, nothing to time out. Empty only when
+ * the conversation opened without text at all (an image, a file), which is the
+ * one case with nothing to read.
+ *
+ * @param text - The user's first message.
+ * @returns A name, or '' when the opening carried no text.
+ */
+export function opening(text: string): string {
+  const LIMIT = 60;
+
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  const line = text.replace(/\s+/g, ' ').trim();
+  if (line.length <= LIMIT) {
+    return line;
+  }
+
+  const cut = line.slice(0, LIMIT);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > LIMIT / 2 ? cut.slice(0, lastSpace) : cut) + '…';
+}
