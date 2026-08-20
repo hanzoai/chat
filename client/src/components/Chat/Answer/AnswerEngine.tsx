@@ -13,7 +13,6 @@ import ConversationStarters from '~/components/Chat/Input/ConversationStarters';
 import { Notice } from '~/components/Free';
 import AnswerComposer from './AnswerComposer';
 import AnswerView from './AnswerView';
-import Modes from './Modes';
 
 /**
  * The answer engine — hanzo.chat's default surface.
@@ -126,21 +125,6 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const hasResult = answer.query !== '';
   const { run, stop } = answer;
 
-  // Leaving a web mode hides both the answer and its Stop button, so the switch
-  // is the last chance to end the run — otherwise a billed stream finishes with
-  // nothing on screen and no way to reach it.
-  const changeMode = useCallback(
-    (m: SearchMode | 'chat') => {
-      // Side effect stays OUT of the updater — an updater must be pure, and
-      // React invokes it twice under StrictMode.
-      if (m !== mode && mode !== 'chat') {
-        stop();
-      }
-      setMode(m);
-    },
-    [mode, stop],
-  );
-
   const ask = useCallback(
     (text: string, m: SearchMode) => run(text, { mode: m, model: model || undefined, sources }),
     [run, model, sources],
@@ -244,14 +228,6 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
             first message of the day is sent from, so it is where a spent balance
             is met, and the offer has to be heard here or it is not heard at all. */}
         <Notice />
-        {/* The mode row is the one thing on the arrival screen that is about the
-            product rather than the visitor's question, and a phone has no room to
-            spend on it before they have asked anything. It returns the moment
-            there is a session — and at every width above a phone. */}
-        <div className={cn('mb-2 px-1', !isAuthenticated && 'max-sm:hidden')}>
-          <Modes mode={mode} setMode={changeMode} />
-        </div>
-
         {isChat ? (
           <>
             <ChatForm index={index} />

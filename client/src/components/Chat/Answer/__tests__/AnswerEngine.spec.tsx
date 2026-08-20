@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
 /**
@@ -63,45 +62,30 @@ const renderAt = (path = '/') =>
   );
 
 describe('AnswerEngine default mode', () => {
-  it('opens on chat, the mode that works without signing in', () => {
-    renderAt();
-
-    expect(screen.getByRole('button', { name: 'com_answer_mode_chat' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(screen.getByRole('button', { name: 'com_answer_mode_search' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
-  });
-
-  it('mounts the chat composer, not the search one', () => {
+  it('mounts the chat composer, and no other', () => {
     renderAt();
 
     expect(screen.getByTestId('chat-composer')).toBeInTheDocument();
     expect(screen.queryByTestId('search-composer')).not.toBeInTheDocument();
   });
 
-  it('still opens on chat for a deep link that carries chat intent', () => {
-    renderAt('/c/new?q=hello&submit=true');
-
-    expect(screen.getByRole('button', { name: 'com_answer_mode_chat' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-  });
-
-  it('lets the visitor choose search — the default is not a restriction', async () => {
+  it('offers no mode switch — chat is the whole landing', () => {
     renderAt();
 
-    await userEvent.click(screen.getByRole('button', { name: 'com_answer_mode_search' }));
+    for (const key of [
+      'com_answer_mode_chat',
+      'com_answer_mode_search',
+      'com_answer_mode_news',
+      'com_answer_mode_research',
+    ]) {
+      expect(screen.queryByRole('button', { name: key })).not.toBeInTheDocument();
+    }
+  });
 
-    expect(screen.getByRole('button', { name: 'com_answer_mode_search' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(screen.getByTestId('search-composer')).toBeInTheDocument();
+  it('still mounts chat for a deep link that carries chat intent', () => {
+    renderAt('/c/new?q=hello&submit=true');
+
+    expect(screen.getByTestId('chat-composer')).toBeInTheDocument();
   });
 });
 
@@ -136,13 +120,6 @@ describe('the landing carries the free offer', () => {
     expect(screen.getByTestId('free-offer')).toBeInTheDocument();
   });
 
-  it('and in the web modes, which run the other composer', async () => {
-    renderAt();
-    await userEvent.click(screen.getByRole('button', { name: 'com_answer_mode_search' }));
-
-    expect(screen.getByTestId('search-composer')).toBeInTheDocument();
-    expect(screen.getByTestId('free-offer')).toBeInTheDocument();
-  });
 });
 
 describe('the conversation column has ONE width law', () => {
