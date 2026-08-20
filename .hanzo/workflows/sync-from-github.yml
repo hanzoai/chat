@@ -4,7 +4,7 @@ name: Sync from GitHub
 # on github.com/hanzoai/chat. Nothing carried commits from there to here, so a
 # push to GitHub sat unbuilt until somebody noticed and pushed by hand.
 #
-# Measured 2026-08-08: forge/main was two commits behind origin/main, and one of
+# Measured 2026-08-08: Hanzo Git/main was two commits behind origin/main, and one of
 # them was a shipped fix. `git push` had reported success — about GitHub, which
 # is not the plane that builds. hanzo.app has had this workflow since the same
 # failure bit it twice (07-23, 07-24, each needing a manual port-forward push);
