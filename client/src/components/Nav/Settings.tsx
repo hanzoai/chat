@@ -149,7 +149,11 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black opacity-50 dark:opacity-80" aria-hidden="true" />
+          {/* The scrim is DECLARED, not painted here. `@hanzo/ui/glass.css` owns
+              one dim for every floating panel in the estate, and this dialog was
+              hand-rolling a second one — a translucent black under a further
+              `opacity`, which is the double dim that sheet exists to end. */}
+          <div data-slot="dialog-overlay" className="fixed inset-0" aria-hidden="true" />
         </TransitionChild>
 
         <TransitionChild
@@ -161,9 +165,18 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
           leaveTo="opacity-0 scale-95"
         >
           <div className={cn('fixed inset-0 flex w-screen items-center justify-center p-4')}>
+            {/* Same idea for the panel: a surface is glass because of what it
+                IS, so it says what it is and the sheet paints it. This carried
+                `backdrop-blur-2xl` over an OPAQUE `bg-background`, which is a
+                blur with nothing to see through — the one combination that
+                costs a compositor layer and returns nothing. The slot brings
+                the material, the blur and elevation-3 together, so Settings
+                stops being the one panel in the app made of a different
+                substance than every menu that opens beside it. */}
             <DialogPanel
+              data-slot="dialog-content"
               className={cn(
-                'max-h-[90vh] overflow-hidden rounded-xl rounded-b-lg bg-background pb-6 shadow-2xl backdrop-blur-2xl animate-in sm:rounded-2xl md:w-[680px]',
+                'max-h-[90vh] overflow-hidden rounded-xl rounded-b-lg pb-6 animate-in sm:rounded-2xl md:w-[680px]',
               )}
             >
               <DialogTitle

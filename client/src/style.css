@@ -455,30 +455,32 @@
   }
 }
 
-/* The sidebar is the LIGHTEST glass in the app, and it is the one surface where
-   that is a legibility decision rather than a taste one.
+/* A COLUMN is the lightest glass in the app, and that is a legibility decision
+   rather than a taste one.
 
-   `.glass` fills at 72% ground, which is the right weight for a menu that opens
-   for a second over content you are already reading. The sidebar is not that:
-   it stands for the whole height of the window, all the time, against a moving
-   reef. At 72% it read as a dark slab with a video faintly bruising through the
-   bottom of it — the worst of both, neither honest chrome nor honest glass.
+   Two surfaces are this kind — the sidebar on the left, the side panel on the
+   right — and they are the same thing seen twice: full-height chrome standing
+   beside the conversation for as long as the window is open. That is what makes
+   them different from a menu. `.glass` fills at 72%, which is right for
+   something that opens for a second over content you are already reading; a
+   column is never a second, it is always. At 72% both read as dark slabs with a
+   reef faintly bruising through the bottom — the worst of both, neither honest
+   chrome nor honest glass.
 
-   So it goes lighter than the composer (86%) and heavier than a chip (34%): far
-   enough through to see the reef move behind the column, solid enough that a
-   list of conversation titles stays readable over whatever swims past. The blur
-   does the rest of the work — it is what turns footage into a ground instead of
-   a distraction, which is why this is inside `@supports`: a browser that cannot
-   blur keeps `.glass`'s heavier fill, because a thin unblurred wash over moving
-   video is unreadable.
+   So a column goes lighter than the composer (86%) and heavier than a chip
+   (34%): far enough through to watch the footage move behind it, solid enough
+   that a list of titles or a form of labels stays readable over whatever swims
+   past. The blur does the rest — it is what turns footage into a ground instead
+   of a distraction, which is why this is inside `@supports`: a browser that
+   cannot blur keeps `.glass`'s heavier fill, because a thin unblurred wash over
+   moving video is unreadable.
 
-   The rim is the column's only edge. It floats over the conversation while a
-   pointer is on it, and a floated panel with no edge has no boundary — the eye
-   cannot tell where the sidebar stops and the reef starts. */
+   Fill only. Each column's EDGE is a border on the element that has one, so
+   there is one mechanism for edges and one for material, rather than an inset
+   shadow here quietly doing a border's job on one side of the app. */
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .glass.hz-nav {
+  .glass.hz-column {
     background-color: color-mix(in oklab, var(--background) 56%, transparent) !important;
-    box-shadow: inset -1px 0 0 0 color-mix(in oklab, var(--text-primary) 8%, transparent);
   }
 }
 
