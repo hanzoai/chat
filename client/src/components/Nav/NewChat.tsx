@@ -20,10 +20,27 @@ import { cn } from '~/utils';
 export default function NewChat({
   toggleNav,
   subHeaders,
-  collapsed,
+  pinned,
 }: {
   toggleNav: () => void;
-  collapsed?: boolean;
+  /**
+   * Is the sidebar PINNED open — as opposed to merely drawn open because a
+   * pointer is resting on the rail?
+   *
+   * The two are different questions and the toggle answers only this one. It
+   * used to read `collapsed`, which is about how wide the column is DRAWN, and
+   * that was fine while the only way to be wide was to be pinned. Once the rail
+   * peeks on hover it stopped being fine in the sharpest possible way: hovering
+   * the rail widened it, the head swapped to the expanded branch, and the
+   * button under the pointer changed from "Open sidebar" to "Close sidebar"
+   * before the click landed. Open became unreachable — the pointer's arrival
+   * was what destroyed the control it was arriving at.
+   *
+   * So the head follows `pinned` and only the body below it follows the drawn
+   * width: unpinned — rail or peek — the head is the mark, offering "Open",
+   * because opening is exactly what is left to do.
+   */
+  pinned?: boolean;
   subHeaders?: React.ReactNode;
 }) {
   const localize = useLocalize();
@@ -42,15 +59,29 @@ export default function NewChat({
 
   return (
     <>
+      {/* THE HEAD DOES NOT MOVE WHEN THE RAIL PEEKS.
+          It keys on `pinned`, and it is pinned to the rail's own 56px box while
+          unpinned, so the mark sits at the same x and y whether the column is
+          drawn 56 wide or 260. Everything below — destinations, search, the
+          list, the foot — is free to widen, because none of it is what the
+          pointer is travelling towards.
+
+          Keying this on `collapsed` instead put a moving target under an
+          arriving pointer: hovering the rail widened the column, the head
+          swapped to the expanded branch, and the control the pointer was aimed
+          at was replaced by a different element ~200px to the right, mid-flight.
+          Measured — the click landed on nothing and the sidebar never opened.
+          That is the same class of defect that got hover-to-expand thrown out
+          of this repo once already; it does not come back through the head. */}
       <div
         className={cn(
           'flex',
-          collapsed === true
-            ? 'flex-col items-center gap-0.5 py-2'
+          pinned === false
+            ? 'w-14 flex-col items-center gap-0.5 py-2'
             : 'items-center justify-between px-0.5 py-[2px] md:py-2',
         )}
       >
-        {collapsed === true ? (
+        {pinned === false ? (
           <TooltipAnchor
             description={localize('com_nav_open_sidebar')}
             render={
@@ -88,7 +119,7 @@ export default function NewChat({
         ) : (
           <BrandCorner />
         )}
-        {collapsed === true ? null : (
+        {pinned === false ? null : (
           /* The sidebar head is the mark and the collapse toggle, nothing else
              (owner call). Compose lives in the view header, right of the
              sidebar, because it acts on the open conversation.

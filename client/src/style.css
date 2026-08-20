@@ -455,6 +455,33 @@
   }
 }
 
+/* The sidebar is the LIGHTEST glass in the app, and it is the one surface where
+   that is a legibility decision rather than a taste one.
+
+   `.glass` fills at 72% ground, which is the right weight for a menu that opens
+   for a second over content you are already reading. The sidebar is not that:
+   it stands for the whole height of the window, all the time, against a moving
+   reef. At 72% it read as a dark slab with a video faintly bruising through the
+   bottom of it — the worst of both, neither honest chrome nor honest glass.
+
+   So it goes lighter than the composer (86%) and heavier than a chip (34%): far
+   enough through to see the reef move behind the column, solid enough that a
+   list of conversation titles stays readable over whatever swims past. The blur
+   does the rest of the work — it is what turns footage into a ground instead of
+   a distraction, which is why this is inside `@supports`: a browser that cannot
+   blur keeps `.glass`'s heavier fill, because a thin unblurred wash over moving
+   video is unreadable.
+
+   The rim is the column's only edge. It floats over the conversation while a
+   pointer is on it, and a floated panel with no edge has no boundary — the eye
+   cannot tell where the sidebar stops and the reef starts. */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass.hz-nav {
+    background-color: color-mix(in oklab, var(--background) 56%, transparent) !important;
+    box-shadow: inset -1px 0 0 0 color-mix(in oklab, var(--text-primary) 8%, transparent);
+  }
+}
+
 /* The gui Switch paints its track `$color3` in BOTH states, which on the dark
    settings surface is near-invisible — an OFF toggle read as a white thumb
    floating with no track under it, and ON was barely distinguishable. The thumb

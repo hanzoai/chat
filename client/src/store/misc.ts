@@ -1,7 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 import { TAttachment } from '@hanzochat/data-provider';
-import { SMALL_SCREEN_QUERY } from '@hanzochat/client';
 import { atomWithLocalStorage } from './utils';
 import { BadgeItem } from '~/common';
 
@@ -70,14 +69,17 @@ const chatBadges = atomWithLocalStorage<Pick<BadgeItem, 'id'>[]>('chatBadges', [
  * translate on the content pane), which is how one boolean produced a drawer
  * that overlaid the page and shoved it sideways at the same time.
  *
- * The first-visit default is the viewport's answer: a phone starts shut, a
- * desktop starts open. After that the stored value is the answer, which is why
- * this is read once at module load rather than on every render.
+ * SHUT on the first visit, at every width. This is the PINNED state, not
+ * "is there a sidebar" — unpinned, the desktop still has the rail, and the rail
+ * reaches the list, search and the account through the mark. So the default
+ * costs a visitor nothing and buys the thing they came for: the conversation,
+ * centred, with the reef behind it instead of a column of chrome they have not
+ * asked for yet. A phone was already shut; this is the desktop joining it.
+ *
+ * After that the stored value is the answer, which is why this is read once at
+ * module load rather than on every render.
  */
-const navVisible = atomWithLocalStorage(
-  'navVisible',
-  typeof window === 'undefined' ? true : !window.matchMedia(SMALL_SCREEN_QUERY).matches,
-);
+const navVisible = atomWithLocalStorage('navVisible', false);
 
 export default {
   hideBannerHint,

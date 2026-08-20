@@ -88,8 +88,17 @@ const Nav = memo(
      * column keeps its stack, which is why compose sits BELOW the mark there.
      * Below md there is no rail: the sidebar is a drawer and collapse is a
      * desktop affordance.
+     *
+     * `peek` is a pointer resting on the rail, and it is deliberately not
+     * persisted: a glance is not a preference, and one that outlived the
+     * pointer would be a sidebar nobody opened.
+     *
+     * Collapsed follows what is DRAWN, not what is pinned — a peeked column is
+     * 260px wide, so it has to carry 260px of content. Reading `navVisible`
+     * alone here would float a full-width panel holding four rail icons.
      */
-    const collapsed = !isSmallScreen && !navVisible;
+    const [peek, setPeek] = useState(false);
+    const collapsed = !isSmallScreen && !navVisible && !peek;
     const [newUser, setNewUser] = useLocalStorage('newUser', true);
     const [isChatsExpanded, setIsChatsExpanded] = useLocalStorage('chatsExpanded', true);
     const [showLoading, setShowLoading] = useState(false);
@@ -259,7 +268,7 @@ const Nav = memo(
             <MemoNewChat
               subHeaders={subHeaders}
               toggleNav={toggleNavVisible}
-              collapsed={collapsed}
+              pinned={isSmallScreen ? undefined : navVisible}
             />
             {/* The chat-history list is for someone who HAS history. A
                 signed-out visitor never fetches any (the query is gated on the
@@ -324,20 +333,41 @@ const Nav = memo(
       );
     }
 
-    // Desktop: the sidebar is ALWAYS on screen — the full column, or the rail.
-    // Only its width moves. `active` is unconditional here because it is what
-    // `.nav` reads as "in flow and visible" (mobile.css); the state that used
-    // to drop it was the state that translated the whole panel away.
-    const width = navVisible ? sidebarWidth : NAV_WIDTH.RAIL;
+    /**
+     * Desktop: the sidebar is ALWAYS on screen — the full column, or the rail.
+     * `active` is unconditional here because it is what `.nav` reads as "in
+     * flow and visible" (mobile.css); the state that used to drop it was the
+     * state that translated the whole panel away.
+     *
+     * TWO widths, and they are not the same measurement. `held` is what the
+     * sidebar takes OUT OF THE ROW; `shown` is how wide it is drawn. Pinned
+     * they agree. Unpinned they do not: the rail holds 56 and, while a pointer
+     * is on it, draws 260 — over the conversation, taking nothing.
+     *
+     * That difference is the whole reason hover-to-open is allowed here at all.
+     * A rail that widens IN FLOW slides the page sideways because a pointer
+     * crossed it, out from under whatever that pointer was reaching for, and
+     * this repo threw one of those away for exactly that. Floating it costs the
+     * page no motion, so the objection is answered rather than overruled.
+     * Pinning still reflows — that one is a deliberate act, and movement is the
+     * feedback that it happened.
+     *
+     * `overflow-visible` on the holder is load-bearing: the old `overflow-hidden`
+     * would clip the floated column back to 56 and the peek would draw nothing.
+     */
+    const shown = navVisible || peek ? sidebarWidth : NAV_WIDTH.RAIL;
+    const held = navVisible ? sidebarWidth : NAV_WIDTH.RAIL;
     return (
       <div
-        className="flex-shrink-0 overflow-hidden"
-        style={{ width, transition: 'width 0.2s ease-out' }}
+        className="relative flex-shrink-0 overflow-visible"
+        style={{ width: held, transition: 'width 0.2s ease-out' }}
+        onMouseEnter={() => setPeek(true)}
+        onMouseLeave={() => setPeek(false)}
       >
         <div
           data-testid="nav"
-          className="nav active h-full glass bg-surface-primary-alt"
-          style={{ width }}
+          className="nav active absolute left-0 top-0 h-full glass hz-nav"
+          style={{ width: shown, transition: 'width 0.2s ease-out' }}
         >
           {sidebarContent}
         </div>
