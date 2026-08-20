@@ -565,4 +565,63 @@ test.describe('window chrome', () => {
     console.log('PINNED', JSON.stringify(pinned));
     expect(pinned.composer).toBeGreaterThan(rest.composer);
   });
+  /**
+   * A COLUMN and a DIALOG are glass, and both had opted out by never saying
+   * what they were.
+   *
+   * `@hanzo/ui/glass.css` paints by identity — `.glass` or a `data-slot` — so a
+   * surface that paints its own `bg-background` instead is not a styling choice,
+   * it is a surface that never joined the system. Settings was the loudest case:
+   * it carried `backdrop-blur-2xl` OVER an opaque fill, which is a blur with
+   * nothing to see through, costing a compositor layer and returning nothing.
+   */
+  test('the columns and the settings dialog are made of glass', async ({ page }) => {
+    await page.goto('/c/new');
+    await page.waitForSelector('[data-testid="nav"]');
+
+    const material = (selector: string) =>
+      page.evaluate((sel) => {
+        const el = document.querySelector(sel) as HTMLElement | null;
+        if (!el) return null;
+        const cs = getComputedStyle(el);
+        /* Two notations reach this, and reading only one of them reports every
+           colour in the other as fully opaque: `oklab(L a b / .56)` from a
+           color-mix, and `rgba(r, g, b, .8)` from a plain token. */
+        const colour = cs.backgroundColor;
+        const slash = /\/\s*([\d.]+)\s*\)/.exec(colour)?.[1];
+        const comma = /^rgba\([^)]*,\s*([\d.]+)\s*\)$/.exec(colour)?.[1];
+        return {
+          alpha: Number(slash ?? comma ?? 1),
+          blurred: (cs.backdropFilter || cs.webkitBackdropFilter || 'none') !== 'none',
+        };
+      }, selector);
+
+    const nav = await material('[data-testid="nav"]');
+    console.log('NAV', JSON.stringify(nav));
+    /* Lighter than the composer (86%) and heavier than a chip (34%). */
+    expect(nav!.alpha).toBeCloseTo(0.56, 2);
+    expect(nav!.blurred).toBe(true);
+
+    /* Settings lives in the sidebar's FOOT, and the foot is one of the things a
+       56px rail cannot say — so the column has to be open before there is a
+       control to click. Pin it rather than peek it: a peek ends the moment the
+       pointer leaves for the button. */
+    await page.getByTestId('open-sidebar-button').click();
+    await page.getByRole('button', { name: /^Settings$/i }).first().click();
+    await page.waitForSelector('[data-slot="dialog-content"]');
+    const dialog = await material('[data-slot="dialog-content"]');
+    const scrim = await material('[data-slot="dialog-overlay"]');
+    console.log('DIALOG', JSON.stringify({ dialog, scrim }));
+
+    /* The shared material, not a hand-rolled opaque one. */
+    expect(dialog!.alpha).toBeLessThan(1);
+    expect(dialog!.blurred).toBe(true);
+    /* ONE dim, at full opacity — not a translucent black under a further
+       `opacity`, which is the double dim the sheet exists to end. */
+    const dimmed = await page.evaluate(
+      () => getComputedStyle(document.querySelector('[data-slot="dialog-overlay"]')!).opacity,
+    );
+    expect(dimmed).toBe('1');
+    expect(scrim!.alpha).toBeLessThan(1);
+  });
 });
