@@ -9,6 +9,13 @@ import Header from './Header';
  * to be written twice under opposite `isSmallScreen` conditions, which is how
  * they drifted to opposite ends of the same header.
  *
+ * PRIVATE IS NO LONGER ONE OF THEM. It does not act on the open conversation —
+ * it decides what the NEXT one is, which is why it hid itself the moment a
+ * thread had a message in it. A control about starting, seated among controls
+ * about continuing, at the opposite end of the row from the button that starts
+ * things. It lives inside HeaderNewChat now, revealed on hover, which is why
+ * this file sees three actions at the right end and not four.
+ *
  * A control also belongs here only if this is its ONE home. Bookmarking is not:
  * the conversation's own row menu offers it under the same permission with the
  * same tags. Neither is maximize: it is a switch in Settings → Chat and a row in
@@ -115,12 +122,14 @@ describe.each([
     render(<Header />);
   });
 
-  it('keeps share and temporary chat at the right end, in one copy', () => {
+  it('keeps share at the right end, in one copy', () => {
     const actions = screen.getByTestId('header-actions');
     expect(within(actions).getByTestId('share')).toBeInTheDocument();
-    expect(within(actions).getByTestId('temporary')).toBeInTheDocument();
     expect(screen.getAllByTestId('share')).toHaveLength(1);
-    expect(screen.getAllByTestId('temporary')).toHaveLength(1);
+  });
+
+  it('does not carry private anywhere — it belongs to starting, not continuing', () => {
+    expect(screen.queryByTestId('temporary')).not.toBeInTheDocument();
   });
 
   it('leaves the mark and the sidebar toggle to the sidebar', () => {
@@ -142,11 +151,10 @@ describe.each([
   // the marker was never going to render either way. Reading the group's actual
   // children is what refuses a bookmark button, a maximize button, or anything
   // else growing back into the row.
-  it('carries these four actions and nothing else', () => {
+  it('carries these three actions and nothing else', () => {
     const actions = screen.getByTestId('header-actions');
     expect([...actions.children].map((c) => c.getAttribute('data-testid'))).toEqual([
       'share',
-      'temporary',
       'canvas',
       'panel-controls',
     ]);

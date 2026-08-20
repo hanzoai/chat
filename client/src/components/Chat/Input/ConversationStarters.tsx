@@ -1,6 +1,7 @@
-import { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
-import { AppWindow } from 'lucide-react';
+import { useSetAtom } from 'jotai';
+import { AppWindow, MessageCircleDashed } from 'lucide-react';
 import { EModelEndpoint, Constants, replaceSpecialVars } from '@hanzochat/data-provider';
 import {
   useChatContext,
@@ -11,31 +12,48 @@ import {
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
 import { cn, getIconEndpoint, getEntity, openAppBuilder } from '~/utils';
 import { useAuthContext, useSubmitMessage, useLocalize } from '~/hooks';
+import store from '~/store';
 
 /** `label` is the chip caption; `text` is the message that gets sent. */
 type Starter = { label: string; text: string };
 
 /**
- * Curated fallback chips for plain-model chats (no agent/assistant-specific
+ * A chip either SENDS a prompt or DOES something. Both were always in this row —
+ * "Build an app" leaves for the builder rather than sending anything — but the
+ * action was hand-written after the loop, so the row was one list plus an
+ * exception. Two kinds in ONE list means the order is a property of the list and
+ * an action can sit anywhere in it, which is what lets the row lead with what
+ * you can DO and follow with what you can ask.
+ */
+type Chip = { label: string; icon?: React.ReactNode; solid?: boolean } & (
+  | { text: string; act?: never }
+  | { act: () => void; text?: never }
+);
+
+/**
+ * Curated fallback prompts for plain-model chats (no agent/assistant-specific
  * starters). Clicking one SENDS it, so every `text` is a complete, standalone
  * prompt that stands on its own — the short `label` is only the caption.
+ *
+ * Two, not four. Each names a DIFFERENT thing this product does — it writes and
+ * runs code, and it makes pictures — where Summarize / Explain / Brainstorm were
+ * three ways of saying "it answers questions", which the composer above them
+ * already says. The row is what the app can do that you might not guess.
  */
 const DEFAULT_STARTERS: Starter[] = [
-  { label: 'Summarize', text: 'Summarize the text I paste next into five bullet points.' },
   {
     label: 'Write code',
     text: 'Write a Python script that renames every file in a folder to a slugified version of its name.',
   },
-  { label: 'Explain', text: 'Explain how HTTPS keeps a connection private, in plain language.' },
   {
-    label: 'Brainstorm',
-    text: 'Brainstorm ten ideas for a weekend side project I could ship in two days.',
+    label: 'Make an image',
+    text: 'Make an image of a paper boat crossing a puddle at night, lit by a streetlight.',
   },
 ];
 
 const ConversationStarters = () => {
   const localize = useLocalize();
-  const { user, isAuthenticated } = useAuthContext();
+  const { user } = useAuthContext();
   const { conversation, isSubmitting } = useChatContext();
   const agentsMap = useAgentsMapContext();
   const assistantMap = useAssistantsMapContext();
@@ -115,54 +133,74 @@ const ConversationStarters = () => {
   );
   // "Build an app" hands the composer intent to the hanzo.app builder (new tab).
   const openBuilder = useCallback(() => openAppBuilder(composerText), [composerText]);
+  const setIsTemporary = useSetAtom(store.isTemporary);
 
-  if (!starters.length) {
+  /**
+   * The row, in the order a first-time reader should meet it: what you can DO,
+   * then what you can ASK.
+   *
+   * The two actions only join a DEFAULT row. An agent's author wrote their
+   * starters and did not ask for a builder handoff or a privacy switch beside
+   * them, so an authored row is left exactly as authored.
+   */
+  const chips: Chip[] = useMemo(() => {
+    const prompts: Chip[] = starters
+      .slice(0, Constants.MAX_CONVO_STARTERS)
+      .map(({ label, text }) => ({ label, text }));
+    if (!isDefault) {
+      return prompts;
+    }
+    return [
+      {
+        label: localize('com_ui_build_app'),
+        icon: <AppWindow className="icon-sm" aria-hidden="true" />,
+        act: openBuilder,
+      },
+      {
+        label: localize('com_ui_temporary'),
+        icon: <MessageCircleDashed className="icon-sm" aria-hidden="true" />,
+        // SOLID, like the composer it turns black. Private is the one surface in
+        // this app you cannot see through, and the chip that switches it on is
+        // the first place that rule is visible — so the row shows you what you
+        // are about to get before you get it.
+        solid: true,
+        act: () => setIsTemporary(true),
+      },
+      ...prompts,
+    ];
+  }, [isDefault, starters, localize, openBuilder, setIsTemporary]);
+
+  if (!chips.length) {
     return null;
   }
 
   return (
     <>
       <div className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-1.5 px-4">
-      {starters.slice(0, Constants.MAX_CONVO_STARTERS).map(({ label, text }, index) => (
+      {chips.map(({ label, text, act, icon, solid }, index) => (
         <button
           key={index}
-          onClick={() => send(text)}
-          disabled={isSubmitting}
+          onClick={() => (act ? act() : send(text as string))}
+          disabled={isSubmitting && act == null}
           title={label}
           className={cn(
             // `glass hz-chip` — the same material family as the composer, but a
             // lighter liquid-glass fill (see style.css) so the landing video
             // reads through the suggestions instead of dark slabs on the hero.
-            'glass hz-chip min-h-11 max-w-full truncate rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
-            // On a phone the suggestions are ONE row, never an orphan. Signed
-            // out, only the first example shows (the rest were a menu the
-            // arriving visitor did not ask for). Signed in, two starters show
-            // and the rest step out below sm, so the row is two starters + the
-            // "Build an app" chip = three items, which fit one line at any phone
-            // width instead of dropping the build chip onto a lonely line
-            // beneath four. Desktop shows the full set.
-            ((!isAuthenticated && index > 0) || (isAuthenticated && index >= 2)) && 'max-sm:hidden',
+            'inline-flex min-h-11 max-w-full items-center gap-1 truncate rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
+            solid === true ? 'border border-border-medium bg-black' : 'glass hz-chip',
+            // On a phone the row is ONE row, never an orphan: the first two
+            // chips show and the rest step out. Indexing the RENDERED list is
+            // what keeps that true — the old rule counted prompts and then let
+            // the build chip through separately, so it depended on how many
+            // prompts happened to exist and on whether anyone was signed in.
+            index >= 2 && 'max-sm:hidden',
           )}
         >
+          {icon}
           {label}
         </button>
       ))}
-      {isDefault && (
-        <button
-          onClick={openBuilder}
-          title={localize('com_ui_build_app')}
-          // Same chip as its siblings — solid glass, not a dashed outline —
-          // so the row reads as one set. It keeps its icon to stay legible as
-          // the one that leaves for the builder.
-          className={cn(
-            'glass hz-chip inline-flex min-h-11 max-w-full items-center gap-1 truncate rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy motion-reduce:transition-none',
-            !isAuthenticated && 'max-sm:hidden',
-          )}
-        >
-          <AppWindow className="icon-sm" aria-hidden="true" />
-          {localize('com_ui_build_app')}
-        </button>
-      )}
       </div>
       {/* No closing pitch under the chips. A "Ship your first app today" action
           line used to sit here, and it went to the SAME builder the "Build an

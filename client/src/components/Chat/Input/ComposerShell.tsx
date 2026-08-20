@@ -23,7 +23,8 @@ export interface ComposerShellProps {
   /** Extra classes for the PANEL (padding and layout inside the box). */
   className?: string;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
-  /** A temporary chat says so with its edge, the one exemption from the ring. */
+  /** A temporary chat says so by being SOLID — the one surface here that is not
+   *  glass, because it is the one that is not being kept. */
   temporary?: boolean;
 }
 
@@ -48,7 +49,7 @@ export default function ComposerShell({
   // wider corner from that property and cannot follow a utility class.
   const radius = 'rounded-3xl';
   return (
-    <div className={cn('hz-composer w-full', temporary && 'opacity-90')}>
+    <div className={cn('hz-composer w-full', temporary && 'hz-private')}>
       <div
         onClick={onClick}
         className={cn(
@@ -64,8 +65,20 @@ export default function ComposerShell({
           // background at all — text floating on the video. `elevation-2` is the
           // pair glass expects: the sheet ships no shadow of its own, and on a
           // light page a 72%-white panel with no edge has none.
+          // A PRIVATE CHAT IS OPAQUE, and that is the whole idea rather than a
+          // colour choice: every other surface in this app is glass, so the one
+          // you can't see through is the one that isn't being kept. It reads
+          // without a legend, and it reads at a glance — which is what a mode
+          // with consequences needs, because the cost of not noticing it is
+          // asymmetric.
+          //
+          // It was a violet tint before, which said nothing (violet is not a
+          // meaning here) and said it faintly — `bg-violet-950/10` over glass is
+          // a 10% wash, so the reef still read straight through the box you were
+          // told was private. It was also the one violet left in a monochrome
+          // app after `--hanzo-accent` was overridden to white.
           temporary
-            ? 'border-violet-800/60 bg-violet-950/10'
+            ? 'border-border-medium bg-black'
             : 'glass elevation-2 border-transparent bg-surface-chat',
           className,
         )}

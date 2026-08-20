@@ -484,6 +484,17 @@
   }
 }
 
+/* A private composer takes NO blur, because there is nothing behind it to show.
+   `.hz-composer > .glass` further up lifts the fill and blurs it; the private
+   shell drops `glass` entirely, but the HOST still paints the ring and the halo,
+   and a blur on a host whose panel is opaque is a compositor layer bought for
+   nothing. Stated here so the two states of one control live beside each other
+   rather than in two files. */
+.hz-private > .field {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* The gui Switch paints its track `$color3` in BOTH states, which on the dark
    settings surface is near-invisible — an OFF toggle read as a white thumb
    floating with no track under it, and ON was barely distinguishable. The thumb

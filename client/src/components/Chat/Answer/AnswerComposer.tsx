@@ -4,7 +4,9 @@ import * as Ariakit from '@ariakit/react/menu';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import { DropdownPopup } from '@hanzochat/client';
 import ComposerShell from '~/components/Chat/Input/ComposerShell';
+import { useAtomValue } from 'jotai';
 import { useLocalize } from '~/hooks';
+import store from '~/store';
 
 /**
  * The grounded-search input. Rendered for the web modes only — chat mode uses the
@@ -44,6 +46,7 @@ export default function AnswerComposer({
   onStop,
 }: AnswerComposerProps) {
   const localize = useLocalize();
+  const isTemporary = useAtomValue(store.isTemporary);
   const [text, setText] = useState('');
   const [modelOpen, setModelOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -110,7 +113,12 @@ export default function AnswerComposer({
         picking Search or News swapped one composer for a differently-sized,
         differently-coloured one and the input jumped under the pointer.
       */}
-      <ComposerShell className="pb-0">
+      {/* Private is one rule and it has to hold on BOTH composers. This is the
+          one the landing renders, and it did not read the flag — so switching
+          private on from the landing turned nothing black and the reader was
+          told, by the absence of any change, that nothing had happened. The
+          chat composer had said it all along; this one simply never asked. */}
+      <ComposerShell className="pb-0" temporary={isTemporary}>
         <label htmlFor="answer-input" className="sr-only">
           {localize('com_answer_ask_placeholder')}
         </label>

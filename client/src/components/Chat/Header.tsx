@@ -2,7 +2,6 @@ import { HeaderNewChat } from './Menus';
 import CanvasToggle from './Menus/CanvasToggle';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
-import { TemporaryChat } from './TemporaryChat';
 import PanelControls from './PanelControls';
 
 export default function Header() {
@@ -29,7 +28,10 @@ export default function Header() {
           {/* New chat lives here now — right of the sidebar, with the controls
               that act on the open conversation — so the sidebar head is just
               the mark and the collapse toggle. No model pill (enso by default;
-              model choice is in Settings). */}
+              model choice is in Settings). Private is its neighbour, revealed on
+              hover: it decides what the NEXT conversation is, so it belongs
+              beside the button that starts one rather than at the far end of the
+              row among the controls that act on this one. */}
           <HeaderNewChat />
         </div>
 
@@ -41,7 +43,6 @@ export default function Header() {
             home is a second answer, and this row was invented to have one. */}
         <div className="flex items-center gap-2" data-testid="header-actions">
           <ExportAndShareMenu isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false} />
-          <TemporaryChat />
           {/* The right edge's mirror of the left sidebar button: it opens the
               canvas (the artifacts panel). Shows only when there is one. */}
           <CanvasToggle />

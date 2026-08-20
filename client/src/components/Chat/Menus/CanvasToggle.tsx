@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue } from 'jotai';
-import { PanelRight, PanelRightClose } from 'lucide-react';
+import { Frame } from 'lucide-react';
 import { TooltipAnchor, Button } from '@hanzochat/client';
 import { CONTROL } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
@@ -10,8 +10,14 @@ import store from '~/store';
  *
  * The left button opens the conversation rail; this one opens the CANVAS: the
  * panel beside the thread where a document, a deck, a spreadsheet, a site
- * preview, an image lives (whatever the model produced as an artifact). Two
- * edges, two panels, one symmetric pair.
+ * preview, an image lives (whatever the model produced as an artifact).
+ *
+ * It draws a FRAME, not a pane. The pane glyph belongs to the two panels that
+ * are chrome for the window — the sidebar and the control panel — and this one
+ * had been wearing the right-hand pane too, so the header carried one glyph on
+ * two buttons and named neither. What this opens is a thing the model MADE, and
+ * a frame is what you put one of those in. `aria-pressed` and the tooltip carry
+ * the open/shut state; the glyph carries which panel.
  *
  * It appears only when there is a canvas to show — an artifact exists — because
  * a toggle for an empty panel is a control that does nothing. Open, it closes
@@ -42,7 +48,7 @@ export default function CanvasToggle() {
           className={CONTROL}
           onClick={() => setVisible((v) => !v)}
         >
-          {visible ? <PanelRightClose aria-hidden="true" /> : <PanelRight aria-hidden="true" />}
+          <Frame aria-hidden="true" />
         </Button>
       }
     />
