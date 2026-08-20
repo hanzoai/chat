@@ -44,47 +44,11 @@ jobs:
           username: ${{ secrets.GHCR_USER }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # The publishable ingest key, from KMS — the only store secrets come from.
-      # Vite inlines import.meta.env at BUILD, so this cannot be delivered at
-      # runtime: an unkeyed bundle sends every beacon down cloud's anonymous lane,
-      # where track/identify/group are dropped and still answered 200.
-      #
-      # Same KMS surface and same key name the shared hanzoai/ci reusable uses for
-      # `build_secrets`, so the key has ONE name and ONE home no matter which
-      # pipeline builds. This repo builds bespoke (it is not on the reusable), so
-      # the fetch is spelled out here.
-      #
-      # Absence is ANNOUNCED, not swallowed: it is the exact silent degradation
-      # this key exists to fix. Non-fatal on purpose — a KMS hiccup must not block
-      # shipping the product — but it lands as a red annotation on the run.
-      - name: Fetch the ingest key from KMS
-        id: ingest
-        env:
-          KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
-          KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
-          KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://kms.hanzo.ai' }}
-        run: |
-          set -uo pipefail
-          if [ -z "${KMS_CLIENT_ID:-}" ] || [ -z "${KMS_CLIENT_SECRET:-}" ]; then
-            echo "::error::KMS credentials absent — shipping a bundle with no ingest key; every track/identify/group it emits will be dropped"
-            exit 0
-          fi
-          TOKEN=$(curl -sf "$KMS_ENDPOINT/v1/kms/auth/login" \
-            -H 'Content-Type: application/json' \
-            -d "{\"clientId\":\"$KMS_CLIENT_ID\",\"clientSecret\":\"$KMS_CLIENT_SECRET\"}" \
-            | jq -r '.accessToken // empty')
-          if [ -z "$TOKEN" ]; then
-            echo "::error::KMS login failed — shipping a bundle with no ingest key"; exit 0
-          fi
-          V=$(curl -sf "$KMS_ENDPOINT/v1/kms/orgs/hanzo/secrets/deploy/EVENT_INGEST_KEY?env=prod" \
-            -H "Authorization: Bearer $TOKEN" | jq -r '.secret.value // empty')
-          if [ -z "$V" ]; then
-            echo "::error::EVENT_INGEST_KEY absent from KMS (hanzo/deploy env=prod) — shipping a bundle with no ingest key"; exit 0
-          fi
-          echo "::add-mask::$V"
-          echo "key=$V" >> "$GITHUB_OUTPUT"
-          echo "ingest key resolved (${#V} chars)"
-
+      # No ingest key is fetched or baked. @hanzo/event resolves its credential as
+      # `ingestKey ?? token`, so a baked pk- REPLACES each signed-in user's bearer
+      # and files every org's events under the single org that minted the key. Chat
+      # is multi-org, so the user's own IAM bearer is the credential — nothing to
+      # build in. See client/src/Providers/AnalyticsProvider.tsx.
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -93,8 +57,6 @@ jobs:
           push: true
           provenance: false
           tags: ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }}
-          build-args: |
-            EVENT_INGEST_KEY=${{ steps.ingest.outputs.key }}
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GH_PAT }}
 

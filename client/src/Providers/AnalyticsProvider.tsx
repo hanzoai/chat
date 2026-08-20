@@ -12,19 +12,6 @@ import { useAuthContext } from '~/hooks/AuthContext';
 const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api.hanzo.ai';
 
 /**
- * Publishable ingest key (pk-…) — write-only, safe in the bundle. It resolves the
- * org server-side for requests that carry no bearer, which is how logged-out and
- * guest views (the landing IS the composer) reach the fail-closed door. Mint one
- * per org via POST /v1/keys with {"type":"publishable"}.
- *
- * Unset is NOT best-effort: cloud takes an unkeyed beacon down the anonymous lane,
- * whose allowlist admits only pageview and error. Every track/identify/group is
- * then dropped — and the caller still gets 200, so the loss is silent on both
- * ends. The key is what buys full-capability ingest.
- */
-const INGEST_KEY = import.meta.env.VITE_EVENT_INGEST_KEY?.trim() || undefined;
-
-/**
  * Consent gate — an explicit browser opt-out (Global Privacy Control, then legacy
  * Do-Not-Track) suppresses pageviews, events AND errors. This is the whole consent
  * surface: the client sends a stable id, never email/PII.
@@ -93,6 +80,24 @@ function AnalyticsBridge() {
  * pageview exactly once — observe must not patch history and double-count.
  * `enabled` is the one consent gate, shared by the client and autocapture.
  */
+/**
+ * NO PUBLISHABLE INGEST KEY IS PASSED, AND THAT IS DELIBERATE.
+ *
+ * Do not "fix" a dropped event by baking a pk- here or adding an EVENT_INGEST_KEY
+ * build arg. @hanzo/event resolves the outgoing credential as `ingestKey ?? token`
+ * — a key does not SUPPLEMENT the bearer, it REPLACES it. Chat is multi-org (a
+ * session's org is the verified IAM `owner` claim, api/server/controllers/auth/
+ * iamSession.js), and cloud stamps the tenant from whichever single credential
+ * arrives. So a baked key would file every org's users under the one org that
+ * minted it, and overwrite each user's own identity while doing it.
+ *
+ * The signed-in path needs no key: the user's own IAM bearer already resolves
+ * their org at FULL capability, which is why chat's signed-in pageviews land in
+ * their own tenant today. Logged-out and guest views carry no bearer and take the
+ * anonymous lane (pageview + error only, filed under `$public`) — the honest
+ * outcome for a visitor who has not identified themselves, and what that lane is
+ * for. Widening it for a multi-tenant app would cost tenant integrity.
+ */
 export default function AnalyticsProvider({ children }: { children: ReactNode }) {
   const { token } = useAuthContext();
 
@@ -107,7 +112,6 @@ export default function AnalyticsProvider({ children }: { children: ReactNode })
     () => ({
       product: 'chat',
       host: ANALYTICS_HOST,
-      ingestKey: INGEST_KEY,
       enabled,
       getToken: () => {
         const value = tokenRef.current;

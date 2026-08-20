@@ -6,12 +6,24 @@ import { render } from '@testing-library/react';
 // WHICH identifier is handed to identify() — rather than exercising the network or
 // a real session.
 const mockIdentify = jest.fn();
+// The config handed to the client is captured so the CREDENTIAL it carries can be
+// asserted directly — that is the other decision this file owns.
+const mockCaptured: { config?: Record<string, unknown> } = {};
 
 jest.mock('@hanzo/event/react', () => ({
   __esModule: true,
   useAnalytics: () => ({ identify: mockIdentify }),
   usePageview: () => {},
-  AnalyticsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AnalyticsProvider: ({
+    children,
+    config,
+  }: {
+    children: React.ReactNode;
+    config?: Record<string, unknown>;
+  }) => {
+    mockCaptured.config = config;
+    return <>{children}</>;
+  },
 }));
 
 jest.mock('@hanzo/observe/react', () => ({
@@ -46,8 +58,10 @@ import AnalyticsProvider from '~/Providers/AnalyticsProvider';
 describe('AnalyticsProvider identity', () => {
   beforeEach(() => {
     mockIdentify.mockClear();
+    mockCaptured.config = undefined;
     mockAuthState.user = undefined;
     mockAuthState.isAuthenticated = false;
+    mockAuthState.token = undefined;
   });
 
   it('identifies the visitor by their Hanzo IAM subject', () => {
@@ -92,5 +106,36 @@ describe('AnalyticsProvider identity', () => {
     render(<AnalyticsProvider>{null}</AnalyticsProvider>);
 
     expect(mockIdentify).not.toHaveBeenCalled();
+  });
+
+  it('carries no publishable ingest key — the credential is the user’s own bearer', () => {
+    // @hanzo/event resolves its credential as `ingestKey ?? token`, so a key does
+    // not supplement the bearer, it REPLACES it. Chat is multi-org, and cloud stamps
+    // the tenant from whichever single credential arrives — so a baked key would
+    // file every org's users under the one org that minted it and overwrite each
+    // user's own identity. The regression is invisible in the app (rows keep
+    // arriving, 200s all round), which is why it is pinned here.
+    mockAuthState.user = { id: 'chat-local-row-id', openidId: 'iam-sub-uuid' };
+    mockAuthState.isAuthenticated = true;
+    mockAuthState.token = 'iam-access-token';
+
+    render(<AnalyticsProvider>{null}</AnalyticsProvider>);
+
+    expect(mockCaptured.config).toBeDefined();
+    expect(mockCaptured.config).not.toHaveProperty('ingestKey');
+    expect((mockCaptured.config?.getToken as () => string | undefined)()).toBe('iam-access-token');
+  });
+
+  it('treats the cookie-session sentinel as anonymous, never as a bearer', () => {
+    // `token === 'session'` means cookie-session auth with no JWT. Forwarding that
+    // literal would send an unresolvable credential, which the door refuses — and a
+    // refused credential is not an error, it is the anonymous lane plus a 200.
+    mockAuthState.user = { id: 'chat-local-row-id', openidId: 'iam-sub-uuid' };
+    mockAuthState.isAuthenticated = true;
+    mockAuthState.token = 'session';
+
+    render(<AnalyticsProvider>{null}</AnalyticsProvider>);
+
+    expect((mockCaptured.config?.getToken as () => string | undefined)()).toBeUndefined();
   });
 });
