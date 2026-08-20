@@ -1,6 +1,13 @@
 import { useMemo } from 'react';
 import { Blocks, MCPIcon, AttachmentIcon } from '@hanzochat/client';
-import { Database, Bookmark, Settings2, ArrowRightToLine, MessageSquareQuote } from 'lucide-react';
+import {
+  Database,
+  Bookmark,
+  Settings2,
+  ArrowRightToLine,
+  MessageSquareQuote,
+  Globe,
+} from 'lucide-react';
 import {
   Permissions,
   EModelEndpoint,
@@ -19,6 +26,7 @@ import PromptsAccordion from '~/components/Prompts/PromptsAccordion';
 import Parameters from '~/components/SidePanel/Parameters/Panel';
 import { MemoryPanel } from '~/components/SidePanel/Memories';
 import FilesPanel from '~/components/SidePanel/Files/Panel';
+import Preview from '~/components/SidePanel/Preview/Panel';
 import { useHasAccess, useMCPServerManager } from '~/hooks';
 
 export default function useSideNavLinks({
@@ -171,6 +179,25 @@ export default function useSideNavLinks({
         Component: MCPBuilderPanel,
       });
     }
+
+    /* A page, held beside the conversation — a preview of what was just built,
+       a doc being quoted from, a dashboard being watched. The frame is the SAME
+       sandboxed one a bottom-bar tab uses (`SidePanel/Preview/Panel`), so there
+       is one answer to "show me a page" and one place its sandbox is decided,
+       rather than a second frame written for this column. It takes no props
+       here: the panel's page has a reserved id of its own, so it is not one of
+       the bar's tabs and closing a tab cannot clear it.
+
+       `frame-src` in api/server/csp.js is what may actually be framed, and it
+       is short. The panel says so when a URL is refused instead of showing an
+       empty rectangle — see that file. */
+    links.push({
+      title: 'com_sidepanel_preview',
+      label: '',
+      icon: Globe,
+      id: 'preview',
+      Component: Preview,
+    });
 
     links.push({
       title: 'com_sidepanel_hide_panel',

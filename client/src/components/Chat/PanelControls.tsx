@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
-import { PanelRight, PanelRightClose } from 'lucide-react';
 import { Button, TooltipAnchor } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
 import { CONTROL } from '~/components/chrome';
+import Pane from '~/components/Pane';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -19,12 +19,15 @@ const buttonClass = CONTROL;
  * third control for one boolean — and the only one of the three that spent a
  * seat in the row.
  *
- * The right panel wears `PanelRight` — the mirror of the left sidebar's
- * `PanelLeft`. One rail on each edge, one glyph pointing at each, so the two
- * ends of the row read as the same idea reflected; open, it flips to
- * `PanelRightClose`, exactly as the left toggle and the canvas toggle do. The
- * canvas toggle shares the family because it, too, opens a right-edge panel —
- * the tooltip names which one.
+ * The right panel wears the pane glyph, REFLECTED — literally the same path
+ * the left sidebar's toggle draws, mirrored about the middle of its box, so the
+ * two ends of the row are the same idea seen from each side. Open and shut are
+ * one glyph at two widths rather than two icons, which is what the window
+ * actually does: this app's panels narrow, they do not leave.
+ *
+ * The canvas toggle no longer shares it. It used to draw `PanelRight` too —
+ * one glyph on two buttons in the same row, naming neither — and it opens a
+ * different panel, so it says so.
  *
  * ⌘T still opens the bottom bar (the framed-page strip under the conversation);
  * it no longer has a header button, so the shortcut is its opener.
@@ -78,7 +81,7 @@ export default function PanelControls() {
           className={cn(buttonClass, sidePanelOpen && 'bg-surface-active-alt')}
           onClick={toggleSideChat}
         >
-          {sidePanelOpen ? <PanelRightClose aria-hidden="true" /> : <PanelRight aria-hidden="true" />}
+          <Pane side="right" open={sidePanelOpen} />
         </Button>
       }
     />

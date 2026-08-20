@@ -10,10 +10,23 @@ import store from '~/store';
  * Preview — a page held beside the conversation, in a frame that cannot reach
  * chat.
  *
- * It is the body of ONE BOTTOM-BAR TAB, not a panel of its own: it resizes with
- * the bar, closes with the bar, and its URL is keyed by the tab id so two tabs
- * are two pages. A panel of its own would need its own size, its own open state
- * and its own toggle, and the reader would have a third movable column.
+ * It is the body of a TAB, and its URL is keyed by that tab's id, so two tabs
+ * are two pages. It serves two hosts and adds a column to neither:
+ *
+ *   - a bottom-bar tab, which passes its generated id and resizes and closes
+ *     with the bar;
+ *   - the right side panel, one of that panel's pages, which passes nothing and
+ *     gets the reserved id below.
+ *
+ * The panel was refused here once, and the reason was that a panel of its own
+ * would need its own size, its own open state and its own toggle — a third
+ * movable column for the reader to manage. The side panel is not that: it
+ * already HAS a size, an open state and a toggle, and it already holds seven
+ * other pages. Being one more of them costs no column, which is exactly the
+ * objection, answered rather than overruled.
+ *
+ * The reserved id cannot collide with a bar tab's: those are
+ * `<base36 time>-<random>` and this one is a word.
  *
  * THE SANDBOX IS THE POINT. `allow-scripts` without `allow-same-origin` gives
  * the framed document an OPAQUE origin: scripts run, so a real page renders,
@@ -45,7 +58,10 @@ import store from '~/store';
  * cannot be detected from the embedder — under the current `frame-src` no such
  * URL can reach the frame anyway, so nothing pretends to catch it.
  */
-export default function Preview({ tabId }: { tabId: string }) {
+/** The side panel's own page — see above. */
+const PANEL = 'panel';
+
+export default function Preview({ tabId = PANEL }: { tabId?: string }) {
   const localize = useLocalize();
   const [url, setUrl] = useAtom(store.preview(tabId));
   const [draft, setDraft] = useState(url);

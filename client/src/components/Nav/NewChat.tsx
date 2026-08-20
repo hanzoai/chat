@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import { PanelLeftOpen } from 'lucide-react';
-import { TooltipAnchor, MobileSidebar, Sidebar, Button } from '@hanzochat/client';
+import Pane from '~/components/Pane';
+import { TooltipAnchor, MobileSidebar, Button } from '@hanzochat/client';
 import { CLOSE_SIDEBAR_ID, OPEN_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
 import BrandCorner from './BrandCorner';
 import Mark from './Mark';
@@ -99,7 +99,7 @@ export default function NewChat({
                 {/* Brand at rest, affordance on point. The rail has exactly one
                     slot, and it owes the eye two things: whose app this is, and
                     the way back to the panel. Pointing at the mark reveals
-                    `PanelLeftOpen` — a left panel opening to the RIGHT — so a
+                    the pane glyph at its OPEN width — so a
                     collapsed rail shows the way it will EXPAND, not a static
                     panel that reads the same shut as open. The tooltip says it
                     in words for anyone who never hovers. Both marks share ONE
@@ -108,8 +108,9 @@ export default function NewChat({
                   <span className="flex transition-opacity group-hover:opacity-0 group-focus-visible:opacity-0">
                     <Mark />
                   </span>
-                  <PanelLeftOpen
-                    aria-hidden="true"
+                  <Pane
+                    side="left"
+                    open
                     className="absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                   />
                 </span>
@@ -145,7 +146,7 @@ export default function NewChat({
                   className={CONTROL}
                   onClick={() => toggleThenFocus(OPEN_SIDEBAR_ID)}
                 >
-                  <Sidebar aria-hidden="true" className="max-md:hidden" />
+                  <Pane side="left" open className="max-md:hidden" />
                   <MobileSidebar
                     aria-hidden="true"
                     className="m-1 inline-flex items-center justify-center md:hidden"
