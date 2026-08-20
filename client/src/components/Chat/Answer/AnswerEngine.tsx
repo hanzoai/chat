@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useSearchParams } from 'react-router-dom';
 import type { SearchMode } from '@hanzo/ai';
 import { useLocalize, useAuthContext } from '~/hooks';
+import { opener, sceneOf } from '~/utils/scenes';
 import useAnswer from '~/hooks/useAnswer';
 import { cn } from '~/utils';
 import { COLUMN } from '~/components/chrome';
@@ -76,7 +77,17 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
   const localize = useLocalize();
   const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
   const answer = useAnswer();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
+
+  // The headline is a property of what is PLAYING, so it reads the same atom the
+  // backdrop does rather than keeping a second copy of "which scene is up".
+  const backdrop = useAtomValue(store.backdrop);
+  const scene = sceneOf(backdrop.source === 'video' ? backdrop.video : '');
+
+  // Read once per mount, not per render: a value straight from the clock makes
+  // this component impure, and re-reading it mid-session would flip the greeting
+  // under someone sitting on the page at midnight.
+  const [today] = useState(() => new Date().getDay());
 
   // Read through react-router, the same source useQueryParams reads, so a
   // client-side navigation to a chat link switches modes too — a one-time read of
@@ -163,8 +174,18 @@ export default function AnswerEngine({ index = 0 }: { index?: number }) {
         // composer under a screen and a half of empty black — the greeting read
         // as a caption for the input rather than as the page's opening.
         <div className="flex flex-1 flex-col items-center justify-center pb-6">
+          {/* The opener names the DAY and the reader; the headline names what is
+              playing behind it. Two lines, because they answer different
+              questions — "who is here today" and "what am I looking at" — and
+              folding them into one sentence made both worse.
+
+              The headline follows the FOOTAGE (utils/scenes pairs them), so the
+              reef says "Explore new worlds" and the fireplace does not. Footage
+              a viewer pasted themselves has no curated line, and that falls back
+              to the localized default rather than inventing one for it. */}
+          <p className="mb-2 px-2 text-center text-sm text-text-secondary">{opener(today, user?.name)}</p>
           <h1 className="text-balance px-2 text-center text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
-            {localize('com_ui_landing_title')}
+            {scene?.headline ?? localize('com_ui_landing_title')}
           </h1>
           {/* WHAT IT IS, on the surface two other properties' primary action
               lands on. The page opened with "Explore new worlds." and then went
