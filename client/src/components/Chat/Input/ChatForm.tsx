@@ -1,13 +1,12 @@
-import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
-import { useWatch } from 'react-hook-form';
+import { memo, useRef, useMemo, useState, useCallback } from 'react';
 import { TextareaAutosize } from '@hanzochat/client';
 import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
-import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from '@hanzochat/data-provider';
+import { Constants, isAssistantsEndpoint } from '@hanzochat/data-provider';
 import {
   useChatContext,
   useChatFormContext,
-  useAddedChatContext,
   useAssistantsMapContext,
+  BadgeRowProvider,
 } from '~/Providers';
 import {
   useTextarea,
@@ -31,35 +30,46 @@ import {
   openAppBuilder,
 } from '~/utils';
 import { COLUMN } from '~/components/chrome';
-import TextareaHeader from './TextareaHeader';
 import PromptsCommand from './PromptsCommand';
 import AgentsCommand from './AgentsCommand';
-import Mic from './Mic';
-import CreateMenu from './CreateMenu';
-import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
-import SendButton from './SendButton';
-import { BadgeRowProvider } from '~/Providers';
-import BadgeRow from './BadgeRow';
-import ModelChip from './ModelChip';
-import Mention from './Mention';
+import ToolDialogs from './ToolDialogs';
 import ComposerShell from './ComposerShell';
+import SendButton from './SendButton';
+import Mention from './Mention';
+import Chips from './Chips';
+import Add from './Add';
+import Mic from './Mic';
 import store from '~/store';
 
+/**
+ * The composer.
+ *
+ * Three controls and a field, and the count is the point. What used to sit here
+ * — a badge per tool, a menu of parameters, a model-and-preset picker on "+",
+ * an artifacts mode, a pin per badge and an edit mode for arranging them —
+ * asked the reader to hold a model of the machine before they could write a
+ * sentence. Each of those concepts still exists; none of them is a question
+ * this row asks. A tool is something you add to a turn, the model is a setting,
+ * and a preset is a Project.
+ *
+ * `＋` is everything that can go INTO the turn — a file, or a tool — because a
+ * person opening it has one question and two menus would make them ask which.
+ * A tool it turns on becomes a chip above the field, so the turn never carries
+ * anything invisible. The mic dictates and the arrow sends. Nothing else, at
+ * any width, in any state.
+ */
 const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const submitButtonRef = useRef<HTMLButtonElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   useFocusChatEffect(textAreaRef);
   const localize = useLocalize();
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [, setIsScrollable] = useState(false);
-  const [visualRowCount, setVisualRowCount] = useState(1);
   // While dictation is live the recorder takes the whole action row, so the
-  // attach/create/badge cluster and its spacer step aside — the waveform reads
-  // full width instead of a thumbnail wedged against the send button.
+  // add/tools cluster and its spacer step aside — the waveform reads full
+  // width instead of a thumbnail wedged against the send button.
   const [recording, setRecording] = useState(false);
-  /** True from the moment the mic opens until it closes. */
 
   const TextToSpeech = useAtomValue(store.textToSpeech);
   const chatDirection = useAtomValue(store.chatDirection);
@@ -67,7 +77,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
   const isTemporary = useAtomValue(store.isTemporary);
 
-  const [showPlusPopover, setShowPlusPopover] = useAtom(store.showPlusPopoverFamily(index));
+  const setShowPlusPopover = useSetAtom(store.showPlusPopoverFamily(index));
   const [showMentionPopover, setShowMentionPopover] = useAtom(
     store.showMentionPopoverFamily(index),
   );
@@ -77,11 +87,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const methods = useChatFormContext();
   const { files, setFiles, conversation, isSubmitting, filesLoading, newConversation } =
     useChatContext();
-  const {
-    generateConversation,
-    conversation: addedConvo,
-    setConversation: setAddedConvo,
-  } = useAddedChatContext();
   const assistantMap = useAssistantsMapContext();
 
   const endpoint = useMemo(
@@ -125,12 +130,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     }
     textAreaRef.current?.focus();
   }, []);
-
-  const handleFocusOrClick = useCallback(() => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-    }
-  }, [isCollapsed]);
 
   useAutoSave({
     files,
@@ -238,28 +237,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     ),
   });
 
-  const textValue = useWatch({ control: methods.control, name: 'text' });
-
-  useEffect(() => {
-    if (textAreaRef.current) {
-      const style = window.getComputedStyle(textAreaRef.current);
-      const lineHeight = parseFloat(style.lineHeight);
-      setVisualRowCount(Math.floor(textAreaRef.current.scrollHeight / lineHeight));
-    }
-  }, [textValue]);
-
-  const isMoreThanThreeRows = visualRowCount > 3;
-
-  const baseClasses = useMemo(
-    () =>
-      cn(
-        'md:py-3.5 m-0 w-full resize-none py-[13px] placeholder-black/50 bg-transparent dark:placeholder-white/50 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
-        isCollapsed ? 'max-h-[52px]' : 'max-h-[45vh] md:max-h-[55vh]',
-        isMoreThanThreeRows ? 'pl-5' : 'px-5',
-      ),
-    [isCollapsed, isMoreThanThreeRows],
-  );
-
   return (
     <form
       onSubmit={submit}
@@ -270,17 +247,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     >
       <div className="relative flex h-full flex-1 items-stretch md:flex-col">
         <div className={cn('flex w-full items-center', isRTL && 'flex-row-reverse')}>
-          {showPlusPopover && !isAssistantsEndpoint(endpoint) && (
-            <Mention
-              conversation={conversation}
-              setShowMentionPopover={setShowPlusPopover}
-              newConversation={generateConversation}
-              textAreaRef={textAreaRef}
-              commandChar="+"
-              placeholder="com_ui_add_model_preset"
-              includeAssistants={false}
-            />
-          )}
           {showMentionPopover && (
             <Mention
               conversation={conversation}
@@ -296,132 +262,79 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             temporary={isTemporary}
             className="flex-grow pb-4 sm:pb-0"
           >
-            <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
-            <FileFormChat conversation={conversation} />
-            {endpoint && (
-              <div className={cn('flex', isRTL ? 'flex-row-reverse' : 'flex-row')}>
-                <div
-                  className="relative flex-1"
-                  style={
-                    isCollapsed
-                      ? {
-                          WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 90%)',
-                          maskImage: 'linear-gradient(to bottom, black 60%, transparent 90%)',
-                        }
-                      : undefined
-                  }
-                >
-                  <TextareaAutosize
-                    {...registerProps}
-                    ref={(e) => {
-                      ref(e);
-                      (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current =
-                        e;
-                    }}
-                    disabled={disableInputs || isNotAppendable}
-                    onPaste={handlePaste}
-                    onKeyDown={handleKeyDown}
-                    onKeyUp={handleKeyUp}
-                    onCompositionStart={handleCompositionStart}
-                    onCompositionEnd={handleCompositionEnd}
-                    id={mainTextareaId}
-                    tabIndex={0}
-                    data-testid="text-input"
-                    rows={1}
-                    onFocus={handleFocusOrClick}
-                    aria-label={localize('com_ui_message_input')}
-                    onClick={handleFocusOrClick}
-                    style={{ height: isLanding ? 46 : 44, overflowY: 'auto' }}
-                    className={cn(
-                      baseClasses,
-                      removeFocusRings,
-                      'scrollbar-hover transition-[max-height] duration-200 disabled:cursor-not-allowed',
-                      isLanding && 'text-[15px]',
-                    )}
-                  />
-                </div>
-                <div className="flex flex-col items-start justify-start pr-2.5 pt-1.5">
-                  <CollapseChat
-                    isCollapsed={isCollapsed}
-                    isScrollable={isMoreThanThreeRows}
-                    setIsCollapsed={setIsCollapsed}
-                  />
-                </div>
-              </div>
-            )}
-            <div
-              className={cn(
-                'composer-actions flex gap-2 pb-2',
-                isRTL ? 'flex-row-reverse' : 'flex-row',
-              )}
+            <BadgeRowProvider
+              conversationId={conversationId}
+              specName={conversation?.spec}
+              isSubmitting={isSubmitting}
             >
-              {/* Hidden while dictating so the waveform owns the full row. */}
-              {!recording && (
-                <BadgeRowProvider
-                  conversationId={conversationId}
-                  specName={conversation?.spec}
-                  isSubmitting={isSubmitting}
-                >
-                  {/* The provider wraps the WHOLE control row, not just the
-                      badges. It used to live inside BadgeRow, which made the
-                      tools state reachable only from BadgeRow's own subtree —
-                      so the "+" could not offer them without throwing. Its three
-                      props are ones this form already holds and already passes
-                      down. */}
-                  {/* ONE control for "add something to this turn": attaching,
-                      making, and the turn's tools all hang off the "+". The
-                      attach button used to sit beside it and the two were never
-                      distinguishable — both meant "add". */}
-                  <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
-                    <CreateMenu conversation={conversation} disableInputs={disableInputs} />
-                  </div>
-                  {/* The model, and the way to change it. Naming the model is
-                      not the same as asking which one to use: the row states
-                      what is answering and gets out of the way, and Enso is
-                      still the default nobody has to touch.
-
-                      Sending it to Settings instead cost SIX clicks — account
-                      row, Settings, Chat tab, picker, endpoint, model — for a
-                      choice this product exists to offer. Two, now: this opens
-                      the picker `@` has always opened in an empty composer
-                      (`useMentions`), where every model is one flat, searchable
-                      row. No second picker was written; the one that existed
-                      simply had nothing to press. */}
-                  <ModelChip
-                    model={conversation?.model}
-                    onOpen={() => setShowMentionPopover(true)}
-                  />
-                  <BadgeRow
-                    showEphemeralBadges={
-                      !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
-                    }
-                  />
-                  <div className="mx-auto flex" />
-                </BadgeRowProvider>
+              <FileFormChat conversation={conversation} />
+              <Chips textAreaRef={textAreaRef} />
+              {endpoint && (
+                <TextareaAutosize
+                  {...registerProps}
+                  ref={(e) => {
+                    ref(e);
+                    (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
+                  }}
+                  disabled={disableInputs || isNotAppendable}
+                  onPaste={handlePaste}
+                  onKeyDown={handleKeyDown}
+                  onKeyUp={handleKeyUp}
+                  onCompositionStart={handleCompositionStart}
+                  onCompositionEnd={handleCompositionEnd}
+                  id={mainTextareaId}
+                  tabIndex={0}
+                  data-testid="text-input"
+                  rows={1}
+                  aria-label={localize('com_ui_message_input')}
+                  style={{ height: isLanding ? 46 : 44, overflowY: 'auto' }}
+                  className={cn(
+                    'm-0 w-full resize-none bg-transparent px-5 py-[13px] placeholder-black/50 dark:placeholder-white/50 md:py-3.5',
+                    'max-h-[45vh] md:max-h-[55vh]',
+                    removeFocusRings,
+                    'scrollbar-hover transition-[max-height] duration-200 disabled:cursor-not-allowed',
+                    isLanding && 'text-[15px]',
+                  )}
+                />
               )}
-              {/* The mic is a core composer control — always present. It
-                  self-disables and names the reason when dictation is
-                  unavailable (Brave ships speech off). Gating its existence
-                  behind the STT setting silently stripped it from anyone whose
-                  stored value was off, and left no affordance to discover
-                  dictation; the Speech settings still tune it. */}
-              <Mic
-                disabled={disableInputs || isNotAppendable}
-                onRecordingChange={setRecording}
-              />
-              <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
-                {/* No stop circle (owner call): the send arrow holds its seat,
+              <div
+                className={cn(
+                  'composer-actions flex items-center gap-2 pb-2',
+                  isRTL ? 'flex-row-reverse' : 'flex-row',
+                )}
+              >
+                {/* Hidden while dictating so the waveform owns the full row. */}
+                {!recording && (
+                  <>
+                    <div className={isRTL ? 'mr-2' : 'ml-2'}>
+                      <Add conversation={conversation} disabled={disableInputs} />
+                    </div>
+                    <div className="mx-auto flex" />
+                  </>
+                )}
+                {/* The mic is a core composer control — always present. It
+                    self-disables and names the reason when dictation is
+                    unavailable (Brave ships speech off). Gating its existence
+                    behind the STT setting silently stripped it from anyone whose
+                    stored value was off, and left no affordance to discover
+                    dictation; the Speech settings still tune it. */}
+                <Mic disabled={disableInputs || isNotAppendable} onRecordingChange={setRecording} />
+                <div className={isRTL ? 'ml-2' : 'mr-2'}>
+                  {/* No stop circle (owner call): the send arrow holds its seat,
                       disabled while the reply streams; the mic carries the
                       voice state in its own color. */}
-                {endpoint && (
-                  <SendButton
-                    ref={submitButtonRef}
-                    control={methods.control}
-                    disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
-                  />
-                )}
+                  {endpoint && (
+                    <SendButton
+                      ref={submitButtonRef}
+                      control={methods.control}
+                      disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
+              {/* What a tool asks for before it runs. No control opens these. */}
+              <ToolDialogs />
+            </BadgeRowProvider>
             {/* While a spoken conversation is live the mic reads the reply, so
                 the automatic-playback stream stands down — one voice at a time. */}
             {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
