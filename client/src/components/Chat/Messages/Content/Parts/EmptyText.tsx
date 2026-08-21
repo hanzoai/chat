@@ -67,10 +67,19 @@ export const Quip = memo(() => {
             {/* A beat is a joke, not a status. Announcing each one would read
                 four fragments a second apart to a screen reader, so it hears
                 the plain word once and the eye gets the joke. */}
-            <span aria-hidden={true}>
+            {/* The quip SHIMMERS and the dots MOVE, because the one question
+                this state answers is "is anything happening". A static line
+                with a literal ellipsis answered "no" for the whole wait. */}
+            <span aria-hidden={true} className="shimmer">
               {parts[beat]}
-              {last ? '' : '…'}
             </span>
+            {!last && (
+              <span className="thinking-dots" aria-hidden={true}>
+                <i />
+                <i />
+                <i />
+              </span>
+            )}
             <span className="sr-only">{localize('com_ui_thinking')}</span>
           </>
         ) : null}

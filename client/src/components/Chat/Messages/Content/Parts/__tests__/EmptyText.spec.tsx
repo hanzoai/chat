@@ -43,10 +43,16 @@ describe('the thinking indicator', () => {
     expect(visible().length).toBeGreaterThan(0);
   });
 
-  it('advances a beat at a time, and each beat trails off', () => {
-    render(<EmptyText />);
+  it('advances a beat at a time, and each beat MOVES while it waits', () => {
+    const { container } = render(<EmptyText />);
     const first = visible();
-    expect(first.endsWith('…')).toBe(true);
+
+    // Three dots, not a literal ellipsis. The character was static for the
+    // whole wait, so a reply in progress read as a sentence trailing off; the
+    // one question this state answers is whether anything is happening.
+    expect(container.querySelectorAll('.thinking-dots i')).toHaveLength(3);
+    // The quip carries the shimmer for the same reason — motion IS the signal.
+    expect(container.querySelector('.shimmer')).toBeTruthy();
 
     tick();
     expect(visible()).not.toBe(first);
@@ -56,7 +62,9 @@ describe('the thinking indicator', () => {
     render(<EmptyText />);
     tick(12);
     const landed = visible();
-    // The last beat keeps its own full stop; the trailing ellipsis is gone.
+    // The punchline has landed, so the waiting mark goes with it — dots that
+    // keep moving after the line settles say work is still arriving when it is
+    // only the joke holding.
     expect(landed.endsWith('…')).toBe(false);
 
     tick(6);
