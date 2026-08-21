@@ -199,7 +199,16 @@ export default function useMentions({
       return models;
     });
 
+    /* Models lead. Every row below is reachable in one click, so the order is
+       purely about what the reader came for, and the composer's model control
+       opens THIS list — a picker whose first forty rows are endpoints is a
+       picker you scroll past to use. The endpoint rows that follow drill into
+       the same models a second time (`modelOptions` is built from exactly those
+       endpoints), so nothing above them is lost by ranking them below; the ones
+       that go somewhere new — agents, assistants — keep their place in the same
+       list. */
     const mentions = [
+      ...modelOptions,
       ...(modelSpecs.length > 0 ? modelSpecs : []).map((modelSpec) => ({
         value: modelSpec.name,
         label: modelSpec.label,
@@ -255,7 +264,6 @@ export default function useMentions({
         }),
         type: 'preset' as const,
       })) ?? []),
-      ...modelOptions,
     ];
 
     return mentions;

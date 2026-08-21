@@ -45,7 +45,6 @@ import {
   useGetRoutingDefaults,
 } from '~/data-provider';
 import useAssistantListMap from './Assistants/useAssistantListMap';
-import { useResetChatBadges } from './useChatBadges';
 import { useApplyModelSpecEffects } from './Agents';
 import { usePauseGlobalAudio } from './Audio';
 import { useHasAccess } from '~/hooks';
@@ -84,7 +83,6 @@ const useNewConvo = (index = 0) => {
   const assistantsListMap = useAssistantListMap();
   const { pauseGlobalAudio } = usePauseGlobalAudio(index);
   const saveDrafts = useAtomValue<boolean>(store.saveDrafts);
-  const resetBadges = useResetChatBadges();
 
   const { mutateAsync } = useDeleteFilesMutation({
     onSuccess: () => {
@@ -313,7 +311,6 @@ const useNewConvo = (index = 0) => {
     } = {}) {
       pauseGlobalAudio();
       if (!saveBadgesState) {
-        resetBadges();
       }
 
       const templateConvoId = _template.conversationId ?? '';
@@ -415,7 +412,6 @@ const useNewConvo = (index = 0) => {
       setFiles,
       saveDrafts,
       mutateAsync,
-      resetBadges,
       startupConfig,
       saveBadgesState,
       pauseGlobalAudio,

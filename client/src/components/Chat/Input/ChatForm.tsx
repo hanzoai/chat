@@ -21,7 +21,7 @@ import {
 } from '~/hooks';
 import { useRunCloudAgent } from '~/hooks/Agents';
 import { command as backdrop } from '~/utils/backdrop';
-import { mainTextareaId, BadgeItem } from '~/common';
+import { mainTextareaId } from '~/common';
 import FileFormChat from './Files/FileFormChat';
 import {
   cn,
@@ -39,9 +39,9 @@ import CreateMenu from './CreateMenu';
 import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
 import SendButton from './SendButton';
-import EditBadges from './EditBadges';
 import { BadgeRowProvider } from '~/Providers';
 import BadgeRow from './BadgeRow';
+import ModelChip from './ModelChip';
 import Mention from './Mention';
 import ComposerShell from './ComposerShell';
 import store from '~/store';
@@ -55,7 +55,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [, setIsScrollable] = useState(false);
   const [visualRowCount, setVisualRowCount] = useState(1);
-  const [backupBadges, setBackupBadges] = useState<Pick<BadgeItem, 'id'>[]>([]);
   // While dictation is live the recorder takes the whole action row, so the
   // attach/create/badge cluster and its spacer step aside — the waveform reads
   // full width instead of a thumbnail wedged against the send button.
@@ -68,8 +67,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
   const isTemporary = useAtomValue(store.isTemporary);
 
-  const [badges, setBadges] = useAtom(store.chatBadges);
-  const [isEditingBadges, setIsEditingBadges] = useAtom(store.isEditingBadges);
   const [showPlusPopover, setShowPlusPopover] = useAtom(store.showPlusPopoverFamily(index));
   const [showMentionPopover, setShowMentionPopover] = useAtom(
     store.showMentionPopoverFamily(index),
@@ -251,25 +248,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     }
   }, [textValue]);
 
-  useEffect(() => {
-    if (isEditingBadges && backupBadges.length === 0) {
-      setBackupBadges([...badges]);
-    }
-  }, [isEditingBadges, badges, backupBadges.length]);
-
-  const handleSaveBadges = useCallback(() => {
-    setIsEditingBadges(false);
-    setBackupBadges([]);
-  }, [setIsEditingBadges, setBackupBadges]);
-
-  const handleCancelBadges = useCallback(() => {
-    if (backupBadges.length > 0) {
-      setBadges([...backupBadges]);
-    }
-    setIsEditingBadges(false);
-    setBackupBadges([]);
-  }, [backupBadges, setBadges, setIsEditingBadges]);
-
   const isMoreThanThreeRows = visualRowCount > 3;
 
   const baseClasses = useMemo(
@@ -319,13 +297,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             className="flex-grow pb-4 sm:pb-0"
           >
             <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
-            {/* WIP */}
-            <EditBadges
-              isEditingChatBadges={isEditingBadges}
-              handleCancelBadges={handleCancelBadges}
-              handleSaveBadges={handleSaveBadges}
-              setBadges={setBadges}
-            />
             <FileFormChat conversation={conversation} />
             {endpoint && (
               <div className={cn('flex', isRTL ? 'flex-row-reverse' : 'flex-row')}>
@@ -404,21 +375,25 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
                     <CreateMenu conversation={conversation} disableInputs={disableInputs} />
                   </div>
-                  {/* No model chip. Enso is the house model and the config's
-                      default, so the composer states no alternative: a picker
-                      sitting under the cursor turns "which model" into a
-                      question every turn asks. Model choice is a setting, and
-                      it lives in Settings → Chat with the rest of them. */}
+                  {/* The model, and the way to change it. Naming the model is
+                      not the same as asking which one to use: the row states
+                      what is answering and gets out of the way, and Enso is
+                      still the default nobody has to touch.
+
+                      Sending it to Settings instead cost SIX clicks — account
+                      row, Settings, Chat tab, picker, endpoint, model — for a
+                      choice this product exists to offer. Two, now: this opens
+                      the picker `@` has always opened in an empty composer
+                      (`useMentions`), where every model is one flat, searchable
+                      row. No second picker was written; the one that existed
+                      simply had nothing to press. */}
+                  <ModelChip
+                    model={conversation?.model}
+                    onOpen={() => setShowMentionPopover(true)}
+                  />
                   <BadgeRow
                     showEphemeralBadges={
                       !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
-                    }
-                    isSubmitting={isSubmitting}
-                    conversationId={conversationId}
-                    specName={conversation?.spec}
-                    onChange={setBadges}
-                    isInChat={
-                      Array.isArray(conversation?.messages) && conversation.messages.length >= 1
                     }
                   />
                   <div className="mx-auto flex" />
