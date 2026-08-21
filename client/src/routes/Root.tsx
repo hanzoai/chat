@@ -29,7 +29,6 @@ import LoginGate from '~/components/Auth/LoginGate';
 import CommandPalette from '~/components/Nav/CommandPalette';
 import { Consent } from '~/components/Free';
 import ProjectBanner from '~/components/Chat/ProjectBanner';
-import Palette from '~/components/Palette';
 import store from '~/store';
 
 /** Two controls open Settings — the account menu and the palette — so the dialog
@@ -250,9 +249,6 @@ export default function Root() {
                   </div>
                 </div>
               </div>
-              {/* ⌘K, from any screen and at any width — which is why it hangs
-                  here rather than off the sidebar that used to own the key. */}
-              <Palette />
               {showSettings && (
                 <Suspense fallback={null}>
                   <Settings open={showSettings} onOpenChange={setShowSettings} />
