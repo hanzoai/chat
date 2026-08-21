@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Sparkles, ArrowUp } from 'lucide-react';
+import { ready, sends } from '@hanzo/ui/chat';
 import { useSubmitMessage, useLocalize } from '~/hooks';
 
 /**
@@ -106,13 +107,12 @@ export default function SelectionAsk() {
   }, [read, dismiss]);
 
   const send = () => {
-    const q = question.trim();
-    if (!q || !anchor) {
+    if (!ready(question) || !anchor) {
       return;
     }
     // The quote is context, the question is the turn — folded into one message
     // the conversation answers in place.
-    submitMessage({ text: `Regarding this:\n\n> ${anchor.text}\n\n${q}` });
+    submitMessage({ text: `Regarding this:\n\n> ${anchor.text}\n\n${question.trim()}` });
     dismiss();
     window.getSelection()?.removeAllRanges();
   };
@@ -151,10 +151,11 @@ export default function SelectionAsk() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
+                if (!sends(e.key, e.nativeEvent)) {
+                  return;
                 }
+                e.preventDefault();
+                send();
               }}
               placeholder={localize('com_ui_ask_followup')}
               data-testid="selection-ask-input"

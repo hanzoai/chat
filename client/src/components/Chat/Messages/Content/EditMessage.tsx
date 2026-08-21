@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { sends } from '@hanzo/ui/chat';
 import { useAtomValue } from 'jotai';
 import { TextareaAutosize, TooltipAnchor } from '@hanzochat/client';
 import { useUpdateMessageMutation } from '@hanzochat/data-provider/react-query';
@@ -123,7 +124,9 @@ const EditMessage = ({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      /* An edit only ever resends on the forced chord — a bare Enter belongs to
+         the text being edited. `sends` supplies the IME refusal either way. */
+      if ((e.ctrlKey || e.metaKey) && sends(e.key, e.nativeEvent)) {
         e.preventDefault();
         submitButtonRef.current?.click();
       }
