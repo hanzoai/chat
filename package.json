@@ -209,7 +209,7 @@
       "zod@3.24.4": "3.25.76",
       "@hanzogui/web": "8.1.1",
       "@hanzogui/telemetry": "8.1.3",
-      "@hanzo/ui": "8.0.114",
+      "@hanzo/ui": "8.0.117",
       "@hanzo/gui": "8.1.1"
     }
   }
