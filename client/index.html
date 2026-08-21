@@ -10,8 +10,18 @@
     <meta name="description" content="AI chat platform with support for multiple AI models" />
     <title>Hanzo Chat</title>
     
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- THE MARK IS VERSIONED BY ITS OWN CONTENT, and that is not decoration.
+         An icon is served `public, max-age=172800` — two days in every browser
+         that has one, and Cloudflare holds its own copy on top. So when the H
+         was corrected from a hollow outline to the solid mark the rest of the
+         fleet shows, the fix reached the pod and stopped there: the edge served
+         a 17-hour-old copy to everyone (measured: cf-cache-status HIT, 5236B,
+         against the pod's correct 2142B), and a purge would still have left
+         every returning visitor on the old one until its own two days ran out.
+         A URL nobody has fetched has no cache to beat. hanzo.ai already does
+         exactly this; chat was the surface still asking for a bare path. -->
+    <link rel="icon" href="/favicon.ico?v=9ed5d449" sizes="any" />
+    <link rel="icon" href="/favicon.svg?v=7c964c7f" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon-180x180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content, viewport-fit=cover" />
     <style>
