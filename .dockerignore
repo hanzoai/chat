@@ -9,7 +9,6 @@ tests
 .devcontainer
 *.tgz
 log.txt
-docker/Dockerfile.*
 node_modules
 **/node_modules
 .env

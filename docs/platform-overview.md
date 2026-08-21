@@ -122,8 +122,8 @@ PRODUCTION_API_URL=https://api.hanzo.ai
 ### Hot Reload Development
 
 ```bash
-# Use development compose file
-docker compose -f compose.dev.yml up
+# API and client, both in watch mode
+npm run backend:dev & npm run frontend:dev
 
 # Services with hot reload:
 # - Cloud (Next.js)
