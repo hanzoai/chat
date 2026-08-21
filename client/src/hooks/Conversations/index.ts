@@ -1,4 +1,3 @@
-export { default as usePresets } from './usePresets';
 export { default as useConvoPin } from './useConvoPin';
 export { default as useConvoRename } from './useConvoRename';
 export { default as useGetSender } from './useGetSender';

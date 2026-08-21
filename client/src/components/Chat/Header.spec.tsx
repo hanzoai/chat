@@ -89,7 +89,6 @@ function mockMarker(id: string) {
 }
 
 jest.mock('./Menus', () => ({
-  PresetsMenu: mockMarker('presets'),
   HeaderNewChat: mockMarker('header-new-chat'),
   OpenSidebar: mockMarker('open-sidebar'),
 }));
@@ -141,9 +140,12 @@ describe.each([
     expect(screen.getAllByTestId('header-new-chat')).toHaveLength(1);
   });
 
-  it('names no model and offers no preset', () => {
+  // The preset half of this went with PresetsMenu: a component that no longer
+  // exists cannot be mounted, so asserting its absence is the vacuous shape the
+  // note below refuses. ModelSelector is still a real module and could be
+  // mounted here, so that half still holds something.
+  it('names no model', () => {
     expect(screen.queryByTestId('model')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('presets')).not.toBeInTheDocument();
   });
 
   // The membership of the group, not just its order. A `queryByTestId` for a
