@@ -3,11 +3,7 @@ import { Provider, createStore } from 'jotai';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
 import store from '~/store';
-import CanvasToggle from '../CanvasToggle';
-
-jest.mock('~/hooks', () => ({
-  useLocalize: () => (key: string) => key,
-}));
+import Sources from '../CanvasToggle';
 
 jest.mock('@hanzochat/client', () => ({
   __esModule: true,
@@ -24,40 +20,50 @@ const withStore = (init?: (s: ReturnType<typeof createStore>) => void) => {
     s,
     ...render(
       <Provider store={s}>
-        <CanvasToggle />
+        <Sources />
       </Provider>,
     ),
   };
 };
 
-describe('CanvasToggle — the right edge mirror of the sidebar button', () => {
-  it('renders nothing when there is no canvas to open', () => {
+describe('Files and sources — the way into the panel beside the thread', () => {
+  it('renders nothing when there is nothing to show', () => {
     withStore((s) => s.set(store.artifactsState, null));
-    expect(screen.queryByTestId('canvas-toggle-button')).toBeNull();
+    expect(screen.queryByTestId('sources-button')).toBeNull();
   });
 
-  it('renders nothing when the artifacts record is empty', () => {
+  it('renders nothing when the record is empty', () => {
     withStore((s) => s.set(store.artifactsState, {}));
-    expect(screen.queryByTestId('canvas-toggle-button')).toBeNull();
+    expect(screen.queryByTestId('sources-button')).toBeNull();
   });
 
-  it('appears once an artifact exists, and reflects visibility as pressed', () => {
+  it('appears once there is something, and reflects visibility as pressed', () => {
     withStore((s) => {
       s.set(store.artifactsState, { a1: { id: 'a1' } as never });
       s.set(store.artifactsVisibility, true);
     });
-    const btn = screen.getByTestId('canvas-toggle-button');
-    expect(btn).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('sources-button')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('toggles the canvas visibility on click', async () => {
+  it('toggles the panel on click', async () => {
     const { s } = withStore((st) => {
       st.set(store.artifactsState, { a1: { id: 'a1' } as never });
       st.set(store.artifactsVisibility, true);
     });
-    await userEvent.click(screen.getByTestId('canvas-toggle-button'));
+    await userEvent.click(screen.getByTestId('sources-button'));
     expect(s.get(store.artifactsVisibility)).toBe(false);
-    await userEvent.click(screen.getByTestId('canvas-toggle-button'));
+    await userEvent.click(screen.getByTestId('sources-button'));
     expect(s.get(store.artifactsVisibility)).toBe(true);
+  });
+
+  // The word is retired, not merely unused: a control that still said "canvas"
+  // would keep teaching a name the rest of the product has stopped using.
+  it('says nothing about a canvas', () => {
+    withStore((s) => {
+      s.set(store.artifactsState, { a1: { id: 'a1' } as never });
+    });
+    expect(screen.getByTestId('sources-button').getAttribute('aria-label')).toBe(
+      'Files and sources',
+    );
   });
 });

@@ -1,39 +1,42 @@
 import ModelSelector from './Menus/Endpoints/ModelSelector';
 import { useGetStartupConfig } from '~/data-provider';
+import Sources from './Menus/CanvasToggle';
 import { TemporaryChat } from './TemporaryChat';
 import ConvoMenu from './Menus/ConvoMenu';
 import Share from './ExportAndShareMenu';
 
 /**
- * The header asks one question and offers three answers about the thread under
+ * The header asks one question and offers four answers about the thread under
  * it. Nothing else.
  *
- *   [ model ]                                    [ share ] [ ⋯ ] [ private ]
+ *   [ Medium ⌄ ]                 [ share ] [ files ] [ ⋯ ] [ private ]
  *
  * WHAT LEFT, and why each was a second answer rather than a feature:
  *
  * - New chat. The sidebar is a rail when collapsed, so its own compose button
  *   never leaves the screen. Two buttons that start a conversation, side by
  *   side, at every width above md.
- * - The canvas toggle and the window controls. The right panel is ONE surface
- *   now and it is the canvas's own; a toggle for it belongs with the panel it
- *   opens, not in the row that names the model. Both components are still on
- *   disk and neither is deleted here — where the canvas opens from is the
- *   canvas's call, not this row's.
- * - The preset menu and the endpoint menu, which are gone from the app, not
- *   moved: see `Menus/Endpoints/ModelSelector`.
+ * - The window controls (width, companions, right panel). Chrome for the
+ *   WINDOW, not for the conversation, and the panel they reach is now one
+ *   surface with its own control two seats to the left. `Chat/PanelControls`
+ *   is still on disk and is not deleted here: it also owns this app's only
+ *   keyboard shortcuts, so removing it is a decision about those, not about
+ *   this row.
+ * - The preset menu and the endpoint menu, which are gone from the app rather
+ *   than moved: see `Menus/Endpoints/ModelSelector`.
  *
- * WHAT ARRIVED: the model. It had been pushed into Settings on the theory that
- * the house default is right and asking on every turn is noise. That is true of
- * a picker that asks "which endpoint, then which model, then which preset" — and
- * it is not true of a name. A person who wants a longer think on one hard
- * question should not have to open Settings to get it.
+ * WHAT ARRIVED: the effort control. It had been pushed into Settings on the
+ * theory that the house default is right and asking on every turn is noise.
+ * That was true of the picker that existed — endpoint, then model, then
+ * preset — and it is not true of one adjective. Someone who wants a longer
+ * think on one hard question should not have to open Settings to get it.
  *
- * Share and `⋯` appear once the conversation exists on the server; private
- * hides itself once it has a message in it, because it decides what the NEXT
- * conversation is. So an empty thread reads [model] [private] and a live one
- * reads [model] [share] [⋯] — the row never shows a control that would do
- * nothing.
+ * Share and `⋯` appear once the conversation exists on the server; files and
+ * sources appears once the assistant has made something; private hides itself
+ * once the thread has a message in it, because it decides what the NEXT
+ * conversation is. So an empty thread reads [effort] [private] and a working
+ * one reads [effort] [share] [files] [⋯] — the row never shows a control that
+ * would do nothing.
  *
  * The row carries no ground of its own: no glass, no plate, no border. The
  * darker glass lives only where a real surface sits — the left sidebar and the
@@ -56,6 +59,7 @@ export default function Header() {
 
         <div className="flex items-center gap-2" data-testid="header-actions">
           <Share enabled={startupConfig?.sharedLinksEnabled ?? false} />
+          <Sources />
           <ConvoMenu />
           <TemporaryChat />
         </div>
