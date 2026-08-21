@@ -75,7 +75,7 @@ async function post(req, path, body) {
   if (!origin || !headers) {
     return null;
   }
-  const { data } = await axios.post(`${origin}/v1/rag${path}`, body, { headers });
+  const { data } = await axios.post(`${origin}/v1/ai/rag${path}`, body, { headers });
   return unwrap(data);
 }
 
@@ -112,7 +112,7 @@ async function context(req, { file_id, store }) {
   if (!origin || !headers) {
     return null;
   }
-  const { data } = await axios.get(`${origin}/v1/rag/context`, {
+  const { data } = await axios.get(`${origin}/v1/ai/rag/context`, {
     headers,
     params: { file_id, ...(store ? { store } : {}) },
   });
@@ -123,7 +123,7 @@ async function context(req, { file_id, store }) {
 function logRagTarget() {
   const origin = cloudOrigin();
   if (origin) {
-    logger.info(`[RagClient] native RAG via ${origin}/v1/rag/* (own embeddings + vector + search)`);
+    logger.info(`[RagClient] native RAG via ${origin}/v1/ai/rag/* (own embeddings + vector + search)`);
   } else {
     logger.warn('[RagClient] no cloud origin resolved — file retrieval is disabled');
   }

@@ -6,7 +6,7 @@
 // the jest coverage; keep the semantics in lock-step.
 
 /**
- * Org-scoped auto-routing defaults from cloud (`GET /v1/router/defaults`),
+ * Org-scoped auto-routing defaults from cloud (`GET /v1/ai/router/defaults`),
  * proxied by the chat backend at `/v1/chat/routing-defaults`. `available` is
  * false when the endpoint is absent (older cloud-api) or the fetch failed soft —
  * the client then behaves exactly as today (local preference only).

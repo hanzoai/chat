@@ -133,7 +133,7 @@ export function checkVariables() {
  * Logs information or warning based on the API's availability and response.
  */
 export async function checkHealth() {
-  // RAG is served by the unified backend (/v1/rag/*), reached per-request with the
+  // RAG is served by the unified backend (/v1/ai/rag/*), reached per-request with the
   // caller's own IAM bearer — see api/server/services/RagClient. There is no
   // standalone RAG service to probe, and an unauthenticated boot-time ping would
   // prove nothing about a user's retrieval anyway, so report the configured target
@@ -145,7 +145,7 @@ export async function checkHealth() {
     .replace(/\/v1\/?$/, '')
     .replace(/\/+$/, '');
   if (origin) {
-    logger.info(`RAG is served by the unified backend at ${origin}/v1/rag/*.`);
+    logger.info(`RAG is served by the unified backend at ${origin}/v1/ai/rag/*.`);
   } else {
     logger.warn(
       'No cloud origin configured (HANZO_CLOUD_URL / OPENAI_BASE_URL) — file retrieval is disabled.',

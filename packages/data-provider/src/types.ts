@@ -631,7 +631,7 @@ export type TUsageResponse = {
 };
 
 /**
- * Org-scoped auto-routing defaults from cloud (`GET /v1/router/defaults`),
+ * Org-scoped auto-routing defaults from cloud (`GET /v1/ai/router/defaults`),
  * proxied by the chat backend. `available` is false when the endpoint is absent
  * (older cloud-api) or the fetch failed soft — the client then behaves exactly as
  * today (local preference only).
