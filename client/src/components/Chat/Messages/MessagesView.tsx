@@ -28,7 +28,7 @@ function MessagesViewContent({
     messagesEndRef,
     showScrollButton,
     handleSmoothToRef,
-    debouncedHandleScroll,
+    handleScroll,
   } = useMessageScrolling(_messagesTree);
 
   const { conversationId } = conversation ?? {};
@@ -39,7 +39,7 @@ function MessagesViewContent({
         <div className="relative h-full">
           <div
             className="scrollbar-gutter-stable"
-            onScroll={debouncedHandleScroll}
+            onScroll={handleScroll}
             ref={scrollableRef}
             style={{
               height: '100%',

@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useRef, useState } from 'react';
 import copy from 'copy-to-clipboard';
+import { pinned } from '@hanzo/ui/chat';
 import rehypeKatex from 'rehype-katex';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@hanzochat/client';
@@ -54,13 +55,9 @@ export const CodeMarkdown = memo(
 
       const handleScroll = () => {
         const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-        const isNearBottom = scrollHeight - scrollTop - clientHeight < 50;
-
-        if (!isNearBottom) {
-          setUserScrolled(true);
-        } else {
-          setUserScrolled(false);
-        }
+        setUserScrolled(
+          !pinned({ offset: scrollTop, viewport: clientHeight, content: scrollHeight }),
+        );
       };
 
       scrollContainer.addEventListener('scroll', handleScroll);

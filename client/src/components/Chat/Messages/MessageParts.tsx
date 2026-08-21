@@ -30,7 +30,6 @@ export default function Message(props: TMessageProps) {
     isLast,
     enterEdit,
     assistant,
-    handleScroll,
     conversation,
     isSubmitting,
     latestMessage,
@@ -90,11 +89,7 @@ export default function Message(props: TMessageProps) {
 
   return (
     <>
-      <div
-        className="w-full border-0 bg-transparent dark:border-0 dark:bg-transparent"
-        onWheel={handleScroll}
-        onTouchMove={handleScroll}
-      >
+      <div className="w-full border-0 bg-transparent dark:border-0 dark:bg-transparent">
         <div className={TURN_ROW}>
           <div
             id={messageId ?? ''}
