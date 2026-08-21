@@ -4,47 +4,35 @@ import Header from './Header';
 /**
  * What the chat header carries, and what it must NOT.
  *
- * Every control that acts on the OPEN conversation belongs at the right end,
- * and there is one copy of each at every width — share and temporary-chat used
- * to be written twice under opposite `isSmallScreen` conditions, which is how
- * they drifted to opposite ends of the same header.
+ * Five controls: the effort picker at the left, then share, files and sources,
+ * the overflow menu and private at the right. This file is what keeps a sixth
+ * from growing back.
  *
- * PRIVATE IS NO LONGER ONE OF THEM. It does not act on the open conversation —
- * it decides what the NEXT one is, which is why it hid itself the moment a
- * thread had a message in it. A control about starting, seated among controls
- * about continuing, at the opposite end of the row from the button that starts
- * things. It lives inside HeaderNewChat now, revealed on hover, which is why
- * this file sees three actions at the right end and not four.
+ * THE PICKER IS BACK, and the reasoning it replaces is worth keeping. This file
+ * used to assert `names no model`, on the grounds that the house default is
+ * right and a picker under the cursor asks "which model?" on every turn. That
+ * was true of the picker that existed: it opened onto ENDPOINTS, made you hover
+ * one to reveal its models, and had presets, agents and assistants beside them —
+ * five words for one decision, four of which mean nothing to a person who has
+ * not read the config. Hiding THAT in Settings was right. What sits there now
+ * asks a different question, in one adjective, and hiding that costs someone a
+ * trip to Settings to think harder about one hard question.
  *
- * A control also belongs here only if this is its ONE home. Bookmarking is not:
- * the conversation's own row menu offers it under the same permission with the
- * same tags. Neither is maximize: it is a switch in Settings → Chat and a row in
- * the backdrop menu. Neither is the model, which is a setting and lives in
- * Settings → Chat with the other settings — the chat view names no model at all,
- * because a picker under the cursor asks "which model?" on every turn and the
- * house answer is already the default.
+ * WHAT IS REFUSED HERE, each because it has another home:
+ * - compose — the sidebar is a rail when collapsed and never gives up its own
+ *   compose button, so a copy here is two of them side by side above md;
+ * - the mark and the sidebar toggle — the sidebar's corner, same reason;
+ * - the window controls — chrome for the window, not for the conversation;
+ * - presets — deleted from the app, not moved.
  *
- * The left edge carries COMPOSE, and only compose. The mark and the sidebar
- * toggle belong to the sidebar, which is a rail when collapsed and so never
- * gives its corner up; a copy of either here would be the duplication this
- * strip was invented to avoid. Compose is the opposite case and the rail
- * deliberately does NOT keep it: the header spans the width beside the rail at
- * every width, so putting compose in both put two "New chat" buttons on screen
- * together — measured at 768 and above. One end, one copy, every width.
- *
- * The mocks below stay wired to the modules that would render each control, so
- * moving one back across that line fails these tests rather than quietly
- * restoring a duplicate.
- *
- * `./Menus/CanvasToggle` is mocked for a duller reason, and it is worth stating
- * because it cost this file its whole life: it reaches `~/store`, the real
- * `@hanzochat/data-provider` is stubbed here with three names, and the store
- * wants a fourth (`EModelEndpoint`). That threw while `./Header` was being
- * required on line 2 — so the suite died at IMPORT and reported `Tests: 0`,
- * which reads in CI as a passing file. It sat that way long enough for the
- * left-edge contract above to reverse underneath it. Mock every child the
- * header renders; a partial package stub only holds until something deeper
- * wants one more name.
+ * The mocks stay wired to the modules that would render each control, so moving
+ * one back across that line fails these tests rather than quietly restoring a
+ * duplicate. Mock EVERY child the header renders: a partial stub of
+ * `@hanzochat/data-provider` holds only until something deeper wants one more
+ * name, and when it throws it throws while `./Header` is being required on line
+ * 2 — so the suite dies at IMPORT and reports `Tests: 0 total`, which reads in
+ * CI as a passing file. This file sat that way long enough for its own contract
+ * to reverse underneath it. Check for `Tests: 0` before believing it is green.
  */
 
 let mockSmallScreen = false;
@@ -64,14 +52,14 @@ jest.mock('framer-motion', () => ({
 }));
 
 jest.mock('@hanzochat/data-provider', () => ({
-  getConfigDefaults: () => ({ interface: { presets: true, modelSelect: true } }),
+  getConfigDefaults: () => ({ interface: { modelSelect: true } }),
   PermissionTypes: { BOOKMARKS: 'BOOKMARKS', MULTI_CONVO: 'MULTI_CONVO' },
   Permissions: { USE: 'USE' },
 }));
 
 jest.mock('~/data-provider', () => ({
   useGetStartupConfig: () => ({
-    data: { interface: { presets: true, modelSelect: true }, sharedLinksEnabled: true },
+    data: { interface: { modelSelect: true }, sharedLinksEnabled: true },
   }),
 }));
 
@@ -88,15 +76,12 @@ function mockMarker(id: string) {
   return () => <div data-testid={id} />;
 }
 
-jest.mock('./Menus', () => ({
-  HeaderNewChat: mockMarker('header-new-chat'),
-  OpenSidebar: mockMarker('open-sidebar'),
-}));
 jest.mock('./Menus/Endpoints/ModelSelector', () => ({
   __esModule: true,
-  default: mockMarker('model'),
+  default: mockMarker('effort'),
 }));
-jest.mock('./Menus/CanvasToggle', () => ({ __esModule: true, default: mockMarker('canvas') }));
+jest.mock('./Menus/ConvoMenu', () => ({ __esModule: true, default: mockMarker('convo-menu') }));
+jest.mock('./Menus/CanvasToggle', () => ({ __esModule: true, default: mockMarker('sources') }));
 jest.mock('./ExportAndShareMenu', () => ({ __esModule: true, default: mockMarker('share') }));
 jest.mock('./TemporaryChat', () => ({ TemporaryChat: mockMarker('temporary') }));
 jest.mock('./PanelControls', () => ({ __esModule: true, default: mockMarker('panel-controls') }));
@@ -121,52 +106,31 @@ describe.each([
     render(<Header />);
   });
 
-  it('keeps share at the right end, in one copy', () => {
-    const actions = screen.getByTestId('header-actions');
-    expect(within(actions).getByTestId('share')).toBeInTheDocument();
-    expect(screen.getAllByTestId('share')).toHaveLength(1);
+  // MEMBERSHIP, not a list of absences. A `queryByTestId` for a control the
+  // header does not import can never fail — the module is gone, so the marker
+  // was never going to render either way — and the previous version of this
+  // file was mostly that shape. Reading each group's actual children is what
+  // refuses compose, the mark, the window controls, a bookmark button, or
+  // anything else growing back into the row.
+  it('asks the one question at the left, and asks nothing else there', () => {
+    const lead = screen.getByTestId('header-lead');
+    expect([...lead.children].map((c) => c.getAttribute('data-testid'))).toEqual(['effort']);
   });
 
-  it('does not carry private anywhere — it belongs to starting, not continuing', () => {
-    expect(screen.queryByTestId('temporary')).not.toBeInTheDocument();
-  });
-
-  it('leaves the mark and the sidebar toggle to the sidebar', () => {
-    expect(screen.queryByTestId('brand')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('open-sidebar')).not.toBeInTheDocument();
-  });
-
-  it('carries compose at the left edge, in one copy', () => {
-    expect(screen.getAllByTestId('header-new-chat')).toHaveLength(1);
-  });
-
-  // The preset half of this went with PresetsMenu: a component that no longer
-  // exists cannot be mounted, so asserting its absence is the vacuous shape the
-  // note below refuses. ModelSelector is still a real module and could be
-  // mounted here, so that half still holds something.
-  it('names no model', () => {
-    expect(screen.queryByTestId('model')).not.toBeInTheDocument();
-  });
-
-  // The membership of the group, not just its order. A `queryByTestId` for a
-  // control this file no longer mocks can never fail — the module is gone, so
-  // the marker was never going to render either way. Reading the group's actual
-  // children is what refuses a bookmark button, a maximize button, or anything
-  // else growing back into the row.
-  it('carries these three actions and nothing else', () => {
+  it('carries share, sources, the overflow menu and private — and nothing else', () => {
     const actions = screen.getByTestId('header-actions');
     expect([...actions.children].map((c) => c.getAttribute('data-testid'))).toEqual([
       'share',
-      'canvas',
-      'panel-controls',
+      'sources',
+      'convo-menu',
+      'temporary',
     ]);
   });
 
-  // The window controls (width, companions, right panel) are chrome for the
-  // WINDOW, not for the conversation, so they sit after every conversation
-  // action — last thing at the right end, the way a title bar reads.
-  it('puts the window controls last in the action group', () => {
+  // Private decides what the NEXT conversation is; the other three act on THIS
+  // one. So private reads last, after the things it is not about.
+  it('puts private last, after the controls that act on the open thread', () => {
     const actions = screen.getByTestId('header-actions');
-    expect(within(actions).getByTestId('panel-controls')).toBe(actions.lastElementChild);
+    expect(within(actions).getByTestId('temporary')).toBe(actions.lastElementChild);
   });
 });
