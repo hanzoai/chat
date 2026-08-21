@@ -12,7 +12,6 @@ jest.mock('../Parts', () => ({
   Reasoning: () => <div data-testid="reasoning" />,
   Summary: () => <div data-testid="summary" />,
   Text: ({ text }: { text?: string }) => <div data-testid="text">{text}</div>,
-  SkillCall: () => <div data-testid="skill-call" />,
   ReadFileCall: () => <div data-testid="read-file-call" />,
   BashCall: ({ commandField }: { commandField?: string }) => (
     <div data-testid="bash-call" data-command-field={commandField ?? 'command'} />
