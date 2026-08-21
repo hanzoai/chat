@@ -1,10 +1,8 @@
 import { useAtom } from 'jotai';
 import { useEffect, useCallback } from 'react';
-import { isAssistantsEndpoint } from '@hanzochat/data-provider';
 import type { TMessage } from '@hanzochat/data-provider';
 import type { TMessageProps } from '~/common';
 import MessageContent from '~/components/Messages/MessageContent';
-import MessageParts from './MessageParts';
 import Message from './Message';
 import store from '~/store';
 
@@ -45,19 +43,10 @@ export default function MultiMessage({
     return null;
   }
 
-  if (isAssistantsEndpoint(message.endpoint) && message.content) {
-    return (
-      <MessageParts
-        key={message.messageId}
-        message={message}
-        currentEditId={currentEditId}
-        setCurrentEditId={setCurrentEditId}
-        siblingIdx={messagesTree.length - siblingIdx - 1}
-        siblingCount={messagesTree.length}
-        setSiblingIdx={setSiblingIdxRev}
-      />
-    );
-  } else if (message.content) {
+  /* A content array renders the same way whoever produced it. This used to
+     fork on `isAssistantsEndpoint` first and hand an identical prop set to a
+     third copy of the turn, which rendered the identical body. */
+  if (message.content) {
     return (
       <MessageContent
         key={message.messageId}

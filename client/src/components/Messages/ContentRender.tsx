@@ -1,18 +1,13 @@
 import { useCallback, useMemo, memo } from 'react';
-import { useAtomValue } from 'jotai';
 import type { TMessage, TMessageContentParts } from '@hanzochat/data-provider';
-import type { TMessageProps, TMessageIcon } from '~/common';
+import type { TMessageProps } from '~/common';
 import { useAttachments, useLocalize, useMessageActions, useContentMetadata } from '~/hooks';
 import ContentParts from '~/components/Chat/Messages/Content/ContentParts';
-import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
 import SiblingSwitch from '~/components/Chat/Messages/SiblingSwitch';
 import HoverButtons from '~/components/Chat/Messages/HoverButtons';
-import MessageIcon from '~/components/Chat/Messages/MessageIcon';
 import SubRow from '~/components/Chat/Messages/SubRow';
-import { cn, getMessageAriaLabel } from '~/utils';
-import { fontSizeAtom } from '~/store/fontSize';
-import store from '~/store';
-import { USER_TURN, chatWidth, turnColumn } from '~/common/turn';
+import { getMessageAriaLabel } from '~/utils';
+import Turn from './Turn';
 
 type ContentRenderProps = {
   message?: TMessage;
@@ -22,6 +17,12 @@ type ContentRenderProps = {
   'currentEditId' | 'setCurrentEditId' | 'siblingIdx' | 'setSiblingIdx' | 'siblingCount'
 >;
 
+/**
+ * A turn whose body is a content array — every turn this app serves, since all
+ * chat goes through the agents framework.
+ *
+ * It carries the body and nothing else; `Turn` is the frame.
+ */
 const ContentRender = memo(
   ({
     message: msg,
@@ -40,11 +41,8 @@ const ContentRender = memo(
     const {
       edit,
       index,
-      agent,
-      assistant,
       enterEdit,
       conversation,
-      messageLabel,
       latestMessage,
       handleContinue,
       handleFeedback,
@@ -56,38 +54,16 @@ const ContentRender = memo(
       currentEditId,
       setCurrentEditId,
     });
-    const fontSize = useAtomValue(fontSizeAtom);
-    const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
 
     const handleRegenerateMessage = useCallback(() => regenerateMessage(), [regenerateMessage]);
-    const isLast = useMemo(
-      () =>
-        !(msg?.children?.length ?? 0) && (msg?.depth === latestMessage?.depth || msg?.depth === -1),
-      [msg?.children, msg?.depth, latestMessage?.depth],
-    );
     const hasNoChildren = !(msg?.children?.length ?? 0);
+    const isLast = useMemo(
+      () => hasNoChildren && (msg?.depth === latestMessage?.depth || msg?.depth === -1),
+      [hasNoChildren, msg?.depth, latestMessage?.depth],
+    );
     const isLatestMessage = msg?.messageId === latestMessage?.messageId;
     /** Only pass isSubmitting to the latest message to prevent unnecessary re-renders */
     const effectiveIsSubmitting = isLatestMessage ? isSubmitting : false;
-
-    const iconData: TMessageIcon = useMemo(
-      () => ({
-        endpoint: msg?.endpoint ?? conversation?.endpoint,
-        model: msg?.model ?? conversation?.model,
-        iconURL: msg?.iconURL,
-        modelLabel: messageLabel,
-        isCreatedByUser: msg?.isCreatedByUser,
-      }),
-      [
-        messageLabel,
-        conversation?.endpoint,
-        conversation?.model,
-        msg?.model,
-        msg?.iconURL,
-        msg?.endpoint,
-        msg?.isCreatedByUser,
-      ],
-    );
 
     const { hasParallelContent } = useContentMetadata(msg);
 
@@ -95,87 +71,53 @@ const ContentRender = memo(
       return null;
     }
 
-
-    const baseClasses = {
-      common: 'group mx-auto flex flex-1 gap-3 transition-all duration-300 transform-gpu ',
-      chat: chatWidth({ maximize: maximizeChatSpace, parallel: hasParallelContent }),
-    };
-
-    const conditionalClasses = {
-      focus: 'focus:outline-none focus:ring-2 focus:ring-border-xheavy',
-    };
-
     return (
-      <div
+      <Turn
         id={msg.messageId}
-        aria-label={getMessageAriaLabel(msg, localize)}
-        className={cn(
-          baseClasses.common,
-          baseClasses.chat,
-          conditionalClasses.focus,
-          'message-render',
-        )}
+        role={msg.isCreatedByUser === true ? 'user' : 'assistant'}
+        label={getMessageAriaLabel(msg, localize)}
+        wide={hasParallelContent}
+        busy={hasNoChildren && effectiveIsSubmitting}
+        actions={
+          <SubRow classes="text-xs" pinned={isLast}>
+            <SiblingSwitch
+              siblingIdx={siblingIdx}
+              siblingCount={siblingCount}
+              setSiblingIdx={setSiblingIdx}
+            />
+            <HoverButtons
+              index={index}
+              message={msg}
+              isEditing={edit}
+              enterEdit={enterEdit}
+              isSubmitting={isSubmitting}
+              conversation={conversation ?? null}
+              regenerate={handleRegenerateMessage}
+              copyToClipboard={copyToClipboard}
+              handleContinue={handleContinue}
+              latestMessage={latestMessage}
+              handleFeedback={handleFeedback}
+              isLast={isLast}
+            />
+          </SubRow>
+        }
       >
-        {/* No avatar, no sender name (owner call): identity chrome is dropped.
-            The user's own turn is a glass bubble on the right; the reply is
-            plain and full width — that contrast is what says who is speaking. */}
-        <div
-          className={cn(
-            'relative flex w-full flex-col',
-            msg.isCreatedByUser ? 'user-turn' : 'agent-turn',
-          )}
-        >
-          <div className={turnColumn(msg.isCreatedByUser)}>
-            <div
-              className={cn(
-                'flex max-w-full flex-grow flex-col gap-0',
-                msg.isCreatedByUser && USER_TURN,
-              )}
-            >
-              <ContentParts
-                edit={edit}
-                isLast={isLast}
-                enterEdit={enterEdit}
-                siblingIdx={siblingIdx}
-                messageId={msg.messageId}
-                attachments={attachments}
-                searchResults={searchResults}
-                setSiblingIdx={setSiblingIdx}
-                isLatestMessage={isLatestMessage}
-                isSubmitting={effectiveIsSubmitting}
-                isCreatedByUser={msg.isCreatedByUser}
-                conversationId={conversation?.conversationId}
-                content={msg.content as Array<TMessageContentParts | undefined>}
-              />
-            </div>
-            {hasNoChildren && effectiveIsSubmitting ? (
-              <PlaceholderRow />
-            ) : (
-              <SubRow classes="text-xs" pinned={isLast}>
-                <SiblingSwitch
-                  siblingIdx={siblingIdx}
-                  siblingCount={siblingCount}
-                  setSiblingIdx={setSiblingIdx}
-                />
-                <HoverButtons
-                  index={index}
-                  message={msg}
-                  isEditing={edit}
-                  enterEdit={enterEdit}
-                  isSubmitting={isSubmitting}
-                  conversation={conversation ?? null}
-                  regenerate={handleRegenerateMessage}
-                  copyToClipboard={copyToClipboard}
-                  handleContinue={handleContinue}
-                  latestMessage={latestMessage}
-                  handleFeedback={handleFeedback}
-                  isLast={isLast}
-                />
-              </SubRow>
-            )}
-          </div>
-        </div>
-      </div>
+        <ContentParts
+          edit={edit}
+          isLast={isLast}
+          enterEdit={enterEdit}
+          siblingIdx={siblingIdx}
+          messageId={msg.messageId}
+          attachments={attachments}
+          searchResults={searchResults}
+          setSiblingIdx={setSiblingIdx}
+          isLatestMessage={isLatestMessage}
+          isSubmitting={effectiveIsSubmitting}
+          isCreatedByUser={msg.isCreatedByUser}
+          conversationId={conversation?.conversationId}
+          content={msg.content as Array<TMessageContentParts | undefined>}
+        />
+      </Turn>
     );
   },
 );
