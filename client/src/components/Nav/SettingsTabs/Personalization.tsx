@@ -1,90 +1,35 @@
-import { useState, useEffect } from 'react';
-import { Switch, useToastContext } from '@hanzochat/client';
-import { useGetUserQuery, useUpdateMemoryPreferencesMutation } from '~/data-provider';
+import { memo } from 'react';
+import { MemoryPanel } from '~/components/SidePanel/Memories';
 import { useLocalize } from '~/hooks';
 
-interface PersonalizationProps {
-  hasMemoryOptOut: boolean;
-  hasAnyPersonalizationFeature: boolean;
-}
-
-export default function Personalization({
-  hasMemoryOptOut,
-  hasAnyPersonalizationFeature,
-}: PersonalizationProps) {
+/**
+ * What the assistant knows about you, and what it does with it.
+ *
+ * Memory is the whole of it today, and it is the REAL memory surface rather
+ * than a second one: `MemoryPanel` already carries the list, the filter, the
+ * create dialog, the usage badge and the reference-saved-memories switch. This
+ * tab used to hold a hand-rolled copy of that switch — two controls writing one
+ * preference, which is one too many — so the copy is gone and the panel came
+ * here from the side panel, where a person looking for a setting never was.
+ *
+ * The panel answers for itself when a deployment turns memory off or a role
+ * cannot read it, so nothing is gated twice.
+ *
+ * Custom instructions belong beside it and cannot be written yet: a user record
+ * carries `personalization.memories` and nothing else, so the field, the route
+ * and the mutation have to exist before there is anything to save.
+ */
+function Personalization() {
   const localize = useLocalize();
-  const { showToast } = useToastContext();
-  const { data: user } = useGetUserQuery();
-  const [referenceSavedMemories, setReferenceSavedMemories] = useState(true);
-
-  const updateMemoryPreferencesMutation = useUpdateMemoryPreferencesMutation({
-    onSuccess: () => {
-      showToast({
-        message: localize('com_ui_preferences_updated'),
-        status: 'success',
-      });
-    },
-    onError: () => {
-      showToast({
-        message: localize('com_ui_error_updating_preferences'),
-        status: 'error',
-      });
-      // Revert the toggle on error
-      setReferenceSavedMemories((prev) => !prev);
-    },
-  });
-
-  // Initialize state from user data
-  useEffect(() => {
-    if (user?.personalization?.memories !== undefined) {
-      setReferenceSavedMemories(user.personalization.memories);
-    }
-  }, [user?.personalization?.memories]);
-
-  const handleMemoryToggle = (checked: boolean) => {
-    setReferenceSavedMemories(checked);
-    updateMemoryPreferencesMutation.mutate({ memories: checked });
-  };
-
-  if (!hasAnyPersonalizationFeature) {
-    return (
-      <div className="flex flex-col gap-3 text-sm text-text-primary">
-        <div className="text-text-secondary">{localize('com_ui_no_personalization_available')}</div>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex flex-col gap-3 text-sm text-text-primary">
-      {/* Memory Settings Section */}
-      {hasMemoryOptOut && (
-        <>
-          <div className="border-b border-border-medium pb-3">
-            <div className="text-base font-semibold">{localize('com_ui_memory')}</div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <div id="reference-saved-memories-label" className="flex items-center gap-2">
-                {localize('com_ui_reference_saved_memories')}
-              </div>
-              <div
-                id="reference-saved-memories-description"
-                className="mt-1 text-xs text-text-secondary"
-              >
-                {localize('com_ui_reference_saved_memories_description')}
-              </div>
-            </div>
-            <Switch
-              checked={referenceSavedMemories}
-              onCheckedChange={handleMemoryToggle}
-              disabled={updateMemoryPreferencesMutation.isLoading}
-              aria-labelledby="reference-saved-memories-label"
-              aria-describedby="reference-saved-memories-description"
-            />
-          </div>
-        </>
-      )}
+    <div className="flex flex-col gap-3 p-1 text-sm text-text-primary">
+      <div className="border-b border-border-medium pb-3">
+        <div className="text-base font-semibold">{localize('com_ui_memory')}</div>
+      </div>
+      <MemoryPanel />
     </div>
   );
 }
+
+export default memo(Personalization);
