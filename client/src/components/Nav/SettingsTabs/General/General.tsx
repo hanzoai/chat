@@ -2,42 +2,15 @@ import React, { useContext, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import { useAtom } from 'jotai';
 import { Dropdown, ThemeContext } from '@hanzochat/client';
+import { Appearance } from '@hanzo/appearance';
+import BackdropSettings from './BackdropSettings';
+import ChatDirection from './ChatDirection';
 import ArchivedChats from './ArchivedChats';
+import { ClearChats } from './ClearChats';
 import ToggleSwitch from '../ToggleSwitch';
 import { useLocalize } from '~/hooks';
+import Voice from './Voice';
 import store from '~/store';
-import { Appearance } from '@hanzo/appearance';
-
-const toggleSwitchConfigs = [
-  {
-    stateAtom: store.enableUserMsgMarkdown,
-    localizationKey: 'com_nav_user_msg_markdown',
-    switchId: 'enableUserMsgMarkdown',
-    hoverCardText: undefined,
-    key: 'enableUserMsgMarkdown',
-  },
-  {
-    stateAtom: store.autoScroll,
-    localizationKey: 'com_nav_auto_scroll',
-    switchId: 'autoScroll',
-    hoverCardText: undefined,
-    key: 'autoScroll',
-  },
-  {
-    stateAtom: store.hideSidePanel,
-    localizationKey: 'com_nav_hide_panel',
-    switchId: 'hideSidePanel',
-    hoverCardText: undefined,
-    key: 'hideSidePanel',
-  },
-  {
-    stateAtom: store.keepScreenAwake,
-    localizationKey: 'com_nav_keep_screen_awake',
-    switchId: 'keepScreenAwake',
-    hoverCardText: undefined,
-    key: 'keepScreenAwake',
-  },
-];
 
 export const ThemeSelector = ({
   theme,
@@ -151,29 +124,16 @@ export const LangSelector = ({
   );
 };
 
-export const SignatureInput = () => {
-  const localize = useLocalize();
-  const [signature, setSignature] = useAtom(store.signature);
-  const labelId = 'signature-input-label';
-
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <div id={labelId} className="shrink-0">
-        {localize('com_nav_signature')}
-      </div>
-      <input
-        aria-labelledby={labelId}
-        data-testid="signature-input"
-        value={signature}
-        maxLength={80}
-        onChange={(e) => setSignature(e.target.value)}
-        placeholder={localize('com_nav_signature_placeholder')}
-        className="w-full max-w-[260px] rounded-md border border-border-light bg-surface-secondary px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-xheavy"
-      />
-    </div>
-  );
-};
-
+/**
+ * How the app looks, speaks and behaves — and the two things you can do to the
+ * whole history at once.
+ *
+ * The text-size row that used to sit in a Chat tab is gone rather than moved.
+ * `Appearance` below already carries a type scale, and that one multiplies
+ * every ramp the design system publishes instead of one class on the message
+ * column, so keeping both was two answers to one question with the smaller
+ * answer winning wherever they disagreed.
+ */
 function General() {
   const { theme, setTheme } = useContext(ThemeContext);
 
@@ -219,20 +179,42 @@ function General() {
         <LangSelector langcode={langcode} onChange={changeLang} />
       </div>
       <div className="pb-3">
-        <SignatureInput />
+        <ChatDirection />
       </div>
-      {toggleSwitchConfigs.map((config) => (
-        <div key={config.key} className="pb-3">
-          <ToggleSwitch
-            stateAtom={config.stateAtom}
-            localizationKey={config.localizationKey}
-            hoverCardText={config.hoverCardText}
-            switchId={config.switchId}
-          />
-        </div>
-      ))}
+      <div className="pb-3">
+        <BackdropSettings />
+      </div>
+      <div className="pb-3">
+        <Voice />
+      </div>
+      <div className="pb-3">
+        <ToggleSwitch
+          stateAtom={store.enterToSend}
+          localizationKey="com_nav_enter_to_send"
+          hoverCardText="com_nav_info_enter_to_send"
+          switchId="enterToSend"
+        />
+      </div>
+      <div className="pb-3">
+        <ToggleSwitch
+          stateAtom={store.autoScroll}
+          localizationKey="com_nav_auto_scroll"
+          switchId="autoScroll"
+        />
+      </div>
+      <div className="pb-3">
+        <ToggleSwitch
+          stateAtom={store.defaultTemporaryChat}
+          localizationKey="com_nav_default_temporary_chat"
+          hoverCardText="com_nav_info_default_temporary_chat"
+          switchId="defaultTemporaryChat"
+        />
+      </div>
       <div className="pb-3">
         <ArchivedChats />
+      </div>
+      <div className="pb-3">
+        <ClearChats />
       </div>
     </div>
   );

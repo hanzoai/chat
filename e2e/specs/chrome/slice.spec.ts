@@ -117,3 +117,106 @@ test.describe('the slice', () => {
     expect(errors).toEqual([]);
   });
 });
+
+/**
+ * Settings, opened the way anyone opens it.
+ *
+ * The palette's `settings` command writes the same `store.showSettings` the
+ * account menu writes, so this drives the real control rather than the atom.
+ * Every preference asserted here is kept in the browser, which is what makes
+ * the reload the proof: a dialog that renders and does not save is not done.
+ */
+const TABS = ['General', 'Notifications', 'Personalization', 'Connected apps', 'Account'];
+
+async function openSettings(page: Page) {
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.getByRole('option', { name: 'Settings', exact: true }).click();
+  await expect(page.getByRole('tab').first()).toBeVisible();
+}
+
+async function pick(page: Page, tab: string) {
+  await page.getByRole('tab', { name: tab, exact: true }).click();
+  await expect(page.getByRole('tab', { name: tab, exact: true })).toHaveAttribute(
+    'data-state',
+    'active',
+  );
+}
+
+test.describe('settings', () => {
+  test('five tabs, in this order, and nothing else', async ({ page }) => {
+    await land(page);
+    await openSettings(page);
+    expect(await page.getByRole('tab').allInnerTexts()).toEqual(TABS);
+  });
+
+  test('every tab renders something', async ({ page }) => {
+    await land(page);
+    await openSettings(page);
+    for (const tab of TABS) {
+      await pick(page, tab);
+      const panel = page.locator('[role="tabpanel"]:visible').last();
+      expect((await panel.innerText()).trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  test('a change in each tab survives a reload', async ({ page }) => {
+    await land(page);
+    await openSettings(page);
+
+    // General — enter-to-send starts on, so this turns it off
+    await pick(page, 'General');
+    await page.getByTestId('enterToSend').click();
+
+    // Notifications — both arrival controls, started from opposite defaults
+    await pick(page, 'Notifications');
+    await page.getByTestId('keepScreenAwake').click();
+    await page.getByTestId('AutomaticPlayback').click();
+
+    // Account — the sign-off is free text, so it proves more than a boolean
+    await pick(page, 'Account');
+    await page.getByTestId('signature-input').fill('per aspera');
+    await page.getByTestId('signature-input').blur();
+
+    await page.reload();
+    await page.waitForSelector('[data-testid="text-input"]', { timeout: 30000 });
+    await openSettings(page);
+
+    await pick(page, 'General');
+    await expect(page.getByTestId('enterToSend')).toHaveAttribute('aria-checked', 'false');
+    await pick(page, 'Notifications');
+    await expect(page.getByTestId('keepScreenAwake')).toHaveAttribute('aria-checked', 'false');
+    await expect(page.getByTestId('AutomaticPlayback')).toHaveAttribute('aria-checked', 'true');
+    await pick(page, 'Account');
+    await expect(page.getByTestId('signature-input')).toHaveValue('per aspera');
+  });
+
+  test('Notifications is the two ways an answer announces itself, and no more', async ({
+    page,
+  }) => {
+    await land(page);
+    await openSettings(page);
+    await pick(page, 'Notifications');
+    const panel = page.locator('[role="tabpanel"]:visible').last();
+    await expect(panel.getByRole('switch')).toHaveCount(2);
+  });
+
+  test('no parameter, preset, endpoint, speech or balance tab remains', async ({ page }) => {
+    await land(page);
+    await openSettings(page);
+    const strip = (await page.getByRole('tab').allInnerTexts()).join(' ').toLowerCase();
+    for (const gone of ['chat', 'speech', 'data', 'balance', 'usage', 'commands', 'about']) {
+      expect(strip).not.toContain(gone);
+    }
+  });
+
+  test('opening and walking settings throws nothing', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await land(page);
+    await openSettings(page);
+    for (const tab of TABS) {
+      await pick(page, tab);
+    }
+    expect(errors).toEqual([]);
+  });
+});
