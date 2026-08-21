@@ -223,7 +223,14 @@ const Conversations: FC<ConversationsProps> = ({
     if (shouldShowFavorites) {
       items.push({ type: 'favorites' });
     }
-    items.push({ type: 'chats-header' });
+    // The header names the rows beneath it, so with no rows there is nothing to
+    // name — an account with no history got a "Chats" heading over a void. It is
+    // this list's own business, not the sidebar's: hiding the whole list instead
+    // took the favourites and the marketplace link down with it.
+    const hasChats = pinnedConversations.length > 0 || groupedConversations.length > 0;
+    if (hasChats || isLoading) {
+      items.push({ type: 'chats-header' });
+    }
 
     if (isChatsExpanded) {
       if (pinnedConversations.length > 0) {
@@ -334,10 +341,13 @@ const Conversations: FC<ConversationsProps> = ({
       }
 
       if (item.type === 'header') {
-        // First date header index depends on whether favorites row is included
-        // With favorites: [favorites, chats-header, first-header] → index 2
-        // Without favorites: [chats-header, first-header] → index 1
-        const firstHeaderIndex = shouldShowFavorites ? 2 : 1;
+        // Asked of the list rather than counted off its front, because the rows
+        // ahead of the first date header are conditional — favourites, and now
+        // the chats header too — and a hardcoded 1-or-2 goes wrong the moment a
+        // third condition joins them.
+        const firstHeaderIndex = flattenedItemsRef.current.findIndex(
+          (row) => row.type === 'header',
+        );
         return (
           <MeasuredRow key={key} {...rowProps}>
             <DateLabel groupName={item.groupName} isFirst={index === firstHeaderIndex} />
@@ -370,7 +380,6 @@ const Conversations: FC<ConversationsProps> = ({
       isSmallScreen,
       isChatsExpanded,
       setIsChatsExpanded,
-      shouldShowFavorites,
       activeJobIds,
     ],
   );
