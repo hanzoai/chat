@@ -1,114 +1,66 @@
-import { useState, useId, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
-import * as Ariakit from '@ariakit/react';
-import { Upload, Share2 } from 'lucide-react';
-import { DropdownPopup, TooltipAnchor, useIsSmallScreen } from '@hanzochat/client';
-import type * as t from '~/common';
-import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
+import { Share2 } from 'lucide-react';
+import { TooltipAnchor } from '@hanzochat/client';
 import { ShareButton } from '~/components/Conversations/ConvoOptions';
-import { CONTROL, CONTROL_OPEN } from '~/components/chrome';
+import { CONTROL } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 import store from '~/store';
 
-export default function ExportAndShareMenu({
-  isSharedButtonEnabled,
-}: {
-  isSharedButtonEnabled: boolean;
-}) {
+/**
+ * Share — one button, one thing.
+ *
+ * This was a MENU of two: a share glyph that opened onto Share and Export.
+ * Export is not a kind of sharing, it is one of the four things you can do to
+ * the conversation, and it lives with the other three under the `⋯` now. What
+ * is left needs no menu — a glyph that opens two rows, one of which is the glyph
+ * itself, costs a click to say what the glyph already said.
+ *
+ * THE FILE NAME IS STALE and the rename is a follow-up, not an oversight:
+ * `components/chrome.spec.ts` holds the list of files that draw a control in the
+ * top row and reads each one off disk by path, so renaming this file makes that
+ * suite fail to load. That list spans several parts of the app and has to be
+ * curated as a whole.
+ */
+export default function Share({ enabled }: { enabled: boolean }) {
   const localize = useLocalize();
-  const [showExports, setShowExports] = useState(false);
-  const [isPopoverActive, setIsPopoverActive] = useState(false);
-  const [showShareDialog, setShowShareDialog] = useState(false);
-
-  const menuId = useId();
-  const shareButtonRef = useRef<HTMLButtonElement>(null);
-  const exportButtonRef = useRef<HTMLButtonElement>(null);
-  const isSmallScreen = useIsSmallScreen();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
   const conversation = useAtomValue(store.conversationByIndex(0));
+  const conversationId = conversation?.conversationId;
 
-  const exportable =
-    conversation &&
-    conversation.conversationId != null &&
-    conversation.conversationId !== 'new' &&
-    conversation.conversationId !== 'search';
-
-  if (exportable === false) {
+  /* Nothing to share until the conversation exists on the server. */
+  if (
+    !enabled ||
+    conversationId == null ||
+    conversationId === 'new' ||
+    conversationId === 'search'
+  ) {
     return null;
   }
 
-  const shareHandler = () => {
-    setShowShareDialog(true);
-  };
-
-  const exportHandler = () => {
-    setShowExports(true);
-  };
-
-  const dropdownItems: t.MenuItemProps[] = [
-    {
-      label: localize('com_ui_share'),
-      onClick: shareHandler,
-      icon: <Share2 className="icon-md mr-2 text-text-secondary" />,
-      show: isSharedButtonEnabled,
-      /** NOTE: THE FOLLOWING PROPS ARE REQUIRED FOR MENU ITEMS THAT OPEN DIALOGS */
-      hideOnClick: false,
-      ref: shareButtonRef,
-      render: (props) => <button {...props} />,
-    },
-    {
-      label: localize('com_endpoint_export'),
-      onClick: exportHandler,
-      icon: <Upload className="icon-md mr-2 text-text-secondary" />,
-      /** NOTE: THE FOLLOWING PROPS ARE REQUIRED FOR MENU ITEMS THAT OPEN DIALOGS */
-      hideOnClick: false,
-      ref: exportButtonRef,
-      render: (props) => <button {...props} />,
-    },
-  ];
-
   return (
     <>
-      <DropdownPopup
-        portal={true}
-        menuId={menuId}
-        focusLoop={true}
-        unmountOnHide={true}
-        isOpen={isPopoverActive}
-        setIsOpen={setIsPopoverActive}
-        trigger={
-          <TooltipAnchor
-            description={localize('com_endpoint_export_share')}
-            render={
-              <Ariakit.MenuButton
-                id="export-menu-button"
-                aria-label="Export options"
-                className={cn(
-                  CONTROL,
-                  'disabled:pointer-events-none disabled:opacity-50',
-                  isPopoverActive && CONTROL_OPEN,
-                )}
-              >
-                <Share2 className="text-text-primary" aria-hidden="true" focusable="false" />
-              </Ariakit.MenuButton>
-            }
-          />
+      <TooltipAnchor
+        description={localize('com_ui_share')}
+        render={
+          <button
+            ref={triggerRef}
+            aria-label={localize('com_ui_share')}
+            aria-haspopup="dialog"
+            onClick={() => setOpen(true)}
+            className={cn(CONTROL)}
+          >
+            <Share2 aria-hidden="true" focusable="false" />
+          </button>
         }
-        items={dropdownItems}
-        className={isSmallScreen ? '' : 'absolute right-0 top-0 mt-2'}
-      />
-      <ExportModal
-        open={showExports}
-        onOpenChange={setShowExports}
-        conversation={conversation}
-        triggerRef={exportButtonRef}
-        aria-label={localize('com_ui_export_convo_modal')}
       />
       <ShareButton
-        triggerRef={shareButtonRef}
-        conversationId={conversation.conversationId ?? ''}
-        open={showShareDialog}
-        onOpenChange={setShowShareDialog}
+        triggerRef={triggerRef}
+        conversationId={conversationId}
+        open={open}
+        onOpenChange={setOpen}
       />
     </>
   );
