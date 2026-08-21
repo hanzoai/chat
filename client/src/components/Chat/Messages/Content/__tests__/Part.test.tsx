@@ -16,7 +16,6 @@ jest.mock('../Parts', () => ({
   BashCall: ({ commandField }: { commandField?: string }) => (
     <div data-testid="bash-call" data-command-field={commandField ?? 'command'} />
   ),
-  SubagentCall: () => <div data-testid="subagent-call" />,
 }));
 
 jest.mock('../MessageContent', () => ({

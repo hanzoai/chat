@@ -28,11 +28,6 @@ jest.mock('../MemoryArtifacts', () => ({
   default: () => <div data-testid="memory-artifacts" />,
 }));
 
-jest.mock('../ToolCallGroup', () => ({
-  __esModule: true,
-  default: () => <div data-testid="tool-call-group" />,
-}));
-
 jest.mock('../Container', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => (
