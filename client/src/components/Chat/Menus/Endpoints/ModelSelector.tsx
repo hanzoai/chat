@@ -66,18 +66,15 @@ import SpecIcon from './components/SpecIcon';
  */
 const STOPS: ReadonlyArray<{
   model: string;
-  /** English, and the fallback for a stop with no key of its own. */
-  name: string;
-  key?: 'com_ui_medium' | 'com_ui_high';
+  key: 'com_ui_instant' | 'com_ui_medium' | 'com_ui_high';
   costly?: boolean;
 }> = [
-  /* Instant has no key: `com_ui_instant` does not exist yet, and `com_ui_low` —
-     which does — is the wrong word twice over. It names the mechanism instead
-     of the outcome, and it warns about the answer where this promises something
-     about the wait. */
-  { model: 'enso-flash', name: 'Instant' },
-  { model: 'enso', name: 'Medium', key: 'com_ui_medium' },
-  { model: 'enso-ultra', name: 'High', key: 'com_ui_high', costly: true },
+  /* `com_ui_instant`, not `com_ui_low`, which is the wrong word twice over: it
+     names the mechanism instead of the outcome, and it warns about the answer
+     where this promises something about the wait. */
+  { model: 'enso-flash', key: 'com_ui_instant' },
+  { model: 'enso', key: 'com_ui_medium' },
+  { model: 'enso-ultra', key: 'com_ui_high', costly: true },
 ];
 
 /** One pick. `endpoint` and `model` are the address; only `name` is read aloud. */
@@ -150,9 +147,9 @@ export function stops(
   available: Choice[],
   localize: ReturnType<typeof useLocalize>,
 ): Array<Choice & { costly?: boolean }> {
-  return STOPS.flatMap(({ model, name, key, costly }) => {
+  return STOPS.flatMap(({ model, key, costly }) => {
     const served = available.find((choice) => choice.model === model);
-    return served ? [{ ...served, name: key ? localize(key) : name, costly }] : [];
+    return served ? [{ ...served, name: localize(key), costly }] : [];
   });
 }
 
@@ -249,7 +246,7 @@ export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
                 <span className="flex flex-col items-start">
                   <span>{stop.name}</span>
                   <span className="text-xs font-normal text-text-secondary-alt">
-                    Consumes usage limits faster
+                    {localize('com_ui_consumes_limits_faster')}
                   </span>
                 </span>
               </button>
@@ -265,8 +262,7 @@ export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
           { separate: true },
           {
             id: 'reset',
-            /* `com_ui_reset` is a bare "Reset", which does not say to what. */
-            label: 'Reset to default',
+            label: localize('com_ui_reset_to_default'),
             disabled: fallback == null,
             onClick: fallback ? pick(fallback) : undefined,
           },
@@ -293,14 +289,15 @@ export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
       setIsOpen={setOpen}
       trigger={
         <TooltipAnchor
-          /* Untranslated, and `com_ui_select_model` is NOT the fallback: this
-             control never says "model", so neither should the name a screen
-             reader reads out. `com_ui_intelligence` is the key to add. */
-          description="Intelligence"
+          /* `com_ui_think`, not `com_ui_select_model`: this control never says
+             "model", so neither should the name a screen reader reads out. Think
+             is the same concept the free tier reduces to one switch, so the
+             control and the switch answer to one word. */
+          description={localize('com_ui_think')}
           render={
             <Ariakit.MenuButton
               id="model-menu-button"
-              aria-label="Intelligence"
+              aria-label={localize('com_ui_think')}
               /* CONTROL is a square; this one carries a name, so it keeps the
                  row's height, radius, ground and glyph size and takes the width
                  its label needs. */

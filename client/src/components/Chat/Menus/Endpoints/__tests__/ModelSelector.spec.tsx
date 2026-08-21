@@ -176,7 +176,7 @@ describe('what the catalog is allowed to offer', () => {
 describe('the effort axis', () => {
   it('is three stops named for what they do, mapped onto the router tiers', () => {
     const axis = stops(models(CATALOG, () => false, [], {}), localize);
-    expect(axis.map((s) => s.name)).toEqual(['Instant', 'com_ui_medium', 'com_ui_high']);
+    expect(axis.map((s) => s.name)).toEqual(['com_ui_instant', 'com_ui_medium', 'com_ui_high']);
     expect(axis.map((s) => s.model)).toEqual(['enso-flash', 'enso', 'enso-ultra']);
   });
 
@@ -198,16 +198,16 @@ describe('the picker', () => {
   it('offers three adjectives and hides every model behind Advanced', () => {
     render(<ModelSelector startupConfig={undefined} />);
     expect(labels()).toEqual([
-      'Instant',
+      'com_ui_instant',
       'com_ui_medium',
-      'com_ui_highConsumes usage limits faster',
+      'com_ui_highcom_ui_consumes_limits_faster',
       'com_ui_advanced',
       'com_ui_advanced / Enso',
       'com_ui_advanced / Enso Flash',
       'com_ui_advanced / Enso Ultra',
       'com_ui_advanced / Zen5 Coder',
       'com_ui_advanced / claude-opus-4.8',
-      'com_ui_advanced / Reset to default',
+      'com_ui_advanced / com_ui_reset_to_default',
     ]);
   });
 
@@ -220,7 +220,7 @@ describe('the picker', () => {
   // The whole point of the component: one press changes what answers you.
   it('sends the endpoint and the model together when a stop is pressed', async () => {
     render(<ModelSelector startupConfig={undefined} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Instant' }));
+    await userEvent.click(screen.getByRole('button', { name: 'com_ui_instant' }));
     expect(mockSelectEndpoint).toHaveBeenCalledWith('Hanzo', { model: 'enso-flash' });
   });
 
@@ -233,14 +233,14 @@ describe('the picker', () => {
   it('resets to the model a fresh conversation would have resolved', async () => {
     render(<ModelSelector startupConfig={undefined} />);
     await userEvent.click(
-      screen.getByRole('button', { name: 'com_ui_advanced / Reset to default' }),
+      screen.getByRole('button', { name: 'com_ui_advanced / com_ui_reset_to_default' }),
     );
     expect(mockSelectEndpoint).toHaveBeenCalledWith('Hanzo', { model: 'enso' });
   });
 
   it('shows the stop the conversation is on', () => {
     render(<ModelSelector startupConfig={undefined} />);
-    expect(screen.getByRole('button', { name: 'Intelligence' })).toHaveTextContent('com_ui_medium');
+    expect(screen.getByRole('button', { name: 'com_ui_think' })).toHaveTextContent('com_ui_medium');
   });
 
   it('picks a deployment-named model as a spec, so its name survives the switch', async () => {
