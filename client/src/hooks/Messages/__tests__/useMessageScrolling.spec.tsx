@@ -137,11 +137,11 @@ function createContextValue(
 }
 
 function ScrollingHarness({ messagesTree }: { messagesTree?: TMessage[] | null }) {
-  const { contentRef, scrollableRef, messagesEndRef, debouncedHandleScroll } =
+  const { contentRef, scrollableRef, messagesEndRef, handleScroll } =
     useMessageScrolling(messagesTree);
 
   return (
-    <div ref={scrollableRef} onScroll={debouncedHandleScroll} data-testid="scrollable">
+    <div ref={scrollableRef} onScroll={handleScroll} data-testid="scrollable">
       <div ref={contentRef} data-testid="content">
         <div ref={messagesEndRef} data-testid="end" />
       </div>
@@ -286,5 +286,69 @@ describe('useMessageScrolling resize reconciliation', () => {
 
     expect(scrollable.scrollTop).toBe(700);
     expect(mockScrollToBottom).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Following a streaming answer is now a distance, not a latch.
+ *
+ * It used to be: any wheel or touch on any message, while submitting, set
+ * `abortScroll` for the rest of the turn. So a flick with the answer already at
+ * the bottom dropped you off the stream, and scrolling back down did not get
+ * you back on — only the scroll-to-bottom button could clear it. `pinned` is
+ * asked on every scroll and answers from where the reader actually is.
+ */
+describe('useMessageScrolling follow decision', () => {
+  const setAbortScroll = jest.fn();
+
+  function scrollTo(offset: number, content = 2000, viewport = 500) {
+    const scrollable = screen.getByTestId('scrollable');
+    Object.defineProperty(scrollable, 'scrollHeight', { value: content, configurable: true });
+    Object.defineProperty(scrollable, 'clientHeight', { value: viewport, configurable: true });
+    scrollable.scrollTop = offset;
+    act(() => {
+      fireEvent.scroll(scrollable);
+    });
+    return setAbortScroll.mock.calls.at(-1)?.[0];
+  }
+
+  beforeEach(() => {
+    MockResizeObserver.reset();
+    MockIntersectionObserver.reset();
+    setAbortScroll.mockClear();
+    global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+    global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+    renderScrolling({ contextOverrides: { setAbortScroll } });
+  });
+
+  afterEach(() => {
+    global.ResizeObserver = originalResizeObserver;
+    global.IntersectionObserver = originalIntersectionObserver;
+  });
+
+  it('keeps following while the reader is at the end', () => {
+    expect(scrollTo(1500)).toBe(false);
+  });
+
+  it('keeps following within the slack the shell allows', () => {
+    // 1500 is the true bottom; 48px short of it still counts.
+    expect(scrollTo(1460)).toBe(false);
+  });
+
+  it('stops following once the reader scrolls up to re-read', () => {
+    expect(scrollTo(400)).toBe(true);
+  });
+
+  it('RESUMES following when the reader scrolls back down', () => {
+    expect(scrollTo(400)).toBe(true);
+    expect(scrollTo(1500)).toBe(false);
+  });
+
+  it('creates no observer per scroll event', () => {
+    const before = MockIntersectionObserver.instances.length;
+    scrollTo(1500);
+    scrollTo(400);
+    scrollTo(1500);
+    expect(MockIntersectionObserver.instances.length).toBe(before);
   });
 });

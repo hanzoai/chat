@@ -1,4 +1,4 @@
-// hooks/useAutoScroll.ts
+import { pinned } from '@hanzo/ui/chat';
 import { useEffect, useState } from 'react';
 
 interface UseAutoScrollProps {
@@ -18,13 +18,9 @@ export const useAutoScroll = ({ ref, content, isSubmitting }: UseAutoScrollProps
 
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 50;
-
-      if (!isNearBottom) {
-        setUserScrolled(true);
-      } else {
-        setUserScrolled(false);
-      }
+      setUserScrolled(
+        !pinned({ offset: scrollTop, viewport: clientHeight, content: scrollHeight }),
+      );
     };
 
     scrollContainer.addEventListener('scroll', handleScroll);

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback, useMemo } from 'react';
-import throttle from 'lodash/throttle';
 import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from '@hanzochat/data-provider';
 import type { TMessageProps } from '~/common';
 import { useMessagesViewContext, useAssistantsMapContext, useAgentsMapContext } from '~/Providers';
@@ -18,7 +17,6 @@ export default function useMessageHelpers(props: TMessageProps) {
     isSubmitting,
     conversation,
     latestMessage,
-    setAbortScroll,
     handleContinue,
     setLatestMessage,
   } = useMessagesViewContext();
@@ -81,24 +79,6 @@ export default function useMessageHelpers(props: TMessageProps) {
     [messageId, setCurrentEditId],
   );
 
-  const handleScroll = useCallback(
-    (event: unknown) => {
-      throttle(() => {
-        logger.log(
-          'message_scrolling',
-          `useMessageHelpers: setting abort scroll to ${isSubmitting}, handleScroll event`,
-          event,
-        );
-        if (isSubmitting) {
-          setAbortScroll(true);
-        } else {
-          setAbortScroll(false);
-        }
-      }, 500)();
-    },
-    [isSubmitting, setAbortScroll],
-  );
-
   const assistant = useMemo(() => {
     if (!isAssistantsEndpoint(conversation?.endpoint)) {
       return undefined;
@@ -140,7 +120,6 @@ export default function useMessageHelpers(props: TMessageProps) {
     enterEdit,
     conversation,
     isSubmitting,
-    handleScroll,
     latestMessage,
     handleContinue,
     copyToClipboard,

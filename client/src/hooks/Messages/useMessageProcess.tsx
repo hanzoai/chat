@@ -1,6 +1,5 @@
-import throttle from 'lodash/throttle';
 import { Constants } from '@hanzochat/data-provider';
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import type { TMessage } from '@hanzochat/data-provider';
 import { getTextKey, TEXT_KEY_DIVIDER, logger } from '~/utils';
 import { useMessagesViewContext } from '~/Providers';
@@ -9,7 +8,7 @@ export default function useMessageProcess({ message }: { message?: TMessage | nu
   const latestText = useRef<string | number>('');
   const hasNoChildren = useMemo(() => (message?.children?.length ?? 0) === 0, [message]);
 
-  const { conversation, setAbortScroll, setLatestMessage, isSubmitting } = useMessagesViewContext();
+  const { conversation, setLatestMessage, isSubmitting } = useMessagesViewContext();
 
   useEffect(() => {
     const convoId = conversation?.conversationId;
@@ -56,26 +55,7 @@ export default function useMessageProcess({ message }: { message?: TMessage | nu
     }
   }, [hasNoChildren, message, setLatestMessage, conversation?.conversationId]);
 
-  const handleScroll = useCallback(
-    (event: unknown | TouchEvent | WheelEvent) => {
-      throttle(() => {
-        logger.log(
-          'message_scrolling',
-          `useMessageProcess: setting abort scroll to ${isSubmitting}, handleScroll event`,
-          event,
-        );
-        if (isSubmitting) {
-          setAbortScroll(true);
-        } else {
-          setAbortScroll(false);
-        }
-      }, 500)();
-    },
-    [isSubmitting, setAbortScroll],
-  );
-
   return {
-    handleScroll,
     isSubmitting,
     conversation,
   };
