@@ -14,7 +14,6 @@ import { IAM_ORG } from '~/utils/iam';
 import LoginLayout from './Layouts/Login';
 import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
-import Collection from './Collection';
 import ChatRoute from './ChatRoute';
 import Search from './Search';
 import Root from './Root';
@@ -149,22 +148,6 @@ export const router = createBrowserRouter(
                   <AgentMarketplace />
                 </MarketplaceProvider>
               ),
-            },
-            {
-              path: 'projects',
-              element: <Collection kind="projects" />,
-            },
-            {
-              path: 'sites',
-              element: <Collection kind="sites" />,
-            },
-            {
-              path: 'scheduled',
-              element: <Collection kind="scheduled" />,
-            },
-            {
-              path: 'plugins',
-              element: <Collection kind="plugins" />,
             },
           ],
         },

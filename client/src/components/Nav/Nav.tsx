@@ -26,7 +26,6 @@ import { Conversations } from '~/components/Conversations';
 import SearchBar from './SearchBar';
 import Signature from './Signature';
 import NewChat from './NewChat';
-import Rail from './Rail';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -196,8 +195,7 @@ const Nav = memo(
     }, [isFetchingNextPage, computedHasNextPage, fetchNextPage]);
 
     /**
-     * The destination rows (Rail), then search and the tag filter on one row
-     * above the list they both filter.
+     * Search and the tag filter, on one row above the list they both filter.
      *
      * The tag filter used to sit in the icon strip, between the app switcher and
      * the compose button, where it read as app chrome rather than as a control
@@ -205,6 +203,14 @@ const Nav = memo(
      * control at the top right of the view: that one tags the OPEN conversation,
      * this one filters THIS list, and its selection is this component's state —
      * two bookmark buttons in one corner would be the duplication, not the fix.
+     *
+     * Four destination rows used to follow — Projects, Sites, Scheduled,
+     * Plugins. All four routed to ONE component that rendered a card saying the
+     * feature lives on hanzo.app, so they were four permanent sidebar rows
+     * spending the column's scarcest space on a link. Chat already has two ways
+     * to reach another Hanzo app, both of them shared with every other surface:
+     * the mark's nine-tile launcher and the ⌘K palette's Hanzo Apps rows. A
+     * third, chat-only copy of that list is the duplication these rows were.
      */
     const subHeaders = useMemo(() => {
       const searching = search.enabled === null || search.enabled === true;
@@ -225,12 +231,11 @@ const Nav = memo(
               )}
             </div>
           )}
-          <Rail toggleNav={itemToggleNav} collapsed={collapsed} />
         </>
       );
-    }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags, itemToggleNav, collapsed]);
+    }, [search.enabled, isSmallScreen, hasAccessToBookmarks, tags, collapsed]);
 
-    // ⌘/Ctrl-K belongs to the palette (components/Palette), which Root mounts
+    // ⌘/Ctrl-K belongs to the palette (Nav/CommandPalette), which Root mounts
     // for every screen. It used to focus this search field instead — the
     // shortcut standing in for a palette that did not exist yet — and it only
     // worked where the sidebar was expanded and the field rendered.
@@ -272,13 +277,23 @@ const Nav = memo(
             />
             {/* The chat-history list is for someone who HAS history. A
                 signed-out visitor never fetches any (the query is gated on the
-                session), so for them with nothing yet it is an empty "Chats"
-                header framing a void — the sidebar should just be New + the
-                sign-up offer. Show the list once there is a session, or the
-                moment a guest turn actually produces a conversation.
+                session), so for them with nothing yet the sidebar should just be
+                New + the sign-up offer. Show the list once there is a session, or
+                the moment a guest turn actually produces a conversation.
+
+                THE CONDITION IS THE SESSION, NOT THE COUNT. Gating on
+                `conversations.length` read as "hide an empty list" and did far
+                more: this block is the only mount of `Conversations`, which owns
+                the favourites rows AND the agent-marketplace link. So somebody
+                who had just made an account — the one person who most needs a way
+                into the product — got a sidebar with nothing in it at all, and it
+                stayed that way until their first conversation existed. The empty
+                "Chats" header that motivated the count is handled where it
+                belongs, in the list itself, which drops that header when it has
+                no rows under it.
 
                 And never in the rail: 56px of column cannot hold a title. */}
-            {!collapsed && conversations.length > 0 && (
+            {!collapsed && (isAuthenticated || conversations.length > 0) && (
               <div className="flex min-h-0 flex-grow flex-col overflow-hidden">
                 <Conversations
                   conversations={conversations}
