@@ -3297,3 +3297,44 @@ html {
     min-height: 2.25rem;
   }
 }
+
+/* THREE DOTS THAT MOVE, because a reply in progress has to look like one.
+   The waiting state used to append a literal '…' — one static character beside
+   one pulsing CSS dot — so a wait that runs several seconds read as a finished
+   sentence trailing off rather than as work happening.
+
+   Three elements rather than an animated `content` string: `content` is
+   animatable in current engines and silently is not in older ones, which fails
+   as a frozen ellipsis, i.e. exactly the bug being fixed. Sized in `em` and
+   painted with `currentColor`, so it inherits the quip's rung and colour and
+   there is no second place that decides either. */
+.thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  margin-left: 0.15em;
+  vertical-align: baseline;
+}
+.thinking-dots i {
+  width: 0.26em;
+  height: 0.26em;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+  animation: thinkingDot 1.2s ease-in-out infinite;
+}
+.thinking-dots i:nth-child(2) { animation-delay: 0.16s; }
+.thinking-dots i:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes thinkingDot {
+  0%, 70%, 100% { opacity: 0.25; }
+  35%           { opacity: 1; }
+}
+
+/* Motion is the SIGNAL here, so it does not simply stop for a reader who asks
+   for less of it — the dots hold at full strength, which still says "three
+   dots, waiting" without anything moving. Same for the quip's shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dots i { animation: none; opacity: 0.7; }
+  .shimmer { animation: none; }
+}
