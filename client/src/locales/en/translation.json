@@ -201,6 +201,8 @@
   "com_auth_login_limit_title": "Keep chatting — free",
   "com_auth_login_limit_message": "You've used the signed-out preview. An account is free: it keeps you on Enso Free, our free model pool, with web search, file uploads, and your history saved. The best models and higher limits are on the paid plans.",
   "com_auth_login_anonymous_title": "You're not signed in",
+  "com_endpoint_fast": "Fast",
+  "com_endpoint_hanzo_fast": "Answer from whichever provider replies first. Cuts the wait when one provider is having a slow moment, and costs more because the question is asked more than once.",
   "com_sidepanel_preview": "Preview",
   "com_sidepanel_preview_blocked": "Hanzo Chat can't embed this page. Open it in a new tab:",
   "com_sidepanel_preview_refused": "This site refuses to be embedded. Open it in a new tab.",
