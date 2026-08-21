@@ -149,11 +149,11 @@ export default function ConvoMenu() {
         setIsOpen={setOpen}
         trigger={
           <TooltipAnchor
-            description={localize('com_nav_convo_menu_options')}
+            description={localize('com_ui_more_options')}
             render={
               <Ariakit.MenuButton
                 id="convo-menu-button"
-                aria-label={localize('com_nav_convo_menu_options')}
+                aria-label={localize('com_ui_more_options')}
                 className={cn(CONTROL, open && CONTROL_OPEN)}
               >
                 <Ellipsis aria-hidden={true} />
