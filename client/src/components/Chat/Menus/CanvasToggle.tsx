@@ -1,40 +1,40 @@
 import { useAtom, useAtomValue } from 'jotai';
-import { Frame } from 'lucide-react';
+import { Files } from 'lucide-react';
 import { TooltipAnchor, Button } from '@hanzochat/client';
 import { CONTROL } from '~/components/chrome';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 /**
- * The canvas toggle — the right edge's mirror of the left sidebar button.
+ * Files and sources — the way into the panel beside the thread.
  *
- * The left button opens the conversation rail; this one opens the CANVAS: the
- * panel beside the thread where a document, a deck, a spreadsheet, a site
- * preview, an image lives (whatever the model produced as an artifact).
+ * That panel holds what the assistant PRODUCED here: documents, images, files,
+ * links, previews of anything it made or opened. It used to be called the
+ * canvas, and this control was `CanvasToggle` drawing a picture frame. Canvas
+ * is retired — the word reads as a dated feature name rather than a description
+ * of what is in the panel — so the control says what it opens and draws files.
  *
- * It draws a FRAME, not a pane. The pane glyph belongs to the two panels that
- * are chrome for the window — the sidebar and the control panel — and this one
- * had been wearing the right-hand pane too, so the header carried one glyph on
- * two buttons and named neither. What this opens is a thing the model MADE, and
- * a frame is what you put one of those in. `aria-pressed` and the tooltip carry
- * the open/shut state; the glyph carries which panel.
+ * THE FILE NAME IS STALE and the rename is a follow-up, not an oversight:
+ * `components/chrome.spec.ts` holds the list of files that draw a control in
+ * the top row and reads each one off disk by path. That list spans several
+ * parts of the app and has to be curated as a whole.
  *
- * It appears only when there is a canvas to show — an artifact exists — because
- * a toggle for an empty panel is a control that does nothing. Open, it closes
- * the canvas; closed, it reopens it. The panel itself is the existing
- * ArtifactsPanel; this is the affordance the header was missing.
+ * It appears only when there is something to show, because a toggle for an
+ * empty panel is a control that does nothing. The emptiness test is artifacts
+ * only, which is narrower than the panel's new name: when the panel starts
+ * carrying plain files and links as well, this test has to widen with it, and
+ * that data belongs to the panel rather than to the header.
  */
-export default function CanvasToggle() {
+export default function Sources() {
   const localize = useLocalize();
   const artifacts = useAtomValue(store.artifactsState);
   const [visible, setVisible] = useAtom(store.artifactsVisibility);
 
-  const hasCanvas = artifacts != null && Object.keys(artifacts).length > 0;
-  if (!hasCanvas) {
+  if (artifacts == null || Object.keys(artifacts).length === 0) {
     return null;
   }
 
-  const label = visible ? localize('com_ui_canvas_hide') : localize('com_ui_canvas_show');
+  const label = localize('com_ui_files_and_sources');
   return (
     <TooltipAnchor
       description={label}
@@ -44,11 +44,11 @@ export default function CanvasToggle() {
           variant="outline"
           aria-label={label}
           aria-pressed={visible}
-          data-testid="canvas-toggle-button"
+          data-testid="sources-button"
           className={CONTROL}
           onClick={() => setVisible((v) => !v)}
         >
-          <Frame aria-hidden="true" />
+          <Files aria-hidden="true" />
         </Button>
       }
     />
