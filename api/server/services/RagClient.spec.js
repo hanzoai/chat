@@ -15,7 +15,7 @@ const rag = require('./RagClient');
 /**
  * RAG is one surface on our own stack, reached with the caller's own IAM bearer.
  * These lock in the two things that make that true: the URL is always the unified
- * backend's /v1/rag/*, and identity is always the forwarded IAM token — never a
+ * backend's /v1/ai/rag/*, and identity is always the forwarded IAM token — never a
  * chat-minted credential, and never a call at all when there is no token.
  */
 describe('RagClient — the one RAG surface', () => {
@@ -34,7 +34,7 @@ describe('RagClient — the one RAG surface', () => {
     await rag.embed(req, { file_id: 'f1', filename: 'a.pdf', content: 'hello' });
 
     const [url, body, cfg] = axios.post.mock.calls[0];
-    expect(url).toBe('https://api.hanzo.ai/v1/rag/embed');
+    expect(url).toBe('https://api.hanzo.ai/v1/ai/rag/embed');
     expect(body).toMatchObject({ file_id: 'f1', filename: 'a.pdf', content: 'hello' });
     expect(cfg.headers.Authorization).toBe('Bearer iam-token');
   });
@@ -47,16 +47,16 @@ describe('RagClient — the one RAG surface', () => {
 
   it('routes multi-file retrieval to query-multiple', async () => {
     await rag.query(req, { query: 'q', file_ids: ['a', 'b'] });
-    expect(axios.post.mock.calls[0][0]).toBe('https://api.hanzo.ai/v1/rag/query-multiple');
+    expect(axios.post.mock.calls[0][0]).toBe('https://api.hanzo.ai/v1/ai/rag/query-multiple');
     expect(axios.post.mock.calls[0][1].file_ids).toEqual(['a', 'b']);
   });
 
   it('deletes and reads context on the same surface', async () => {
     await rag.remove(req, { file_id: 'f1' });
-    expect(axios.post.mock.calls[0][0]).toBe('https://api.hanzo.ai/v1/rag/delete');
+    expect(axios.post.mock.calls[0][0]).toBe('https://api.hanzo.ai/v1/ai/rag/delete');
 
     await rag.context(req, { file_id: 'f1' });
-    expect(axios.get.mock.calls[0][0]).toBe('https://api.hanzo.ai/v1/rag/context');
+    expect(axios.get.mock.calls[0][0]).toBe('https://api.hanzo.ai/v1/ai/rag/context');
   });
 
   it('makes NO call when the request carries no IAM token — fail-secure', async () => {

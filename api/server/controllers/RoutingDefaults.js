@@ -3,7 +3,7 @@ const { resolveTenantBearer } = require('@hanzochat/api');
 
 /**
  * Server-driven auto-routing defaults for the caller's org. Proxies cloud's
- * `GET /v1/router/defaults` (authenticated, org-scoped) so ops can enable
+ * `GET /v1/ai/router/defaults` (authenticated, org-scoped) so ops can enable
  * routing per-default in production from admin.hanzo.ai. The user's hanzo.id
  * bearer is resolved server-side and forwarded on-behalf-of — cloud validates it
  * and scopes to the caller's own org (same trust model as CloudAgentsClient); the
@@ -44,7 +44,7 @@ async function routingDefaultsController(req, res) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
   try {
-    const resp = await fetch(`${endpoint}/v1/router/defaults`, {
+    const resp = await fetch(`${endpoint}/v1/ai/router/defaults`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${bearer}` },
       signal: controller.signal,
