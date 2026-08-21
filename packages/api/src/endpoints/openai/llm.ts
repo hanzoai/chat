@@ -150,6 +150,7 @@ export function getOpenAILLMConfig({
     reasoning_summary,
     verbosity,
     web_search,
+    fast,
     frequency_penalty,
     presence_penalty,
     ...modelOptions
@@ -175,6 +176,18 @@ export function getOpenAILLMConfig({
 
   if (verbosity != null && verbosity !== '') {
     modelKwargs.verbosity = verbosity;
+    hasModelKwargs = true;
+  }
+
+  /**
+   * `fast` asks the gateway to offer the completion to several providers at once
+   * and keep whichever answers first. It rides in modelKwargs rather than on
+   * llmConfig because the client's constructor is typed: an unrecognised key set
+   * there is dropped without a word, so the toggle would read as on and change
+   * nothing. Only `true` is sent — `false` is the absence of the ask.
+   */
+  if (fast === true) {
+    modelKwargs.fast = true;
     hasModelKwargs = true;
   }
 

@@ -589,6 +589,39 @@ describe('getOpenAILLMConfig', () => {
     });
   });
 
+  describe('Fast mode', () => {
+    /**
+     * The toggle has to reach the WIRE, and the way it fails is silent: the
+     * client's constructor is typed, so an unrecognised key set on llmConfig is
+     * dropped without a word. The switch would read as on, the request would go
+     * out unchanged, and nobody would be able to tell from the screen.
+     */
+    it('rides in modelKwargs, where an unknown key survives', () => {
+      const result = getOpenAILLMConfig({
+        apiKey: 'test-api-key',
+        streaming: true,
+        modelOptions: { model: 'gpt-4', fast: true },
+      });
+
+      expect(result.llmConfig.modelKwargs).toHaveProperty('fast', true);
+      expect(result.llmConfig).not.toHaveProperty('fast');
+    });
+
+    it('sends nothing when the toggle is off', () => {
+      // `false` is the ABSENCE of the ask, not a request to be slow. Sending it
+      // would put a field on every ordinary request for no reason.
+      for (const fast of [false, undefined]) {
+        const result = getOpenAILLMConfig({
+          apiKey: 'test-api-key',
+          streaming: true,
+          modelOptions: { model: 'gpt-4', fast },
+        });
+        expect(result.llmConfig.modelKwargs?.fast).toBeUndefined();
+        expect(result.llmConfig).not.toHaveProperty('fast');
+      }
+    });
+  });
+
   describe('Verbosity Handling', () => {
     it('should add verbosity to modelKwargs', () => {
       const result = getOpenAILLMConfig({
