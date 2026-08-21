@@ -103,9 +103,31 @@ const ContentParts = memo(function ContentParts({
     ],
   );
 
-  // Early return: no content
+  /**
+   * No content — which is TWO states, and this used to answer both with nothing.
+   *
+   * An assistant message that is still being WRITTEN starts with no content at
+   * all: its placeholder exists from the moment the request goes out, and its
+   * first content part does not exist until the first token lands. That is
+   * exactly the state the thinking indicator covers, and this return ran first,
+   * so the indicator never rendered on the real path. The `showEmptyCursor`
+   * branch below could only ever see an EMPTY ARRAY (`[]` is truthy, so it
+   * reaches that line) — a shape the streaming path does not produce.
+   *
+   * Measured on production before the fix: a real send streams and answers, and
+   * `.result-thinking` is never in the document — not for one frame. A
+   * MutationObserver at 40ms saw nothing, which is what separated "missing
+   * render" from "missed window".
+   *
+   * An empty message that is NOT being written is finished and empty, and still
+   * has nothing to say.
+   */
   if (!content) {
-    return null;
+    return effectiveIsSubmitting ? (
+      <Container>
+        <EmptyText />
+      </Container>
+    ) : null;
   }
 
   // Edit mode: render editable text parts
