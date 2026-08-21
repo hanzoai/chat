@@ -1,19 +1,24 @@
 import React, { useMemo } from 'react';
 import SearchApiKeyDialog from '~/components/SidePanel/Agents/Search/ApiKeyDialog';
+import MCPConfigDialog from '~/components/MCP/MCPConfigDialog';
 import { useBadgeRowContext } from '~/Providers';
 
 /**
- * Key dialogs for the tools that still take a user-held key.
+ * What a tool asks for before it can run, for every tool that asks.
  *
- * The code interpreter no longer does, and its dialog is gone rather than hidden:
- * a sandbox runs under the caller's own Hanzo IAM bearer, so there is no key to
- * type and nowhere to put one. What used to sit beside this was a form that
- * stored `CHAT_CODE_API_KEY` as a per-user plugin credential for a shared service
- * key the user never held.
+ * These are not settings and there is no control that opens them: asking for
+ * the tool IS the gesture, and the machinery behind it opens the form when the
+ * credential it needs is missing. That is why they are mounted beside the
+ * composer rather than hung off a gear in the Tools menu — a second way in
+ * would be a second thing to find.
+ *
+ * The code interpreter asks for nothing: a sandbox runs under the caller's own
+ * Hanzo IAM bearer, so there is no key to type and nowhere to put one.
  */
 function ToolDialogs() {
-  const { webSearch, searchApiKeyForm } = useBadgeRowContext();
+  const { webSearch, searchApiKeyForm, mcpServerManager, storageContextKey } = useBadgeRowContext();
   const { authData: webSearchAuthData } = webSearch;
+  const mcpConfig = mcpServerManager.getConfigDialogProps();
 
   const {
     methods: searchMethods,
@@ -31,17 +36,20 @@ function ToolDialogs() {
   );
 
   return (
-    <SearchApiKeyDialog
-      onSubmit={searchOnSubmit}
-      authTypes={searchAuthTypes}
-      isOpen={searchDialogOpen}
-      onRevoke={searchHandleRevoke}
-      register={searchMethods.register}
-      onOpenChange={setSearchDialogOpen}
-      handleSubmit={searchMethods.handleSubmit}
-      triggerRefs={[searchMenuTriggerRef, searchBadgeTriggerRef]}
-      isToolAuthenticated={webSearchAuthData?.authenticated ?? false}
-    />
+    <>
+      <SearchApiKeyDialog
+        onSubmit={searchOnSubmit}
+        authTypes={searchAuthTypes}
+        isOpen={searchDialogOpen}
+        onRevoke={searchHandleRevoke}
+        register={searchMethods.register}
+        onOpenChange={setSearchDialogOpen}
+        handleSubmit={searchMethods.handleSubmit}
+        triggerRefs={[searchMenuTriggerRef, searchBadgeTriggerRef]}
+        isToolAuthenticated={webSearchAuthData?.authenticated ?? false}
+      />
+      {mcpConfig && <MCPConfigDialog {...mcpConfig} storageContextKey={storageContextKey} />}
+    </>
   );
 }
 
