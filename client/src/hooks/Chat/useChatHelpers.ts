@@ -8,6 +8,7 @@ import type { ActiveJobsResponse } from '~/data-provider';
 import { useGetMessagesByConvoId, useAbortStreamMutation } from '~/data-provider';
 import useChatFunctions from '~/hooks/Chat/useChatFunctions';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { messagesKey } from './messagesKey';
 import useNewConvo from '~/hooks/useNewConvo';
 import store from '~/store';
 
@@ -26,9 +27,10 @@ export default function useChatHelpers(index = 0, paramId?: string) {
   const { conversation, setConversation } = useCreateConversationAtom(index);
   const { conversationId, endpoint, endpointType } = conversation ?? {};
 
-  /** Use paramId (from URL) as primary source for query key - this must match what ChatView uses
-  Falling back to conversationId (Jotai) only if paramId is not available */
-  const queryParam = paramId === 'new' ? paramId : (paramId ?? conversationId ?? '');
+  // ONE derivation, shared with ChatView — see ./messagesKey. The comment that
+  // used to stand here said "this must match what ChatView uses"; it did not,
+  // and the mismatch is what swallowed the optimistic echo on the landing.
+  const queryParam = messagesKey(paramId, conversationId);
 
   /* Messages: here simply to fetch, don't export and use `getMessages()` instead */
 

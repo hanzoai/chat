@@ -12,6 +12,7 @@ import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } fro
 import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
 import { chatSurface } from './surface';
+import { messagesKey } from '~/hooks/Chat/messagesKey';
 import Presentation from './Presentation';
 import SelectionAsk from './SelectionAsk';
 import ChatForm from './Input/ChatForm';
@@ -36,6 +37,12 @@ function LoadingSpinner() {
 function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
   const rootSubmission = useAtomValue(store.submissionByIndex(index));
+  // The conversation the store holds, read HERE so the messages query below can
+  // be keyed the same way useChatHelpers keys its write. On the landing the URL
+  // carries no id, and reading the param alone looked under '' while the echo
+  // was written under 'new' — see ~/hooks/Chat/messagesKey.
+  const { conversation: storedConvo } = store.useCreateConversationAtom(index);
+  const messagesQueryKey = messagesKey(conversationId, storedConvo?.conversationId);
 
   const fileMap = useFileMapContext();
 
@@ -43,7 +50,7 @@ function ChatView({ index = 0 }: { index?: number }) {
     data: messagesTree = null,
     isLoading,
     isInitialLoading,
-  } = useGetMessagesByConvoId(conversationId ?? '', {
+  } = useGetMessagesByConvoId(messagesQueryKey, {
     select: useCallback(
       (data: TMessage[]) => {
         const dataTree = buildTree({ messages: data, fileMap });
