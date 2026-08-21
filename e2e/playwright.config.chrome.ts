@@ -51,6 +51,12 @@ export default defineConfig({
          composer, panels — with no credential to mint. */
       ALLOW_GUEST_CHAT: 'true',
       GUEST_TOKEN_MAX: '999',
+      /* A guest can also ASK here, which is what lets `turn.spec.ts` measure
+         the composer's submit and not only the chrome around it. The gateway
+         refuses the key and no answer comes back — see that spec's header for
+         why the fake model cannot stand in — but the send itself is real. */
+      GUEST_MESSAGE_MAX: '99',
+      HANZO_API_KEY: 'e2e-no-provider',
       TITLE_CONVO: 'false',
       OPENID_CLIENT_ID: '',
       OPENID_ISSUER: '',
