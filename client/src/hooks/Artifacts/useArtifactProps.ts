@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { removeNullishValues } from '@hanzochat/data-provider';
 import type { Artifact } from '~/common';
-import { getKey, getProps, getTemplate, getArtifactFilename } from '~/utils/artifacts';
+import { getKey, getTemplate, getArtifactFilename } from '~/utils/artifacts';
 import { getMermaidFiles } from '~/utils/mermaid';
 import { getMarkdownFiles } from '~/utils/markdown';
 
@@ -30,12 +30,9 @@ export default function useArtifactProps({ artifact }: { artifact: Artifact }) {
     [artifact.type, artifact.language],
   );
 
-  const sharedProps = useMemo(() => getProps(artifact.type ?? ''), [artifact.type]);
-
   return {
     files,
     fileKey,
     template,
-    sharedProps,
   };
 }

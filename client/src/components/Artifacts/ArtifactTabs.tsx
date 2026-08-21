@@ -1,30 +1,24 @@
 import { useRef, useEffect } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import type { SandpackPreviewRef } from '@codesandbox/sandpack-react/unstyled';
-import type { CodeEditorRef } from '@codesandbox/sandpack-react';
 import type { Artifact } from '~/common';
 import { useCodeState } from '~/Providers/EditorContext';
 import { useArtifactsContext } from '~/Providers';
 import useArtifactProps from '~/hooks/Artifacts/useArtifactProps';
 import { useAutoScroll } from '~/hooks/Artifacts/useAutoScroll';
 import { ArtifactCodeEditor } from './ArtifactCodeEditor';
-import { useGetStartupConfig } from '~/data-provider';
-import { ArtifactPreview } from './ArtifactPreview';
+import { ArtifactPreview, type PreviewHandle } from './ArtifactPreview';
 
 export default function ArtifactTabs({
   artifact,
-  editorRef,
   previewRef,
   isSharedConvo,
 }: {
   artifact: Artifact;
-  editorRef: React.MutableRefObject<CodeEditorRef>;
-  previewRef: React.MutableRefObject<SandpackPreviewRef>;
+  previewRef: React.MutableRefObject<PreviewHandle | undefined>;
   isSharedConvo?: boolean;
 }) {
   const { isSubmitting } = useArtifactsContext();
   const { currentCode, setCurrentCode } = useCodeState();
-  const { data: startupConfig } = useGetStartupConfig();
   const lastIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -38,7 +32,7 @@ export default function ArtifactTabs({
   const contentRef = useRef<HTMLDivElement>(null);
   useAutoScroll({ ref: contentRef, content, isSubmitting });
 
-  const { files, fileKey, template, sharedProps } = useArtifactProps({ artifact });
+  const { files, fileKey, template } = useArtifactProps({ artifact });
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -52,10 +46,7 @@ export default function ArtifactTabs({
         <ArtifactCodeEditor
           files={files}
           fileKey={fileKey}
-          template={template}
           artifact={artifact}
-          editorRef={editorRef}
-          sharedProps={sharedProps}
           readOnly={isSharedConvo}
         />
       </Tabs.Content>
@@ -64,11 +55,10 @@ export default function ArtifactTabs({
         <ArtifactPreview
           files={files}
           fileKey={fileKey}
+          type={artifact.type ?? ''}
           template={template}
           previewRef={previewRef}
-          sharedProps={sharedProps}
           currentCode={currentCode}
-          startupConfig={startupConfig}
         />
       </Tabs.Content>
     </div>

@@ -4,7 +4,7 @@ import { Code, Play, RefreshCw, X } from 'lucide-react';
 import { useSetAtom } from 'jotai';
 import { useResetAtom } from 'jotai/utils';
 import { Button, Spinner, useMediaQuery, Radio } from '@hanzochat/client';
-import type { SandpackPreviewRef, CodeEditorRef } from '@codesandbox/sandpack-react';
+import type { PreviewHandle } from './ArtifactPreview';
 import { useShareContext, useMutationState } from '~/Providers';
 import useArtifacts from '~/hooks/Artifacts/useArtifacts';
 import DownloadArtifact from './DownloadArtifact';
@@ -23,8 +23,7 @@ export default function Artifacts() {
   const { isMutating } = useMutationState();
   const { isSharedConvo } = useShareContext();
   const isMobile = useMediaQuery('(max-width: 868px)');
-  const editorRef = useRef<CodeEditorRef>(undefined);
-  const previewRef = useRef<SandpackPreviewRef>(undefined);
+  const previewRef = useRef<PreviewHandle | undefined>(undefined);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -134,10 +133,7 @@ export default function Artifacts() {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    const client = previewRef.current?.getClient();
-    if (client) {
-      client.dispatch({ type: 'refresh' });
-    }
+    previewRef.current?.refresh();
     setTimeout(() => setIsRefreshing(false), 750);
   };
 
@@ -298,8 +294,7 @@ export default function Artifacts() {
             <div className="absolute inset-0 flex flex-col">
               <ArtifactTabs
                 artifact={currentArtifact}
-                editorRef={editorRef as React.MutableRefObject<CodeEditorRef>}
-                previewRef={previewRef as React.MutableRefObject<SandpackPreviewRef>}
+                previewRef={previewRef}
                 isSharedConvo={isSharedConvo}
               />
             </div>

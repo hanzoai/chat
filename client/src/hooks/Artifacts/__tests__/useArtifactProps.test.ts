@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import useArtifactProps from '../useArtifactProps';
+import { project } from '~/utils/artifacts';
 import type { Artifact } from '~/common';
 
 describe('useArtifactProps', () => {
@@ -19,7 +20,7 @@ describe('useArtifactProps', () => {
       const { result } = renderHook(() => useArtifactProps({ artifact }));
 
       expect(result.current.fileKey).toBe('content.md');
-      expect(result.current.template).toBe('react-ts');
+      expect(result.current.template).toBe('react');
     });
 
     it('should handle text/plain type with content.md as fileKey', () => {
@@ -31,7 +32,7 @@ describe('useArtifactProps', () => {
       const { result } = renderHook(() => useArtifactProps({ artifact }));
 
       expect(result.current.fileKey).toBe('content.md');
-      expect(result.current.template).toBe('react-ts');
+      expect(result.current.template).toBe('react');
     });
 
     it('should include content.md in files with original markdown', () => {
@@ -112,15 +113,20 @@ describe('useArtifactProps', () => {
       expect(result.current.files['content.md']).toBe('# No content provided');
     });
 
-    it('should provide marked-react dependency', () => {
+    it('should name marked-react in the project the sandbox builds', () => {
       const artifact = createArtifact({
         type: 'text/markdown',
         content: '# Test',
       });
 
       const { result } = renderHook(() => useArtifactProps({ artifact }));
+      const manifest = JSON.parse(
+        project(result.current.files as Record<string, string>, artifact.type ?? '')[
+          'package.json'
+        ],
+      );
 
-      expect(result.current.sharedProps.customSetup?.dependencies).toHaveProperty('marked-react');
+      expect(manifest.dependencies).toHaveProperty('marked-react');
     });
 
     it('should update files when content changes', () => {
@@ -157,7 +163,7 @@ describe('useArtifactProps', () => {
       const { result } = renderHook(() => useArtifactProps({ artifact }));
 
       expect(result.current.fileKey).toBe('diagram.mmd');
-      expect(result.current.template).toBe('react-ts');
+      expect(result.current.template).toBe('react');
     });
   });
 
@@ -171,7 +177,7 @@ describe('useArtifactProps', () => {
       const { result } = renderHook(() => useArtifactProps({ artifact }));
 
       expect(result.current.fileKey).toBe('App.tsx');
-      expect(result.current.template).toBe('react-ts');
+      expect(result.current.template).toBe('react');
     });
   });
 
@@ -185,7 +191,7 @@ describe('useArtifactProps', () => {
       const { result } = renderHook(() => useArtifactProps({ artifact }));
 
       expect(result.current.fileKey).toBe('index.html');
-      expect(result.current.template).toBe('static');
+      expect(result.current.template).toBe('page');
     });
   });
 
@@ -213,7 +219,7 @@ describe('useArtifactProps', () => {
       const { result } = renderHook(() => useArtifactProps({ artifact }));
 
       // Should use default behavior
-      expect(result.current.template).toBe('static');
+      expect(result.current.template).toBe('page');
     });
   });
 });

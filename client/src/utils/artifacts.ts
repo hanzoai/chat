@@ -1,11 +1,21 @@
 import dedent from 'dedent';
 import { excelMimeTypes, shadcnComponents } from '@hanzochat/data-provider';
-import type {
-  SandpackProviderProps,
-  SandpackPredefinedTemplate,
-} from '@codesandbox/sandpack-react';
-import type { TStartupConfig, TAttachment, TFile } from '@hanzochat/data-provider';
+import type { TAttachment, TFile } from '@hanzochat/data-provider';
 import type { Artifact } from '~/common';
+
+/**
+ * What an artifact IS, for the purpose of showing it.
+ *
+ * `page` — the artifact is already a document. Nothing has to happen to it before
+ * a browser can render it, so nothing does.
+ * `react` — the artifact is a program. It has to be compiled first, and the
+ * sandbox that holds the project is what compiles it.
+ *
+ * These are the only two, because "does this need building" is the only question
+ * the preview has to answer. It used to be a bundler's template name, which meant
+ * chat's own routing table was written in a third party's vocabulary.
+ */
+export type Template = 'page' | 'react';
 
 const artifactFilename = {
   'application/vnd.react': 'App.tsx',
@@ -14,7 +24,7 @@ const artifactFilename = {
   'application/vnd.code-html': 'index.html',
   /* Office preview buckets — the backend produces a complete sanitized
    * `index.html` document (head + body) and ships it via `attachment.text`.
-   * The Sandpack `static` template loads it as-is. See
+   * The artifact frame loads it as-is. See
    * `packages/api/src/files/documents/html.ts`. */
   'application/vnd.librechat.docx-preview': 'index.html',
   'application/vnd.librechat.spreadsheet-preview': 'index.html',
@@ -35,29 +45,28 @@ const artifactTemplate: Record<
   | 'text/markdown'
   | 'text/md'
   | 'text/plain',
-  SandpackPredefinedTemplate | undefined
+  Template | undefined
 > = {
-  'text/html': 'static',
-  'application/vnd.react': 'react-ts',
-  'application/vnd.ant.react': 'react-ts',
-  'application/vnd.mermaid': 'react-ts',
-  'application/vnd.code-html': 'static',
+  'text/html': 'page',
+  'application/vnd.react': 'react',
+  'application/vnd.ant.react': 'react',
+  'application/vnd.mermaid': 'react',
+  'application/vnd.code-html': 'page',
   /* CODE renders as a plain file — `useArtifactProps` does not route it
-   * through `getMarkdownFiles`, so it never pays the sandpack-React boot
-   * cost. */
-  'application/vnd.code': 'static',
+   * through `getMarkdownFiles`, so it never pays the build. */
+  'application/vnd.code': 'page',
   /* Markdown/plain-text DO go through `getMarkdownFiles`, which emits an
-   * `App.tsx` importing `marked-react` (see `~/utils/markdown`). That needs
-   * the React template and the dependency below. */
-  'text/markdown': 'react-ts',
-  'text/md': 'react-ts',
-  'text/plain': 'react-ts',
-  /* Office preview buckets ride the same static pipeline — the backend
-   * already sanitized the HTML, so we just hand it to Sandpack. */
-  'application/vnd.librechat.docx-preview': 'static',
-  'application/vnd.librechat.spreadsheet-preview': 'static',
-  'application/vnd.librechat.presentation-preview': 'static',
-  default: 'static',
+   * `App.tsx` importing `marked-react` (see `~/utils/markdown`). That is a
+   * program, so it is built like one. */
+  'text/markdown': 'react',
+  'text/md': 'react',
+  'text/plain': 'react',
+  /* Office preview buckets are documents already — the backend rendered and
+   * sanitized the whole HTML file. */
+  'application/vnd.librechat.docx-preview': 'page',
+  'application/vnd.librechat.spreadsheet-preview': 'page',
+  'application/vnd.librechat.presentation-preview': 'page',
+  default: 'page',
   // 'css': 'css',
   // 'javascript': 'js',
   // 'typescript': 'ts',
@@ -74,10 +83,17 @@ export function getArtifactFilename(type: string, language?: string): string {
   return artifactFilename[key] ?? artifactFilename.default;
 }
 
-export function getTemplate(type: string, language?: string): SandpackPredefinedTemplate {
+export function getTemplate(type: string, language?: string): Template {
   const key = getKey(type, language);
-  return artifactTemplate[key] ?? (artifactTemplate.default as SandpackPredefinedTemplate);
+  return artifactTemplate[key] ?? (artifactTemplate.default as Template);
 }
+
+/** React is a DEPENDENCY of the project now, not an ambient gift from a template.
+ *  The build in the sandbox resolves exactly what `package.json` names. */
+const runtimeDependencies = {
+  react: '^18.3.1',
+  'react-dom': '^18.3.1',
+};
 
 const standardDependencies = {
   three: '^0.167.1',
@@ -148,13 +164,13 @@ const dependenciesMap: Record<
   'text/html': standardDependencies,
   'application/vnd.code-html': standardDependencies,
   /* CODE renders as a plain file; no React or other runtime deps. An empty
-   * map skips the sandpack `package.json` install step entirely. */
+   * map means the build installs nothing. */
   'application/vnd.code': {},
   'text/markdown': markdownDependencies,
   'text/md': markdownDependencies,
   'text/plain': markdownDependencies,
   /* Office preview HTML is fully self-contained (CSS-only sheet tabs, no
-   * JS), so no Sandpack-side packages are needed. */
+   * JS), so the project needs no packages at all. */
   'application/vnd.librechat.docx-preview': {},
   'application/vnd.librechat.spreadsheet-preview': {},
   'application/vnd.librechat.presentation-preview': {},
@@ -165,35 +181,31 @@ export function getDependencies(type: string): Record<string, string> {
   return dependenciesMap[type] ?? standardDependencies;
 }
 
-export function getProps(type: string): Partial<SandpackProviderProps> {
-  return {
-    customSetup: {
-      dependencies: getDependencies(type),
-    },
+/**
+ * The whole project, as the sandbox will see it on disk.
+ *
+ * ONE function turns an artifact into files, and `package.json` is one of them.
+ * The dependency list used to travel beside the files as a bundler option, so the
+ * project was half a file map and half a config object and neither half was the
+ * project. A directory is the project.
+ *
+ * Keys lose their leading slash because they are about to be paths under the
+ * project directory. Imports keep theirs — `/components/ui/card` is how artifacts
+ * address the shared set, and the build maps root-relative specifiers back here.
+ */
+export function project(files: Record<string, string>, type: string): Record<string, string> {
+  const merged: Record<string, string> = {
+    ...sharedFiles,
+    ...files,
+    'package.json': JSON.stringify(
+      { private: true, dependencies: { ...runtimeDependencies, ...getDependencies(type) } },
+      null,
+      2,
+    ),
   };
-}
-
-/** Fragment hint lets Sandpack's static-template regex detect `.js` from the URL;
- * without it, the versioned CDN path (`/3.4.17`) has no recognised extension and
- * `injectExternalResources` throws "Unable to determine file type". */
-const TAILWIND_CDN = 'https://cdn.tailwindcss.com/3.4.17#tailwind.js';
-
-export const sharedOptions: SandpackProviderProps['options'] = {
-  externalResources: [TAILWIND_CDN],
-};
-
-export function buildSandpackOptions(
-  template: SandpackProviderProps['template'],
-  startupConfig?: TStartupConfig,
-): SandpackProviderProps['options'] {
-  if (!startupConfig) {
-    return sharedOptions;
-  }
-
-  return {
-    ...sharedOptions,
-    bundlerURL: template === 'static' ? startupConfig.staticBundlerURL : startupConfig.bundlerURL,
-  };
+  return Object.fromEntries(
+    Object.entries(merged).map(([name, code]) => [name.replace(/^\/+/, ''), code]),
+  );
 }
 
 /**
@@ -288,8 +300,8 @@ export const TOOL_ARTIFACT_TYPES = {
   CODE: 'application/vnd.code',
   /* Office-format rich previews. The backend renders the binary file as a
    * complete sanitized HTML document and ships it via `attachment.text`;
-   * the client routes these types through the Sandpack `static` template's
-   * `index.html` slot. The values are synthetic LibreChat-internal MIMEs
+   * the client routes these types through the artifact frame's
+   * `index.html` slot. The values are synthetic chat-internal MIMEs
    * — they don't appear on disk or in HTTP headers, only on the artifact
    * object — so they can't collide with the canonical office MIMEs that
    * the routing maps key off of. */
@@ -566,7 +578,7 @@ const EXTENSION_TO_TOOL_ARTIFACT_TYPE: Record<string, ToolArtifactType> = {
   html: TOOL_ARTIFACT_TYPES.HTML,
   htm: TOOL_ARTIFACT_TYPES.HTML,
   // jsx/tsx are React component sources — keep them on the React
-  // (sandpack) bucket rather than the new CODE bucket so the existing
+  // React bucket rather than the new CODE bucket so the existing
   // live-preview behavior survives. Plain JS/TS source goes through CODE.
   jsx: TOOL_ARTIFACT_TYPES.REACT,
   tsx: TOOL_ARTIFACT_TYPES.REACT,
@@ -595,7 +607,7 @@ const EXTENSION_TO_TOOL_ARTIFACT_TYPE: Record<string, ToolArtifactType> = {
  * of truth means a new language is one entry away from being routable.
  *
  * Skip extensions already claimed by a non-CODE bucket — `jsx`/`tsx`
- * belong to React (sandpack) for the live-preview, and a future
+ * belong to React for the live-preview, and a future
  * contributor adding them to `CODE_EXTENSION_TO_LANGUAGE` (a natural
  * mistake — they ARE source code) shouldn't silently break the React
  * routing path. The explicit map entries above always win. */
@@ -683,7 +695,7 @@ const MIME_TO_TOOL_ARTIFACT_TYPE: Record<string, ToolArtifactType> = {
  * card still routes through the panel and `fileToArtifact` substitutes a
  * placeholder so the panel renders something sensible. The HTML, React,
  * and Mermaid buckets still require real content because their viewers
- * (sandpack / mermaid.js) error on empty input.
+ * (the artifact frame / mermaid.js) error on empty input.
  */
 /**
  * Office preview buckets the backend MUST mark as `textFormat: 'html'`
@@ -764,7 +776,7 @@ export function detectArtifactTypeFromFile(
     type !== TOOL_ARTIFACT_TYPES.CODE
   ) {
     /* HTML, REACT, MERMAID, and the office preview buckets all require
-     * real content — their renderers (sandpack iframes / mermaid.js /
+     * real content — their renderers (artifact frames / mermaid.js /
      * the office HTML pipeline) error or render blank without it. The
      * artifact stays unregistered until the backend produces text;
      * `ToolArtifactCard`'s self-heal effect re-fires on drift so the
@@ -861,7 +873,7 @@ export function fileToArtifact(
     type !== TOOL_ARTIFACT_TYPES.CODE
   ) {
     /* HTML, REACT, MERMAID, and the office preview buckets all require
-     * real content — their renderers (sandpack iframes / mermaid.js /
+     * real content — their renderers (artifact frames / mermaid.js /
      * the office HTML pipeline) error or render blank without it. The
      * artifact stays unregistered until the backend produces text;
      * `ToolArtifactCard`'s self-heal effect re-fires on drift so the
@@ -935,26 +947,33 @@ export const sharedFiles = {
   '/components/ui/toggle.tsx': shadcnComponents.toggle,
   '/components/ui/tooltip.tsx': shadcnComponents.tooltip,
   '/components/ui/use-toast.tsx': shadcnComponents.useToast,
-  '/public/index.html': dedent`
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
-        <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-        <style>
-          ::-webkit-scrollbar{height:.1em;width:.5rem}
-          ::-webkit-scrollbar-thumb{background-color:rgba(0,0,0,.1);border-radius:9999px}
-          ::-webkit-scrollbar-track{background-color:transparent;border-radius:9999px}
-          @media(prefers-color-scheme:dark){::-webkit-scrollbar-thumb{background-color:hsla(0,0%,100%,.1)}}
-          *{scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.1) transparent}
-          @media(prefers-color-scheme:dark){*{scrollbar-color:hsla(0,0%,100%,.1) transparent}}
-        </style>
-      </head>
-      <body>
-        <div id="root"></div>
-      </body>
-    </html>
+  /* The root the build compiles from. An artifact supplies `App.tsx`; a few
+   * supply their own `index.tsx` and override this one. */
+  'index.tsx': dedent`
+    import { StrictMode } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import App from './App';
+
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
   `,
+  /* Tailwind's INPUT. The build runs tailwind over the project's own sources and
+   * inlines the result, so the document carries the classes it uses and loads
+   * nothing from anywhere. This used to be a CDN <script> the frame fetched at
+   * view time. */
+  'styles.css': dedent`
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+
+    ::-webkit-scrollbar{height:.1em;width:.5rem}
+    ::-webkit-scrollbar-thumb{background-color:rgba(0,0,0,.1);border-radius:9999px}
+    ::-webkit-scrollbar-track{background-color:transparent;border-radius:9999px}
+    @media(prefers-color-scheme:dark){::-webkit-scrollbar-thumb{background-color:hsla(0,0%,100%,.1)}}
+    *{scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.1) transparent}
+    @media(prefers-color-scheme:dark){*{scrollbar-color:hsla(0,0%,100%,.1) transparent}}
+  `
 };
