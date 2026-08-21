@@ -11,11 +11,19 @@ import Share from './ExportAndShareMenu';
  *
  *   [ Medium ⌄ ]                 [ share ] [ files ] [ ⋯ ] [ private ]
  *
+ * Both ends are named (`header-lead`, `header-actions`) so the contract can be
+ * read as MEMBERSHIP rather than as a list of absences. A test that queries for
+ * a control the header does not import can never fail — the module is gone, so
+ * the marker was never going to render either way — and a row defended only by
+ * absences drifts without anything going red.
+ *
  * WHAT LEFT, and why each was a second answer rather than a feature:
  *
- * - New chat. The sidebar is a rail when collapsed, so its own compose button
- *   never leaves the screen. Two buttons that start a conversation, side by
- *   side, at every width above md.
+ * - New chat, DELETED rather than unmounted: the sidebar is a rail when
+ *   collapsed, so its own compose button never leaves the screen, and this was
+ *   a second one beside it at every width above md. Nothing imported it by
+ *   name — only the `Menus` barrel re-exported it, which is what made it look
+ *   reachable.
  * - The window controls (width, companions, right panel). Chrome for the
  *   WINDOW, not for the conversation, and the panel they reach is now one
  *   surface with its own control two seats to the left. `Chat/PanelControls`
@@ -53,7 +61,7 @@ export default function Header() {
   return (
     <div className="absolute top-0 z-10 hidden h-14 w-full items-center justify-between px-2 py-1.5 font-semibold text-text-primary md:flex">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
-        <div className="mx-1 flex items-center">
+        <div className="mx-1 flex items-center" data-testid="header-lead">
           <ModelSelector startupConfig={startupConfig} />
         </div>
 

@@ -76,10 +76,6 @@ function mockMarker(id: string) {
   return () => <div data-testid={id} />;
 }
 
-jest.mock('./Menus', () => ({
-  HeaderNewChat: mockMarker('header-new-chat'),
-  OpenSidebar: mockMarker('open-sidebar'),
-}));
 jest.mock('./Menus/Endpoints/ModelSelector', () => ({
   __esModule: true,
   default: mockMarker('effort'),
@@ -110,23 +106,17 @@ describe.each([
     render(<Header />);
   });
 
-  it('asks the one question at the left, in one copy, outside the action group', () => {
-    expect(screen.getAllByTestId('effort')).toHaveLength(1);
-    const actions = screen.getByTestId('header-actions');
-    expect(within(actions).queryByTestId('effort')).not.toBeInTheDocument();
-  });
-
-  it('leaves compose, the mark and the sidebar toggle to the sidebar', () => {
-    expect(screen.queryByTestId('header-new-chat')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('brand')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('open-sidebar')).not.toBeInTheDocument();
-  });
-
-  // The membership of the group, not just its order. A `queryByTestId` for a
-  // control this file no longer mocks can never fail — the module is gone, so
-  // the marker was never going to render either way. Reading the group's actual
-  // children is what refuses the window controls, a bookmark button, or
+  // MEMBERSHIP, not a list of absences. A `queryByTestId` for a control the
+  // header does not import can never fail — the module is gone, so the marker
+  // was never going to render either way — and the previous version of this
+  // file was mostly that shape. Reading each group's actual children is what
+  // refuses compose, the mark, the window controls, a bookmark button, or
   // anything else growing back into the row.
+  it('asks the one question at the left, and asks nothing else there', () => {
+    const lead = screen.getByTestId('header-lead');
+    expect([...lead.children].map((c) => c.getAttribute('data-testid'))).toEqual(['effort']);
+  });
+
   it('carries share, sources, the overflow menu and private — and nothing else', () => {
     const actions = screen.getByTestId('header-actions');
     expect([...actions.children].map((c) => c.getAttribute('data-testid'))).toEqual([

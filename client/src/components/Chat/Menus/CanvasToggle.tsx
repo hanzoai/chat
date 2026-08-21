@@ -2,6 +2,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { Files } from 'lucide-react';
 import { TooltipAnchor, Button } from '@hanzochat/client';
 import { CONTROL } from '~/components/chrome';
+import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 /**
@@ -25,6 +26,7 @@ import store from '~/store';
  * that data belongs to the panel rather than to the header.
  */
 export default function Sources() {
+  const localize = useLocalize();
   const artifacts = useAtomValue(store.artifactsState);
   const [visible, setVisible] = useAtom(store.artifactsVisibility);
 
@@ -32,10 +34,7 @@ export default function Sources() {
     return null;
   }
 
-  /* Untranslated: the locales are another slice's to edit and this string has
-     no key yet. `com_ui_files_and_sources` is the one to add; `com_ui_files`
-     exists but says only half of it. */
-  const label = 'Files and sources';
+  const label = localize('com_ui_files_and_sources');
   return (
     <TooltipAnchor
       description={label}

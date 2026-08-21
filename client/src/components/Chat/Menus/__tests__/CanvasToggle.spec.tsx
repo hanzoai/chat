@@ -5,6 +5,8 @@ import { render, screen } from '@testing-library/react';
 import store from '~/store';
 import Sources from '../CanvasToggle';
 
+jest.mock('~/hooks', () => ({ useLocalize: () => (key: string) => key }));
+
 jest.mock('@hanzochat/client', () => ({
   __esModule: true,
   TooltipAnchor: ({ render: r }: { render: React.ReactElement }) => r,
@@ -63,7 +65,7 @@ describe('Files and sources — the way into the panel beside the thread', () =>
       s.set(store.artifactsState, { a1: { id: 'a1' } as never });
     });
     expect(screen.getByTestId('sources-button').getAttribute('aria-label')).toBe(
-      'Files and sources',
+      'com_ui_files_and_sources',
     );
   });
 });

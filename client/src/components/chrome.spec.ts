@@ -31,7 +31,6 @@ const TOP_ROW = [
   'Chat/ExportAndShareMenu.tsx',
   'Chat/Menus/CanvasToggle.tsx',
   'Chat/Menus/OpenSidebar.tsx',
-  'Chat/Menus/HeaderNewChat.tsx',
 ];
 
 /**
