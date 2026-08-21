@@ -96,9 +96,38 @@ describe('ContentParts — interim skill cards', () => {
     expect(screen.queryByTestId('pending-skill-call')).toBeNull();
   });
 
-  it('renders nothing when manualSkills is empty and content is undefined', () => {
+  // NO CONTENT IS TWO STATES, and the pair below is the rule.
+  //
+  // A message with nothing in it that is FINISHED is finished and empty. A
+  // message with nothing in it that is still being WRITTEN is the assistant
+  // about to speak — its placeholder exists from the moment the request goes
+  // out, and its first content part does not exist until the first token lands.
+  // That second state is the whole reason the thinking indicator exists, and it
+  // was answered with `null` too: measured on production, a real send streamed
+  // and answered with `.result-thinking` never in the document, not for one
+  // frame.
+  it('renders nothing when content is undefined and nothing is being written', () => {
     const { container } = render(
       <ContentParts {...baseProps} content={undefined} manualSkills={[]} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders the thinking indicator when content is undefined and it IS writing', () => {
+    const { container } = render(
+      <ContentParts {...baseProps} content={undefined} isSubmitting isLatestMessage />,
+    );
+    // `EmptyText` is mocked at the top of this file, so the assertion is on the
+    // stub it renders — this test is about WHETHER the indicator is reached,
+    // which is what was broken; EmptyText.spec covers what it then says.
+    expect(screen.getByTestId('empty-text')).toBeInTheDocument();
+  });
+
+  // Only the LATEST message is being written. An older empty one is finished,
+  // and a spinner on it would say the app is working when it is not.
+  it('leaves an older empty message alone, even mid-stream', () => {
+    const { container } = render(
+      <ContentParts {...baseProps} content={undefined} isSubmitting isLatestMessage={false} />,
     );
     expect(container.firstChild).toBeNull();
   });
