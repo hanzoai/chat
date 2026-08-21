@@ -2939,8 +2939,9 @@ html {
   anything" floating inside the prism ring.
 
   Four shells had already noticed and each written `border-0` on its own control
-  (Mention, PromptsCommand, AgentsCommand, SkillsCommand) — the same rule stated
-  four times, and not stated by the two that needed it most. It belongs here,
+  (Mention, PromptsCommand, AgentsCommand and the since-deleted SkillsCommand) —
+  the same rule stated four times, and not stated by the two that needed it
+  most. It belongs here,
   once, next to the ring it is the other half of: inside a `.field`, the shell is
   the boundary and the control has none.
 */

@@ -65,19 +65,25 @@ export default function CommandPalette() {
     }));
   }, [data, localize, navigateToConvo]);
 
+  /* Two groups, both named by a key rather than by a literal. `category` is
+     PAINTED — the shell renders it as the group heading and matches queries
+     against it — so an English string here would read as English in the other
+     forty locales, in the first surface ⌘K opens. Neither label is new:
+     `com_ui_go_to` and `com_ui_chats` are the two headings the palette this
+     replaces already used for exactly these rows. */
   const commands = useMemo<OrgCommandItem[]>(
     () => [
       {
         id: 'new-chat',
         title: localize('com_ui_new_chat'),
         href: '/c/new',
-        category: 'Chat',
+        category: localize('com_ui_go_to'),
         keywords: ['new', 'conversation', 'start'],
       },
       {
         id: 'settings',
         title: localize('com_nav_settings'),
-        category: 'Chat',
+        category: localize('com_ui_go_to'),
         keywords: ['settings', 'preferences', 'model'],
         action: () => setShowSettings(true),
       },

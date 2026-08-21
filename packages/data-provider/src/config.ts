@@ -1829,8 +1829,7 @@ export enum Constants {
    * was dead — bash PTC calls fell through to the generic path and were labelled
    * by whatever their `lang` happened to say. The value is not a guess:
    * client/src/utils/toolLabels.ts already maps `run_tools_with_bash` to the
-   * Code label, and ToolCallGroup's own test lists it beside
-   * `run_tools_with_code` as a Code-family name.
+   * Code label, beside `run_tools_with_code` as a Code-family name.
    */
   BASH_PROGRAMMATIC_TOOL_CALLING = 'run_tools_with_bash',
 }
