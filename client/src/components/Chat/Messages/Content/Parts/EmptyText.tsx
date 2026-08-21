@@ -1,7 +1,9 @@
 import { memo, useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAtomValue } from 'jotai';
 import { useLocalize } from '~/hooks';
-import { QUIPS, BEAT_MS, beats, speaksEnglish } from './quips';
+import { BEAT_MS, beats, quipFor, speaksEnglish } from './quips';
+import store from '~/store';
 
 /**
  * What the assistant shows once it is answering and has produced no text yet.
@@ -23,8 +25,20 @@ export const Quip = memo(() => {
   const { i18n } = useTranslation();
   const english = speaksEnglish(i18n.language);
 
-  /** One quip per answer, chosen on mount and kept for as long as it streams. */
-  const [quip] = useState(() => QUIPS[Math.floor(Math.random() * QUIPS.length)]);
+  /**
+   * One quip per answer, chosen ON MOUNT from the pool the prompt earns, and
+   * kept for as long as it streams.
+   *
+   * The prompt is read straight off the live submission rather than passed in:
+   * this component takes no props and has three call sites, and threading the
+   * same string through all three would be three chances for one of them to
+   * forget and quietly go back to generic.
+   *
+   * `useState`'s initializer runs once, so the quip cannot be re-rolled by a
+   * re-render — a joke that changed mid-beat would lose its own punchline.
+   */
+  const submission = useAtomValue(store.submission);
+  const [quip] = useState(() => quipFor(submission?.userMessage?.text));
   const parts = useMemo(() => beats(quip), [quip]);
   const [beat, setBeat] = useState(0);
   const last = beat >= parts.length - 1;

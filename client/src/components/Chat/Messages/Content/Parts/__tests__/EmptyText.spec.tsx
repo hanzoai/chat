@@ -1,6 +1,8 @@
 import { render, screen, act } from '@testing-library/react';
+import { Provider, createStore } from 'jotai';
 import EmptyText from '../EmptyText';
-import { BEAT_MS } from '../quips';
+import { BEAT_MS, POOLS, beats } from '../quips';
+import store from '~/store';
 
 /**
  * The indicator schedules ONE timer per beat and the next only after it
@@ -78,5 +80,43 @@ describe('the thinking indicator', () => {
     const { unmount } = render(<EmptyText />);
     unmount();
     expect(jest.getTimerCount()).toBe(0);
+  });
+
+  /**
+   * The joke is about what was ASKED — which is the difference between a quip
+   * and a screensaver. The indicator takes no props, so it reads the live
+   * submission itself; this renders it inside a store that holds one and checks
+   * the words that appear come from the pool that prompt earns.
+   */
+  it('tells a joke about the thing you asked for', () => {
+    const code = POOLS.find((p) => p.name === 'code')!.quips;
+    const jotai = createStore();
+    jotai.set(store.submission, {
+      userMessage: { text: 'there is a bug in my python function' },
+    } as never);
+
+    render(
+      <Provider store={jotai}>
+        <EmptyText />
+      </Provider>,
+    );
+
+    // The opening beat is enough to identify the quip, and it is what a reader
+    // sees first — an answer that arrives quickly shows only this one.
+    const openings = code.map((q) => beats(q)[0]);
+    expect(openings).toContain(visible().replace(/…$/, ''));
+  });
+
+  it('falls back to the general pool when the prompt is about nothing special', () => {
+    const topical = POOLS.flatMap((p) => p.quips).map((q) => beats(q)[0]);
+    const jotai = createStore();
+    jotai.set(store.submission, { userMessage: { text: 'hello there' } } as never);
+
+    render(
+      <Provider store={jotai}>
+        <EmptyText />
+      </Provider>,
+    );
+    expect(topical).not.toContain(visible().replace(/…$/, ''));
   });
 });
