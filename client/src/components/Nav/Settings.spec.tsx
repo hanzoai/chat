@@ -1,47 +1,37 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GuiTestProvider } from 'test/gui-provider';
 import Settings from './Settings';
-
-const mockUseGetStartupConfig = jest.fn();
-
-jest.mock('~/data-provider', () => ({
-  useGetStartupConfig: () => mockUseGetStartupConfig(),
-}));
 
 jest.mock('~/hooks', () => ({
   useLocalize: () => (key: string) => key,
 }));
 
-jest.mock('~/hooks/usePersonalizationAccess', () => ({
-  __esModule: true,
-  default: () => ({
-    hasMemoryOptOut: false,
-    hasAnyPersonalizationFeature: false,
-  }),
-}));
-
 jest.mock('@hanzochat/client', () => ({
   GearIcon: () => <span aria-hidden="true" />,
-  DataIcon: () => <span aria-hidden="true" />,
   UserIcon: () => <span aria-hidden="true" />,
-  SpeechIcon: () => <span aria-hidden="true" />,
   PersonalizationIcon: () => <span aria-hidden="true" />,
   useMediaQuery: () => false,
 }));
 
 jest.mock('./SettingsTabs', () => ({
   General: () => <div data-testid="general-panel" />,
-  Chat: () => <div data-testid="chat-panel" />,
-  Commands: () => <div data-testid="commands-panel" />,
-  Speech: () => <div data-testid="speech-panel" />,
+  Notifications: () => <div data-testid="notifications-panel" />,
   Personalization: () => <div data-testid="personalization-panel" />,
-  Data: () => <div data-testid="data-panel" />,
-  Balance: () => <div data-testid="balance-panel" />,
+  Apps: () => <div data-testid="apps-panel" />,
   Account: () => <div data-testid="account-panel" />,
-  About: () => <div data-testid="about-panel" />,
 }));
+
+/** The whole tab strip, in order. A sixth entry is a product decision, not a
+ *  refactor, so it has to change this line to land. */
+const TABS = [
+  'com_nav_setting_general',
+  'com_nav_setting_notifications',
+  'com_nav_setting_personalization',
+  'com_nav_setting_apps',
+  'com_nav_setting_account',
+];
 
 function renderSettings() {
   // The tab strip is a @hanzo/ui primitive now, and those read their theme from
@@ -53,40 +43,47 @@ function renderSettings() {
   );
 }
 
-beforeEach(() => {
-  mockUseGetStartupConfig.mockReturnValue({ data: {} });
-});
-
 describe('Settings', () => {
-  it('shows the About tab while startup config is loading', () => {
-    mockUseGetStartupConfig.mockReturnValue({ data: undefined });
-
+  it('offers five tabs, in order, to everyone', () => {
     renderSettings();
 
-    expect(screen.getByText('com_nav_setting_about')).toBeInTheDocument();
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(TABS);
   });
 
-  it('hides the About tab only when buildInfo is explicitly disabled', () => {
-    mockUseGetStartupConfig.mockReturnValue({ data: { interface: { buildInfo: false } } });
-
+  it('opens on General', () => {
     renderSettings();
 
-    expect(screen.queryByText('com_nav_setting_about')).not.toBeInTheDocument();
-  });
-
-  it('resets the active tab when loaded config disables About', async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderSettings();
-
-    await user.click(screen.getByText('com_nav_setting_about'));
-    expect(screen.getByTestId('about-panel')).toBeInTheDocument();
-
-    mockUseGetStartupConfig.mockReturnValue({ data: { interface: { buildInfo: false } } });
-    rerender(<Settings open={true} onOpenChange={jest.fn()} />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('about-panel')).not.toBeInTheDocument();
-    });
     expect(screen.getByTestId('general-panel')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['com_nav_setting_notifications', 'notifications-panel'],
+    ['com_nav_setting_personalization', 'personalization-panel'],
+    ['com_nav_setting_apps', 'apps-panel'],
+    ['com_nav_setting_account', 'account-panel'],
+  ])('shows the %s panel when its tab is picked', async (label, panel) => {
+    const user = userEvent.setup();
+    renderSettings();
+
+    await user.click(screen.getByText(label));
+
+    expect(screen.getByTestId(panel)).toBeInTheDocument();
+  });
+
+  /** Arrow keys read the same list the strip is built from. They used to read a
+   *  second copy of it, which is how the two came to disagree. */
+  it('walks the strip with the arrow keys', async () => {
+    const user = userEvent.setup();
+    renderSettings();
+
+    await user.click(screen.getByText(TABS[0]));
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByTestId('notifications-panel')).toBeInTheDocument();
+
+    await user.keyboard('{ArrowUp}');
+    expect(screen.getByTestId('general-panel')).toBeInTheDocument();
+
+    await user.keyboard('{End}');
+    expect(screen.getByTestId('account-panel')).toBeInTheDocument();
   });
 });
