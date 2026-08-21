@@ -3,139 +3,81 @@ import { Tabs } from '@hanzo/ui/primitives/Tabs';
 import { TabsList } from '@hanzo/ui/primitives/TabsList';
 import { TabsTrigger } from '@hanzo/ui/primitives/TabsTrigger';
 import { TabsContent } from '@hanzo/ui/primitives/TabsContent';
-import { SettingsTabValues, balanceOn } from '@hanzochat/data-provider';
-import { MessageSquare, Command, DollarSign, BarChart3 } from 'lucide-react';
+import { Bell, Plug } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import {
-  GearIcon,
-  DataIcon,
-  UserIcon,
-  SpeechIcon,
-  useMediaQuery,
-  PersonalizationIcon,
-} from '@hanzochat/client';
+import { GearIcon, UserIcon, useMediaQuery, PersonalizationIcon } from '@hanzochat/client';
 import type { TDialogProps } from '~/common';
-import {
-  General,
-  Chat,
-  Commands,
-  Speech,
-  Personalization,
-  Data,
-  Balance,
-  Usage,
-  Account,
-} from './SettingsTabs';
-import usePersonalizationAccess from '~/hooks/usePersonalizationAccess';
-import { useLocalize, TranslationKeys } from '~/hooks';
-import { useGetStartupConfig } from '~/data-provider';
+import { General, Notifications, Personalization, Apps, Account } from './SettingsTabs';
+import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
+
+/**
+ * Five tabs, and the same five for everyone.
+ *
+ * What is NOT here is the point of the list. Parameters, presets, endpoints,
+ * models, speech engines, token balances and command toggles were tabs of their
+ * own; none of them is a thing a person came here to decide. A control that
+ * only a developer can name does not get a home on a consumer surface — it goes
+ * where the deployment configures it, or it goes.
+ *
+ * The strip is also the ONE source of tab order: arrow-key navigation reads
+ * this array rather than restating it, which is how the two used to drift.
+ */
+const TABS = ['general', 'notifications', 'personalization', 'apps', 'account'] as const;
+
+type Tab = (typeof TABS)[number];
 
 export default function Settings({ open, onOpenChange }: TDialogProps) {
   const isSmallScreen = useMediaQuery('(max-width: 767px)');
-  const { data: startupConfig } = useGetStartupConfig();
   const localize = useLocalize();
-  const [activeTab, setActiveTab] = useState(SettingsTabValues.GENERAL);
+  const [activeTab, setActiveTab] = useState<Tab>('general');
   const tabRefs = useRef({});
-  const { hasAnyPersonalizationFeature, hasMemoryOptOut } = usePersonalizationAccess();
+
+  const labels: Record<Tab, string> = {
+    general: localize('com_nav_setting_general'),
+    notifications: localize('com_nav_setting_notifications'),
+    personalization: localize('com_nav_setting_personalization'),
+    apps: localize('com_nav_setting_apps'),
+    account: localize('com_nav_setting_account'),
+  };
+
+  const icons: Record<Tab, React.JSX.Element> = {
+    general: <GearIcon />,
+    notifications: <Bell className="icon-sm" aria-hidden="true" />,
+    personalization: <PersonalizationIcon />,
+    apps: <Plug className="icon-sm" aria-hidden="true" />,
+    account: <UserIcon />,
+  };
+
+  const panels: Record<Tab, React.JSX.Element> = {
+    general: <General />,
+    notifications: <Notifications />,
+    personalization: <Personalization />,
+    apps: <Apps />,
+    account: <Account />,
+  };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    const tabs: SettingsTabValues[] = [
-      SettingsTabValues.GENERAL,
-      SettingsTabValues.CHAT,
-      SettingsTabValues.COMMANDS,
-      SettingsTabValues.SPEECH,
-      ...(hasAnyPersonalizationFeature ? [SettingsTabValues.PERSONALIZATION] : []),
-      SettingsTabValues.DATA,
-      ...(balanceOn(startupConfig)
-        ? [SettingsTabValues.BALANCE, SettingsTabValues.USAGE]
-        : []),
-      SettingsTabValues.ACCOUNT,
-    ];
-    const currentIndex = tabs.indexOf(activeTab);
+    const at = TABS.indexOf(activeTab);
 
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        setActiveTab(tabs[(currentIndex + 1) % tabs.length]);
+        setActiveTab(TABS[(at + 1) % TABS.length]);
         break;
       case 'ArrowUp':
         event.preventDefault();
-        setActiveTab(tabs[(currentIndex - 1 + tabs.length) % tabs.length]);
+        setActiveTab(TABS[(at - 1 + TABS.length) % TABS.length]);
         break;
       case 'Home':
         event.preventDefault();
-        setActiveTab(tabs[0]);
+        setActiveTab(TABS[0]);
         break;
       case 'End':
         event.preventDefault();
-        setActiveTab(tabs[tabs.length - 1]);
+        setActiveTab(TABS[TABS.length - 1]);
         break;
     }
-  };
-
-  const settingsTabs: {
-    value: SettingsTabValues;
-    icon: React.JSX.Element;
-    label: TranslationKeys;
-  }[] = [
-    {
-      value: SettingsTabValues.GENERAL,
-      icon: <GearIcon />,
-      label: 'com_nav_setting_general',
-    },
-    {
-      value: SettingsTabValues.CHAT,
-      icon: <MessageSquare className="icon-sm" aria-hidden="true" />,
-      label: 'com_nav_setting_chat',
-    },
-    {
-      value: SettingsTabValues.COMMANDS,
-      icon: <Command className="icon-sm" aria-hidden="true" />,
-      label: 'com_nav_commands',
-    },
-    {
-      value: SettingsTabValues.SPEECH,
-      icon: <SpeechIcon className="icon-sm" aria-hidden="true" />,
-      label: 'com_nav_setting_speech',
-    },
-    ...(hasAnyPersonalizationFeature
-      ? [
-          {
-            value: SettingsTabValues.PERSONALIZATION,
-            icon: <PersonalizationIcon />,
-            label: 'com_nav_setting_personalization' as TranslationKeys,
-          },
-        ]
-      : []),
-    {
-      value: SettingsTabValues.DATA,
-      icon: <DataIcon />,
-      label: 'com_nav_setting_data',
-    },
-    ...(balanceOn(startupConfig)
-      ? [
-          {
-            value: SettingsTabValues.BALANCE,
-            icon: <DollarSign size={18} />,
-            label: 'com_nav_setting_balance' as TranslationKeys,
-          },
-          {
-            value: SettingsTabValues.USAGE,
-            icon: <BarChart3 size={18} />,
-            label: 'com_nav_setting_usage' as TranslationKeys,
-          },
-        ]
-      : ([] as { value: SettingsTabValues; icon: React.JSX.Element; label: TranslationKeys }[])),
-    {
-      value: SettingsTabValues.ACCOUNT,
-      icon: <UserIcon />,
-      label: 'com_nav_setting_account',
-    },
-  ];
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as SettingsTabValues);
   };
 
   return (
@@ -212,7 +154,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
               <div className="max-h-[calc(90vh-120px)] overflow-auto px-6 md:w-[680px]">
                 <Tabs
                   value={activeTab}
-                  onValueChange={handleTabChange}
+                  onValueChange={(value) => setActiveTab(value as Tab)}
                   className="flex flex-col gap-10 md:flex-row"
                   orientation="vertical"
                   flexDirection={isSmallScreen ? 'column' : 'row'}
@@ -246,7 +188,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                     borderRadius={isSmallScreen ? 12 : 0}
                     backgroundColor={isSmallScreen ? 'var(--surface-secondary)' : 'transparent'}
                   >
-                    {settingsTabs.map(({ value, icon, label }) => (
+                    {TABS.map((value) => (
                       <TabsTrigger
                         key={value}
                         className={cn(
@@ -268,48 +210,17 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                         hoverStyle={{}}
                         focusStyle={{}}
                       >
-                        {icon}
-                        <span>{localize(label)}</span>
+                        {icons[value]}
+                        <span>{labels[value]}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
                   <div className="overflow-auto sm:w-full sm:max-w-none md:pr-0.5 md:pt-0.5">
-                    <TabsContent value={SettingsTabValues.GENERAL} tabIndex={-1}>
-                      <General />
-                    </TabsContent>
-                    <TabsContent value={SettingsTabValues.CHAT} tabIndex={-1}>
-                      <Chat />
-                    </TabsContent>
-                    <TabsContent value={SettingsTabValues.COMMANDS} tabIndex={-1}>
-                      <Commands />
-                    </TabsContent>
-                    <TabsContent value={SettingsTabValues.SPEECH} tabIndex={-1}>
-                      <Speech />
-                    </TabsContent>
-                    {hasAnyPersonalizationFeature && (
-                      <TabsContent value={SettingsTabValues.PERSONALIZATION} tabIndex={-1}>
-                        <Personalization
-                          hasMemoryOptOut={hasMemoryOptOut}
-                          hasAnyPersonalizationFeature={hasAnyPersonalizationFeature}
-                        />
+                    {TABS.map((value) => (
+                      <TabsContent key={value} value={value} tabIndex={-1}>
+                        {panels[value]}
                       </TabsContent>
-                    )}
-                    <TabsContent value={SettingsTabValues.DATA} tabIndex={-1}>
-                      <Data />
-                    </TabsContent>
-                    {balanceOn(startupConfig) && (
-                      <TabsContent value={SettingsTabValues.BALANCE} tabIndex={-1}>
-                        <Balance />
-                      </TabsContent>
-                    )}
-                    {balanceOn(startupConfig) && (
-                      <TabsContent value={SettingsTabValues.USAGE} tabIndex={-1}>
-                        <Usage />
-                      </TabsContent>
-                    )}
-                    <TabsContent value={SettingsTabValues.ACCOUNT} tabIndex={-1}>
-                      <Account />
-                    </TabsContent>
+                    ))}
                   </div>
                 </Tabs>
               </div>
