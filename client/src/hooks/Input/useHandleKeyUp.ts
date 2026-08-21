@@ -38,20 +38,14 @@ const shouldTriggerCommand = (
 const useHandleKeyUp = ({
   index,
   textAreaRef,
-  setShowPlusPopover,
   setShowMentionPopover,
 }: {
   index: number;
   textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
-  setShowPlusPopover: Setter<boolean>;
   setShowMentionPopover: Setter<boolean>;
 }) => {
   const hasPromptsAccess = useHasAccess({
     permissionType: PermissionTypes.PROMPTS,
-    permission: Permissions.USE,
-  });
-  const hasMultiConvoAccess = useHasAccess({
-    permissionType: PermissionTypes.MULTI_CONVO,
     permission: Permissions.USE,
   });
   const latestMessage = useAtomValue(store.latestMessageFamily(index));
@@ -60,7 +54,6 @@ const useHandleKeyUp = ({
 
   // Get the current state of command toggles
   const atCommandEnabled = useAtomValue(store.atCommand);
-  const plusCommandEnabled = useAtomValue(store.plusCommand);
   const slashCommandEnabled = useAtomValue(store.slashCommand);
 
   const handleAtCommand = useCallback(() => {
@@ -68,15 +61,6 @@ const useHandleKeyUp = ({
       setShowMentionPopover(true);
     }
   }, [textAreaRef, setShowMentionPopover, atCommandEnabled]);
-
-  const handlePlusCommand = useCallback(() => {
-    if (!hasMultiConvoAccess || !plusCommandEnabled) {
-      return;
-    }
-    if (shouldTriggerCommand(textAreaRef, '+')) {
-      setShowPlusPopover(true);
-    }
-  }, [textAreaRef, setShowPlusPopover, plusCommandEnabled, hasMultiConvoAccess]);
 
   const handlePromptsCommand = useCallback(() => {
     if (!slashCommandEnabled) {
@@ -108,10 +92,9 @@ const useHandleKeyUp = ({
   const commandHandlers = useMemo(
     () => ({
       '@': handleAtCommand,
-      '+': handlePlusCommand,
       '/': handlePromptsCommand,
     }),
-    [handleAtCommand, handlePlusCommand, handlePromptsCommand],
+    [handleAtCommand, handlePromptsCommand],
   );
 
   const handleUpArrow = useCallback(

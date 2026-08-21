@@ -16,11 +16,6 @@ jest.mock('~/hooks', () => ({
   }),
 }));
 
-jest.mock('~/components/Chat/Menus/Endpoints/components/SpecIcon', () => ({
-  __esModule: true,
-  default: () => <span data-testid="spec-icon" />,
-}));
-
 jest.mock('~/components/Endpoints/MinimalIcon', () => ({
   __esModule: true,
   default: () => <span data-testid="minimal-icon" />,

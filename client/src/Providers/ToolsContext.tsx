@@ -12,7 +12,17 @@ import { getTimestampedValue } from '~/utils/timestamps';
 import { useGetStartupConfig } from '~/data-provider';
 import { ephemeralAgentByConvoId } from '~/store';
 
-interface BadgeRowContextType {
+/**
+ * What this turn is carrying, and the localStorage it is seeded from.
+ *
+ * It was `BadgeRowContext`, named after the row of pinnable badges that used to
+ * render it. That row is gone; the state it held is not, because the state was
+ * never the row's — it is the ephemeral agent's, one field per tool, which the
+ * server reads back (`packages/api/src/agents/load.ts`). `Add` writes it,
+ * `Chips` draws what is on, `ToolDialogs` collects a credential when one is
+ * missing.
+ */
+interface ToolsContextType {
   conversationId?: string | null;
   storageContextKey?: string;
   agentsConfig?: TAgentsEndpoint | null;
@@ -24,29 +34,29 @@ interface BadgeRowContextType {
   mcpServerManager: ReturnType<typeof useMCPServerManager>;
 }
 
-const BadgeRowContext = createContext<BadgeRowContextType | undefined>(undefined);
+const ToolsContext = createContext<ToolsContextType | undefined>(undefined);
 
-export function useBadgeRowContext() {
-  const context = useContext(BadgeRowContext);
+export function useToolsContext() {
+  const context = useContext(ToolsContext);
   if (context === undefined) {
-    throw new Error('useBadgeRowContext must be used within a BadgeRowProvider');
+    throw new Error('useToolsContext must be used within a ToolsProvider');
   }
   return context;
 }
 
-interface BadgeRowProviderProps {
+interface ToolsProviderProps {
   children: React.ReactNode;
   isSubmitting?: boolean;
   conversationId?: string | null;
   specName?: string | null;
 }
 
-export default function BadgeRowProvider({
+export default function ToolsProvider({
   children,
   isSubmitting,
   conversationId,
   specName,
-}: BadgeRowProviderProps) {
+}: ToolsProviderProps) {
   const lastContextKeyRef = useRef<string>('');
   const hasInitializedRef = useRef(false);
   const { agentsConfig } = useGetAgentsConfig();
@@ -240,7 +250,7 @@ export default function BadgeRowProvider({
 
   const mcpServerManager = useMCPServerManager({ conversationId, storageContextKey });
 
-  const value: BadgeRowContextType = {
+  const value: ToolsContextType = {
     webSearch,
     artifacts,
     fileSearch,
@@ -252,5 +262,5 @@ export default function BadgeRowProvider({
     mcpServerManager,
   };
 
-  return <BadgeRowContext.Provider value={value}>{children}</BadgeRowContext.Provider>;
+  return <ToolsContext.Provider value={value}>{children}</ToolsContext.Provider>;
 }

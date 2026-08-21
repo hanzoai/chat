@@ -15,8 +15,8 @@ import { DropdownPopup, MCPIcon, TooltipAnchor } from '@hanzochat/client';
 import { Permissions, PermissionTypes, defaultAgentCapabilities } from '@hanzochat/data-provider';
 import type { TConversation } from '@hanzochat/data-provider';
 import type { MenuItemProps } from '~/common';
-import { useAgentCapabilities, useHasAccess, useLocalize } from '~/hooks';
-import { useBadgeRowContext } from '~/Providers';
+import { useAgentCapabilities, useHasAccess, useLocalize, type TranslationKeys } from '~/hooks';
+import { useToolsContext } from '~/Providers';
 import { cn } from '~/utils';
 import { useAttach } from './Files/useAttach';
 import type { Takes } from './Files/useUpload';
@@ -43,20 +43,11 @@ import type { Takes } from './Files/useUpload';
  */
 
 /** Named after what the provider can actually read. */
-const ADD: Record<Takes, string> = {
-  photos: 'Add photos',
-  files: 'Add files',
-  both: 'Add photos & files',
+const ADD: Record<Takes, TranslationKeys> = {
+  photos: 'com_ui_add_photos',
+  files: 'com_ui_add_files',
+  both: 'com_ui_add_photos_files',
 };
-
-/** A tool the product names and this build cannot run yet. */
-const soon = (id: string, label: string, icon: React.ReactNode): MenuItemProps => ({
-  id,
-  label,
-  icon,
-  kbd: 'Soon',
-  hideOnClick: false,
-});
 
 export default function Add({
   conversation,
@@ -68,7 +59,7 @@ export default function Add({
   const localize = useLocalize();
   const [open, setOpen] = useState(false);
   const { add, takes, library, enabled, portals } = useAttach(conversation, disabled);
-  const { webSearch, codeInterpreter, agentsConfig, mcpServerManager } = useBadgeRowContext();
+  const { webSearch, codeInterpreter, agentsConfig, mcpServerManager } = useToolsContext();
   const { codeEnabled, webSearchEnabled } = useAgentCapabilities(
     agentsConfig?.capabilities ?? defaultAgentCapabilities,
   );
@@ -89,12 +80,21 @@ export default function Add({
   const { mcpValues, selectableServers, toggleServerSelection } = mcpServerManager;
   const servers = canUseMcp ? (selectableServers ?? []) : [];
 
+  /** A tool the product names and this build cannot run yet. */
+  const soon = (id: string, label: TranslationKeys, icon: React.ReactNode): MenuItemProps => ({
+    id,
+    label: localize(label),
+    icon,
+    kbd: localize('com_ui_soon'),
+    hideOnClick: false,
+  });
+
   const items: MenuItemProps[] = [];
 
   if (enabled) {
     items.push({
       id: 'add-files',
-      label: ADD[takes],
+      label: localize(ADD[takes]),
       icon: <Paperclip className="icon-md" aria-hidden="true" />,
       onClick: add,
     });
@@ -102,7 +102,7 @@ export default function Add({
   if (library) {
     items.push({
       id: 'add-library',
-      label: 'Add from library',
+      label: localize('com_ui_add_from_library'),
       icon: <Images className="icon-md" aria-hidden="true" />,
       onClick: library,
     });
@@ -123,26 +123,26 @@ export default function Add({
       onClick: () => webSearch.debouncedChange({ value: !webSearch.isToolEnabled }),
     });
   }
-  items.push(soon('tool-image', 'Create image', <ImagePlus className="icon-md" />));
-  items.push(soon('tool-research', 'Deep research', <Telescope className="icon-md" />));
+  items.push(soon('tool-image', 'com_ui_create_image', <ImagePlus className="icon-md" />));
+  items.push(soon('tool-research', 'com_ui_deep_research', <Telescope className="icon-md" />));
   if (canRunCode && codeEnabled) {
     items.push({
       id: 'tool-code',
-      label: 'Write code',
+      label: localize('com_ui_write_code'),
       icon: <Code className="icon-md" aria-hidden="true" />,
       ariaChecked: codeInterpreter.isToolEnabled,
       hideOnClick: false,
       onClick: () => codeInterpreter.debouncedChange({ value: !codeInterpreter.isToolEnabled }),
     });
   }
-  items.push(soon('tool-study', 'Study', <GraduationCap className="icon-md" />));
+  items.push(soon('tool-study', 'com_ui_study', <GraduationCap className="icon-md" />));
 
   /* The long tail, disclosed rather than listed: a deployment can connect any
    * number of servers, and the five above are the ones everybody has. */
   if (servers.length > 0) {
     items.push({
       id: 'tool-all',
-      label: 'View all tools',
+      label: localize('com_ui_view_all_tools'),
       icon: <Wrench className="icon-md" aria-hidden="true" />,
       subItems: servers.map((server) => ({
         id: `tool-mcp-${server.serverName}`,
@@ -163,7 +163,7 @@ export default function Add({
     id: 'add-slash',
     render: (
       <div className="px-3 py-1.5 text-xs text-text-secondary-alt md:px-2.5">
-        Type / for quick access
+        {localize('com_ui_slash_hint')}
       </div>
     ),
   });

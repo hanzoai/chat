@@ -33,7 +33,6 @@ export default function useClearStates() {
           set(store.optionSettingsFamily(key), RESET);
           set(store.showPopoverFamily(key), RESET);
           set(store.showMentionPopoverFamily(key), RESET);
-          set(store.showPlusPopoverFamily(key), RESET);
           set(store.showPromptsPopoverFamily(key), RESET);
           set(store.activePromptByIndex(key), RESET);
           set(store.globalAudioURLFamily(key), RESET);

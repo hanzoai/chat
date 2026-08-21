@@ -102,7 +102,7 @@ jest.mock('~/hooks', () => ({
 jest.mock('~/Providers', () => ({
   useChatContext: () => ({ conversation: mockConversation, newConversation: jest.fn() }),
 }));
-jest.mock('./../components/SpecIcon', () => ({ __esModule: true, default: () => <i /> }));
+jest.mock('../SpecIcon', () => ({ __esModule: true, default: () => <i /> }));
 /* `~/utils` is a barrel, and requiring it here pulls `utils/files.ts`, which
    destructures `fileConfig` off the data-provider at module scope and throws
    against the stub above — a picker's suite dying on file-upload validation.

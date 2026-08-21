@@ -33,49 +33,52 @@ export function isAgentGenerationStart(response: Response) {
   );
 }
 
-const modelSelectorTrigger = (page: Page) =>
-  page.getByRole('button', { name: 'Select a model' }).first();
+/**
+ * The header's model control.
+ *
+ * Addressed by id, not by name. The control deliberately never says "model" —
+ * its accessible name is the effort question (`com_ui_think`) and its TEXT is
+ * whatever is currently chosen — so a name-based locator here would pin a
+ * translation, and an English one at that.
+ */
+const modelTrigger = (page: Page) => page.locator('#model-menu-button');
 
 export const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** Open the model selector, choose an endpoint, then its model (committed on the model click). */
-export async function selectMockEndpoint(page: Page, endpoint: MockEndpoint) {
-  const trigger = modelSelectorTrigger(page);
-  await trigger.click();
-  await page.getByRole('option', { name: endpoint.label }).click();
-  const modelOption = page.getByRole('option', { name: endpoint.model, exact: true });
-  if (await modelOption.isVisible({ timeout: 1000 }).catch(() => false)) {
-    await modelOption.click();
-  }
-  await expect(trigger).not.toHaveText('Select a model');
-}
-
-/** Open the model selector and choose a configured model spec by label. */
-export async function selectModelSpec(page: Page, label: string) {
-  const trigger = modelSelectorTrigger(page);
+/**
+ * Choose a model by the name the picker reads aloud.
+ *
+ * There is no endpoint step any more — no list of providers to drill through —
+ * so this is the one selection helper and it replaces both of the two that were
+ * here. Rows are `menuitemcheckbox`: `ModelSelector` marks every row with the
+ * current choice, and `DropdownPopup` promotes any row carrying `ariaChecked`.
+ *
+ * The menu has TWO shapes and this handles both, because which one renders is a
+ * property of the deployment rather than of the test: where the gateway serves
+ * the enso tiers, the first list is the three effort stops and the models sit
+ * behind `Advanced`; where it serves none of them, the models ARE the first
+ * list. Reaching for `Advanced` only when the row is not already on screen
+ * keeps one helper honest under both.
+ */
+export async function selectModel(page: Page, name: string) {
+  const trigger = modelTrigger(page);
   await expect(trigger).toBeVisible();
-  if ((await trigger.textContent())?.includes(label)) {
+  if ((await trigger.textContent())?.includes(name)) {
     return;
   }
+
   await trigger.click();
-  await page.getByRole('option', { name: new RegExp(`(^|\\s)${escapeRegExp(label)}\\b`) }).click();
-  await expect(trigger).toContainText(label);
-}
+  const row = page.getByRole('menuitemcheckbox', {
+    name: new RegExp(`(^|\\s)${escapeRegExp(name)}\\b`),
+  });
 
-/** Enable the ephemeral Skills capability from the composer tool menu. */
-export async function enableSkills(page: Page) {
-  await page.getByRole('button', { name: 'Tools Options' }).click();
-  await page.getByTestId('tools-menu-skills').click();
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: 'Skills' })).toBeVisible();
-}
+  if (!(await row.isVisible({ timeout: 1000 }).catch(() => false))) {
+    await page.getByRole('button', { name: 'Advanced' }).click();
+    await expect(row).toBeVisible();
+  }
 
-/** Enable the ephemeral Memory capability from the composer tool menu. */
-export async function enableMemory(page: Page) {
-  await page.getByRole('button', { name: 'Tools Options' }).click();
-  await page.getByTestId('tools-menu-memory').click();
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('checkbox', { name: 'Memory' })).toBeVisible();
+  await row.click();
+  await expect(trigger).toContainText(name);
 }
 
 /** The conversation messages container. */

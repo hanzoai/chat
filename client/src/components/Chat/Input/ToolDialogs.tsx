@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import SearchApiKeyDialog from '~/components/SidePanel/Agents/Search/ApiKeyDialog';
 import MCPConfigDialog from '~/components/MCP/MCPConfigDialog';
-import { useBadgeRowContext } from '~/Providers';
+import { useToolsContext } from '~/Providers';
 
 /**
  * What a tool asks for before it can run, for every tool that asks.
@@ -16,7 +16,7 @@ import { useBadgeRowContext } from '~/Providers';
  * Hanzo IAM bearer, so there is no key to type and nowhere to put one.
  */
 function ToolDialogs() {
-  const { webSearch, searchApiKeyForm, mcpServerManager, storageContextKey } = useBadgeRowContext();
+  const { webSearch, searchApiKeyForm, mcpServerManager, storageContextKey } = useToolsContext();
   const { authData: webSearchAuthData } = webSearch;
   const mcpConfig = mcpServerManager.getConfigDialogProps();
 

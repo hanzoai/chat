@@ -60,7 +60,6 @@ const useNewConvo = (index = 0) => {
   const defaultPreset = useAtomValue(store.defaultPreset);
   const { setConversation } = store.useCreateConversationAtom(index);
   const [files, setFiles] = useAtom(store.filesByIndex(index));
-  const saveBadgesState = useAtomValue<boolean>(store.saveBadgesState);
   const smartRoutingPref = useAtomValue<boolean | null>(store.smartRouting);
   // Server-driven org defaults (fail-soft: `available:false` when the endpoint is
   // absent/older cloud-api — resolveSmartRouting then keeps today's behavior).
@@ -310,9 +309,6 @@ const useNewConvo = (index = 0) => {
       disableParams?: boolean;
     } = {}) {
       pauseGlobalAudio();
-      if (!saveBadgesState) {
-      }
-
       const templateConvoId = _template.conversationId ?? '';
       const paramEndpoint =
         isParamEndpoint(_template.endpoint ?? '', _template.endpointType ?? '') === true ||
@@ -413,7 +409,6 @@ const useNewConvo = (index = 0) => {
       saveDrafts,
       mutateAsync,
       startupConfig,
-      saveBadgesState,
       pauseGlobalAudio,
       switchToConversation,
       applyModelSpecEffects,

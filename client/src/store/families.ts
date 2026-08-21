@@ -163,7 +163,6 @@ const activePromptByIndex = family<string | number | null, string | undefined>(u
 
 const showMentionPopoverFamily = family<string | number | null, boolean>(false);
 
-const showPlusPopoverFamily = family<string | number | null, boolean>(false);
 
 const showPromptsPopoverFamily = family<string | number | null, boolean>(false);
 
@@ -321,7 +320,6 @@ export default {
   audioRunFamily,
   globalAudioPlayingFamily,
   globalAudioFetchingFamily,
-  showPlusPopoverFamily,
   activePromptByIndex,
   useClearSubmissionState,
   useClearLatestMessages,

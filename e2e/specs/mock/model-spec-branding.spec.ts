@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { getPrimaryE2EUser } from '../../setup/users.mock';
-import { NEW_CHAT_PATH, selectModelSpec } from './helpers';
+import { NEW_CHAT_PATH, selectModel } from './helpers';
 
 /** Spec with `showOnLanding: true` and an HTML `description` in e2e/config/chat.e2e.yaml. */
 const BRANDED_SPEC = {
@@ -17,7 +17,7 @@ test.describe('model spec branding on landing', () => {
     page,
   }) => {
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectModelSpec(page, BRANDED_SPEC.label);
+    await selectModel(page, BRANDED_SPEC.label);
 
     const main = page.getByRole('main');
     await expect(main).toContainText(BRANDED_SPEC.label);
@@ -30,18 +30,16 @@ test.describe('model spec branding on landing', () => {
 
   test('unbranded spec keeps the personalized greeting', async ({ page }) => {
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectModelSpec(page, UNBRANDED_SPEC_LABEL);
+    await selectModel(page, UNBRANDED_SPEC_LABEL);
 
     const user = getPrimaryE2EUser();
     await expect(page.getByRole('main')).toContainText(user.name);
   });
 
-  test('branded spec renders its description in the model selector', async ({ page }) => {
-    await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-
-    await page.getByRole('button', { name: 'Select a model' }).first().click();
-    const option = page.getByRole('option', { name: new RegExp(BRANDED_SPEC.label) });
-    await expect(option).toContainText(BRANDED_SPEC.descriptionText);
-    await expect(option.locator(`img[src$="${BRANDED_SPEC.descriptionIcon}"]`)).toBeVisible();
-  });
+  /* The third test here asserted the spec's description INSIDE the picker, and
+     it is deleted rather than re-selectored: a row is `{icon}{label}` now and
+     carries no second line, so there is no longer a description in the menu to
+     find. Re-pointing it at the new row would have produced a test that passes
+     by looking for nothing. The description still renders, on the landing —
+     which is what the first test above already measures. */
 });

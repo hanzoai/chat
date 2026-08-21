@@ -6,7 +6,7 @@ import {
   useChatContext,
   useChatFormContext,
   useAssistantsMapContext,
-  BadgeRowProvider,
+  ToolsProvider,
 } from '~/Providers';
 import {
   useTextarea,
@@ -77,7 +77,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const maximizeChatSpace = useAtomValue(store.maximizeChatSpace);
   const isTemporary = useAtomValue(store.isTemporary);
 
-  const setShowPlusPopover = useSetAtom(store.showPlusPopoverFamily(index));
   const [showMentionPopover, setShowMentionPopover] = useAtom(
     store.showMentionPopoverFamily(index),
   );
@@ -210,7 +209,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const handleKeyUp = useHandleKeyUp({
     index,
     textAreaRef,
-    setShowPlusPopover,
     setShowMentionPopover,
   });
   const {
@@ -262,7 +260,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             temporary={isTemporary}
             className="flex-grow pb-4 sm:pb-0"
           >
-            <BadgeRowProvider
+            <ToolsProvider
               conversationId={conversationId}
               specName={conversation?.spec}
               isSubmitting={isSubmitting}
@@ -334,7 +332,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
               </div>
               {/* What a tool asks for before it runs. No control opens these. */}
               <ToolDialogs />
-            </BadgeRowProvider>
+            </ToolsProvider>
             {/* While a spoken conversation is live the mic reads the reply, so
                 the automatic-playback stream stands down — one voice at a time. */}
             {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}

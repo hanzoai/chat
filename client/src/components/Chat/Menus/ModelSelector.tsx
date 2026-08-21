@@ -16,7 +16,7 @@ import { useGetEndpointsQuery } from '~/data-provider';
 import { useEndpoints, useLocalize } from '~/hooks';
 import { useChatContext } from '~/Providers';
 import { cn, label as written } from '~/utils';
-import SpecIcon from './components/SpecIcon';
+import SpecIcon from './SpecIcon';
 
 /**
  * How hard should it think — one question, asked in adjectives.

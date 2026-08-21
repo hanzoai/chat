@@ -14,11 +14,9 @@ export default function useSpeechSettingsInit(isAuthenticated: boolean) {
   const setters = useRef({
     conversationMode: useSetAtom(store.conversationMode),
     advancedMode: useSetAtom(store.advancedMode),
-    speechToText: useSetAtom(store.speechToText),
     textToSpeech: useSetAtom(store.textToSpeech),
     cacheTTS: useSetAtom(store.cacheTTS),
     engineSTT: useSetAtom(store.engineSTT),
-    languageSTT: useSetAtom(store.languageSTT),
     autoTranscribeAudio: useSetAtom(store.autoTranscribeAudio),
     decibelValue: useSetAtom(store.decibelValue),
     autoSendText: useSetAtom(store.autoSendText),

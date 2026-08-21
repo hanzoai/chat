@@ -811,7 +811,7 @@ describe('useMCPSelect', () => {
       });
 
       // mcpValues should remain unchanged — null ephemeral agent doesn't trigger sync
-      // (BadgeRowContext will fill from localStorage defaults separately)
+      // (ToolsContext will fill from localStorage defaults separately)
       await waitFor(() => {
         expect(result.current.mcpHook.mcpValues).toEqual(['server1', 'server2']);
       });
