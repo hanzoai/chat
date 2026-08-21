@@ -45,7 +45,6 @@ jest.mock('~/data-provider', () => ({
 }));
 jest.mock('~/hooks', () => ({ useHasAccess: () => true }));
 jest.mock('../Assistants/useAssistantListMap', () => ({ __esModule: true, default: () => ({}) }));
-jest.mock('../useChatBadges', () => ({ useResetChatBadges: () => jest.fn() }));
 jest.mock('../Agents', () => ({ useApplyModelSpecEffects: () => jest.fn() }));
 jest.mock('../Audio', () => ({ usePauseGlobalAudio: () => ({ pauseGlobalAudio: jest.fn() }) }));
 

@@ -110,7 +110,9 @@ jest.mock('react-i18next', () => {
 //
 // Making that wrapper the global default for RTL's `render` was tried and
 // REJECTED on evidence: it regressed 8 previously-passing suites (SmartLoader,
-// MemoryInfo, UIResourceCarousel, FileRow, SkillsCommand, FavoritesList,
-// MCPUIResourceCarousel, SkillPills). Wrap per test until those 8 are
+// MemoryInfo, UIResourceCarousel, FileRow, FavoritesList,
+// MCPUIResourceCarousel). Wrap per test until those are
 // understood — do not re-add a global wrapper without re-measuring.
+// (SkillsCommand and SkillPills were two of the original eight and have
+// since been deleted as unreachable, so six remain.)
 require('@hanzo/ui/gui-config');

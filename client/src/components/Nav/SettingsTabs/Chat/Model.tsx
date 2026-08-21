@@ -7,10 +7,16 @@ import { useLocalize } from '~/hooks';
 /**
  * Which model answers you.
  *
- * Enso is the house model and leads the endpoint's list, so a new conversation
- * is already on it and nothing in the chat view offers to change that. This row
- * is where the change is made — one setting among the others, chosen
- * deliberately rather than in passing.
+ * SECOND of two surfaces, and that is a known duplication awaiting a decision,
+ * not a design. The composer now carries `ModelChip`, which opens the flat
+ * `@` picker in two clicks against the six this row costs; this row's own note
+ * used to say "nothing in the chat view offers to change that", and that is no
+ * longer true. One of the two should go, and the argument for keeping this one
+ * is narrow: `ModelSelector` is the only path to `SetKeyDialog`, the per-endpoint
+ * API-key prompt, which opens when `endpointRequiresUserKey`. No endpoint in the
+ * shipped config asks for a user key — all nine carry a server-injected
+ * `{{CHAT_OPENID_TOKEN}}` — but that is a fact about the config in universe, not
+ * a guarantee this repo makes.
  *
  * The picker is the app's one `ModelSelector`, unchanged: it reads the endpoints
  * and models the deployment actually serves, and hides itself when the
