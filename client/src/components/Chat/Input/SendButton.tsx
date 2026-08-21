@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { useWatch } from 'react-hook-form';
+import { ready } from '@hanzo/ui/chat';
 import type { Control } from 'react-hook-form';
 import { SendIcon, TooltipAnchor } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
@@ -51,8 +52,7 @@ const SubmitButton = React.memo(
 const SendButton = React.memo(
   forwardRef((props: SendButtonProps, ref: React.ForwardedRef<HTMLButtonElement>) => {
     const data = useWatch({ control: props.control });
-    const content = data?.text?.trim();
-    return <SubmitButton ref={ref} disabled={props.disabled || !content} />;
+    return <SubmitButton ref={ref} disabled={!ready(data?.text ?? '', props.disabled)} />;
   }),
 );
 

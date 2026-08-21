@@ -1,6 +1,7 @@
 import debounce from 'lodash/debounce';
 import { useEffect, useRef, useCallback } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
+import { sends } from '@hanzo/ui/chat';
 import type { KeyboardEvent } from 'react';
 import { forceResize, insertTextAtCursor, getEntity, checkIfScrollable } from '~/utils';
 import { useAssistantsMapContext } from '~/Providers/AssistantsMapContext';
@@ -146,51 +147,44 @@ export default function useTextarea({
 
       checkHealth();
 
-      const isNonShiftEnter = e.key === 'Enter' && !e.shiftKey;
-      const isCtrlEnter = e.key === 'Enter' && (e.ctrlKey || e.metaKey);
-
-      // NOTE: isComposing and e.key behave differently in Safari compared to other browsers, forcing us to use e.keyCode instead
-      const isComposingInput = isComposing.current || e.key === 'Process' || e.keyCode === 229;
-
-      if (isNonShiftEnter && filesLoading) {
-        e.preventDefault();
-      }
-
-      if (isNonShiftEnter) {
-        e.preventDefault();
-      }
-
-      if (
-        e.key === 'Enter' &&
-        !enterToSend &&
-        !isCtrlEnter &&
-        textAreaRef.current &&
-        !isComposingInput
-      ) {
-        e.preventDefault();
-        insertTextAtCursor(textAreaRef.current, '\n');
-        forceResize(textAreaRef.current);
+      /* `sends` is the shell's rule and the only one this app states. It knows
+         the three signals an IME answers on — `isComposing`, a `Process` key and
+         Safari's bare keyCode 229 — so a keystroke the IME has claimed never
+         reaches either branch below, and the newline branch inherits that for
+         free rather than re-deriving it. `isComposing.current` still feeds it:
+         compositionstart/end are DOM events only this element sees. */
+      const chord = sends(e.key, {
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        metaKey: e.metaKey,
+        ctrlKey: e.ctrlKey,
+        keyCode: e.keyCode,
+        isComposing: isComposing.current || e.nativeEvent.isComposing,
+      });
+      if (!chord) {
         return;
       }
 
-      if ((isNonShiftEnter || isCtrlEnter) && !isComposingInput) {
-        const globalAudio = document.getElementById(globalAudioId) as HTMLAudioElement | undefined;
-        if (globalAudio) {
-          console.log('Unmuting global audio');
-          globalAudio.muted = false;
+      e.preventDefault();
+
+      /* Cmd/Ctrl+Enter sends whatever the preference says; a bare Enter under
+         `enterToSend: false` is the same chord asking for a newline instead. */
+      const forced = e.metaKey || e.ctrlKey;
+      if (!enterToSend && !forced) {
+        if (textAreaRef.current) {
+          insertTextAtCursor(textAreaRef.current, '\n');
+          forceResize(textAreaRef.current);
         }
-        submitButtonRef.current?.click();
+        return;
       }
+
+      const globalAudio = document.getElementById(globalAudioId) as HTMLAudioElement | undefined;
+      if (globalAudio) {
+        globalAudio.muted = false;
+      }
+      submitButtonRef.current?.click();
     },
-    [
-      isSubmitting,
-      checkHealth,
-      filesLoading,
-      enterToSend,
-      setIsScrollable,
-      textAreaRef,
-      submitButtonRef,
-    ],
+    [isSubmitting, checkHealth, enterToSend, setIsScrollable, textAreaRef, submitButtonRef],
   );
 
   const handleCompositionStart = () => {

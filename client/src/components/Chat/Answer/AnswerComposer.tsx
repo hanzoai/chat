@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ArrowUp, Check, ChevronDown, Square } from 'lucide-react';
+import { ready, sends } from '@hanzo/ui/chat';
 import * as Ariakit from '@ariakit/react/menu';
 import { useGetModelsQuery } from '@hanzochat/data-provider/react-query';
 import { DropdownPopup } from '@hanzochat/client';
@@ -94,11 +95,10 @@ export default function AnswerComposer({
   }, [models, model, setModel]);
 
   const submit = () => {
-    const value = text.trim();
-    if (!value || isLoading) {
+    if (!ready(text, isLoading)) {
       return;
     }
-    onSubmit(value);
+    onSubmit(text.trim());
     setText('');
     if (areaRef.current) {
       areaRef.current.style.height = 'auto';
@@ -133,11 +133,15 @@ export default function AnswerComposer({
             e.target.style.height = 'auto';
             e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
           }}
+          /* `e.nativeEvent`, not `e` — React's synthetic keyboard event has no
+             `isComposing`, so the shell would be judging an IME candidate on
+             two signals out of three. The DOM event carries all of them. */
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              submit();
+            if (!sends(e.key, e.nativeEvent)) {
+              return;
             }
+            e.preventDefault();
+            submit();
           }}
           className="max-h-[200px] min-h-10 w-full resize-none bg-transparent px-4 pt-3 text-[15px] leading-6 text-text-primary outline-none placeholder:text-text-secondary"
         />
