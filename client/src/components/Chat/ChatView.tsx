@@ -11,6 +11,7 @@ import { ChatContext, AddedChatContext, useFileMapContext, ChatFormProvider } fr
 import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } from '~/hooks';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
+import { chatSurface } from './surface';
 import Presentation from './Presentation';
 import SelectionAsk from './SelectionAsk';
 import ChatForm from './Input/ChatForm';
@@ -75,17 +76,24 @@ function ChatView({ index = 0 }: { index?: number }) {
     defaultValues: { text: seededProjectSlug ? projectOpener(seededProjectSlug) : '' },
   });
 
-  let content: JSX.Element | null | undefined;
-  const isLandingPage =
-    (!messagesTree || messagesTree.length === 0) &&
-    (conversationId === Constants.NEW_CONVO || !conversationId);
-  const isNavigating = (!messagesTree || messagesTree.length === 0) && conversationId != null;
+  // ONE decision, in one place — see ./surface. It used to be three booleans in
+  // this render body that each had to agree with the other two, and they did
+  // not: the landing kept rendering for the 10.5s a new conversation takes to
+  // exist server-side, so the echo of the message just sent and the thinking
+  // indicator beside it were never mounted.
+  const surface = chatSurface({
+    hasMessages: Boolean(messagesTree && messagesTree.length > 0),
+    conversationId,
+    isNewConversation: conversationId === Constants.NEW_CONVO || !conversationId,
+    isSubmitting: rootSubmission != null,
+    isLoading,
+  });
+  const isLandingPage = surface === 'landing';
 
-  if (isLoading && conversationId !== Constants.NEW_CONVO) {
+  let content: JSX.Element | null | undefined;
+  if (surface === 'loading') {
     content = <LoadingSpinner />;
-  } else if ((isLoading || isNavigating) && !isLandingPage) {
-    content = <LoadingSpinner />;
-  } else if (!isLandingPage) {
+  } else if (surface === 'thread') {
     content = <MessagesView messagesTree={messagesTree} />;
   }
 
