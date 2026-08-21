@@ -77,7 +77,6 @@ help-all:
 	@echo ""
 	@echo "$(BLUE)Docker Compose Files:$(NC)"
 	@echo "  compose.yml          - Base configuration"
-	@echo "  compose.dev.yml      - Development overrides"
 	@echo "  compose.prod.yml     - Production overrides"
 
 # ============================================================================
@@ -115,12 +114,8 @@ clean:
 # ============================================================================
 
 dev:
-	@echo "$(GREEN)Starting in development mode...$(NC)"
-	@docker compose -f compose.yml -f compose.dev.yml up
-
-dev-full:
-	@echo "$(GREEN)Starting full dev stack with local router...$(NC)"
-	@docker compose -f compose.yml -f compose.dev.yml --profile with-router up
+	@echo "$(GREEN)Starting API and client in watch mode...$(NC)"
+	@npm run backend:dev & npm run frontend:dev
 
 build:
 	@echo "$(GREEN)Building containers...$(NC)"
@@ -128,7 +123,7 @@ build:
 
 build-prod:
 	@echo "$(GREEN)Building production image...$(NC)"
-	@docker build -f docker/Dockerfile -t hanzoai/chat:latest .
+	@docker build -f Dockerfile.multi -t chat:dev .
 
 build-static-local:
 	@echo "$(GREEN)Building static SPA locally...$(NC)"
@@ -181,9 +176,6 @@ logs-mongo:
 
 logs-meili:
 	@docker compose logs -f meilisearch
-
-logs-router:
-	@docker compose -f compose.yml -f compose.dev.yml logs -f router
 
 # ============================================================================
 # SHELL ACCESS
