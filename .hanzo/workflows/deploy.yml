@@ -171,11 +171,24 @@ jobs:
       # egress does — four builds on one commit failed cloning actions/checkout,
       # before install, with nothing in the tree read. A wrapper around one
       # command is not worth a network dependency.
+      # Retried, because the action this replaces retries and the runner's
+      # egress is not reliable: a single attempt met
+      # `Get "https://ghcr.io/v2/": context deadline exceeded` and failed the
+      # build on a network blip. Backs off, and says which attempt it is so a
+      # log shows a flaky link rather than a wrong credential.
       - name: Sign in to the registry
         run: |
-          set -euo pipefail
-          printf '%s' "${{ secrets.GHCR_TOKEN }}" \
-            | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+          set -uo pipefail
+          for i in 1 2 3 4 5; do
+            if printf '%s' "${{ secrets.GHCR_TOKEN }}" \
+                 | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin; then
+              exit 0
+            fi
+            echo "registry sign-in attempt $i failed; retrying"
+            sleep $((i * 5))
+          done
+          echo "::error::could not sign in to ghcr.io after 5 attempts"
+          exit 1
 
       # The publishable ingest key, from KMS — the only store secrets come from.
       # Vite inlines import.meta.env at BUILD, so this cannot be delivered at
@@ -248,17 +261,26 @@ jobs:
       # `docker buildx build`, the command the action wraps. GIT_AUTH_TOKEN is
       # not carried over: the Dockerfile mounts no secret, so it was passed and
       # discarded. PUBLISHABLE_KEY stays a build-arg because Vite inlines it.
+      # Same reason as the sign-in above: the push crosses the same link, and
+      # the action this replaces retries where a bare command gives up.
       - name: Build and push
         run: |
-          set -euo pipefail
-          docker buildx build . \
+          set -uo pipefail
+          build() { docker buildx build . \
             --file ./Dockerfile \
             --platform linux/amd64 \
             --provenance=false \
             --build-arg PUBLISHABLE_KEY="${{ steps.ingest.outputs.key }}" \
             --tag ghcr.io/hanzoai/chat:${{ steps.ver.outputs.version }} \
             --tag ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }} \
-            --push
+            --push; }
+          for i in 1 2 3; do
+            build && exit 0
+            echo "build/push attempt $i failed; retrying"
+            sleep $((i * 10))
+          done
+          echo "::error::build and push failed after 3 attempts"
+          exit 1
 
       # build-push-action can exit 0 before the manifest resolves, so a green run
       # could still mean a future ImagePullBackOff. Prove it pulls.
