@@ -1,7 +1,16 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrgCommandPalette, type OrgCommandItem } from '@hanzogui/shell';
-import { useLocalize } from '~/hooks';
+import { useSetAtom } from 'jotai';
+import type { TConversation } from '@hanzochat/data-provider';
+import { useAuthContext, useLocalize, useNavigateToConvo } from '~/hooks';
+import { useConversationsInfiniteQuery } from '~/data-provider';
+import store from '~/store';
+
+/** How many chats the palette offers. A palette is a shortlist, not the archive
+    — the whole list is one row away in the sidebar, and eighty titles in a
+    scroller is slower to read than typing two more letters. */
+const LIMIT = 8;
 
 /**
  * ⌘K, in chat.
@@ -10,6 +19,19 @@ import { useLocalize } from '~/hooks';
  * ask row every other Hanzo surface opens — so learning it once is learning it
  * everywhere. This file supplies only the two things the shell cannot know:
  * which app this is, and what chat can do.
+ *
+ * ONE palette holds the chord. Chat used to mount a second, hand-rolled one
+ * beside this (`components/Palette.tsx`), and both bound ⌘K on `document`: two
+ * listeners, one chord, so the key opened two overlays stacked on each other and
+ * which one you typed into came down to listener order. The shell's own
+ * `useCommandKey` says why in one line — "a page that mounted two would have
+ * them fight over the same chord". The hand-rolled one is deleted rather than
+ * quieted with `stopPropagation`, which would only have hidden the second
+ * palette while still mounting it.
+ *
+ * Its material moved here, because that material was the reason it existed: the
+ * recent conversations and Settings are things only chat can contribute. The
+ * shell owns the frame; chat owns the commands.
  *
  * The ask row goes to the COMPOSER rather than to hanzo.chat, which is the
  * point of `onAsk`. Every other surface asks by opening chat; chat is already
@@ -20,8 +42,30 @@ import { useLocalize } from '~/hooks';
 export default function CommandPalette() {
   const navigate = useNavigate();
   const localize = useLocalize();
+  const { isAuthenticated } = useAuthContext();
+  const { navigateToConvo } = useNavigateToConvo();
+  const setShowSettings = useSetAtom(store.showSettings);
 
-  const commands: OrgCommandItem[] = useMemo(
+  /** The params the sidebar passes, so this reads that query's cache instead of
+      opening a second one against the same rows. */
+  const { data } = useConversationsInfiniteQuery(
+    {},
+    { enabled: isAuthenticated, staleTime: 30000, cacheTime: 300000 },
+  );
+
+  const chats = useMemo<OrgCommandItem[]>(() => {
+    const all = (data ? data.pages.flatMap((page) => page.conversations) : []).filter(
+      Boolean,
+    ) as TConversation[];
+    return all.slice(0, LIMIT).map((convo) => ({
+      id: `chat-${convo.conversationId}`,
+      title: convo.title ?? localize('com_ui_new_chat'),
+      category: localize('com_ui_chats'),
+      action: () => navigateToConvo(convo),
+    }));
+  }, [data, localize, navigateToConvo]);
+
+  const commands = useMemo<OrgCommandItem[]>(
     () => [
       {
         id: 'new-chat',
@@ -30,8 +74,16 @@ export default function CommandPalette() {
         category: 'Chat',
         keywords: ['new', 'conversation', 'start'],
       },
+      {
+        id: 'settings',
+        title: localize('com_nav_settings'),
+        category: 'Chat',
+        keywords: ['settings', 'preferences', 'model'],
+        action: () => setShowSettings(true),
+      },
+      ...chats,
     ],
-    [localize],
+    [chats, localize, setShowSettings],
   );
 
   const ask = useCallback(
