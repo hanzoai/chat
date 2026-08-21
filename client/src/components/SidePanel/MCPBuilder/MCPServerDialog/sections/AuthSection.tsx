@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Copy, CopyCheck } from 'lucide-react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Label, Input, Checkbox, SecretInput, Radio, useToastContext } from '@hanzochat/client';
 import { AuthTypeEnum, AuthorizationTypeEnum } from '../hooks/useMCPServerForm';
 import type { MCPServerFormData } from '../hooks/useMCPServerForm';
@@ -17,6 +17,7 @@ export default function AuthSection({ isEditMode, serverName }: AuthSectionProps
   const { showToast } = useToastContext();
   const {
     register,
+    control,
     setValue,
     formState: { errors },
   } = useFormContext<MCPServerFormData>();
@@ -105,7 +106,18 @@ export default function AuthSection({ isEditMode, serverName }: AuthSectionProps
               <Label htmlFor="api_key" className="text-sm font-medium">
                 {localize('com_ui_api_key')}
               </Label>
-              <SecretInput id="api_key" placeholder="sk-..." {...register('auth.api_key')} />
+              <Controller
+                name="auth.api_key"
+                control={control}
+                render={({ field }) => (
+                  <SecretInput
+                    id="api_key"
+                    placeholder="sk-..."
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
             </div>
           )}
 
@@ -193,15 +205,22 @@ export default function AuthSection({ isEditMode, serverName }: AuthSectionProps
                   </>
                 )}
               </Label>
-              <SecretInput
-                id="oauth_client_secret"
-                placeholder={isEditMode ? localize('com_ui_leave_blank_to_keep') : ''}
-                aria-invalid={errors.auth?.oauth_client_secret ? 'true' : 'false'}
-                aria-describedby={
-                  errors.auth?.oauth_client_secret ? 'oauth-client-secret-error' : undefined
-                }
-                {...register('auth.oauth_client_secret', { required: !isEditMode })}
-                className={cn(errors.auth?.oauth_client_secret && 'border-border-destructive')}
+              <Controller
+                name="auth.oauth_client_secret"
+                control={control}
+                rules={{ required: !isEditMode }}
+                render={({ field }) => (
+                  <SecretInput
+                    id="oauth_client_secret"
+                    placeholder={isEditMode ? localize('com_ui_leave_blank_to_keep') : ''}
+                    invalid={!!errors.auth?.oauth_client_secret}
+                    aria-describedby={
+                      errors.auth?.oauth_client_secret ? 'oauth-client-secret-error' : undefined
+                    }
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.auth?.oauth_client_secret && (
                 <p

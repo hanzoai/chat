@@ -34,7 +34,7 @@
     "@dicebear/collection": "^9.2.2",
     "@dicebear/core": "^9.2.2",
     "@hanzo/gui": ">=8.0.1",
-    "@hanzo/ui": "^8.0.76",
+    "@hanzo/ui": "^8.0.117",
     "@headlessui/react": "^2.1.2",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "1.0.2",
