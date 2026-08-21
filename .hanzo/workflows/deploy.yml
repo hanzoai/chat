@@ -27,6 +27,11 @@ on:
     # `.md` are docs, issue templates or migration READMEs. `.hanzo/workflows/**`
     # is deliberately NOT ignored — a change to this lane must prove it still
     # builds.
+    #
+    # An EMPTY commit does not retrigger this lane. The filter matches on the
+    # paths a push touches, and a commit that touches none has nothing to match,
+    # so `--allow-empty` reads like a retry and fires no run at all. Rebuild a
+    # commit by changing a real file, or dispatch the workflow.
     paths-ignore:
       - '**.md'
   workflow_dispatch:
@@ -64,21 +69,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
-
       # No PUBLISHABLE_KEY: this image is measured and discarded, never served.
       # Dockerfile.multi predates the key gate, so it will build without one —
       # that gap is part of what the port has to close.
+      #
+      # The same two commands the build job runs, for the same reason: a wrapper
+      # fetched from github.com is a network dependency this runner does not
+      # need to take.
       - name: Build Dockerfile.multi
         continue-on-error: true
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.multi
-          platforms: linux/amd64
-          push: false
-          load: true
-          tags: chat-multi:measure
+        run: |
+          set -uo pipefail
+          docker buildx create --name hanzo-measure --driver docker-container --use 2>/dev/null \
+            || docker buildx use hanzo-measure
+          docker buildx build . \
+            --file ./Dockerfile.multi \
+            --platform linux/amd64 \
+            --tag chat-multi:measure \
+            --load
 
       - name: Report the size, against what runs today
         run: |
@@ -101,14 +109,19 @@ jobs:
       # Full history + tags: this job TAGS the release, so it needs the tag
       # namespace to push into and a non-shallow clone to describe from.
       #
-      # This step, and the three docker/* below, are fetched from GITHUB. On a
-      # fleet that builds on its own runners that is the one hop in this lane
-      # that leaves the estate, and it is where the lane dies when egress does:
-      # `dial tcp …:443: i/o timeout` cloning actions/checkout, before install,
-      # before build, with nothing in the tree read. Four attempts on one commit
-      # failed identically that way while cicd — which imports a forge-hosted
-      # reusable, hanzoai/ci/.hanzo/workflows/build.yml@v1 — went green beside
-      # them. Mirroring these four onto git.hanzo.ai closes it.
+      # THE LAST github.com FETCH IN THIS JOB, and the only one left because it
+      # is the only one that is not a wrapper: it clones with a credential the
+      # runner supplies, and getting that wrong fails every build rather than
+      # one. The three docker/* steps it used to sit beside are gone — each was
+      # one command (`docker login`, `buildx create`, `buildx build`) that the
+      # runner already has.
+      #
+      # The hop matters because it is where the lane dies when egress does:
+      # `dial tcp …:443: i/o timeout` here, before install, before build, with
+      # nothing in the tree read. Four attempts on one commit failed that way
+      # while cicd — which imports a forge-hosted reusable,
+      # hanzoai/ci/.hanzo/workflows/build.yml@v1 — went green beside them.
+      # Mirroring actions/checkout onto git.hanzo.ai closes the rest.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -141,15 +154,28 @@ jobs:
       - id: meta
         run: echo "tag=sha-$(echo "$GITHUB_SHA" | cut -c1-7)" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v3
-        with: { driver: docker-container, driver-opts: network=host }
+      # Same builder the action creates, by the command it runs. `network=host`
+      # so the build can reach the registry cache and the runner's own mirrors.
+      - name: Prepare the builder
+        run: |
+          set -euo pipefail
+          docker buildx create --name hanzo --driver docker-container \
+            --driver-opt network=host --use 2>/dev/null || docker buildx use hanzo
+          docker buildx inspect --bootstrap >/dev/null
 
       # Without this the push is unauthenticated and 403s at the registry.
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ secrets.GHCR_USER }}
-          password: ${{ secrets.GHCR_TOKEN }}
+      #
+      # `docker login` directly, not docker/login-action: every action in this
+      # lane is fetched from github.com at run time, and that hop is the one
+      # thing here that leaves the estate. It is also where the lane dies when
+      # egress does — four builds on one commit failed cloning actions/checkout,
+      # before install, with nothing in the tree read. A wrapper around one
+      # command is not worth a network dependency.
+      - name: Sign in to the registry
+        run: |
+          set -euo pipefail
+          printf '%s' "${{ secrets.GHCR_TOKEN }}" \
+            | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
 
       # The publishable ingest key, from KMS — the only store secrets come from.
       # Vite inlines import.meta.env at BUILD, so this cannot be delivered at
@@ -219,20 +245,20 @@ jobs:
           echo "key=$V" >> "$GITHUB_OUTPUT"
           echo "ingest key resolved ($code, ${#V} chars)"
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: true
-          provenance: false
-          tags: |
-            ghcr.io/hanzoai/chat:${{ steps.ver.outputs.version }}
-            ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }}
-          build-args: |
-            PUBLISHABLE_KEY=${{ steps.ingest.outputs.key }}
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GH_PAT }}
+      # `docker buildx build`, the command the action wraps. GIT_AUTH_TOKEN is
+      # not carried over: the Dockerfile mounts no secret, so it was passed and
+      # discarded. PUBLISHABLE_KEY stays a build-arg because Vite inlines it.
+      - name: Build and push
+        run: |
+          set -euo pipefail
+          docker buildx build . \
+            --file ./Dockerfile \
+            --platform linux/amd64 \
+            --provenance=false \
+            --build-arg PUBLISHABLE_KEY="${{ steps.ingest.outputs.key }}" \
+            --tag ghcr.io/hanzoai/chat:${{ steps.ver.outputs.version }} \
+            --tag ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }} \
+            --push
 
       # build-push-action can exit 0 before the manifest resolves, so a green run
       # could still mean a future ImagePullBackOff. Prove it pulls.
