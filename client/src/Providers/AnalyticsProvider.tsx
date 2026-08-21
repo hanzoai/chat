@@ -58,7 +58,7 @@ function consented(): boolean {
  * unidentified rather than given a fabricated one.
  *
  * HISTORY SURVIVES SIGN-UP. Nothing here mints or resets an id. @hanzo/event stamps
- * `anonymousId` from the `hz_anon_id` localStorage value on EVERY event, including
+ * `anonymousId` from the `iam-anon-id` localStorage value on EVERY event, including
  * this identify, and that value is minted once per browser and never cleared on
  * login — so the identify arrives carrying the same anonymous id the visitor's
  * pre-signup pageviews were filed under, and the two join.
