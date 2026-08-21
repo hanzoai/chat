@@ -170,7 +170,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                       orientation, which is vertical, so the phone's flex-row
                       would never land. */}
                   <TabsList
-                    aria-label="Settings"
+                    aria-label={localize('com_nav_settings')}
                     className={cn(
                       'min-w-auto max-w-auto relative -ml-[8px] flex flex-shrink-0 flex-col flex-nowrap overflow-auto sm:max-w-none',
                       isSmallScreen

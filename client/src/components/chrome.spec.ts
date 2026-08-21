@@ -22,15 +22,33 @@ import { CONTROL, CONTROL_OPEN, ROW } from './chrome';
 
 const HERE = join(__dirname);
 
-/** Every file that renders a control in the top row. */
+/**
+ * Every file that renders a control in the top row.
+ *
+ * MEMBERSHIP, and it is checked against `Chat/Header.tsx`'s imports rather than
+ * accumulated. Two files left the list in the same pass that added two, and the
+ * pair is worth naming because neither was deleted:
+ *
+ * - `Chat/PanelControls.tsx` renders nowhere at all now. It is still on disk and
+ *   is still the only place this app defines a keyboard shortcut, so an unmounted
+ *   file is a decision about those shortcuts and not a geometry question. It has
+ *   no box in this row to disagree with.
+ * - `Chat/Menus/OpenSidebar.tsx` is mounted, but by `Agents/Marketplace` — a
+ *   different surface with its own row. Scanning it here asserted a rule it was
+ *   never subject to.
+ *
+ * A file that renders no control in this row cannot violate this row's geometry,
+ * so leaving either in would be a rule that passes for the wrong reason — which
+ * is the same failure as a suite that cannot run.
+ */
 const TOP_ROW = [
   'Nav/NewChat.tsx',
   'Nav/BrandCorner.tsx',
-  'Chat/PanelControls.tsx',
+  'Chat/Menus/ModelSelector.tsx',
+  'Chat/Share.tsx',
+  'Chat/Menus/Sources.tsx',
+  'Chat/Menus/ConvoMenu.tsx',
   'Chat/TemporaryChat.tsx',
-  'Chat/ExportAndShareMenu.tsx',
-  'Chat/Menus/CanvasToggle.tsx',
-  'Chat/Menus/OpenSidebar.tsx',
 ];
 
 /**

@@ -1,9 +1,9 @@
-import ModelSelector from './Menus/Endpoints/ModelSelector';
+import ModelSelector from './Menus/ModelSelector';
 import { useGetStartupConfig } from '~/data-provider';
-import Sources from './Menus/CanvasToggle';
+import Sources from './Menus/Sources';
 import { TemporaryChat } from './TemporaryChat';
 import ConvoMenu from './Menus/ConvoMenu';
-import Share from './ExportAndShareMenu';
+import Share from './Share';
 
 /**
  * The header asks one question and offers four answers about the thread under
@@ -31,7 +31,7 @@ import Share from './ExportAndShareMenu';
  *   keyboard shortcuts, so removing it is a decision about those, not about
  *   this row.
  * - The preset menu and the endpoint menu, which are gone from the app rather
- *   than moved: see `Menus/Endpoints/ModelSelector`.
+ *   than moved: see `Menus/ModelSelector`.
  *
  * WHAT ARRIVED: the effort control. It had been pushed into Settings on the
  * theory that the house default is right and asking on every turn is noise.

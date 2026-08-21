@@ -10,7 +10,7 @@ import { getModelSpec, applyModelSpecEphemeralAgent } from '~/utils';
  *
  * When a spec is provided, its tool settings are applied to the ephemeral agent.
  * When no spec is provided but specs are configured, the ephemeral agent is reset
- * to null so BadgeRowContext can apply localStorage defaults (non-spec experience).
+ * to null so ToolsContext can apply localStorage defaults (non-spec experience).
  */
 export function useApplyModelSpecEffects() {
   const updateEphemeralAgent = useUpdateEphemeralAgent();
@@ -27,7 +27,7 @@ export function useApplyModelSpecEffects() {
       if (specName == null || !specName) {
         if (startupConfig?.modelSpecs?.list?.length) {
           /** Specs are configured but none selected — reset ephemeral agent to null
-           *  so BadgeRowContext fills all values (tool toggles + MCP) from localStorage. */
+           *  so ToolsContext fills all values (tool toggles + MCP) from localStorage. */
           updateEphemeralAgent((convoId ?? Constants.NEW_CONVO) || Constants.NEW_CONVO, null);
         }
         return;

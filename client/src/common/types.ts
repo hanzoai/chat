@@ -3,7 +3,7 @@ import { RefObject } from 'react';
 import { FileSources, EModelEndpoint, isEphemeralAgentId } from '@hanzochat/data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type * as InputNumberPrimitive from 'rc-input-number';
-import type { SetStateAction, WritableAtom } from 'jotai';
+import type { SetStateAction } from 'jotai';
 import type { ColumnDef } from '@tanstack/react-table';
 import type * as t from '@hanzochat/data-provider';
 import type { LucideIcon } from 'lucide-react';
@@ -60,14 +60,6 @@ export type AudioChunk = {
 
 /** Writes a value, or a function of the previous value — a jotai atom setter. */
 export type Setter<T> = (update: SetStateAction<T>) => void;
-
-export type BadgeItem = {
-  id: string;
-  icon: React.ComponentType<any>;
-  label: string;
-  atom: WritableAtom<boolean, [boolean], void>;
-  isAvailable: boolean;
-};
 
 export type AssistantListItem = {
   id: string;

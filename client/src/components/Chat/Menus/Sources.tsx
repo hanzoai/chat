@@ -14,11 +14,6 @@ import store from '~/store';
  * is retired — the word reads as a dated feature name rather than a description
  * of what is in the panel — so the control says what it opens and draws files.
  *
- * THE FILE NAME IS STALE and the rename is a follow-up, not an oversight:
- * `components/chrome.spec.ts` holds the list of files that draw a control in
- * the top row and reads each one off disk by path. That list spans several
- * parts of the app and has to be curated as a whole.
- *
  * It appears only when there is something to show, because a toggle for an
  * empty panel is a control that does nothing. The emptiness test is artifacts
  * only, which is narrower than the panel's new name: when the panel starts

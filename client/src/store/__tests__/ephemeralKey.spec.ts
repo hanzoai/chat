@@ -12,7 +12,7 @@ import { join } from 'path';
  *
  * Measured 2026-08-08: `DragDropModal` read `conversationId ?? ''` while every
  * writer used `conversationId ?? Constants.NEW_CONVO` — useDragHelpers and
- * useFileHandling when a tool resource is switched on, plus BadgeRowContext,
+ * useFileHandling when a tool resource is switched on, plus ToolsContext,
  * useMCPSelect and useToolToggle. On a NEW chat the modal therefore subscribed
  * to an atom nobody writes: choosing "file search" in that very modal left the
  * permission check beside it reading an empty ephemeral agent. It agreed with

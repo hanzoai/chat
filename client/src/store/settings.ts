@@ -115,7 +115,6 @@ const localStorageAtoms = {
   splitAtTarget: atomWithLocalStorage('splitAtTarget', false),
   rememberDefaultFork: atomWithLocalStorage(LocalStorageKeys.REMEMBER_FORK_OPTION, false),
   showThinking: atomWithLocalStorage('showThinking', false),
-  saveBadgesState: atomWithLocalStorage('saveBadgesState', false),
 
   // Beta features settings
   modularChat: atomWithLocalStorage('modularChat', true),
@@ -153,16 +152,13 @@ const localStorageAtoms = {
 
   // Commands settings
   atCommand: atomWithLocalStorage('atCommand', true),
-  plusCommand: atomWithLocalStorage('plusCommand', true),
   slashCommand: atomWithLocalStorage('slashCommand', true),
 
   // Speech settings
   conversationMode: atomWithLocalStorage('conversationMode', false),
   advancedMode: atomWithLocalStorage('advancedMode', false),
 
-  speechToText: atomWithLocalStorage('speechToText', true),
   engineSTT: atomWithLocalStorage('engineSTT', 'browser'),
-  languageSTT: atomWithLocalStorage('languageSTT', ''),
   autoTranscribeAudio: atomWithLocalStorage('autoTranscribeAudio', false),
   decibelValue: atomWithLocalStorage('decibelValue', -45),
   autoSendText: atomWithLocalStorage('autoSendText', -1),

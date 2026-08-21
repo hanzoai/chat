@@ -8,7 +8,7 @@ import {
   mockReply,
   replyText,
   replyPrompt,
-  selectMockEndpoint,
+  selectModel,
   sendMessage,
 } from './helpers';
 
@@ -92,7 +92,7 @@ test.describe('core chat loop', () => {
     const userMessage = 'ping from e2e';
 
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     const response = await sendMessage(page, userMessage);
     expect(response.ok()).toBeTruthy();
@@ -119,7 +119,7 @@ test.describe('core chat loop', () => {
 
   test('keeps send disabled until the composer has message text', async ({ page }) => {
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     const input = page.getByRole('textbox', { name: 'Message input' });
     const sendButton = page.getByTestId('send-button');
@@ -133,7 +133,7 @@ test.describe('core chat loop', () => {
 
   test('renders assistant markdown and syntax-highlighted code blocks', async ({ page }) => {
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     const response = await sendMessage(page, 'E2E_MARKDOWN_REPLY');
     expect(response.ok()).toBeTruthy();
@@ -167,7 +167,7 @@ test.describe('core chat loop', () => {
     const followUpMessage = 'follow-up on original branch from e2e';
 
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     let response = await sendMessage(page, firstMessage);
     expect(response.ok()).toBeTruthy();
@@ -202,7 +202,7 @@ test.describe('core chat loop', () => {
     const secondMessage = 'second turn from e2e';
 
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     let response = await sendMessage(page, firstMessage);
     expect(response.ok()).toBeTruthy();
@@ -262,7 +262,7 @@ test.describe('core chat loop', () => {
     ];
 
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     // Build a three-turn thread (the "long running thread"), waiting for each
     // turn's unique reply to render before sending the next.
@@ -327,7 +327,7 @@ test.describe('core chat loop', () => {
     const fileChip = messagesView(page).getByRole('button', { name: filename });
 
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     await uploadProviderFile(page, csvFixture);
 
@@ -362,7 +362,7 @@ test.describe('core chat loop', () => {
     test.setTimeout(90000);
 
     await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-    await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+    await selectModel(page, MOCK_ENDPOINTS[0].label);
 
     await uploadProviderFile(page, pdfFixture);
     const pdfChip = composer(page).getByRole('button', { name: pdfFixture.name });

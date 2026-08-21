@@ -3,7 +3,7 @@ import { Provider, createStore } from 'jotai';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
 import store from '~/store';
-import Sources from '../CanvasToggle';
+import Sources from '../Sources';
 
 jest.mock('~/hooks', () => ({ useLocalize: () => (key: string) => key }));
 

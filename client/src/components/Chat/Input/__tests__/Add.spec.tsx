@@ -28,9 +28,38 @@ const mockAttach = {
 };
 jest.mock('../Files/useAttach', () => ({ useAttach: () => mockAttach }));
 
+/**
+ * en, and only the keys this menu reads.
+ *
+ * A key with no entry here renders as the key itself, so the assertions below
+ * read as English exactly as long as every label goes through `localize`. That
+ * is the second thing this file now measures: hard-coding one of these strings
+ * back into the component would not change what it says in en, and nothing else
+ * in the suite would notice.
+ */
+const EN: Record<string, string> = {
+  com_ui_add: 'Add',
+  com_ui_add_files: 'Add files',
+  com_ui_add_from_library: 'Add from library',
+  com_ui_add_photos: 'Add photos',
+  com_ui_add_photos_files: 'Add photos & files',
+  com_ui_create_image: 'Create image',
+  com_ui_deep_research: 'Deep research',
+  com_ui_remove_tool: 'Remove {{0}}',
+  com_ui_slash_hint: 'Type / for quick access',
+  com_ui_soon: 'Soon',
+  com_ui_study: 'Study',
+  com_ui_tools: 'Tools',
+  com_ui_view_all_tools: 'View all tools',
+  com_ui_web_search: 'Web Search',
+  com_ui_write_code: 'Write code',
+};
+
 jest.mock('~/hooks', () => ({
-  useLocalize: () => (key: string) =>
-    ({ com_ui_web_search: 'Web Search', com_ui_add: 'Add', com_ui_tools: 'Tools' })[key] ?? key,
+  useLocalize: () => (key: string, vars?: Record<string, string>) => {
+    const text = EN[key] ?? key;
+    return vars ? text.replace(/\{\{(\w+)\}\}/g, (_, name) => vars[name] ?? '') : text;
+  },
   useHasAccess: () => true,
   useAgentCapabilities: () => ({ codeEnabled: true, webSearchEnabled: true }),
 }));
@@ -73,9 +102,9 @@ jest.mock('@ariakit/react', () => ({
   MenuButton: ({ children, ...p }: any) => <button {...p}>{children}</button>,
 }));
 
-/** The BadgeRowContext contract, backed by state so a write is readable. */
+/** The ToolsContext contract, backed by state so a write is readable. */
 let mockCtx: any;
-jest.mock('~/Providers', () => ({ useBadgeRowContext: () => mockCtx }));
+jest.mock('~/Providers', () => ({ useToolsContext: () => mockCtx }));
 
 function Harness() {
   const [search, setSearch] = useState(false);

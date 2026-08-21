@@ -76,13 +76,13 @@ function mockMarker(id: string) {
   return () => <div data-testid={id} />;
 }
 
-jest.mock('./Menus/Endpoints/ModelSelector', () => ({
+jest.mock('./Menus/ModelSelector', () => ({
   __esModule: true,
   default: mockMarker('effort'),
 }));
 jest.mock('./Menus/ConvoMenu', () => ({ __esModule: true, default: mockMarker('convo-menu') }));
-jest.mock('./Menus/CanvasToggle', () => ({ __esModule: true, default: mockMarker('sources') }));
-jest.mock('./ExportAndShareMenu', () => ({ __esModule: true, default: mockMarker('share') }));
+jest.mock('./Menus/Sources', () => ({ __esModule: true, default: mockMarker('sources') }));
+jest.mock('./Share', () => ({ __esModule: true, default: mockMarker('share') }));
 jest.mock('./TemporaryChat', () => ({ TemporaryChat: mockMarker('temporary') }));
 jest.mock('./PanelControls', () => ({ __esModule: true, default: mockMarker('panel-controls') }));
 jest.mock('~/components/Nav/BrandCorner', () => ({

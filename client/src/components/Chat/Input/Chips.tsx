@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Code, Globe, X } from 'lucide-react';
 import { MCPIcon } from '@hanzochat/client';
 import { useLocalize } from '~/hooks';
-import { useBadgeRowContext } from '~/Providers';
+import { useToolsContext } from '~/Providers';
 
 /**
  * The tools this turn is carrying, as chips you can take back off.
@@ -26,7 +26,7 @@ export default function Chips({
   textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
 }) {
   const localize = useLocalize();
-  const { webSearch, codeInterpreter, mcpServerManager } = useBadgeRowContext();
+  const { webSearch, codeInterpreter, mcpServerManager } = useToolsContext();
   const { mcpValues, toggleServerSelection } = mcpServerManager;
 
   const chips = useMemo(() => {
@@ -42,7 +42,7 @@ export default function Chips({
     if (codeInterpreter.isToolEnabled) {
       on.push({
         id: 'chip-code',
-        label: 'Write code',
+        label: localize('com_ui_write_code'),
         icon: <Code className="size-3.5" aria-hidden="true" />,
         off: () => codeInterpreter.debouncedChange({ value: false }),
       });
@@ -95,7 +95,7 @@ export default function Chips({
           <span className="max-w-[12rem] truncate">{chip.label}</span>
           <button
             type="button"
-            aria-label={`Remove ${chip.label}`}
+            aria-label={localize('com_ui_remove_tool', { 0: chip.label })}
             onClick={chip.off}
             className="-mr-1 rounded-full p-0.5 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary"
           >

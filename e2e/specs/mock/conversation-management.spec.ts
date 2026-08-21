@@ -6,7 +6,7 @@ import {
   messagesView,
   replyPrompt,
   replyText,
-  selectMockEndpoint,
+  selectModel,
   sendMessage,
 } from './helpers';
 
@@ -18,7 +18,7 @@ function uniqueLabel(prefix: string) {
 
 async function openMockChat(page: Page) {
   await page.goto(NEW_CHAT_PATH, { timeout: 10000 });
-  await selectMockEndpoint(page, MOCK_ENDPOINTS[0]);
+  await selectModel(page, MOCK_ENDPOINTS[0].label);
 }
 
 async function sendAndExpectReply(page: Page, label: string) {

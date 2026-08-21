@@ -9,6 +9,33 @@ import { test, expect, type Page } from '@playwright/test';
  * with no identity to mint.
  */
 
+/**
+ * The catalog a visitor WITH a plan is served.
+ *
+ * The harness signs nobody in, and an anonymous visitor is pinned server-side
+ * to the free route — one model, and the one model the picker deliberately
+ * never offers. That is correct product behaviour and the test above measures
+ * it. It also means the guest path cannot exercise a choice, so the click count
+ * is measured against the list a paying visitor gets. Only the model QUERY is
+ * answered here; the component, its menu and the browser are all real.
+ */
+const CATALOG = {
+  Hanzo: ['enso', 'enso-flash', 'enso-ultra', 'zen5-flash', 'zen5', 'zen5-pro', 'zen5-coder'],
+};
+
+async function withCatalog(page: Page) {
+  // A REGEX, not a glob. The double-star glob for this path does not match the
+  // URL, and the interception then silently never fires: the picker renders the
+  // guest's empty catalog and the failure reads as a missing control.
+  await page.route(/\/v1\/chat\/models/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(CATALOG),
+    }),
+  );
+}
+
 async function land(page: Page) {
   await page.addInitScript(() => {
     /* The signed-out SSO probe navigates the document to hanzo.id on first
@@ -51,30 +78,90 @@ test.describe('the slice', () => {
     await expect(page.getByText('Go to', { exact: true })).toBeVisible();
   });
 
-  test('model choice is TWO clicks from the composer', async ({ page }) => {
+  test('a guest is offered no model, because a guest has no choice to make', async ({ page }) => {
     await land(page);
 
-    const chip = page.getByTestId('model-chip');
-    await expect(chip).toBeVisible();
+    /* Measured, and it is the designed answer rather than a gap: the server
+       pins an anonymous visitor to the free route (`/v1/chat/models` answers
+       `{"Hanzo":["enso-free"]}`), `models()` drops the free route because it is
+       where the gateway LANDS you rather than something to ask for, and a
+       control with nothing to offer renders nothing. The left end of the header
+       is empty here; it is not empty for someone with a catalog, which is what
+       the next test serves. */
+    await expect(page.getByTestId('header-lead')).toBeEmpty();
+    await expect(page.locator('#model-menu-button')).toHaveCount(0);
+  });
 
-    // click 1 — the trigger the `@` picker never had
-    await chip.click();
+  test('model choice is TWO clicks, and the first list is answers not providers', async ({
+    page,
+  }) => {
+    await withCatalog(page);
+    await land(page);
 
-    const picker = page.locator('input[placeholder]:visible').last();
-    await expect(picker).toBeFocused();
+    /* The control moved out of the composer and into the header, so the chip
+       this used to click is gone rather than renamed. By id: the accessible
+       name is the effort question and the text is the current choice, so both
+       move under this test's feet. */
+    const trigger = page.locator('#model-menu-button');
+    await expect(trigger).toBeVisible();
 
-    // the first rows offered are MODELS, not endpoints to drill into
-    const firstRow = page.locator('[id^="mention-item-"]').first();
-    await expect(firstRow).toBeVisible();
+    // click 1 — open
+    await trigger.click();
 
-    // click 2 — a model, selected outright
-    const label = (await firstRow.innerText()).trim();
-    await firstRow.click();
+    /* THREE rows, and each one is an ANSWER. The old menu's first list was
+       endpoints and every row opened another list, which is what made the real
+       count six. Asserting the count is what keeps a provider from reappearing
+       here as a fourth row that drills. */
+    const rows = page.getByRole('menuitemcheckbox');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0)).toHaveText(/Instant/);
+    await expect(rows.nth(2)).toHaveText(/High/);
+
+    // click 2 — chosen outright, no second list in between
+    await rows.nth(0).click();
     await page.waitForTimeout(400);
 
-    // the chip now names what was chosen, and the picker is gone
-    await expect(page.locator('[id^="mention-item-"]')).toHaveCount(0);
-    expect(label.length).toBeGreaterThan(0);
+    /* The menu closed on the pick, which is the second click doing the work
+       rather than opening something.
+       What is NOT asserted here is that the trigger then READS "Instant", and
+       the omission is deliberate. This harness signs nobody in, and the server
+       pins an anonymous visitor's conversation to the free route, so the pick is
+       overridden the moment it lands and the trigger falls back to its default
+       word. That is guest scoping doing its job, not the picker failing — the
+       selection path itself is measured against a real conversation in
+       `Chat/Menus/__tests__/ModelSelector.spec.tsx`. Asserting it here would
+       measure the harness. */
+    await expect(page.getByRole('menuitemcheckbox')).toHaveCount(0);
+  });
+
+  test('a named model is one level deeper, and that is the whole of Advanced', async ({ page }) => {
+    await withCatalog(page);
+    await land(page);
+
+    const trigger = page.locator('#model-menu-button');
+    await trigger.click();
+    await page.getByRole('menuitem', { name: 'Advanced' }).click();
+
+    /* Breadth of models is something this product sells, so it is kept — but
+       behind a disclosure, because naming a slug is not the question most
+       people arrived with. Three clicks for the deliberate case, two for the
+       common one. */
+    const named = page.getByRole('menuitemcheckbox', { name: 'Zen5 Pro' });
+    await expect(named).toBeVisible();
+    await named.click();
+
+    // Closed on the pick — see the note above on why the trigger's text is the
+    // guest scope's answer here and not this test's business.
+    await expect(page.getByRole('menuitemcheckbox')).toHaveCount(0);
+  });
+
+  test('the composer carries exactly three controls', async ({ page }) => {
+    await land(page);
+
+    /* Add, Dictate, Send. Counted rather than named so that renaming one does
+       not quietly let a fourth in beside it. */
+    const controls = page.locator('.composer-actions button');
+    await expect(controls).toHaveCount(3);
   });
 
   test('the composer row draws no phantom badge', async ({ page }) => {
@@ -108,11 +195,12 @@ test.describe('the slice', () => {
   test('nothing in the shell throws on boot', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
+    await withCatalog(page);
     await land(page);
     await page.keyboard.press('ControlOrMeta+k');
     await page.waitForTimeout(300);
     await page.keyboard.press('Escape');
-    await page.getByTestId('model-chip').click();
+    await page.locator('#model-menu-button').click();
     await page.waitForTimeout(500);
     expect(errors).toEqual([]);
   });
