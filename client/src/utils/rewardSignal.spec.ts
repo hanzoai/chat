@@ -27,10 +27,10 @@ describe('sendRewardSignal', () => {
   const urlOf = (call = 0) => fetchMock.mock.calls[call][0] as string;
   const bodyOf = (call = 0) => JSON.parse(initOf(call).body as string);
 
-  it('POSTs to {base}/v1/feedback with exactly {request_id, signal} for "up"', () => {
+  it('POSTs to {base}/v1/ai/feedback with exactly {request_id, signal} for "up"', () => {
     sendRewardSignal('chatcmpl-up', 'up');
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(urlOf()).toBe('https://api.hanzo.ai/v1/feedback');
+    expect(urlOf()).toBe('https://api.hanzo.ai/v1/ai/feedback');
     const init = initOf();
     expect(init.method).toBe('POST');
     expect(init.credentials).toBe('include');
@@ -98,7 +98,7 @@ describe('sendRewardSignal', () => {
   it('strips a trailing slash from the base URL', () => {
     process.env.VITE_HANZO_API_URL = 'https://api.hanzo.ai/';
     sendRewardSignal('slash-1', 'up');
-    expect(urlOf()).toBe('https://api.hanzo.ai/v1/feedback');
+    expect(urlOf()).toBe('https://api.hanzo.ai/v1/ai/feedback');
   });
 
   it('dedupes the same signal for the same request id', () => {

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { sendFeedback, type FeedbackSignal } from '@hanzo/ai';
 
 /**
- * CONTENT-FREE reward signals emitted to the Hanzo gateway (`POST {base}/v1/feedback`)
+ * CONTENT-FREE reward signals emitted to the Hanzo gateway (`POST {base}/v1/ai/feedback`)
  * so router training gets production feedback.
  *
  * THIN adapter over the shared `@hanzo/ai` `sendFeedback` client (one
