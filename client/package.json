@@ -34,7 +34,7 @@
     "@codesandbox/sandpack-react": "^2.19.10",
     "@dicebear/collection": "^9.2.2",
     "@dicebear/core": "^9.2.2",
-    "@hanzo/ai": "^0.3.8",
+    "@hanzo/ai": "^0.3.10",
     "@hanzo/appearance": "^0.1.2",
     "@hanzo/composer": "^0.1.0",
     "@hanzo/design": "^0.4.12",

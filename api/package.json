@@ -44,7 +44,7 @@
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.30.0",
     "@google/genai": "^1.19.0",
-    "@hanzo/ai": "^0.3.8",
+    "@hanzo/ai": "^0.3.10",
     "@hanzochat/agents": "^3.2.63",
     "@hanzochat/api": "workspace:*",
     "@hanzochat/data-provider": "workspace:*",
