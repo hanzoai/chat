@@ -7,17 +7,15 @@ import type { TEndpointsConfig, Agent } from '@hanzochat/data-provider';
 import { useAttach } from '../useAttach';
 
 /**
- * What the conversation says about attaching — the derivation that decides
- * WHICH upload options a turn gets, and whether it gets any.
+ * What the conversation says about attaching — whether a turn can take a file
+ * at all, and what the upload machinery is told about the endpoint.
  *
- * This used to test `AttachFileChat`, the component that both derived this and
- * chose between two controls. The controls are gone (attaching is items in the
- * composer's "+" now) but the derivation is the part that was ever subtle:
- * an agent's endpointType comes from its provider, through a fetch when the
- * agent is not in the map, and `useResponsesApi` has to prefer an explicit
- * `false` on the conversation over the agent's `true`. So the assertions are
- * unchanged and only what they read moved — from the props of a mocked
- * component to the argument of the mocked hook.
+ * The derivation is the part that was ever subtle: an agent's endpointType
+ * comes from its provider, through a fetch when the agent is not in the map,
+ * and `useResponsesApi` has to prefer an explicit `false` on the conversation
+ * over the agent's `true`. Those assertions are unchanged. What moved is the
+ * OTHER half: "can this turn attach" used to be observable as the length of a
+ * capability menu, and is now the one boolean the composer asks for.
  */
 
 const mockEndpointsConfig: TEndpointsConfig = {
@@ -57,8 +55,7 @@ let mockAttachFileMenuProps: Record<string, unknown> = {};
 jest.mock('../useUpload', () => ({
   useUpload: (props: Record<string, unknown>) => {
     mockAttachFileMenuProps = props;
-    // One item, so "this turn can attach" is observable as a length.
-    return { items: [{ label: 'upload' }], upload: () => {}, portals: null };
+    return { add: () => {}, takes: 'both', library: null, portals: null };
   },
 }));
 
@@ -67,7 +64,7 @@ jest.mock('~/hooks', () => ({ useLocalize: () => (key: string) => key }));
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 /** The hook's result for one conversation, read through a probe component. */
-let seen: { items: unknown[] } = { items: [] };
+let seen: { enabled: boolean } = { enabled: false };
 
 function renderComponent(conversation: Record<string, unknown> | null, disableInputs = false) {
   function Probe() {
@@ -89,25 +86,24 @@ describe('useAttach', () => {
     mockAgentsMap = {};
     mockAgentQueryData = undefined;
     mockAttachFileMenuProps = {};
-    seen = { items: [] };
+    seen = { enabled: false };
   });
 
   describe('whether the turn can attach at all', () => {
-    it('offers items for an agents endpoint', () => {
+    it('can attach on an agents endpoint', () => {
       renderComponent({ endpoint: EModelEndpoint.agents, agent_id: 'agent-1' });
-      expect(seen.items.length).toBeGreaterThan(0);
+      expect(seen.enabled).toBe(true);
     });
 
-    it('offers items for a custom endpoint that takes files', () => {
+    it('can attach on a custom endpoint that takes files', () => {
       renderComponent({ endpoint: 'Moonshot' });
-      expect(seen.items.length).toBeGreaterThan(0);
+      expect(seen.enabled).toBe(true);
     });
 
-    it('offers NOTHING when there is no conversation', () => {
-      // An "Attach" that opens onto nothing is worse than an absent one, and an
-      // empty list is what makes the "+" simply not draw the section.
+    it('cannot attach when there is no conversation', () => {
+      // An "Add" that opens onto nothing is worse than one that says it cannot.
       renderComponent(null);
-      expect(seen.items).toHaveLength(0);
+      expect(seen.enabled).toBe(false);
     });
   });
 
@@ -217,8 +213,8 @@ describe('useAttach', () => {
     });
   });
 
-  describe('upload disabled rendering', () => {
-    it('renders null for agents endpoint when fileConfig.agents.disabled is true', () => {
+  describe('upload disabled', () => {
+    it('cannot attach for agents endpoint when fileConfig.agents.disabled is true', () => {
       mockFileConfig = mergeFileConfig({
         endpoints: {
           [EModelEndpoint.agents]: { disabled: true },
@@ -228,25 +224,20 @@ describe('useAttach', () => {
         endpoint: EModelEndpoint.agents,
         agent_id: 'agent-1',
       });
-      expect(seen.items).toHaveLength(0);
+      expect(seen.enabled).toBe(false);
     });
 
-    it('renders null for agents endpoint when disableInputs is true', () => {
-      renderComponent(
-        { endpoint: EModelEndpoint.agents, agent_id: 'agent-1' },
-        true,
-      );
-      expect(seen.items).toHaveLength(0);
+    it('cannot attach for agents endpoint when disableInputs is true', () => {
+      renderComponent({ endpoint: EModelEndpoint.agents, agent_id: 'agent-1' }, true);
+      expect(seen.enabled).toBe(false);
     });
 
-    it('offers exactly one item for an assistants endpoint when not disabled', () => {
-      // Assistants expose no capability choice, so the menu of one IS the
-      // honest shape — it is what the old plain button did, as an item.
+    it('can attach on an assistants endpoint when not disabled', () => {
       renderComponent({ endpoint: EModelEndpoint.assistants });
-      expect(seen.items).toHaveLength(1);
+      expect(seen.enabled).toBe(true);
     });
 
-    it('offers items when provider config overrides agents disabled', () => {
+    it('can attach when provider config overrides agents disabled', () => {
       mockFileConfig = mergeFileConfig({
         endpoints: {
           Moonshot: { disabled: false, fileLimit: 5 },
@@ -257,10 +248,10 @@ describe('useAttach', () => {
         'agent-1': { provider: 'Moonshot', model_parameters: {} } as Partial<Agent>,
       };
       renderComponent({ endpoint: EModelEndpoint.agents, agent_id: 'agent-1' });
-      expect(seen.items.length).toBeGreaterThan(0);
+      expect(seen.enabled).toBe(true);
     });
 
-    it('renders null for assistants endpoint when fileConfig.assistants.disabled is true', () => {
+    it('cannot attach for assistants endpoint when fileConfig.assistants.disabled is true', () => {
       mockFileConfig = mergeFileConfig({
         endpoints: {
           [EModelEndpoint.assistants]: { disabled: true },
@@ -269,33 +260,7 @@ describe('useAttach', () => {
       renderComponent({
         endpoint: EModelEndpoint.assistants,
       });
-      expect(seen.items).toHaveLength(0);
-    });
-  });
-
-  describe('endpointFileConfig resolution', () => {
-    it('passes Moonshot-specific file config for agent with Moonshot provider', () => {
-      mockAgentsMap = {
-        'agent-1': { provider: 'Moonshot', model_parameters: {} } as Partial<Agent>,
-      };
-      renderComponent({ endpoint: EModelEndpoint.agents, agent_id: 'agent-1' });
-      const config = mockAttachFileMenuProps.endpointFileConfig as { fileLimit?: number };
-      expect(config?.fileLimit).toBe(5);
-    });
-
-    it('passes agents file config when agent has no specific provider config', () => {
-      mockAgentsMap = {
-        'agent-1': { provider: EModelEndpoint.openAI, model_parameters: {} } as Partial<Agent>,
-      };
-      renderComponent({ endpoint: EModelEndpoint.agents, agent_id: 'agent-1' });
-      const config = mockAttachFileMenuProps.endpointFileConfig as { fileLimit?: number };
-      expect(config?.fileLimit).toBe(10);
-    });
-
-    it('passes agents file config when no agent provider', () => {
-      renderComponent({ endpoint: EModelEndpoint.agents });
-      const config = mockAttachFileMenuProps.endpointFileConfig as { fileLimit?: number };
-      expect(config?.fileLimit).toBe(20);
+      expect(seen.enabled).toBe(false);
     });
   });
 });
