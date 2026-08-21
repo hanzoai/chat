@@ -100,6 +100,15 @@ jobs:
     steps:
       # Full history + tags: this job TAGS the release, so it needs the tag
       # namespace to push into and a non-shallow clone to describe from.
+      #
+      # This step, and the three docker/* below, are fetched from GITHUB. On a
+      # fleet that builds on its own runners that is the one hop in this lane
+      # that leaves the estate, and it is where the lane dies when egress does:
+      # `dial tcp …:443: i/o timeout` cloning actions/checkout, before install,
+      # before build, with nothing in the tree read. Four attempts on one commit
+      # failed identically that way while cicd — which imports a forge-hosted
+      # reusable, hanzoai/ci/.hanzo/workflows/build.yml@v1 — went green beside
+      # them. Mirroring these four onto git.hanzo.ai closes it.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
