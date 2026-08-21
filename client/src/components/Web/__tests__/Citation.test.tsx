@@ -27,16 +27,6 @@ jest.mock('~/hooks', () => ({
   },
 }));
 
-jest.mock('~/components/Chat/Messages/Content/FilePreviewDialog', () => ({
-  __esModule: true,
-  default: ({ open, fileId, fileName }: { open: boolean; fileId?: string; fileName: string }) =>
-    open ? (
-      <div data-testid="file-preview-dialog" data-file-id={fileId}>
-        {fileName}
-      </div>
-    ) : null,
-}));
-
 jest.mock('@hanzochat/client', () => ({
   Button: ({ children, onClick, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button onClick={onClick} {...props}>

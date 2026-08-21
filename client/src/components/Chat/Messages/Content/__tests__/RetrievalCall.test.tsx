@@ -63,14 +63,6 @@ jest.mock('../ProgressText', () => ({
   ),
 }));
 
-jest.mock('../ToolOutput', () => ({
-  ToolIcon: ({ type, isAnimating }: { type: string; isAnimating?: boolean }) => (
-    <span data-testid="tool-icon" data-type={type} data-animating={isAnimating} />
-  ),
-  OutputRenderer: ({ text }: { text: string }) => <pre data-testid="output-renderer">{text}</pre>,
-  isError: (output: string) => typeof output === 'string' && output.toLowerCase().includes('error'),
-}));
-
 jest.mock('~/utils', () => ({
   cn: (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' '),
   logger: { error: jest.fn(), debug: jest.fn() },
@@ -78,16 +70,6 @@ jest.mock('~/utils', () => ({
 
 jest.mock('~/data-provider', () => ({
   useGetFiles: jest.fn(() => ({ data: [] })),
-}));
-
-jest.mock('../FilePreviewDialog', () => ({
-  __esModule: true,
-  default: ({ open, fileId, fileName }: { open: boolean; fileId?: string; fileName: string }) =>
-    open ? (
-      <div data-testid="file-preview-dialog" data-file-id={fileId}>
-        {fileName}
-      </div>
-    ) : null,
 }));
 
 const defaultProps = {

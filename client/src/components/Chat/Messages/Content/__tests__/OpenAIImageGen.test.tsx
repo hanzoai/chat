@@ -29,13 +29,6 @@ jest.mock('@hanzochat/client', () => ({
   ),
 }));
 
-jest.mock('../ToolOutput', () => ({
-  ToolIcon: ({ type, isAnimating }: { type: string; isAnimating?: boolean }) => (
-    <span data-testid="tool-icon" data-type={type} data-animating={isAnimating} />
-  ),
-  isError: (output: string) => typeof output === 'string' && output.toLowerCase().includes('error'),
-}));
-
 jest.mock('../Parts/OpenAIImageGen/ProgressText', () => ({
   __esModule: true,
   default: ({ progress, error }: { progress: number; error: boolean }) => (

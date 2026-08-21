@@ -66,13 +66,6 @@ jest.mock('~/components/Chat/Messages/Content/Image', () => ({
   default: () => <div data-testid="image" />,
 }));
 
-jest.mock('../ToolOutput', () => ({
-  ToolIcon: ({ type, isAnimating }: { type: string; isAnimating?: boolean }) => (
-    <span data-testid="tool-icon" data-type={type} data-animating={isAnimating} />
-  ),
-  isError: (output: string) => typeof output === 'string' && output.toLowerCase().includes('error'),
-}));
-
 jest.mock('~/utils', () => ({
   scaleImage: () => ({ width: '512px', height: '512px' }),
   logger: { error: jest.fn(), debug: jest.fn() },

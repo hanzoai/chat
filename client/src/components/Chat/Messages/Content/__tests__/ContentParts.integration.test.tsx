@@ -24,14 +24,6 @@ jest.mock('~/hooks/MCP', () => ({
   useMCPIconMap: () => new Map(),
 }));
 
-jest.mock('../ToolOutput', () => ({
-  StackedToolIcons: () => <span data-testid="stacked-icons" />,
-  getMCPServerName: () => '',
-  ToolIcon: () => <span data-testid="tool-icon" />,
-  getToolIconType: () => 'mcp',
-  isError: () => false,
-}));
-
 jest.mock('../ToolCallInfo', () => ({
   __esModule: true,
   default: () => <div data-testid="tool-call-info" />,
