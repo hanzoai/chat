@@ -72,9 +72,14 @@ const dashboardRoutes = {
         },
       ],
     },
+    // Prompts is the only child this dashboard serves, so it is where an
+    // unmatched `/d/…` lands. It used to point at `/d/files`, whose route is
+    // inside the comment block above — so the redirect matched this same splat
+    // again and the URL bounced against itself. Point a fallback at something
+    // that renders, or it is not a fallback.
     {
       path: '*',
-      element: <Navigate to="/d/files" replace={true} />,
+      element: <Navigate to="/d/prompts" replace={true} />,
     },
   ],
 };
