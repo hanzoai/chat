@@ -1096,6 +1096,35 @@ Prod sets `CONFIG_PATH=/app/chat.yaml` (ConfigMap mount). Repo ships
 provide `chat.yaml`) falls back to the built-in `openAI` endpoint. `OPENAI_BASE_URL`
 in `compose.prod.yml` is inert here (built-in openAI reads `OPENAI_REVERSE_PROXY`).
 
+## Adding a model parameter — modelKwargs or it never left the building
+
+A conversation parameter has to reach the WIRE, and the way it fails is silent.
+`getOpenAILLMConfig` spreads the caller's model options onto `llmConfig`, which
+is the client's typed constructor: **an unrecognised key set there is dropped
+without a word.** The switch reads as on, the request goes out unchanged, and no
+error, log line or network entry says otherwise. `verbosity` already had to solve
+this; `fast` follows it.
+
+So a parameter the upstream API does not know natively goes in **`modelKwargs`**:
+
+    packages/data-provider/src/schemas.ts          the field, and both tKeys lists
+    packages/data-provider/src/parameterSettings.ts  the control + the endpoint's config list
+    packages/api/src/endpoints/openai/llm.ts       destructure it OUT, then modelKwargs
+    client/src/locales/en/translation.json         label + description
+
+Destructuring it out of `cleanedModelOptions` is not cosmetic — without it the
+key lands on `llmConfig` as well, which is the dropped case above.
+
+Send only the affirmative value. `false` is the ABSENCE of the ask, not a request
+for the opposite, and sending it puts a field on every ordinary request that
+nothing reads.
+
+**`fast`** is the current one: the gateway offers the completion to several
+providers at once and keeps whichever answers first (`hanzoai/ai`
+`controllers/fast.go`, `hedged.go`). It costs a completion per attempt and the
+account is charged for all of them, which is why the description says so and why
+the gateway reserves for every attempt before spending any of it.
+
 ## Internal Package Names
 
 These are kept as-is from upstream (npm deps, not worth renaming):
