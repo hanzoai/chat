@@ -9,13 +9,17 @@ import { EditorProvider, SidePanelProvider, ArtifactsProvider } from '~/Provider
 import Artifacts from '~/components/Artifacts/Artifacts';
 import { SidePanelGroup } from '~/components/SidePanel';
 import { BottomBarGroup } from '~/components/Chat/BottomBar';
-import { useSetFilesToDelete } from '~/hooks';
+import { useSetFilesToDelete, useShortcuts } from '~/hooks';
 import { savedLayout } from '~/utils';
 import store from '~/store';
 
 export default function Presentation({ children }: { children: React.ReactNode }) {
   const artifacts = useAtomValue(store.artifactsState);
   const artifactsVisibility = useAtomValue(store.artifactsVisibility);
+
+  /* The app's key bindings, registered once on the surface that is always
+     mounted — not inside a control that a header redesign can unmount. */
+  useShortcuts();
 
   const setFilesToDelete = useSetFilesToDelete();
 

@@ -203,11 +203,12 @@ async function contrast(page: Page, selector: string, nth = 0): Promise<number> 
   );
 }
 
-const CLUSTER = [
-  '[data-testid="maximize-chat-space"]',
-  '[data-testid="companions-menu"]',
-  '[data-testid="toggle-side-panel"]',
-];
+/* There is no window-control cluster in the header any more. Width, companions
+   and the right panel were each a second answer to something the panels already
+   offer, and they were removed as a row; PanelControls, which drew the last of
+   them, is deleted. What it really owned — the app's key bindings — is
+   hooks/useShortcuts now, mounted by Presentation. Nothing here measures a box
+   that no longer exists. */
 
 async function land(page: Page) {
   await page.addInitScript(INSTALL_READ_RING);
@@ -241,64 +242,13 @@ async function land(page: Page) {
  * panel 197.6 wide (208 × 0.95), row 41.8 tall (44 × 0.95), icon slot 15.2
  * (16 × 0.95). The animation is the measurement's problem, not the layout's.
  */
-async function openMenu(page: Page) {
-  await page.getByTestId('companions-menu').click();
-  await expect(page.getByRole('menu')).toBeVisible();
-  await page.waitForFunction(() => {
-    const el = document.querySelector('[role="menu"]') as HTMLElement | null;
-    if (!el) {
-      return false;
-    }
-    const cs = getComputedStyle(el);
-    return cs.opacity === '1' && (cs.scale === '1' || cs.scale === 'none');
-  });
-}
-
-/** Open the companions menu and dock a Browser tab through it. */
+/** Open the bottom bar with the shortcut that replaced its header button. */
 async function openBar(page: Page) {
-  await openMenu(page);
-  await page.getByRole('menuitem', { name: 'Browser' }).click();
+  await page.keyboard.press('ControlOrMeta+t');
   await expect(page.getByRole('tablist', { name: 'Bottom bar' })).toBeVisible();
 }
 
 test.describe('window chrome', () => {
-  test('the cluster is three 44×44 squares in a row that has room for them', async ({ page }) => {
-    await land(page);
-
-    const row = await box(page, '[data-testid="header-actions"]');
-    const header = await page.evaluate(() => {
-      const el = document.querySelector('[data-testid="header-actions"]')?.closest('.absolute') as
-        | HTMLElement
-        | undefined;
-      if (!el) {
-        throw new Error('no header strip');
-      }
-      const r = el.getBoundingClientRect();
-      const cs = getComputedStyle(el);
-      const px = (v: string) => parseFloat(v) || 0;
-      return {
-        h: Math.round(r.height * 100) / 100,
-        innerH: Math.round((r.height - px(cs.paddingTop) - px(cs.paddingBottom)) * 100) / 100,
-      };
-    });
-    const squares: Box[] = [];
-    for (const sel of CLUSTER) {
-      squares.push(await box(page, sel));
-    }
-
-    console.log('CHROME ROW', JSON.stringify({ header, actions: row }));
-    console.log('CLUSTER', JSON.stringify(squares));
-
-    for (const square of squares) {
-      expect(square.w).toBe(CHROME_CONTROL);
-      expect(square.h).toBe(CHROME_CONTROL);
-      expect(square.radius).toBe(CHROME_RADIUS);
-    }
-    /* The row's padding box must FIT the square it carries. At `p-2` on an
-       `h-14` strip it was 40 and the cluster overhung its own padding. */
-    expect(header.innerH).toBeGreaterThanOrEqual(CHROME_CONTROL);
-  });
-
   test('the whole chrome paints ONE focus indicator', async ({ page }) => {
     await land(page);
     await openBar(page);
@@ -306,9 +256,6 @@ test.describe('window chrome', () => {
     await page.keyboard.press('Tab');
 
     const probes: Record<string, Ring> = {
-      maximize: await ring(page, CLUSTER[0]),
-      companions: await ring(page, CLUSTER[1]),
-      sidePanel: await ring(page, CLUSTER[2]),
       stripNewTab: await ring(page, '[data-testid="bottom-bar-new-tab"]'),
       stripClose: await ring(page, '[data-testid="bottom-bar-close"]'),
       tab: await ring(page, '[role="tab"]'),
@@ -316,18 +263,6 @@ test.describe('window chrome', () => {
       seam: await ring(page, '[data-panel-resize-handle-id]'),
     };
 
-    /* The menu row is only mounted while the menu is open — and it has to be
-       opened from the KEYBOARD. Script focus only takes `:focus-visible` while
-       the last interaction was a keypress, so a row reached after clicking the
-       trigger reports no focus state at all and the reading is of an unfocused
-       row. Enter opens the menu and Ariakit moves focus into it. */
-    await page.getByTestId('companions-menu').focus();
-    await page.keyboard.press('Enter');
-    await expect(page.getByRole('menu')).toBeVisible();
-    await page.keyboard.press('ArrowDown');
-    const row = await ringOfActive(page);
-    expect(row.role, 'the keyboard did not land on a menu row').toBe('menuitem');
-    probes.menuRow = { ...row };
     await page.keyboard.press('Escape');
 
     console.log('FOCUS', JSON.stringify(probes, null, 2));
@@ -349,7 +284,7 @@ test.describe('window chrome', () => {
        over — composited here against the page rather than assumed. WCAG 1.4.11
        wants 3:1 for a non-text indicator. */
     const ringContrast = await page.evaluate(() => {
-      const el = document.querySelector('[data-testid="maximize-chat-space"]') as HTMLElement;
+      const el = document.querySelector('[data-testid="bottom-bar-new-tab"]') as HTMLElement;
       /* FOCUS it first. `outline-color` on an unfocused control is the initial
          `currentColor`, i.e. the label — reading that reported 17.78:1 for a
          ring nobody was looking at. Escape was the last keypress, so script
@@ -371,52 +306,6 @@ test.describe('window chrome', () => {
     });
     console.log('RING CONTRAST', ringContrast);
     expect(ringContrast).toBeGreaterThanOrEqual(3);
-  });
-
-  test('menu rows are the chrome square tall and hang off the trigger’s right edge', async ({
-    page,
-  }) => {
-    await land(page);
-    const trigger = await box(page, '[data-testid="companions-menu"]');
-    await openMenu(page);
-
-    const panel = await box(page, '[role="menu"]');
-    const row = await box(page, '[role="menuitem"]');
-    const iconSlot = await box(page, '[role="menuitem"] > span[aria-hidden="true"]');
-    const kbd = await box(page, '[role="menuitem"] kbd');
-
-    console.log(
-      'MENU',
-      JSON.stringify({ trigger: trigger.right, panel, row, iconSlot, kbd }, null, 2),
-    );
-
-    expect(row.h).toBe(CHROME_CONTROL);
-    expect(row.radius).toBe(CHROME_RADIUS);
-    expect(panel.radius).toBe(PANEL_RADIUS);
-    expect(iconSlot.w).toBe(16);
-    expect(iconSlot.h).toBe(16);
-    /* Right-aligned to the trigger, to the pixel. */
-    expect(Math.abs(panel.right - trigger.right)).toBeLessThanOrEqual(0.5);
-    /* And the row fills the panel it sits in. */
-    expect(panel.right - row.right).toBeLessThanOrEqual(9);
-  });
-
-  test('the shortcut is a rung under the label and still clears WCAG AA', async ({ page }) => {
-    await land(page);
-    await openMenu(page);
-
-    const kbd = await contrast(page, '[role="menuitem"] kbd');
-    const label = await contrast(page, '[role="menuitem"]');
-    const size = await page.evaluate(
-      () => getComputedStyle(document.querySelector('[role="menuitem"] kbd')!).fontSize,
-    );
-
-    console.log('SHORTCUT', JSON.stringify({ kbd, label, size }));
-
-    expect(size).toBe('12px');
-    expect(kbd).toBeGreaterThanOrEqual(4.5);
-    /* A rung UNDER the label — same rung would read as a second label. */
-    expect(kbd).toBeLessThan(label);
   });
 
   test('every control in the strip is bled into the strip’s budget', async ({ page }) => {

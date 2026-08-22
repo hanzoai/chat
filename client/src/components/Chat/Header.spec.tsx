@@ -84,7 +84,6 @@ jest.mock('./Menus/ConvoMenu', () => ({ __esModule: true, default: mockMarker('c
 jest.mock('./Menus/Sources', () => ({ __esModule: true, default: mockMarker('sources') }));
 jest.mock('./Share', () => ({ __esModule: true, default: mockMarker('share') }));
 jest.mock('./TemporaryChat', () => ({ TemporaryChat: mockMarker('temporary') }));
-jest.mock('./PanelControls', () => ({ __esModule: true, default: mockMarker('panel-controls') }));
 jest.mock('~/components/Nav/BrandCorner', () => ({
   __esModule: true,
   default: mockMarker('brand'),

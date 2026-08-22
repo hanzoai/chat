@@ -29,10 +29,16 @@ const HERE = join(__dirname);
  * accumulated. Two files left the list in the same pass that added two, and the
  * pair is worth naming because neither was deleted:
  *
- * - `Chat/PanelControls.tsx` renders nowhere at all now. It is still on disk and
- *   is still the only place this app defines a keyboard shortcut, so an unmounted
- *   file is a decision about those shortcuts and not a geometry question. It has
- *   no box in this row to disagree with.
+ * - `Chat/PanelControls.tsx` is DELETED, and the decision this list deferred is
+ *   taken. It rendered nowhere while remaining the only place this app defined a
+ *   keyboard shortcut, and an effect in an unmounted component registers nothing:
+ *   ⌥⌘S and ⌘T had both stopped working, and ⌘T was one of only two ways to open
+ *   the bottom bar — the other being the companions menu that left with the same
+ *   row. `BottomBarGroup` renders `{open && <BottomBar/>}`, so the bar's own `+`
+ *   exists only once it is already open. The bar was mounted and unreachable.
+ *   The bindings are `hooks/useShortcuts`, called by `Chat/Presentation` — the
+ *   surface that is always mounted — so a header redesign cannot unmount them
+ *   again. The button itself was redundant: SidePanel owns its own control.
  * - `Chat/Menus/OpenSidebar.tsx` is mounted, but by `Agents/Marketplace` — a
  *   different surface with its own row. Scanning it here asserted a rule it was
  *   never subject to.

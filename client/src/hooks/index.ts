@@ -25,6 +25,7 @@ export * from './Skills';
 export type { TranslationKeys } from './useLocalize';
 
 export { default as useTimeout } from './useTimeout';
+export { default as useShortcuts } from './useShortcuts';
 export { default as useNewConvo } from './useNewConvo';
 export { default as useLocalize } from './useLocalize';
 export { default as useActive } from './useActive';
