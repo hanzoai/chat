@@ -21,7 +21,7 @@ interface MCPServerCardProps {
  * Visual design:
  * - Status shown via colored dot on icon (no separate badge - avoids redundancy)
  * - Action buttons clearly indicate available operations
- * - Consistent with MCPServerMenuItem in chat dropdown
+ * - Consistent with MCPServerStatusIcon, which draws the same states elsewhere
  */
 export default function MCPServerCard({
   server,
