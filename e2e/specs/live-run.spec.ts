@@ -12,7 +12,7 @@
  * WHERE THE STUB SITS. `window.fetch`, for two URLs: the live feed and the stop.
  * Playwright's own interception cannot express this — `route.fulfill` sends a
  * body whole, and a stream that arrives all at once is precisely the bug. Below
- * that door everything is the shipping code: `useRunLog`'s reader and decoder,
+ * that stub everything is the shipping code: `useRunLog`'s reader and decoder,
  * `Part.tsx`'s routing, `ExecuteCode`, and the Stop control's own request.
  *
  * WHERE THE DATA COMES FROM. The real store. `npm run e2e:live` seeds a

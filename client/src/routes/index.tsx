@@ -92,7 +92,7 @@ export const router = createBrowserRouter(
             },
           ],
         },
-        // Marketing keeps a home, it just stops being the front door — the same
+        // Marketing keeps a home, it just stops answering `/` — the same
         // shape chatgpt.com uses, where the app answers `/` and the pitch lives at
         // `/pricing`. Declared OUTSIDE <Root/> because LandingPage brings its own
         // full-page chrome and must not mount inside the chat shell.

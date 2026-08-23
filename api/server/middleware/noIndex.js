@@ -1,5 +1,5 @@
 /**
- * Keep the private surfaces out of search, leave the front door in.
+ * Keep the private surfaces out of search, leave the landing in.
  *
  * `/` is the signed-out PRODUCT landing (the app is the landing, 2026-07-28),
  * so it must be indexable — a public product nobody can find is not

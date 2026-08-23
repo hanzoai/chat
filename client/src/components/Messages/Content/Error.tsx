@@ -209,7 +209,7 @@ const errorMessages = {
     // advertise free money it cannot grant. Add funds or pick a plan, both at
     // billing.hanzo.ai.
     if (reason === 'commerce_insufficient') {
-      // Signed out: the door is sign-up, not top-up — a visitor with no account
+      // Signed out: the action is sign-up, not top-up — a visitor with no account
       // has no balance to add and would dead-end at a billing page for an
       // account that doesn't exist.
       if (isAuthenticated !== true) {
@@ -298,7 +298,7 @@ const isUnauthorized = (value: unknown): boolean =>
 
 const Error = ({ text }: { text: string }) => {
   const localize = useLocalize();
-  // A refusal offers the door the visitor can actually walk through: a
+  // A refusal offers the action the visitor can actually take: a
   // signed-out person has no balance to top up, they have an account to make.
   const isAuthenticated = useAtomValue(store.isAuthenticated);
   const jsonString = extractJson(text);

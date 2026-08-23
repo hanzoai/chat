@@ -7,8 +7,8 @@ import { FREE_OFFERED } from '~/utils/free';
 /**
  * The way forward when a paid turn cannot be billed.
  *
- * A refusal used to end at a billing link, which is a door the visitor may not
- * want and cannot walk through in the next second. Free costs nothing and
+ * A refusal used to end at a billing link, which is a step the visitor may not
+ * want and cannot take in the next second. Free costs nothing and
  * serves, so the offer is the answer — and taking it moves the conversation
  * rather than telling the visitor to go do something elsewhere.
  */

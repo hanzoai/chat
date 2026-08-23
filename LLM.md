@@ -1150,7 +1150,7 @@ All user-visible `Chat` / `chat.ai` references replaced with Hanzo equivalents:
 - Log messages: Chat -> Hanzo Chat
 - Helm chart URLs -> hanzo.ai/docs/chat/...
 
-## hanzo.chat front door — the app IS the landing (CTO direction, 2026-07-28)
+## hanzo.chat entry point — the app IS the landing (CTO direction, 2026-07-28)
 
 Target: ChatGPT's shape. A signed-out visitor lands in the **product** — composer
 centred, thin sidebar, `Log in` / `Sign up free` top-right — and marketing lives at
@@ -1183,7 +1183,7 @@ extension's search surface (`~/work/hanzo/extension`), not a new design.
    and the only reset is a pod restart. Raise/re-key `GUEST_TOKEN_MAX` / `GUEST_TOKEN_WINDOW`.
 
 **Then the design work**, which is small once the above lands:
-`components/Landing/LandingPage.tsx` stops being the front door. Its hero mock
+`components/Landing/LandingPage.tsx` stops being the entry point. Its hero mock
 advertises the DEPRECATED `chat.hanzo.ai` (301s to hanzo.chat) and shows a CODING
 session (`zen5-coder`, "Refactor the auth module") — that is hanzo.app's story on the
 chat product. Marketing moves to sub-routes or hanzo.ai; the composer, source pills
@@ -1193,7 +1193,7 @@ marketing page — it asserts `/` shows the nav and a composer textbox, i.e. it
 already describes the target and was failing against the brochure.
 
 **Landed 2026-07-28 (increments 1–3 of the above):**
-- `Root.tsx` no longer has a front-door branch. The chat shell answers every
+- `Root.tsx` no longer has a separate-landing branch. The chat shell answers every
   route; `LoginGate` (already mounted for every `!isAuthenticated` visitor) asks
   for a session at submit — the first moment one is needed.
 - `utils/login.ts#trySilentSso()` — one `prompt=none` attempt per tab via

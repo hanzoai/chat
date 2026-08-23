@@ -140,7 +140,7 @@ export default function Root() {
     );
   }
 
-  // LAST RESORT, not the front door. The fix for "hanzo.chat shows a brochure" is
+  // LAST RESORT, not the default. The fix for "hanzo.chat shows a brochure" is
   // upstream of here — silent SSO adopts a hanzo.id session (utils/login.ts) and
   // the guest mint is no longer rate-limited out — so `showChat` is now true for
   // anyone who has any path to chat at all. This branch survives only for the
@@ -179,7 +179,7 @@ export default function Root() {
   // visitor with "Meet Hanzo · Hanzo Chat — Every Model, One Interface", 21 times
   // the word Hanzo and not once the word Lux. Guest chat is off there, which makes
   // `showChat` false for EVERY anonymous visitor, so the brochure was not a last
-  // resort on that host: it was the front door.
+  // resort on that host: it was the default.
   //
   // The org comes from the same runtime value the login SDK signs in against
   // (`window.__IAM__`), because a build-time constant would pin one brand

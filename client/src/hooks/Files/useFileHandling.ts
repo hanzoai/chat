@@ -95,7 +95,7 @@ const useFileHandling = (params?: UseFileHandling) => {
    * `errors` and is rebuilt whenever they change, which is exactly when this
    * runs. So the debounced wrapper is built ONCE and reads the current
    * `displayToast` through a ref — the same shape useDragHelpers already uses
-   * next door to keep its drop handler stable.
+   * to keep its drop handler stable.
    */
   const displayToastRef = useRef(displayToast);
   displayToastRef.current = displayToast;

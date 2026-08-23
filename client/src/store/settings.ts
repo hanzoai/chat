@@ -18,8 +18,8 @@ import type { Backdrop } from '~/utils/backdrop';
  * State the cost rather than hide it. Playing on arrival tells YouTube the
  * visitor's address, user agent and that they opened this product, before they
  * have asked us for anything; and it decodes video behind someone's reading for
- * as long as the tab is open. Both are real, both are the price of the front
- * door looking like the product, and both are one click from off — the source
+ * as long as the tab is open. Both are real, both are the price of the landing
+ * looking like the product, and both are one click from off — the source
  * selector, or right-click on the canvas.
  *
  * Muted, and that is not negotiable here: `sound` below stays false, so the

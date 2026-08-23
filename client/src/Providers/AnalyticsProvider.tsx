@@ -15,7 +15,7 @@ const ANALYTICS_HOST = import.meta.env.VITE_HANZO_ANALYTICS_HOST || 'https://api
 /**
  * Publishable ingest key (pk-…) — write-only, safe in the bundle. It resolves the
  * org server-side for requests that carry no bearer, which is how logged-out and
- * guest views (the landing IS the composer) reach the fail-closed door. Mint one
+ * guest views (the landing IS the composer) reach the fail-closed edge. Mint one
  * per org via POST /v1/keys with {"type":"publishable"}.
  *
  * Unset is NOT best-effort: cloud takes an unkeyed beacon down the anonymous lane,
@@ -104,7 +104,7 @@ function AnalyticsBridge() {
 
 /**
  * The ONE telemetry client for Hanzo Chat: @hanzo/event → POST /v1/event, the
- * single front door Cloud fans out into the web (analytics), product (insights)
+ * single endpoint Cloud fans out into the web (analytics), product (insights)
  * and error (sentry) lenses. There is no page tag — this client covers pageviews
  * and errors for logged-in, guest AND logged-out visitors alike. Mounted inside
  * AuthContextProvider so it can read the live JWT and the resolved user.

@@ -126,7 +126,7 @@ const HERE = 'https://backdrop.invalid';
  * afterwards, reporting the viewer's address to whoever owns the host, forever.
  * That is the same beacon the markdown renderer refuses (MarkdownComponents
  * `autoLoadable`) and the same one `img-src` stopped allowing when it dropped
- * the bare `https:` scheme. A background is not the hole left in that door.
+ * the bare `https:` scheme. A background is not an exception to that.
  *
  * So a photo is ours: a path on this origin — kept RELATIVE, because the app is
  * served under several brands' domains and a stored absolute origin would be

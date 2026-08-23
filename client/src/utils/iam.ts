@@ -70,7 +70,7 @@ export const IAM_PROVIDER_NAME =
  * before it paints, because one image serves every brand. A build-time `VITE_*`
  * cannot answer it — Vite inlines the value, so the image would carry whichever
  * brand happened to build it. That is precisely how hanzo.chat's marketing page
- * became the signed-out front door of lux.chat: nothing on it ever asked.
+ * became the signed-out landing of lux.chat: nothing on it ever asked.
  */
 export const IAM_ORG = ORGANIZATION;
 
