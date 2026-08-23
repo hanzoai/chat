@@ -332,7 +332,6 @@ export default defineConfig(({ command }) => ({
     dedupe: ['axios'],
     alias: {
       '~': path.join(__dirname, 'src/'),
-      $fonts: path.resolve(__dirname, 'public/fonts'),
       'micromark-extension-math': 'micromark-extension-llm-math',
       // @hanzo/ui's primitives are backed by @hanzo/gui, which is authored
       // against the react-native API. On web that API IS react-native-web.

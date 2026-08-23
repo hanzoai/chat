@@ -44,14 +44,13 @@ module.exports = {
   // darkMode: 'class',
   darkMode: ['class'],
   theme: {
+    // Zen, through the token, never by name. @hanzo/design declares both faces and
+    // both variables (tokens/fonts.css, imported first in style.css); the generic
+    // tail lives in the variable, so restating one here would be a second answer.
     fontFamily: {
-      sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-      mono: ['Geist Mono', 'ui-monospace', 'monospace'],
+      sans: ['var(--font-sans)'],
+      mono: ['var(--font-mono)'],
     },
-    // fontFamily: {
-    //   sans: ['Söhne', 'sans-serif'],
-    //   mono: ['Söhne Mono', 'monospace'],
-    // },
     extend: {
       width: {
         authPageWidth: '370px',

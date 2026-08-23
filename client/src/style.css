@@ -10,7 +10,6 @@
 
    base.css is deliberately NOT imported: it carries element defaults (body, a,
    h1-h4, *) that would fight tailwind's preflight. Every token file is. */
-@import '@hanzo/design/tokens/fonts.css';
 @import '@hanzo/design/tokens/colors.css';
 @import '@hanzo/design/tokens/typography.css';
 @import '@hanzo/design/tokens/spacing.css';
@@ -26,6 +25,37 @@
    shared design tokens stay the base and this only fills the names @hanzo/ui
    adds. Chat's own overrides below still win — they come later in the file. */
 @import '@hanzo/ui/theme.css';
+
+/* Zen — the one typeface, and this line has to sit HERE rather than with the other
+   token files above. @hanzo/ui@8.1.21's theme.css still carries the pre-Zen
+   typeface and redeclares `--font-sans: "Geist", …` / `--font-mono: "Geist Mono", …`
+   in its own `:root`. Imported first, design loses that pair to the later
+   declaration — and @hanzo/ui ships no face behind the name, so `--font-sans`
+   resolved to a family with no @font-face and fell through to the platform sans:
+   DejaVu on Linux. Nothing errors, so the app just renders in the wrong face.
+
+   So the FONTS file, alone, comes after. It declares two @font-face rules and five
+   custom properties and nothing else, so ordering it last costs no colour, spacing
+   or radius — the paragraph above still describes those. Fold it back in when
+   @hanzo/ui ships Zen. */
+@import '@hanzo/design/tokens/fonts.css';
+
+/* That same theme.css keeps a SECOND pair of names — --font-geist-sans and
+   --font-geist-mono — and binds `:where(html, body)` and
+   `:where(code, kbd, samp, pre)` to them. Winning --font-sans does not reach
+   those, so body still asked for 'Geist', a family with no face behind it, and
+   landed on the platform sans. Specificity does not rescue it either: html takes
+   Zen from tailwind's preflight, but a declaration ON body beats what body
+   INHERITS from html, however weak the selector that made it.
+
+   @hanzo/ui states the way to answer — it reads its own pair through
+   --font-geist-*-provided so a host can bind them. Binding them here is the whole
+   fix: two lines, one place, and every rule in that file that names Geist
+   resolves to Zen. */
+:root {
+  --font-geist-sans-provided: var(--font-sans);
+  --font-geist-mono-provided: var(--font-mono);
+}
 
 /* The dark-glass material and its elevation ladder, named EXPLICITLY rather than
    taken from theme.css. theme.css does inline this slice — at 8.0.48 and above.
@@ -625,33 +655,16 @@
   text-overflow: ellipsis;
 }
 
-@font-face {
-  font-display: swap;
-  font-family: Roboto Mono;
-  font-style: normal;
-  font-weight: 400;
-  src: url('$fonts/roboto-mono-latin-400-normal.woff2') format('woff2');
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Roboto Mono;
-  font-style: normal;
-  font-weight: 700;
-  src: url('$fonts/roboto-mono-latin-700-normal.woff2') format('woff2');
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Roboto Mono;
-  font-style: italic;
-  font-weight: 400;
-  src: url('$fonts/roboto-mono-latin-400-italic.woff2') format('woff2');
-}
-
-/* Crisp type: never synthesize weights/italics. Geist is a variable face carrying
+/* Crisp type: never synthesize weights/italics. Zen is a variable face carrying
    every weight 100–900 for real, so a synthesized one could only be worse.
-   Antialiased for a clean Linear/Claude-caliber render. */
+   Antialiased for a clean Linear/Claude-caliber render.
+
+   No woff2 lives in this repo and this file declares no @font-face. Zen and Zen
+   Mono ship inside @hanzo/design and it declares both faces, so they arrive with
+   the `tokens/fonts.css` import at the top of this file. One copy of the family
+   for the whole estate — a second copy here is a surface the next font update
+   silently misses. Reach the faces through --font-sans / --font-mono; never name
+   a family. */
 html {
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
@@ -659,105 +672,6 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-/*
-
-The default ChatGPT fonts, according to OpenAI's brand guidelines, are proprietary and require appropriate font license according to your use case.
-
-They can be purchased here: https://klim.co.nz/buy/soehne/
-
-The fonts in question are (9 total):
-
-> - Söhne (Buch Kursiv, Buch, Halbfett Kursiv, Halbfett, Kraftig Kursiv, Kraftig, Mono Buch Kursiv, Mono Buch, Mono Halbfett)
-
-If you have purchased a license, you can use the commented-out `@font-face` declarations below to include them in your project.
-
-Step 1: Buy whatever license applies to you and allows use of `.woff2` font files (likely web font license).
-Step 2: Place them in ./client/public/fonts/ directory.
-Step 3: Replace the current `fontFamily` config in ./client/tailwind.config.cjs with the following:
-
-```
-    fontFamily: {
-      sans: ['Söhne', 'sans-serif'],
-      mono: ['Söhne Mono', 'monospace'],
-    },
-```
-
-Step 4: Uncomment all Söhne font-face declarations below.
-Step 5: rebuild frontend code: `npm run frontend` (or rebuild docker).
-
-*/
-
-/* @font-face {
-  font-display: swap;
-  font-family: Söhne;
-  font-style: normal;
-  font-weight: 400;
-  src: url("$fonts/soehne-buch.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne;
-  font-style: italic;
-  font-weight: 400;
-  src: url("$fonts/soehne-buch-kursiv.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne;
-  font-style: normal;
-  font-weight: 500;
-  src: url("$fonts/soehne-kraftig.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne;
-  font-style: italic;
-  font-weight: 500;
-  src: url("$fonts/soehne-kraftig-kursiv.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne;
-  font-style: normal;
-  font-weight: 600;
-  src: url("$fonts/soehne-halbfett.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne;
-  font-style: italic;
-  font-weight: 600;
-  src: url("$fonts/soehne-halbfett-kursiv.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne Mono;
-  font-style: normal;
-  font-weight: 400;
-  src: url("$fonts/soehne-mono-buch.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne Mono;
-  font-style: normal;
-  font-weight: 700;
-  src: url("$fonts/soehne-mono-halbfett.woff2") format("woff2")
-}
-
-@font-face {
-  font-display: swap;
-  font-family: Söhne Mono;
-  font-style: italic;
-  font-weight: 400;
-  src: url("$fonts/soehne-mono-buch-kursiv.woff2") format("woff2")
-} */
 
 /* * {
   box-sizing: border-box;
@@ -1499,11 +1413,11 @@ pre {
   margin-top: 0;
 }
 
-code,
-pre {
-  font-family:
-    'Geist Mono', 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace !important;
-}
+/* code, kbd, samp and pre take Zen Mono from tailwind's preflight, which reads
+   the same token this file binds — so there is no rule for them here. One was
+   written when the token still said Geist; binding --font-geist-mono-provided at
+   the top answers it at the source instead, and measured in Chromium all four
+   compute to Zen Mono with this gone. */
 code.language-text,
 code.language-txt,
 code.language-plaintext,
@@ -2377,23 +2291,18 @@ html {
   --tw-shadow-colored: inset 0 0 0 0 1px var(--tw-shadow-color);
 }
 
+/* The typing dot is U+2B24, which Zen does not draw (checked in its cmap — it has
+   U+25CF and U+2022, not this one). That is fine and is why the stack is the token
+   rather than a hand-written chain: CSS falls back PER GLYPH, so the dot comes from
+   ui-sans-serif/system-ui exactly as it did before, and every other character in
+   the rule comes from Zen. Do not "fix" this by naming a family. */
 .result-streaming > :not(ol):not(ul):not(pre):last-child:after,
 .result-streaming > pre:last-child code:after {
   display: inline-block;
   content: '⬤';
   width: 12px;
   height: 12px;
-  font-family:
-    system-ui,
-    'Geist Sans',
-    Söhne Circle,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Ubuntu,
-    Cantarell,
-    Noto Sans,
-    sans-serif;
+  font-family: var(--font-sans);
   line-height: normal;
   margin-left: 0.25rem;
   vertical-align: middle;
@@ -2403,17 +2312,7 @@ html {
 @supports (selector(:has(*))) {
   .result-streaming > :is(ul, ol):last-child > li:last-child:not(:has(> :is(ul, ol, pre))):after {
     content: '⬤';
-    font-family:
-      system-ui,
-      'Geist Sans',
-      Söhne Circle,
-      -apple-system,
-      Segoe UI,
-      Roboto,
-      Ubuntu,
-      Cantarell,
-      Noto Sans,
-      sans-serif;
+    font-family: var(--font-sans);
     line-height: normal;
     margin-left: 0.25rem;
     vertical-align: middle;
@@ -2428,17 +2327,7 @@ html {
   .result-streaming > ol:last-child > li:last-child:after,
   .result-streaming > ul:last-child > li:last-child:after {
     content: '⬤';
-    font-family:
-      system-ui,
-      'Geist Sans',
-      Söhne Circle,
-      -apple-system,
-      Segoe UI,
-      Roboto,
-      Ubuntu,
-      Cantarell,
-      Noto Sans,
-      sans-serif;
+    font-family: var(--font-sans);
     line-height: normal;
     margin-left: 0.25rem;
     vertical-align: middle;

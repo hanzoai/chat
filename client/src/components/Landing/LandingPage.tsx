@@ -34,7 +34,7 @@ import { getHanzoIamSdk } from '~/utils/iam';
  */
 
 /* ------------------------------------------------------------------ */
-/*  Design tokens matching dev.hanzo.ai (Geist/fd- design system)     */
+/*  Design tokens matching dev.hanzo.ai (Zen/fd- design system)       */
 /* ------------------------------------------------------------------ */
 
 const colors = {
@@ -195,7 +195,7 @@ export default function LandingPage() {
       style={{
         backgroundColor: colors.bg,
         color: colors.fg,
-        fontFamily: "'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily: 'var(--font-sans)',
       }}
     >
       {/* ---- Unified Hanzo marketing header (shared @hanzogui/shell) ---- */}
