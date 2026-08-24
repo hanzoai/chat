@@ -1,0 +1,38 @@
+{
+  "name": "@hanzo/chat2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Hanzo Chat — the client, on @hanzo/gui + @hanzo/ui.",
+  "packageManager": "pnpm@10.16.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hanzo/ai": "^0.3.10",
+    "@hanzo/gui": "^8.1.1",
+    "@hanzo/iam": "^0.21.13",
+    "@hanzo/ui": "^8.3.4",
+    "@hanzo/voice": "^0.1.8",
+    "@hanzogui/lucide-icons-2": "^8.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "react-native-web": "^0.21.2",
+    "react-router": "^8.3.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@hanzo/vite": "^0.1.1",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.1.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
+  }
+}

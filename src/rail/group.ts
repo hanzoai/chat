@@ -1,0 +1,169 @@
+/**
+ * The SET, ordered and named — the only rules about a list of conversations
+ * that the rail and the full-page manager both have to agree on.
+ *
+ * No React, no fetch, no tokens: a band is a fact about a clock and a title is
+ * a fact about a string, and both are asked by four different screens. Written
+ * twice they drift, and the drift is invisible — one surface says "Yesterday"
+ * where the other says "Previous 7 days" about the same row and neither is
+ * obviously wrong.
+ *
+ * Dates are the reader's own local midnight, not UTC: "yesterday" is a thing
+ * that happened where the reader is, and an ISO instant compared in UTC puts
+ * an evening in Auckland two days back.
+ */
+
+/**
+ * What a ROW needs of a conversation — not what the wire carries.
+ *
+ * Stating the requirement rather than restating the payload is what lets the
+ * richer record `src/data` reads off `/v1/chat/convos` satisfy this by being
+ * itself: structural typing does the joining, so there is no mapping layer and
+ * no second copy of the server's shape to keep in step.
+ */
+export interface Convo {
+  id: string
+  /** The server's title. Empty until it has generated one — see `named`. */
+  title: string
+  /** ISO 8601. */
+  updatedAt: string
+  pinned?: boolean
+  archived?: boolean
+  tags?: string[]
+}
+
+/** One labelled run of rows. */
+export interface Band {
+  label: string
+  convos: Convo[]
+}
+
+/** Pinned rows are a band of their own, above every dated one. */
+export const PINNED = 'Pinned'
+
+const MONTH = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+const DAY = 86_400_000
+
+const midnight = (ms: number): number => {
+  const d = new Date(ms)
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+/** Which band a moment falls in. Whole days apart, so 23:59 and 00:01 differ. */
+const bandOf = (at: number, now: number): string => {
+  const days = Math.round((midnight(now) - midnight(at)) / DAY)
+  if (days <= 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days <= 7) return 'Previous 7 days'
+  if (days <= 30) return 'Previous 30 days'
+  const then = new Date(at)
+  return then.getFullYear() === new Date(now).getFullYear()
+    ? MONTH[then.getMonth()]
+    : String(then.getFullYear())
+}
+
+/** An unreadable stamp sorts to the end rather than throwing the whole list. */
+const moment = (c: Convo): number => {
+  const ms = Date.parse(c.updatedAt)
+  return Number.isNaN(ms) ? 0 : ms
+}
+
+/**
+ * The title a row shows.
+ *
+ * A conversation exists before it has a name — the server generates one after
+ * the first exchange — so every surface needs the same word for that gap, and
+ * an empty row is a row nobody can aim at.
+ */
+export const named = (c: Convo): string => c.title.trim() || 'Untitled'
+
+/**
+ * The set, banded.
+ *
+ * Sorting once is what puts the bands in order: newest first means Today's rows
+ * come before Yesterday's, which come before every month and then every year,
+ * so the run boundaries ARE the band boundaries and nothing has to rank labels.
+ * A ranking table would be a second statement of the same order, and the two
+ * would disagree the first time a band was added.
+ *
+ * Pins are the one exception, hoisted whole — they are a choice the reader made
+ * and a date cannot outrank it.
+ */
+export const group = (convos: readonly Convo[], now: number = Date.now()): Band[] => {
+  const seen = new Set<string>()
+  const once: Convo[] = []
+  for (const c of convos) {
+    if (seen.has(c.id)) continue
+    seen.add(c.id)
+    once.push(c)
+  }
+  once.sort((a, b) => moment(b) - moment(a))
+
+  const bands: Band[] = []
+  const pins = once.filter((c) => c.pinned === true)
+  if (pins.length > 0) bands.push({ label: PINNED, convos: pins })
+
+  let run: Band | undefined
+  for (const c of once) {
+    if (c.pinned === true) continue
+    const label = bandOf(moment(c), now)
+    if (run === undefined || run.label !== label) {
+      run = { label, convos: [] }
+      bands.push(run)
+    }
+    run.convos.push(c)
+  }
+  return bands
+}
+
+/**
+ * Finding one.
+ *
+ * A literal substring over the title and the tags, lower-cased — never a regex
+ * built from what someone typed, which is both a ReDoS and a surprise (`.` in a
+ * title stops meaning a full stop). An empty question asks nothing, so it
+ * answers with everything rather than nothing.
+ */
+export const hits = (convos: readonly Convo[], query: string): Convo[] => {
+  const q = query.trim().toLowerCase()
+  if (q === '') return convos.slice()
+  return convos.filter(
+    (c) =>
+      named(c).toLowerCase().includes(q) ||
+      (c.tags ?? []).some((t) => t.toLowerCase().includes(q)),
+  )
+}
+
+/**
+ * When, in as few characters as a table column can spare.
+ *
+ * Relative inside a day because that is the range a reader holds in their head,
+ * absolute past it because "37h" is arithmetic, not information. The year
+ * appears only when it is not this one.
+ */
+export const when = (iso: string, now: number = Date.now()): string => {
+  const ms = Date.parse(iso)
+  if (Number.isNaN(ms)) return ''
+  const gap = now - ms
+  if (gap < 60_000) return 'now'
+  if (gap < 3_600_000) return `${Math.floor(gap / 60_000)}m`
+  if (gap < DAY) return `${Math.floor(gap / 3_600_000)}h`
+  const d = new Date(ms)
+  const day = `${d.getDate()} ${MONTH[d.getMonth()].slice(0, 3)}`
+  return d.getFullYear() === new Date(now).getFullYear() ? day : `${day} ${d.getFullYear()}`
+}

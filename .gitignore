@@ -1,0 +1,10 @@
+node_modules
+dist
+*.tsbuildinfo
+*.log
+.env
+.env.local
+.DS_Store
+
+# Claude Code session state (worktrees, transcripts)
+.claude/
