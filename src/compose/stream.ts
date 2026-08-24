@@ -19,13 +19,18 @@
  * carries no bearer, takes no abort signal, and hides the status of a failing
  * response — so a refusal with a real explanation in its body arrives as an
  * anonymous `error` and gets retried five times before the reader is told
- * anything. A `fetch` body is a stream, and reading it is four lines.
+ * anything. A `fetch` body is a stream, and `@hanzo/ai`'s `parseSSE` decodes it:
+ * the blank-line boundary, an event split across two reads, CRLF, and a `data:`
+ * spread over several lines are the same four rules for every SSE client in the
+ * estate, and the copy that used to live here knew only the first two.
  */
+import { parseSSE } from '@hanzo/ai'
+
 import { api } from '~/data/api'
 import { http, open } from '~/data/http'
 import { explain } from '~/data/types'
 
-import { read, type Frame } from '~/compose/frames'
+import { frame, type Frame } from '~/compose/frames'
 import type { Payload } from '~/compose/submit'
 
 /** How many times a dropped connection is reopened before the reader is told. */
@@ -138,21 +143,18 @@ export const listen = (id: string, ear: Ear, o: { resume?: boolean } = {}): (() 
     ear.open?.()
     tries = 0
 
-    const reader = res.body.getReader()
-    const decoder = new TextDecoder()
-    let rest = ''
     let closed = false
     try {
-      for (;;) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const cut = read(decoder.decode(value, { stream: true }), rest)
-        rest = cut.rest
-        for (const f of cut.list) {
-          ear.frame(f)
-          if (f.kind === 'close') closed = true
+      for await (const event of parseSSE(res.body)) {
+        const f = frame(event.data)
+        if (!f) continue
+        ear.frame(f)
+        // A close is terminal. Reading past it is how a stray fault after the
+        // end turns a finished reply back into a failed one.
+        if (f.kind === 'close') {
+          closed = true
+          break
         }
-        if (closed) break
       }
     } catch {
       if (!shut) return again(true)

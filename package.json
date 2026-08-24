@@ -13,10 +13,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hanzo/ai": "^0.3.10",
+    "@hanzo/ai": "^0.5.0",
     "@hanzo/gui": "^8.1.1",
     "@hanzo/iam": "^0.21.13",
-    "@hanzo/ui": "^8.3.4",
+    "@hanzo/ui": "^8.4.0",
     "@hanzo/voice": "^0.1.8",
     "@hanzogui/lucide-icons-2": "^8.1.1",
     "@hanzogui/next-theme": "^8.1.1",

@@ -7,7 +7,11 @@
  * the entire protocol — a resumed stream, an aborted one, a tool that streams
  * its arguments before it runs — is assertable in Node against a string.
  *
- * `stream.ts` supplies bytes and nothing else.
+ * SSE framing is NOT here. Blank-line boundaries, chunk splits, CRLF and
+ * multi-line `data:` are the transport's problem and every client has the same
+ * one, so `@hanzo/ai`'s `parseSSE` answers it and `stream.ts` hands the payload
+ * of each event straight to `frame`. What is left here is the part no shared
+ * package can know: what THIS server's payloads mean.
  *
  * ONE ADDRESSING RULE, and it is the decomplection this file exists for. The
  * server addresses every piece of a reply by INDEX — a slot in the reply's
@@ -288,28 +292,6 @@ export const frame = (raw: string): Frame | null => {
   }
 
   return null
-}
-
-/**
- * Bytes → frames.
- *
- * SSE separates frames with a blank line, so the last piece of any chunk is
- * usually half a frame; it is handed back as `rest` and prefixed onto the next
- * chunk. Dropping it instead is how a long reply loses a word every few
- * kilobytes — invisibly, since the JSON that survives still parses.
- */
-export const read = (chunk: string, rest = ''): { list: Frame[]; rest: string } => {
-  const blocks = (rest + chunk).split('\n\n')
-  const tail = blocks.pop() ?? ''
-  const list: Frame[] = []
-  for (const block of blocks) {
-    for (const line of block.split('\n')) {
-      if (!line.startsWith('data:')) continue
-      const f = frame(line.slice(5))
-      if (f) list.push(f)
-    }
-  }
-  return { list, rest: tail }
 }
 
 /** An empty reply, waiting for its first frame. */
