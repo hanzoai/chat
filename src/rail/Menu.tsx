@@ -2,7 +2,9 @@ import { Button, DropdownMenu } from '@hanzo/ui'
 import { ContextMenu, type MenuItemSpec } from '@hanzo/ui/product'
 import type { ReactElement } from 'react'
 
-import { named, type Convo } from './group'
+import type { Convo } from '~/data/types'
+
+import { named } from './group'
 
 /**
  * The ONE verb set for a conversation: pin, rename, share, export, archive,
@@ -62,10 +64,10 @@ export const verbs = (c: Convo, on: Verbs, edit?: () => void): MenuItemSpec[] =>
   if (pin) {
     rows.push({
       key: 'pin',
-      label: c.pinned === true ? 'Unpin' : 'Pin',
+      label: c.isPinned === true ? 'Unpin' : 'Pin',
       shortcut: 'P',
-      selected: c.pinned === true,
-      onSelect: () => pin(c, c.pinned !== true),
+      selected: c.isPinned === true,
+      onSelect: () => pin(c, c.isPinned !== true),
     })
   }
   if (on.rename && edit) {
@@ -76,8 +78,8 @@ export const verbs = (c: Convo, on: Verbs, edit?: () => void): MenuItemSpec[] =>
   if (archive) {
     rows.push({
       key: 'archive',
-      label: c.archived === true ? 'Unarchive' : 'Archive',
-      onSelect: () => archive(c, c.archived !== true),
+      label: c.isArchived === true ? 'Unarchive' : 'Archive',
+      onSelect: () => archive(c, c.isArchived !== true),
     })
   }
   if (drop) {

@@ -1,113 +1,95 @@
 /**
  * Dictation — a way of typing, not a spoken conversation.
  *
- * One press opens the microphone; a second closes it, and what was said lands
- * in the box for the reader to check and send themselves. Nothing is auto-sent
- * and nothing is read back: a composer microphone is for writing, and the two
- * jobs wearing one control is what made the old one hard to describe.
+ * One press opens the microphone; a second closes it, and what was said stays
+ * in the box for the reader to check and send themselves. NOTHING IS AUTO-SENT
+ * and no reply is read back. `@hanzo/voice` can run a whole spoken conversation
+ * — its `onUtterance` is documented as "send this" — and the one decision this
+ * file makes is not to: a composer microphone is for writing, and a control
+ * that sometimes writes and sometimes sends is the one nobody can describe.
  *
- * The transcript comes from the server (`/v1/chat/files/speech/stt`), which is
- * why there is no engine here and no waveform: the browser's own speech engine
- * is absent in some browsers and disabled in others, and a canvas of moving
- * bars is 200 lines that say the same thing as a button that has changed shape.
+ * The machine is `@hanzo/voice`, shared with every other Hanzo surface, so the
+ * browser recogniser, the platform transcriber, the fallback between them and
+ * the reasons voice cannot run are answered once for the estate. The chrome is
+ * this app's, because the package's own button is an unstyled `<button>` meant
+ * to be dressed by whoever mounts it.
+ *
+ * What is NOT here: a canvas waveform. Two hundred lines to say what a button
+ * that has changed shape already says.
  */
 import { Button, Spinner } from '@hanzo/ui'
-import { useCallback, useRef, useState } from 'react'
+import { useVoice, type Speech } from '@hanzo/voice'
+import { Mic, Square } from '@hanzogui/lucide-icons-2'
+import { useCallback, useMemo, useRef } from 'react'
 
-/** Where speech becomes text. */
-const STT = '/v1/chat/files/speech/stt'
-
-/** Under this, a recording is a misclick rather than a silence worth naming. */
-const BLINK = 400
+import { api } from '~/data/api'
+import { http } from '~/data/http'
 
 export interface VoiceProps {
   disabled?: boolean
-  /** A bearer, when there is one. A guest sends no header at all. */
-  token?: string
-  /** What was heard. Appended by the caller — dictation adds to the draft, it
-   *  does not replace it. */
-  onHeard: (said: string) => void
+  /** What is in the box now. Dictation appends to it rather than replacing it —
+   *  a sentence typed before somebody reached for the microphone is theirs. */
+  text: string
+  /** The whole draft, rewritten as the transcript grows. A partial REPLACES the
+   *  last partial, so this cannot be an append. */
+  onText: (text: string) => void
   onTrouble?: (say: string) => void
 }
 
-type Doing = 'off' | 'hearing' | 'reading'
+export const Voice = ({ disabled = false, text, onText, onTrouble }: VoiceProps) => {
+  // The draft as of this render, readable from inside a callback that was
+  // created several utterances ago.
+  const now = useRef(text)
+  now.current = text
 
-export const Voice = ({ disabled = false, token, onHeard, onTrouble }: VoiceProps) => {
-  const [doing, set] = useState<Doing>('off')
-  const tape = useRef<MediaRecorder | null>(null)
-  const opened = useRef(0)
-
-  const transcribe = useCallback(
-    async (heard: Blob) => {
-      const form = new FormData()
-      form.append('audio', heard, 'turn.webm')
-      const res = await fetch(STT, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        body: form,
-      })
-      if (!res.ok) throw new Error('That could not be transcribed.')
-      const said = (await res.json()) as { text?: string }
-      return said.text?.trim() ?? ''
-    },
-    [token],
-  )
-
-  const open = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      onTrouble?.('This browser will not give a page the microphone.')
-      return
-    }
-    let sound: MediaStream
-    try {
-      sound = await navigator.mediaDevices.getUserMedia({ audio: true })
-    } catch {
-      onTrouble?.('The microphone was refused. Allow it for this site and try again.')
-      return
-    }
-
-    const bits: Blob[] = []
-    const recorder = new MediaRecorder(sound)
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) bits.push(e.data)
-    }
-    recorder.onstop = () => {
-      for (const track of sound.getTracks()) track.stop()
-      const brief = performance.now() - opened.current < BLINK
-      if (brief || bits.length === 0) {
-        set('off')
-        return
-      }
-      set('reading')
-      transcribe(new Blob(bits, { type: recorder.mimeType || 'audio/webm' })).then(
-        (said) => {
-          set('off')
-          if (said) onHeard(said)
-          // The recording worked and the transcription produced nothing. Say so
-          // — a silent failure here reads as the microphone being broken.
-          else onTrouble?.('Nothing was heard.')
-        },
-        (trouble: Error) => {
-          set('off')
-          onTrouble?.(trouble.message)
-        },
-      )
-    }
-
-    tape.current = recorder
-    opened.current = performance.now()
-    recorder.start()
-    set('hearing')
-  }, [onHeard, onTrouble, transcribe])
-
-  const close = useCallback(() => {
-    tape.current?.stop()
-    tape.current = null
+  // Everything dictation has settled so far, including whatever was already in
+  // the box. Live partials are appended to THIS, so a pause never rewrites the
+  // sentence before it. Null until the first word — the box is only read once,
+  // at the start, or every partial would re-read text it just wrote.
+  const before = useRef<string | null>(null)
+  const join = useCallback((heard: string) => {
+    const held = before.current
+    return held ? `${held} ${heard}` : heard
   }, [])
 
-  const hearing = doing === 'hearing'
-  const reading = doing === 'reading'
+  /**
+   * Our half of the platform's speech service: audio in, text out.
+   *
+   * The package never owns a credential — each surface authenticates
+   * differently — so this is where the one HTTP client fills that in.
+   */
+  const speech = useMemo<Speech>(
+    () => ({
+      transcribe: async (audio) => {
+        const form = new FormData()
+        form.append('audio', audio, 'turn.webm')
+        const said = await http.form<{ text?: string }>(api.files.listen, form)
+        return said.text?.trim() ?? ''
+      },
+    }),
+    [],
+  )
+
+  const voice = useVoice({
+    speech,
+    onPartial: (heard) => {
+      if (before.current === null) before.current = now.current.trim()
+      onText(join(heard))
+    },
+    onUtterance: (said) => {
+      // Settle it: the box already shows it, and folding it in means the next
+      // partial appends rather than overwriting this sentence.
+      if (before.current === null) before.current = now.current.trim()
+      before.current = join(said)
+      onText(before.current)
+    },
+    // A platform service that refuses sounds exactly like one that works — the
+    // browser stands in and the words keep arriving. Only this says otherwise.
+    onRefusal: (refusal) => onTrouble?.(refusal.error.message),
+  })
+
+  const open = voice.open
+  if (!open && before.current !== null) before.current = null
 
   return (
     <Button
@@ -115,18 +97,25 @@ export const Voice = ({ disabled = false, token, onHeard, onTrouble }: VoiceProp
       // label, and a label inside a Button resolves its colour from the theme
       // scope the Button mounts — where the token means something quieter than
       // it does outside. The variant paints both halves, correctly, by itself.
-      variant={hearing ? 'outline' : 'ghost'}
+      variant={open ? 'outline' : 'ghost'}
       size="icon-sm"
-      disabled={disabled || reading}
-      aria-label={hearing ? 'Stop dictating' : 'Dictate'}
-      aria-pressed={hearing}
-      onPress={() => (hearing ? close() : void open())}
+      // Voice that cannot run keeps its control and wears the reason. One that
+      // disappears teaches nobody anything, and "where did the microphone go"
+      // is a worse question than "why is it off".
+      disabled={disabled || voice.blocked !== null}
+      title={voice.reason ?? undefined}
+      aria-label={open ? 'Stop dictating' : (voice.reason ?? 'Dictate')}
+      aria-pressed={open}
+      onPress={voice.toggle}
       data-testid="voice"
     >
-      {/* Glyphs, not icons: a filled circle is the universal record mark and a
-          filled square the stop, both render wherever text does, and neither
-          costs a package. */}
-      {reading ? <Spinner size={14} /> : hearing ? '■' : '●'}
+      {voice.state === 'speaking' ? (
+        <Spinner size={14} />
+      ) : open ? (
+        <Square size={14} />
+      ) : (
+        <Mic size={16} />
+      )}
     </Button>
   )
 }

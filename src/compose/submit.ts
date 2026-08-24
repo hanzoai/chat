@@ -14,7 +14,13 @@
  * mode is an unreadable hang, on a value nobody validates, is worse than none.
  */
 
-/** A file already uploaded and now riding on this turn. */
+/**
+ * A file riding on this turn.
+ *
+ * It exists in the draft from the moment it is chosen, which is why `here` is
+ * a field rather than an assumption: until the server holds the bytes, the
+ * record is a promise about a file and the turn must not go out on it.
+ */
 export interface Attached {
   file_id: string
   filepath: string
@@ -22,8 +28,8 @@ export interface Attached {
   type: string
   height?: number
   width?: number
-  /** 0..1 while it uploads; 1 once the server holds it. */
-  progress: number
+  /** The server has it. */
+  here: boolean
 }
 
 /**
@@ -82,7 +88,8 @@ export interface Payload {
   model?: string
   agent_id?: string
   spec?: string
-  files?: Attached[]
+  /** The attachments, minus the two fields that are the composer's own. */
+  files?: Omit<Attached, 'filename' | 'here'>[]
   ephemeralAgent?: Tools
   /** True only when finishing a reply that stopped short. */
   isContinued: boolean
@@ -134,7 +141,9 @@ const kept = <T extends object>(o: T): T =>
  */
 export const payload = ({ draft, conversation, parent, again, temporary }: Send): Payload => {
   const tools = kept(draft.tools)
-  return kept({
+  // Typed on the way in rather than cast on the way out: a cast here would let
+  // a field be renamed on one side of the wire and nowhere else.
+  const turn: Payload = {
     text: draft.text.trim(),
     messageId: crypto.randomUUID(),
     parentMessageId: parent ?? ROOT,
@@ -143,7 +152,19 @@ export const payload = ({ draft, conversation, parent, again, temporary }: Send)
     model: conversation?.model ?? undefined,
     agent_id: conversation?.agent_id ?? undefined,
     spec: conversation?.spec ?? undefined,
-    files: draft.files.length > 0 ? draft.files : undefined,
+    // Only the fields the server reads. `filename` and `here` are the
+    // composer's own — one to draw a chip with, one to know the bytes landed —
+    // and a payload carrying them invites a server to start believing them.
+    files:
+      draft.files.length > 0
+        ? draft.files.map(({ file_id, filepath, type, height, width }) => ({
+            file_id,
+            filepath,
+            type,
+            height,
+            width,
+          }))
+        : undefined,
     ephemeralAgent: Object.keys(tools).length > 0 ? tools : undefined,
     isContinued: false,
     isRegenerate: again != null ? true : undefined,
@@ -153,15 +174,16 @@ export const payload = ({ draft, conversation, parent, again, temporary }: Send)
     sender: 'User',
     isCreatedByUser: true,
     clientTimestamp: now(),
-  } as Payload)
+  }
+  return kept(turn)
 }
 
 /**
  * Whether a draft may go out.
  *
- * A file still uploading holds the turn — sending its id before the server has
+ * A file still arriving holds the turn — sending its id before the server has
  * the bytes gets the file dropped silently, which reads as the model ignoring
  * an attachment. `@hanzo/ui/chat`'s `ready` covers the text and the busy state;
  * this is the half that is about what the draft is CARRYING.
  */
-export const settled = (draft: Draft): boolean => draft.files.every((f) => f.progress >= 1)
+export const settled = (draft: Draft): boolean => draft.files.every((f) => f.here)

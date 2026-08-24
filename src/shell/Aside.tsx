@@ -26,7 +26,7 @@ const on = (iso?: string | null): string | null => {
 /** One line of the card: what it is called, and what it says. */
 const Fact = ({ name, children }: { name: string; children: ReactNode }) => (
   <XStack {...row}>
-    <SizableText fontSize="$2" color="$color11" shrink={0}>
+    <SizableText fontSize="$2" color="$color11" flexShrink={0}>
       {name}
     </SizableText>
     <SizableText fontSize="$2" color="$color12" numberOfLines={1}>
@@ -60,7 +60,7 @@ export const Aside = ({ convo, onClose, children }: AsideProps) => {
 
   return (
     <Column>
-      <XStack items="center" justify="space-between" gap="$2">
+      <XStack alignItems="center" justifyContent="space-between" gap="$2">
         <SizableText fontSize="$2" fontWeight="500" color="$color12">
           Details
         </SizableText>

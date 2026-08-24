@@ -26,7 +26,8 @@ export interface Starter {
 const HOUSE: Starter[] = [
   {
     label: 'Write code',
-    text: 'Write a Python script that renames every file in a folder to a slugified version of its name.',
+    text:
+      'Write a Python script that renames every file in a folder to a slugified version of its name.',
   },
   {
     label: 'Make an image',

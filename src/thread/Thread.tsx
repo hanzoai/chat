@@ -15,13 +15,15 @@
  * What is left is this app's: turning the wire's flat array into a tree, keeping
  * which sibling each fork is showing, and knowing which turn is being rewritten.
  * Both pieces of state are HERE rather than in a store, because both are about
- * what this screen is showing and neither survives leaving it.
+ * what this screen is showing and neither survives leaving it — so a screen
+ * showing a different conversation mounts a different one of these.
  */
 import { Fill } from '@hanzo/ui'
 import { Thread as Scroll, type Source } from '@hanzo/ui/chat'
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 
-import { build, path, role, type Choice, type Chosen, type Message, type Vote } from './tree'
+import type { Message } from '~/data/types'
+import { build, path, type Choice, type Chosen, type Entry, type Vote } from './tree'
 import { Turn } from './Turn'
 
 /**
@@ -34,14 +36,21 @@ import { Turn } from './Turn'
  */
 const WAITING = '~waiting'
 const wait: Choice = {
-  message: { messageId: WAITING, isCreatedByUser: false, children: [] },
+  message: {
+    messageId: WAITING,
+    conversationId: null,
+    parentMessageId: null,
+    role: 'assistant',
+    text: '',
+    children: [],
+  },
   group: WAITING,
   index: 0,
   count: 1,
 }
 
 export interface ThreadProps {
-  messages: readonly Message[]
+  messages: readonly Entry[]
   /** A turn has been asked for and has not finished. */
   busy?: boolean
   /** Shown instead of the conversation while there is none. */
@@ -65,7 +74,10 @@ export const Thread = ({
   const [chosen, setChosen] = useState<Chosen>({})
   const [editing, setEditing] = useState<string | null>(null)
 
-  const turns = useMemo(() => path(build(messages), chosen), [messages, chosen])
+  // Two steps, not one: the tree is a function of the messages alone, so moving
+  // between siblings must not rebuild it.
+  const roots = useMemo(() => build(messages), [messages])
+  const turns = useMemo(() => path(roots, chosen), [roots, chosen])
 
   const pick = useCallback(
     (group: string, index: number) => setChosen((was) => ({ ...was, [group]: index })),
@@ -82,18 +94,25 @@ export const Thread = ({
 
   const last = turns.length > 0 ? turns[turns.length - 1] : null
   // Nothing has come back yet: the last thing said was the question.
-  const waiting = busy && (last == null || role(last.message) === 'user')
+  const waiting = busy && (last == null || last.message.role === 'user')
+
+  // The stream marks the turn it is writing; the prop covers a surface that
+  // does not, which is every surface that renders a conversation it did not
+  // send — a shared link replaying one, a page restored from cache.
+  const arriving = (choice: Choice) =>
+    choice.message.busy === true ||
+    (busy && choice === last && choice.message.role === 'assistant')
 
   return (
     <Scroll>
       {turns.map((choice) => {
         const { message, group } = choice
-        const answer = role(message) === 'assistant'
+        const answer = message.role === 'assistant'
         return (
           <Turn
             key={message.messageId}
             choice={choice}
-            busy={busy && choice === last && answer}
+            busy={arriving(choice)}
             editing={editing === message.messageId}
             onEdit={onEdit ? () => setEditing(message.messageId) : undefined}
             onCancel={() => setEditing(null)}

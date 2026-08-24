@@ -8,99 +8,38 @@
  *
  * Two functions and one shape:
  *
- *   build(messages)        the wire's flat array -> roots, children attached
+ *   build(messages)        the flat array -> roots, with children attached
  *   path(roots, chosen)    roots + one index per fork -> the turns on screen
  *
  * `path` returns a FLAT list, which is the whole point: rendering a tree by
  * recursion means every turn is a component that mounts the rest of the
- * conversation below it, so a token arriving at the end re-renders the top.
- * The sibling walk happens here, once, over data — the view maps a list.
+ * conversation below it, so a token arriving at the end re-renders the top. The
+ * sibling walk happens here, once, over data — the view maps a list.
  *
- * The field names are the server's, because the client has to speak the wire it
- * is served beside; the SHAPE is only what the thread reads. Anything richer
- * satisfies it structurally, so no module has to hand its types down.
+ * The turn itself is `~/data/types`' — `data` owns the wire and the words for
+ * it, and a second `Message` here would be the same fact in two homes, drifting
+ * the first time the server grows a field.
  */
 import type { Source } from '@hanzo/ui/chat'
 
-/** Who is speaking. The wire says it with a boolean; the view wants the noun. */
-export type Role = 'user' | 'assistant' | 'system'
+import type { Feedback, Message } from '~/data/types'
 
-/** A thumbs-up or thumbs-down on an answer. The strings are the wire's. */
-export type Vote = 'thumbsUp' | 'thumbsDown'
-
-/** Something attached to a turn — an upload, or a file the model produced. */
-export interface Doc {
-  file_id?: string
-  filename?: string
-  filepath?: string
-  /** A local object URL, present before the upload lands. */
-  preview?: string
-  type?: string
-  height?: number
-  width?: number
-  size?: number
-}
-
-/** A tool the assistant ran, and how it went. */
-export interface Call {
-  id?: string
-  name?: string
-  /** JSON, as a string, or already parsed. Providers disagree. */
-  args?: string | Record<string, unknown>
-  output?: string
-  /** 0..1. Absent while the call is still opening. */
-  progress?: number
-  type?: string
-}
+/** A thumbs-up or thumbs-down on an answer. */
+export type Vote = Feedback['rating']
 
 /**
- * One piece of a turn.
+ * A turn as the THREAD receives it: the wire's, plus the citations resolved for
+ * it.
  *
- * Discriminated on `type`, which is what lets `Parts` be a switch rather than a
- * chain of `if ('text' in part)`. A wire that grows a new kind lands in the
- * default branch and renders nothing, rather than throwing inside a stream.
+ * `sources` is not on the wire type because nothing outside this module has an
+ * opinion about them — the marker in the prose and the strip under the turn are
+ * both here. The day a citation means something to another module, it moves to
+ * `data` and this alias becomes `Message`.
  */
-export type Part =
-  | { type: 'text'; text?: string | { value?: string }; tool_call_ids?: string[] }
-  | { type: 'think'; think?: string | { value?: string } }
-  | { type: 'tool_call'; tool_call?: Call }
-  | { type: 'image_file'; image_file?: Doc }
-  | { type: 'image_url'; image_url?: { url?: string; detail?: string } }
-  | { type: 'error'; error?: string; text?: string }
-  | { type: 'agent_update'; agent_update?: { agentId?: string; index?: number } }
+export type Entry = Message & { sources?: Source[] }
 
-/**
- * A turn, as the server keeps it.
- *
- * `content` and `text` are both here and both optional because both arrive: a
- * modern turn is a part array, an older one (and every user turn) is a string.
- * `plain()` is the one place that reconciles them.
- */
-export interface Message {
-  messageId: string
-  parentMessageId?: string | null
-  conversationId?: string | null
-  isCreatedByUser?: boolean
-  sender?: string
-  text?: string
-  content?: Part[]
-  files?: Doc[]
-  /**
-   * What the answer cited, already resolved. The thread renders citations it is
-   * handed rather than digging them out of a tool's output — deriving them here
-   * would put the shape of one tool's JSON in the middle of the view.
-   */
-  sources?: Source[]
-  error?: boolean
-  unfinished?: boolean
-  feedback?: { rating?: Vote } | null
-  model?: string | null
-  endpoint?: string | null
-  createdAt?: string
-}
-
-/** A message with its replies. A tree IS its root. */
-export interface Tree extends Message {
+/** A turn with its replies. A tree IS its root. */
+export interface Tree extends Entry {
   children: Tree[]
 }
 
@@ -120,13 +59,13 @@ export interface Choice {
 }
 
 /**
- * The wire's flat array as a forest.
+ * The flat array as a forest.
  *
  * A turn whose parent has not arrived (or never existed) is a root, so a partial
  * page renders instead of vanishing. Insertion order is preserved, which is what
  * makes "the last sibling" mean "the newest".
  */
-export const build = (messages: readonly Message[]): Tree[] => {
+export const build = (messages: readonly Entry[]): Tree[] => {
   const byId = new Map<string, Tree>()
   const roots: Tree[] = []
 
@@ -176,27 +115,29 @@ export const path = (roots: readonly Tree[], chosen: Chosen): Choice[] => {
   return turns
 }
 
-/** Who said it. There is no system turn in a conversation, only in a settings screen. */
-export const role = (message: Message): Role => (message.isCreatedByUser ? 'user' : 'assistant')
-
-const said = (value: string | { value?: string } | undefined): string =>
-  typeof value === 'string' ? value : (value?.value ?? '')
+/**
+ * The value of a text or think part.
+ *
+ * The wire has spelled it both ways — the string itself, and an object with the
+ * string in it — and a stray object handed to React throws inside a stream,
+ * taking the answer around it down. One tolerant reader, at the one place the
+ * value is taken.
+ */
+export const value = (said: string | { value?: string } | undefined): string =>
+  typeof said === 'string' ? said : (said?.value ?? '')
 
 /**
  * The turn as text — what gets copied, and what an edit starts from.
  *
  * Only the prose: reasoning and tool output are how the answer was reached, not
- * the answer, and pasting a page of JSON into a document is never what was
- * meant by "copy".
+ * the answer, and pasting a page of JSON into a document is never what was meant
+ * by "copy".
  */
 export const plain = (message: Message): string => {
   const parts = message.content
   if (!parts || parts.length === 0) return message.text ?? ''
   return parts
-    .map((part) => (part.type === 'text' ? said(part.text) : ''))
+    .map((part) => (part.type === 'text' ? value(part.text) : ''))
     .join('')
     .trim()
 }
-
-/** The value of a text or think part, whichever spelling the provider used. */
-export const value = said

@@ -15,9 +15,11 @@ import { accent } from '@hanzo/ui/glass'
  * what renders is the way IN and nothing else: the errands below are one press
  * away, because the mark above opens the column.
  *
- * Sign up is a real navigation to the issuer's app-scoped form, so it stays an
- * anchor — right-click-openable, and a link to a page rather than a script that
- * goes to one. Log in starts a redirect in JS, so it is a button. The two are
+ * BOTH ways in are verbs, not addresses. The issuer's account form takes the
+ * same PKCE challenge the authorize endpoint does, so reaching it correctly
+ * means STARTING a sign-in that lands on it; a bare link leaves a new account
+ * signed in at the issuer and stranded here, and the verifier that would redeem
+ * the code lives in the tab a new-tab open just left behind. The two are
  * ordered by errand and weighted by offer: the returning reader's path reads
  * first because it is the shorter one, and the offer sits last because the eye
  * arrives at the bottom of a column.
@@ -34,8 +36,8 @@ import { accent } from '@hanzo/ui/glass'
 export interface VisitorProps {
   collapsed?: boolean
   onLogIn: () => void
-  /** The issuer's app-scoped sign-up form. Absent → no second path is offered. */
-  signupHref?: string
+  /** Start the issuer's account form. Absent → no second path is offered. */
+  onSignUp?: () => void
   onSettings?: () => void
   helpHref?: string
   plansHref?: string
@@ -85,7 +87,7 @@ function Row({ label, href, onPress }: { label: string; href?: string; onPress?:
 export function Visitor({
   collapsed = false,
   onLogIn,
-  signupHref,
+  onSignUp,
   onSettings,
   helpHref,
   plansHref,
@@ -135,25 +137,15 @@ export function Visitor({
         <Button variant="ghost" onPress={onLogIn} data-testid="rail-log-in">
           Log in
         </Button>
-        {signupHref ? (
-          <Anchor
-            href={signupHref}
-            textDecorationLine="none"
-            textAlign="center"
-            fontSize="$3"
-            fontWeight="500"
-            color={accent.color}
-            backgroundColor={accent.backgroundColor}
-            borderWidth={accent.borderWidth}
-            borderColor={accent.borderColor}
-            borderRadius="$3"
-            paddingVertical="$2.5"
-            paddingHorizontal="$3"
-            hoverStyle={{ backgroundColor: accent.hoverStyle.backgroundColor }}
-            data-testid="rail-sign-up"
-          >
+        {/* The string is handed straight to the Button so its own text host
+            paints it. A wrapped `SizableText` here would resolve its colour in
+            the theme scope the Button mounts, where the foreground re-bases to
+            the QUIET rung — the loudest control on the screen, labelled in the
+            colour of the row above it. */}
+        {onSignUp ? (
+          <Button {...accent} onPress={onSignUp} data-testid="rail-sign-up">
             Sign up
-          </Anchor>
+          </Button>
         ) : null}
       </YStack>
     </YStack>

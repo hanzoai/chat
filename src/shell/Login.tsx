@@ -46,8 +46,8 @@ export const Login = () => {
 
   if (stay) {
     return (
-      <YStack flex={1} items="center" justify="center" padding="$6" backgroundColor="$background">
-        <YStack width="100%" maxWidth={420} gap="$3" items="center">
+      <YStack flex={1} alignItems="center" justifyContent="center" padding="$6" backgroundColor="$background">
+        <YStack width="100%" maxWidth={420} gap="$3" alignItems="center">
           <H2 fontSize="$6" fontWeight="500" color="$color" textAlign="center">
             {failed ? 'That sign-in did not finish' : `Signed out of ${brand}`}
           </H2>

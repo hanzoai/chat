@@ -12,8 +12,8 @@
 import { Step, type Ran } from '@hanzo/ui/chat'
 import type { ReactNode } from 'react'
 
+import type { ToolCall } from '~/data/types'
 import { Fence } from './Fence'
-import type { Call } from './tree'
 
 /** Tools whose name is machinery. Everything else reads fine as it arrives. */
 const NAMES: Record<string, string> = {
@@ -24,10 +24,18 @@ const NAMES: Record<string, string> = {
   image_edit_oai: 'Edited an image',
 }
 
+/** The server's word for how a call went, in the four this renders. */
+const RAN: Record<string, Ran> = {
+  in_progress: 'running',
+  completed: 'done',
+  cancelled: 'cancelled',
+  failed: 'error',
+}
+
 /** How much of the arguments fits on the header line beside the name. */
 const BRIEF = 96
 
-const json = (args: Call['args']): string => {
+const json = (args: ToolCall['args']): string => {
   if (args == null) return ''
   if (typeof args === 'string') return args
   try {
@@ -63,25 +71,27 @@ const program = (args: string): { language: string; body: string } | null => {
 }
 
 export interface ToolProps {
-  call: Call
+  call: ToolCall
   /** The turn is still arriving, so a call with no output yet is still running. */
   busy?: boolean
 }
 
 export const Tool = ({ call, busy = false }: ToolProps) => {
-  const name = call.name ?? 'Tool'
   const args = json(call.args)
   const done = call.output != null && call.output !== ''
-  const status: Ran = !done && busy ? 'running' : 'done'
+  // The server's own word when it gave one; otherwise the only thing that can
+  // be known from here — output means finished, and nothing yet means running
+  // while the turn is still arriving.
+  const status: Ran = (call.status ? RAN[call.status] : undefined) ?? (!done && busy ? 'running' : 'done')
 
   const body: ReactNode[] = []
-  const code = name === 'execute_code' ? program(args) : null
+  const code = call.name === 'execute_code' ? program(args) : null
   if (code) body.push(<Fence key="in" language={code.language} value={code.body} />)
   else if (args) body.push(<Fence key="in" language="json" value={args} />)
   if (call.output) body.push(<Fence key="out" value={call.output} />)
 
   return (
-    <Step name={NAMES[name] ?? name} status={status} detail={brief(args)}>
+    <Step name={NAMES[call.name] ?? call.name} status={status} detail={brief(args)}>
       {/* `undefined`, not an empty array: a step with a body it cannot fill
           still draws a chevron and still takes a keyboard stop. */}
       {body.length > 0 ? body : undefined}

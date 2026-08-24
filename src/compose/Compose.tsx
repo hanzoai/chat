@@ -28,12 +28,19 @@ import { Starters, type Starter } from '~/compose/Starters'
 import { Voice } from '~/compose/Voice'
 import { useDraft } from '~/compose/draft'
 import type { Handoff } from '~/compose/link'
-import { AGENTS, payload, settled, type Conversation, type Draft, type Payload } from '~/compose/submit'
+import {
+  AGENTS,
+  payload,
+  settled,
+  type Conversation,
+  type Draft,
+  type Payload,
+} from '~/compose/submit'
 import { useUpload, type Takes } from '~/compose/upload'
 
-/** The reading measure the thread is set to. The box sits under the column it
- *  writes into, so the two carry the SAME number rather than two numbers that
- *  happen to match today. */
+/** The reading measure. `Thread` caps and centres its own column at this; the
+ *  box sits OUTSIDE the thread and has to be told, or the two columns are
+ *  different widths and the answer does not line up with the question. */
 const COLUMN = 768
 
 /** How tall the field may grow before it scrolls. Past this the composer is
@@ -59,8 +66,6 @@ export interface ComposeProps {
   can?: AttachProps['can']
   /** Largest file this conversation accepts, in bytes. */
   limit?: number
-  /** A bearer, when there is one. A guest has none and sends none. */
-  token?: string
   /** A question that arrived in the address bar. */
   link?: Handoff | null
   /** The thread has no turns yet, so openings are worth offering. */
@@ -76,6 +81,9 @@ export interface ComposeProps {
    */
   onSend: (turn: Payload) => boolean | void
   onStop?: () => void
+  /** Where a refused upload, a denied microphone or a file that is too large
+   *  gets said. Omit it and those reasons are discarded — the composer has
+   *  nowhere of its own to put a sentence. */
   onTrouble?: (say: string) => void
 }
 
@@ -90,7 +98,6 @@ export const Compose = ({
   servers,
   can,
   limit,
-  token,
   link = null,
   empty = false,
   starters,
@@ -107,16 +114,26 @@ export const Compose = ({
 
   const say = useCallback((trouble: string) => onTrouble?.(trouble), [onTrouble])
 
-  const { add } = useUpload({
+  const { add, cancel } = useUpload({
     conversationId,
     endpoint: conversation?.endpoint ?? AGENTS,
     agentId: conversation?.agent_id,
-    token,
     put,
     take,
     say,
     limit,
   })
+
+  /** Taking a file back off STOPS it as well as hiding it. An upload nobody is
+   *  waiting for still finishes, and its record then walks straight back into
+   *  the draft the reader just cleared. */
+  const remove = useCallback(
+    (fileId: string) => {
+      cancel(fileId)
+      take(fileId)
+    },
+    [cancel, take],
+  )
 
   /**
    * The ONE send. Typed, dictated, picked from an opening, handed over in a
@@ -234,13 +251,16 @@ export const Compose = ({
         // edge; lighting it is cheaper and clearer than an overlay that has to
         // be positioned, dismissed and kept out of the way of the caret.
         borderColor={landing ? '$color12' : '$borderColor'}
-        // The ref, and only the ref. The field is already addressable — the
-        // shell marks it `[data-slot="composer-field"]` and it answers to its
-        // accessible name — so its props take no test handle, and a third name
-        // for one element is the one nobody keeps in step.
+        // The ref, and only the ref. The field is already addressable —
+        // `Composer` marks it `[data-slot="composer-field"]` and it answers to
+        // its accessible name — so its props take no test handle, and a third
+        // name for one element is the one nobody keeps in step.
         field={{ ref: field }}
       >
-        {model}
+        {/* Left to right: what can go IN, which model answers, what is in
+            there now, and a way to say it. The chips sit between the controls
+            and the send arrow because that is where the eye lands last before
+            committing — the moment to notice the turn is carrying something. */}
         <Attach
           takes={takes}
           disabled={disabled}
@@ -251,22 +271,16 @@ export const Compose = ({
           onTool={tool}
           onServer={server}
         />
-        <Voice
-          disabled={disabled}
-          token={token}
-          // Dictation ADDS to the draft. Replacing it would throw away a
-          // sentence somebody typed before they reached for the microphone.
-          onHeard={(said) => write(draft.text ? `${draft.text} ${said}` : said)}
-          onTrouble={say}
-        />
+        {model}
         <Chips
           files={draft.files}
           tools={draft.tools}
-          onTake={take}
+          onTake={remove}
           onTool={tool}
           onServer={server}
           field={field}
         />
+        <Voice disabled={disabled} text={draft.text} onText={write} onTrouble={say} />
       </Composer>
     </YStack>
   )

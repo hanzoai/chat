@@ -19,6 +19,7 @@
     "@hanzo/ui": "^8.3.4",
     "@hanzo/voice": "^0.1.8",
     "@hanzogui/lucide-icons-2": "^8.1.1",
+    "@hanzogui/next-theme": "^8.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",

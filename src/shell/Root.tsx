@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, Screen, XStack, YStack } from '@hanzo/ui'
 import { ConfirmDelete } from '@hanzo/ui/product'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Outlet, useMatch, useNavigate, useOutletContext } from 'react-router'
 
 import { api } from '~/data/api'
@@ -9,9 +9,10 @@ import { useArchive, useConvos, useDelete, useDeleteAll, useRename } from '~/dat
 import { useConnections, useRestart, useServers } from '~/data/mcp'
 import { useSession } from '~/data/session'
 import { useShares, useUnshare } from '~/data/share'
+import type { Convo } from '~/data/types'
 import { useNarrow } from '~/gui'
 import { Account } from '~/rail/Account'
-import type { Convo as Row } from '~/rail/group'
+import { id, named } from '~/rail/group'
 import type { Verbs } from '~/rail/Menu'
 import { Rail } from '~/rail/Rail'
 import { Visitor } from '~/rail/Visitor'
@@ -35,29 +36,6 @@ export type Frame = {
 }
 
 export const useFrame = (): Frame => useOutletContext<Frame>()
-
-/** The wire's conversation, as the rail reads one. */
-const listed = (c: { conversationId: string | null }): Row[] => {
-  const one = c as {
-    conversationId: string | null
-    title?: string | null
-    updatedAt?: string
-    isPinned?: boolean
-    isArchived?: boolean
-    tags?: string[]
-  }
-  if (!one.conversationId) return []
-  return [
-    {
-      id: one.conversationId,
-      title: one.title ?? '',
-      updatedAt: one.updatedAt ?? '',
-      pinned: one.isPinned,
-      archived: one.isArchived,
-      tags: one.tags,
-    },
-  ]
-}
 
 /**
  * The frame every conversation screen renders into, and the one place the app's
@@ -85,19 +63,21 @@ export const Root = () => {
   const navigate = useNavigate()
   const here = useMatch('/c/:id')?.params.id ?? null
 
-  const [rail, setRail] = useState(true)
-  const [settings, setSettings] = useState(false)
-  /** The conversation somebody asked to delete, held while they confirm it. */
-  const [doomed, setDoomed] = useState<Row | null>(null)
-
   /**
    * A phone opens with the drawer SHUT, every load — not only on a first visit.
-   * The viewport is the authority at mount. A mid-session resize is deliberately
-   * left alone, so an open drawer is never yanked shut under somebody using it.
+   *
+   * The viewport is the authority, and it is read ONCE, from the same answer
+   * the drawer itself is decided from, so the two cannot disagree about what
+   * narrow means. An initial value rather than an effect: an effect would paint
+   * the open column first and then close it, which on a phone is the whole
+   * conversation appearing and being covered. A mid-session resize is
+   * deliberately left alone, so an open drawer is never yanked shut under
+   * somebody who is using it.
    */
-  useEffect(() => {
-    if (window.matchMedia('(max-width: 800px)').matches) setRail(false)
-  }, [])
+  const [rail, setRail] = useState(!narrow)
+  const [settings, setSettings] = useState(false)
+  /** The conversation somebody asked to delete, held while they confirm it. */
+  const [doomed, setDoomed] = useState<Convo | null>(null)
 
   const { standing, user, signIn, signOut } = useSession()
   const mine = standing === 'live'
@@ -122,9 +102,7 @@ export const Root = () => {
   const connections = useConnections(mine && settings)
   const restart = useRestart()
 
-  const rows = useMemo(() => convos.items.flatMap(listed), [convos.items])
-
-  const open = useCallback((c: Row) => navigate(`/c/${c.id}`), [navigate])
+  const open = useCallback((c: Convo) => navigate(`/c/${id(c)}`), [navigate])
   const fresh = useCallback(() => navigate('/'), [navigate])
   const preferences = useCallback(() => setSettings(true), [])
 
@@ -135,9 +113,9 @@ export const Root = () => {
    */
   const verbs = useMemo<Verbs>(
     () => ({
-      rename: (c, title) => void rename.send({ conversationId: c.id, title }),
-      pin: (c, yes) => void rename.send({ conversationId: c.id, isPinned: yes }),
-      archive: (c, yes) => void archive.send({ conversationId: c.id, isArchived: yes }),
+      rename: (c, title) => void rename.send({ conversationId: id(c), title }),
+      pin: (c, yes) => void rename.send({ conversationId: id(c), isPinned: yes }),
+      archive: (c, yes) => void archive.send({ conversationId: id(c), isArchived: yes }),
       delete: setDoomed,
     }),
     [rename, archive],
@@ -184,7 +162,7 @@ export const Root = () => {
           and both are placed against this row. */}
       <XStack flex={1} minHeight={0} position="relative">
         <Rail
-          convos={rows}
+          convos={convos.items}
           activeId={here}
           loading={convos.pending}
           more={convos.more}
@@ -262,12 +240,12 @@ export const Root = () => {
         <Dialog open onOpenChange={() => setDoomed(null)}>
           <DialogContent maxWidth={440}>
             <ConfirmDelete
-              message={`Delete “${doomed.title || 'Untitled'}”? Every turn in it goes with it, and there is no undo.`}
+              message={`Delete “${named(doomed)}”? Every turn in it goes with it, and there is no undo.`}
               confirmLabel="Delete conversation"
               run={async () => {
-                await drop.send(doomed.id)
+                await drop.send(id(doomed))
                 announce('Conversation deleted.')
-                if (here === doomed.id) navigate('/')
+                if (here === id(doomed)) navigate('/')
               }}
               onDone={() => setDoomed(null)}
             />

@@ -4,7 +4,7 @@ import { scrim } from '@hanzo/ui/glass'
 import { HanzoMark } from '@hanzo/ui/product'
 import { useState, type ReactNode } from 'react'
 
-import type { Convo } from './group'
+import type { Convo } from '~/data/types'
 import { Find } from './Find'
 import { Hits } from './Hits'
 import { List } from './List'

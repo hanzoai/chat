@@ -3,7 +3,9 @@ import { selected } from '@hanzo/ui/glass'
 import { DataTable, EmptyState, PageHeader, type Column } from '@hanzo/ui/product'
 import { useMemo, useState } from 'react'
 
-import { hits, named, when, type Convo } from './group'
+import type { Convo } from '~/data/types'
+
+import { hits, id, named, when } from './group'
 import { Find } from './Find'
 import { Menu, type Verbs } from './Menu'
 import { Rename } from './Rename'
@@ -110,7 +112,7 @@ export function Chats({
       key: 'title',
       header: 'Conversation',
       render: (c) =>
-        editing === c.id ? (
+        editing === id(c) ? (
           <Rename
             value={named(c)}
             onCommit={(title) => {
@@ -147,7 +149,7 @@ export function Chats({
       width: 56,
       align: 'right',
       render: (c) => (
-        <Menu convo={c} on={on} edit={rename ? () => setEditing(c.id) : undefined} />
+        <Menu convo={c} on={on} edit={rename ? () => setEditing(id(c)) : undefined} />
       ),
     },
   ]
@@ -209,7 +211,7 @@ export function Chats({
               columns={columns}
               rows={rows}
               loading={loading}
-              rowKey={(c) => c.id}
+              rowKey={id}
               empty={`Nothing matches “${query.trim()}”.`}
             />
           )}

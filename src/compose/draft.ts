@@ -15,8 +15,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { blank, type Attached, type Draft, type Tools } from '~/compose/submit'
 
-/** The key a conversation with no id yet writes under. It is a ROUTE, never a
- *  conversation id — a payload sends null, not this. */
+/**
+ * What a draft with no conversation yet is filed under.
+ *
+ * A STORAGE name, never an identifier: a payload for the same draft sends
+ * `conversationId: null`, because "there is no conversation" is not a
+ * conversation called `new`, and a server told otherwise looks one up.
+ */
 export const NEW = 'new'
 
 const TEXT = 'textDraft_'
@@ -73,6 +78,11 @@ export const drop = (id: string | null): void => {
   at.removeItem(FILES + key(id))
 }
 
+/** The tools that are simply on or off. MCP servers are a list, and have their
+ *  own verb, because "which servers" is a different question from "search or
+ *  not" and one verb answering both takes a union at every call site. */
+export type Switch = Exclude<keyof Tools, 'mcp'>
+
 export interface Held {
   draft: Draft
   write: (text: string) => void
@@ -88,11 +98,6 @@ export interface Held {
   /** The turn went out. */
   clear: () => void
 }
-
-/** The tools that are simply on or off. MCP servers are a list, and have their
- *  own verb, because "which servers" is a different question from "search or
- *  not" and one verb answering both takes a union at every call site. */
-export type Switch = Exclude<keyof Tools, 'mcp'>
 
 /** A draft and the conversation it belongs to, as ONE value. Two states — the
  *  text, and which thread it is the text of — is how a draft comes to be shown
@@ -155,7 +160,8 @@ export const useDraft = (conversationId: string | null): Held => {
   )
 
   const tool = useCallback(
-    (which: Switch) => edit((d) => ({ ...d, tools: { ...d.tools, [which]: d.tools[which] !== true } })),
+    (which: Switch) =>
+      edit((d) => ({ ...d, tools: { ...d.tools, [which]: d.tools[which] !== true } })),
     [edit],
   )
 
@@ -165,21 +171,22 @@ export const useDraft = (conversationId: string | null): Held => {
         const on = d.tools.mcp ?? []
         return {
           ...d,
-          tools: { ...d.tools, mcp: on.includes(name) ? on.filter((s) => s !== name) : [...on, name] },
+          tools: {
+            ...d.tools,
+            mcp: on.includes(name) ? on.filter((s) => s !== name) : [...on, name],
+          },
         }
       }),
     [edit],
   )
 
   const clear = useCallback(() => {
-    set((b) => {
-      drop(b.id)
-      // The TOOLS stay. Searching the web is something this conversation is
-      // doing, not something one sentence did — turning it back on after every
-      // question is the kind of small tax nobody can name but everybody feels.
-      // They stay visible as chips, so nothing about the next turn is hidden.
-      return { ...b, draft: { ...blank, tools: b.draft.tools } }
-    })
+    drop(live.current.id)
+    // The TOOLS stay. Searching the web is something this conversation is
+    // doing, not something one sentence did — turning it back on after every
+    // question is the kind of small tax nobody can name but everybody feels.
+    // They stay visible as chips, so nothing about the next turn is hidden.
+    set((b) => ({ ...b, draft: { ...blank, tools: b.draft.tools } }))
   }, [])
 
   return { draft: box.draft, write, put, take, tool, server, clear }

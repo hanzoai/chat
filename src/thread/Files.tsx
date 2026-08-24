@@ -8,8 +8,8 @@
 import { Paperclip } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack } from '@hanzo/ui'
 
+import type { Attachment } from '~/data/types'
 import { Picture } from './Picture'
-import type { Doc } from './tree'
 
 const UNITS = ['B', 'KB', 'MB', 'GB']
 
@@ -25,31 +25,32 @@ const weight = (bytes?: number): string => {
   return `${unit === 0 ? n : n.toFixed(1)} ${UNITS[unit]}`
 }
 
-const looksLikeImage = (doc: Doc) => doc.type?.startsWith('image/') === true
+const looksLikeImage = (file: Attachment) => file.type?.startsWith('image/') === true
 
-const at = (doc: Doc) => doc.preview ?? doc.filepath ?? ''
+/** Where to open it: the local copy while it uploads, the server's after. */
+const at = (file: Attachment) => file.preview ?? file.filepath ?? ''
 
 export interface FilesProps {
-  files: Doc[]
+  files: Attachment[]
 }
 
 export const Files = ({ files }: FilesProps) => {
   if (files.length === 0) return null
 
   const pictures = files.filter(looksLikeImage)
-  const rest = files.filter((doc) => !looksLikeImage(doc))
+  const rest = files.filter((file) => !looksLikeImage(file))
 
   return (
     <>
       {rest.length > 0 ? (
         <XStack gap="$2" flexWrap="wrap">
-          {rest.map((doc, i) => {
-            const href = at(doc)
-            const size = weight(doc.size)
-            const name = doc.filename ?? 'Attachment'
+          {rest.map((file, i) => {
+            const href = at(file)
+            const size = weight(file.bytes)
+            const name = file.filename || 'Attachment'
             return (
               <XStack
-                key={doc.file_id ?? `${name}.${i}`}
+                key={file.file_id || `${name}.${i}`}
                 alignItems="center"
                 gap="$2"
                 paddingHorizontal="$3"
@@ -81,8 +82,8 @@ export const Files = ({ files }: FilesProps) => {
         </XStack>
       ) : null}
 
-      {pictures.map((doc, i) => (
-        <Picture key={doc.file_id ?? `image.${i}`} src={at(doc)} alt={doc.filename} />
+      {pictures.map((file, i) => (
+        <Picture key={file.file_id || `image.${i}`} src={at(file)} alt={file.filename} />
       ))}
     </>
   )

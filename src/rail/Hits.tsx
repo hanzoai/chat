@@ -2,7 +2,9 @@ import { SizableText, YStack } from '@hanzo/ui'
 import { SidebarScroll, SidebarSection } from '@hanzo/ui/chat'
 import { useMemo } from 'react'
 
-import { hits, type Convo } from './group'
+import type { Convo } from '~/data/types'
+
+import { hits, id } from './group'
 import { Item } from './Item'
 import type { Verbs } from './Menu'
 
@@ -48,10 +50,10 @@ export function Hits({ convos, query, activeId, busy, on, onOpen }: HitsProps) {
         <SidebarSection label={found.length === 1 ? '1 result' : `${found.length} results`}>
           {found.map((c) => (
             <Item
-              key={c.id}
+              key={id(c)}
               convo={c}
-              active={c.id === activeId}
-              busy={running.has(c.id)}
+              active={id(c) === activeId}
+              busy={running.has(id(c))}
               on={on}
               onOpen={onOpen}
             />

@@ -122,11 +122,33 @@ const source = (node: ReactNode): string =>
     .join('')
 
 /** A list item, carrying the mark its list decided on. */
-type Item = { marker?: string; checked?: boolean | null }
+type Item = { marker?: string }
 
 const BULLET = '•'
 const TICKED = '☑'
 const UNTICKED = '☐'
+
+/**
+ * Whether a list item is a task, and whether it is done.
+ *
+ * The state is on the CHECKBOX, not on the item — a task item is marked only by
+ * a class name, and reading `checked` off the item gets `undefined` for every
+ * task list, so every one of them drew a bullet. Depth 1, because a loose item
+ * wraps its checkbox in a paragraph while a tight one does not, and going deeper
+ * would let a nested list's first task decide its parent's mark.
+ */
+const ticked = (children: ReactNode, depth = 0): boolean | null => {
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue
+    const props = child.props as { type?: string; checked?: boolean; children?: ReactNode }
+    if (props.type === 'checkbox') return props.checked === true
+    if (depth === 0) {
+      const inner = ticked(props.children, 1)
+      if (inner != null) return inner
+    }
+  }
+  return null
+}
 
 /** Numbers the items so an ordered list is ordered without a CSS counter. */
 const enumerate = (children: ReactNode, mark_: (n: number) => string, from = 1) => {
@@ -204,8 +226,8 @@ const map: Components = {
     </YStack>
   ),
   li: ({ children, ...rest }) => {
-    const { marker, checked } = rest as Item
-    const glyph = checked == null ? (marker ?? BULLET) : checked ? TICKED : UNTICKED
+    const tick = ticked(children)
+    const glyph = tick == null ? ((rest as Item).marker ?? BULLET) : tick ? TICKED : UNTICKED
     return (
       <XStack width="100%" gap="$2" alignItems="flex-start">
         <SizableText color="$quiet" width={20} textAlign="right" flexShrink={0}>

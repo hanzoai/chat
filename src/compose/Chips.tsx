@@ -15,7 +15,8 @@
  * the thing that actually is to the left of the caret. It costs nothing —
  * Backspace at offset zero does nothing otherwise.
  */
-import { Button, Progress, SizableText, XStack } from '@hanzo/ui'
+import { Button, SizableText, Spinner, XStack } from '@hanzo/ui'
+import { X } from '@hanzogui/lucide-icons-2'
 import { useEffect, useRef, type RefObject } from 'react'
 
 import type { Switch } from '~/compose/draft'
@@ -42,12 +43,12 @@ export interface ChipsProps {
 interface One {
   id: string
   label: string
-  /** 0..1 while a file is still arriving; absent once it is here. */
-  filling?: number
+  /** Still on its way. A tool is never this; a file is, until the bytes land. */
+  coming?: boolean
   off: () => void
 }
 
-const Chip = ({ label, filling, off }: Omit<One, 'id'>) => (
+const Chip = ({ label, coming, off }: Omit<One, 'id'>) => (
   <XStack
     role="listitem"
     alignItems="center"
@@ -57,18 +58,21 @@ const Chip = ({ label, filling, off }: Omit<One, 'id'>) => (
     borderColor="$borderColor"
     backgroundColor="$color2"
     paddingLeft="$3"
-    paddingRight="$2"
-    paddingVertical="$1"
+    paddingRight="$1"
+    // No vertical padding: the remove control is an icon-sized Button and sets
+    // the height, which is the same height as every other control on the row.
+    // Padding here would make the chips the one thing that does not line up.
     maxWidth={240}
   >
     <SizableText fontSize="$1" color="$color12" numberOfLines={1}>
       {label}
     </SizableText>
-    {filling != null && <Progress value={Math.round(filling * 100)} width={40} height={2} />}
-    {/* A real multiplication sign, not an icon: it renders wherever text does,
-        carries no package, and is the glyph every icon set is drawing here. */}
+    {/* Arriving, without a number. The browser reports nothing useful about a
+        multipart upload's progress, and a bar that moves on a guess is a worse
+        answer than a mark that says honestly "not here yet". */}
+    {coming === true && <Spinner size={12} />}
     <Button variant="ghost" size="icon-sm" aria-label={`Remove ${label}`} onPress={off}>
-      ×
+      <X size={12} />
     </Button>
   </XStack>
 )
@@ -87,7 +91,7 @@ export const Chips = ({ files, tools, onTake, onTool, onServer, field }: ChipsPr
     on.push({
       id: `file-${file.file_id}`,
       label: file.filename,
-      filling: file.progress < 1 ? file.progress : undefined,
+      coming: !file.here,
       off: () => onTake(file.file_id),
     })
   }
@@ -120,7 +124,12 @@ export const Chips = ({ files, tools, onTake, onTool, onServer, field }: ChipsPr
       aria-label="On this message"
       alignItems="center"
       gap="$2"
+      // The chips share the toolbar row with the controls, so they take what
+      // is left of it and wrap inside that — a row of six attachments makes
+      // the toolbar two lines tall rather than pushing the send button off it.
       flexWrap="wrap"
+      flexShrink={1}
+      minWidth={0}
       data-testid="chips"
     >
       {on.map(({ id, ...chip }) => (

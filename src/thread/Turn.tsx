@@ -17,7 +17,7 @@ import { Cited } from './Cite'
 import { Edit } from './Edit'
 import { Parts } from './Parts'
 import { Siblings } from './Siblings'
-import { plain, role, type Choice, type Vote } from './tree'
+import { plain, type Choice, type Vote } from './tree'
 
 const OOPS = 'Something went wrong.'
 
@@ -50,7 +50,7 @@ export const Turn = ({
   onSource,
 }: TurnProps) => {
   const { message, index, count } = choice
-  const mine = role(message) === 'user'
+  const mine = message.role === 'user'
   const text = plain(message)
 
   const action: ActionsProps = {
@@ -76,7 +76,7 @@ export const Turn = ({
     ) : undefined
 
   return (
-    <Message role={role(message)} busy={busy} actions={bar}>
+    <Message role={message.role} busy={busy} actions={bar}>
       {editing && onSave && onCancel ? (
         <Edit value={text} onSave={onSave} onCancel={onCancel} />
       ) : message.error ? (

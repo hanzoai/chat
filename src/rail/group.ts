@@ -1,3 +1,5 @@
+import type { Convo } from '~/data/types'
+
 /**
  * The SET, ordered and named — the only rules about a list of conversations
  * that the rail and the full-page manager both have to agree on.
@@ -8,29 +10,16 @@
  * where the other says "Previous 7 days" about the same row and neither is
  * obviously wrong.
  *
- * Dates are the reader's own local midnight, not UTC: "yesterday" is a thing
- * that happened where the reader is, and an ISO instant compared in UTC puts
- * an evening in Auckland two days back.
- */
-
-/**
- * What a ROW needs of a conversation — not what the wire carries.
+ * The subject is `Convo` from `~/data/types` and there is no row-shaped copy of
+ * it here. A second vocabulary for one fact is how two halves of a product
+ * start disagreeing about it, and the mapping between them would be a layer
+ * with nothing in it: `conversationId` is the id, and renaming it on the way in
+ * buys a rename on the way back out.
  *
- * Stating the requirement rather than restating the payload is what lets the
- * richer record `src/data` reads off `/v1/chat/convos` satisfy this by being
- * itself: structural typing does the joining, so there is no mapping layer and
- * no second copy of the server's shape to keep in step.
+ * Dates are the reader's own local midnight, not UTC: "yesterday" is a thing
+ * that happened where the reader is, and an ISO instant compared in UTC puts an
+ * evening in Auckland two days back.
  */
-export interface Convo {
-  id: string
-  /** The server's title. Empty until it has generated one — see `named`. */
-  title: string
-  /** ISO 8601. */
-  updatedAt: string
-  pinned?: boolean
-  archived?: boolean
-  tags?: string[]
-}
 
 /** One labelled run of rows. */
 export interface Band {
@@ -84,13 +73,22 @@ const moment = (c: Convo): number => {
 }
 
 /**
+ * The row's key.
+ *
+ * `conversationId` is null until the server has taken the first turn, which is
+ * the draft the composer holds — a state, not a row. `group` drops those, so
+ * everything downstream of it has a real id and React has a real key.
+ */
+export const id = (c: Convo): string => c.conversationId ?? ''
+
+/**
  * The title a row shows.
  *
  * A conversation exists before it has a name — the server generates one after
  * the first exchange — so every surface needs the same word for that gap, and
- * an empty row is a row nobody can aim at.
+ * a blank row is a row nobody can aim at.
  */
-export const named = (c: Convo): string => c.title.trim() || 'Untitled'
+export const named = (c: Convo): string => (c.title ?? '').trim() || 'Untitled'
 
 /**
  * The set, banded.
@@ -108,19 +106,20 @@ export const group = (convos: readonly Convo[], now: number = Date.now()): Band[
   const seen = new Set<string>()
   const once: Convo[] = []
   for (const c of convos) {
-    if (seen.has(c.id)) continue
-    seen.add(c.id)
+    const key = id(c)
+    if (key === '' || seen.has(key)) continue
+    seen.add(key)
     once.push(c)
   }
   once.sort((a, b) => moment(b) - moment(a))
 
   const bands: Band[] = []
-  const pins = once.filter((c) => c.pinned === true)
+  const pins = once.filter((c) => c.isPinned === true)
   if (pins.length > 0) bands.push({ label: PINNED, convos: pins })
 
   let run: Band | undefined
   for (const c of once) {
-    if (c.pinned === true) continue
+    if (c.isPinned === true) continue
     const label = bandOf(moment(c), now)
     if (run === undefined || run.label !== label) {
       run = { label, convos: [] }
@@ -141,8 +140,9 @@ export const group = (convos: readonly Convo[], now: number = Date.now()): Band[
  */
 export const hits = (convos: readonly Convo[], query: string): Convo[] => {
   const q = query.trim().toLowerCase()
-  if (q === '') return convos.slice()
-  return convos.filter(
+  const listed = convos.filter((c) => id(c) !== '')
+  if (q === '') return listed
+  return listed.filter(
     (c) =>
       named(c).toLowerCase().includes(q) ||
       (c.tags ?? []).some((t) => t.toLowerCase().includes(q)),

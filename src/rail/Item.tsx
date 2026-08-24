@@ -2,7 +2,9 @@ import { Spinner, XStack, YStack } from '@hanzo/ui'
 import { SidebarItem } from '@hanzo/ui/chat'
 import { useState } from 'react'
 
-import { named, type Convo } from './group'
+import type { Convo } from '~/data/types'
+
+import { named } from './group'
 import { Menu, Pointer, type Verbs } from './Menu'
 import { Rename } from './Rename'
 

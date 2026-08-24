@@ -15,6 +15,7 @@
  */
 import { Button, DropdownMenu } from '@hanzo/ui'
 import type { MenuItemSpec } from '@hanzo/ui/product'
+import { Plus } from '@hanzogui/lucide-icons-2'
 import { useRef } from 'react'
 
 import type { Switch } from '~/compose/draft'
@@ -65,7 +66,12 @@ export const Attach = ({
         on: tools.web_search,
         show: can.search !== false,
       },
-      { key: 'execute_code', label: 'Write code', on: tools.execute_code, show: can.code !== false },
+      {
+        key: 'execute_code',
+        label: 'Write code',
+        on: tools.execute_code,
+        show: can.code !== false,
+      },
     ] satisfies { key: Switch; label: string; on: boolean | undefined; show: boolean }[]
   ).filter((t) => t.show)
 
@@ -98,10 +104,11 @@ export const Attach = ({
 
   return (
     <>
-      {/* The one file input. Opened by the row above rather than shown, because
-          a bare file input has a label nobody can write and a look nobody can
-          theme. Off-screen rather than `display:none`: a hidden input is not
-          reachable by assistive technology, and this one is the only way in. */}
+      {/* The one file input, and it is a MECHANISM rather than a control: the
+          menu row above names the action and is what a reader or a screen
+          reader reaches, so this is taken out of the tab order and out of the
+          tree. Off-screen rather than `display: none`, because a programmatic
+          click on an undisplayed input is not honoured everywhere. */}
       <input
         ref={input}
         type="file"
@@ -126,7 +133,7 @@ export const Attach = ({
             aria-label="Add to this message"
             data-testid="attach"
           >
-            +
+            <Plus size={16} />
           </Button>
         }
       />

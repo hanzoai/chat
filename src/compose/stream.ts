@@ -6,31 +6,27 @@
  * carries the frames, and STOPPED with a POST that names the job. Splitting
  * start from listen is what makes a reply survive a reload: the run belongs to
  * the server, not to the socket, so closing the socket does not cancel
- * anything and reopening it with `?resume=true` gets the catch-up.
+ * anything, and reopening it with `resume` gets the catch-up.
  *
- * `fetch` rather than `EventSource`, for reasons that are all the same reason:
- * an EventSource cannot carry a bearer, cannot be aborted with a signal, and
- * hides the status of a failing response — so a 402 with a real explanation in
- * its body arrives as an anonymous `error` and gets retried five times before
- * the reader is told anything.
+ * `open` from `~/data/http` rather than a `fetch` of its own — which also
+ * settles the question of the credential. The bearer, the single-flight
+ * renewal on a 401 and the cookie policy are decided in one place for the whole
+ * client, and a guest simply has no bearer to send: `Bearer undefined` is not
+ * the same as no header, and a server reads any bearer as a claim to be
+ * somebody and refuses it.
  *
- * NO AUTHORIZATION HEADER FOR A GUEST. `Bearer undefined` is not the same as no
- * header: the server reads any bearer as a claim to be somebody and refuses
- * it, which is a guest locked out of reading back their own reply. The header
- * exists only when there is a token.
- *
- * Every URL here is same-origin and relative. The client is served beside the
- * API, and the dev proxy makes that true on localhost too.
+ * `EventSource` is not an option here, for reasons that are all one reason: it
+ * carries no bearer, takes no abort signal, and hides the status of a failing
+ * response — so a refusal with a real explanation in its body arrives as an
+ * anonymous `error` and gets retried five times before the reader is told
+ * anything. A `fetch` body is a stream, and reading it is four lines.
  */
+import { api } from '~/data/api'
+import { http, open } from '~/data/http'
+import { explain } from '~/data/types'
+
 import { read, type Frame } from '~/compose/frames'
 import type { Payload } from '~/compose/submit'
-
-/** Where a turn is started. `endpoint` is the route family — `agents`. */
-const runs = (endpoint: string) => `/v1/chat/agents/chat/${encodeURIComponent(endpoint)}`
-/** Where it is heard. */
-const heard = (id: string) => `/v1/chat/agents/chat/stream/${encodeURIComponent(id)}`
-/** Where it is called off. */
-const HALT = '/v1/chat/agents/chat/abort'
 
 /** How many times a dropped connection is reopened before the reader is told. */
 const TRIES = 5
@@ -43,7 +39,7 @@ export type Ended =
   | 'done'
   /** No such job — it completed or expired while nobody was listening. */
   | 'gone'
-  /** The token was refused. Renew it and listen again. */
+  /** The session was refused, and renewing it did not help. */
   | 'denied'
   /** The connection kept dropping. The run may still be alive server-side. */
   | 'lost'
@@ -57,73 +53,20 @@ export interface Ear {
   ended?: (why: Ended) => void
 }
 
-export interface Auth {
-  /** A bearer, when there is one. A guest has none, and sends none. */
-  token?: string
-}
-
-/** The sentence in a refusal, if it carries one. An object where a sentence
- *  was expected is left alone rather than stringified: `[object Object]` is
- *  not an explanation, and offering it as one is worse than saying nothing. */
-const said = (body: Record<string, unknown> | string): string | null => {
-  if (typeof body === 'string') return body.trim() || null
-  for (const key of ['message', 'error', 'detail']) {
-    const value = body[key]
-    if (typeof value === 'string' && value.trim()) return value
-  }
-  return null
-}
-
-/**
- * The server refused the turn, and said why.
- *
- * `status` and `body` both travel, because both decide what to do: 401 is a
- * session to renew, 402 with `GUEST_LIMIT` is a quota to name, and everything
- * else is a sentence to show. Swallowing the body and throwing a bare `HTTP
- * 402` is how a paid-route outage became "something went wrong".
- */
-export class Refused extends Error {
-  constructor(
-    readonly status: number,
-    readonly body: Record<string, unknown> | string,
-  ) {
-    super(said(body) ?? `The server refused this turn (${status}).`)
-    this.name = 'Refused'
-  }
-}
-
-const head = (auth?: Auth, extra?: Record<string, string>): Record<string, string> => ({
-  ...extra,
-  ...(auth?.token ? { Authorization: `Bearer ${auth.token}` } : {}),
-})
-
-const body = async (res: Response): Promise<Record<string, unknown> | string> => {
-  const text = await res.text().catch(() => '')
-  try {
-    const parsed: unknown = JSON.parse(text)
-    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : text
-  } catch {
-    return text
-  }
-}
-
 /**
  * Start a turn. Answers the stream id to listen on.
  *
- * Nothing is retried here. A failed start has a status the caller acts on, and
- * a retry loop around a request that already reached the model is how one
+ * Nothing is retried here, and the refusal is not swallowed: `http` throws a
+ * `Refused` carrying the status and the server's own body, which is what tells
+ * a lapsed session apart from an exhausted quota apart from a provider that is
+ * down. A retry loop around a request that already reached the model is how one
  * question becomes three answers.
  */
-export const start = async (endpoint: string, payload: Payload, auth?: Auth): Promise<string> => {
-  const res = await fetch(runs(endpoint), {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: head(auth, { 'Content-Type': 'application/json' }),
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Refused(res.status, await body(res))
-  const answered = (await res.json()) as { streamId?: string }
-  if (!answered.streamId) throw new Refused(res.status, 'The server started no stream.')
+export const start = async (endpoint: string, payload: Payload): Promise<string> => {
+  const answered = await http.post<{ streamId?: string }>(api.ask.send(endpoint), payload)
+  // Accepted, but nothing to listen to. Not a refusal — there is no status to
+  // act on, only a turn that went nowhere.
+  if (!answered.streamId) throw new Error('The turn was accepted but no stream was started.')
   return answered.streamId
 }
 
@@ -135,39 +78,38 @@ export const start = async (endpoint: string, payload: Payload, auth?: Auth): Pr
  * point of a resumable stream.
  *
  * `resume` asks the server to open with a catch-up of everything already
- * written. It is passed on the first connection only when rejoining a run
- * found in progress; every reconnection sets it, because the drop is exactly
- * when frames go missing.
+ * written. It is set on the first connection only when rejoining a run found in
+ * progress, and on every RECONNECTION, because a drop is exactly when frames go
+ * missing.
  */
-export const listen = (id: string, ear: Ear, o: Auth & { resume?: boolean } = {}): (() => void) => {
+export const listen = (id: string, ear: Ear, o: { resume?: boolean } = {}): (() => void) => {
   const control = new AbortController()
   let tries = 0
-  let over = false
+  let shut = false
 
   const end = (why: Ended) => {
-    if (over) return
-    over = true
+    if (shut) return
+    shut = true
     control.abort()
     ear.ended?.(why)
   }
 
   const again = (resume: boolean) => {
-    if (over) return
+    if (shut) return
     if (tries >= TRIES) return end('lost')
     const pause = Math.min(1000 * 2 ** tries, WAIT)
     tries += 1
     setTimeout(() => {
-      if (!over) void hear(resume)
+      if (!shut) void hear(resume)
     }, pause)
   }
 
   const hear = async (resume: boolean) => {
     let res: Response
     try {
-      res = await fetch(heard(id) + (resume ? '?resume=true' : ''), {
+      res = await open(api.ask.stream(id, resume), {
         method: 'GET',
-        credentials: 'same-origin',
-        headers: head(o, { Accept: 'text/event-stream' }),
+        headers: { Accept: 'text/event-stream' },
         signal: control.signal,
       })
     } catch {
@@ -176,16 +118,18 @@ export const listen = (id: string, ear: Ear, o: Auth & { resume?: boolean } = {}
     }
 
     if (res.status === 404) return end('gone')
+    // `open` has already spent one renewal on a 401 and replayed the request,
+    // so a refusal that reaches here is an answer rather than an expiry.
     if (res.status === 401 || res.status === 403) return end('denied')
 
     if (!res.ok || !res.body) {
-      // A failure the server DESCRIBED is the answer, not a hiccup: surface it
-      // and stop. Reconnecting through five backoffs first spends half a
-      // minute and then reports something vaguer than what arrived at once.
-      // A bodyless failure IS a hiccup, and goes to the reconnect below.
-      const explained = said(await body(res))
-      if (explained) {
-        ear.frame({ kind: 'fault', text: explained })
+      // A failure the server DESCRIBED is the answer, not a hiccup: say it and
+      // stop. Reconnecting through five backoffs first spends half a minute and
+      // then reports something vaguer than what arrived at once. A bodyless
+      // failure IS a hiccup, and falls through to the reconnect below.
+      const body = await res.text().catch(() => '')
+      if (body) {
+        ear.frame({ kind: 'fault', text: explain(body).text })
         return end('done')
       }
       return again(true)
@@ -211,7 +155,7 @@ export const listen = (id: string, ear: Ear, o: Auth & { resume?: boolean } = {}
         if (closed) break
       }
     } catch {
-      if (!over) return again(true)
+      if (!shut) return again(true)
       return
     }
 
@@ -232,32 +176,21 @@ export const listen = (id: string, ear: Ear, o: Auth & { resume?: boolean } = {}
  * when the stream id was lost to a reload.
  *
  * The stop is not the end of the stream. The server answers by writing a
- * closing frame with `aborted`, and the reply ends the same way it would have
- * ended anyway: through the fold, in one place.
+ * closing frame with `aborted`, and the reply ends the way it would have ended
+ * anyway: through the fold, in one place.
  */
-export const stop = async (
-  what: { streamId?: string; conversationId?: string },
-  auth?: Auth,
-): Promise<void> => {
-  await fetch(HALT, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: head(auth, { 'Content-Type': 'application/json' }),
-    body: JSON.stringify(what),
-  })
+export const stop = async (what: {
+  streamId?: string
+  conversationId?: string
+}): Promise<void> => {
+  await http.post(api.ask.stop, what)
 }
 
-/** A run already in flight for this conversation, if the server is holding one
- *  — what a freshly loaded tab asks before it decides to show a resting box. */
-export const inFlight = async (
-  conversationId: string,
-  auth?: Auth,
-): Promise<{ streamId: string } | null> => {
-  const res = await fetch(`/v1/chat/agents/chat/status/${encodeURIComponent(conversationId)}`, {
-    credentials: 'same-origin',
-    headers: head(auth),
-  })
-  if (!res.ok) return null
-  const said = (await res.json()) as { active?: boolean; streamId?: string }
-  return said.active === true && said.streamId ? { streamId: said.streamId } : null
+/** The run this conversation already has going, if the server is holding one —
+ *  what a freshly loaded tab asks before it settles on showing a resting box. */
+export const running = async (conversationId: string): Promise<string | null> => {
+  const answered = await http
+    .get<{ active?: boolean; streamId?: string }>(api.ask.state(conversationId))
+    .catch(() => null)
+  return answered?.active === true && answered.streamId ? answered.streamId : null
 }

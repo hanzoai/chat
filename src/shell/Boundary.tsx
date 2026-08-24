@@ -21,7 +21,7 @@ import type { ReactNode } from 'react'
  * something is happening, never what, and never when to give up on it.
  */
 export const Waiting = ({ children }: { children: ReactNode }) => (
-  <YStack flex={1} items="center" justify="center" gap="$3" padding="$6">
+  <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$6">
     <Spinner size={20} color="$color11" />
     <SizableText fontSize="$2" color="$color11">
       {children}
@@ -42,8 +42,8 @@ export const Waiting = ({ children }: { children: ReactNode }) => (
  * state that broke is the state a navigation would carry with it.
  */
 export const Boundary = () => (
-  <YStack flex={1} items="center" justify="center" padding="$6" backgroundColor="$background">
-    <YStack width="100%" maxWidth={420} gap="$3" items="center">
+  <YStack flex={1} alignItems="center" justifyContent="center" padding="$6" backgroundColor="$background">
+    <YStack width="100%" maxWidth={420} gap="$3" alignItems="center">
       <H2 fontSize="$6" fontWeight="500" color="$color" textAlign="center">
         That did not load
       </H2>

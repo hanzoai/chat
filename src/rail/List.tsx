@@ -2,7 +2,9 @@ import { Paragraph, SizableText, Spinner, XStack } from '@hanzo/ui'
 import { SidebarScroll, SidebarSection } from '@hanzo/ui/chat'
 import { useEffect, useMemo, useRef } from 'react'
 
-import { group, type Convo } from './group'
+import type { Convo } from '~/data/types'
+
+import { group, id } from './group'
 import { Item } from './Item'
 import type { Verbs } from './Menu'
 
@@ -71,10 +73,10 @@ export function List({
         <SidebarSection key={band.label} label={band.label}>
           {band.convos.map((c) => (
             <Item
-              key={c.id}
+              key={id(c)}
               convo={c}
-              active={c.id === activeId}
-              busy={running.has(c.id)}
+              active={id(c) === activeId}
+              busy={running.has(id(c))}
               on={on}
               onOpen={onOpen}
             />

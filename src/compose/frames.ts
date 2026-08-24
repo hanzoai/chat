@@ -20,8 +20,9 @@
  */
 import type { Ran } from '@hanzo/ui/chat'
 
-/** How a step ended, in the shell's own vocabulary. Re-exported so a reader of
- *  a reply never has to know it came from the component library. */
+/** Whether a thing is still going, and how it stopped. The reply and each tool
+ *  in it answer the same four ways, in the same words the shell renders — one
+ *  vocabulary, so nothing has to be translated on the way to the screen. */
 export type { Ran }
 
 /**
@@ -71,7 +72,8 @@ export interface Reply {
   title?: string
 }
 
-/** The frames. Seven, and every one of them names a slot or ends the run. */
+/** The frames. Every one of them writes a slot, hangs something off the reply,
+ *  or ends the run — there is no fourth thing a frame can mean. */
 export type Frame =
   /** The server accepted the turn and minted its real ids. */
   | { kind: 'open'; askedBy: string; conversationId: string | null }
@@ -87,8 +89,16 @@ export type Frame =
   | { kind: 'file'; file: Attachment }
   /** The catch-up a rejoined stream opens with. Replaces what is there. */
   | { kind: 'resume'; id?: string; parts: Part[] }
-  /** It is over — one way or the other. */
-  | { kind: 'close'; aborted: boolean; conversationId: string | null; title?: string; reply?: Part[]; id?: string }
+  /** It is over — one way or the other, and this is the server's own account
+   *  of what the reply says. */
+  | {
+      kind: 'close'
+      aborted: boolean
+      conversationId: string | null
+      title?: string
+      reply?: Part[]
+      id?: string
+    }
   /** It failed, and this is what to say about it. */
   | { kind: 'fault'; text: string }
 
