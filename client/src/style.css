@@ -363,6 +363,25 @@
    one value. */
 .hz-composer {
   --hz-composer-radius: 1.5rem;
+
+  /* NO RESTING EDGE. The ring is drawn at `--hz-composer-rest` (0.5 in the
+     package) whether or not anything is focused, so the composer wore a
+     permanent light outline one pixel outside its own corner — two contours
+     around one box, and on the landing backdrop the outer one reads as a stray
+     rectangle rather than as the composer's edge. The panel already has an edge:
+     `elevation-2` plus the glass fill.
+
+     Set through the package's own knobs rather than by overriding `::before`,
+     because the ring and the halo are one material with one API — reaching past
+     it to the pseudo-element would work until the package moved its selector.
+
+     `--hz-composer-lift` is deliberately LEFT ALONE: it is what paints the ring
+     on :focus-within, and it is the composer's only focus indicator — the rule
+     further down cancels `.field`'s outline precisely because this lift is
+     supposed to replace it. Zeroing it too would leave a keyboard user with no
+     indication at all of where they are. */
+  --hz-composer-rest: 0;
+  --hz-composer-glow: 0;
 }
 
 /* The composer sits a touch more solid than ambient glass (menus, dialogs at
