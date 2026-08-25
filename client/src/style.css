@@ -412,6 +412,31 @@
   ) !important;
 }
 
+/* A chrome square's ground — the header cluster, the sidebar head, the strip.
+   It was `bg-surface-active-alt`, a flat opaque grey, and over the backdrop
+   video that reads as a slab dropped on the picture: the one row in the app
+   that floats over the image was the one row painting paint. The chrome sits on
+   the same material the composer does, so it lifts the same way — the ground
+   mixed toward the foreground, taken transparent, then blurred. Lighter than
+   the composer (62% against its 86%) because a square you are only passing over
+   should not read as solid as the box you type into.
+
+   Two classes rather than one selector: `:hover` is the pointer, and the open
+   state is a BOOLEAN each menu already holds. Keying the open state on
+   `[aria-expanded]` would light the sidebar toggle for as long as the sidebar
+   stays open — one permanent plate in a row of none — which is the whole reason
+   `components/chrome.ts` separates them. */
+.hz-chrome:hover,
+.hz-chrome-open {
+  background-color: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--background) 82%, var(--foreground)) 62%,
+    transparent
+  );
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
 /* The user's turn wears the composer's material, stated here so the two cannot
    drift. What you typed and the box you typed it in are the same object a
    moment apart; different fills make the message read as a foreign surface

@@ -17,6 +17,10 @@
  * glyphs — one row, two kinds of button, no rule saying which control got
  * which. The mark was rounder than all of them.
  *
+ * The ground it takes when you DO point at it is glass, not paint — the same
+ * material the composer wears, lighter (`.hz-chrome`, style.css). A flat grey
+ * plate was the one thing in this row that did not belong on a moving backdrop.
+ *
  * So: 44 square, one radius, a 20px glyph, and no ground until you point at it.
  * 44 is the pointer floor and what the majority already measured; 20 is what
  * the composer's own row settled on, so the chrome speaks one size throughout;
@@ -38,7 +42,7 @@
  * an inline declaration.
  */
 export const CONTROL =
-  'inline-flex size-11 flex-shrink-0 items-center justify-center rounded-full border-none bg-transparent text-text-primary duration-0 hover:bg-surface-active-alt focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl [&_svg]:size-5';
+  'hz-chrome inline-flex size-11 flex-shrink-0 items-center justify-center rounded-full border-none bg-transparent text-text-primary duration-0 focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl [&_svg]:size-5';
 
 /**
  * The ground a MENU trigger wears while its menu is open, applied from the
@@ -54,7 +58,7 @@ export const CONTROL =
  * panel attached to it — there is nothing to trace, and the light is just a
  * plate.
  */
-export const CONTROL_OPEN = 'bg-surface-active-alt';
+export const CONTROL_OPEN = 'hz-chrome-open';
 
 /**
  * The box every row in the sidebar column wears.
