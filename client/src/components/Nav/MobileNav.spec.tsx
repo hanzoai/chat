@@ -31,6 +31,11 @@ jest.mock('~/components/Chat/TemporaryChat', () => ({
 jest.mock('~/hooks', () => ({
   useLocalize: () => (key: string) => key,
   useAuthContext: () => ({ isAuthenticated: mockAuthenticated }),
+  /* The hook mints an authorize request asynchronously and holds the plain
+     address until it lands; the bar only ever renders whichever it is holding,
+     so the mock is that address — the real one, so the href below is asserted
+     against what the app would actually send someone to. */
+  useSignupUrl: () => jest.requireActual('~/utils/iam').IAM_SIGNUP_URL,
 }));
 
 jest.mock('~/utils/login', () => ({ startHanzoLogin: () => mockLogin() }));
