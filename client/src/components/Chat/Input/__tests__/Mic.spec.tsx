@@ -1,18 +1,19 @@
 /**
- * The composer's mic is a CONVERSATION, not a dictation key.
+ * The composer's mic is DICTATION — a way of typing, not a spoken conversation.
  *
- * The old AudioRecorder appended a transcript and left it there; you still had
- * to press send, nothing was read back, and a browser without a recogniser got
- * a control that could not work. This pins the four things that make it a
- * conversation instead: the transcript appears while you speak, a pause sends
- * the turn through `ask` (the composer's own path, exactly once), the reply is
- * read back, and a refused microphone leaves the typed composer working with an
- * honest reason on the button.
+ * What it must do is put what it hears into the composer and then stop: the
+ * transcript appears while you speak and STAYS there for you to read and send
+ * yourself. What it must NOT do is the half that would make it a conversation,
+ * and both halves are pinned here because each was once true — nothing is sent
+ * on a pause, and no reply is ever read back, not on a typed turn and not when
+ * the mic opens on a thread that already has an answer in it.
+ *
+ * A refused microphone leaves the typed composer working, with the reason on
+ * the button.
  */
 import React from 'react';
 import { act, render, screen } from '@testing-library/react';
 
-const mockAsk = jest.fn();
 const mockSetValue = jest.fn();
 const mockReset = jest.fn();
 const mockShowToast = jest.fn();
@@ -33,6 +34,9 @@ jest.mock('~/Providers', () => ({
 
 jest.mock('@hanzochat/client', () => ({
   useToastContext: () => ({ showToast: mockShowToast }),
+  /* The anchor only decorates whatever it is handed; the button underneath is
+     what every assertion here reaches for, so it is rendered directly. */
+  TooltipAnchor: ({ render }: { render: React.ReactElement }) => render,
 }));
 
 jest.mock('@hanzochat/data-provider', () => ({
@@ -116,7 +120,7 @@ beforeEach(() => {
 afterEach(() => jest.useRealTimers());
 
 const composer = (props: Partial<React.ComponentProps<typeof Mic>> = {}) =>
-  render(<Mic ask={mockAsk} disabled={false} isSubmitting={false} {...props} />);
+  render(<Mic disabled={false} {...props} />);
 
 const click = async () => {
   await act(async () => {
@@ -124,11 +128,8 @@ const click = async () => {
   });
 };
 
-/**
- * Hang up. An open microphone is a fact about the PAGE — that is what lets a
- * conversation survive this composer remounting on its first turn — so a case
- * that opens one has to end it, exactly as a user would.
- */
+/** An open microphone is a fact about the PAGE, so a case that opens one
+ *  closes it, exactly as a user would. */
 const hangUp = async () => {
   if (screen.getByRole('button').getAttribute('aria-pressed') === 'true') await click();
 };
@@ -141,34 +142,6 @@ it('shows what it is hearing in the composer, and sends nothing yet', async () =
   expect(mockSetValue).toHaveBeenLastCalledWith('text', 'draft a launch email', {
     shouldValidate: true,
   });
-  expect(mockAsk).not.toHaveBeenCalled();
-  await hangUp();
-});
-
-it('sends the turn through ask exactly once when the speaker pauses', async () => {
-  composer();
-  await click();
-  act(() => Fake.live!.hear('draft a launch email', true));
-  await act(async () => {
-    jest.advanceTimersByTime(1_000);
-  });
-
-  expect(mockAsk).toHaveBeenCalledTimes(1);
-  expect(mockAsk).toHaveBeenCalledWith({ text: 'draft a launch email' });
-  expect(mockReset).toHaveBeenCalledWith({ text: '' });
-  await hangUp();
-});
-
-it('reads a new reply back while the conversation is live', async () => {
-  const view = composer();
-  await click();
-
-  mockLatest.current = { messageId: 'a1', isCreatedByUser: false, text: 'Here is a draft.' };
-  await act(async () => {
-    view.rerender(<Mic ask={mockAsk} disabled={false} isSubmitting={false} />);
-  });
-
-  expect(spoken).toEqual(['Here is a draft.']);
   await hangUp();
 });
 
@@ -177,7 +150,7 @@ it('stays silent for a typed turn — no conversation, no voice', async () => {
 
   mockLatest.current = { messageId: 'a1', isCreatedByUser: false, text: 'Here is a draft.' };
   await act(async () => {
-    view.rerender(<Mic ask={mockAsk} disabled={false} isSubmitting={false} />);
+    view.rerender(<Mic disabled={false} />);
   });
 
   expect(spoken).toEqual([]);
@@ -188,32 +161,10 @@ it('does not replay the last answer when the mic opens mid-thread', async () => 
   const view = composer();
   await click();
   await act(async () => {
-    view.rerender(<Mic ask={mockAsk} disabled={false} isSubmitting={false} />);
+    view.rerender(<Mic disabled={false} />);
   });
 
   expect(spoken).toEqual([]);
-  await hangUp();
-});
-
-it('keeps the conversation across the remount that sending the first turn causes', async () => {
-  // Sending is exactly what makes this surface swap /c/new for /c/<id>, which
-  // replaces the composer. The user did not hang up.
-  const view = composer();
-  await click();
-  expect(screen.getByRole('button').getAttribute('aria-pressed')).toBe('true');
-
-  view.unmount();
-  composer();
-  await act(async () => {
-    await Promise.resolve();
-  });
-
-  expect(screen.getByRole('button').getAttribute('aria-pressed')).toBe('true');
-  act(() => Fake.live!.hear('and shorter', true));
-  await act(async () => {
-    jest.advanceTimersByTime(1_000);
-  });
-  expect(mockAsk).toHaveBeenCalledWith({ text: 'and shorter' });
   await hangUp();
 });
 
@@ -227,19 +178,6 @@ it('leaves the typed composer working, with the reason on the button, when refus
   const button = screen.getByRole('button');
   expect(button).toBeDisabled();
   expect(button.getAttribute('aria-label')).toMatch(/Microphone access was blocked/);
-  expect(mockAsk).not.toHaveBeenCalled();
   expect(mockSetValue).not.toHaveBeenCalled();
 });
 
-it('tells you rather than dropping a turn spoken over a running reply', async () => {
-  composer({ isSubmitting: true });
-  await click();
-  act(() => Fake.live!.hear('and make it shorter', true));
-  await act(async () => {
-    jest.advanceTimersByTime(1_000);
-  });
-
-  expect(mockAsk).not.toHaveBeenCalled();
-  expect(mockShowToast).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
-  await hangUp();
-});

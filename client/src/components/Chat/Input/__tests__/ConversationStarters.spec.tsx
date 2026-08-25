@@ -14,11 +14,10 @@ import { render, screen } from '@testing-library/react';
 const mockSubmitMessage = jest.fn();
 const mockSubmitPrompt = jest.fn();
 const mockChatContext = { conversation: { endpoint: 'openAI' }, isSubmitting: false };
-let mockAuthenticated = true;
 
 jest.mock('~/hooks', () => ({
   useLocalize: () => (key: string) => key,
-  useAuthContext: () => ({ user: { name: 'Tester' }, isAuthenticated: mockAuthenticated }),
+  useAuthContext: () => ({ user: { name: 'Tester' } }),
   useSubmitMessage: () => ({
     submitMessage: mockSubmitMessage,
     submitPrompt: mockSubmitPrompt,
@@ -52,17 +51,16 @@ describe('ConversationStarters', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockChatContext.isSubmitting = false;
-    mockAuthenticated = true;
   });
 
   it('SENDS the starter text on click, through the typed-message submit path', async () => {
     render(<ConversationStarters />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Explain' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Write code' }));
 
     expect(mockSubmitMessage).toHaveBeenCalledTimes(1);
     expect(mockSubmitMessage).toHaveBeenCalledWith({
-      text: 'Explain how HTTPS keeps a connection private, in plain language.',
+      text: 'Write a Python script that renames every file in a folder to a slugified version of its name.',
     });
     // The composer-arming path must NOT be used — that is the bug being fixed.
     expect(mockSubmitPrompt).not.toHaveBeenCalled();
@@ -71,11 +69,11 @@ describe('ConversationStarters', () => {
   it('sends a complete prompt, never a dangling fragment', async () => {
     render(<ConversationStarters />);
 
-    for (const label of ['Summarize', 'Write code', 'Explain', 'Brainstorm']) {
+    for (const label of ['Write code', 'Make an image']) {
       await userEvent.click(screen.getByRole('button', { name: label }));
     }
 
-    expect(mockSubmitMessage).toHaveBeenCalledTimes(4);
+    expect(mockSubmitMessage).toHaveBeenCalledTimes(2);
     for (const [{ text }] of mockSubmitMessage.mock.calls) {
       expect(text).toBe(text.trim());
       expect(text).toMatch(/[.?]$/);
@@ -86,37 +84,28 @@ describe('ConversationStarters', () => {
     mockChatContext.isSubmitting = true;
     render(<ConversationStarters />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Explain' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Write code' }));
 
     expect(mockSubmitMessage).not.toHaveBeenCalled();
   });
 
   /**
-   * The arrival screen on a phone offers ONE example, not a menu: five chips wrap
-   * to three rows directly under the composer the visitor came to use.
+   * On a phone the row is ONE row, and which chips survive it is decided by
+   * POSITION in the rendered list — the first two stand, the rest step out.
    *
    * Asserted on the class, because the rule is a media query and jsdom resolves
-   * no CSS — what is checkable here is that the component asks for the right
-   * behaviour at the right width, and only when signed out.
+   * no CSS: what is checkable here is that the component asks for the right
+   * behaviour at the right width. Asserted on the WHOLE list rather than on
+   * named chips, because the rule is about the row's length and not about which
+   * chips happen to fill it — the two actions lead, the prompts follow.
    */
-  const hidesOnPhone = (name: string) =>
-    screen.getByRole('button', { name }).className.includes('max-sm:hidden');
-
-  it('offers one example chip on a phone when signed out', () => {
-    mockAuthenticated = false;
+  it('keeps one row on a phone: the first two chips stand, the rest step out', () => {
     render(<ConversationStarters />);
 
-    expect(hidesOnPhone('Summarize')).toBe(false);
-    for (const label of ['Write code', 'Explain', 'Brainstorm', 'com_ui_build_app']) {
-      expect(hidesOnPhone(label)).toBe(true);
-    }
-  });
+    const stepsOut = screen
+      .getAllByRole('button')
+      .map((chip) => chip.className.includes('max-sm:hidden'));
 
-  it('keeps every chip at every width once signed in', () => {
-    render(<ConversationStarters />);
-
-    for (const label of ['Summarize', 'Write code', 'Explain', 'Brainstorm', 'com_ui_build_app']) {
-      expect(hidesOnPhone(label)).toBe(false);
-    }
+    expect(stepsOut).toEqual([false, false, true, true]);
   });
 });
