@@ -67,7 +67,7 @@ export default function BrandCorner() {
     // has to be `!important` because the shell writes `border-radius: 999px` on
     // that very button. Without it the corner is a circle among 12px squircles
     // — measured on production, the one round box in a row of six.
-    <div className="flex items-center [&_[data-hanzo-shell]>button:hover]:bg-surface-active-alt [&_[data-hanzo-shell]>button:hover_[data-testid=brand-mark]]:text-white [&_[data-hanzo-shell]>button]:min-h-11 [&_[data-hanzo-shell]>button]:min-w-11 [&_[data-hanzo-shell]>button]:!rounded-xl">
+    <div className="flex items-center [&_[data-hanzo-shell]>button:hover]:bg-surface-row-hover [&_[data-hanzo-shell]>button:hover_[data-testid=brand-mark]]:text-white [&_[data-hanzo-shell]>button]:min-h-11 [&_[data-hanzo-shell]>button]:min-w-11 [&_[data-hanzo-shell]>button]:!rounded-xl">
       {/* The launcher's global ⌘/Ctrl-K listener stays off: chat must not claim
           an app-wide shortcut just because it adopted the shared shell. */}
       <HanzoAppLauncher

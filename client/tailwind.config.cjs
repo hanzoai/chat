@@ -156,6 +156,11 @@ module.exports = {
         'surface-active': 'var(--surface-active)',
         'surface-active-alt': 'var(--surface-active-alt)',
         'surface-hover': 'var(--surface-hover)',
+        // The two grounds every row and control in the GLASS sidebar wears.
+        // Translucent by construction (see style.css): an opaque token here
+        // paints a second solid panel over the blur.
+        'surface-row-hover': 'var(--surface-row-hover)',
+        'surface-row-active': 'var(--surface-row-active)',
         'surface-hover-alt': 'var(--surface-hover-alt)',
         'surface-primary': 'var(--surface-primary)',
         'surface-primary-alt': 'var(--surface-primary-alt)',

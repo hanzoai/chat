@@ -266,7 +266,11 @@ const Nav = memo(
         <nav
           id="chat-history-nav"
           aria-label={localize('com_ui_chat_history')}
-          className="flex h-full flex-col px-2 pb-3.5"
+          /* The rail is 56 wide and every control in it is 44, so at the rail
+             the column spends no side padding: 8+8 would leave 40 for a 44px
+             box and the head's mark would sit off the rail's centre by the
+             difference. Open, the padding is what holds the list off the edge. */
+          className={cn('flex h-full flex-col pb-3.5', collapsed ? 'px-0' : 'px-2')}
           aria-hidden={isSmallScreen && !navVisible}
         >
           <div className="flex flex-1 flex-col overflow-hidden" ref={outerContainerRef}>

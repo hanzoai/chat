@@ -89,7 +89,7 @@ const ChatsHeader: FC<ChatsHeaderProps> = memo(({ isExpanded, onToggle }) => {
       <button
         onClick={onToggle}
         aria-expanded={isExpanded}
-        className="flex flex-1 items-center gap-1 rounded-lg text-left outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white"
+        className="flex flex-1 items-center gap-1 rounded-lg text-left outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-heavy"
         type="button"
       >
         <span className="select-none">{localize('com_ui_chats')}</span>
@@ -105,7 +105,7 @@ const ChatsHeader: FC<ChatsHeaderProps> = memo(({ isExpanded, onToggle }) => {
         data-testid="nav-all-chats-button"
         onClick={() => navigate('/chats')}
         aria-label={localize('com_ui_chats_and_tasks')}
-        className="rounded-lg p-1 opacity-0 outline-none hover:bg-surface-active-alt focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black group-hover:opacity-100 dark:focus-visible:ring-white"
+        className="rounded-lg p-1 opacity-0 outline-none hover:bg-surface-row-hover focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-heavy group-hover:opacity-100"
       >
         <ArrowUpRight className="h-3.5 w-3.5" aria-hidden={true} />
       </button>

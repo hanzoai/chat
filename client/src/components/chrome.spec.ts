@@ -82,16 +82,29 @@ describe('the top row wears one box', () => {
     expect(CONTROL).toContain('[&_svg]:size-5');
   });
 
-  it('carries no ground until you point at it', () => {
+  it('carries no ground until you point at it, and that ground is not paint', () => {
     expect(CONTROL).toContain('bg-transparent');
-    expect(CONTROL).toContain('hover:bg-surface-active-alt');
-    // `bg-presentation` is the canvas colour: opaque, and over the backdrop
-    // video it reads as a slab floating beside the controls that lack it.
-    expect(CONTROL).not.toContain('bg-presentation');
+
+    // A chrome SQUARE lifts on the glass material (`.hz-chrome` in style.css):
+    // the ground mixed toward the foreground, taken transparent, then blurred.
+    // A sidebar ROW is not a square and takes the column's own translucent
+    // rung. Two shapes, two tokens, one rule — neither paints an opaque slab.
+    expect(CONTROL).toContain('hz-chrome');
+    expect(CONTROL_OPEN).toBe('hz-chrome-open');
+    expect(ROW).toContain('hover:bg-surface-row-hover');
+
+    // `bg-presentation` is the canvas colour and `surface-active-alt` is
+    // `--gray-800`. Both are opaque, and this row is the one row in the app
+    // that floats over the backdrop video, so either reads as a slab dropped on
+    // the picture. The ban is on the CLASS of ground, not on one token.
+    for (const box of [CONTROL, CONTROL_OPEN, ROW]) {
+      expect(box).not.toContain('bg-presentation');
+      expect(box).not.toContain('surface-active-alt');
+    }
+
     // `aria-expanded` is set by the sidebar toggles too, so keying the shared
     // ground on it lights a panel toggle for as long as its panel is open.
     expect(CONTROL).not.toContain('aria-expanded:');
-    expect(CONTROL_OPEN).toBe('bg-surface-active-alt');
   });
 
   it('keys the row height on the POINTER, never on a width breakpoint', () => {

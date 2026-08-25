@@ -157,10 +157,10 @@ export default function Conversation({
     <div
       ref={containerRef}
       className={cn(
-        'group relative flex h-12 w-full items-center rounded-lg outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white md:h-9',
+        'group relative flex h-12 w-full items-center rounded-lg outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-heavy md:h-9',
         isActiveConvo || isPopoverActive
-          ? 'bg-[var(--surface-row-active)] before:absolute before:bottom-1 before:left-0 before:top-1 before:w-0.5 before:rounded-full before:bg-black dark:before:bg-white'
-          : 'hover:bg-[var(--surface-row-hover)]',
+          ? 'bg-surface-row-active before:absolute before:bottom-1 before:left-0 before:top-1 before:w-0.5 before:rounded-full before:bg-black dark:before:bg-white'
+          : 'hover:bg-surface-row-hover',
       )}
       role="button"
       tabIndex={renaming ? -1 : 0}
@@ -206,7 +206,6 @@ export default function Conversation({
       ) : (
         <ConvoLink
           isActiveConvo={isActiveConvo}
-          isPopoverActive={isPopoverActive}
           title={title}
           onRename={handleRename}
           isSmallScreen={isSmallScreen}

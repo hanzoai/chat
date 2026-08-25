@@ -54,7 +54,7 @@ export default function MobileNav({
         aria-expanded={navVisible}
         aria-controls="chat-history-nav"
         onClick={toggleNav}
-        className="group relative m-1 inline-flex size-11 items-center justify-center rounded-full text-text-secondary hover:bg-surface-active-alt"
+        className="group relative m-1 inline-flex size-11 items-center justify-center rounded-full text-text-secondary hover:bg-surface-row-hover"
       >
         <span className="transition-opacity duration-150 group-hover:opacity-0 group-focus-visible:opacity-0">
           <HanzoMark size={20} />
