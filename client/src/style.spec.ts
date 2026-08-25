@@ -157,8 +157,12 @@ describe('the look, ratcheted', () => {
  */
 describe('the composer, one surface', () => {
   const css = read(path.join(CLIENT, 'style.css'));
-  /** The material itself — shared with hanzo.ai and hanzo.app. */
-  const pkg = read(require.resolve('@hanzo/composer/composer.css'));
+  /** The material itself — shared with hanzo.ai and hanzo.app.
+   *  Reached from the package's ENTRY, beside which the sheet is published,
+   *  rather than by its own specifier: `moduleNameMapper` sends every `.css`
+   *  to `identity-obj-proxy`, so resolving the sheet directly hands back the
+   *  stub's source and every assertion below reads a file nobody shipped. */
+  const pkg = read(path.resolve(path.dirname(require.resolve('@hanzo/composer')), 'composer.css'));
 
   /** The declarations of the rule whose selector list ends with `selector`. */
   const block = (selector: string): string => {
