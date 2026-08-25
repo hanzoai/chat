@@ -56,6 +56,12 @@ export default defineConfig({
          refuses the key and no answer comes back — see that spec's header for
          why the fake model cannot stand in — but the send itself is real. */
       GUEST_MESSAGE_MAX: '99',
+      /* The guest's model is the FREE route, which is the default this reads
+         when nothing overrides it. It is pinned empty rather than named: the
+         server already resolves the name, and `start-server` loads a developer
+         `.env` whose own GUEST_MODEL would otherwise decide what the header is
+         measured against. */
+      GUEST_MODEL: '',
       HANZO_API_KEY: 'e2e-no-provider',
       TITLE_CONVO: 'false',
       OPENID_CLIENT_ID: '',
