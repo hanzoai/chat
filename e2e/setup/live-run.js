@@ -24,6 +24,7 @@ require('module-alias').addAlias('~', path.join(__dirname, '..', '..', 'api'));
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const EMAIL = 'e2e@hanzo.ai';
+const PASSWORD = process.env.CHAT_E2E_PASSWORD || ''
 const CONVO = '11111111-1111-4111-8111-111111111111';
 
 (async () => {
@@ -36,8 +37,8 @@ const CONVO = '11111111-1111-4111-8111-111111111111';
   if (!user) {
     await registerUser({
       email: EMAIL,
-      password: '***REMOVED***',
-      confirm_password: '***REMOVED***',
+      password: PASSWORD,
+      confirm_password: PASSWORD,
       name: 'E2E',
       username: 'e2e',
     });
