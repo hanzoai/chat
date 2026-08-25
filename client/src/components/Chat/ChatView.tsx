@@ -117,27 +117,38 @@ function ChatView({ index = 0 }: { index?: number }) {
           toggle, no brand corner, no way back once the drawer was closed. */}
       {!isInitialLoading && <Header />}
       {isLandingPage ? (
-        <>
-          <div className="flex min-h-0 flex-1 flex-col">
-            <AnswerEngine index={index} />
+        /* The chat holds the whole screen and the footer starts just past it, so
+           a visitor sees the composer and nothing else until they go looking for
+           a link. The footer is still in the document and still reachable — it
+           just stops spending the one screen they came for. */
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div className="flex min-h-full shrink-0 flex-col">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <AnswerEngine index={index} />
+            </div>
+            {/* Only on the empty chat, and only for an account that has never
+                seen it. It stays on the first screen with the composer rather
+                than going down with the footer: it greets the product without
+                covering it. */}
+            <Tour />
           </div>
-          {/* Only on the empty chat, and only for an account that has never seen
-              it. Between the composer and the footer, so it greets the product
-              without covering it. */}
-          <Tour />
           <Footer />
-        </>
+        </div>
       ) : (
         <div className="flex h-full flex-col overflow-y-auto">
-          {content}
-          <div className="w-full">
-            {/* Sits with the composer, above it: when a paid model cannot serve,
-                the offer to continue on Free belongs beside the thing that will
-                carry the next message. */}
-            <Notice />
-            <ChatForm index={index} />
-            <Footer />
+          {/* Same floor as the landing: the thread and its composer own the
+              screen, and the footer begins below them. */}
+          <div className="flex min-h-full shrink-0 flex-col">
+            {content}
+            <div className="w-full">
+              {/* Sits with the composer, above it: when a paid model cannot
+                  serve, the offer to continue on Free belongs beside the thing
+                  that will carry the next message. */}
+              <Notice />
+              <ChatForm index={index} />
+            </div>
           </div>
+          <Footer />
           {/* Highlight text in a reply → ask about just that, folded back into
               this thread. One overlay for the whole conversation; it reads the
               live selection, so it only acts on the words under the cursor. */}
