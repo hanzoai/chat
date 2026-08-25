@@ -83,6 +83,30 @@ const LONGEST = 2048;
 const MOST = 64;
 
 /**
+ * The scenes the product ships with, in the order the menu offers them.
+ *
+ * A visitor could always paste a URL, and could always `/bg add` one — what was
+ * missing was anything to choose WITHOUT knowing a link. So the house keeps a
+ * short list, and the first entry is what the canvas opens on: the default is
+ * DERIVED from this list rather than restated beside it, because a default and
+ * a menu that disagree is a menu that cannot set the thing it is showing you.
+ *
+ * `label` is the scene, not the upload's title. Those titles are long, and a
+ * menu row wants a name.
+ *
+ * Short by intent. This is the set someone can read in one glance and pick from
+ * without deciding; the whole rest of the web is one paste away.
+ */
+export const SCENES: readonly { readonly id: string; readonly label: string; readonly url: string }[] = [
+  { id: 'cetaceans', label: 'Cetaceans', url: 'https://www.youtube.com/watch?v=UY5YH6B4A9o' },
+  { id: 'reef', label: 'Reef', url: 'https://www.youtube.com/watch?v=6lZ3CookYNg' },
+  { id: 'deep', label: 'Deep water', url: 'https://www.youtube.com/watch?v=7Exxd2ievAw' },
+];
+
+/** What the canvas opens on when nobody has chosen anything. */
+export const OPENING_SCENE = SCENES[0].url;
+
+/**
  * The URL if it is one we are willing to load, else ''. Anything that is not
  * http(s) — `javascript:`, `data:`, `blob:` — is refused here, at the boundary,
  * so no caller downstream has to remember to check.

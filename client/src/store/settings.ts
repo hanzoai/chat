@@ -1,12 +1,15 @@
 import { atom } from 'jotai';
 import { SettingsViews, LocalStorageKeys } from '@hanzochat/data-provider';
 import { atomWithLocalStorage, readStorage } from '~/store/utils';
-import { merge } from '~/utils/backdrop';
+import { merge, OPENING_SCENE } from '~/utils/backdrop';
 import type { TOptionSettings } from '~/common';
 import type { Backdrop } from '~/utils/backdrop';
 
 /**
- * What the canvas paints when nobody has chosen anything: the reef, playing.
+ * What the canvas paints when nobody has chosen anything: the first of the
+ * house scenes, playing. The scene itself is `SCENES[0]` in utils/backdrop —
+ * stated once, so changing what the product opens on is one edit in the list a
+ * visitor picks from rather than two that can disagree.
  * Every visitor, signed in or not, on the first paint of the first visit.
  *
  * The backdrop is what this product looks like — a stranger who has not signed
@@ -34,7 +37,7 @@ import type { Backdrop } from '~/utils/backdrop';
 const DEFAULT_BACKDROP: Backdrop = {
   source: readStorage('showBackdrop', true) ? 'video' : 'off',
   photo: '',
-  video: readStorage('backdropVideo', 'https://www.youtube.com/watch?v=6lZ3CookYNg'),
+  video: readStorage('backdropVideo', OPENING_SCENE),
   playlist: [],
   loop: true,
   // Silent unless somebody asks. Nobody has ever wanted a browser tab to start

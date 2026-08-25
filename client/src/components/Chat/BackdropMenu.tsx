@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
-import { merge } from '~/utils/backdrop';
+import { merge, SCENES } from '~/utils/backdrop';
 import { useLocalize } from '~/hooks';
+import { cn } from '~/utils';
 import store from '~/store';
 
 /**
@@ -13,17 +14,36 @@ import store from '~/store';
  * its usual thing. It writes the same `backdrop` atom the Settings panel and
  * the `/bg` commands do, through the same `merge` — one background, one way to
  * change it, three ways to reach it.
+ *
+ * The house scenes come first, because picking one is the thing most people
+ * want and pasting a URL is the thing a few do. They are DATA (`SCENES`,
+ * utils/backdrop), so the list a visitor reads and the scene the canvas opens
+ * on cannot disagree — the opening scene is the first row.
  */
 const INTERACTIVE =
   'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"], [role="menu"], .message-render';
 
-function Item({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function Item({
+  onClick,
+  current,
+  children,
+}: {
+  onClick: () => void;
+  /** The scene already playing. Said with `aria-checked` and not only with a
+   *  tint, so the row states which one is on to a reader who cannot see it. */
+  current?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <button
       type="button"
-      role="menuitem"
+      role={current === undefined ? 'menuitem' : 'menuitemradio'}
+      aria-checked={current}
       onClick={onClick}
-      className="flex w-full items-center rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-active-alt focus:outline-none focus-visible:bg-surface-active-alt"
+      className={cn(
+        'flex w-full items-center rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-active-alt focus:outline-none focus-visible:bg-surface-active-alt',
+        current && 'bg-surface-active-alt',
+      )}
     >
       {children}
     </button>
@@ -93,6 +113,16 @@ export default function BackdropMenu({ children }: { children: React.ReactNode }
           onClick={(e) => e.stopPropagation()}
           onContextMenu={(e) => e.preventDefault()}
         >
+          {SCENES.map((scene) => (
+            <Item
+              key={scene.id}
+              current={backdrop.source === 'video' && backdrop.video === scene.url}
+              onClick={() => change({ source: 'video', video: scene.url })}
+            >
+              {scene.label}
+            </Item>
+          ))}
+          <div className="my-1 h-px bg-border-light" />
           <Item onClick={() => ask('video')}>{localize('com_backdrop_set_video')}</Item>
           <Item onClick={() => ask('photo')}>{localize('com_backdrop_set_photo')}</Item>
           <Item onClick={() => change({ source: off ? 'video' : 'off' })}>
