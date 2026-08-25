@@ -1711,7 +1711,7 @@ is `@hanzo/design`'s light `--foreground` `#0a0a0a` — on `rgb(0,0,0)`:
 
 | | contrast |
 |---|---|
-| `Thinking...` (`text-text-secondary`, 14px Geist) | **1.06:1** |
+| `Thinking...` (`text-text-secondary`, 14px Zen) | **1.06:1** |
 | the reasoning body under it | **1.06:1** |
 | the finished reply beside it (`dark:text-gray-100`) | 17.78:1 |
 
