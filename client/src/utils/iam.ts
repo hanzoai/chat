@@ -10,7 +10,7 @@
 // constructor config (serverUrl, clientId, redirectUri, scope, proxyBaseUrl) is
 // unchanged from the earlier `BrowserIamSdk` name.
 import { IAM } from '@hanzo/iam';
-import { setTokenRenewer } from '@hanzochat/data-provider';
+import { setTokenRenewer, apiBaseUrl } from '@hanzochat/data-provider';
 
 let instance: IAM | null = null;
 
@@ -120,6 +120,28 @@ export async function signupUrl(): Promise<string> {
  */
 export const IAM_ACCOUNT_URL = `${SERVER_URL}/account`;
 
+/**
+ * Where this app answers, as an address IAM can call back.
+ *
+ * The HOST has to come from the browser: each brand returns to its own host, and
+ * each host registers its own addresses with its own IAM application. The PATH
+ * has to come from the app, because `window.location.origin` carries none — and
+ * served under a subdirectory that difference is the whole login.
+ *
+ * `apiBaseUrl()` is the same value everything else here already reads: the server
+ * writes `<base href>` out of DOMAIN_CLIENT, and the router's basename, the asset
+ * paths and the API base are all derived from that one tag. It is `''` at a root
+ * and `/chat` under one, so this expression is unchanged in the ordinary case and
+ * correct in the other.
+ *
+ * Measured when it was not: served at hanzo.ai/chat, the origin alone asked IAM to
+ * call back https://hanzo.ai/auth/callback — the marketing site — so a sign-in
+ * completed onto a page that could not finish it.
+ */
+function selfUrl(path: string): string {
+  return `${window.location.origin}${apiBaseUrl()}${path}`;
+}
+
 /** The single IAM SDK instance driving PKCE login and callback exchange. */
 export function getHanzoIamSdk(): IAM {
   if (instance) {
@@ -130,18 +152,18 @@ export function getHanzoIamSdk(): IAM {
     serverUrl: SERVER_URL,
     clientId: CLIENT_ID,
     organization: ORGANIZATION,
-    redirectUri: `${window.location.origin}/auth/callback`,
+    redirectUri: selfUrl('/auth/callback'),
     /**
      * Where IAM returns the browser once the session has ended.
      *
      * `?redirect=false` is what makes this a landing rather than a bounce: the
      * login route starts a fresh authorize on mount, so a bare `/login` would
      * send someone who just signed out straight back to the issuer. Built from
-     * `window.location.origin` for the same reason the callback above is — each
-     * brand returns to its OWN host, and each host registers this exact address
-     * with its own IAM application.
+     * `selfUrl` for the same reason the callback above is — each brand returns to
+     * its OWN host, and each host registers this exact address with its own IAM
+     * application.
      */
-    postLogoutRedirectUri: `${window.location.origin}/login?redirect=false`,
+    postLogoutRedirectUri: selfUrl('/login?redirect=false'),
     /**
      * `offline_access` is what makes a session outlive its access token.
      *

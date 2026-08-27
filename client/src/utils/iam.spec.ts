@@ -11,7 +11,11 @@ const mockGetSigninUrl = jest.fn();
 jest.mock('@hanzo/iam', () => ({
   IAM: jest.fn().mockImplementation(() => ({ getSigninUrl: mockGetSigninUrl })),
 }));
-jest.mock('@hanzochat/data-provider', () => ({ setTokenRenewer: jest.fn() }));
+const mockApiBaseUrl = jest.fn(() => '');
+jest.mock('@hanzochat/data-provider', () => ({
+  setTokenRenewer: jest.fn(),
+  apiBaseUrl: () => mockApiBaseUrl(),
+}));
 
 import { IAM_SIGNUP_URL, signupUrl } from './iam';
 
@@ -39,5 +43,48 @@ describe('the way in for a visitor with no account', () => {
     expect(url.searchParams.get('redirect_uri')).toBe('https://hanzo.chat/auth/callback');
     expect(url.searchParams.get('state')).toBe('abc123');
     expect(url.searchParams.get('code_challenge')).toBe('xyz789');
+  });
+});
+
+/**
+ * The addresses this app gives IAM to call back.
+ *
+ * `window.location.origin` carries no path, so on its own it describes the ROOT
+ * of the host whatever directory the app is actually served from. Served at
+ * hanzo.ai/chat that named https://hanzo.ai/auth/callback — the marketing site —
+ * and a sign-in completed onto a page that could not finish it. The host still
+ * has to come from the browser (each brand returns to its own), so the fix is to
+ * add the base the rest of the app already reads, not to replace the origin.
+ */
+describe('the callback addresses carry the directory the app is served from', () => {
+  const at = (origin: string, base: string) => {
+    mockApiBaseUrl.mockReturnValue(base);
+    Object.defineProperty(window, 'location', {
+      value: { origin },
+      writable: true,
+    });
+    jest.resetModules();
+    const { getHanzoIamSdk } = require('./iam');
+    const { IAM } = require('@hanzo/iam');
+    (IAM as jest.Mock).mockClear();
+    getHanzoIamSdk();
+    return (IAM as jest.Mock).mock.calls[0]?.[0] ?? {};
+  };
+
+  it('is the bare host when the app is served at a root', () => {
+    const cfg = at('https://hanzo.chat', '');
+    expect(cfg.redirectUri).toBe('https://hanzo.chat/auth/callback');
+    expect(cfg.postLogoutRedirectUri).toBe('https://hanzo.chat/login?redirect=false');
+  });
+
+  it('carries the subdirectory when the app is served under one', () => {
+    const cfg = at('https://hanzo.ai', '/chat');
+    expect(cfg.redirectUri).toBe('https://hanzo.ai/chat/auth/callback');
+    expect(cfg.postLogoutRedirectUri).toBe('https://hanzo.ai/chat/login?redirect=false');
+  });
+
+  it('never names the host root while served from a directory', () => {
+    const cfg = at('https://hanzo.ai', '/chat');
+    expect(cfg.redirectUri).not.toBe('https://hanzo.ai/auth/callback');
   });
 });
