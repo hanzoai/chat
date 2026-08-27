@@ -348,7 +348,7 @@ const Nav = memo(
           <div
             data-testid="nav"
             className={cn(
-              'nav fixed left-0 top-0 z-[110] h-full glass hz-column',
+              'nav fixed left-0 top-0 z-[110] h-full glass column',
               navVisible && 'active',
             )}
             style={{
@@ -397,7 +397,7 @@ const Nav = memo(
       >
         <div
           data-testid="nav"
-          className="nav active absolute left-0 top-0 h-full glass hz-column border-r border-border-light"
+          className="nav active absolute left-0 top-0 h-full glass column border-r border-border-light"
           style={{ width: shown, transition: 'width 0.2s ease-out' }}
         >
           {sidebarContent}

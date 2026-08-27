@@ -49,7 +49,7 @@ export default function ComposerShell({
   // wider corner from that property and cannot follow a utility class.
   const radius = 'rounded-3xl';
   return (
-    <div className={cn('hz-composer w-full', temporary && 'hz-private')}>
+    <div className={cn('hz-composer w-full', temporary && 'private')}>
       <div
         onClick={onClick}
         className={cn(

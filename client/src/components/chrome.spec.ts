@@ -85,12 +85,12 @@ describe('the top row wears one box', () => {
   it('carries no ground until you point at it, and that ground is not paint', () => {
     expect(CONTROL).toContain('bg-transparent');
 
-    // A chrome SQUARE lifts on the glass material (`.hz-chrome` in style.css):
+    // A chrome SQUARE lifts on the glass material (`.chrome` in style.css):
     // the ground mixed toward the foreground, taken transparent, then blurred.
     // A sidebar ROW is not a square and takes the column's own translucent
     // rung. Two shapes, two tokens, one rule — neither paints an opaque slab.
-    expect(CONTROL).toContain('hz-chrome');
-    expect(CONTROL_OPEN).toBe('hz-chrome-open');
+    expect(CONTROL).toContain('chrome');
+    expect(CONTROL_OPEN).toBe('open');
     expect(ROW).toContain('hover:bg-surface-row-hover');
 
     // `bg-presentation` is the canvas colour and `surface-active-alt` is
@@ -112,7 +112,7 @@ describe('the top row wears one box', () => {
     // `md:min-h-9` got both backwards and shipped 36px rows to every tablet.
     expect(ROW).toContain('min-h-12');
     expect(ROW).not.toMatch(/\bmd:min-h-/);
-    expect(ROW).toContain('hz-row');
+    expect(ROW).toContain('row');
   });
 
   it('rounds the same way in both grounds', () => {

@@ -18,7 +18,7 @@
  * which. The mark was rounder than all of them.
  *
  * The ground it takes when you DO point at it is glass, not paint — the same
- * material the composer wears, lighter (`.hz-chrome`, style.css). A flat grey
+ * material the composer wears, lighter (`.chrome`, style.css). A flat grey
  * plate was the one thing in this row that did not belong on a moving backdrop.
  *
  * So: 44 square, one radius, a 20px glyph, and no ground until you point at it.
@@ -42,7 +42,7 @@
  * an inline declaration.
  */
 export const CONTROL =
-  'hz-chrome inline-flex size-11 flex-shrink-0 items-center justify-center rounded-full border-none bg-transparent text-text-primary duration-0 focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl [&_svg]:size-5';
+  'chrome inline-flex size-11 flex-shrink-0 items-center justify-center rounded-full border-none bg-transparent text-text-primary duration-0 focus-visible:ring-inset focus-visible:ring-black focus-visible:ring-offset-0 dark:focus-visible:ring-white md:rounded-xl [&_svg]:size-5';
 
 /**
  * The ground a MENU trigger wears while its menu is open, applied from the
@@ -57,8 +57,13 @@ export const CONTROL =
  * can trace a floating popup back to what opened it. A panel toggle has its
  * panel attached to it — there is nothing to trace, and the light is just a
  * plate.
+ *
+ * A bare `open` rather than a name of its own: it is a STATE, and it is only
+ * ever applied on top of `CONTROL`, so `.chrome.open` in style.css is what
+ * reads it. Nothing else in the product — app, dependency or Tailwind — emits
+ * an `.open` rule for it to collide with.
  */
-export const CONTROL_OPEN = 'hz-chrome-open';
+export const CONTROL_OPEN = 'open';
 
 /**
  * The box every row in the sidebar column wears.
@@ -89,7 +94,7 @@ export const CONTROL_OPEN = 'hz-chrome-open';
  * not a row in a list.
  */
 export const ROW =
-  'hz-row flex min-h-12 w-full items-center gap-2 rounded-lg px-2 text-sm text-text-primary transition-colors hover:bg-surface-row-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy [&_svg]:size-4';
+  'row flex min-h-12 w-full items-center gap-2 rounded-lg px-2 text-sm text-text-primary transition-colors hover:bg-surface-row-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy [&_svg]:size-4';
 
 
 /**

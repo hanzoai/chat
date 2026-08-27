@@ -14,7 +14,7 @@
  * An assistant turn deliberately has no bubble. It is the page's main content,
  * and wrapping it would make the reply look like a quotation of itself.
  */
-export const USER_TURN = 'glass hz-turn w-fit max-w-[85%] rounded-3xl px-3.5 py-2';
+export const USER_TURN = 'glass turn w-fit max-w-[85%] rounded-3xl px-3.5 py-2';
 
 /**
  * The row a turn sits in, stated once.
@@ -24,7 +24,7 @@ export const USER_TURN = 'glass hz-turn w-fit max-w-[85%] rounded-3xl px-3.5 py-
  * definitions and no way to change them together.
  *
  * Only the horizontal padding is spelled here. How much room a turn gets above
- * and below is `.hz-turn-row` in style.css, because it depends on the pointer
+ * and below is `.turn-row` in style.css, because it depends on the pointer
  * and tailwind 3.4 has no variant for that. What the two say together: the room
  * between turns is the room the action strip needs, since from `md` up SubRow
  * hangs that strip in it rather than stacking on top of it.
@@ -32,7 +32,7 @@ export const USER_TURN = 'glass hz-turn w-fit max-w-[85%] rounded-3xl px-3.5 py-
  * `justify-center` and `md:gap-6` used to ride along in these copies. The box is
  * a block, so neither ever did anything.
  */
-export const TURN_ROW = 'hz-turn-row m-auto px-4';
+export const TURN_ROW = 'turn-row m-auto px-4';
 
 /**
  * The column a turn's parts stack in: what was said, and the action strip under

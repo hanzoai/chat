@@ -184,11 +184,11 @@ const ConversationStarters = () => {
           disabled={isSubmitting && act == null}
           title={label}
           className={cn(
-            // `glass hz-chip` — the same material family as the composer, but a
+            // `glass chip` — the same material family as the composer, but a
             // lighter liquid-glass fill (see style.css) so the landing video
             // reads through the suggestions instead of dark slabs on the hero.
             'inline-flex min-h-11 max-w-full items-center gap-1 truncate rounded-full px-3 py-1.5 text-sm text-text-secondary transition-colors duration-200 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none',
-            solid === true ? 'border border-border-medium bg-black' : 'glass hz-chip',
+            solid === true ? 'border border-border-medium bg-black' : 'glass chip',
             // On a phone the row is ONE row, never an orphan: the first two
             // chips show and the rest step out. Indexing the RENDERED list is
             // what keeps that true — the old rule counted prompts and then let

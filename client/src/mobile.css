@@ -1,3 +1,26 @@
+/* Why every `!important` in this file is load-bearing, and why removing one is
+   not the local decision it looks like.
+
+   `style.css` imports `@hanzo/ui/theme.css`, which opens `@layer`. Nothing in
+   the toolchain ships native layers, so `postcss-preset-env` polyfills them:
+   `@csstools/postcss-cascade-layers` re-ranks that whole sheet by PADDING its
+   selectors with `:not(#\#)` — four synthetic id selectors, +(4,0,0) each rule.
+   This file opens no layer, is bundled separately, and is left unpadded.
+
+   So the two sheets are no longer on one ladder. style.css's plainest rule,
+   `::-webkit-scrollbar` at (0,0,0), ships at (4,0,0), and the most specific
+   selector in this file — the artifact preview panel, five attributes and a
+   type, (0,5,1) — still loses to it, because ids outrank everything left.
+   `!important` is the only rung above that, which is why these rules carry it
+   and why dropping one silently hands the declaration back to a generic rule in
+   the other sheet. Measured, not assumed: dropping them put the app's white
+   `:focus-visible` ring back on a focused CodeMirror editor and returned the
+   preview scrollbars to the default chrome.
+
+   The fix is upstream and structural — one sheet, or real `@layer` support, so
+   both files are ranked by the same rules again. Until then, force here is
+   answering force introduced by the build, not by an author. */
+
 .hover-button.active {
   display: block;
   visibility: visible;

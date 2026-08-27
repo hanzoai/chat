@@ -16,7 +16,7 @@ type TSubRowProps = {
  * used to: 31px of strip plus 8px of offsets meant 39 of the 55px between a
  * user's bubble and the reply were blank by construction, and the transcript
  * read as unrelated blocks rather than as a conversation. Out of flow the strip
- * hangs in the room the row already keeps for it (`.hz-turn-row` in style.css),
+ * hangs in the room the row already keeps for it (`.turn-row` in style.css),
  * so pointing at a turn moves nothing and the gap between two turns is the
  * strip's room rather than a hole above it.
  *

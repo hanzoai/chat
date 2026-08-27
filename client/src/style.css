@@ -67,7 +67,31 @@
 
    So the import is spelled out and the floor is `^8.0.48` — the version that
    first shipped the module. One line that fails loudly at build time if the
-   dependency ever slips back under it, instead of a silently unstyled product. */
+   dependency ever slips back under it, instead of a silently unstyled product.
+
+   WHY FOUR RULES BELOW CARRY `!important`, stated once here rather than four
+   times there. The sheet pins its ground as
+
+     @supports (backdrop-filter: blur(8px)) {
+       .glass, [data-slot="…"] { background-color: …72%… !important }
+     }
+
+   and an important declaration is beaten only by another important one. So a
+   surface that wants a different weight of glass — the composer, a turn, a chip,
+   a column — cannot out-specify it; it can only match the force and win the tie
+   on specificity, which is what `.glass.turn` (0,2,0) over `.glass` (0,1,0)
+   does. That is force answering force, and it is not this file's to fix: the
+   repair is in @hanzo/ui, dropping `!important` from that rule, after which all
+   four here drop theirs and win on specificity alone.
+
+   Two consequences worth knowing before touching a call site. That rule is the
+   sheet's ONLY `.glass` rule and it is INSIDE the `@supports` — nothing paints
+   a ground outside it, despite the sheet's own comment claiming otherwise — so
+   on an engine without unprefixed `backdrop-filter` a `bg-*` utility beside
+   `glass` is not redundant, it is the only background the element has. And the
+   probe is unprefixed, where every `@supports` in THIS file also names
+   `-webkit-backdrop-filter`, so old WebKit takes this app's glass and not the
+   package's. */
 @import '@hanzo/ui/glass.css';
 
 /* The composer's material — the lit ring around the field. Shared with hanzo.ai
@@ -360,7 +384,17 @@
    same material hanzo.ai and hanzo.app draw. One knob differs: this composer is
    a box, not a pill, and the halo derives its own corner from this. Stated here
    rather than as a utility on the host, so the shell's radius and the ring's are
-   one value. */
+   one value.
+
+   `hz-composer` and the `--hz-*` properties below are the PACKAGE'S names, not
+   this app's, which is why they alone still carry the prefix — everything this
+   stylesheet owns dropped it. They are the published surface @hanzo/composer
+   selects on: `.hz-composer::before` paints the ring, `::after` the halo, and
+   `--hz-angle` is an `@property` the package registers so the conic sweep can
+   animate at all. Rename any of them here and the selectors stop matching a
+   sheet this file cannot edit — the composer keeps its layout and silently
+   loses its edge, its halo, and the focus indicator that `.field`'s outline was
+   removed in favour of further down. Nothing reports it. */
 .hz-composer {
   --hz-composer-radius: 1.5rem;
 
@@ -440,13 +474,18 @@
    the composer (62% against its 86%) because a square you are only passing over
    should not read as solid as the box you type into.
 
-   Two classes rather than one selector: `:hover` is the pointer, and the open
-   state is a BOOLEAN each menu already holds. Keying the open state on
+   Two selectors rather than one attribute: `:hover` is the pointer, and `open`
+   is a BOOLEAN each menu already holds. Keying the open state on
    `[aria-expanded]` would light the sidebar toggle for as long as the sidebar
    stays open — one permanent plate in a row of none — which is the whole reason
-   `components/chrome.ts` separates them. */
-.hz-chrome:hover,
-.hz-chrome-open {
+   `components/chrome.ts` separates them.
+
+   `open` is a state, so it is written as one — a bare modifier composed onto
+   `.chrome` rather than folded into a name. The selector then says the thing it
+   means, and it reads at (0,2,0) like the `:hover` beside it rather than losing
+   a tie to whatever the utilities emit. */
+.chrome:hover,
+.chrome.open {
   background-color: color-mix(
     in oklab,
     color-mix(in oklab, var(--background) 82%, var(--foreground)) 62%,
@@ -460,7 +499,7 @@
    drift. What you typed and the box you typed it in are the same object a
    moment apart; different fills make the message read as a foreign surface
    rather than as your own words moving up the page. */
-.glass.hz-turn {
+.glass.turn {
   background-color: color-mix(
     in oklab,
     color-mix(in oklab, var(--background) 91%, var(--foreground)) 86%,
@@ -472,7 +511,7 @@
 /* How much room a turn gets above and below — the whole rhythm of a
    conversation, in one place. `TURN_ROW` in common/turn.ts carries the class and
    the horizontal padding; the vertical is here because it depends on the POINTER
-   and tailwind 3.4 has no variant to write that with, the same reason `.hz-row`
+   and tailwind 3.4 has no variant to write that with, the same reason `.row`
    further down states its own floor.
 
    The room is sized to the action strip, because from `md` up SubRow takes that
@@ -489,16 +528,16 @@
 
    Below `md` the strip is painted and sits in the flow, so it spaces itself and
    the row adds only its own 8. */
-.hz-turn-row {
+.turn-row {
   padding-block: 0.5rem;
 }
 @media (min-width: 768px) {
-  .hz-turn-row {
+  .turn-row {
     padding-block: 1.5rem;
   }
 }
 @media (min-width: 768px) and (pointer: fine) {
-  .hz-turn-row {
+  .turn-row {
     padding-block: 1rem;
   }
 }
@@ -520,11 +559,11 @@
    also brightens, from `hover:text-text-primary` on the element). A 1px inner
    rim draws the glass edge. */
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .glass.hz-chip {
+  .glass.chip {
     background-color: color-mix(in oklab, var(--background) 34%, transparent) !important;
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-primary) 8%, transparent);
   }
-  .glass.hz-chip:hover {
+  .glass.chip:hover {
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-primary) 16%, transparent);
   }
 }
@@ -553,7 +592,7 @@
    there is one mechanism for edges and one for material, rather than an inset
    shadow here quietly doing a border's job on one side of the app. */
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .glass.hz-column {
+  .glass.column {
     background-color: color-mix(in oklab, var(--background) 56%, transparent) !important;
   }
 }
@@ -564,7 +603,7 @@
    and a blur on a host whose panel is opaque is a compositor layer bought for
    nothing. Stated here so the two states of one control live beside each other
    rather than in two files. */
-.hz-private > .field {
+.private > .field {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -575,7 +614,14 @@
    is white and moves left↔right, so position is the primary signal; these give
    the track a visible ground in both states as the secondary one — a dim gray
    off, a bright gray on, both clear against a white thumb. Scoped to the switch
-   role so nothing else moves; `!important` beats gui's inline atomic fill. */
+   role so nothing else moves.
+
+   `!important` because gui's own fill cannot be out-specified from here. It is
+   not an inline style — on web `getSplitStyles` takes the className path, so the
+   prop becomes an atomic RULE, `:root ._backgroundColor-<hash>` at (0,2,0),
+   inserted into <head> at runtime and so ordered after this sheet. `[role]`
+   alone is (0,1,0) and loses on specificity; the checked pair is (0,2,0) and
+   loses the tie on order. */
 [role='switch'] {
   background-color: color-mix(in oklab, var(--text-primary) 14%, transparent) !important;
 }
@@ -689,7 +735,7 @@
 
 @media (max-width: 640px) {
   .no-gradient-sm {
-    background: none !important;
+    background: none;
   }
 }
 
@@ -716,11 +762,6 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-
-/* * {
-  box-sizing: border-box;
-  outline: 1px solid limegreen !important;
-} */
 
 /* p small {
   opacity: 0;
@@ -774,7 +815,7 @@ select {
 
 .reset-rc-number-input input {
   width: 100%;
-  border: none !important;
+  border: none;
   background: transparent;
 }
 
@@ -948,7 +989,7 @@ pre {
 }
 
 .scroll-animation-enter-active .premium-scroll-button {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 .premium-scroll-button:hover:not(:active) {
@@ -2392,7 +2433,24 @@ html {
   }
 }
 
-/* Remove cursors when streaming is complete */
+/* Remove cursors when streaming is complete.
+
+   The one `!important` in this file that is not fighting `.glass`, and it is not
+   fighting the selector it appears to fight. `postcss-preset-env` lowers the
+   `:is()` and `:has()` in the PAINT rules above, and pays for the rewrite with
+   `:not(#\#)` — four synthetic id selectors, (4,0,0) — so what ships is
+
+     .result-streaming:not(#\#):not(#\#):not(#\#):not(#\#)>ul:last-child>li:last-child:not(:has(>ol)):after
+
+   at roughly (4,3,4). This rule's `:is(ul, ol)` needs no such rewrite — both
+   arms are elements, so it expands to `ul`/`ol` at unchanged specificity — and
+   ships at (0,2,3). Nothing an author can write beats four ids except the same
+   hack, which is the force this would be removing, spelled differently.
+
+   So it stays until the cursor stops being painted-then-unpainted: paint it on
+   the streaming state instead and there is no fight left to win. That is a
+   change to the streaming mechanism, and it is verifiable only against a live
+   stream. */
 .result-streaming:not(.submitting) :is(ul, ol) li:after {
   display: none !important;
 }
@@ -3059,9 +3117,9 @@ html {
 
 /** Note: ensure KaTeX can spread across visible space */
 .message-content pre:has(> span.katex) {
-  overflow: visible !important;
-  height: auto !important;
-  max-height: none !important;
+  overflow: visible;
+  height: auto;
+  max-height: none;
 }
 
 /** AnimatedSearchInput style */
@@ -3226,7 +3284,7 @@ html {
  * A media query rather than a Tailwind variant on purpose: this project is on
  * tailwind 3.4, which has no `pointer-*` variant to write it with. */
 @media (pointer: fine) {
-  .hz-row {
+  .row {
     min-height: 2.25rem;
   }
 }
