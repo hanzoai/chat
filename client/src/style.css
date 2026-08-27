@@ -381,7 +381,7 @@
      foreground FIRST and takes its transparency after. */
   background-color: color-mix(
     in oklab,
-    color-mix(in oklab, var(--background) 91%, var(--foreground)) 86%,
+    color-mix(in oklab, var(--background) 91%, var(--foreground)) 72%,
     transparent
   ) !important;
   /* ONE edge, and it is the ring.
@@ -407,7 +407,7 @@
      see-through, so the step reads as solidity rather than a colour change. */
   background-color: color-mix(
     in oklab,
-    color-mix(in oklab, var(--background) 91%, var(--foreground)) 94%,
+    color-mix(in oklab, var(--background) 91%, var(--foreground)) 82%,
     transparent
   ) !important;
 }

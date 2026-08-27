@@ -107,6 +107,41 @@ function Video({ src, onEnd }: { src: string; onEnd?: () => void }) {
         const state = JSON.parse(event.data)?.info?.playerState;
         if (state === 1) {
           setPlaying(true);
+          // The BROWSER's transport controls, disowned. A page that plays media
+          // gets a system play/pause/skip overlay — Safari draws it over the
+          // middle of the conversation — and `controls=0` never reaches it,
+          // because that overlay belongs to the user agent, not the player.
+          // mediaSession is where a page says whose media this is: cleared
+          // metadata, no playback state, no handlers, nothing to present.
+          //
+          // This is scenery. It is muted, it loops, and the only controls that
+          // mean anything for it are in the backdrop menu. System skip buttons
+          // put furniture over the chat and wire it to nothing.
+          try {
+            const ms = navigator.mediaSession;
+            if (ms) {
+              ms.metadata = null;
+              ms.playbackState = 'none';
+              const actions = [
+                'play',
+                'pause',
+                'previoustrack',
+                'nexttrack',
+                'seekbackward',
+                'seekforward',
+                'stop',
+              ] as const;
+              for (const action of actions) {
+                try {
+                  ms.setActionHandler(action, null);
+                } catch {
+                  /* an action this agent does not know */
+                }
+              }
+            }
+          } catch {
+            /* no mediaSession here */
+          }
         } else if (state === 0) {
           onEnd?.();
         }
