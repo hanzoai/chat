@@ -76,6 +76,21 @@ router.get('/', async function (req, res) {
     /** @type {TStartupConfig} */
     const payload = {
       appTitle: process.env.APP_TITLE || 'Hanzo Chat',
+      /**
+       * The commit this process is SERVING, baked into the image (Dockerfile
+       * ARG BUILD_SHA) and read back here.
+       *
+       * A green build says an image was produced. It says nothing about what is
+       * running, and the difference is not academic: a change whose only effect
+       * is under a subdirectory behaves identically at a root, so nothing
+       * observable separates a pod that has it from one that does not. Moving
+       * hanzo.chat to hanzo.ai/chat on a green build alone took sign-in down,
+       * because the redirect_uri fix had not reached the pod yet.
+       *
+       * Empty outside a built image, which is the honest answer for a dev server
+       * rather than a guess at one.
+       */
+      build: process.env.BUILD_SHA || '',
       socialLogins: appConfig?.registration?.socialLogins ?? defaultSocialLogins,
       discordLoginEnabled: !!process.env.DISCORD_CLIENT_ID && !!process.env.DISCORD_CLIENT_SECRET,
       facebookLoginEnabled:

@@ -271,6 +271,7 @@ jobs:
             --platform linux/amd64 \
             --provenance=false \
             --build-arg PUBLISHABLE_KEY="${{ steps.ingest.outputs.key }}" \
+            --build-arg BUILD_SHA="${{ github.sha }}" \
             --tag ghcr.io/hanzoai/chat:${{ steps.ver.outputs.version }} \
             --tag ghcr.io/hanzoai/chat:${{ steps.meta.outputs.tag }} \
             --push; }

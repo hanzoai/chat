@@ -127,6 +127,17 @@ RUN node scripts/check-barrel.cjs
 # Node API setup
 EXPOSE 3080
 ENV HOST=0.0.0.0
+# WHICH COMMIT THIS IMAGE IS. Baked at build time and read back by
+# GET /v1/chat/config, so a running pod can be asked what it is serving.
+#
+# A green build says an image was PRODUCED; it says nothing about what is
+# RUNNING. That gap is not academic: a change whose only effect is under a
+# subdirectory behaves identically at a root, so nothing observable
+# distinguishes a pod that has it from one that does not — and moving the
+# routing on a green build alone is what took sign-in down once already.
+ARG BUILD_SHA=""
+ENV BUILD_SHA=$BUILD_SHA
+
 CMD ["pnpm", "run", "backend"]
 
 # cache-bust: 1774514777
