@@ -44,12 +44,27 @@ export default function ComposerShell({
   onClick,
   temporary = false,
 }: ComposerShellProps) {
-  // The PANEL's corner. The host's is @hanzo/composer's `--hz-composer-radius`
-  // (style.css sets it to this same 1.5rem), because the halo derives its own
-  // wider corner from that property and cannot follow a utility class.
+  // ONE CORNER, WORN BY BOTH BOXES, and the host has to wear it as a class.
+  //
+  // The package states it — `.hz-composer { border-radius: var(--hz-composer-radius) }`
+  // — and that declaration does not survive our build. postcss-preset-env
+  // inlines custom properties, resolves the ones whose value is a literal
+  // (`padding` came out `1.5px`) and DROPS a declaration it cannot resolve;
+  // `--hz-composer-radius` is `var(--radius-composer, 9999px)`, a var pointing
+  // at a var, which it does not follow. So the shipped rule reads
+  // `position:relative;isolation:isolate;padding:1.5px` and no radius at all.
+  //
+  // The ring is `::before` with `border-radius: inherit`, so it inherited that
+  // nothing and painted a SQUARE around a 24px panel — a hard-cornered outline
+  // 1.5px outside the glass, on every chat. The halo escaped it only because
+  // `::after` computes `calc(radius + inset)`, which preset-env kept.
+  //
+  // A utility class is a literal and cannot be dropped, so the corner is stated
+  // once here and worn by the host and the panel alike. `--hz-composer-radius`
+  // stays: the halo still derives its wider corner from it.
   const radius = 'rounded-3xl';
   return (
-    <div className={cn('hz-composer w-full', temporary && 'private')}>
+    <div className={cn('hz-composer w-full', radius, temporary && 'private')}>
       <div
         onClick={onClick}
         className={cn(
