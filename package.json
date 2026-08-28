@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "description": "Hanzo Chat — the client, on @hanzo/gui + @hanzo/ui.",
-  "packageManager": "pnpm@10.16.1",
+  "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -13,11 +13,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hanzo/ai": "^0.5.0",
-    "@hanzo/gui": "^8.1.1",
-    "@hanzo/iam": "^0.21.13",
-    "@hanzo/ui": "^8.4.0",
-    "@hanzo/voice": "^0.1.8",
+    "@hanzo/ai": "0.6.7",
+    "@hanzo/gui": "8.3.0",
+    "@hanzo/iam": "0.21.17",
+    "@hanzo/ui": "8.25.0",
+    "@hanzo/voice": "0.1.8",
     "@hanzogui/lucide-icons-2": "^8.1.1",
     "@hanzogui/next-theme": "^8.1.1",
     "react": "^19.2.8",
@@ -28,7 +28,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@hanzo/vite": "^0.1.1",
+    "@hanzo/vite": "0.1.1",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
