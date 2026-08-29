@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Hanzo Chat — the client, on @hanzo/gui + @hanzo/ui.",
+  "description": "Hanzo Chat \u2014 the client, on @hanzo/gui + @hanzo/ui.",
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite",
@@ -13,27 +13,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hanzo/ai": "0.6.7",
-    "@hanzo/gui": "8.3.0",
-    "@hanzo/iam": "0.21.17",
-    "@hanzo/ui": "8.27.0",
-    "@hanzo/voice": "0.1.8",
-    "@hanzogui/lucide-icons-2": "8.3.1",
-    "@hanzogui/next-theme": "8.3.1",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "react-markdown": "^10.1.0",
-    "react-native-web": "^0.21.2",
-    "react-router": "^8.3.1",
-    "remark-gfm": "^4.0.1"
+    "@hanzo/ai": "catalog:",
+    "@hanzo/gui": "catalog:",
+    "@hanzo/iam": "catalog:",
+    "@hanzo/ui": "catalog:",
+    "@hanzo/voice": "catalog:",
+    "@hanzogui/lucide-icons-2": "catalog:",
+    "@hanzogui/next-theme": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-markdown": "catalog:",
+    "react-native-web": "catalog:",
+    "react-router": "catalog:",
+    "remark-gfm": "catalog:"
   },
   "devDependencies": {
-    "@hanzo/vite": "0.1.1",
-    "@types/node": "26.4.0",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.5",
-    "@vitejs/plugin-react": "^6.1.1",
-    "typescript": "7.0.2",
-    "vite": "^8.2.2"
+    "@hanzo/vite": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }
