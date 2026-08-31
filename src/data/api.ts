@@ -14,14 +14,18 @@
  * localhost too. A compiled-in host would be a second answer to a question the
  * document already answers, and it would pin one image to one brand.
  *
- * Three groups are NOT under `/v1/chat`, and each is deliberate:
+ * One group is NOT under `/v1/chat`: `iam.*`, the two trips to the issuer that
+ * are plain navigations rather than SDK calls. Everything else the SDK resolves
+ * from discovery.
  *
- *   `iam.*`     the issuer's own OIDC surface. `session.tsx` drives it through
- *               the SDK, which reads most of it from discovery — they are named
- *               here so the table stays the whole answer to "where does this
- *               client talk", not most of it.
- *   `cloud.*`   api.hanzo.ai, the estate-wide surface: one event sink, one
- *               catalogue of plans. Cross-origin by nature; nothing else is.
+ * A caveat this table cannot fix, and the reader should know it: `/v1/chat/*`
+ * is not a surface api.hanzo.ai serves. `/v1/chat/config` answers 404 there and
+ * hanzo.chat redirects to the marketing site, so every address below resolves
+ * to nothing today. The real conversation surface is
+ * `/v1/agents/chat/conversations`, which `@hanzo/ai` binds as `client.threads`,
+ * and the real completion is `/v1/chat/completions`. Moving to them is a change
+ * to the frames and the shapes as much as to these strings, so it is one piece
+ * of work rather than a rename here.
  */
 import { brand, clientId } from '~/brand'
 
@@ -59,14 +63,6 @@ export type ConvoQuery = {
   search?: string
 }
 
-export type MessageQuery = {
-  cursor?: string
-  sortBy?: 'endpoint' | 'createdAt'
-  sortDirection?: 'asc' | 'desc'
-  pageSize?: number
-  search?: string
-}
-
 export type ShareQuery = {
   cursor?: string
   pageSize?: number
@@ -77,59 +73,30 @@ export type ShareQuery = {
 }
 
 export const api = {
-  /** Is the server there at all. The one call that means nothing but "yes". */
-  health: `${chat}/health`,
-
-  /** What THIS deployment is: its name, its limits, what a guest may do. */
+  /** What THIS deployment is: its limits, and what a guest may do. */
   config: `${chat}/config`,
   endpoints: `${chat}/endpoints`,
   models: `${chat}/models`,
-  banner: `${chat}/banner`,
-  searchEnabled: `${chat}/search/enable`,
-  balance: `${chat}/balance`,
-  usage: `${chat}/usage`,
-  role: (name: string) => `${chat}/roles/${one(name.toLowerCase())}`,
-  key: (endpoint: string) => `${chat}/keys${q({ name: endpoint })}`,
 
-  /** Who is asking, and the handful of facts kept against them. */
+  /** Who is asking. */
   user: {
     self: `${chat}/user`,
-    org: `${chat}/user/active-org`,
-    terms: `${chat}/user/terms`,
-    accept: `${chat}/user/terms/accept`,
-    tour: `${chat}/user/tour`,
     close: `${chat}/user/delete`,
-    favorites: `${chat}/user/settings/favorites`,
   },
 
   /** The SET of conversations. */
   convos: {
     list: (params: ConvoQuery = {}) => `${chat}/convos${q({ ...params })}`,
     one: (id: string) => `${chat}/convos/${one(id)}`,
-    title: (id: string) => `${chat}/convos/gen_title/${one(id)}`,
     update: `${chat}/convos/update`,
     archive: `${chat}/convos/archive`,
-    import: `${chat}/convos/import`,
-    fork: `${chat}/convos/fork`,
-    copy: `${chat}/convos/duplicate`,
     drop: `${chat}/convos`,
     dropAll: `${chat}/convos/all`,
   },
 
   /** ONE conversation's turns. */
   messages: {
-    list: (params: MessageQuery = {}) => `${chat}/messages${q({ ...params })}`,
     of: (convoId: string) => `${chat}/messages/${one(convoId)}`,
-    one: (convoId: string, id: string) => `${chat}/messages/${one(convoId)}/${one(id)}`,
-    feedback: (convoId: string, id: string) =>
-      `${chat}/messages/${one(convoId)}/${one(id)}/feedback`,
-    branch: `${chat}/messages/branch`,
-  },
-
-  /** Labels on conversations. */
-  tags: {
-    list: `${chat}/tags`,
-    of: (convoId: string) => `${chat}/tags/convo/${one(convoId)}`,
   },
 
   /**
@@ -144,21 +111,7 @@ export const api = {
     stream: (streamId: string, resume = false) =>
       `${chat}/agents/chat/stream/${one(streamId)}${q({ resume: resume ? 'true' : '' })}`,
     state: (convoId: string) => `${chat}/agents/chat/status/${one(convoId)}`,
-    running: `${chat}/agents/chat/active`,
     stop: `${chat}/agents/chat/abort`,
-    plain: `${chat}/ask`,
-  },
-
-  /** Hanzo Cloud's own agents, relayed so the visitor's token stays here. */
-  agents: {
-    list: `${chat}/agents/cloud`,
-    run: (name: string) => `${chat}/agents/cloud/${one(name)}/run`,
-  },
-
-  /** A run's event stream, and the way to end one. */
-  runs: {
-    watch: (sessionId: string) => `${chat}/runs/stream${q({ root: sessionId })}`,
-    stop: `${chat}/runs/stop`,
   },
 
   /** A conversation someone published. The one surface that takes no session. */
@@ -173,58 +126,29 @@ export const api = {
 
   /** What a turn can carry, and what it can be turned into. */
   files: {
-    list: `${chat}/files`,
     upload: `${chat}/files`,
-    drop: `${chat}/files`,
-    config: `${chat}/files/config`,
-    ofAgent: (agentId: string) => `${chat}/files/agent/${one(agentId)}`,
-    download: (userId: string, fileId: string) =>
-      `${chat}/files/download/${one(userId)}/${one(fileId)}`,
     images: `${chat}/files/images`,
     listen: `${chat}/files/speech/stt`,
-    speak: `${chat}/files/speech/tts`,
-    voices: `${chat}/files/speech/tts/voices`,
-    speech: `${chat}/files/speech/config/get`,
   },
-
-  /**
-   * Where the server serves an image it wrote. A stored filepath IS this
-   * address, so it is passed through whole rather than re-encoded.
-   */
-  image: (path: string) => `${chat}/images/${path.replace(/^\/+/, '')}`,
 
   /** The tools a conversation can reach, and their connections. */
   mcp: {
     servers: `${chat}/mcp/servers`,
-    tools: `${chat}/mcp/tools`,
     status: `${chat}/mcp/connection/status`,
-    statusOf: (server: string) => `${chat}/mcp/connection/status/${one(server)}`,
-    bind: (server: string) => `${chat}/mcp/${one(server)}/oauth/bind`,
-    cancel: (server: string) => `${chat}/mcp/oauth/cancel/${one(server)}`,
     restart: (server: string) => `${chat}/mcp/${one(server)}/reinitialize`,
   },
 
   /**
-   * The issuer. `session.tsx` reaches these through the IAM SDK, which resolves
-   * all but the first from discovery — they are written out because a reader
-   * asking "what does this client talk to" deserves the whole answer here.
+   * The issuer, for the two trips the IAM SDK does not make. Everything else it
+   * resolves from discovery, and writing those out here would be a second copy
+   * of what the issuer already publishes — one that can drift from it.
    */
   iam: {
-    discovery: `${brand.issuer}/.well-known/openid-configuration`,
-    authorize: `${brand.issuer}/v1/iam/oauth/authorize`,
-    token: `${brand.issuer}/v1/iam/oauth/token`,
-    userinfo: `${brand.issuer}/v1/iam/oauth/userinfo`,
-    logout: `${brand.issuer}/v1/iam/oauth/logout`,
     signup: `${brand.issuer}/signup/${clientId}`,
     account: `${brand.issuer}/account`,
   },
-
-  /** The estate, not this deployment. Cross-origin, and the only thing that is. */
-  cloud: {
-    event: 'https://api.hanzo.ai/v1/event',
-    plans: 'https://api.hanzo.ai/v1/billing/plans',
-  },
 } as const
+
 
 /** Where a refusal sends a visitor who has to sign in. */
 export const loginPath = '/login'

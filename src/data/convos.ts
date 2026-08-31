@@ -13,8 +13,8 @@
 import { api, type ConvoQuery } from '~/data/api'
 import { http } from '~/data/http'
 import { keys } from '~/data/keys'
-import { invalidate, useRead, useSend, usePages, type Page } from '~/data/query'
-import type { Convo, Tag } from '~/data/types'
+import { useRead, useSend, usePages, type Page } from '~/data/query'
+import type { Convo } from '~/data/types'
 
 type Listed = { conversations?: Convo[]; nextCursor?: string | null }
 
@@ -35,23 +35,6 @@ export const useConvo = (id: string | null | undefined) =>
     enabled: Boolean(id),
   })
 
-/**
- * The title the server writes after the first exchange.
- *
- * The route waits for it — the model is still being asked as the request
- * arrives — so this is one call that legitimately takes seconds, and a 404 means
- * this endpoint does not name conversations at all. Either way it is a nicety:
- * the conversation is perfectly usable called nothing.
- */
-export const title = async (id: string): Promise<string | null> => {
-  try {
-    const { title: named } = await http.get<{ title?: string }>(api.convos.title(id))
-    if (named) invalidate(keys.convos)
-    return named ?? null
-  } catch {
-    return null
-  }
-}
 
 export type Rename = { conversationId: string; title?: string; isPinned?: boolean }
 
@@ -75,55 +58,3 @@ export const useDelete = () =>
 /** Delete all of them. The one verb with no undo, so it is named plainly. */
 export const useDeleteAll = () =>
   useSend<void, void>(() => http.drop<void>(api.convos.dropAll), [keys.convos, keys.shares])
-
-export type Fork = {
-  conversationId: string
-  messageId: string
-  /** How much of the thread comes along — the server's words for the choices. */
-  option?: string
-  splitAtTarget?: boolean
-  latestMessageId?: string
-}
-
-/** Branch a conversation from one of its turns into a new conversation. */
-export const useFork = () =>
-  useSend<Fork, { conversation: Convo }>(
-    (body) => http.post<{ conversation: Convo }>(api.convos.fork, body),
-    [keys.convos],
-  )
-
-/** Copy a conversation whole. */
-export const useCopy = () =>
-  useSend<{ conversationId: string; title?: string }, { conversation: Convo }>(
-    (body) => http.post<{ conversation: Convo }>(api.convos.copy, body),
-    [keys.convos],
-  )
-
-/**
- * Read conversations out of an exported file.
- *
- * Multipart, because the file IS the request. The answer says only that it
- * worked — what arrived is discovered by re-reading the list, which is the
- * honest thing to do when an import can create any number of conversations.
- */
-export const useImport = () =>
-  useSend<globalThis.File, { message: string }>((file) => {
-    const form = new FormData()
-    form.append('file', file)
-    return http.form<{ message: string }>(api.convos.import, form)
-  }, [keys.convos])
-
-// ---------------------------------------------------------------------------
-// Tags
-// ---------------------------------------------------------------------------
-
-/** Every label in use, with how many conversations carry it. */
-export const useTags = (enabled = true) =>
-  useRead<Tag[]>(keys.tags, () => http.get<Tag[]>(api.tags.list), { enabled })
-
-/** Replace the labels on one conversation. */
-export const useTag = () =>
-  useSend<{ conversationId: string; tags: string[] }, Tag[]>(
-    ({ conversationId, tags }) => http.put<Tag[]>(api.tags.of(conversationId), { tags }),
-    [keys.tags, keys.convos],
-  )

@@ -24,7 +24,7 @@ import type { Attached, Tools } from '~/compose/submit'
 
 /** What each tool is called where a reader can see it. The menu that turns
  *  them on reads the same names, so a chip and its row never disagree. */
-export const TOOL: Record<Switch, string> = {
+const TOOL: Record<Switch, string> = {
   web_search: 'Search the web',
   execute_code: 'Write code',
   file_search: 'Search files',

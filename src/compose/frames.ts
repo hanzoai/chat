@@ -119,7 +119,7 @@ const bag = (v: unknown): Record<string, unknown> =>
  * than at four call sites. An unknown type yields nothing: a slot with no
  * picture is better than a box saying the server said something.
  */
-export const partOf = (raw: unknown): Part | null => {
+const partOf = (raw: unknown): Part | null => {
   const p = bag(raw)
   const type = str(p.type)
   const inner = bag(p[type])
@@ -419,6 +419,3 @@ export const fold = (reply: Reply, f: Frame): Reply => {
     }
   }
 }
-
-/** Fold a whole run at once — what a test does with a captured transcript. */
-export const played = (askedBy: string, list: Frame[]): Reply => list.reduce(fold, opening(askedBy))

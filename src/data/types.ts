@@ -57,7 +57,7 @@ export type Config = {
   conversationImportMaxFileSize?: number
 }
 
-export type McpMenu = {
+type McpMenu = {
   chatMenu?: boolean
   isOAuth?: boolean
   startup?: boolean
@@ -85,7 +85,7 @@ export type Spec = {
   mcpServers?: string[]
 }
 
-export type Specs = {
+type Specs = {
   enforce?: boolean
   prioritize?: boolean
   list: Spec[]
@@ -93,7 +93,7 @@ export type Specs = {
 }
 
 /** The settings a spec carries — the same shape a conversation holds. */
-export type Preset = {
+type Preset = {
   endpoint?: string | null
   endpointType?: string | null
   model?: string | null
@@ -115,7 +115,7 @@ export type Preset = {
 }
 
 /** One entry of `/v1/chat/endpoints` — what a provider can do here. */
-export type Endpoint = {
+type Endpoint = {
   order: number
   type?: string
   name?: string
@@ -132,47 +132,6 @@ export type Endpoints = Record<string, Endpoint | null>
 
 /** `/v1/chat/models` — the models each endpoint will serve. */
 export type Models = Record<string, string[]>
-
-export type Banner = {
-  bannerId: string
-  message: string
-  displayFrom?: string
-  displayTo?: string
-  type?: string
-  isPublic?: boolean
-} | null
-
-export type Balance = {
-  balance?: number
-  tokenCredits?: number
-  autoRefillEnabled?: boolean
-  refillAmount?: number
-}
-
-export type Usage = {
-  total?: number
-  entries?: { date: string; tokens: number; cost?: number }[]
-}
-
-export type Role = {
-  name: string
-  permissions?: Record<string, Record<string, boolean>>
-}
-
-export type Terms = { termsAccepted: boolean }
-
-/**
- * A pinned way to ask. Exactly ONE kind per entry — an agent, a skill, a spec,
- * or a model and its endpoint, which are two halves of one name — and the
- * server refuses anything that names two.
- */
-export type Favorite = {
-  agentId?: string
-  skillId?: string
-  spec?: string
-  model?: string
-  endpoint?: string
-}
 
 // ---------------------------------------------------------------------------
 // Conversations and turns
@@ -256,12 +215,6 @@ export type ToolCall = {
   expires_at?: number
 }
 
-export type Tag = {
-  tag: string
-  count?: number
-  position?: number
-}
-
 // ---------------------------------------------------------------------------
 // Files, sharing, tools
 // ---------------------------------------------------------------------------
@@ -294,22 +247,6 @@ export type Attachment = {
   createdAt?: string
 }
 
-/** What this deployment will accept, per endpoint. */
-export type Limits = {
-  endpoints?: Record<
-    string,
-    {
-      fileLimit?: number
-      fileSizeLimit?: number
-      totalSizeLimit?: number
-      supportedMimeTypes?: string[]
-      disabled?: boolean
-    }
-  >
-  serverFileSizeLimit?: number
-  avatarSizeLimit?: number
-}
-
 export type Share = {
   shareId: string
   conversationId: string
@@ -330,30 +267,6 @@ export type McpServer = {
   startup?: boolean
   consumeOnly?: boolean
   customUserVars?: Record<string, { title: string; description: string }>
-}
-
-export type McpTool = {
-  name: string
-  /** The tool's full name — the server's and its own, joined. */
-  pluginKey: string
-  description?: string
-  serverName: string
-}
-
-/** What a server needs from the person before it will connect. */
-export type McpField = {
-  authField: string
-  label: string
-  description: string
-}
-
-/** A server as the tool menu shows it: its icon, its tools, what it still needs. */
-export type McpEntry = {
-  name: string
-  icon?: string
-  authenticated: boolean
-  authConfig: McpField[]
-  tools: McpTool[]
 }
 
 /**

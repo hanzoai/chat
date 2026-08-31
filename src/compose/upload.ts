@@ -33,7 +33,7 @@ export const accepts = (takes: Takes): string => (takes === 'photos' ? 'image/*,
 
 const isImage = (file: File): boolean => file.type.startsWith('image/')
 
-export interface Upload {
+interface Upload {
   /**
    * The file's id, minted by the CALLER.
    *
@@ -120,7 +120,7 @@ export const upload = async (file: File, o: Upload): Promise<Attached> => {
   }
 }
 
-export interface Uploading extends Omit<Upload, 'id' | 'signal'> {
+interface Uploading extends Omit<Upload, 'id' | 'signal'> {
   /** Where a file, and then the stored record that replaces it, is written. */
   put: (file: Attached) => void
   /** Where a file that failed is taken back off. */
@@ -131,7 +131,7 @@ export interface Uploading extends Omit<Upload, 'id' | 'signal'> {
   limit?: number
 }
 
-export interface Uploads {
+interface Uploads {
   /** Start these. Each appears in the draft at once and fills in. */
   add: (chosen: FileList | File[] | null) => void
   /** Give up on one. Taking a chip off has to STOP the transfer: an upload

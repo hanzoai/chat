@@ -17,7 +17,7 @@
  * where a value can be refetched rather than remembered). A "global store" that
  * takes those in is how a product ends up with two answers to every question.
  */
-import { useCallback, useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react'
 
 import type { Convo, Failure, Message } from '~/data/types'
 
@@ -52,10 +52,6 @@ export const atom = <T,>(initial: T): Atom<T> => {
 
 /** Read an atom. The component re-renders when, and only when, it changes. */
 export const useAtom = <T,>(a: Atom<T>): T => useSyncExternalStore(a.watch, a.get, a.get)
-
-/** Write an atom without subscribing — a button does not need to re-render. */
-export const useSet = <T,>(a: Atom<T>): Atom<T>['set'] =>
-  useCallback((next: T | ((prev: T) => T)) => a.set(next), [a])
 
 // ---------------------------------------------------------------------------
 // The live conversation

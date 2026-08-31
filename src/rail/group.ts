@@ -22,13 +22,13 @@ import type { Convo } from '~/data/types'
  */
 
 /** One labelled run of rows. */
-export interface Band {
+interface Band {
   label: string
   convos: Convo[]
 }
 
 /** Pinned rows are a band of their own, above every dated one. */
-export const PINNED = 'Pinned'
+const PINNED = 'Pinned'
 
 const MONTH = [
   'January',

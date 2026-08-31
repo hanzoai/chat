@@ -15,7 +15,7 @@ import { api } from '~/data/api'
 import { http } from '~/data/http'
 import { keys } from '~/data/keys'
 import { invalidate, useRead, useSend } from '~/data/query'
-import type { McpEntry, McpServer, McpStatus } from '~/data/types'
+import type { McpServer, McpStatus } from '~/data/types'
 
 type ServerConfigs = Record<string, Omit<McpServer, 'serverName'> & { serverName?: string }>
 
@@ -33,16 +33,6 @@ export const useServers = (enabled = true) =>
     { enabled },
   )
 
-/** Every server with its tools, as the tool menu lists them. */
-export const useTools = (enabled = true) =>
-  useRead<McpEntry[]>(
-    keys.tools,
-    async () => {
-      const { servers } = await http.get<{ servers?: Record<string, McpEntry> }>(api.mcp.tools)
-      return Object.values(servers ?? {})
-    },
-    { enabled },
-  )
 
 /** Which servers are connected, keyed by name. */
 export const useConnections = (enabled = true) =>
@@ -57,45 +47,8 @@ export const useConnections = (enabled = true) =>
     { enabled },
   )
 
-/**
- * One server's connection, asked for directly.
- *
- * Worth its own read only while something is watching a single server come up —
- * a reconnect, an OAuth round trip — which is why it takes a poll interval
- * rather than sharing the list's freshness.
- */
-export const useConnection = (server: string | null | undefined, enabled = true) =>
-  useRead<McpStatus>(
-    keys.statusOf(server ?? ''),
-    async () => {
-      const answer = await http.get<{
-        connectionStatus?: string
-        requiresOAuth?: boolean
-      }>(api.mcp.statusOf(server as string))
-      return {
-        connectionState: answer.connectionStatus ?? 'disconnected',
-        requiresOAuth: answer.requiresOAuth,
-      }
-    },
-    { enabled: enabled && Boolean(server), fresh: 0 },
-  )
 
-/**
- * Begin an OAuth connection to a server.
- *
- * The server answers by setting the one-shot cookie that binds the round trip
- * to this browser; the visitor is then sent to the provider. Nothing here holds
- * a credential — this only starts the trip.
- */
-export const useBind = () =>
-  useSend<string, { success: boolean }>(
-    (server) => http.post<{ success: boolean }>(api.mcp.bind(server)),
-    [keys.status],
-  )
 
-/** Abandon an OAuth connection that was started and not finished. */
-export const useCancel = () =>
-  useSend<string, void>((server) => http.post<void>(api.mcp.cancel(server)), [keys.status])
 
 /**
  * Reconnect a server.

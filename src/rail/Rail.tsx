@@ -49,7 +49,7 @@ import type { Verbs } from './Menu'
  */
 export const OPEN = 260
 export const RAIL = 56
-export const DRAWER = 320
+const DRAWER = 320
 
 export interface RailProps {
   convos: readonly Convo[]

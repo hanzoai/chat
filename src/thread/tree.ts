@@ -39,7 +39,7 @@ export type Vote = Feedback['rating']
 export type Entry = Message & { sources?: Source[] }
 
 /** A turn with its replies. A tree IS its root. */
-export interface Tree extends Entry {
+interface Tree extends Entry {
   children: Tree[]
 }
 

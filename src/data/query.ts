@@ -167,7 +167,7 @@ export type Page<T> = { items: T[]; next?: string | null }
 
 type Held<T> = { items: T[]; next: string | null }
 
-export type Pages<T> = {
+type Pages<T> = {
   items: T[]
   error: unknown
   pending: boolean

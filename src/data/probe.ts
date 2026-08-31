@@ -89,9 +89,6 @@ const NOBODY = new Set([
 export const noSession = (error: string | null | undefined): boolean =>
   error != null && NOBODY.has(error)
 
-/** Whether this visit has already spent its probe. */
-export const probed = (): boolean => slot()?.getItem(SLOT) === '1'
-
 /**
  * Spend the probe.
  *

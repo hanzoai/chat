@@ -28,7 +28,7 @@ export interface Pref<T> extends Atom<T> {
 }
 
 /** A validator for what comes back off disk: the value, or nothing. */
-export type Revive<T> = (raw: unknown) => T | undefined
+type Revive<T> = (raw: unknown) => T | undefined
 
 export const flag: Revive<boolean> = (raw) => (typeof raw === 'boolean' ? raw : undefined)
 

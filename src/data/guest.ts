@@ -17,6 +17,3 @@ export const guest = (): User => ({
   username: GUEST,
   name: 'Guest',
 })
-
-/** Whether a person is the anonymous one. */
-export const isGuest = (user: User | null | undefined): boolean => user?.id === GUEST
