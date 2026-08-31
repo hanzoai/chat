@@ -11,12 +11,18 @@ import react from '@vitejs/plugin-react'
  * from props at runtime it inserts itself. Nothing to generate, no config file
  * to keep in step with the components.
  *
- * In production the client is served from the static plane and `/v1/chat/*` is
- * peeled off to the cloud binary by the ingress, so every call the app makes is
- * same-origin. The dev proxy makes that true on localhost too, which is why no
+ * The dev proxy keeps every call same-origin on localhost, which is why no
  * module outside `src/data` ever learns an API host.
+ *
+ * It points at api.hanzo.ai because that is where the estate's `/v1` lives.
+ * Note what that does NOT buy: the addresses in `src/data/api.ts` are under
+ * `/v1/chat/*`, and api.hanzo.ai answers 404 for them — the real conversation
+ * surface is `/v1/agents/chat/conversations` and the real completion is
+ * `/v1/chat/completions`. This target was `https://hanzo.chat`, which is a
+ * 301 to the marketing site, so a proxied call came back as HTML and a JSON
+ * parse failure rather than as the 404 it is.
  */
-const API = 'https://hanzo.chat'
+const API = 'https://api.hanzo.ai'
 
 const config = hanzo(
   {
