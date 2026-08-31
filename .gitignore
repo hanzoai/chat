@@ -8,3 +8,4 @@ dist
 
 # Claude Code session state (worktrees, transcripts)
 .claude/
+LLM.md
