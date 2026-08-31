@@ -13,6 +13,9 @@
     "noFallthroughCasesInSwitch": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    // `node --test` runs the suites straight off source; Node ESM needs the
+    // extension, and nothing emits, so importing one is exact rather than lax.
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {

@@ -21,9 +21,6 @@ catalogs:
     '@hanzo/vite':
       specifier: 0.1.1
       version: 0.1.1
-    '@hanzo/voice':
-      specifier: 0.1.8
-      version: 0.1.8
     '@hanzogui/lucide-icons-2':
       specifier: 8.3.1
       version: 8.3.1
@@ -86,9 +83,6 @@ importers:
       '@hanzo/ui':
         specifier: 'catalog:'
         version: 8.27.2(5c45a67929ec8f5e358f2cd75355b9b1)
-      '@hanzo/voice':
-        specifier: 'catalog:'
-        version: 0.1.8(react@19.2.8)
       '@hanzogui/lucide-icons-2':
         specifier: 'catalog:'
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(react-native@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
@@ -644,12 +638,6 @@ packages:
     resolution: {integrity: sha512-sdisBFwBTeDPKgyM8BLR3lQYLtnqBA/ehK3tzgEZ0jfQdfsxYKWn8x2wmAW1IMbzfpU3qguyXP238QoPihE1xw==}
     peerDependencies:
       vite: '>=6'
-
-  '@hanzo/voice@0.1.8':
-    resolution: {integrity: sha512-ZmISBbxZhjGurmtTWSjWDltIZZc40zrfbkLitzW8rU2ZI4hI6+HRnQMgmOCWUP83J40lVABhLVaqIflsRuj9Wg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      react: '>=18'
 
   '@hanzogui/accordion@8.3.1':
     resolution: {integrity: sha512-78V9VrhpNP3t6A1ZICD3FEkUmKrvdm4SNLYw+C6p3UJDK+AOW3xIbI+L7RJOh3MRsiuZELQ91Y+vEvhcgYpmQw==}
@@ -3935,10 +3923,6 @@ snapshots:
   '@hanzo/vite@0.1.1(vite@8.2.2(@types/node@26.4.0)(terser@5.50.0))':
     dependencies:
       vite: 8.2.2(@types/node@26.4.0)(terser@5.50.0)
-
-  '@hanzo/voice@0.1.8(react@19.2.8)':
-    dependencies:
-      react: 19.2.8
 
   '@hanzogui/accordion@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:

@@ -35,36 +35,6 @@ export type Standing = 'unknown' | 'guest' | 'live'
 // The deployment
 // ---------------------------------------------------------------------------
 
-export type Config = {
-  appTitle: string
-  serverDomain?: string
-  helpAndFaqURL?: string
-  customFooter?: string
-  sharedLinksEnabled?: boolean
-  publicSharedLinksEnabled?: boolean
-  registrationEnabled?: boolean
-  /** Whether a visitor with no account may hold a conversation at all. */
-  allowGuestChat?: boolean
-  guestMessageMax?: number
-  guestEndpoint?: string
-  guestModel?: string
-  modelSpecs?: Specs
-  modelDescriptions?: Record<string, Record<string, string>>
-  interface?: Record<string, unknown>
-  balance?: { enabled?: boolean; startBalance?: number }
-  webSearch?: { searchProvider?: string; scraperProvider?: string; rerankerType?: string }
-  mcpServers?: Record<string, McpMenu>
-  conversationImportMaxFileSize?: number
-}
-
-type McpMenu = {
-  chatMenu?: boolean
-  isOAuth?: boolean
-  startup?: boolean
-  iconPath?: string
-  customUserVars?: Record<string, { title: string; description: string }>
-}
-
 /** A named, preconfigured way to ask — what the model selector actually lists. */
 export type Spec = {
   name: string
@@ -83,13 +53,6 @@ export type Spec = {
   executeCode?: boolean
   artifacts?: string | boolean
   mcpServers?: string[]
-}
-
-type Specs = {
-  enforce?: boolean
-  prioritize?: boolean
-  list: Spec[]
-  addedEndpoints?: string[]
 }
 
 /** The settings a spec carries — the same shape a conversation holds. */
@@ -137,17 +100,15 @@ export type Models = Record<string, string[]>
 // Conversations and turns
 // ---------------------------------------------------------------------------
 
-export type Convo = Preset & {
+/**
+ * A conversation, as `/v1/agents/chat/conversations` answers one: an id, a
+ * derived title, and when it was last appended to. Nothing else is on that
+ * wire — no endpoint, model, tags or archive flag — so nothing else is here.
+ */
+export type Convo = {
   conversationId: string | null
   title?: string | null
-  user?: string
-  isArchived?: boolean
-  isPinned?: boolean
-  tags?: string[]
-  files?: Attachment[]
-  createdAt: string
-  updatedAt: string
-  expiredAt?: string | null
+  updatedAt?: string
 }
 
 export type Feedback = {
@@ -187,12 +148,6 @@ export type Message = {
   finish_reason?: string
   createdAt?: string
   updatedAt?: string
-}
-
-/** The wire's turn, before `asMessage`. */
-export type RawMessage = Omit<Message, 'role' | 'busy'> & {
-  isCreatedByUser?: boolean
-  role?: string
 }
 
 export type Part =
@@ -254,42 +209,6 @@ export type Share = {
   isPublic?: boolean
   createdAt?: string
   updatedAt?: string
-}
-
-export type McpServer = {
-  serverName: string
-  title?: string
-  description?: string
-  url?: string
-  iconPath?: string
-  isOAuth?: boolean
-  chatMenu?: boolean
-  startup?: boolean
-  consumeOnly?: boolean
-  customUserVars?: Record<string, { title: string; description: string }>
-}
-
-/**
- * A server's connection.
- *
- * `connectionState` is the wire's word — `connected`, `disconnected`,
- * `connecting`, `error` — and it maps straight onto `StatusTag`'s tone. The
- * per-server route spells the same fact `connectionStatus`, so `mcp.ts` reads
- * both into this one shape rather than letting two names for one state reach
- * the interface.
- */
-export type McpStatus = {
-  connectionState: string
-  requiresOAuth?: boolean
-  error?: string
-}
-
-export type Voice = { name: string; id?: string }
-
-export type Speech = {
-  speechTab?: Record<string, unknown>
-  sttExternal?: boolean
-  ttsExternal?: boolean
 }
 
 // ---------------------------------------------------------------------------

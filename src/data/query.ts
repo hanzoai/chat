@@ -18,7 +18,7 @@
  * the identity is being decided. What re-reads it is `invalidate()`, which is
  * exactly what adopting an identity does.
  */
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 
 import type { Key } from '~/data/keys'
 
@@ -160,136 +160,6 @@ export const useRead = <T,>(key: Key, read: () => Promise<T>, options: Options =
   }, [id, enabled, fresh])
 
   return { data: entry.data as T | undefined, error: entry.error, pending: entry.pending, reload }
-}
-
-/** One page of a cursor-paged list. */
-export type Page<T> = { items: T[]; next?: string | null }
-
-type Held<T> = { items: T[]; next: string | null }
-
-type Pages<T> = {
-  items: T[]
-  error: unknown
-  pending: boolean
-  /** Whether the server said there is more. */
-  more: boolean
-  /** Ask for the next page. Does nothing while one is already in flight. */
-  next: () => void
-}
-
-/**
- * A list read a page at a time.
- *
- * Pages accumulate in ONE cache entry rather than one per cursor, because the
- * list is what the reader sees — the cursors are how it arrived. That also makes
- * invalidation obvious: dropping the key drops the whole list and re-reads it
- * from the top, which is the only correct thing to do after a conversation is
- * deleted somewhere in the middle of it.
- */
-export const usePages = <T,>(
-  key: Key,
-  read: (cursor?: string) => Promise<Page<T>>,
-  options: Options = {},
-): Pages<T> => {
-  const id = idOf(key)
-  const enabled = options.enabled ?? true
-  const fresh = options.fresh ?? 30_000
-
-  const latest = useRef(read)
-  latest.current = read
-
-  const entry = useSyncExternalStore(
-    useCallback((fn: () => void) => listen(id, fn), [id]),
-    () => cache.get(id) ?? nothing,
-    () => cache.get(id) ?? nothing,
-  )
-
-  const first = useCallback(
-    async (): Promise<Held<T>> => {
-      const page = await latest.current()
-      return { items: page.items, next: page.next ?? null }
-    },
-    [],
-  )
-
-  useEffect(() => {
-    if (!enabled) return
-    const held = cache.get(id)
-    if (held && Date.now() - held.at < fresh) return
-    void draw(id, first)
-  }, [id, enabled, fresh, first])
-
-  const held = entry.data as Held<T> | undefined
-
-  const next = useCallback(() => {
-    const sofar = cache.get(id)?.data as Held<T> | undefined
-    if (!sofar?.next || flights.has(id)) return
-    const cursor = sofar.next
-    void draw(
-      id,
-      async () => {
-        const page = await latest.current(cursor)
-        return { items: [...sofar.items, ...page.items], next: page.next ?? null }
-      },
-      first,
-    )
-  }, [id, first])
-
-  return {
-    items: held?.items ?? [],
-    error: entry.error,
-    pending: entry.pending,
-    more: Boolean(held?.next),
-    next,
-  }
-}
-
-export type Send<I, O> = {
-  send: (input: I) => Promise<O>
-  pending: boolean
-  error: unknown
-}
-
-/**
- * A change, and what it makes untrue.
- *
- * `after` is the list of keys the change invalidates, stated beside the change
- * itself. Refreshing by hand at each call site is how a rename lands in the
- * database and not in the sidebar.
- */
-export const useSend = <I, O>(
-  run: (input: I) => Promise<O>,
-  after: Key[] = [],
-): Send<I, O> => {
-  const [state, setState] = useState<{ pending: boolean; error?: unknown }>({ pending: false })
-
-  const latest = useRef(run)
-  latest.current = run
-  const stale = useRef(after)
-  stale.current = after
-
-  const alive = useRef(true)
-  useEffect(() => {
-    alive.current = true
-    return () => {
-      alive.current = false
-    }
-  }, [])
-
-  const send = useCallback(async (input: I) => {
-    setState({ pending: true })
-    try {
-      const out = await latest.current(input)
-      invalidate(...stale.current)
-      if (alive.current) setState({ pending: false })
-      return out
-    } catch (error) {
-      if (alive.current) setState({ pending: false, error })
-      throw error
-    }
-  }, [])
-
-  return { send, pending: state.pending, error: state.error }
 }
 
 /**

@@ -93,16 +93,6 @@ export const put = (message: Message) =>
     return next
   })
 
-/** Change part of a turn already in the thread. Unknown ids are left alone. */
-export const patch = (messageId: string, change: Partial<Message>) =>
-  turns.set((prev) => {
-    const at = prev.findIndex((one) => one.messageId === messageId)
-    if (at < 0) return prev
-    const next = prev.slice()
-    next[at] = { ...next[at], ...change }
-    return next
-  })
-
 /**
  * Start over on a different conversation.
  *

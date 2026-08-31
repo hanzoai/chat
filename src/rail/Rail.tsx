@@ -8,7 +8,6 @@ import type { Convo } from '~/data/types'
 import { Find } from './Find'
 import { Hits } from './Hits'
 import { List } from './List'
-import type { Verbs } from './Menu'
 
 /**
  * The left column — the SET, as a place on the page.
@@ -67,7 +66,6 @@ export interface RailProps {
   drawer?: boolean
 
   title?: string
-  on?: Verbs
   onOpen: (c: Convo) => void
   onNew: () => void
   /** Open the full-page manager. Absent → the row is not offered. */
@@ -88,7 +86,6 @@ export function Rail({
   onOpenChange,
   drawer = false,
   title = 'Hanzo Chat',
-  on,
   onOpen,
   onNew,
   onAll,
@@ -120,7 +117,6 @@ export function Rail({
           convos={convos}
           activeId={activeId}
           busy={busy}
-          on={on}
           onOpen={reach}
           onEnd={onEnd}
           more={more}
@@ -132,7 +128,6 @@ export function Rail({
           query={query}
           activeId={activeId}
           busy={busy}
-          on={on}
           onOpen={reach}
         />
       )}

@@ -27,8 +27,6 @@ interface Band {
   convos: Convo[]
 }
 
-/** Pinned rows are a band of their own, above every dated one. */
-const PINNED = 'Pinned'
 
 const MONTH = [
   'January',
@@ -68,7 +66,7 @@ const bandOf = (at: number, now: number): string => {
 
 /** An unreadable stamp sorts to the end rather than throwing the whole list. */
 const moment = (c: Convo): number => {
-  const ms = Date.parse(c.updatedAt)
+  const ms = Date.parse(c.updatedAt ?? '')
   return Number.isNaN(ms) ? 0 : ms
 }
 
@@ -114,12 +112,9 @@ export const group = (convos: readonly Convo[], now: number = Date.now()): Band[
   once.sort((a, b) => moment(b) - moment(a))
 
   const bands: Band[] = []
-  const pins = once.filter((c) => c.isPinned === true)
-  if (pins.length > 0) bands.push({ label: PINNED, convos: pins })
 
   let run: Band | undefined
   for (const c of once) {
-    if (c.isPinned === true) continue
     const label = bandOf(moment(c), now)
     if (run === undefined || run.label !== label) {
       run = { label, convos: [] }
@@ -133,7 +128,7 @@ export const group = (convos: readonly Convo[], now: number = Date.now()): Band[
 /**
  * Finding one.
  *
- * A literal substring over the title and the tags, lower-cased — never a regex
+ * A literal substring over the title, lower-cased — never a regex
  * built from what someone typed, which is both a ReDoS and a surprise (`.` in a
  * title stops meaning a full stop). An empty question asks nothing, so it
  * answers with everything rather than nothing.
@@ -142,11 +137,7 @@ export const hits = (convos: readonly Convo[], query: string): Convo[] => {
   const q = query.trim().toLowerCase()
   const listed = convos.filter((c) => id(c) !== '')
   if (q === '') return listed
-  return listed.filter(
-    (c) =>
-      named(c).toLowerCase().includes(q) ||
-      (c.tags ?? []).some((t) => t.toLowerCase().includes(q)),
-  )
+  return listed.filter((c) => named(c).toLowerCase().includes(q))
 }
 
 /**

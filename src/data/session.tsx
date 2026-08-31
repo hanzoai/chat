@@ -22,7 +22,6 @@
  * so there is exactly one place a credential is obtained, refreshed or thrown
  * away, and a second one cannot appear without moving this import.
  */
-import { IAM } from '@hanzo/iam'
 import {
   createContext,
   useCallback,
@@ -34,47 +33,17 @@ import {
   type ReactNode,
 } from 'react'
 
-import { brand, clientId } from '~/brand'
-import { api, callbackPath, loginPath } from '~/data/api'
+import { ai } from '~/data/ai'
+import { api } from '~/data/api'
 import { keepHere, take } from '~/data/back'
 import { guest } from '~/data/guest'
-import { http, Refused, setBearer, setRenew } from '~/data/http'
+import { iam } from '~/data/iam'
+import { HeldError } from '@hanzo/ai'
 import { keys } from '~/data/keys'
 import { exchanging, noSession, probe } from '~/data/probe'
 import { invalidate, useRead } from '~/data/query'
 import type { Standing, User } from '~/data/types'
 
-let engine: IAM | null = null
-
-/**
- * What a session asks for.
- *
- * `offline_access` is what makes a session outlive its access token. IAM issues
- * a refresh token only when asked, and without one the only way past an expiry
- * is a full redirect to the issuer — a page navigation in the middle of
- * whatever someone was typing.
- */
-const scope = 'openid profile email offline_access'
-
-/** The one IAM client. Built on first use, because it reads `window`. */
-const iam = (): IAM =>
-  (engine ??= new IAM({
-    serverUrl: brand.issuer,
-    clientId,
-    organization: brand.org,
-    redirectUri: `${window.location.origin}${callbackPath}`,
-    /**
-     * Where the issuer returns the browser once the session has ended.
-     *
-     * `?redirect=false` is what makes this a landing rather than a bounce: the
-     * login route starts a fresh authorize on mount, so a bare `/login` would
-     * send somebody who just signed out straight back to the issuer. Built from
-     * the current origin for the same reason the callback is — each brand
-     * returns to its OWN host, and each host registers this exact address.
-     */
-    postLogoutRedirectUri: `${window.location.origin}${loginPath}?redirect=false`,
-    scope,
-  }))
 
 export type Session = {
   /** `unknown` while it is being decided, then `guest` or `live`. */
@@ -111,36 +80,14 @@ export const Session = ({ children }: { children: ReactNode }) => {
    * re-runs, so the pane would simply stay empty. Adopting a principal re-reads
    * the world.
    */
-  const live = useCallback((token: string) => {
-    setBearer(token)
+  const live = useCallback((_token: string) => {
     setStanding('live')
     invalidate()
   }, [])
 
   const anonymous = useCallback(() => {
-    setBearer(undefined)
     setStanding('guest')
     invalidate()
-  }, [])
-
-  /**
-   * How this page gets a fresh bearer when the one it holds is refused.
-   *
-   * Installed before anything is read, so the very first bootstrap call can
-   * survive an expiry. `http` owns the single-flight and the one replay; this
-   * owns the credential. Renewal happens at IAM — the chat server is not asked,
-   * which is why there is no endpoint here that could itself answer 401 and
-   * deadlock the queue behind it.
-   */
-  useEffect(() => {
-    setRenew(async () => {
-      const fresh = await iam()
-        .getValidAccessToken()
-        .catch(() => null)
-      if (fresh) setStanding('live')
-      return fresh
-    })
-    return () => setRenew(null)
   }, [])
 
   const started = useRef(false)
@@ -176,9 +123,28 @@ export const Session = ({ children }: { children: ReactNode }) => {
   }, [live, anonymous])
 
   /** The account behind a real session. A guest has none to read. */
-  const record = useRead<User>(keys.user, () => http.get<User>(api.user.self), {
-    enabled: standing === 'live',
-  })
+  /**
+   * The account behind a real session — `/v1/ai/account`, the identity the
+   * token itself names. A guest has none to read.
+   *
+   * IAM's `owner` is the org; `name` is the login. Both are carried because the
+   * rail shows one and the tenancy is decided by the other.
+   */
+  const record = useRead<User>(
+    keys.user,
+    async () => {
+      const account = await ai().account.get()
+      return {
+        id: account.name,
+        name: account.displayName || account.name,
+        username: account.name,
+        email: account.email,
+        avatar: account.avatar,
+        role: account.owner,
+      }
+    },
+    { enabled: standing === 'live' },
+  )
 
   /**
    * A token this server will not accept is not a session.
@@ -189,7 +155,7 @@ export const Session = ({ children }: { children: ReactNode }) => {
    * them something.
    */
   useEffect(() => {
-    if (record.error instanceof Refused && record.error.status === 401) anonymous()
+    if (record.error instanceof HeldError) anonymous()
   }, [record.error, anonymous])
 
   const nobody = useMemo(guest, [])

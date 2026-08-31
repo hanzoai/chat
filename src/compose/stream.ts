@@ -1,198 +1,108 @@
 /**
- * The stream — the ONE client for a turn in flight.
+ * The turn in flight.
  *
- * Three verbs, and they are three because the server draws the line there: a
- * turn is STARTED with a POST that answers a stream id, HEARD over a GET that
- * carries the frames, and STOPPED with a POST that names the job. Splitting
- * start from listen is what makes a reply survive a reload: the run belongs to
- * the server, not to the socket, so closing the socket does not cancel
- * anything, and reopening it with `resume` gets the catch-up.
+ * One verb, where there were three. The tree this replaces started a turn with a
+ * POST that answered a stream id, HEARD it over a separate GET, and STOPPED it
+ * with a third call naming the job — because that server ran the model behind a
+ * job it owned, so a reply outlived the socket and a reload could rejoin it.
  *
- * `open` from `~/data/http` rather than a `fetch` of its own — which also
- * settles the question of the credential. The bearer, the single-flight
- * renewal on a 401 and the cookie policy are decided in one place for the whole
- * client, and a guest simply has no bearer to send: `Bearer undefined` is not
- * the same as no header, and a server reads any bearer as a claim to be
- * somebody and refuses it.
+ * `/v1/chat/completions` is not that server. A completion IS its response: there
+ * is no job to name, nothing to rejoin, and closing the stream ends the work.
+ * So resumption is gone, the reconnect-with-backoff is gone, and stopping is
+ * `AbortController` rather than a request. That is a real loss of behaviour —
+ * an answer no longer survives a reload — and it is stated in `LLM.md` rather
+ * than hidden behind a resume that would silently do nothing.
  *
- * `EventSource` is not an option here, for reasons that are all one reason: it
- * carries no bearer, takes no abort signal, and hides the status of a failing
- * response — so a refusal with a real explanation in its body arrives as an
- * anonymous `error` and gets retried five times before the reader is told
- * anything. A `fetch` body is a stream, and `@hanzo/ai`'s `parseSSE` decodes it:
- * the blank-line boundary, an event split across two reads, CRLF, and a `data:`
- * spread over several lines are the same four rules for every SSE client in the
- * estate, and the copy that used to live here knew only the first two.
+ * The SSE decode is gone too, and it did not move here: `parseSSE` used to be
+ * called in this file over `fetch`'s body. The SDK does both now, and yields
+ * decoded `chat.completion.chunk` values, so the blank-line boundary, the split
+ * event, CRLF and the multi-line `data:` are answered once for the estate rather
+ * than once more here.
  */
-import { parseSSE } from '@hanzo/ai'
+import type { ChatCompletionChunk, ChatCompletionMessage } from '@hanzo/ai'
 
-import { api } from '~/data/api'
-import { http, open } from '~/data/http'
-import { explain } from '~/data/types'
+import { ai } from '~/data/ai'
 
-import { frame, type Frame } from '~/compose/frames'
-import type { Payload } from '~/compose/submit'
-
-/** How many times a dropped connection is reopened before the reader is told. */
-const TRIES = 5
-/** The backoff ceiling. Past ~30s a reader has already reloaded. */
-const WAIT = 30_000
-
-/** How a stream ended. The shell answers each differently, so it is told which. */
+/** How a turn ended. The shell answers each differently, so it is told which. */
 export type Ended =
-  /** The run finished, or failed with a reason already delivered as a frame. */
+  /** The model finished, or stopped for a reason already folded in. */
   | 'done'
-  /** No such job — it completed or expired while nobody was listening. */
-  | 'gone'
-  /** The session was refused, and renewing it did not help. */
+  /** The session was refused, and the SDK's own retry did not help. */
   | 'denied'
-  /** The connection kept dropping. The run may still be alive server-side. */
-  | 'lost'
-  /** The caller closed it. */
+  /** It failed, and `fault` carries what to say. */
+  | 'failed'
+  /** The reader closed it. */
   | 'stopped'
 
 export interface Ear {
-  frame: (f: Frame) => void
-  /** The socket is live. Raised again on every reconnect. */
-  open?: () => void
-  ended?: (why: Ended) => void
+  chunk: (c: ChatCompletionChunk) => void
+  ended: (why: Ended, fault?: string) => void
+}
+
+export interface Turn {
+  model: string
+  messages: ChatCompletionMessage[]
 }
 
 /**
- * Start a turn. Answers the stream id to listen on.
+ * What a refusal says.
  *
- * Nothing is retried here, and the refusal is not swallowed: `http` throws a
- * `Refused` carrying the status and the server's own body, which is what tells
- * a lapsed session apart from an exhausted quota apart from a provider that is
- * down. A retry loop around a request that already reached the model is how one
- * question becomes three answers.
+ * The SDK throws its own errors carrying the server's status and body; a network
+ * failure throws a `TypeError` with nothing useful in it. Both reach a reader,
+ * so both get a sentence — and the status is read where there is one, because
+ * 401 is a session question and everything else is not.
  */
-export const start = async (endpoint: string, payload: Payload): Promise<string> => {
-  const answered = await http.post<{ streamId?: string }>(api.ask.send(endpoint), payload)
-  // Accepted, but nothing to listen to. Not a refusal — there is no status to
-  // act on, only a turn that went nowhere.
-  if (!answered.streamId) throw new Error('The turn was accepted but no stream was started.')
-  return answered.streamId
+const status = (error: unknown): number | null => {
+  const e = error as { status?: unknown; statusCode?: unknown }
+  const said = e?.status ?? e?.statusCode
+  return typeof said === 'number' ? said : null
 }
 
+const said = (error: unknown): string =>
+  error instanceof Error && error.message ? error.message : 'The answer could not be reached.'
+
 /**
- * Hear a turn. Returns the way to stop listening.
+ * Ask, and hear the answer. Returns the way to stop listening.
  *
- * Stopping LISTENING is not stopping the RUN — that is `stop()`. Navigating
- * away closes the socket and leaves the model working, which is the whole
- * point of a resumable stream.
- *
- * `resume` asks the server to open with a catch-up of everything already
- * written. It is set on the first connection only when rejoining a run found in
- * progress, and on every RECONNECTION, because a drop is exactly when frames go
- * missing.
+ * Stopping here DOES end the run — see the note above. The abort propagates
+ * into the SDK's fetch, the connection closes, and the model stops being paid
+ * for.
  */
-export const listen = (id: string, ear: Ear, o: { resume?: boolean } = {}): (() => void) => {
+export const run = (turn: Turn, ear: Ear): (() => void) => {
   const control = new AbortController()
-  let tries = 0
   let shut = false
 
-  const end = (why: Ended) => {
+  const end = (why: Ended, fault?: string) => {
     if (shut) return
     shut = true
-    control.abort()
-    ear.ended?.(why)
+    ear.ended(why, fault)
   }
 
-  const again = (resume: boolean) => {
+  void (async () => {
+    try {
+      const stream = await ai().chat.completions.create(
+        { model: turn.model, messages: turn.messages, stream: true },
+        { signal: control.signal },
+      )
+
+      for await (const chunk of stream) {
+        if (shut) return
+        ear.chunk(chunk)
+      }
+
+      end('done')
+    } catch (error) {
+      // The reader's own abort surfaces as a throw. It is not a failure, and it
+      // has already been reported by the caller that asked for it.
+      if (control.signal.aborted) return end('stopped')
+      if (status(error) === 401) return end('denied')
+      end('failed', said(error))
+    }
+  })()
+
+  return () => {
     if (shut) return
-    if (tries >= TRIES) return end('lost')
-    const pause = Math.min(1000 * 2 ** tries, WAIT)
-    tries += 1
-    setTimeout(() => {
-      if (!shut) void hear(resume)
-    }, pause)
+    control.abort()
+    end('stopped')
   }
-
-  const hear = async (resume: boolean) => {
-    let res: Response
-    try {
-      res = await open(api.ask.stream(id, resume), {
-        method: 'GET',
-        headers: { Accept: 'text/event-stream' },
-        signal: control.signal,
-      })
-    } catch {
-      // A network failure, not an answer. The run is probably still alive.
-      return again(true)
-    }
-
-    if (res.status === 404) return end('gone')
-    // `open` has already spent one renewal on a 401 and replayed the request,
-    // so a refusal that reaches here is an answer rather than an expiry.
-    if (res.status === 401 || res.status === 403) return end('denied')
-
-    if (!res.ok || !res.body) {
-      // A failure the server DESCRIBED is the answer, not a hiccup: say it and
-      // stop. Reconnecting through five backoffs first spends half a minute and
-      // then reports something vaguer than what arrived at once. A bodyless
-      // failure IS a hiccup, and falls through to the reconnect below.
-      const body = await res.text().catch(() => '')
-      if (body) {
-        ear.frame({ kind: 'fault', text: explain(body).text })
-        return end('done')
-      }
-      return again(true)
-    }
-
-    ear.open?.()
-    tries = 0
-
-    let closed = false
-    try {
-      for await (const event of parseSSE(res.body)) {
-        const f = frame(event.data)
-        if (!f) continue
-        ear.frame(f)
-        // A close is terminal. Reading past it is how a stray fault after the
-        // end turns a finished reply back into a failed one.
-        if (f.kind === 'close') {
-          closed = true
-          break
-        }
-      }
-    } catch {
-      if (!shut) return again(true)
-      return
-    }
-
-    if (closed) return end('done')
-    // The body ended without a closing frame: the connection dropped mid-run.
-    return again(true)
-  }
-
-  void hear(o.resume === true)
-  return () => end('stopped')
-}
-
-/**
- * Stop the run itself.
- *
- * Either name works — the server finds the job from whichever it is given — and
- * the conversation id is the one a reader always has, so a stop still lands
- * when the stream id was lost to a reload.
- *
- * The stop is not the end of the stream. The server answers by writing a
- * closing frame with `aborted`, and the reply ends the way it would have ended
- * anyway: through the fold, in one place.
- */
-export const stop = async (what: {
-  streamId?: string
-  conversationId?: string
-}): Promise<void> => {
-  await http.post(api.ask.stop, what)
-}
-
-/** The run this conversation already has going, if the server is holding one —
- *  what a freshly loaded tab asks before it settles on showing a resting box. */
-export const running = async (conversationId: string): Promise<string | null> => {
-  const answered = await http
-    .get<{ active?: boolean; streamId?: string }>(api.ask.state(conversationId))
-    .catch(() => null)
-  return answered?.active === true && answered.streamId ? answered.streamId : null
 }

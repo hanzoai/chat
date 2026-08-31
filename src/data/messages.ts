@@ -1,46 +1,51 @@
 /**
  * ONE conversation's turns.
  *
- * This is also the single crossing between the server's word for who spoke and
- * the app's. The wire says `isCreatedByUser: boolean`; every component asks
- * `role`, because @hanzo/ui/chat's `Message` decides its entire presentation
- * from it — a contained bubble for a person, full-bleed prose for a model. The
- * translation happens HERE, on the way in, and `asMessage` is exported so the
- * stream can put its frames through the same door rather than inventing a
- * second one.
+ * `/v1/agents/chat/conversations/{id}` answers a flat transcript: an id, a role
+ * and a string per turn. Everything the old wire carried around a turn — parts,
+ * attachments, feedback, sibling links — is not on it, so a stored turn is prose
+ * and the renderer's `text` path draws it.
+ *
+ * Parents are assigned HERE, linearly, because the transcript has none. The
+ * thread renders a tree and asks each turn who it answers; given a straight line
+ * it draws a straight line, and `Siblings` never appears because nothing on this
+ * wire branches. That is the truth about the data rather than a limitation of
+ * the renderer.
+ *
+ * `null` from the SDK means "no such thread for this caller" — the route answers
+ * 200 with an empty transcript for another tenant's id, so the SDK reads empty
+ * as absent. An empty list is passed straight through as an empty conversation.
  */
-import { api } from '~/data/api'
-import { http } from '~/data/http'
+import { ai } from '~/data/ai'
 import { keys } from '~/data/keys'
 import { useRead } from '~/data/query'
-import type { Message, RawMessage } from '~/data/types'
-
-/**
- * A turn, as the app holds it.
- *
- * The server has said who spoke in two different ways over the years — a
- * boolean, and lately a `role` string — so both are read, boolean first because
- * it is the one every stored message carries.
- */
-const asMessage = (raw: RawMessage): Message => {
-  const { isCreatedByUser, role, ...rest } = raw
-  const spoke = isCreatedByUser === true || (isCreatedByUser == null && role === 'user')
-  return { ...rest, role: spoke ? 'user' : 'assistant', text: raw.text ?? '' }
-}
-
-export const asMessages = (raw: RawMessage[] | null | undefined): Message[] =>
-  (raw ?? []).map(asMessage)
+import type { Message } from '~/data/types'
 
 /**
  * Every turn of one conversation, oldest first.
  *
- * The whole thread in one read: a conversation is a unit — it is forked, shared
- * and deleted whole — and paging it would mean the thread rendering half of
- * itself while the reader scrolls up through the other half.
+ * The whole thread in one read: a conversation is a unit, and paging it would
+ * mean the thread rendering half of itself while the reader scrolls up through
+ * the other half. The route agrees — it takes no cursor.
  */
 export const useTurns = (convoId: string | null | undefined) =>
   useRead<Message[]>(
     keys.turns(convoId ?? ''),
-    async () => asMessages(await http.get<RawMessage[]>(api.messages.of(convoId as string))),
+    async () => {
+      const thread = await ai().threads.get(convoId as string)
+      let parent: string | null = null
+      return (thread?.messages ?? []).map((m) => {
+        const turn: Message = {
+          messageId: m.id,
+          conversationId: convoId ?? null,
+          parentMessageId: parent,
+          role: m.role === 'user' ? 'user' : 'assistant',
+          text: m.content ?? '',
+          createdAt: m.createdAt,
+        }
+        parent = m.id
+        return turn
+      })
+    },
     { enabled: Boolean(convoId) },
   )

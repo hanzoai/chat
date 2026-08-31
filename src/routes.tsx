@@ -5,7 +5,6 @@ import { Callback } from '~/shell/Callback'
 import { Chat } from '~/shell/Chat'
 import { Login } from '~/shell/Login'
 import { Root } from '~/shell/Root'
-import { Share } from '~/shell/Share'
 
 /**
  * Where the app is mounted, from the document that served it.
@@ -21,7 +20,6 @@ const base = document.querySelector('base')?.getAttribute('href') ?? '/'
  *
  *   /               a conversation that has no id yet
  *   /c/:id          that same conversation, once it has one
- *   /share/:shareId somebody else's conversation, read-only and public
  *   /login          where a refusal sends you
  *   /auth/callback  where the identity provider sends you back
  *   *               home, because every path this client has ever meant is a
@@ -39,17 +37,14 @@ const base = document.querySelector('base')?.getAttribute('href') ?? '/'
  * prints a status code and a "download error logs" button at a URL a person
  * typed. Ranked last, it catches only what nothing else claims.
  *
- * Three routes sit OUTSIDE `Root`, and each is deliberate. `/share/:shareId` is
- * public: it takes no session, so it must not mount the rail, the gate or the
- * palette, none of which mean anything to somebody who was handed a link.
- * `/login` and `/auth/callback` are the doorway, and drawing the product's
+ * Two routes sit OUTSIDE `Root`, and both are the doorway:
+ * `/login` and `/auth/callback` are where a session begins and ends, and drawing the product's
  * chrome around a page whose whole job is to hand the browser somewhere else
  * would paint a conversation list nobody can use for the half-second before the
  * navigation.
  */
 export const router = createBrowserRouter(
   [
-    { path: '/share/:shareId', element: <Share />, errorElement: <Boundary /> },
     { path: '/login', element: <Login />, errorElement: <Boundary /> },
     { path: '/auth/callback', element: <Callback />, errorElement: <Boundary /> },
     {

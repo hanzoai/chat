@@ -6,7 +6,6 @@ import type { Convo } from '~/data/types'
 
 import { group, id } from './group'
 import { Item } from './Item'
-import type { Verbs } from './Menu'
 
 /**
  * The set, as the rail draws it: banded by when, newest first, pinned above.
@@ -31,7 +30,6 @@ export interface ListProps {
   activeId?: string | null
   /** Conversations with a turn in flight. */
   busy?: readonly string[]
-  on?: Verbs
   onOpen: (c: Convo) => void
   /** The foot came into view and there is another cursor to spend. */
   onEnd?: () => void
@@ -44,7 +42,6 @@ export function List({
   convos,
   activeId,
   busy,
-  on,
   onOpen,
   onEnd,
   more = false,
@@ -77,7 +74,6 @@ export function List({
               convo={c}
               active={id(c) === activeId}
               busy={running.has(id(c))}
-              on={on}
               onOpen={onOpen}
             />
           ))}

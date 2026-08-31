@@ -40,6 +40,17 @@ export type Brand = {
   footer: string
   /** The hosts this brand answers on. */
   hosts: readonly string[]
+  /**
+   * The brand's `pk-` key, for asking without signing in.
+   *
+   * Optional, and unset on purpose: `createAiClient` at the pinned 0.6.7 takes
+   * `auth`, `token` and `getToken` and nothing else, so there is nowhere to put
+   * one yet. Declared here because the anonymous baseline is a BRAND fact — each
+   * org mints its own — and a field added later beside the issuer is a field two
+   * brands can already disagree about. `ai.ts` starts reading it when the SDK
+   * takes it.
+   */
+  publishableKey?: string
 }
 
 /**

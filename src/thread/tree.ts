@@ -44,7 +44,7 @@ interface Tree extends Entry {
 }
 
 /** The group key of the top level. Roots have no parent to name them. */
-export const ROOT = ''
+const ROOT = ''
 
 /** Which sibling is showing at each fork, keyed by the parent's id. */
 export type Chosen = Readonly<Record<string, number>>

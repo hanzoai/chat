@@ -1,24 +1,20 @@
-import { Dialog, DialogContent, Screen, XStack, YStack } from '@hanzo/ui'
-import { ConfirmDelete } from '@hanzo/ui/product'
+import { Screen, XStack, YStack } from '@hanzo/ui'
 import { useCallback, useMemo, useState } from 'react'
 import { Outlet, useMatch, useNavigate, useOutletContext } from 'react-router'
 
 import { brand } from '~/brand'
 import { api } from '~/data/api'
-import { useCloseAccount, useConfig, useEndpoints, useModels } from '~/data/config'
-import { useArchive, useConvos, useDelete, useDeleteAll, useRename } from '~/data/convos'
-import { useConnections, useRestart, useServers } from '~/data/mcp'
+import { useModels } from '~/data/config'
+import { useConvos } from '~/data/convos'
 import { useSession } from '~/data/session'
-import { useShares, useUnshare } from '~/data/share'
 import type { Convo } from '~/data/types'
 import { useNarrow } from '~/gui'
 import { Account } from '~/rail/Account'
-import { id, named } from '~/rail/group'
-import type { Verbs } from '~/rail/Menu'
+import { id } from '~/rail/group'
 import { Rail } from '~/rail/Rail'
 import { Visitor } from '~/rail/Visitor'
 import { Settings } from '~/settings/Settings'
-import { announce, Announce } from '~/shell/Announce'
+import { Announce } from '~/shell/Announce'
 import { Gate } from '~/shell/Gate'
 import { Palette } from '~/shell/Palette'
 
@@ -77,50 +73,16 @@ export const Root = () => {
    */
   const [rail, setRail] = useState(!narrow)
   const [settings, setSettings] = useState(false)
-  /** The conversation somebody asked to delete, held while they confirm it. */
-  const [doomed, setDoomed] = useState<Convo | null>(null)
 
   const { standing, user, signIn, signOut } = useSession()
   const mine = standing === 'live'
 
-  const config = useConfig()
-  const endpoints = useEndpoints()
-  const models = useModels()
-
-  const convos = useConvos({}, mine)
-  const rename = useRename()
-  const archive = useArchive()
-  const drop = useDelete()
-  const dropAll = useDeleteAll()
-  const closeAccount = useCloseAccount()
-
-  // Read only while the dialog that shows them is open. A settings tab nobody
-  // has opened is four requests nobody asked for, on every visit.
-  const archived = useConvos({ isArchived: true }, mine && settings)
-  const shares = useShares({}, mine && settings)
-  const unshare = useUnshare()
-  const servers = useServers(mine && settings)
-  const connections = useConnections(mine && settings)
-  const restart = useRestart()
+  const models = useModels(mine)
+  const convos = useConvos(mine)
 
   const open = useCallback((c: Convo) => navigate(`/c/${id(c)}`), [navigate])
   const fresh = useCallback(() => navigate('/'), [navigate])
   const preferences = useCallback(() => setSettings(true), [])
-
-  /**
-   * What a row can do to its conversation. `delete` only ASKS — the menu is
-   * deliberately not the place a confirm or a request lives, so it hands the
-   * conversation back and this holds it until somebody says yes.
-   */
-  const verbs = useMemo<Verbs>(
-    () => ({
-      rename: (c, title) => void rename.send({ conversationId: id(c), title }),
-      pin: (c, yes) => void rename.send({ conversationId: id(c), isPinned: yes }),
-      archive: (c, yes) => void archive.send({ conversationId: id(c), isArchived: yes }),
-      delete: setDoomed,
-    }),
-    [rename, archive],
-  )
 
   const frame = useMemo<Frame>(() => ({ rail, setRail, setSettings }), [rail])
 
@@ -142,7 +104,6 @@ export const Root = () => {
       collapsed={!rail}
       onSettings={preferences}
       accountHref={api.iam.account}
-      helpHref={config.data?.helpAndFaqURL}
       onSignOut={signOut}
     />
   ) : (
@@ -150,7 +111,6 @@ export const Root = () => {
       collapsed={!rail}
       onLogIn={signIn}
       onSettings={preferences}
-      helpHref={config.data?.helpAndFaqURL}
     />
   )
 
@@ -163,16 +123,13 @@ export const Root = () => {
           and both are placed against this row. */}
       <XStack flex={1} minHeight={0} position="relative">
         <Rail
-          convos={convos.items}
+          convos={convos.data ?? []}
           activeId={here}
           loading={convos.pending}
-          more={convos.more}
-          onEnd={convos.next}
           open={rail}
           onOpenChange={setRail}
           drawer={narrow}
           title={brand.title}
-          on={verbs}
           onOpen={open}
           onNew={fresh}
           account={foot}
@@ -193,66 +150,14 @@ export const Root = () => {
         <Settings
           open
           onOpenChange={setSettings}
-          served={{
-            endpoints: endpoints.data,
-            models: models.data,
-            specs: config.data?.modelSpecs?.list,
-          }}
+          served={{ models: models.data }}
           account={{
             person: user ?? undefined,
             onSignOut: signOut,
-            onClear: async () => {
-              await dropAll.send()
-              announce('Every conversation has been deleted.')
-              navigate('/')
-            },
-            onDelete: async () => {
-              await closeAccount.send()
-              signOut()
-            },
-          }}
-          apps={{
-            servers: servers.data,
-            status: connections.data,
-            loading: servers.pending,
-            onConnect: (server) => void restart.send(server),
-          }}
-          archive={{
-            archived: archived.items,
-            loading: archived.pending,
-            onRestore: (id) => void archive.send({ conversationId: id, isArchived: false }),
-            onDelete: async (id) => {
-              await drop.send(id)
-              announce('Conversation deleted.')
-            },
-          }}
-          links={{
-            links: shares.items,
-            loading: shares.pending,
-            onRevoke: async (shareId) => {
-              await unshare.send(shareId)
-              announce('That link no longer works.')
-            },
           }}
         />
       ) : null}
 
-      {doomed ? (
-        <Dialog open onOpenChange={() => setDoomed(null)}>
-          <DialogContent maxWidth={440}>
-            <ConfirmDelete
-              message={`Delete “${named(doomed)}”? Every turn in it goes with it, and there is no undo.`}
-              confirmLabel="Delete conversation"
-              run={async () => {
-                await drop.send(id(doomed))
-                announce('Conversation deleted.')
-                if (here === id(doomed)) navigate('/')
-              }}
-              onDone={() => setDoomed(null)}
-            />
-          </DialogContent>
-        </Dialog>
-      ) : null}
     </Screen>
   )
 }

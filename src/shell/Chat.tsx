@@ -1,28 +1,24 @@
 import { Fill, Paragraph, XStack, YStack } from '@hanzo/ui'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 
 import { brand } from '~/brand'
 import { Compose } from '~/compose/Compose'
-import { fold, opening, parts, spoken, type Part as Piece, type Reply } from '~/compose/frames'
+import { faulted, fold, opening, parts, spoken, stopped, type Part as Piece, type Reply } from '~/compose/frames'
 import { useHandoff } from '~/compose/link'
-import { listen, running, start, stop as halt } from '~/compose/stream'
-import { AGENTS, type Conversation, type Payload } from '~/compose/submit'
-import { useConfig, useEndpoints, useModels } from '~/data/config'
+import { run } from '~/compose/stream'
+import { history, type Conversation, type Payload } from '~/compose/submit'
+import { useModels } from '~/data/config'
 import { useConvo } from '~/data/convos'
-import { refuse, requireLogin } from '~/data/gate'
-import { Refused } from '~/data/http'
-import { keys } from '~/data/keys'
+import { requireLogin } from '~/data/gate'
 import { useTurns } from '~/data/messages'
-import { invalidate } from '~/data/query'
+import { why } from '~/data/missing'
 import { useSession } from '~/data/session'
 import * as store from '~/data/store'
-import { explain, type Message, type Part } from '~/data/types'
-import { useNarrow } from '~/gui'
+import type { Message, Part } from '~/data/types'
 import { Model } from '~/settings/Model'
 import { pick } from '~/settings/models'
 import { model as preferred, usePref } from '~/settings/prefs'
-import { Aside } from '~/shell/Aside'
 import { Header } from '~/shell/Header'
 import { useFrame } from '~/shell/Root'
 import { useTitle } from '~/shell/title'
@@ -65,7 +61,7 @@ const piece = (p: Piece): Part => {
  */
 const answered = (reply: Reply, local: string, conversationId: string | null): Message => ({
   messageId: local,
-  conversationId: reply.conversationId ?? conversationId,
+  conversationId,
   parentMessageId: reply.askedBy || null,
   role: 'assistant',
   text: spoken(reply),
@@ -112,12 +108,9 @@ export const Chat = () => {
   const { rail, setRail } = useFrame()
   const navigate = useNavigate()
   const { search } = useLocation()
-  const narrow = useNarrow()
 
   const { standing } = useSession()
-  const config = useConfig()
-  const endpoints = useEndpoints()
-  const models = useModels()
+  const models = useModels(standing === 'live')
 
   const record = useConvo(id)
   const served = useTurns(id)
@@ -128,7 +121,6 @@ export const Chat = () => {
   const failure = store.useAtom(store.failure)
   const held = store.useAtom(store.convo)
 
-  const [aside, setAside] = useState(false)
   const [address, choose] = usePref(preferred)
 
   useTitle(record.data?.title ?? held?.title)
@@ -151,93 +143,65 @@ export const Chat = () => {
   const asked = useHandoff(search, strip)
 
   /**
-   * Hear a run and paint it.
-   *
-   * The same three lines serve a turn just sent and a turn found already in
-   * flight, which is the whole reason it is one function: a reload during a
-   * long answer rejoins the stream with `resume`, and a rejoin that painted
-   * differently from the original would be a second renderer of the same run.
+   * Ask, and paint the answer as it arrives.
    *
    * Nothing about the reply's SHAPE is decided here — `fold` is the composer's,
-   * and it is pure. Three of the five ways a stream can end are answered
-   * differently, which is why it is told which: a refused token opens the gate,
-   * a connection that kept dropping is a sentence, and the rest are simply over.
+   * and it is pure. What is here is the lifecycle: mark the screen busy, put
+   * every fold into the store, and answer the four ways a stream can end.
+   *
+   * A refused session opens the gate. A failure becomes a part IN the reply
+   * rather than a toast, because it is the answer to the question above it and
+   * a message that scrolls away takes the explanation with it.
    */
-  const follow = useCallback(
-    (streamId: string, local: string, askedBy: string, convoId: string | null, resume = false) => {
-      let reply = opening(askedBy)
+  const ask = useCallback(
+    (payload: Payload, said: readonly Message[]) => {
+      const local = `${payload.messageId}~`
+      let reply = opening(payload.messageId)
+
+      const paint = () => store.put(answered(reply, local, payload.conversationId))
+
       store.busy.set(true)
+      paint()
 
-      const finish = () => {
-        store.busy.set(false)
-        store.stop.set(null)
-        const settled = reply.conversationId ?? convoId
-        invalidate(keys.convos)
-        if (settled) invalidate(keys.turns(settled))
-      }
-
-      const close = listen(
-        streamId,
+      const close = run(
+        { model: payload.model, messages: history(said, payload) },
         {
-          frame: (f) => {
-            reply = fold(reply, f)
-            store.put(answered(reply, local, convoId))
-            // The id the server mints on a first turn belongs in the address
-            // bar. `replace`, because the URL somebody arrived at and the URL
-            // it became are one step, not two to press back through.
-            if (!convoId && reply.conversationId) {
-              navigate(`/c/${reply.conversationId}`, { replace: true })
-            }
+          chunk: (c) => {
+            reply = fold(reply, c)
+            paint()
           },
-          ended: (why) => {
-            if (why === 'denied') requireLogin('anonymous')
-            if (why === 'lost') {
-              store.failure.set({
-                code: 'lost',
-                text: 'The connection kept dropping. The answer may still be running — reload to pick it up.',
-              })
-            }
-            finish()
+          ended: (whyEnded, fault) => {
+            if (whyEnded === 'denied') requireLogin('anonymous')
+            if (whyEnded === 'failed') reply = faulted(reply, fault ?? why.write)
+            if (whyEnded === 'stopped') reply = stopped(reply)
+            paint()
+            store.busy.set(false)
+            store.stop.set(null)
           },
         },
-        { resume },
       )
 
-      // Stopping ENDS THE RUN, which is not the same as closing the socket: the
-      // server answers a stop by writing a closing frame, so the reply finishes
-      // the way every other reply finishes — through the fold, in one place.
-      store.stop.set(() => {
-        void halt({ streamId, conversationId: convoId ?? undefined })
-        close()
-      })
+      store.stop.set(() => close())
     },
-    [navigate],
+    [],
   )
 
   /**
-   * Opening a conversation is a RESET, not a merge. Five values are one fact —
-   * the turns, whether one is arriving, how to end it, the record and the last
-   * refusal — and clearing four of them is how a conversation opens showing the
-   * previous one's error under a caret that never stops.
+   * Opening a conversation is a RESET, not a merge. Four values are one fact —
+   * the turns, whether one is arriving, how to end it, and the last refusal —
+   * and clearing three of them is how a conversation opens showing the previous
+   * one's error under a caret that never stops.
    *
    * It waits for the turns before it clears, so an id landing in the bar does
    * not blank the conversation already on screen, and it keys off the id, so a
    * re-read of the same conversation cannot throw away a turn arriving in it.
    *
-   * Then it asks whether the server is still answering one. That question is
-   * what makes the stream's `resume` worth having — an answer outlives the tab
-   * that asked for it, so a reload picks it back up instead of showing a
-   * finished-looking conversation with half an answer in it. It is asked HERE
-   * rather than in an effect of its own so it cannot race the reset and be
-   * wiped by it; the reply is checked against the conversation still open,
-   * because a probe outlives the screen that sent it.
+   * It no longer asks whether a run is still going. A completion IS its
+   * response — there is no job on the server to rejoin — so a reload ends the
+   * answer rather than resuming it.
    */
   useEffect(() => {
     if (opened.current === id) return
-    // A run already in flight has this conversation on screen, and its turns are
-    // the live ones. This is exactly the moment a first turn mints an id and the
-    // address bar catches up — resetting here would replace the reply being
-    // written with the half of it the server has stored so far.
     if (store.busy.get()) {
       opened.current = id
       return
@@ -245,61 +209,51 @@ export const Chat = () => {
     if (id && !served.data) return
     opened.current = id
     store.reset(record.data ?? null, served.data ?? [])
-    if (!id) return
-    void running(id).then((streamId) => {
-      if (streamId && opened.current === id) follow(streamId, `${id}~live`, '', id, true)
-    })
-  }, [id, record.data, served.data, follow])
+  }, [id, record.data, served.data])
 
   /**
    * The composer built the payload; this puts it on the wire.
+   *
+   * The thread is read HERE and handed to the ask, because a completion holds no
+   * conversation: every turn carries everything said so far. The composer does
+   * not have the thread and must not learn about the store to get it.
    *
    * `true` is answered so the box empties — the draft is kept only when the
    * turn is HELD, and nothing holds one here.
    */
   const send = useCallback(
     (payload: Payload) => {
+      // Every route this client asks for needs a session, and the SDK refuses
+      // before it sends when there is none — so the gate opens HERE, while the
+      // question is still in the box. `false` keeps the draft, so signing in
+      // returns somebody to the sentence they wrote rather than to an empty one.
+      if (standing !== 'live') {
+        requireLogin('anonymous')
+        return false
+      }
+
+      const said = store.turns.get()
+
       store.put({
         messageId: payload.messageId,
         conversationId: payload.conversationId,
         parentMessageId: payload.parentMessageId,
         role: 'user',
         text: payload.text,
-        createdAt: payload.clientTimestamp,
       })
       store.failure.set(null)
-      store.busy.set(true)
 
-      void start(payload.endpoint, payload)
-        .then((streamId) =>
-          follow(streamId, `${payload.messageId}~`, payload.messageId, payload.conversationId),
-        )
-        .catch((error: unknown) => {
-          store.busy.set(false)
-          store.stop.set(null)
-          // A spent preview and a lapsed session are the gate's — `refuse` says
-          // which, and opens it. Everything else is a sentence in the thread,
-          // read from the body's own code, never the upstream's own words.
-          if (refuse(error)) return
-          store.failure.set(explain(error instanceof Refused ? error.body : error))
-        })
-
+      ask(payload, said)
       return true
     },
-    [follow],
+    [ask, standing],
   )
 
-  const { endpoint, model } = useMemo(() => pick(address), [address])
+  const { model } = useMemo(() => pick(address), [address])
 
   const conversation = useMemo<Conversation>(
-    () => ({
-      conversationId: id,
-      endpoint: endpoint || record.data?.endpoint || AGENTS,
-      model: model || record.data?.model || undefined,
-      agent_id: record.data?.agent_id,
-      spec: record.data?.spec,
-    }),
-    [id, endpoint, model, record.data],
+    () => ({ conversationId: id, model }),
+    [id, model],
   )
 
   const last = messages.length ? messages[messages.length - 1].messageId : null
@@ -310,19 +264,13 @@ export const Chat = () => {
   )
 
   const title = record.data?.title ?? held?.title ?? 'New chat'
-  const details = !narrow
 
   return (
     <>
       <Header
         title={title}
-        id={id}
         rail={rail}
         onRail={() => setRail(!rail)}
-        sharing={config.data?.sharedLinksEnabled === true && standing === 'live'}
-        details={details}
-        aside={aside}
-        onAside={() => setAside((was) => !was)}
       />
 
       <XStack flex={1} minHeight={0}>
@@ -359,12 +307,9 @@ export const Chat = () => {
               busy={busy}
               empty={messages.length === 0}
               link={asked}
-              servers={Object.keys(config.data?.mcpServers ?? {})}
               model={
                 <Model
-                  endpoints={endpoints.data}
                   models={models.data}
-                  specs={config.data?.modelSpecs?.list}
                   value={address}
                   onChange={choose}
                   size="sm"
@@ -374,6 +319,16 @@ export const Chat = () => {
               onStop={() => stop?.()}
               onTrouble={(say) => store.failure.set({ code: 'local', text: say })}
             />
+
+            {/* A turn is answered by `/v1/chat/completions`, which persists
+                nothing, and there is no route to record one — so a reader is
+                told plainly rather than discovering it on their next visit.
+                Shown once there is something that would have been saved. */}
+            {messages.length > 0 ? (
+              <Paragraph fontSize="$1" color="$color11" textAlign="center" paddingTop="$2">
+                {why.write}
+              </Paragraph>
+            ) : null}
 
             {/* The brand's own line, when it has one. Inside the composer's
                 block so it shares that measure rather than stating a second. */}
@@ -385,11 +340,6 @@ export const Chat = () => {
           </YStack>
         </YStack>
 
-        {/* Its own column, never an overlay — and not offered at all where
-            there is no room for one beside the conversation. */}
-        {aside && details ? (
-          <Aside convo={record.data ?? held} onClose={() => setAside(false)} />
-        ) : null}
       </XStack>
     </>
   )

@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types 'src/**/*.test.ts'",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -17,7 +18,6 @@
     "@hanzo/gui": "catalog:",
     "@hanzo/iam": "catalog:",
     "@hanzo/ui": "catalog:",
-    "@hanzo/voice": "catalog:",
     "@hanzogui/lucide-icons-2": "catalog:",
     "@hanzogui/next-theme": "catalog:",
     "react": "catalog:",

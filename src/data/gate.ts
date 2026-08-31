@@ -16,12 +16,10 @@
  * it up on mount. Taking it consumes it, so dismissing the gate is not undone
  * by the next remount.
  */
-import { Refused } from '~/data/http'
-
 /**
  * Why the gate opened.
  *
- *   `limit`       the free preview is spent — a 402 naming `GUEST_LIMIT`.
+ *   `limit`       the free preview is spent.
  *   `anonymous`   the request needed an identity this visitor does not have.
  *   `unavailable` the anonymous preview itself could not start, so there is no
  *                 signed-out product to fall back to.
@@ -53,28 +51,3 @@ export const watchLogin = (fn: (reason: Reason) => void): (() => void) => {
   return () => window.removeEventListener(EVENT, handle)
 }
 
-/**
- * Whether a failure means "sign in", and if so, open the gate.
- *
- * The two shapes are the two ways a visitor runs out of room: a 402 whose body
- * names `GUEST_LIMIT` is the free preview ending, and a 401 is a request that
- * needed an identity. Everything else is a real error and belongs in the
- * thread, so this answers `false` and leaves it alone.
- */
-export const refuse = (error: unknown): boolean => {
-  if (!(error instanceof Refused)) return false
-
-  if (error.status === 402) {
-    const body = error.body as { type?: string } | null
-    if (body?.type !== 'GUEST_LIMIT') return false
-    requireLogin('limit')
-    return true
-  }
-
-  if (error.status === 401) {
-    requireLogin('anonymous')
-    return true
-  }
-
-  return false
-}

@@ -6,7 +6,6 @@ import type { Convo } from '~/data/types'
 
 import { hits, id } from './group'
 import { Item } from './Item'
-import type { Verbs } from './Menu'
 
 /**
  * What finding one found.
@@ -35,11 +34,10 @@ export interface HitsProps {
   query: string
   activeId?: string | null
   busy?: readonly string[]
-  on?: Verbs
   onOpen: (c: Convo) => void
 }
 
-export function Hits({ convos, query, activeId, busy, on, onOpen }: HitsProps) {
+export function Hits({ convos, query, activeId, busy, onOpen }: HitsProps) {
   const found = useMemo(() => hits(convos, query), [convos, query])
   const running = useMemo(() => new Set(busy ?? []), [busy])
   const asked = query.trim()
@@ -54,7 +52,6 @@ export function Hits({ convos, query, activeId, busy, on, onOpen }: HitsProps) {
               convo={c}
               active={id(c) === activeId}
               busy={running.has(id(c))}
-              on={on}
               onOpen={onOpen}
             />
           ))}

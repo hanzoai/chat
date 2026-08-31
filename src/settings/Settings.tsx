@@ -17,10 +17,7 @@ import { selected } from '@hanzo/ui/glass'
 import { useState, type ReactNode } from 'react'
 
 import { Account, type AccountProps } from './Account'
-import { Apps, type AppsProps } from './Apps'
-import { Archive, type ArchiveProps } from './Archive'
 import { General } from './General'
-import { Links, type LinksProps } from './Links'
 import { Look } from './Look'
 import type { Served } from './models'
 
@@ -31,12 +28,6 @@ export interface SettingsProps {
   served?: Served
   /** Who is signed in, and the verbs that end the session or the account. */
   account?: AccountProps
-  /** Connected apps and their reachability. */
-  apps?: AppsProps
-  /** Archived conversations, and the two things you can do to one. */
-  archive?: ArchiveProps
-  /** Shared links, and revoking one. */
-  links?: LinksProps
 }
 
 /**
@@ -74,9 +65,6 @@ const TABS: readonly Tab[] = [
   { id: 'general', label: 'General', panel: (p) => <General served={p.served} /> },
   { id: 'look', label: 'Look', panel: () => <Look /> },
   { id: 'account', label: 'Account', panel: (p) => <Account {...p.account} /> },
-  { id: 'apps', label: 'Apps', panel: (p) => <Apps {...p.apps} /> },
-  { id: 'archive', label: 'Archive', panel: (p) => <Archive {...p.archive} /> },
-  { id: 'links', label: 'Links', panel: (p) => <Links {...p.links} /> },
 ]
 
 /**

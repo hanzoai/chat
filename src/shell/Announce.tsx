@@ -23,11 +23,6 @@ import { useEffect, useState } from 'react'
  */
 const voices = new Set<(text: string) => void>()
 
-/** Say something. Nothing is drawn; the region reads it aloud. */
-export const announce = (text: string) => {
-  for (const say of voices) say(text)
-}
-
 export const Announce = () => {
   const [text, setText] = useState('')
 

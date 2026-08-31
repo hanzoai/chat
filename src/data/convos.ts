@@ -1,60 +1,52 @@
 /**
- * The SET of conversations — listing them, and the verbs a row offers.
+ * The SET of conversations.
  *
- * The list is cursor-paged and accumulates in one cache entry, so the sidebar
- * asks for more by calling `next()` and never learns what a cursor is. Every
- * verb states what it makes untrue, which is why renaming a conversation
- * refreshes the sidebar without the sidebar being told about renaming.
+ * `/v1/agents/chat/conversations` answers every thread in the caller's org,
+ * newest first, in ONE read. That is the whole surface: no filter, no cursor, no
+ * sort — so the sidebar's paging is gone rather than faked, and `useConvos`
+ * answers a list that is already complete.
  *
- * A note on the wire: the mutating routes take their arguments wrapped in
- * `arg`. That is the server's shape, not a taste, and it is written out here
- * once so no caller has to know it.
+ * The verbs are gone too, and this is the honest part. Renaming, archiving,
+ * pinning and deleting were six routes on a server that does not exist; the one
+ * that does is GET-only, on both `/conversations` and `/conversations/{id}`.
+ * There is no route to write to and no SDK method to call, so nothing here
+ * pretends otherwise — `~/data/missing` is what the rail's controls report.
  */
-import { api, type ConvoQuery } from '~/data/api'
-import { http } from '~/data/http'
+import { ai } from '~/data/ai'
 import { keys } from '~/data/keys'
-import { useRead, useSend, usePages, type Page } from '~/data/query'
+import { useRead } from '~/data/query'
 import type { Convo } from '~/data/types'
 
-type Listed = { conversations?: Convo[]; nextCursor?: string | null }
-
-/** How the sidebar asks: a filter, and pages of the answer. */
-export const useConvos = (filter: ConvoQuery = {}, enabled = true) =>
-  usePages<Convo>(
-    keys.convoList(filter),
-    async (cursor): Promise<Page<Convo>> => {
-      const page = await http.get<Listed>(api.convos.list({ ...filter, cursor }))
-      return { items: page.conversations ?? [], next: page.nextCursor }
+/**
+ * Every conversation, newest first.
+ *
+ * The SDK's `Thread` carries an id, a derived title and when it was last
+ * appended to. `Convo` is the app's richer record, and the extra fields simply
+ * are not answered here — a thread has no endpoint, model or tags on this wire.
+ */
+export const useConvos = (enabled = true) =>
+  useRead<Convo[]>(
+    keys.convos,
+    async () => {
+      const threads = await ai().threads.list()
+      return threads.map((t) => ({
+        conversationId: t.id,
+        title: t.title ?? '',
+        updatedAt: t.updatedAt,
+      }))
     },
     { enabled },
   )
 
-/** One conversation's own record — its title, its settings, its tags. */
-export const useConvo = (id: string | null | undefined) =>
-  useRead<Convo>(keys.convo(id ?? ''), () => http.get<Convo>(api.convos.one(id as string)), {
-    enabled: Boolean(id),
-  })
-
-
-export type Rename = { conversationId: string; title?: string; isPinned?: boolean }
-
-/** Rename a conversation, pin it, or both. */
-export const useRename = () =>
-  useSend<Rename, Convo>((arg) => http.post<Convo>(api.convos.update, { arg }), [keys.convos])
-
-export type Archive = { conversationId: string; isArchived: boolean }
-
-/** Put a conversation away, or take it back out. */
-export const useArchive = () =>
-  useSend<Archive, Convo>((arg) => http.post<Convo>(api.convos.archive, { arg }), [keys.convos])
-
-/** Delete one conversation. */
-export const useDelete = () =>
-  useSend<string, void>(
-    (conversationId) => http.drop<void>(api.convos.drop, { arg: { conversationId } }),
-    [keys.convos, keys.shares],
-  )
-
-/** Delete all of them. The one verb with no undo, so it is named plainly. */
-export const useDeleteAll = () =>
-  useSend<void, void>(() => http.drop<void>(api.convos.dropAll), [keys.convos, keys.shares])
+/**
+ * One conversation's record.
+ *
+ * Read out of the list rather than from a route of its own: `/conversations/{id}`
+ * answers the TRANSCRIPT, not the record, and the list is where a title lives.
+ * So this shares the list's cache entry and costs no second request.
+ */
+export const useConvo = (id: string | null | undefined) => {
+  const list = useConvos(Boolean(id))
+  const found = id ? list.data?.find((c) => c.conversationId === id) : undefined
+  return { ...list, data: found }
+}

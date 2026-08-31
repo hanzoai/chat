@@ -1,27 +1,27 @@
 /**
- * The wire a reply arrives on, as values.
+ * A reply, assembled from OpenAI chunks.
  *
- * A reply is not sent; it is ASSEMBLED, frame by frame, and this file is the
- * whole of that assembly: what a frame is, how one is recognised, and what it
- * does to the reply so far. Nothing here touches a socket, a DOM or React, so
- * the entire protocol — a resumed stream, an aborted one, a tool that streams
- * its arguments before it runs — is assertable in Node against a string.
+ * A reply is not sent; it is ASSEMBLED, and this file is the whole of that
+ * assembly. Nothing here touches a socket, a DOM or React — the SDK yields
+ * `chat.completion.chunk` values and this folds them — so the entire protocol is
+ * assertable in Node against an array of literals.
  *
- * SSE framing is NOT here. Blank-line boundaries, chunk splits, CRLF and
- * multi-line `data:` are the transport's problem and every client has the same
- * one, so `@hanzo/ai`'s `parseSSE` answers it and `stream.ts` hands the payload
- * of each event straight to `frame`. What is left here is the part no shared
- * package can know: what THIS server's payloads mean.
+ * There is no frame vocabulary any more, and that is the point. The tree this
+ * replaces decoded an eight-variant union out of one server's SSE payloads:
+ * `on_run_step`, `on_message_delta`, `on_reasoning_delta`, `on_run_step_delta`,
+ * `on_run_step_completed`, `sync`/`resumeState`, `created`, `final`. None of
+ * those exist on `/v1/chat/completions`, which speaks the OpenAI wire, and the
+ * SDK has already parsed it. What is left is the one thing no shared package can
+ * do: decide what a delta MEANS to the reply on screen.
  *
- * ONE ADDRESSING RULE, and it is the decomplection this file exists for. The
- * server addresses every piece of a reply by INDEX — a slot in the reply's
- * content — and it addresses a slot two ways: directly (`index`), or through
- * the id of the run step that owns it. So a reply carries `slots` (what is at
- * each index) and `at` (which index a step id names), and every frame reduces
- * to writing one slot. The eight-handler tangle this replaces kept four
- * mutable maps in refs to say the same thing, which is why a delta that
- * overtook its step lost its text.
+ * ONE ADDRESSING RULE. A chunk names no slot — OpenAI has no notion of where a
+ * piece of an answer goes — so a slot is claimed by CHANNEL, on first sight, in
+ * arrival order. Prose is one channel, reasoning is another, and each tool call
+ * is its own, keyed by the index OpenAI does give. That is what keeps reasoning
+ * above the answer it reasoned toward instead of interleaved through it, without
+ * anything here knowing which order a given model emits them in.
  */
+import type { ChatCompletionChunk } from '@hanzo/ai'
 import type { Ran } from '@hanzo/ui/chat'
 
 /** Whether a thing is still going, and how it stopped. The reply and each tool
@@ -35,6 +35,10 @@ export type { Ran }
  * Prose, private reasoning, a tool that ran, a picture, or a refusal. Five
  * kinds, and the renderer picks a component per kind — which is the whole
  * reason the union is closed rather than a bag of server types.
+ *
+ * `image` survives the move with no producer on this wire: chat completions
+ * answer text. It is kept because the renderer already draws it and a stored
+ * thread can carry one, not as a promise that a stream will make one.
  */
 export type Part =
   | { kind: 'text'; text: string }
@@ -43,379 +47,169 @@ export type Part =
   | { kind: 'image'; url: string; alt: string }
   | { kind: 'fault'; text: string }
 
-/** Something the run produced beside its prose — a generated file, a memory
- *  write, an artifact. Opaque on purpose: the server owns this vocabulary and
- *  a closed copy of it here would go stale silently. */
-export interface Attachment {
-  messageId: string
-  type?: string
-  filename?: string
-  filepath?: string
-  [key: string]: unknown
-}
-
 /**
  * A reply, mid-assembly.
  *
- * `slots` is sparse and keyed by the server's index, so a frame never has to
- * know how many parts arrived before it — which is what makes the fold
- * order-independent and a resume a plain overwrite.
+ * `slots` is sparse and keyed by claim order; `at` says which slot a channel
+ * claimed. Two maps rather than a list because a delta arrives for a channel,
+ * not for a position, and looking a position up by scanning is how a fold starts
+ * depending on how many pieces came before it.
  */
 export interface Reply {
-  /** The server's id for this reply, once it has named one. */
+  /** The completion's id, once a chunk has carried one. */
   id: string
   /** The turn that asked for it. */
   askedBy: string
-  conversationId: string | null
+  /** Which model answered, as the wire reported it. */
+  model: string
   slots: Record<number, Part>
-  /** Run-step id → the slot it writes to. */
+  /** Channel → the slot it claimed. `text`, `think`, `tool:0`, `tool:1`… */
   at: Record<string, number>
-  attachments: Attachment[]
   status: Ran
-  /** The conversation's title, when the server settles on one. */
-  title?: string
 }
 
-/** The frames. Every one of them writes a slot, hangs something off the reply,
- *  or ends the run — there is no fourth thing a frame can mean. */
-export type Frame =
-  /** The server accepted the turn and minted its real ids. */
-  | { kind: 'open'; askedBy: string; conversationId: string | null }
-  /** A run step opened and claimed a slot. */
-  | { kind: 'slot'; step: string; at: number; tool?: string }
-  /** Text for the slot a step owns. `think` is the model's private reasoning. */
-  | { kind: 'delta'; step: string; text: string; think: boolean }
-  /** A tool's arguments, or its result. */
-  | { kind: 'tool'; step: string; name?: string; args?: string; output?: string; status?: Ran }
-  /** A whole part, at an index the server gave outright. */
-  | { kind: 'part'; at: number; part: Part }
-  /** Something the run produced beside its prose. */
-  | { kind: 'file'; file: Attachment }
-  /** The catch-up a rejoined stream opens with. Replaces what is there. */
-  | { kind: 'resume'; id?: string; parts: Part[] }
-  /** It is over — one way or the other, and this is the server's own account
-   *  of what the reply says. */
-  | {
-      kind: 'close'
-      aborted: boolean
-      conversationId: string | null
-      title?: string
-      reply?: Part[]
-      id?: string
-    }
-  /** It failed, and this is what to say about it. */
-  | { kind: 'fault'; text: string }
-
-const str = (v: unknown): string => (typeof v === 'string' ? v : '')
-const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
-const bag = (v: unknown): Record<string, unknown> =>
-  typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {}
-
-/**
- * A server content part → one of ours.
- *
- * The server spells a part two ways for the same thing — `{text: 'hi'}` while
- * streaming, `{text: {value: 'hi'}}` once stored — so both are read here rather
- * than at four call sites. An unknown type yields nothing: a slot with no
- * picture is better than a box saying the server said something.
- */
-const partOf = (raw: unknown): Part | null => {
-  const p = bag(raw)
-  const type = str(p.type)
-  const inner = bag(p[type])
-  const value = (key: string): string => {
-    const direct = p[type]
-    if (typeof direct === 'string') return direct
-    return str(inner[key])
-  }
-  switch (type) {
-    case 'text':
-    case 'text_delta':
-      return { kind: 'text', text: value('value') }
-    case 'think':
-      return { kind: 'think', text: value('value') }
-    case 'tool_call': {
-      const done = num(inner.progress) >= 1 || inner.output != null
-      return {
-        kind: 'tool',
-        name: str(inner.name),
-        args: typeof inner.args === 'string' ? inner.args : JSON.stringify(inner.args ?? ''),
-        output: str(inner.output),
-        status: done ? 'done' : 'running',
-      }
-    }
-    case 'image_file':
-      return { kind: 'image', url: str(inner.filepath), alt: str(inner.filename) }
-    case 'image_url':
-      // No name travels with a URL part, and `detail` is the fetch quality, not
-      // a description — spelling it into `alt` would read a picture out as
-      // "high" to somebody who cannot see it.
-      return { kind: 'image', url: str(inner.url), alt: '' }
-    case 'error':
-      return { kind: 'fault', text: value('value') }
-    default:
-      return null
-  }
-}
-
-const partsOf = (raw: unknown): Part[] =>
-  (Array.isArray(raw) ? raw : []).map(partOf).filter((p): p is Part => p !== null)
-
-/** The text a step's delta carries, on either of the two shapes the server
- *  sends it in (`delta.content` is a part, or an array of one). */
-const deltaText = (delta: unknown): { text: string; think: boolean } => {
-  const d = bag(delta)
-  const content = Array.isArray(d.content) ? d.content[0] : d.content
-  const part = partOf(content)
-  if (part?.kind === 'text') return { text: part.text, think: false }
-  if (part?.kind === 'think') return { text: part.text, think: true }
-  return { text: '', think: false }
-}
-
-/**
- * One `data:` payload → one frame.
- *
- * The order is the server's own precedence and is load-bearing: `final`
- * carries a `conversation` that also looks like a message, and a step event
- * carries a `data` that also carries a `type`. Reading the most specific key
- * first is what keeps a close from being mistaken for a part.
- *
- * Anything unrecognised is `null` — a stream stays live through a frame this
- * client has not learned yet, which is how a server can add one.
- */
-export const frame = (raw: string): Frame | null => {
-  const text = raw.trim()
-  if (!text || text === '[DONE]') return null
-  let d: Record<string, unknown>
-  try {
-    d = bag(JSON.parse(text))
-  } catch {
-    return null
-  }
-
-  if (d.final != null) {
-    const convo = bag(d.conversation)
-    const reply = bag(d.responseMessage)
-    return {
-      kind: 'close',
-      aborted: d.aborted === true,
-      conversationId: typeof convo.conversationId === 'string' ? convo.conversationId : null,
-      title: typeof convo.title === 'string' ? convo.title : undefined,
-      reply: reply.content != null ? partsOf(reply.content) : undefined,
-      id: typeof reply.messageId === 'string' ? reply.messageId : undefined,
-    }
-  }
-
-  if (d.error != null) {
-    return { kind: 'fault', text: typeof d.error === 'string' ? d.error : JSON.stringify(d.error) }
-  }
-
-  if (d.created != null) {
-    const m = bag(d.message)
-    return {
-      kind: 'open',
-      askedBy: str(m.messageId),
-      conversationId: typeof m.conversationId === 'string' ? m.conversationId : null,
-    }
-  }
-
-  if (d.sync != null) {
-    const state = bag(d.resumeState)
-    return {
-      kind: 'resume',
-      id: typeof state.responseMessageId === 'string' ? state.responseMessageId : undefined,
-      parts: partsOf(state.aggregatedContent),
-    }
-  }
-
-  if (d.event === 'attachment') {
-    const file = bag(d.data)
-    return { kind: 'file', file: { ...file, messageId: str(file.messageId) } }
-  }
-
-  if (typeof d.event === 'string') {
-    const body = bag(d.data)
-    switch (d.event) {
-      case 'on_run_step': {
-        const calls = Array.isArray(body.tool_calls) ? body.tool_calls : []
-        return {
-          kind: 'slot',
-          step: str(body.id),
-          at: num(body.index),
-          tool: calls.length > 0 ? str(bag(calls[0]).name) : undefined,
-        }
-      }
-      case 'on_message_delta':
-      case 'on_reasoning_delta': {
-        const { text: t, think } = deltaText(body.delta)
-        return {
-          kind: 'delta',
-          step: str(body.id),
-          text: t,
-          think: think || d.event === 'on_reasoning_delta',
-        }
-      }
-      case 'on_run_step_delta': {
-        const calls = bag(body.delta).tool_calls
-        const call = bag(Array.isArray(calls) ? calls[0] : undefined)
-        return {
-          kind: 'tool',
-          step: str(body.id),
-          name: str(call.name) || undefined,
-          args: typeof call.args === 'string' ? call.args : undefined,
-        }
-      }
-      case 'on_run_step_completed': {
-        const result = bag(body.result)
-        const call = bag(result.tool_call)
-        return {
-          kind: 'tool',
-          step: str(result.id),
-          name: str(call.name) || undefined,
-          output: str(call.output),
-          status: 'done',
-        }
-      }
-      default:
-        return null
-    }
-  }
-
-  if (typeof d.type === 'string') {
-    const part = partOf(d)
-    return part ? { kind: 'part', at: num(d.index), part } : null
-  }
-
-  if (d.message != null) {
-    const body = typeof d.text === 'string' ? d.text : str(d.response)
-    return { kind: 'part', at: 0, part: { kind: 'text', text: body } }
-  }
-
-  return null
-}
-
-/** An empty reply, waiting for its first frame. */
+/** An empty reply, waiting for its first chunk. */
 export const opening = (askedBy: string): Reply => ({
   id: '',
   askedBy,
-  conversationId: null,
+  model: '',
   slots: {},
   at: {},
-  attachments: [],
   status: 'running',
 })
 
-/** The slots, in index order — what a renderer walks. */
+/** The slots, in claim order — what a renderer walks. */
 export const parts = (reply: Reply): Part[] =>
   Object.keys(reply.slots)
     .map(Number)
     .sort((a, b) => a - b)
     .map((i) => reply.slots[i])
 
-/** Everything the reply says, as one string. The title generator and the
- *  clipboard both want this, and neither wants to know about slots. */
+/** Everything the reply says, as one string. The clipboard and the thread's own
+ *  plain-text copy both want this, and neither wants to know about slots. */
 export const spoken = (reply: Reply): string =>
   parts(reply)
     .filter((p) => p.kind === 'text')
     .map((p) => p.text)
     .join('')
 
+/**
+ * The slot a channel owns, claiming the next one if it owns none yet.
+ *
+ * Answers the reply as well as the index because claiming is a write: returning
+ * only the index would leave the caller to remember to record it, and the one
+ * that forgot appended every delta to slot `undefined`.
+ */
+const claim = (reply: Reply, channel: string): [Reply, number] => {
+  const held = reply.at[channel]
+  if (held != null) return [reply, held]
+  const at = Object.keys(reply.slots).length
+  return [{ ...reply, at: { ...reply.at, [channel]: at } }, at]
+}
+
 const write = (reply: Reply, at: number, part: Part): Reply => ({
   ...reply,
   slots: { ...reply.slots, [at]: part },
 })
 
-/** Extend the text already in a slot, whatever kind it is. */
-const extend = (reply: Reply, at: number, text: string, think: boolean): Reply => {
-  const kind = think ? 'think' : 'text'
-  const held = reply.slots[at]
-  const before = held?.kind === kind ? held.text : ''
-  return write(reply, at, { kind, text: before + text })
+/** Extend the prose or the reasoning in a channel's slot. */
+const extend = (reply: Reply, channel: 'text' | 'think', text: string): Reply => {
+  if (!text) return reply
+  const [claimed, at] = claim(reply, channel)
+  const held = claimed.slots[at]
+  const before = held?.kind === channel ? held.text : ''
+  return write(claimed, at, { kind: channel, text: before + text })
 }
 
 const asTool = (part: Part | undefined): Extract<Part, { kind: 'tool' }> =>
   part?.kind === 'tool' ? part : { kind: 'tool', name: '', args: '', output: '', status: 'running' }
 
-const slotsOf = (list: Part[]): Record<number, Part> =>
-  Object.fromEntries(list.map((p, i) => [i, p]))
+/**
+ * Reasoning, which the typed delta does not declare.
+ *
+ * Providers that expose a model's private reasoning put it beside `content`
+ * under a name they each chose — `reasoning_content` is DeepSeek's and the one
+ * the gateway relays, `reasoning` is the other spelling in the wild. Neither is
+ * in `ChatCompletionChunkDelta`, so it is read off the object rather than the
+ * type. A model that emits none simply never takes this branch.
+ */
+const thought = (delta: object): string => {
+  const d = delta as Record<string, unknown>
+  const said = d.reasoning_content ?? d.reasoning
+  return typeof said === 'string' ? said : ''
+}
 
 /**
- * One frame onto a reply. Pure — a new reply, every time.
+ * How a completion stopped, in the vocabulary the shell renders.
  *
- * A frame naming a step nobody opened is DROPPED rather than guessed at. The
- * server can emit a delta before the step that owns it (they race), and the
- * step arrives a moment later carrying the same text; inventing a slot for the
- * early one printed the sentence twice.
+ * `stop` and `tool_calls` are both a finished answer. `length` is the model
+ * running out of room, which is a truncation rather than a failure, and reads as
+ * the same unfinished state a reader's own stop produces — the answer is
+ * incomplete either way, and the thread says so the same way.
  */
-export const fold = (reply: Reply, f: Frame): Reply => {
-  switch (f.kind) {
-    case 'open':
-      return { ...reply, askedBy: f.askedBy || reply.askedBy, conversationId: f.conversationId }
+const how = (reason: string): Ran => (reason === 'length' ? 'cancelled' : 'done')
 
-    case 'slot': {
-      const held = reply.slots[f.at]
-      // A step that re-opens a slot claims it again but never empties it: the
-      // server re-sends a run step on a reconnect, and replacing what is there
-      // would delete the sentence the reader is looking at.
-      const opened: Part =
-        f.tool != null
-          ? (held?.kind === 'tool'
-              ? held
-              : { kind: 'tool', name: f.tool, args: '', output: '', status: 'running' })
-          : (held ?? { kind: 'text', text: '' })
-      return { ...write(reply, f.at, opened), at: { ...reply.at, [f.step]: f.at } }
-    }
+/**
+ * One chunk onto a reply. Pure — a new reply, every time.
+ *
+ * Only `choices[0]` is read. `n > 1` is never asked for by this client, and a
+ * second choice folded into the same slots would interleave two answers into one
+ * paragraph.
+ */
+export const fold = (reply: Reply, chunk: ChatCompletionChunk): Reply => {
+  const next = {
+    ...reply,
+    id: reply.id || chunk.id || '',
+    model: reply.model || chunk.model || '',
+  }
 
-    case 'delta': {
-      const at = reply.at[f.step]
-      if (at == null || !f.text) return reply
-      return extend(reply, at, f.text, f.think)
-    }
+  const choice = chunk.choices?.[0]
+  if (!choice) return next
 
-    case 'tool': {
-      const at = reply.at[f.step]
-      if (at == null) return reply
-      const held = asTool(reply.slots[at])
-      return write(reply, at, {
-        ...held,
-        name: f.name ?? held.name,
-        args: held.args + (f.args ?? ''),
-        output: f.output ?? held.output,
-        status: f.status ?? held.status,
+  let held = next
+  const delta = choice.delta
+
+  if (delta) {
+    held = extend(held, 'think', thought(delta))
+    held = extend(held, 'text', typeof delta.content === 'string' ? delta.content : '')
+
+    for (const call of delta.tool_calls ?? []) {
+      const [claimed, at] = claim(held, `tool:${call.index}`)
+      const was = asTool(claimed.slots[at])
+      held = write(claimed, at, {
+        ...was,
+        name: call.function?.name || was.name,
+        args: was.args + (call.function?.arguments ?? ''),
       })
     }
-
-    case 'part':
-      return write(reply, f.at, f.part)
-
-    case 'file':
-      return { ...reply, attachments: [...reply.attachments, f.file] }
-
-    case 'resume':
-      return {
-        ...reply,
-        id: f.id ?? reply.id,
-        // The catch-up is the server's whole account of the reply so far, so it
-        // REPLACES rather than merges: a rejoin that appended printed every
-        // sentence the reader had already seen a second time.
-        slots: slotsOf(f.parts),
-        at: {},
-        status: 'running',
-      }
-
-    case 'close':
-      return {
-        ...reply,
-        id: f.id ?? reply.id,
-        conversationId: f.conversationId ?? reply.conversationId,
-        title: f.title ?? reply.title,
-        slots: f.reply != null && f.reply.length > 0 ? slotsOf(f.reply) : reply.slots,
-        status: f.aborted ? 'cancelled' : 'done',
-      }
-
-    case 'fault': {
-      const at = Object.keys(reply.slots).length
-      return { ...write(reply, at, { kind: 'fault', text: f.text }), status: 'error' }
-    }
   }
+
+  if (choice.finish_reason == null) return held
+
+  // A finish reason ends the reply AND every tool still shown as running: the
+  // wire reports no per-call completion, so a tool left running paints a
+  // spinner beside a finished answer forever.
+  const settled = Object.fromEntries(
+    Object.entries(held.slots).map(([at, part]) => [
+      at,
+      part.kind === 'tool' && part.status === 'running' ? { ...part, status: 'done' as Ran } : part,
+    ]),
+  )
+  return { ...held, slots: settled, status: how(choice.finish_reason) }
 }
+
+/**
+ * The reply, failed.
+ *
+ * A refusal is a PART rather than a status alone, because it is the answer to
+ * the question above it and has to be readable in place. It takes the slot after
+ * whatever arrived before it, so a stream that produced two sentences and then
+ * died shows both and then says what happened.
+ */
+export const faulted = (reply: Reply, text: string): Reply => ({
+  ...write(reply, Object.keys(reply.slots).length, { kind: 'fault', text }),
+  status: 'error',
+})
+
+/** The reply, ended by the reader rather than by the model. */
+export const stopped = (reply: Reply): Reply => ({ ...reply, status: 'cancelled' })

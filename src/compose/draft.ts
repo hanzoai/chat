@@ -13,7 +13,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { blank, type Attached, type Draft, type Tools } from '~/compose/submit'
+import { blank, type Draft } from '~/compose/submit'
 
 /**
  * What a draft with no conversation yet is filed under.
@@ -25,7 +25,6 @@ import { blank, type Attached, type Draft, type Tools } from '~/compose/submit'
 export const NEW = 'new'
 
 const TEXT = 'textDraft_'
-const FILES = 'filesDraft_'
 
 /** How long typing settles before it is written down. One delay: a second one
  *  for "clearing" only exists to paper over the first being too eager. */
@@ -47,15 +46,7 @@ const store = (): Storage | null => {
 export const held = (id: string | null): Draft => {
   const at = store()
   if (!at) return blank
-  const text = at.getItem(TEXT + key(id)) ?? ''
-  let files: Attached[] = []
-  try {
-    const kept: unknown = JSON.parse(at.getItem(FILES + key(id)) ?? '[]')
-    if (Array.isArray(kept)) files = kept as Attached[]
-  } catch {
-    files = []
-  }
-  return { text, files, tools: {} }
+  return { text: at.getItem(TEXT + key(id)) ?? '' }
 }
 
 /** Put it down. An empty draft is removed rather than stored empty, so a
@@ -66,8 +57,6 @@ export const keep = (id: string | null, draft: Draft): void => {
   const k = key(id)
   if (draft.text.trim()) at.setItem(TEXT + k, draft.text)
   else at.removeItem(TEXT + k)
-  if (draft.files.length > 0) at.setItem(FILES + k, JSON.stringify(draft.files))
-  else at.removeItem(FILES + k)
 }
 
 /** It went out. Nothing is owed to it any more. */
@@ -75,26 +64,11 @@ export const drop = (id: string | null): void => {
   const at = store()
   if (!at) return
   at.removeItem(TEXT + key(id))
-  at.removeItem(FILES + key(id))
 }
-
-/** The tools that are simply on or off. MCP servers are a list, and have their
- *  own verb, because "which servers" is a different question from "search or
- *  not" and one verb answering both takes a union at every call site. */
-export type Switch = Exclude<keyof Tools, 'mcp'>
 
 export interface Held {
   draft: Draft
   write: (text: string) => void
-  /** Add a file, or replace one already there — an upload reports its progress
-   *  by putting the same record back with a higher number. */
-  put: (file: Attached) => void
-  /** Take one back off. */
-  take: (fileId: string) => void
-  /** Turn a tool on or off for this turn. */
-  tool: (which: Switch) => void
-  /** Turn one MCP server on or off for this turn. */
-  server: (name: string) => void
   /** The turn went out. */
   clear: () => void
 }
@@ -143,51 +117,11 @@ export const useDraft = (conversationId: string | null): Held => {
 
   const write = useCallback((text: string) => edit((d) => ({ ...d, text })), [edit])
 
-  const put = useCallback(
-    (file: Attached) =>
-      edit((d) => ({
-        ...d,
-        files: d.files.some((f) => f.file_id === file.file_id)
-          ? d.files.map((f) => (f.file_id === file.file_id ? file : f))
-          : [...d.files, file],
-      })),
-    [edit],
-  )
-
-  const take = useCallback(
-    (fileId: string) => edit((d) => ({ ...d, files: d.files.filter((f) => f.file_id !== fileId) })),
-    [edit],
-  )
-
-  const tool = useCallback(
-    (which: Switch) =>
-      edit((d) => ({ ...d, tools: { ...d.tools, [which]: d.tools[which] !== true } })),
-    [edit],
-  )
-
-  const server = useCallback(
-    (name: string) =>
-      edit((d) => {
-        const on = d.tools.mcp ?? []
-        return {
-          ...d,
-          tools: {
-            ...d.tools,
-            mcp: on.includes(name) ? on.filter((s) => s !== name) : [...on, name],
-          },
-        }
-      }),
-    [edit],
-  )
 
   const clear = useCallback(() => {
     drop(live.current.id)
-    // The TOOLS stay. Searching the web is something this conversation is
-    // doing, not something one sentence did — turning it back on after every
-    // question is the kind of small tax nobody can name but everybody feels.
-    // They stay visible as chips, so nothing about the next turn is hidden.
-    set((b) => ({ ...b, draft: { ...blank, tools: b.draft.tools } }))
+    set((b) => ({ ...b, draft: blank }))
   }, [])
 
-  return { draft: box.draft, write, put, take, tool, server, clear }
+  return { draft: box.draft, write, clear }
 }

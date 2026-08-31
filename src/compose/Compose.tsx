@@ -13,30 +13,24 @@
  * submits and stops. The pair of absolutely-positioned buttons that used to
  * live in this file is the arrangement every surface got subtly different.
  *
- * What stays is this surface's own: what may go INTO a turn (`+`), what the
- * turn is carrying (chips), a way to say it out loud, which model answers, and
- * the one send path everything funnels through — typed, dictated, dropped from
- * a link or picked from an opening.
+ * What stays is this surface's own: which model answers, and the one send path
+ * everything funnels through — typed, dropped from a link, or picked from an
+ * opening.
+ *
+ * Attachments, the tool badges and the microphone went with the routes behind
+ * them. There is no upload for a chat turn to carry; a completion takes OpenAI
+ * `tools` rather than the old server's `{web_search: true}`; and `/v1/models`
+ * publishes no transcription model to dictate with. Each is gone rather than
+ * left as a control that does nothing.
  */
-import { YStack, type GuiElement } from '@hanzo/ui'
+import { YStack } from '@hanzo/ui'
 import { Composer, ready } from '@hanzo/ui/chat'
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, type ReactNode } from 'react'
 
-import { Attach, type AttachProps } from '~/compose/Attach'
-import { Chips } from '~/compose/Chips'
 import { Starters, type Starter } from '~/compose/Starters'
-import { Voice } from '~/compose/Voice'
 import { useDraft } from '~/compose/draft'
 import type { Handoff } from '~/compose/link'
-import {
-  AGENTS,
-  payload,
-  settled,
-  type Conversation,
-  type Draft,
-  type Payload,
-} from '~/compose/submit'
-import { useUpload, type Takes } from '~/compose/upload'
+import { payload, type Conversation, type Draft, type Payload } from '~/compose/submit'
 
 /** The reading measure. `Thread` caps and centres its own column at this; the
  *  box sits OUTSIDE the thread and has to be told, or the two columns are
@@ -54,18 +48,9 @@ export interface ComposeProps {
   /** A turn is in flight: the send control becomes stop. */
   busy?: boolean
   disabled?: boolean
-  /** A conversation that is never written down. */
-  temporary?: boolean
   /** The model picker. Which models exist is settings'; where the control sits
    *  is the composer's, and that is the whole of what crosses here. */
   model?: ReactNode
-  /** What the provider can read. */
-  takes?: Takes
-  /** MCP servers this deployment offers. */
-  servers?: string[]
-  can?: AttachProps['can']
-  /** Largest file this conversation accepts, in bytes. */
-  limit?: number
   /** A question that arrived in the address bar. */
   link?: Handoff | null
   /** The thread has no turns yet, so openings are worth offering. */
@@ -92,12 +77,7 @@ export const Compose = ({
   parent = null,
   busy = false,
   disabled = false,
-  temporary = false,
   model,
-  takes = 'files',
-  servers,
-  can,
-  limit,
   link = null,
   empty = false,
   starters,
@@ -106,34 +86,11 @@ export const Compose = ({
   onTrouble,
 }: ComposeProps) => {
   const field = useRef<HTMLTextAreaElement>(null)
-  const frame = useRef<GuiElement | null>(null)
-  const [landing, setLanding] = useState(false)
 
   const conversationId = conversation?.conversationId ?? null
-  const { draft, write, put, take, tool, server, clear } = useDraft(conversationId)
+  const { draft, write, clear } = useDraft(conversationId)
 
   const say = useCallback((trouble: string) => onTrouble?.(trouble), [onTrouble])
-
-  const { add, cancel } = useUpload({
-    conversationId,
-    endpoint: conversation?.endpoint ?? AGENTS,
-    agentId: conversation?.agent_id,
-    put,
-    take,
-    say,
-    limit,
-  })
-
-  /** Taking a file back off STOPS it as well as hiding it. An upload nobody is
-   *  waiting for still finishes, and its record then walks straight back into
-   *  the draft the reader just cleared. */
-  const remove = useCallback(
-    (fileId: string) => {
-      cancel(fileId)
-      take(fileId)
-    },
-    [cancel, take],
-  )
 
   /**
    * The ONE send. Typed, dictated, picked from an opening, handed over in a
@@ -143,14 +100,10 @@ export const Compose = ({
     (text: string) => {
       const going: Draft = { ...draft, text: text.trim() }
       if (!ready(going.text, busy, disabled)) return
-      if (!settled(going)) {
-        say('One of the files is still uploading.')
-        return
-      }
-      const gone = onSend(payload({ draft: going, conversation, parent, temporary }))
+      const gone = onSend(payload({ draft: going, conversation, parent }))
       if (gone !== false) clear()
     },
-    [draft, busy, disabled, conversation, parent, temporary, onSend, clear, say],
+    [draft, busy, disabled, conversation, parent, onSend, clear, say],
   )
 
   const send = useCallback(() => fire(draft.text), [fire, draft.text])
@@ -172,63 +125,8 @@ export const Compose = ({
     fire(draft.text)
   }, [draft.text, fire])
 
-  // A pasted image is an attachment, not a filename. Bound to the node rather
-  // than passed as a prop: the field is a cross-platform component and a paste
-  // event is a web one, so it is read where the web actually is.
-  useEffect(() => {
-    const box = field.current
-    if (!box) return
-    const paste = (e: ClipboardEvent) => {
-      const files = e.clipboardData?.files
-      if (!files || files.length === 0) return
-      e.preventDefault()
-      add(files)
-    }
-    box.addEventListener('paste', paste)
-    return () => box.removeEventListener('paste', paste)
-  }, [add])
-
-  // Dropping a file on the composer. Native handlers on the node — `react-dnd`
-  // and a provider at the root of the app are a backend, a context and three
-  // wrapper components to learn that a file was let go over a box.
-  useEffect(() => {
-    const box = frame.current
-    // Where there is no DOM node there is no drag — the effect simply does not
-    // apply, rather than being branched around at the call site.
-    if (!box || !('addEventListener' in box)) return
-    const carrying = (e: DragEvent) => (e.dataTransfer?.types ?? []).includes('Files')
-    const onto = (e: DragEvent) => {
-      if (!carrying(e)) return
-      e.preventDefault()
-      setLanding(true)
-    }
-    // A drag crossing from the box into one of its own children raises
-    // `dragleave` too, so the mark has to check that the pointer really left.
-    // Without it the highlight flickers off the moment you aim at the field.
-    const away = (e: DragEvent) => {
-      const to = e.relatedTarget
-      if (to instanceof Node && box.contains(to)) return
-      setLanding(false)
-    }
-    const land = (e: DragEvent) => {
-      if (!carrying(e)) return
-      e.preventDefault()
-      setLanding(false)
-      add(e.dataTransfer?.files ?? null)
-    }
-    box.addEventListener('dragover', onto)
-    box.addEventListener('dragleave', away)
-    box.addEventListener('drop', land)
-    return () => {
-      box.removeEventListener('dragover', onto)
-      box.removeEventListener('dragleave', away)
-      box.removeEventListener('drop', land)
-    }
-  }, [add])
-
   return (
     <YStack
-      ref={frame}
       width="100%"
       maxWidth={COLUMN}
       alignSelf="center"
@@ -247,40 +145,14 @@ export const Compose = ({
         maxHeight={CEILING}
         label="Message"
         hint={busy ? 'Generating…' : 'Enter to send, Shift+Enter for a new line'}
-        // The one mark that a drop would land here. The box already draws an
-        // edge; lighting it is cheaper and clearer than an overlay that has to
-        // be positioned, dismissed and kept out of the way of the caret.
-        borderColor={landing ? '$color12' : '$borderColor'}
         // The ref, and only the ref. The field is already addressable —
         // `Composer` marks it `[data-slot="composer-field"]` and it answers to
         // its accessible name — so its props take no test handle, and a third
         // name for one element is the one nobody keeps in step.
         field={{ ref: field }}
       >
-        {/* Left to right: what can go IN, which model answers, what is in
-            there now, and a way to say it. The chips sit between the controls
-            and the send arrow because that is where the eye lands last before
-            committing — the moment to notice the turn is carrying something. */}
-        <Attach
-          takes={takes}
-          disabled={disabled}
-          tools={draft.tools}
-          servers={servers}
-          can={can}
-          onFiles={add}
-          onTool={tool}
-          onServer={server}
-        />
+        {/* Which model answers. */}
         {model}
-        <Chips
-          files={draft.files}
-          tools={draft.tools}
-          onTake={remove}
-          onTool={tool}
-          onServer={server}
-          field={field}
-        />
-        <Voice disabled={disabled} text={draft.text} onText={write} onTrouble={say} />
       </Composer>
     </YStack>
   )
