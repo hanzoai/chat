@@ -3,6 +3,7 @@ import { ConfirmDelete } from '@hanzo/ui/product'
 import { useCallback, useMemo, useState } from 'react'
 import { Outlet, useMatch, useNavigate, useOutletContext } from 'react-router'
 
+import { brand } from '~/brand'
 import { api } from '~/data/api'
 import { useCloseAccount, useConfig, useEndpoints, useModels } from '~/data/config'
 import { useArchive, useConvos, useDelete, useDeleteAll, useRename } from '~/data/convos'
@@ -170,7 +171,7 @@ export const Root = () => {
           open={rail}
           onOpenChange={setRail}
           drawer={narrow}
-          title={config.data?.appTitle ?? 'Hanzo Chat'}
+          title={brand.title}
           on={verbs}
           onOpen={open}
           onNew={fresh}

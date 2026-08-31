@@ -34,11 +34,11 @@ import {
   type ReactNode,
 } from 'react'
 
+import { brand, clientId } from '~/brand'
 import { api, callbackPath, loginPath } from '~/data/api'
 import { keepHere, take } from '~/data/back'
 import { guest } from '~/data/guest'
 import { http, Refused, setBearer, setRenew } from '~/data/http'
-import { identity, scope } from '~/data/iam'
 import { keys } from '~/data/keys'
 import { exchanging, noSession, probe } from '~/data/probe'
 import { invalidate, useRead } from '~/data/query'
@@ -46,12 +46,22 @@ import type { Standing, User } from '~/data/types'
 
 let engine: IAM | null = null
 
+/**
+ * What a session asks for.
+ *
+ * `offline_access` is what makes a session outlive its access token. IAM issues
+ * a refresh token only when asked, and without one the only way past an expiry
+ * is a full redirect to the issuer — a page navigation in the middle of
+ * whatever someone was typing.
+ */
+const scope = 'openid profile email offline_access'
+
 /** The one IAM client. Built on first use, because it reads `window`. */
 const iam = (): IAM =>
   (engine ??= new IAM({
-    serverUrl: identity.issuer,
-    clientId: identity.clientId,
-    organization: identity.org,
+    serverUrl: brand.issuer,
+    clientId,
+    organization: brand.org,
     redirectUri: `${window.location.origin}${callbackPath}`,
     /**
      * Where the issuer returns the browser once the session has ended.

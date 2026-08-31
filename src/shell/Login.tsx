@@ -2,7 +2,7 @@ import { Button, H2, Paragraph, YStack } from '@hanzo/ui'
 import { useEffect, useRef } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 
-import { brand } from '~/data/iam'
+import { brand } from '~/brand'
 import { useSession } from '~/data/session'
 import { Waiting } from '~/shell/Boundary'
 
@@ -49,11 +49,11 @@ export const Login = () => {
       <YStack flex={1} alignItems="center" justifyContent="center" padding="$6" backgroundColor="$background">
         <YStack width="100%" maxWidth={420} gap="$3" alignItems="center">
           <H2 fontSize="$6" fontWeight="500" color="$color" textAlign="center">
-            {failed ? 'That sign-in did not finish' : `Signed out of ${brand}`}
+            {failed ? 'That sign-in did not finish' : `Signed out of ${brand.name}`}
           </H2>
           <Paragraph fontSize="$3" color="$color11" textAlign="center">
             {failed
-              ? `${brand} did not complete the sign-in. Nothing was changed — try again, or carry on signed out.`
+              ? `${brand.name} did not complete the sign-in. Nothing was changed — try again, or carry on signed out.`
               : 'Your session has ended on this browser. Chat is still here signed out, with the free preview.'}
           </Paragraph>
           <Button variant="primary" onPress={signIn}>
@@ -67,5 +67,5 @@ export const Login = () => {
     )
   }
 
-  return <Waiting>Taking you to {brand}…</Waiting>
+  return <Waiting>Taking you to {brand.name}…</Waiting>
 }

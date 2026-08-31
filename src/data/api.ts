@@ -23,7 +23,7 @@
  *   `cloud.*`   api.hanzo.ai, the estate-wide surface: one event sink, one
  *               catalogue of plans. Cross-origin by nature; nothing else is.
  */
-import { identity } from '~/data/iam'
+import { brand, clientId } from '~/brand'
 
 /** The document's own root, without its trailing slash. */
 const root = (() => {
@@ -210,13 +210,13 @@ export const api = {
    * asking "what does this client talk to" deserves the whole answer here.
    */
   iam: {
-    discovery: `${identity.issuer}/.well-known/openid-configuration`,
-    authorize: `${identity.issuer}/v1/iam/oauth/authorize`,
-    token: `${identity.issuer}/v1/iam/oauth/token`,
-    userinfo: `${identity.issuer}/v1/iam/oauth/userinfo`,
-    logout: `${identity.issuer}/v1/iam/oauth/logout`,
-    signup: `${identity.issuer}/signup/${identity.clientId}`,
-    account: `${identity.issuer}/account`,
+    discovery: `${brand.issuer}/.well-known/openid-configuration`,
+    authorize: `${brand.issuer}/v1/iam/oauth/authorize`,
+    token: `${brand.issuer}/v1/iam/oauth/token`,
+    userinfo: `${brand.issuer}/v1/iam/oauth/userinfo`,
+    logout: `${brand.issuer}/v1/iam/oauth/logout`,
+    signup: `${brand.issuer}/signup/${clientId}`,
+    account: `${brand.issuer}/account`,
   },
 
   /** The estate, not this deployment. Cross-origin, and the only thing that is. */

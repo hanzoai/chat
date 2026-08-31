@@ -2,7 +2,6 @@ import { Button, H2, Paragraph, Screen, YStack } from '@hanzo/ui'
 import { Header as Bar } from '@hanzo/ui/chat'
 import { useNavigate, useParams } from 'react-router'
 
-import { useConfig } from '~/data/config'
 import { useShared } from '~/data/share'
 import { Waiting } from '~/shell/Boundary'
 import { useTitle } from '~/shell/title'
@@ -29,10 +28,9 @@ import { Thread } from '~/thread/Thread'
 export const Share = () => {
   const { shareId } = useParams()
   const shared = useShared(shareId)
-  const config = useConfig()
 
   const navigate = useNavigate()
-  useTitle(shared.data?.title, config.data?.appTitle)
+  useTitle(shared.data?.title)
 
   const gone = Boolean(shared.error) && !shared.data
 

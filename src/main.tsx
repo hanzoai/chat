@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { App } from '~/app'
+import { brand, wear } from '~/brand'
 
 /**
  * The mount. Three lines, and the second one is the whole design system.
@@ -15,12 +16,16 @@ import { App } from '~/app'
  * in step; a second one of any of those is how two surfaces of the same product
  * end up different sizes.
  *
- * Dark is the default because Hanzo is dark; `<Hanzo theme="light">` retunes the
- * same tokens rather than swapping in a second set.
+ * The theme is the brand's, not a literal: one image serves every brand, so the
+ * served document carries a placeholder name, icon and backdrop and `wear()` is
+ * the moment they become this brand's. It runs before the render so nothing is
+ * ever painted under another brand's name.
  */
+wear()
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Hanzo>
+    <Hanzo theme={brand.backdrop}>
       <App />
     </Hanzo>
   </StrictMode>,

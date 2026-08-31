@@ -1,29 +1,22 @@
 /**
  * What the tab says, and the one place it is said.
  *
- * A browser tab is the only piece of chrome a reader sees when the window is
- * not focused, so it has to name the CONVERSATION and not just the product —
- * eleven tabs all reading "Hanzo Chat" is eleven tabs you have to click through.
+ * A browser tab is the only chrome a reader sees when the window is not
+ * focused, so it names the CONVERSATION and not just the product — eleven tabs
+ * all reading "Hanzo Chat" is eleven tabs you have to click through.
  *
- * The product half is a parameter rather than a literal because the brand is a
- * runtime fact: one image serves hanzo.chat, lux.chat and zoo.chat, and the
- * deployment says which it is (`config.appTitle`). Until that read lands, the
- * document's own title stands in — the served HTML already carries a name, and
- * blanking the tab while a fetch is in flight is worse than a moment of the
- * generic one.
+ * The product half comes from `brand`, which is the whole point: it used to be
+ * `config.appTitle` read from the server with a hard-coded 'Hanzo Chat' beside
+ * every use of it, so a brand whose config route answered nothing wore Hanzo's
+ * name in its own tab.
  */
 import { useEffect } from 'react'
 
-/**
- * The title the document arrived with. Read at module scope, which is the only
- * moment it is still the served one — the first `useTitle` overwrites it.
- */
-const SERVED = typeof document === 'undefined' ? '' : document.title
+import { brand } from '~/brand'
 
-export const useTitle = (subject?: string | null, product?: string) => {
+export const useTitle = (subject?: string | null) => {
   useEffect(() => {
-    const name = product?.trim() || SERVED
     const named = subject?.trim()
-    document.title = named ? `${named} · ${name}` : name
-  }, [subject, product])
+    document.title = named ? `${named} · ${brand.title}` : brand.title
+  }, [subject])
 }

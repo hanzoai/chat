@@ -1,7 +1,8 @@
-import { Fill, XStack, YStack } from '@hanzo/ui'
+import { Fill, Paragraph, XStack, YStack } from '@hanzo/ui'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 
+import { brand } from '~/brand'
 import { Compose } from '~/compose/Compose'
 import { fold, opening, parts, spoken, type Part as Piece, type Reply } from '~/compose/frames'
 import { useHandoff } from '~/compose/link'
@@ -130,7 +131,7 @@ export const Chat = () => {
   const [aside, setAside] = useState(false)
   const [address, choose] = usePref(preferred)
 
-  useTitle(record.data?.title ?? held?.title, config.data?.appTitle)
+  useTitle(record.data?.title ?? held?.title)
 
   /** The conversation the screen is currently showing. Written when it opens,
    *  and read by anything that answers later, to ask whether it still applies. */
@@ -308,7 +309,7 @@ export const Chat = () => {
     [messages, failure, last],
   )
 
-  const title = record.data?.title ?? held?.title ?? config.data?.appTitle ?? 'New chat'
+  const title = record.data?.title ?? held?.title ?? 'New chat'
   const details = !narrow
 
   return (
@@ -335,7 +336,7 @@ export const Chat = () => {
               busy={busy}
               greeting={
                 <Greeting
-                  hint={config.data?.appTitle ? `Ask ${config.data.appTitle} anything.` : undefined}
+                  hint={`Ask ${brand.title} anything.`}
                 />
               }
             />
@@ -373,6 +374,14 @@ export const Chat = () => {
               onStop={() => stop?.()}
               onTrouble={(say) => store.failure.set({ code: 'local', text: say })}
             />
+
+            {/* The brand's own line, when it has one. Inside the composer's
+                block so it shares that measure rather than stating a second. */}
+            {brand.footer ? (
+              <Paragraph fontSize="$1" color="$color11" textAlign="center" paddingTop="$2">
+                {brand.footer}
+              </Paragraph>
+            ) : null}
           </YStack>
         </YStack>
 

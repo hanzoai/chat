@@ -4,12 +4,11 @@
     <meta charset="utf-8" />
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Hanzo Chat</title>
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='64' height='64' rx='8' fill='%23000'/%3E%3Cg transform='translate(8,8) scale(0.716)'%3E%3Cpath d='M22.21 67V44.6369H0V67H22.21Z' fill='%23fff'/%3E%3Cpath d='M66.7038 22.3184H22.2534L0.0878906 44.6367H44.4634L66.7038 22.3184Z' fill='%23fff'/%3E%3Cpath d='M22.21 0H0V22.3184H22.21V0Z' fill='%23fff'/%3E%3Cpath d='M66.7198 0H44.5098V22.3184H66.7198V0Z' fill='%23fff'/%3E%3Cpath d='M66.7198 67V44.6369H44.5098V67H66.7198Z' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E"
-    />
+    <!-- Placeholders. One image serves hanzo.chat, lux.chat and zoolabs.io, so
+         this document cannot know whose it is; `wear()` in src/brand.ts writes
+         the name and the mark from the host before the first render. Naming one
+         brand here is how the other two wore it until the bundle arrived. -->
+    <title>Chat</title>
     <style>
       /* The two things only the host document can answer: how tall the app is,
          and that its one child is a flex item. @hanzo/ui's stylesheet resets and
