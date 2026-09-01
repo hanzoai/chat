@@ -24,6 +24,16 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- A local cloud is its own issuer, so on loopback the brand's issuer is the
+         cloud you are running rather than hanzo.id. Same escape hatch the static
+         plane uses in production; scoped to loopback so no deployment sees it. -->
+    <script>
+      if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+        window.__brand = Object.assign({}, window.__brand, {
+          issuer: 'http://localhost:18080',
+        })
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

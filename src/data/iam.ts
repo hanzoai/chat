@@ -26,21 +26,39 @@ const scope = 'openid profile email offline_access'
 
 let engine: IAM | null = null
 
-export const iam = (): IAM =>
-  (engine ??= new IAM({
+export const iam = (): IAM => {
+  if (engine) return engine
+
+  const isLocal =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+
+  // On localhost against hanzo.id, the allowlisted redirect is a FIXED
+  // http://localhost:3000/auth/callback under hanzo-app — we do not own that
+  // allowlist, so the port is theirs to dictate.
+  //
+  // Against a LOCAL cloud we own it, and the app rarely has :3000 free, so the
+  // redirect follows the origin actually being served. Register that URI on the
+  // local issuer's hanzo-app; an issuer cannot redirect to a URI it never heard.
+  const localIssuer =
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:|$|\/)/.test(brand.issuer)
+  const base = localIssuer ? window.location.origin : 'http://localhost:3000'
+  const effectiveClientId = isLocal ? 'hanzo-app' : clientId
+  const redirectUri = isLocal
+    ? `${base}${callbackPath}`
+    : `${window.location.origin}${callbackPath}`
+  const postLogoutRedirectUri = isLocal
+    ? `${base}${loginPath}?redirect=false`
+    : `${window.location.origin}${loginPath}?redirect=false`
+
+  engine = new IAM({
     serverUrl: brand.issuer,
-    clientId,
+    clientId: effectiveClientId,
     organization: brand.org,
-    redirectUri: `${window.location.origin}${callbackPath}`,
-    /**
-     * Where the issuer returns the browser once the session has ended.
-     *
-     * `?redirect=false` is what makes this a landing rather than a bounce: the
-     * login route starts a fresh authorize on mount, so a bare `/login` would
-     * send somebody who just signed out straight back to the issuer. Built from
-     * the current origin for the same reason the callback is — each brand
-     * returns to its OWN host, and each host registers this exact address.
-     */
-    postLogoutRedirectUri: `${window.location.origin}${loginPath}?redirect=false`,
+    redirectUri,
+    postLogoutRedirectUri,
     scope,
-  }))
+  })
+
+  return engine
+}
