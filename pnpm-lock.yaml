@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@hanzo/ai':
-      specifier: 0.6.7
-      version: 0.6.7
+      specifier: 0.6.16
+      version: 0.6.16
     '@hanzo/gui':
       specifier: 8.3.1
       version: 8.3.1
@@ -16,8 +16,8 @@ catalogs:
       specifier: 0.21.17
       version: 0.21.17
     '@hanzo/ui':
-      specifier: 8.27.2
-      version: 8.27.2
+      specifier: 8.27.4
+      version: 8.27.4
     '@hanzo/vite':
       specifier: 0.1.1
       version: 0.1.1
@@ -73,7 +73,7 @@ importers:
     dependencies:
       '@hanzo/ai':
         specifier: 'catalog:'
-        version: 0.6.7(react@19.2.8)
+        version: 0.6.16(react@19.2.8)
       '@hanzo/gui':
         specifier: 'catalog:'
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
@@ -82,7 +82,7 @@ importers:
         version: 0.21.17(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/ui':
         specifier: 'catalog:'
-        version: 8.27.2(5c45a67929ec8f5e358f2cd75355b9b1)
+        version: 8.27.4(5c45a67929ec8f5e358f2cd75355b9b1)
       '@hanzogui/lucide-icons-2':
         specifier: 'catalog:'
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(react-native@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
@@ -490,8 +490,8 @@ packages:
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
-  '@hanzo/ai@0.6.7':
-    resolution: {integrity: sha512-d96sOt1GgYTOMjno43SEVsUyrdk3xIsGQC7CJK62SFLcnpl1N4Pn2s1a1YTDY3UiU0EiiwOUuIK+zNLFiuximA==}
+  '@hanzo/ai@0.6.16':
+    resolution: {integrity: sha512-MgnRooi4D+3n1YnJ9BDmYBB15noscN+nhRerYrGm/zpI5jC002Il1jj53uNIRhVX736/fOxFJjErlpnKjy4C1w==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=18'
@@ -518,10 +518,6 @@ packages:
     peerDependencies:
       '@hanzo/gui': '>=7.2.2'
       react: '>=19'
-
-  '@hanzo/design@0.5.21':
-    resolution: {integrity: sha512-E2g6DZCn2IUf2AQKqPMwlVV5fz2wvIpAagFRLx33gIsJfmpyubFnx0LINjFs7UoMI1ajnwSa73k7rPteVSemUw==}
-    hasBin: true
 
   '@hanzo/design@0.5.24':
     resolution: {integrity: sha512-eXoD1Q3giJ3TEx2+rtCub/xZX5j4AflWixt3TXsf3dcYrWuChxSVhzRQdDWyibXzPPtn+msCtLX11IvvcHHUzw==}
@@ -561,14 +557,6 @@ packages:
       react-dom:
         optional: true
 
-  '@hanzo/logo@1.0.20':
-    resolution: {integrity: sha512-QmsBB4k5UPlhRHbFYUacXcULG2BKdhp1Bn2LoJp3BE3XVtDsk2G1v6RXty6XY4J6nN1j05j1T8b6HUg14dKV8w==}
-    peerDependencies:
-      react: '>=16.8.0'
-    peerDependenciesMeta:
-      react:
-        optional: true
-
   '@hanzo/logo@1.0.26':
     resolution: {integrity: sha512-acPRsdTD/pfsDLUias989cDZCCg4Q9rCCrlOWVqlAzcN7xyoi3Vl4DjM7Z+feOL5SDPxWY1M0hJn9B1xqGjK4g==}
     peerDependencies:
@@ -596,8 +584,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/ui@8.27.2':
-    resolution: {integrity: sha512-/PwUB5hz6eN4fbXtAGh9NKn7Up9vS+fggh0rJhhOQ3/eX+QJXIIljV6fgpFNsaNRLATbJxqe7kOJjH3r8fE4cQ==}
+  '@hanzo/ui@8.27.4':
+    resolution: {integrity: sha512-tRQJpgVEfiIH4abNI3NqH6zDsCdBfu1MD8f51MnI5Nq/Z08Jy6VQASmu02vNTkIazth7WVjZvfopqs+/u1wilg==}
     peerDependencies:
       '@hanzo/canvas': '>=0.2.3'
       '@hanzo/cd': '>=0.1.2'
@@ -3752,18 +3740,18 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
-  '@hanzo/ai@0.6.7(react@19.2.8)':
+  '@hanzo/ai@0.6.16(react@19.2.8)':
     optionalDependencies:
       react: 19.2.8
 
   '@hanzo/appearance@0.2.2(react@19.2.8)':
     dependencies:
-      '@hanzo/design': 0.5.21
+      '@hanzo/design': 0.5.24
       react: 19.2.8
 
   '@hanzo/brand@1.4.8(react@19.2.8)':
     dependencies:
-      '@hanzo/logo': 1.0.20(react@19.2.8)
+      '@hanzo/logo': 1.0.26(react@19.2.8)
     optionalDependencies:
       react: 19.2.8
 
@@ -3775,8 +3763,6 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
       - react-native-svg
-
-  '@hanzo/design@0.5.21': {}
 
   '@hanzo/design@0.5.24': {}
 
@@ -3873,10 +3859,6 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@hanzo/logo@1.0.20(react@19.2.8)':
-    optionalDependencies:
-      react: 19.2.8
-
   '@hanzo/logo@1.0.26(react@19.2.8)':
     optionalDependencies:
       react: 19.2.8
@@ -3892,7 +3874,7 @@ snapshots:
       '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(react-native@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
-  '@hanzo/ui@8.27.2(5c45a67929ec8f5e358f2cd75355b9b1)':
+  '@hanzo/ui@8.27.4(5c45a67929ec8f5e358f2cd75355b9b1)':
     dependencies:
       '@hanzo/appearance': 0.2.2(react@19.2.8)
       '@hanzo/brand': 1.4.8(react@19.2.8)
