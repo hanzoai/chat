@@ -15,6 +15,9 @@ import type { Attachment } from '~/data/types'
 const COLUMN = 768
 const MAX_TEXTAREA_HEIGHT = 220
 
+/** The largest file whose text rides in a turn. */
+const READABLE = 500_000
+
 export interface ComposeProps {
   conversation?: Conversation | null
   parent?: string | null
@@ -47,6 +50,8 @@ export const Compose = ({
   const [dragOver, setDragOver] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [isListening, setIsListening] = useState(false)
+  /** What a file could not be attached for. Cleared by the next attempt. */
+  const [refused, setRefused] = useState<string | null>(null)
   const recognitionRef = useRef<any>(null)
 
   const conversationId = conversation?.conversationId ?? null
@@ -129,6 +134,7 @@ export const Compose = ({
   const processFiles = useCallback(
     async (fileList: FileList | File[]) => {
       const incoming: Attachment[] = []
+      setRefused(null)
       for (const f of Array.from(fileList)) {
         const isImg = f.type.startsWith('image/')
         let preview = ''
@@ -141,13 +147,18 @@ export const Compose = ({
             reader.readAsDataURL(f)
           })
         } else {
-          if (f.size < 500000) {
-            text = await new Promise<string>((resolve) => {
-              const reader = new FileReader()
-              reader.onload = () => resolve(reader.result as string)
-              reader.readAsText(f)
-            })
+          // Read it or refuse it. Over the limit the body used to be left empty
+          // and the file attached anyway, so the turn carried a header naming a
+          // file whose contents nobody — reader or model — ever saw.
+          if (f.size >= READABLE) {
+            setRefused(`${f.name} is too large to read, so it was not attached.`)
+            continue
           }
+          text = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.readAsText(f)
+          })
         }
 
         incoming.push({
@@ -256,6 +267,12 @@ export const Compose = ({
         onChange={handleFileInput}
       />
 
+      {refused && (
+        <SizableText fontSize="$1" color="$color11" paddingHorizontal="$2">
+          {refused}
+        </SizableText>
+      )}
+
       {/* Attachment Previews */}
       {attachments.length > 0 && (
         <XStack gap="$2" flexWrap="wrap" paddingHorizontal="$2">
@@ -342,7 +359,7 @@ export const Compose = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={busy || disabled}
-          placeholder={busy ? 'Agent swarm synthesizing…' : 'Ask anything or @mention an agent...'}
+          placeholder={busy ? 'Answering…' : 'Ask anything'}
           rows={1}
           style={{
             width: '100%',

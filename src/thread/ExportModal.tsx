@@ -9,12 +9,15 @@ import {
   X,
 } from '@hanzogui/lucide-icons-2'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 
+import { ai } from '~/data/ai'
 import * as store from '~/data/store'
 import { useChannels } from '~/channels/store'
 import { exportStore, useExport } from './exportStore'
 
 export const ExportModal = () => {
+  const navigate = useNavigate()
   const { isOpen } = useExport()
   const { selected, rooms } = useChannels()
   const [copied, setCopied] = useState(false)
@@ -74,9 +77,25 @@ export const ExportModal = () => {
     exportStore.close()
   }
 
-  const handleForkConversation = () => {
-    handleCopyMarkdown()
+  /**
+   * Fork: write these turns under a NEW thread and open it.
+   *
+   * `threads.record` with no id opens one and answers the id it opened, so a
+   * fork is the same write a first turn makes — which is why the copy stays a
+   * copy and this stays a fork. It used to put the transcript on the clipboard
+   * and close, so the only thing forked was the reader's paste buffer.
+   */
+  const [forking, setForking] = useState(false)
+  const handleForkConversation = async () => {
+    if (forking) return
+    setForking(true)
+    const thread = await ai()
+      .threads.record(turns.map((t) => ({ role: t.role, content: t.text ?? '' })))
+      .catch(() => null)
+    setForking(false)
+    if (!thread) return
     exportStore.close()
+    navigate(`/c/${thread}`)
   }
 
   return (

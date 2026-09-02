@@ -167,10 +167,15 @@ export const sandbox = {
   release: async () => {
     const held = lease.held
     if (!held) return
-    patch({ held: null, busy: false }, { kind: 'note', text: `released ${held.id}` })
+    patch({ busy: true })
     try {
       await ai().sandboxes.end({ id: held.id })
+      patch({ held: null, busy: false }, { kind: 'note', text: `released ${held.id}` })
     } catch (fault) {
+      // The lease is KEPT. `released` used to be written and the lease cleared
+      // before the server was asked, so a refused end read as a release that
+      // happened — and the computer it did not release became unreachable from
+      // here, still running and still billed.
       refuse(fault)
     }
   },

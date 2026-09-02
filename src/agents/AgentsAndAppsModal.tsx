@@ -309,7 +309,8 @@ export const AgentsAndAppsModal = ({ onOpenAgentBuilder }: AgentsAndAppsModalPro
                       }}
                     >
                       <span style={{ fontSize: 11, color: faint }}>
-                        {agent.runs ?? 0} runs · {agent.status ?? 'unknown'}
+                        {agent.runs === undefined ? '—' : `${agent.runs} runs`} ·{' '}
+                        {agent.status ?? 'unknown'}
                       </span>
 
                       <div style={{ display: 'flex', gap: 6 }}>
