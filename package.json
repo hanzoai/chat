@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@hanzo/ai": "catalog:",
+    "@hanzo/font": "catalog:",
     "@hanzo/gui": "catalog:",
     "@hanzo/iam": "catalog:",
     "@hanzo/ui": "catalog:",

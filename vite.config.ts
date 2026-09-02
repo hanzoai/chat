@@ -29,6 +29,10 @@ const config = hanzo(
     plugins: [react()],
     server: {
       port: 3090,
+      // Reachable by LAN name in dev — the Spark serves this to the Mac over
+      // `spark.local`, and vite 8 refuses an unlisted Host by default. Dev-only;
+      // the built app is static and has no host allowlist.
+      allowedHosts: true,
       proxy: { '/v1': { target: API, changeOrigin: true } },
     },
     // gui reads `process.env.*` at module scope — thirty-five different keys

@@ -1,11 +1,15 @@
-node_modules
+
+.claude/
+# Claude Code session state (worktrees, transcripts)
 dist
-*.tsbuildinfo
-*.log
+dist/
+.DS_Store
 .env
 .env.local
-.DS_Store
-
-# Claude Code session state (worktrees, transcripts)
-.claude/
+GEMINI.md
 LLM.md
+*.log
+node_modules
+node_modules/
+*.png
+*.tsbuildinfo
