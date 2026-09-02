@@ -1,8 +1,6 @@
 import { Header as Bar } from '@hanzo/ui/chat'
 import {
-  Activity,
   Columns2,
-  FileText,
   Hash,
   Keyboard,
   Layers,
@@ -11,7 +9,6 @@ import {
   Menu,
   Palette,
   PanelRight,
-  PhoneCall,
   Share2,
 } from '@hanzogui/lucide-icons-2'
 import { XStack } from '@hanzo/ui'
@@ -21,7 +18,6 @@ import { PresenceStack } from '~/presence/PresenceStack'
 import { artifactStore, useArtifact } from '~/artifact/store'
 import { useChannels } from '~/channels/store'
 import { exportStore } from '~/thread/exportStore'
-import { liveVoiceStore } from '~/voice/store'
 import { shortcutsStore } from '~/shortcuts/store'
 import { themeCustomizerStore } from '~/theme/store'
 
@@ -44,15 +40,9 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
       if ((e.metaKey || e.ctrlKey) && e.key === '/') {
         e.preventDefault()
         shortcutsStore.toggle()
-      } else if ((e.metaKey || e.ctrlKey) && e.key === '.') {
-        e.preventDefault()
-        liveVoiceStore.open()
       } else if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
         e.preventDefault()
         artifactStore.toggle()
-      } else if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
-        e.preventDefault()
-        artifactStore.toggleIntelligence()
       }
     }
 
@@ -98,61 +88,6 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
     >
       <XStack alignItems="center" gap="$1.5" style={{ position: 'relative' }}>
         <PresenceStack />
-
-        {/* Live Call Trigger */}
-        <button
-          type="button"
-          data-testid="header-voice-call-toggle"
-          onClick={() => liveVoiceStore.open()}
-          className="tap"
-          title="Start / Join Live Duplex Call with AI Agents (⌘.)"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            padding: '0 8px',
-            height: 32,
-            borderRadius: 7,
-            background: 'rgba(52, 211, 153, 0.12)',
-            border: '1px solid rgba(52, 211, 153, 0.3)',
-            color: '#34d399',
-            fontSize: 11,
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <PhoneCall size={13} />
-          <span style={{ display: 'none', md: { display: 'inline' } } as any}>Live Call</span>
-        </button>
-
-        {/* Channel Notes Quick Toggle */}
-        <button
-          type="button"
-          data-testid="header-notes-toggle"
-          onClick={() => {
-            if (!artifact.isIntelligenceOpen) {
-              artifactStore.toggleIntelligence()
-            }
-          }}
-          className="tap"
-          title="Channel Scratchpad & Collaborative Notes"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            borderRadius: 7,
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            color: 'rgba(255, 255, 255, 0.75)',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <FileText size={14} />
-        </button>
 
         {/* Theme Customizer Trigger */}
         <button
@@ -401,30 +336,6 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
           }}
         >
           <PanelRight size={15} />
-        </button>
-
-        {/* Workspace Hub & Intelligence Far-Right Dock Toggle */}
-        <button
-          type="button"
-          data-testid="header-dock-toggle"
-          onClick={() => artifactStore.toggleIntelligence()}
-          className="tap"
-          title={artifact.isIntelligenceOpen ? 'Hide Workspace Hub (⌘I)' : 'Show Workspace Hub (⌘I)'}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            borderRadius: 7,
-            background: artifact.isIntelligenceOpen ? 'rgba(96, 165, 250, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-            border: artifact.isIntelligenceOpen ? '1px solid rgba(96, 165, 250, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
-            color: artifact.isIntelligenceOpen ? '#60a5fa' : 'rgba(255, 255, 255, 0.75)',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <Activity size={15} />
         </button>
       </XStack>
     </Bar>

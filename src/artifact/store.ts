@@ -19,25 +19,18 @@ export type ArtifactTab = 'code' | 'preview' | 'turn' | 'logs'
 export type LayoutMode = 'default' | 'split' | 'studio' | 'focus'
 
 /**
- * The last turn, as the composer reports it.
+ * The last turn, as the composer reports it: what was sent, what came back, and
+ * which model answered.
  *
- * The two summaries and the model are what was actually sent and what actually
- * came back. The counts and the two latencies are the caller's estimates —
- * `src/shell/Chat.tsx` derives tokens from string length and passes constants
- * for the timings — so they are held but not shown. `/v1/chat/completions`
- * answers a `usage` object and that is where real counts come from; `/v1/usage`
- * accounts for the org, never for one turn.
+ * Counts and timings are absent. A turn's token counts belong to the server —
+ * `/v1/chat/completions` answers a `usage` object, `/v1/usage` accounts for the
+ * org and never for one turn — and until a count is read off that wire there is
+ * nothing here to hold.
  */
 export type Turn = {
   inputSummary?: string
   outputSummary?: string
   model?: string
-  timestamp?: string
-  promptTokens?: number
-  completionTokens?: number
-  totalTokens?: number
-  latencyMs?: number
-  ttftMs?: number
 }
 
 export type ArtifactData = {
@@ -47,7 +40,6 @@ export type ArtifactData = {
   code: string
   activeTab: ArtifactTab
   isOpen: boolean
-  isIntelligenceOpen: boolean
   layoutMode: LayoutMode
   turn: Turn
 }
@@ -84,7 +76,6 @@ const EMPTY: ArtifactData = {
   code: '',
   activeTab: 'code',
   isOpen: false,
-  isIntelligenceOpen: false,
   layoutMode: 'default',
   turn: {},
 }
@@ -112,14 +103,11 @@ export const artifactStore = {
   close: () => patch({ isOpen: false }),
   toggle: () => patch({ isOpen: !current.isOpen }),
 
-  closeIntelligence: () => patch({ isIntelligenceOpen: false }),
-  toggleIntelligence: () => patch({ isIntelligenceOpen: !current.isIntelligenceOpen }),
 
   setLayoutMode: (layoutMode: LayoutMode) =>
     patch({
       layoutMode,
       isOpen: layoutMode === 'split' || layoutMode === 'studio',
-      isIntelligenceOpen: layoutMode === 'studio',
     }),
 
   updateCode: (code: string) => patch({ code }),

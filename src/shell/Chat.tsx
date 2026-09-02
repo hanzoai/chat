@@ -28,7 +28,6 @@ import { useFrame } from '~/shell/Root'
 import { useTitle } from '~/shell/title'
 import { TerminalPanel } from '~/terminal/TerminalPanel'
 import { BrowseChannelsModal } from '~/channels/BrowseChannelsModal'
-import { LiveVoiceModal } from '~/voice/LiveVoiceModal'
 import { ShortcutsModal } from '~/shortcuts/ShortcutsModal'
 import { ThemeModal } from '~/theme/ThemeModal'
 import { ExportModal } from '~/thread/ExportModal'
@@ -196,14 +195,7 @@ export const Chat = () => {
             paint()
             store.busy.set(false)
             store.stop.set(null)
-            const outText = spoken(reply) || ''
-            artifactStore.updateTelemetry({
-              outputSummary: outText.slice(0, 200) || 'Synthesized multi-agent response.',
-              completionTokens: Math.max(180, Math.floor(outText.length / 3.5)),
-              totalTokens: Math.max(280, Math.floor(payload.text.length / 3.2) + Math.floor(outText.length / 3.5)),
-              latencyMs: 142,
-              ttftMs: 31,
-            })
+            artifactStore.updateTelemetry({ outputSummary: spoken(reply).slice(0, 200) })
           },
         },
       )
@@ -264,12 +256,7 @@ export const Chat = () => {
       store.put(userMsg)
       store.failure.set(null)
 
-      artifactStore.updateTelemetry({
-        inputSummary: payload.text,
-        promptTokens: Math.max(64, Math.floor(payload.text.length / 3.2)),
-        model: payload.model,
-        timestamp: 'Just now',
-      })
+      artifactStore.updateTelemetry({ inputSummary: payload.text, model: payload.model })
 
       ask(payload, said)
       return true
@@ -418,7 +405,6 @@ export const Chat = () => {
       <BrowseChannelsModal />
 
       {/* Live Duplex Agent Voice Call Modal */}
-      <LiveVoiceModal />
 
       {/* Keyboard Shortcuts Cheatsheet Modal */}
       <ShortcutsModal />

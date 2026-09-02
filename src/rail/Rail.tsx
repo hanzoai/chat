@@ -2,10 +2,9 @@ import { Button, SizableText, XStack, YStack } from '@hanzo/ui'
 import { Sidebar, SidebarHeader, SidebarNewChat } from '@hanzo/ui/chat'
 import { scrim } from '@hanzo/ui/glass'
 import { HanzoMark } from '@hanzo/ui/product'
-import { AppWindow, Blocks, Kanban, LayoutGrid, ListTodo } from '@hanzogui/lucide-icons-2'
+import { Blocks, Kanban, LayoutGrid, ListTodo } from '@hanzogui/lucide-icons-2'
 import { useRef, useState, type ReactNode } from 'react'
 
-import { workspaceAppsStore } from '~/apps/store'
 import { boardStore } from '~/boards/store'
 import { ChannelSection } from '~/channels/ChannelSection'
 import { mcpStore } from '~/mcp/store'
@@ -186,30 +185,6 @@ export function Rail({
           >
             <ListTodo size={13} style={{ color: '#fbbf24' }} />
             <span>Tasks</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => workspaceAppsStore.open()}
-            className="tap"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 8px',
-              borderRadius: 6,
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: 11.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
-            data-testid="rail-apps-suite-link"
-          >
-            <AppWindow size={13} style={{ color: '#818cf8' }} />
-            <span>Apps Suite</span>
           </button>
 
           <button

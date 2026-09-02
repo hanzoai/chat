@@ -2,11 +2,9 @@ import { Palette as Bar, useCommandK, type Op } from '@hanzo/ui/product'
 import {
   Blocks,
   Bot,
-  Brain,
   Building2,
   Clock,
   Code2,
-  FileText,
   FolderGit2,
   Hash,
   Kanban,
@@ -16,26 +14,22 @@ import {
   PanelLeft,
   PanelRight,
   Settings,
-  Shield,
   SquarePen,
   Terminal,
   UserCheck,
   UserPlus,
   UserRound,
-  Video,
 } from '@hanzogui/lucide-icons-2'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { swarmStore } from '~/agents/store'
-import { workspaceAppsStore } from '~/apps/store'
 import { artifactStore } from '~/artifact/store'
 import { automationsStore } from '~/automations/store'
 import { boardStore } from '~/boards/store'
 import { channelsStore } from '~/channels/store'
 import { api } from '~/data/api'
 import { useSession } from '~/data/session'
-import { intelligenceStore } from '~/intelligence/store'
 import { mcpStore } from '~/mcp/store'
 import { pluginsStore } from '~/plugins/store'
 import { multiplayerStore } from '~/presence/store'
@@ -87,9 +81,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
       } else if (isCmd && (e.key === 'q' || e.key === 'Q')) {
         e.preventDefault()
         taskQueueStore.toggle()
-      } else if (isCmd && (e.key === 't' || e.key === 'T')) {
-        e.preventDefault()
-        workspaceAppsStore.toggle('tunnel')
       } else if (isCmd && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault()
         projectsStore.toggle()
@@ -181,27 +172,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         icon: <Bot size={15} />,
       },
       {
-        id: 'meet',
-        group: 'Workspace Apps',
-        label: 'meet.hanzo.ai — Live Video Room',
-        hint: 'WebRTC room with AI transcription agent',
-        icon: <Video size={15} />,
-      },
-      {
-        id: 'notes',
-        group: 'Workspace Apps',
-        label: 'notes.hanzo.ai & todo.hanzo.ai',
-        hint: 'Collaborative markdown notes and checklists',
-        icon: <FileText size={15} />,
-      },
-      {
-        id: 'tunnel',
-        group: 'Workspace Apps',
-        label: 'zt.hanzo.ai — Zero-Trust Dev Sharing',
-        hint: 'Expose local machine to team via Cloudflare (⌘T)',
-        icon: <Shield size={15} />,
-      },
-      {
         id: 'tasks',
         group: 'Agentic & Cloud',
         label: 'tasks.hanzo.ai & CI/CD Pipelines',
@@ -221,13 +191,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         label: 'MCP Skills & Server Connectors',
         hint: 'Filesystem, GitHub, Postgres, k3s, Web Search (⌘M)',
         icon: <Blocks size={15} />,
-      },
-      {
-        id: 'intelligence',
-        group: 'Agentic & Cloud',
-        label: 'Memory & Code Intelligence',
-        hint: 'Vector memory, rules, and AST codebase symbols',
-        icon: <Brain size={15} />,
       },
       {
         id: 'builder',
@@ -320,15 +283,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         case 'swarm':
           swarmStore.setSwarmMode(!swarmStore.get().swarmMode)
           break
-        case 'meet':
-          workspaceAppsStore.open('meet')
-          break
-        case 'notes':
-          workspaceAppsStore.open('notes')
-          break
-        case 'tunnel':
-          workspaceAppsStore.open('tunnel')
-          break
         case 'tasks':
           taskQueueStore.open()
           break
@@ -337,9 +291,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
           break
         case 'mcp':
           mcpStore.open()
-          break
-        case 'intelligence':
-          intelligenceStore.open()
           break
         case 'builder':
           onOpenAgentBuilder?.()

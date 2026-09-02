@@ -20,7 +20,6 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
       { keys: ['⌘', '/'], description: 'Open Keyboard Shortcuts' },
       { keys: ['⌘', '\\'], description: 'Toggle Conversations Rail' },
       { keys: ['⌘', 'J'], description: 'Toggle Code / Inspector Canvas' },
-      { keys: ['⌘', 'I'], description: 'Toggle Swarm Intelligence Dock' },
     ],
   },
   {

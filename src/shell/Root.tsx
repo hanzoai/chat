@@ -4,7 +4,6 @@ import { Outlet, useMatch, useNavigate, useOutletContext } from 'react-router'
 
 import { AgentBuilderModal } from '~/agents/AgentBuilderModal'
 import { AgentsAndAppsModal } from '~/agents/AgentsAndAppsModal'
-import { AppWorkspaceModal } from '~/apps/AppWorkspaceModal'
 import { AutomationsModal } from '~/automations/AutomationsModal'
 import { BoardModal } from '~/boards/BoardModal'
 import { brand } from '~/brand'
@@ -14,7 +13,6 @@ import { useConvos } from '~/data/convos'
 import { useSession } from '~/data/session'
 import type { Convo } from '~/data/types'
 import { useNarrow } from '~/gui'
-import { IntelligenceModal } from '~/intelligence/IntelligenceModal'
 import { McpModal } from '~/mcp/McpModal'
 import { PluginsModal } from '~/plugins/PluginsModal'
 import { ProjectModal } from '~/projects/ProjectModal'
@@ -126,9 +124,6 @@ export const Root = () => {
       {/* MCP Skills & Server Connectors Modal */}
       <McpModal />
 
-      {/* Memory & Code Intelligence Modal */}
-      <IntelligenceModal />
-
       {/* Agent Builder & Studio Modal */}
       <AgentBuilderModal
         isOpen={agentBuilder}
@@ -145,9 +140,6 @@ export const Root = () => {
 
       {/* Durable Task Queue & CI/CD Modal */}
       <TaskQueueModal />
-
-      {/* Unified Micro-Apps Suite: tasks, notes, todo, meet, tunnel */}
-      <AppWorkspaceModal />
 
       {/* Projects, Organizations & User Switcher Modal */}
       <ProjectModal />
