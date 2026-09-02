@@ -11,7 +11,7 @@ import { faulted, fold, opening, parts, spoken, stopped, type Part as Piece, typ
 import { useHandoff } from '~/compose/link'
 import { run } from '~/compose/stream'
 import { history, type Conversation, type Payload } from '~/compose/submit'
-import { channelsStore, useChannels } from '~/channels/store'
+import { useChannels } from '~/channels/store'
 import { useModels } from '~/data/config'
 import { useConvo } from '~/data/convos'
 import { requireLogin } from '~/data/gate'
@@ -27,7 +27,6 @@ import { Header } from '~/shell/Header'
 import { useFrame } from '~/shell/Root'
 import { useTitle } from '~/shell/title'
 import { TerminalPanel } from '~/terminal/TerminalPanel'
-import { DockPanel } from '~/dock/DockPanel'
 import { BrowseChannelsModal } from '~/channels/BrowseChannelsModal'
 import { LiveVoiceModal } from '~/voice/LiveVoiceModal'
 import { ShortcutsModal } from '~/shortcuts/ShortcutsModal'
@@ -136,11 +135,11 @@ export const Chat = () => {
 
   const [address, choose] = usePref(preferred)
 
-  const { activeRoomId, rooms } = useChannels()
-  const activeRoom = rooms.find((r) => r.id === activeRoomId)
+  const { selected, rooms } = useChannels()
+  const activeRoom = rooms.find((r) => r.key === selected)
 
   const activeTitle = activeRoom
-    ? (activeRoom.type === 'channel' ? `#${activeRoom.name}` : activeRoom.name || 'Chat Room')
+    ? `#${activeRoom.roomId} (${activeRoom.channel})`
     : (record.data?.title ?? held?.title ?? 'New chat')
 
   useTitle(activeTitle)
@@ -197,9 +196,6 @@ export const Chat = () => {
             paint()
             store.busy.set(false)
             store.stop.set(null)
-            if (activeRoomId) {
-              channelsStore.addMessageToRoom(activeRoomId, answered(reply, local, payload.conversationId))
-            }
             const outText = spoken(reply) || ''
             artifactStore.updateTelemetry({
               outputSummary: outText.slice(0, 200) || 'Synthesized multi-agent response.',
@@ -214,7 +210,7 @@ export const Chat = () => {
 
       store.stop.set({ cancel: close })
     },
-    [activeRoomId],
+    [],
   )
 
   /**
@@ -258,7 +254,7 @@ export const Chat = () => {
 
       const userMsg: Message = {
         messageId: payload.messageId,
-        conversationId: payload.conversationId || activeRoomId,
+        conversationId: payload.conversationId,
         parentMessageId: payload.parentMessageId,
         role: 'user',
         text: payload.text,
@@ -266,9 +262,6 @@ export const Chat = () => {
       }
 
       store.put(userMsg)
-      if (activeRoomId) {
-        channelsStore.addMessageToRoom(activeRoomId, userMsg)
-      }
       store.failure.set(null)
 
       artifactStore.updateTelemetry({
@@ -281,7 +274,7 @@ export const Chat = () => {
       ask(payload, said)
       return true
     },
-    [ask, activeRoomId],
+    [ask],
   )
 
   const { model } = useMemo(() => pick(address), [address])
@@ -416,9 +409,6 @@ export const Chat = () => {
 
         {/* Interactive Terminal & Cloud Sandbox Panel */}
         <TerminalPanel />
-
-        {/* Far-Right Swarm Intelligence, Activity, & Layout Dock */}
-        <DockPanel />
       </XStack>
 
       {/* Multiplayer Room Invite & Team Access Modal */}

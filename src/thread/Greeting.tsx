@@ -61,9 +61,9 @@ const TEMPLATES: TemplateCard[] = [
     category: 'AI & Agents',
     badge: 'Autonomous Swarm',
     title: 'Multi-Agent Code Engine & SWE Swarm',
-    description: 'Coordinate Planner, Dev, and SecOps agents to refactor code with worktree isolation and Playwright gates.',
+    description: 'Coordinate Vi, Dev, and Cyber agents to refactor code with worktree isolation and Playwright gates.',
     tags: ['Agent Swarm', 'Playwright', 'Git Worktrees', 'Automated PRs'],
-    prompt: 'Create an autonomous multi-agent software engineering workflow that coordinates Planner, Dev, and SecOps agents to refactor code with git worktree isolation and live Playwright E2E verification.',
+    prompt: 'Create an autonomous multi-agent software engineering workflow that coordinates Vi, Dev, and Cyber agents to refactor code with git worktree isolation and live Playwright E2E verification.',
   },
   {
     id: 'web3-defi-portal',

@@ -200,8 +200,8 @@ export const AppWorkspaceModal = () => {
                   </div>
                   {[
                     { name: 'CI/CD Multi-Target Compilation', status: 'Running', duration: '12s', agent: '@dev' },
-                    { name: 'KMS Hardware Enclave Key Rotation', status: 'Passed', duration: '4s', agent: '@secops' },
-                    { name: 'ZAP High-Throughput Stream Benchmark', status: 'Queued', duration: '--', agent: '@executor' },
+                    { name: 'KMS Hardware Enclave Key Rotation', status: 'Passed', duration: '4s', agent: '@cyber' },
+                    { name: 'ZAP High-Throughput Stream Benchmark', status: 'Queued', duration: '--', agent: '@opera' },
                   ].map((dag) => (
                     <div
                       key={dag.name}

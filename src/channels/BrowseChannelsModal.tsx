@@ -1,57 +1,42 @@
-import {
-  Check,
-  Compass,
-  Hash,
-  Plus,
-  Search,
-  Users,
-  X,
-} from '@hanzogui/lucide-icons-2'
-import { useEffect, useMemo, useState } from 'react'
+/**
+ * The directory: which transports this org can send through, and what one room
+ * actually said.
+ *
+ * It used to browse a network of public rooms with member counts and a Follow
+ * button. There is no discovery route, no membership and no follow — so what it
+ * shows now is the two things the server does answer: `/v1/channels`, which
+ * reports every transport whether or not it is connected precisely so "no
+ * Slack" and "Slack is down" read differently, and the messages of the room
+ * selected in the rail, grouped out of `/v1/channels/inbox`.
+ */
+import { SizableText, XStack, YStack } from '@hanzo/ui'
+import { X } from '@hanzogui/lucide-icons-2'
+import { useEffect } from 'react'
 
-import { channelsStore, useChannels } from './store'
-import type { ChannelCategory } from './types'
+import { why } from '~/data/missing'
+import { channelsStore, refusal, speaker, useChannels, useTransports, when } from './store'
 
-const CATEGORIES: { id: ChannelCategory | 'all'; label: string }[] = [
-  { id: 'all', label: 'All Channels' },
-  { id: 'official', label: 'Official Hanzo' },
-  { id: 'dev', label: 'Engineering & ZAP' },
-  { id: 'infra', label: 'Cloud & Sandbox' },
-  { id: 'design', label: 'Design & UI' },
-  { id: 'community', label: 'Community' },
-]
+const Note = ({ children }: { children: string }) => (
+  <SizableText size="$1" style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.45)' }}>
+    {children}
+  </SizableText>
+)
 
 export const BrowseChannelsModal = () => {
-  const { isBrowseOpen, discoverableChannels, rooms } = useChannels()
-  const [query, setQuery] = useState('')
-  const [selectedCat, setSelectedCat] = useState<ChannelCategory | 'all'>('all')
+  const { browsing, rooms, selected, signedIn } = useChannels()
+  const transports = useTransports(signedIn && browsing)
+  const room = rooms.find((r) => r.key === selected)
 
   useEffect(() => {
-    if (!isBrowseOpen) return
+    if (!browsing) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') channelsStore.closeBrowse()
+      if (e.key === 'Escape') channelsStore.close()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [isBrowseOpen])
+  }, [browsing])
 
-  const followedIds = useMemo(() => new Set(rooms.map((r) => r.id)), [rooms])
-
-  const filtered = useMemo(() => {
-    return discoverableChannels.filter((chan) => {
-      if (selectedCat !== 'all' && chan.category !== selectedCat) return false
-      if (query.trim()) {
-        const q = query.toLowerCase()
-        const matchName = chan.name?.toLowerCase().includes(q)
-        const matchTopic = chan.topic?.toLowerCase().includes(q)
-        const matchCreator = chan.creator?.toLowerCase().includes(q)
-        return matchName || matchTopic || matchCreator
-      }
-      return true
-    })
-  }, [discoverableChannels, selectedCat, query])
-
-  if (!isBrowseOpen) return null
+  if (!browsing) return null
 
   return (
     <div
@@ -67,62 +52,38 @@ export const BrowseChannelsModal = () => {
         justifyContent: 'center',
         padding: 20,
       }}
-      onClick={() => channelsStore.closeBrowse()}
+      onClick={() => channelsStore.close()}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 640,
-          maxHeight: '85vh',
-          backgroundColor: '#0e0e12',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: 20,
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-        onClick={(e) => e.stopPropagation()}
+      <YStack
+        width="100%"
+        maxWidth={640}
+        maxHeight="85vh"
+        borderRadius="$4"
+        borderWidth={1}
+        borderColor="rgba(255, 255, 255, 0.12)"
+        backgroundColor="#0e0e12"
+        style={{ overflow: 'hidden', boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)' }}
+        onClick={(e: any) => e.stopPropagation()}
         data-testid="browse-channels-modal"
       >
-        {/* Header */}
-        <div
-          style={{
-            padding: '18px 22px 14px 22px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
+        <XStack
+          alignItems="center"
+          justifyContent="space-between"
+          padding="$4"
+          borderBottomWidth={1}
+          borderColor="rgba(255, 255, 255, 0.08)"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 9,
-                background: 'rgba(52, 211, 153, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#34d399',
-              }}
-            >
-              <Compass size={17} />
-            </div>
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
-                Browse & Follow Channels
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
-                Discover public channels across the Hanzo network
-              </div>
-            </div>
-          </div>
-
+          <YStack gap="$0.5">
+            <SizableText size="$3" fontWeight="700" style={{ color: '#ffffff' }}>
+              Channels
+            </SizableText>
+            <SizableText size="$1" style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
+              The transports your org has connected, and what has arrived on them.
+            </SizableText>
+          </YStack>
           <button
             type="button"
-            onClick={() => channelsStore.closeBrowse()}
+            onClick={() => channelsStore.close()}
             className="tap"
             style={{
               display: 'inline-flex',
@@ -139,203 +100,93 @@ export const BrowseChannelsModal = () => {
           >
             <X size={15} />
           </button>
-        </div>
+        </XStack>
 
-        {/* Search and Category Filter Toolbar */}
-        <div
-          style={{
-            padding: '14px 22px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Search
-              size={14}
-              style={{
-                position: 'absolute',
-                left: 12,
-                color: 'rgba(255, 255, 255, 0.4)',
-              }}
-            />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search channels by name, topic, or creator…"
-              style={{
-                width: '100%',
-                padding: '9px 12px 9px 34px',
-                borderRadius: 10,
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#ffffff',
-                fontSize: 13,
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {CATEGORIES.map((cat) => {
-              const active = selectedCat === cat.id
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCat(cat.id)}
-                  className="tap"
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 9999,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: active ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                    background: active ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255, 255, 255, 0.03)',
-                    border: active ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(255, 255, 255, 0.06)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {cat.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Channels List */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '14px 22px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255, 255, 255, 0.4)' }}>
-              No channels match your search.
-            </div>
+        <YStack gap="$3" padding="$4" style={{ overflowY: 'auto' }}>
+          {!signedIn ? (
+            <Note>{why.anonymous}</Note>
+          ) : transports.error ? (
+            <Note>{refusal(transports.error)}</Note>
           ) : (
-            filtered.map((chan) => {
-              const isFollowed = followedIds.has(chan.id)
-
-              return (
-                <div
-                  key={chan.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 16px',
-                    borderRadius: 12,
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0, flex: 1, marginRight: 16 }}>
-                    <div
+            (transports.data ?? []).map((transport) => (
+              <XStack
+                key={transport.id}
+                alignItems="center"
+                justifyContent="space-between"
+                gap="$3"
+                padding="$3"
+                borderRadius="$3"
+                borderWidth={1}
+                borderColor="rgba(255, 255, 255, 0.08)"
+                backgroundColor="rgba(255, 255, 255, 0.03)"
+              >
+                <YStack gap="$0.5" minWidth={0}>
+                  <XStack alignItems="center" gap="$2">
+                    <span
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#34d399',
-                        flexShrink: 0,
+                        width: 7,
+                        height: 7,
+                        borderRadius: 9999,
+                        background: transport.connected ? '#34d399' : 'rgba(255, 255, 255, 0.25)',
                       }}
-                    >
-                      <Hash size={16} />
-                    </div>
-
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>
-                          #{chan.name}
-                        </span>
-                        {chan.category && (
-                          <span
-                            style={{
-                              fontSize: 9.5,
-                              padding: '2px 6px',
-                              borderRadius: 4,
-                              background: 'rgba(255, 255, 255, 0.08)',
-                              color: 'rgba(255, 255, 255, 0.6)',
-                              fontWeight: 600,
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {chan.category}
-                          </span>
-                        )}
-                      </div>
-
-                      {chan.topic && (
-                        <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.6)', marginTop: 2, lineHeight: 1.4 }}>
-                          {chan.topic}
-                        </div>
-                      )}
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6, fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Users size={11} /> {chan.memberCount || chan.members.length} members
-                        </span>
-                        {chan.creator && <span>Created by {chan.creator}</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => channelsStore.toggleFollowChannel(chan.id)}
-                    className="tap"
+                    />
+                    <SizableText size="$2" fontWeight="700" style={{ color: '#ffffff' }}>
+                      {transport.id}
+                    </SizableText>
+                  </XStack>
+                  <SizableText size="$1" style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
+                    {transport.connected
+                      ? `${transport.accountLabel || transport.account || 'connected'} · DMs ${transport.dmPolicy || 'unset'} · groups ${transport.groupPolicy || 'unset'}`
+                      : 'Not connected.'}
+                  </SizableText>
+                </YStack>
+                {transport.pendingPairing ? (
+                  <SizableText
+                    size="$1"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '7px 14px',
-                      borderRadius: 8,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      background: isFollowed ? 'rgba(255, 255, 255, 0.08)' : '#34d399',
-                      border: isFollowed ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
-                      color: isFollowed ? 'rgba(255, 255, 255, 0.8)' : '#0a0a0d',
-                      cursor: 'pointer',
                       flexShrink: 0,
+                      padding: '3px 8px',
+                      borderRadius: 9999,
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      background: 'rgba(251, 191, 36, 0.15)',
+                      color: '#fbbf24',
                     }}
                   >
-                    {isFollowed ? (
-                      <>
-                        <Check size={12} strokeWidth={2.5} />
-                        <span>Following</span>
-                      </>
-                    ) : (
-                      <>
-                        <Plus size={12} strokeWidth={2.5} />
-                        <span>Follow</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )
-            })
+                    {transport.pendingPairing} waiting to pair
+                  </SizableText>
+                ) : null}
+              </XStack>
+            ))
           )}
-        </div>
-      </div>
+
+          {room ? (
+            <YStack gap="$2" paddingTop="$2" borderTopWidth={1} borderColor="rgba(255, 255, 255, 0.08)">
+              <SizableText
+                size="$1"
+                style={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10, fontWeight: 700, color: 'rgba(255, 255, 255, 0.5)' }}
+              >
+                {room.channel} · {room.roomId} · {room.roomKind}
+              </SizableText>
+              {room.messages.map((message) => (
+                <YStack key={message.id} gap="$0.5">
+                  <XStack alignItems="center" gap="$2">
+                    <SizableText size="$1" style={{ fontSize: 11, fontWeight: 700, color: '#ffffff' }}>
+                      {speaker(message)}
+                    </SizableText>
+                    <SizableText size="$1" style={{ fontSize: 10, color: 'rgba(255, 255, 255, 0.35)' }}>
+                      {when(message.createdAt)}
+                    </SizableText>
+                  </XStack>
+                  <SizableText size="$1" style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.8)' }}>
+                    {message.text}
+                  </SizableText>
+                </YStack>
+              ))}
+            </YStack>
+          ) : null}
+        </YStack>
+      </YStack>
     </div>
   )
 }

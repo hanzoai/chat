@@ -1,104 +1,162 @@
 /**
- * Unified Agents & Apps Hub Modal.
- * Brings together AI Agents, Standalone Workspace Micro-Apps, Plugins, and Automations.
+ * The org's agents.
+ *
+ * One subject, because there is one route behind it. This was a four-tab hub
+ * over agents, apps, plugins and automations, and three of those tabs were
+ * arrays written into the page: `/v1/apps`, `/v1/plugins` and `/v1/automations`
+ * all answer 404, and the surfaces that DO exist for plugins and the workspace
+ * apps are already reachable from the palette — a second copy here would be a
+ * second place to keep them right.
+ *
+ * A scheduled agent is what an "automation" was: `executionMode: long-running`
+ * plus the cron the scheduler fires it on, both fields of the agent itself.
  */
-import {
-  Blocks,
-  Bot,
-  Check,
-  CheckSquare,
-  Clock,
-  ExternalLink,
-  FileText,
-  Globe,
-  LayoutGrid,
-  ListTodo,
-  Play,
-  Plus,
-  Shield,
-  Video,
-  X,
-  Zap,
-} from '@hanzogui/lucide-icons-2'
+import { Loader, Play, Plus, Trash2, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { automationsStore } from '~/automations/store'
-import { pluginsStore } from '~/plugins/store'
-import { workspaceAppsStore } from '~/apps/store'
-import { swarmStore, useSwarm } from './store'
-import { AGENT_ROSTER } from './types'
+import type { Agent } from '@hanzo/ai'
+
+import { none, remove, run, swarmStore, unread, useAgent, useAgents, useSwarm } from './store'
 
 export interface AgentsAndAppsModalProps {
   onOpenAgentBuilder?: () => void
 }
 
+const face = (agent: Agent) => agent.emoji || agent.name.charAt(0).toUpperCase()
+
+const faint = 'rgba(255, 255, 255, 0.5)'
+const line = '1px solid rgba(255, 255, 255, 0.08)'
+
+const chip = {
+  fontSize: 10,
+  padding: '1px 6px',
+  borderRadius: 4,
+  background: 'rgba(255, 255, 255, 0.06)',
+  color: 'rgba(255, 255, 255, 0.65)',
+} as const
+
+const action = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+  padding: '4px 10px',
+  borderRadius: 6,
+  background: 'rgba(255, 255, 255, 0.06)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  color: '#ffffff',
+  fontSize: 11.5,
+  fontWeight: 600,
+  cursor: 'pointer',
+} as const
+
+/** One agent's prompt, its recorded runs, and the control that adds another. */
+const Detail = ({ name }: { name: string }) => {
+  const detail = useAgent(name)
+  const [input, setInput] = useState('')
+  const [running, setRunning] = useState(false)
+  const [last, setLast] = useState<{ status: string; text: string } | null>(null)
+
+  const go = async () => {
+    if (!input.trim()) return
+    setRunning(true)
+    setLast(null)
+    try {
+      const recorded = await run(name, input)
+      setLast({ status: recorded.status, text: recorded.error || recorded.output || '' })
+    } catch (failure) {
+      setLast({ status: 'error', text: failure instanceof Error ? failure.message : String(failure) })
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, borderTop: line }}>
+      {detail.error ? (
+        <span style={{ fontSize: 11, color: faint }}>{unread}</span>
+      ) : detail.data?.instructions ? (
+        <pre
+          style={{
+            margin: 0,
+            fontSize: 10.5,
+            lineHeight: 1.45,
+            color: 'rgba(255, 255, 255, 0.6)',
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'var(--font-mono, monospace)',
+            maxHeight: 120,
+            overflowY: 'auto',
+          }}
+        >
+          {detail.data.instructions}
+        </pre>
+      ) : null}
+
+      <div style={{ display: 'flex', gap: 6 }}>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void go()
+          }}
+          placeholder="Give this agent something to do"
+          style={{
+            flex: 1,
+            padding: '5px 9px',
+            borderRadius: 6,
+            border: line,
+            background: 'rgba(255, 255, 255, 0.04)',
+            color: '#ffffff',
+            fontSize: 11.5,
+            outline: 'none',
+          }}
+        />
+        <button type="button" onClick={() => void go()} disabled={running} style={action}>
+          {running ? <Loader size={11} /> : <Play size={11} fill="currentColor" />}
+          <span>{running ? 'Running…' : 'Run'}</span>
+        </button>
+      </div>
+
+      {last && (
+        <pre
+          style={{
+            margin: 0,
+            fontSize: 10.5,
+            lineHeight: 1.45,
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'var(--font-mono, monospace)',
+            color: last.status === 'ok' ? 'rgba(255, 255, 255, 0.75)' : '#f87171',
+            maxHeight: 160,
+            overflowY: 'auto',
+          }}
+        >
+          {last.text}
+        </pre>
+      )}
+
+      {detail.data?.recentRuns?.length ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {detail.data.recentRuns.slice(0, 5).map((r) => (
+            <div key={r.id} style={{ fontSize: 10, color: faint, display: 'flex', gap: 6 }}>
+              <span style={{ color: r.status === 'ok' ? '#34d399' : '#f87171' }}>{r.status}</span>
+              <span>{r.model}</span>
+              {r.durationMs != null && <span>{r.durationMs} ms</span>}
+              <span>{r.createdAt}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export const AgentsAndAppsModal = ({ onOpenAgentBuilder }: AgentsAndAppsModalProps) => {
   const { isHubOpen, activeAgentIds } = useSwarm()
-  const [activeTab, setActiveTab] = useState<'agents' | 'apps' | 'plugins' | 'automations'>('agents')
+  const agents = useAgents()
+  const [open, setOpen] = useState<string | null>(null)
 
   if (!isHubOpen) return null
 
-  const APPS_LIST = [
-    {
-      id: 'tasks',
-      name: 'tasks.hanzo.ai',
-      badge: 'Distributed Workflows',
-      desc: 'Stateful DAG execution engine, async background dispatch, and multi-step CI/CD compilation pipelines.',
-      icon: ListTodo,
-      color: '#34d399',
-      target: 'tasks',
-      url: 'https://tasks.hanzo.ai',
-    },
-    {
-      id: 'notes',
-      name: 'notes.hanzo.ai',
-      badge: 'AI Co-Authoring',
-      desc: 'Collaborative real-time markdown documentation with AI co-authors, live diffing, and export.',
-      icon: FileText,
-      color: '#60a5fa',
-      target: 'notes',
-      url: 'https://notes.hanzo.ai',
-    },
-    {
-      id: 'todo',
-      name: 'todo.hanzo.ai',
-      badge: 'Checklist & Delegation',
-      desc: 'Collaborative task checklists with automated agent delegation (@dev, @secops) and priority triage.',
-      icon: CheckSquare,
-      color: '#a78bfa',
-      target: 'todo',
-      url: 'https://todo.hanzo.ai',
-    },
-    {
-      id: 'meet',
-      name: 'meet.hanzo.ai',
-      badge: 'WebRTC Video & AI Notes',
-      desc: 'Encrypted multiplayer audio/video rooms with live speech-to-text transcription and automated meeting notes.',
-      icon: Video,
-      color: '#f87171',
-      target: 'meet',
-      url: 'https://meet.hanzo.ai',
-    },
-    {
-      id: 'tunnel',
-      name: 'zt.hanzo.ai',
-      badge: 'Zero-Trust Dev Sharing',
-      desc: 'Expose your local machine compute, Node.js runtime, and k3s pods securely via Cloudflare and WireGuard.',
-      icon: Shield,
-      color: '#fbbf24',
-      target: 'tunnel',
-      url: 'https://zt.hanzo.ai',
-    },
-    {
-      id: 'tabs',
-      name: 'tabs.hanzo.ai',
-      badge: 'Cloud Tabs & Browser',
-      desc: 'Headless browser execution, web scraping sandbox, and live interactive cloud tab automation.',
-      icon: Globe,
-      color: '#38bdf8',
-      target: 'tunnel',
-      url: 'https://tabs.hanzo.ai',
-    },
-  ]
+  const listed = agents.data ?? []
 
   return (
     <div
@@ -131,97 +189,24 @@ export const AgentsAndAppsModal = ({ onOpenAgentBuilder }: AgentsAndAppsModalPro
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Header Bar */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '14px 18px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: line,
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <LayoutGrid size={18} color="#ffffff" />
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#ffffff' }}>
-                Agents & Apps Hub
-              </div>
-              <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
-                Discover specialized AI agents, workspace micro-apps, plugins, and automations.
-              </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#ffffff' }}>Agents</div>
+            <div style={{ fontSize: 11.5, color: faint }}>
+              {listed.length} defined in this org.
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => swarmStore.closeHub()}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'rgba(255, 255, 255, 0.5)',
-              cursor: 'pointer',
-              padding: 4,
-            }}
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Tab Selector & Actions Row */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '10px 18px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            gap: 12,
-          }}
-        >
-          {/* Tabs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {[
-              { id: 'agents', label: 'AI Agents', icon: Bot, count: AGENT_ROSTER.length },
-              { id: 'apps', label: 'Apps & Tools', icon: Zap, count: APPS_LIST.length },
-              { id: 'plugins', label: 'Plugins', icon: Blocks, count: 5 },
-              { id: 'automations', label: 'Automations', icon: Clock, count: 4 },
-            ].map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className="tap"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '5px 12px',
-                    borderRadius: 7,
-                    background: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    border: isActive ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid transparent',
-                    color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <Icon size={14} color={isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.4)'} />
-                  <span>{tab.label}</span>
-                  <span style={{ fontSize: 10.5, opacity: 0.6, background: 'rgba(255, 255, 255, 0.1)', padding: '1px 5px', borderRadius: 9999 }}>
-                    {tab.count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Action on Right (e.g. + Create Agent button) */}
-          {activeTab === 'agents' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               type="button"
               onClick={() => {
@@ -229,350 +214,141 @@ export const AgentsAndAppsModal = ({ onOpenAgentBuilder }: AgentsAndAppsModalPro
                 onOpenAgentBuilder?.()
               }}
               className="tap"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '5px 12px',
-                borderRadius: 7,
-                background: '#ffffff',
-                border: 'none',
-                color: '#000000',
-                fontSize: 11.5,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              style={{ ...action, background: '#ffffff', border: 'none', color: '#000000' }}
             >
               <Plus size={13} />
-              <span>Create Custom Agent</span>
+              <span>Define Agent</span>
             </button>
-          )}
+
+            <button
+              type="button"
+              onClick={() => swarmStore.closeHub()}
+              style={{ background: 'none', border: 'none', color: faint, cursor: 'pointer', padding: 4 }}
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Content Pane */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 18, overflowY: 'auto' }}>
-          {/* 1. AI AGENTS TAB */}
-          {activeTab === 'agents' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: 12 }}>
-              {AGENT_ROSTER.map((agent) => {
-                const isSelected = activeAgentIds.includes(agent.id)
+        <div style={{ flex: 1, minHeight: 0, padding: 18, overflowY: 'auto' }}>
+          {agents.error ? (
+            <span style={{ fontSize: 12.5, color: faint }}>{unread}</span>
+          ) : listed.length === 0 && !agents.pending ? (
+            <span style={{ fontSize: 12.5, color: faint }}>{none}</span>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))',
+                gap: 12,
+              }}
+            >
+              {listed.map((agent) => {
+                const inSwarm = activeAgentIds.includes(agent.name)
                 return (
                   <div
                     key={agent.id}
                     style={{
                       padding: 14,
                       borderRadius: 12,
-                      background: isSelected ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.025)',
-                      border: isSelected ? `1px solid ${agent.badgeColor}` : '1px solid rgba(255, 255, 255, 0.08)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      boxShadow: isSelected ? `0 0 16px ${agent.badgeColor}22` : 'none',
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div
-                            style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 8,
-                              background: `${agent.badgeColor}22`,
-                              border: `1px solid ${agent.badgeColor}44`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: agent.badgeColor,
-                              fontWeight: 700,
-                              fontSize: 14,
-                            }}
-                          >
-                            {agent.handle[1].toUpperCase()}
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>
-                              {agent.name}
-                            </div>
-                            <code style={{ fontSize: 11, color: agent.badgeColor, fontWeight: 600 }}>
-                              {agent.handle}
-                            </code>
-                          </div>
-                        </div>
-                      </div>
-
-                      <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.4 }}>
-                        {agent.role}
-                      </span>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, paddingTop: 2 }}>
-                        {agent.capabilities.map((cap) => (
-                          <span
-                            key={cap}
-                            style={{
-                              fontSize: 10,
-                              padding: '1px 6px',
-                              borderRadius: 4,
-                              background: 'rgba(255, 255, 255, 0.06)',
-                              color: 'rgba(255, 255, 255, 0.65)',
-                            }}
-                          >
-                            {cap}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                      <span style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.4)' }}>
-                        Status: <strong style={{ color: isSelected ? agent.badgeColor : 'rgba(255, 255, 255, 0.6)' }}>{isSelected ? 'Active in Swarm' : 'Available'}</strong>
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => swarmStore.toggleAgent(agent.id)}
-                        className="tap"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 10px',
-                          borderRadius: 6,
-                          background: isSelected ? `${agent.badgeColor}22` : 'rgba(255, 255, 255, 0.06)',
-                          border: isSelected ? `1px solid ${agent.badgeColor}66` : '1px solid rgba(255, 255, 255, 0.1)',
-                          color: isSelected ? agent.badgeColor : '#ffffff',
-                          fontSize: 11.5,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {isSelected ? <Check size={12} /> : <Plus size={12} />}
-                        <span>{isSelected ? 'In Swarm' : 'Add to Swarm'}</span>
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* 2. STANDALONE APPS TAB */}
-          {activeTab === 'apps' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: 12 }}>
-              {APPS_LIST.map((app) => {
-                const Icon = app.icon
-                return (
-                  <div
-                    key={app.id}
-                    style={{
-                      padding: 14,
-                      borderRadius: 12,
                       background: 'rgba(255, 255, 255, 0.025)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      border: line,
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: 12,
+                      gap: 10,
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div
-                            style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 8,
-                              background: `${app.color}22`,
-                              border: `1px solid ${app.color}44`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: app.color,
-                            }}
-                          >
-                            <Icon size={18} />
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>
-                              {app.name}
-                            </div>
-                            <span style={{ fontSize: 11, color: app.color, fontWeight: 600 }}>
-                              {app.badge}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.4 }}>
-                        {app.desc}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                      <a
-                        href={app.url}
-                        target="_blank"
-                        rel="noreferrer"
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div
                         style={{
-                          display: 'inline-flex',
+                          width: 34,
+                          height: 34,
+                          borderRadius: 8,
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          border: line,
+                          display: 'flex',
                           alignItems: 'center',
-                          gap: 4,
-                          fontSize: 11,
-                          color: 'rgba(255, 255, 255, 0.5)',
-                          textDecoration: 'none',
-                        }}
-                      >
-                        <span>External</span>
-                        <ExternalLink size={11} />
-                      </a>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          swarmStore.closeHub()
-                          workspaceAppsStore.open(app.target as any)
-                        }}
-                        className="tap"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 10px',
-                          borderRadius: 6,
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          justifyContent: 'center',
                           color: '#ffffff',
-                          fontSize: 11.5,
-                          fontWeight: 600,
-                          cursor: 'pointer',
+                          fontWeight: 700,
+                          fontSize: 14,
                         }}
                       >
-                        <Play size={11} fill="currentColor" />
-                        <span>Launch App</span>
-                      </button>
+                        {face(agent)}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>
+                          {agent.name}
+                        </div>
+                        <code style={{ fontSize: 11, color: faint }}>{agent.model}</code>
+                      </div>
                     </div>
+
+                    {agent.description && (
+                      <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.4 }}>
+                        {agent.description}
+                      </span>
+                    )}
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {(agent.tools ?? []).map((tool) => (
+                        <span key={tool} style={chip}>
+                          {tool}
+                        </span>
+                      ))}
+                      {agent.schedule && <span style={chip}>cron {agent.schedule}</span>}
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingTop: 8,
+                        borderTop: line,
+                      }}
+                    >
+                      <span style={{ fontSize: 11, color: faint }}>
+                        {agent.runs ?? 0} runs · {agent.status ?? 'unknown'}
+                      </span>
+
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          onClick={() => swarmStore.toggleAgent(agent.name)}
+                          className="tap"
+                          style={{
+                            ...action,
+                            background: inSwarm ? 'rgba(52, 211, 153, 0.15)' : action.background,
+                            color: inSwarm ? '#34d399' : '#ffffff',
+                          }}
+                        >
+                          {inSwarm ? 'In chat' : 'Add to chat'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOpen(open === agent.name ? null : agent.name)}
+                          className="tap"
+                          style={action}
+                        >
+                          <Play size={11} fill="currentColor" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void remove(agent.name)}
+                          className="tap"
+                          title="Remove this agent and every run recorded against it"
+                          style={{ ...action, color: '#f87171' }}
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {open === agent.name && <Detail name={agent.name} />}
                   </div>
                 )
               })}
-            </div>
-          )}
-
-          {/* 3. PLUGINS TAB */}
-          {activeTab === 'plugins' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Developer toolings and runtime connectors
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    swarmStore.closeHub()
-                    pluginsStore.open()
-                  }}
-                  className="tap"
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 6,
-                    background: '#ffffff',
-                    border: 'none',
-                    color: '#000000',
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Manage All Plugins
-                </button>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
-                {[
-                  { name: 'GitHub CI/CD Trigger', desc: 'Dispatch tests and builds directly from agents' },
-                  { name: 'pgvector Auto-Indexer', desc: 'Continuous AST embedding indexing into Postgres' },
-                  { name: 'KMS Hardware Enclave', desc: '30-day ECDSA key rotation with AES-256 envelope encryption' },
-                  { name: 'ZAP Stream Profiler', desc: 'Zero-allocation telemetry & latency profiling' },
-                ].map((p) => (
-                  <div
-                    key={p.name}
-                    style={{
-                      padding: 12,
-                      borderRadius: 10,
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 6,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: '#ffffff' }}>{p.name}</span>
-                      <span style={{ fontSize: 10.5, color: '#34d399', fontWeight: 600 }}>Active</span>
-                    </div>
-                    <span style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.5)' }}>{p.desc}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 4. AUTOMATIONS TAB */}
-          {activeTab === 'automations' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Scheduled cron jobs and event routines
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    swarmStore.closeHub()
-                    automationsStore.open()
-                  }}
-                  className="tap"
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 6,
-                    background: '#ffffff',
-                    border: 'none',
-                    color: '#000000',
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Manage All Automations
-                </button>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
-                {[
-                  { name: 'Hourly KMS Vulnerability Sweep', agent: '@secops', schedule: 'Hourly' },
-                  { name: 'Daily Model & ZAP Benchmark', agent: '@researcher', schedule: 'Daily @ 00:00' },
-                  { name: 'On Git Push -> Auto-Deploy k3s', agent: '@dev', schedule: 'On main push' },
-                  { name: 'Continuous AST Memory Sync', agent: '@planner', schedule: 'Every 15m' },
-                ].map((job) => (
-                  <div
-                    key={job.name}
-                    style={{
-                      padding: 12,
-                      borderRadius: 10,
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                    }}
-                  >
-                    <span style={{ fontSize: 12.5, fontWeight: 600, color: '#ffffff' }}>{job.name}</span>
-                    <span style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.5)' }}>
-                      Agent: <strong style={{ color: '#a78bfa' }}>{job.agent}</strong> • {job.schedule}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
         </div>

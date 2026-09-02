@@ -45,8 +45,8 @@ const TEMPLATES: Starter[] = [
     id: 'swarm-refactor',
     category: 'swarm',
     label: 'Autonomous Agent Swarm',
-    subtitle: 'Planner, Dev & SecOps Pipeline',
-    text: 'Coordinate a multi-agent engineering swarm (@planner, @dev, @secops) to analyze codebase architecture, refactor modules, and run Playwright tests.',
+    subtitle: 'Vi, Dev & Cyber Pipeline',
+    text: 'Coordinate a multi-agent engineering swarm (@vi, @dev, @cyber) to analyze codebase architecture, refactor modules, and run Playwright tests.',
     icon: Bot,
   },
   {
@@ -78,7 +78,7 @@ const TEMPLATES: Starter[] = [
     category: 'swarm',
     label: 'Deep Research & RAG Memory',
     subtitle: 'AST Graph & Vector Indexing',
-    text: 'Task @researcher with crawling live documentation, analyzing GitHub repository patterns, and indexing vector embeddings into pgvector.',
+    text: 'Task @data with crawling live documentation, analyzing GitHub repository patterns, and indexing vector embeddings into pgvector.',
     icon: Sparkles,
   },
   {

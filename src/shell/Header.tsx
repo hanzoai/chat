@@ -3,7 +3,6 @@ import {
   Activity,
   Columns2,
   FileText,
-  Globe,
   Hash,
   Keyboard,
   Layers,
@@ -13,7 +12,6 @@ import {
   Palette,
   PanelRight,
   PhoneCall,
-  Radio,
   Share2,
 } from '@hanzogui/lucide-icons-2'
 import { XStack } from '@hanzo/ui'
@@ -35,11 +33,10 @@ export interface HeaderProps {
 
 export const Header = ({ title, rail, onRail }: HeaderProps) => {
   const artifact = useArtifact()
-  const { rooms, activeRoomId } = useChannels()
+  const { rooms, selected } = useChannels()
   const [layoutMenuOpen, setLayoutMenuOpen] = useState(false)
 
-  const activeRoom = rooms.find((r) => r.id === activeRoomId)
-  const isGlobal = activeRoom?.scope === 'global'
+  const activeRoom = rooms.find((r) => r.key === selected)
 
   // Global keydown handler for productivity shortcuts
   useEffect(() => {
@@ -63,7 +60,7 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const displayTitle = activeRoom?.name ? `#${activeRoom.name}` : title
+  const displayTitle = activeRoom ? `#${activeRoom.roomId} (${activeRoom.channel})` : title
 
   return (
     <Bar
@@ -93,52 +90,8 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
               <Menu size={16} />
             </button>
           )}
-          {activeRoom?.type === 'channel' && (
-            <Hash size={16} style={{ color: isGlobal ? '#60a5fa' : '#34d399', flexShrink: 0 }} />
-          )}
-          {activeRoom?.scope === 'global' && (
-            <span
-              style={{
-                fontSize: 9.5,
-                fontWeight: 700,
-                padding: '2px 6px',
-                borderRadius: 4,
-                background: 'rgba(96, 165, 250, 0.15)',
-                border: '1px solid rgba(96, 165, 250, 0.3)',
-                color: '#60a5fa',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 3,
-                flexShrink: 0,
-              }}
-            >
-              <Globe size={9} />
-              <span>GLOBAL</span>
-            </span>
-          )}
-          {activeRoom?.liveCallActive && (
-            <button
-              type="button"
-              onClick={() => liveVoiceStore.open()}
-              className="tap"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '2px 8px',
-                borderRadius: 9999,
-                background: 'rgba(52, 211, 153, 0.15)',
-                border: '1px solid rgba(52, 211, 153, 0.4)',
-                color: '#34d399',
-                fontSize: 10,
-                fontWeight: 700,
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              <Radio size={10} />
-              <span>LIVE CALL</span>
-            </button>
+          {activeRoom && (
+            <Hash size={16} style={{ color: '#34d399', flexShrink: 0 }} />
           )}
         </div>
       }
@@ -160,8 +113,8 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
             padding: '0 8px',
             height: 32,
             borderRadius: 7,
-            background: activeRoom?.liveCallActive ? 'rgba(52, 211, 153, 0.2)' : 'rgba(52, 211, 153, 0.12)',
-            border: activeRoom?.liveCallActive ? '1px solid #34d399' : '1px solid rgba(52, 211, 153, 0.3)',
+            background: 'rgba(52, 211, 153, 0.12)',
+            border: '1px solid rgba(52, 211, 153, 0.3)',
             color: '#34d399',
             fontSize: 11,
             fontWeight: 700,

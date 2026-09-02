@@ -177,7 +177,7 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         id: 'swarm',
         group: 'Agentic & Cloud',
         label: 'Toggle Multi-Agent Swarm Mode',
-        hint: '@planner, @dev, @secops, @researcher, @executor (⌘J)',
+        hint: '@vi, @dev, @des, @cyber, @opera, @algo (⌘J)',
         icon: <Bot size={15} />,
       },
       {
@@ -352,7 +352,7 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
           })
           break
         case 'channel':
-          channelsStore.openCreate()
+          channelsStore.open()
           break
         case 'invite':
           multiplayerStore.openInvite()

@@ -1,269 +1,149 @@
 /**
- * Artifact and Sandbox Execution state store with live Telemetry & Inputs/Outputs Inspector.
+ * The code block under inspection, and how it gets run.
  *
- * Provides a lightweight reactive state for:
- * 1. Live code artifacts & interactive iframe preview
- * 2. Inputs & Outputs summary (tokens, latency, active MCP tools, prompt params)
- * 3. Local k3s / Hanzo Cloud gVisor microVM sandbox terminal execution
+ * Running is `POST /v1/sandbox/write` followed by `POST /v1/sandbox/run` on the
+ * lease `~/terminal/sandbox` holds — the same borrowed computer the terminal
+ * shows, so a file written from here is a file the terminal can list. What
+ * reaches the log is the program's own output, including its own failure to
+ * start; nothing narrates a build on its behalf.
+ *
+ * An artifact opens EMPTY. There is no code here until a fenced block or the
+ * palette puts some here.
  */
+import { sandbox } from '~/terminal/sandbox'
+
 import { useEffect, useState } from 'react'
 
-export type SandboxEnvironment = 'local-k3s' | 'hanzo-cloud' | 'gvisor-enclave'
-export type ArtifactTab = 'preview' | 'code' | 'diff' | 'telemetry' | 'terminal'
-
-export interface TelemetryData {
-  promptTokens: number
-  completionTokens: number
-  totalTokens: number
-  model: string
-  latencyMs: number
-  ttftMs: number
-  mcpTools: string[]
-  inputSummary: string
-  outputSummary: string
-  protocol: string
-  enclaveKey: string
-  timestamp: string
-}
+export type ArtifactTab = 'code' | 'preview' | 'turn' | 'logs'
 
 export type LayoutMode = 'default' | 'split' | 'studio' | 'focus'
 
-export interface ArtifactData {
+/**
+ * The last turn, as the composer reports it.
+ *
+ * The two summaries and the model are what was actually sent and what actually
+ * came back. The counts and the two latencies are the caller's estimates —
+ * `src/shell/Chat.tsx` derives tokens from string length and passes constants
+ * for the timings — so they are held but not shown. `/v1/chat/completions`
+ * answers a `usage` object and that is where real counts come from; `/v1/usage`
+ * accounts for the org, never for one turn.
+ */
+export type Turn = {
+  inputSummary?: string
+  outputSummary?: string
+  model?: string
+  timestamp?: string
+  promptTokens?: number
+  completionTokens?: number
+  totalTokens?: number
+  latencyMs?: number
+  ttftMs?: number
+}
+
+export type ArtifactData = {
   id: string
   title: string
   language: string
   code: string
-  environment: SandboxEnvironment
   activeTab: ArtifactTab
-  isRunning: boolean
-  logs: string[]
   isOpen: boolean
   isIntelligenceOpen: boolean
   layoutMode: LayoutMode
-  telemetry: TelemetryData
+  turn: Turn
 }
 
-const DEFAULT_TELEMETRY: TelemetryData = {
-  promptTokens: 342,
-  completionTokens: 816,
-  totalTokens: 1158,
-  model: 'deepseek-chat',
-  latencyMs: 180,
-  ttftMs: 42,
-  mcpTools: ['Local Filesystem MCP', 'PostgreSQL & pgvector', 'Kubernetes k3s Controller'],
-  inputSummary: 'Fullstack Next.js 16 + React 19 application with ZAP binary protocol streaming.',
-  outputSummary: 'Synthesized zero-allocation route handlers, UI components, and verified KMS hardware enclave attestation.',
-  protocol: 'ZAP Zero-Allocation Binary Protocol (0.18ms p99)',
-  enclaveKey: 'kms-hardware-aes256-gcm-0x892a',
-  timestamp: 'Just now',
+/**
+ * How a language is run, when it can be. A language absent here has no
+ * interpreter to name, so the Run control is not drawn for it — and what is
+ * named is a REQUEST of the sandbox, not a promise: an image without `python3`
+ * answers so itself.
+ */
+const RUNNERS: Record<string, { ext: string; argv: (path: string) => string[] }> = {
+  python: { ext: 'py', argv: (path) => ['python3', path] },
+  py: { ext: 'py', argv: (path) => ['python3', path] },
+  javascript: { ext: 'mjs', argv: (path) => ['node', path] },
+  js: { ext: 'mjs', argv: (path) => ['node', path] },
+  typescript: { ext: 'ts', argv: (path) => ['node', '--experimental-strip-types', path] },
+  ts: { ext: 'ts', argv: (path) => ['node', '--experimental-strip-types', path] },
+  bash: { ext: 'sh', argv: (path) => ['sh', path] },
+  sh: { ext: 'sh', argv: (path) => ['sh', path] },
+  shell: { ext: 'sh', argv: (path) => ['sh', path] },
 }
 
-const DEFAULT_ARTIFACT: ArtifactData = {
-  id: 'art-default',
-  title: 'Next.js 16 Luxury Storefront',
-  language: 'typescript',
-  code: `// Next.js 16 Route Handler with ZAP Zero-Allocation Binary Stream
-import { createZAPStream } from '@hanzo/zap'
-import { kmsEnclave } from '@hanzo/security'
+export const runner = (language: string) => RUNNERS[language.toLowerCase()] ?? null
 
-export async function POST(req: Request) {
-  const { prompt } = await req.json()
+/** A page the browser can render on its own, with no server and no pretending. */
+export const previewable = (language: string) => language === 'html' || language === 'svg'
 
-  // Hardware enclave key attestation & sub-millisecond memory stream
-  const stream = createZAPStream({
-    target: 'local-k3s',
-    enclaveKey: kmsEnclave.getAttestationKey(),
-  })
+const name = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
-  return stream.dispatch({
-    status: 'ok',
-    timestamp: Date.now(),
-    payload: prompt,
-  })
-}`,
-  environment: 'local-k3s',
-  activeTab: 'preview',
-  isRunning: false,
-  logs: [
-    `[sandbox] Initializing local-k3s environment...`,
-    `[sandbox] Kubernetes pod 'sandbox-node-16' spawned in 28ms`,
-    `[sandbox] Container runtime: hanzo/runtime:node22-next16`,
-    `[sandbox] Volume mounted: /workspace (isolated worktree overlay)`,
-    `[sandbox] ✓ Zero-trust KMS hardware enclave verified (AES-256-GCM)`,
-    `[sandbox] Ingress listening on http://localhost:8080`,
-    `[sandbox] Environment ready. Click 'Run' (▶) or switch to Preview tab.`,
-  ],
+const EMPTY: ArtifactData = {
+  id: '',
+  title: '',
+  language: 'text',
+  code: '',
+  activeTab: 'code',
   isOpen: false,
   isIntelligenceOpen: false,
   layoutMode: 'default',
-  telemetry: DEFAULT_TELEMETRY,
+  turn: {},
 }
 
-let currentArtifact: ArtifactData = DEFAULT_ARTIFACT
-const listeners = new Set<(artifact: ArtifactData) => void>()
+let current: ArtifactData = EMPTY
 
-let runInterval: NodeJS.Timeout | null = null
+const listeners = new Set<(next: ArtifactData) => void>()
 
-const notify = () => listeners.forEach((fn) => fn(currentArtifact))
+const patch = (next: Partial<ArtifactData>) => {
+  current = { ...current, ...next }
+  for (const fn of listeners) fn(current)
+}
 
 export const artifactStore = {
-  get: (): ArtifactData => currentArtifact,
+  get: (): ArtifactData => current,
 
-  open: (data?: Partial<ArtifactData> & { title?: string; code?: string; language?: string }) => {
-    const env = data?.environment || currentArtifact.environment || 'local-k3s'
-    const podId = `sandbox-pod-${Math.random().toString(36).substring(2, 8)}`
-    currentArtifact = {
-      ...currentArtifact,
+  open: (data?: Partial<ArtifactData>) => {
+    patch({
       ...data,
-      id: data?.id || currentArtifact.id || `art_${Date.now()}`,
-      title: data?.title || currentArtifact.title,
-      code: data?.code || currentArtifact.code,
-      language: data?.language || currentArtifact.language || 'typescript',
-      activeTab: data?.activeTab || currentArtifact.activeTab || 'preview',
+      id: data?.id || current.id || `art_${Date.now()}`,
       isOpen: true,
-      logs: data?.logs || currentArtifact.logs || [
-        `[sandbox] Initializing ${env} environment...`,
-        `[sandbox] Kubernetes pod '${podId}' spawned in 28ms`,
-        `[sandbox] Container runtime: hanzo/runtime:node22-next16`,
-      ],
-    }
-    notify()
+    })
   },
 
-  close: () => {
-    currentArtifact = { ...currentArtifact, isOpen: false }
-    notify()
+  close: () => patch({ isOpen: false }),
+  toggle: () => patch({ isOpen: !current.isOpen }),
+
+  closeIntelligence: () => patch({ isIntelligenceOpen: false }),
+  toggleIntelligence: () => patch({ isIntelligenceOpen: !current.isIntelligenceOpen }),
+
+  setLayoutMode: (layoutMode: LayoutMode) =>
+    patch({
+      layoutMode,
+      isOpen: layoutMode === 'split' || layoutMode === 'studio',
+      isIntelligenceOpen: layoutMode === 'studio',
+    }),
+
+  updateCode: (code: string) => patch({ code }),
+
+  setTab: (activeTab: ArtifactTab) => patch({ activeTab, isOpen: true }),
+
+  updateTelemetry: (turn: Turn) => patch({ turn: { ...current.turn, ...turn } }),
+
+  /** Puts the code on the sandbox and runs it. The Logs tab is where it lands. */
+  run: async () => {
+    const how = runner(current.language)
+    if (!how || !current.code.trim()) return
+    const path = `${name(current.title) || 'artifact'}.${how.ext}`
+    patch({ activeTab: 'logs', isOpen: true })
+    if (!(await sandbox.write(path, current.code))) return
+    await sandbox.run(how.argv(path))
   },
 
-  toggle: () => {
-    currentArtifact = { ...currentArtifact, isOpen: !currentArtifact.isOpen }
-    notify()
-  },
-
-  openIntelligence: () => {
-    currentArtifact = { ...currentArtifact, isIntelligenceOpen: true }
-    notify()
-  },
-
-  closeIntelligence: () => {
-    currentArtifact = { ...currentArtifact, isIntelligenceOpen: false }
-    notify()
-  },
-
-  toggleIntelligence: () => {
-    currentArtifact = { ...currentArtifact, isIntelligenceOpen: !currentArtifact.isIntelligenceOpen }
-    notify()
-  },
-
-  setLayoutMode: (mode: LayoutMode) => {
-    if (mode === 'default') {
-      currentArtifact = { ...currentArtifact, layoutMode: 'default', isOpen: false, isIntelligenceOpen: false }
-    } else if (mode === 'split') {
-      currentArtifact = { ...currentArtifact, layoutMode: 'split', isOpen: true, isIntelligenceOpen: false }
-    } else if (mode === 'studio') {
-      currentArtifact = { ...currentArtifact, layoutMode: 'studio', isOpen: true, isIntelligenceOpen: true }
-    } else if (mode === 'focus') {
-      currentArtifact = { ...currentArtifact, layoutMode: 'focus', isOpen: false, isIntelligenceOpen: false }
-    }
-    notify()
-  },
-
-  updateCode: (code: string) => {
-    currentArtifact = { ...currentArtifact, code }
-    notify()
-  },
-
-  setTab: (tab: ArtifactTab) => {
-    currentArtifact = { ...currentArtifact, activeTab: tab, isOpen: true }
-    notify()
-  },
-
-  setEnvironment: (env: SandboxEnvironment) => {
-    const envLabel = env === 'local-k3s' ? 'Local k3s' : env === 'hanzo-cloud' ? 'Hanzo Cloud' : 'gVisor Enclave'
-    const newLogs = [
-      ...currentArtifact.logs,
-      `[sandbox] Runtime target changed to ${envLabel}`,
-      `[sandbox] Re-attaching pod network interface (ZAP stream ready)...`,
-    ]
-    currentArtifact = { ...currentArtifact, environment: env, logs: newLogs }
-    notify()
-  },
-
-  updateTelemetry: (telemetry: Partial<TelemetryData>) => {
-    currentArtifact = {
-      ...currentArtifact,
-      telemetry: {
-        ...currentArtifact.telemetry,
-        ...telemetry,
-      },
-    }
-    notify()
-  },
-
-  runCode: () => {
-    if (runInterval) clearInterval(runInterval)
-
-    const title = currentArtifact.title
-    const env = currentArtifact.environment
-    const lang = currentArtifact.language
-
-    currentArtifact = {
-      ...currentArtifact,
-      isRunning: true,
-      activeTab: 'terminal',
-      isOpen: true,
-      logs: [
-        ...currentArtifact.logs,
-        `\n$ hanzo dev --env=${env} /workspace/${title}`,
-        `[builder] Resolving dependencies (@hanzo/ui, @hanzo/gui, next@16, react@19)...`,
-        `[builder] ✓ Cached node_modules verified in 14ms`,
-        `[compiler] Compiling ${lang} AST modules...`,
-      ],
-    }
-    notify()
-
-    setTimeout(() => {
-      currentArtifact = {
-        ...currentArtifact,
-        logs: [
-          ...currentArtifact.logs,
-          `[compiler] ✓ Compilation finished in 0.18s (0 warnings)`,
-          `[runtime] Starting local development server...`,
-          `[runtime] ✓ Ingress live on http://localhost:8080`,
-          `[zap] Zero-allocation telemetry stream online (0.18ms p99)`,
-          `[sandbox] Listening for HTTP & WebSocket connections...`,
-        ],
-      }
-      notify()
-    }, 250)
-  },
-
-  stopCode: () => {
-    if (runInterval) clearInterval(runInterval)
-    currentArtifact = {
-      ...currentArtifact,
-      isRunning: false,
-      logs: [
-        ...currentArtifact.logs,
-        `[sandbox] Process terminated (signal SIGTERM)`,
-        `[sandbox] Port 8080 released`,
-      ],
-    }
-    notify()
-  },
-
-  clearLogs: () => {
-    currentArtifact = {
-      ...currentArtifact,
-      logs: [`[sandbox] Terminal cleared.`],
-    }
-    notify()
-  },
+  /** Interrupts what the sandbox is running. The lease survives. */
+  stop: () => sandbox.interrupt(),
 }
 
 export const useArtifact = (): ArtifactData => {
-  const [artifact, setArtifact] = useState<ArtifactData>(currentArtifact)
-
+  const [artifact, setArtifact] = useState<ArtifactData>(current)
   useEffect(() => {
     const handler = (next: ArtifactData) => setArtifact(next)
     listeners.add(handler)
@@ -271,6 +151,5 @@ export const useArtifact = (): ArtifactData => {
       listeners.delete(handler)
     }
   }, [])
-
   return artifact
 }

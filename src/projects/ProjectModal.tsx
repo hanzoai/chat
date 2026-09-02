@@ -1,55 +1,68 @@
 /**
- * Project, Organization, and Multi-User Identity Modal.
- * Supports 1-click Org switching, User switching, Project creation, and runtime dispatch.
+ * Projects, and the org that owns them.
+ *
+ * One org, because the server derives it from the principal — so there is no
+ * org switcher and no identity switcher here: both would be controls the API
+ * ignores. What is switchable is which list you are looking at.
  */
-import {
-  Building2,
-  Check,
-  FolderGit2,
-  Plus,
-  UserCheck,
-  X,
-} from '@hanzogui/lucide-icons-2'
-import { useState } from 'react'
-import { projectsStore, useProjects } from './store'
+import { Building2, FolderGit2, Plus, Star, UserCheck, X } from '@hanzogui/lucide-icons-2'
+import { useState, type FormEvent } from 'react'
+
+import { useSession } from '~/data/session'
+
+import { create, star, useProjects, usePeople } from './projects'
+import { projectsStore, useProjectPanel } from './store'
+
+const field = {
+  padding: '8px 12px',
+  borderRadius: 8,
+  background: 'rgba(255, 255, 255, 0.04)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  color: '#ffffff',
+  fontSize: 12.5,
+  outline: 'none',
+} as const
+
+const note = (text: string) => (
+  <div style={{ padding: 16, fontSize: 12.5, color: 'rgba(255, 255, 255, 0.5)' }}>{text}</div>
+)
 
 export const ProjectModal = () => {
-  const {
-    isOpen,
-    activeOrgId,
-    activeUserId,
-    activeProjectId,
-    organizations,
-    users,
-    projects,
-  } = useProjects()
+  const { isOpen, pane } = useProjectPanel()
+  const { standing, user } = useSession()
+  const live = standing === 'live'
+  const on = isOpen && live
 
-  const [activeTab, setActiveTab] = useState<'projects' | 'orgs' | 'users'>('projects')
-  const [newProjectName, setNewProjectName] = useState('')
-  const [newProjectDesc, setNewProjectDesc] = useState('')
-  const [newOrgName, setNewOrgName] = useState('')
+  // `user.role` carries the account's `owner`, which IS the org — the same one
+  // /v1/projects is keyed by, so nothing here has to ask a second time.
+  const org = user?.role
+
+  const projects = useProjects(on)
+  const people = usePeople(org, on && pane === 'people')
+
+  const [name, setName] = useState('')
+  const [refused, setRefused] = useState<string | null>(null)
 
   if (!isOpen) return null
 
-  const activeOrg = organizations.find((o) => o.id === activeOrgId) || organizations[0]
-  const filteredProjects = projects.filter((p) => p.orgId === activeOrgId)
-
-  const handleCreateProject = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newProjectName.trim()) {
-      projectsStore.createProject(newProjectName.trim(), newProjectDesc.trim() || 'Next.js 16 fullstack application')
-      setNewProjectName('')
-      setNewProjectDesc('')
+  const attempt = async (act: Promise<unknown>) => {
+    setRefused(null)
+    try {
+      await act
+    } catch (error) {
+      setRefused(error instanceof Error ? error.message : String(error))
     }
   }
 
-  const handleCreateOrg = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newOrgName.trim()) {
-      projectsStore.createOrg(newOrgName.trim(), newOrgName.trim().toLowerCase())
-      setNewOrgName('')
-    }
+  const add = (event: FormEvent) => {
+    event.preventDefault()
+    if (!name.trim()) return
+    void attempt(create(name.trim()))
+    setName('')
   }
+
+  const read = pane === 'projects' ? projects : people
+  const rows = read.data ?? []
 
   return (
     <div
@@ -82,7 +95,6 @@ export const ProjectModal = () => {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Bar */}
         <div
           style={{
             display: 'flex',
@@ -94,18 +106,17 @@ export const ProjectModal = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {[
-              { id: 'projects', label: 'Projects', icon: FolderGit2, count: filteredProjects.length },
-              { id: 'orgs', label: 'Organizations', icon: Building2, count: organizations.length },
-              { id: 'users', label: 'Identities & Users', icon: UserCheck, count: users.length },
-            ].map((tab) => {
+            {([
+              { id: 'projects', label: 'Projects', icon: FolderGit2 },
+              { id: 'people', label: 'People', icon: UserCheck },
+            ] as const).map((tab) => {
               const Icon = tab.icon
-              const isActive = activeTab === tab.id
+              const active = pane === tab.id
               return (
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => projectsStore.show(tab.id)}
                   className="tap"
                   style={{
                     display: 'inline-flex',
@@ -113,300 +124,223 @@ export const ProjectModal = () => {
                     gap: 6,
                     padding: '6px 12px',
                     borderRadius: 8,
-                    background: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    border: isActive ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid transparent',
-                    color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                    background: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    border: active ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid transparent',
+                    color: active ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                     fontSize: 12.5,
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
-                  <Icon size={14} color={isActive ? '#60a5fa' : 'rgba(255, 255, 255, 0.5)'} />
+                  <Icon size={14} color={active ? '#60a5fa' : 'rgba(255, 255, 255, 0.5)'} />
                   <span>{tab.label}</span>
-                  <span style={{ fontSize: 10.5, opacity: 0.6, background: 'rgba(255, 255, 255, 0.1)', padding: '1px 5px', borderRadius: 9999 }}>
-                    {tab.count}
-                  </span>
                 </button>
               )
             })}
           </div>
 
-          <button
-            type="button"
-            onClick={() => projectsStore.close()}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'rgba(255, 255, 255, 0.5)',
-              cursor: 'pointer',
-              padding: 4,
-            }}
-          >
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {org && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 12,
+                  color: 'rgba(255, 255, 255, 0.55)',
+                }}
+              >
+                <Building2 size={13} color="rgba(255, 255, 255, 0.4)" />
+                {org}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => projectsStore.close()}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.5)',
+                cursor: 'pointer',
+                padding: 4,
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Content Area */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', padding: 18, gap: 16 }}>
-          {/* TAB 1: PROJECTS */}
-          {activeTab === 'projects' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
-                    Active Organization: <span style={{ color: '#60a5fa' }}>{activeOrg.name}</span>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 18, gap: 14 }}>
+          {pane === 'projects' && (
+            <form onSubmit={add} style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="text"
+                placeholder="New project name…"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ ...field, flex: 1 }}
+              />
+              <button
+                type="submit"
+                className="tap"
+                disabled={!name.trim()}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  background: '#ffffff',
+                  border: 'none',
+                  color: '#000000',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: name.trim() ? 'pointer' : 'not-allowed',
+                  opacity: name.trim() ? 1 : 0.4,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Plus size={14} />
+                <span>Create</span>
+              </button>
+            </form>
+          )}
+
+          {refused && (
+            <div style={{ fontSize: 11.5, color: '#f87171' }}>
+              The server refused that: {refused}
+            </div>
+          )}
+
+          {!live && note('Sign in to read your org’s projects.')}
+          {live && read.pending && rows.length === 0 && note('Reading…')}
+          {live && !read.pending && read.error != null && note('The server refused this read.')}
+          {live && !read.pending && read.error == null && rows.length === 0 &&
+            note(pane === 'projects' ? 'This org owns no projects.' : 'This org lists nobody.')}
+
+          {live && pane === 'projects' && projects.data && projects.data.length > 0 && (
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: 12,
+                alignContent: 'start',
+              }}
+            >
+              {projects.data.map((project) => (
+                <div
+                  key={project.slug}
+                  style={{
+                    padding: 14,
+                    borderRadius: 12,
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>
+                        {project.name}
+                      </span>
+                      <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.55)', lineHeight: 1.4 }}>
+                        {project.description || project.slug}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      title={project.starred ? 'Remove your bookmark' : 'Bookmark this for yourself'}
+                      onClick={() => void attempt(star(project.slug, !project.starred))}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 2,
+                        color: project.starred ? '#fbbf24' : 'rgba(255, 255, 255, 0.3)',
+                      }}
+                    >
+                      <Star size={14} />
+                    </button>
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
-                    Isolated repositories, worktrees, sandbox runtime pods, and agent swarms.
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      fontSize: 11,
+                      color: 'rgba(255, 255, 255, 0.4)',
+                    }}
+                  >
+                    <span>
+                      {project.status ?? 'draft'}
+                      {project.framework ? ` · ${project.framework}` : ''}
+                      {project.visibility ? ` · ${project.visibility}` : ''}
+                    </span>
+                    {project.liveUrl && (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: '#60a5fa', textDecoration: 'none' }}
+                      >
+                        live
+                      </a>
+                    )}
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          )}
 
-              {/* Create Project Input */}
-              <form onSubmit={handleCreateProject} style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="text"
-                  placeholder="New project name (e.g. Next.js 16 Storefront)..."
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
+          {live && pane === 'people' && people.data && people.data.length > 0 && (
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {people.data.map((person) => (
+                <div
+                  key={person.id}
                   style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff',
-                    fontSize: 12.5,
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  type="submit"
-                  className="tap"
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 8,
-                    background: '#ffffff',
-                    border: 'none',
-                    color: '#000000',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
+                    display: 'flex',
                     alignItems: 'center',
-                    gap: 6,
+                    gap: 12,
+                    padding: '12px 16px',
+                    borderRadius: 10,
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                   }}
                 >
-                  <Plus size={14} />
-                  <span>Create Project</span>
-                </button>
-              </form>
-
-              {/* Projects Grid */}
-              <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-                {filteredProjects.map((p) => {
-                  const isSelected = p.id === activeProjectId
-                  return (
-                    <div
-                      key={p.id}
-                      onClick={() => projectsStore.setActiveProject(p.id)}
-                      className="tap"
-                      style={{
-                        padding: 14,
-                        borderRadius: 12,
-                        background: isSelected ? 'rgba(96, 165, 250, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                        border: isSelected ? '1px solid rgba(96, 165, 250, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        gap: 10,
-                      }}
-                    >
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>{p.name}</span>
-                          {isSelected && <Check size={14} color="#60a5fa" />}
-                        </div>
-                        <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.55)', lineHeight: 1.4 }}>
-                          {p.description}
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255, 255, 255, 0.4)' }}>
-                        <span>Target: <strong style={{ color: '#34d399' }}>{p.runtimeTarget}</strong></span>
-                        <span>{p.updatedAt}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: ORGANIZATIONS */}
-          {activeTab === 'orgs' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
-                    Organization Switcher
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 9999,
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      color: '#ffffff',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {(person.displayName || person.name).slice(0, 1).toUpperCase()}
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
-                    Switch organization tenancy, IAM policies, and billing subscriptions.
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#ffffff' }}>
+                      {person.displayName || person.name}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.45)' }}>
+                      {person.email || person.id}
+                      {person.service ? ' · service account' : ''}
+                      {person.admin ? ' · admin' : ''}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Create Org Form */}
-              <form onSubmit={handleCreateOrg} style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="text"
-                  placeholder="New organization name..."
-                  value={newOrgName}
-                  onChange={(e) => setNewOrgName(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff',
-                    fontSize: 12.5,
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  type="submit"
-                  className="tap"
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 8,
-                    background: '#ffffff',
-                    border: 'none',
-                    color: '#000000',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Create Org
-                </button>
-              </form>
-
-              {/* Orgs List */}
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {organizations.map((org) => {
-                  const isSelected = org.id === activeOrgId
-                  return (
-                    <div
-                      key={org.id}
-                      onClick={() => projectsStore.setActiveOrg(org.id)}
-                      className="tap"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px 16px',
-                        borderRadius: 10,
-                        background: isSelected ? 'rgba(96, 165, 250, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                        border: isSelected ? '1px solid rgba(96, 165, 250, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 8,
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            color: '#ffffff',
-                          }}
-                        >
-                          {org.name[0]}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>{org.name}</div>
-                          <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.45)' }}>
-                            slug: {org.slug} • {org.membersCount} members • Tier: <strong style={{ color: '#a78bfa' }}>{org.tier}</strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      {isSelected && <Check size={16} color="#60a5fa" />}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: USERS & IDENTITIES */}
-          {activeTab === 'users' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
-                  User & Identity Switcher
-                </div>
-                <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
-                  Switch acting identity, IAM role permissions, and local dev credentials.
-                </div>
-              </div>
-
-              {/* Users List */}
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {users.map((u) => {
-                  const isSelected = u.id === activeUserId
-                  return (
-                    <div
-                      key={u.id}
-                      onClick={() => projectsStore.setActiveUser(u.id)}
-                      className="tap"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px 16px',
-                        borderRadius: 10,
-                        background: isSelected ? 'rgba(52, 211, 153, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                        border: isSelected ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 9999,
-                            background: isSelected ? '#34d399' : 'rgba(255, 255, 255, 0.1)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            color: isSelected ? '#000000' : '#ffffff',
-                          }}
-                        >
-                          {u.name[0]}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>{u.name}</div>
-                          <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.45)' }}>
-                            {u.email} • Role: <strong style={{ color: '#34d399' }}>{u.role}</strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      {isSelected && <Check size={16} color="#34d399" />}
-                    </div>
-                  )
-                })}
-              </div>
+              ))}
             </div>
           )}
         </div>

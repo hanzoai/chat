@@ -1,8 +1,18 @@
 /**
- * Presence Stack & Multiplayer Header Controls.
+ * The header's people stack.
+ *
+ * The avatars are the org's roster, self first. There is no status dot: nothing
+ * on this wire publishes who is online, and a dot lit for everybody is worse
+ * than no dot at all. An empty stack is a roster that has not landed or was
+ * refused, and the panel behind it says which.
+ *
+ * The swarm and terminal toggles ride here because this is the header's control
+ * cluster; their state belongs to `~/agents` and `~/terminal`.
  */
-import { Terminal, UserPlus, Zap } from '@hanzogui/lucide-icons-2'
+import { Terminal, Users, Zap } from '@hanzogui/lucide-icons-2'
 import { XStack } from '@hanzo/ui'
+
+import { initial, label, tint } from './person'
 import { multiplayerStore, useMultiplayer } from './store'
 import { terminalStore, useTerminal } from '~/terminal/store'
 import { swarmStore, useSwarm } from '~/agents/store'
@@ -54,9 +64,7 @@ export const PresenceStack = () => {
           gap: 5,
           padding: '4px 9px',
           borderRadius: 6,
-          background: isTerminalOpen
-            ? 'rgba(52, 211, 153, 0.15)'
-            : 'rgba(255, 255, 255, 0.04)',
+          background: isTerminalOpen ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.04)',
           border: isTerminalOpen
             ? '1px solid rgba(52, 211, 153, 0.35)'
             : '1px solid rgba(255, 255, 255, 0.08)',
@@ -70,25 +78,21 @@ export const PresenceStack = () => {
         <span>Terminal</span>
       </button>
 
-      {/* Multiplayer Avatar Stack */}
+      {/* The org's people */}
       <div
         onClick={() => multiplayerStore.openInvite()}
-        title="Multiplayer room participants"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginLeft: 4,
-          cursor: 'pointer',
-        }}
+        title="Your organization"
+        style={{ display: 'flex', alignItems: 'center', marginLeft: 4, cursor: 'pointer' }}
       >
         {participants.slice(0, 3).map((p, idx) => (
           <div
             key={p.id}
+            title={label(p)}
             style={{
               width: 24,
               height: 24,
               borderRadius: 9999,
-              background: p.color,
+              background: tint(p),
               color: '#000000',
               display: 'flex',
               alignItems: 'center',
@@ -96,35 +100,20 @@ export const PresenceStack = () => {
               fontSize: 10,
               fontWeight: 700,
               border: '2px solid #09090b',
-              position: 'relative',
               marginLeft: idx === 0 ? 0 : -6,
+              opacity: p.active === false ? 0.4 : 1,
             }}
           >
-            {p.name.charAt(0)}
-            {p.status === 'online' && (
-              <span
-                style={{
-                  position: 'absolute',
-                  bottom: -1,
-                  right: -1,
-                  width: 6,
-                  height: 6,
-                  borderRadius: 9999,
-                  background: '#10b981',
-                  border: '1px solid #000',
-                }}
-              />
-            )}
+            {initial(p)}
           </div>
         ))}
       </div>
 
-      {/* Invite Button */}
       <button
         type="button"
         onClick={() => multiplayerStore.openInvite()}
         className="tap"
-        title="Invite teammates to chat"
+        title="Your organization"
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -139,8 +128,8 @@ export const PresenceStack = () => {
           cursor: 'pointer',
         }}
       >
-        <UserPlus size={12} />
-        <span>Invite</span>
+        <Users size={12} />
+        <span>Team</span>
       </button>
     </XStack>
   )

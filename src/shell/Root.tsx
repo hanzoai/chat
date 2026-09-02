@@ -8,7 +8,6 @@ import { AppWorkspaceModal } from '~/apps/AppWorkspaceModal'
 import { AutomationsModal } from '~/automations/AutomationsModal'
 import { BoardModal } from '~/boards/BoardModal'
 import { brand } from '~/brand'
-import { CreateChannelModal } from '~/channels/CreateChannelModal'
 import { api } from '~/data/api'
 import { useModels } from '~/data/config'
 import { useConvos } from '~/data/convos'
@@ -123,9 +122,6 @@ export const Root = () => {
           }}
         />
       ) : null}
-
-      {/* Channel Creation Modal */}
-      <CreateChannelModal />
 
       {/* MCP Skills & Server Connectors Modal */}
       <McpModal />

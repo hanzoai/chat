@@ -1,133 +1,63 @@
 /**
- * Plugins and Extensions Marketplace Store.
+ * The plugins this deployment mounted.
+ *
+ * `GET /v1/tools/plugins?all=true` reports what the composition root declared —
+ * a name, whether it is switched on, and the URL prefixes it answers. That is
+ * the whole record, and it is a report rather than a marketplace: nothing here
+ * has an author, a rating, a download count or a version, because the route
+ * answers none of those, and nothing installs or uninstalls, because the route
+ * is GET and the switch is the deployment's, not the reader's.
+ *
+ * The `plugins` name is shared with a second, unrelated plane — the TypeScript
+ * an org authors and builds under `/v1/tools/plugins/authored`. That is
+ * authoring, not mounting, and it is not this surface.
  */
-import { useEffect, useState } from 'react'
-import type { PluginExtension } from './types'
+import { useSyncExternalStore } from 'react'
+import type { PluginMount } from '@hanzo/ai'
 
-export interface PluginsState {
-  isOpen: boolean
-  plugins: PluginExtension[]
+import { ai } from '~/data/ai'
+import type { Key } from '~/data/keys'
+import { useRead } from '~/data/query'
+import { useSession } from '~/data/session'
+
+const key: Key = ['plugins']
+
+let open = false
+const listeners = new Set<() => void>()
+const set = (next: boolean) => {
+  open = next
+  listeners.forEach((fn) => fn())
 }
-
-const DEFAULT_PLUGINS: PluginExtension[] = [
-  {
-    id: 'plugin-github-actions',
-    name: 'GitHub Actions & CI/CD Trigger',
-    version: '2.4.1',
-    author: 'Hanzo Labs',
-    description: 'Dispatch automated test suites, build Docker images, and tag releases directly from agent workflows.',
-    iconName: 'GitPullRequest',
-    category: 'devtools',
-    installed: true,
-    enabled: true,
-    downloads: '14.2k',
-    rating: 4.9,
-  },
-  {
-    id: 'plugin-pgvector-indexer',
-    name: 'PostgreSQL pgvector Auto-Indexer',
-    version: '1.8.0',
-    author: 'Database Core',
-    description: 'Automatic AST code embedding extraction, vector index reindexing, and fast cosine similarity search.',
-    iconName: 'Database',
-    category: 'database',
-    installed: true,
-    enabled: true,
-    downloads: '9.8k',
-    rating: 4.8,
-  },
-  {
-    id: 'plugin-kms-enclave',
-    name: 'KMS Hardware Enclave Key Rotation',
-    version: '3.1.2',
-    author: 'SecOps Team',
-    description: 'Hardware envelope encryption with automated 30-day ECDSA key rotation and zero-trust IAM attestation.',
-    iconName: 'Shield',
-    category: 'security',
-    installed: true,
-    enabled: true,
-    downloads: '6.4k',
-    rating: 5.0,
-  },
-  {
-    id: 'plugin-figma-sync',
-    name: 'Figma to Next.js 16 Component Sync',
-    version: '1.2.0',
-    author: 'Design Systems',
-    description: 'Import Figma design tokens and auto-generate @hanzo/ui TypeScript components in the live worktree.',
-    iconName: 'Sparkles',
-    category: 'devtools',
-    installed: false,
-    enabled: false,
-    downloads: '8.1k',
-    rating: 4.7,
-  },
-  {
-    id: 'plugin-zap-telemetry',
-    name: 'ZAP Real-time Profiler & Telemetry',
-    version: '0.9.4',
-    author: 'Performance Eng',
-    description: 'Zero-allocation binary stream telemetry, eBPF packet inspections, and sub-millisecond latency graphs.',
-    iconName: 'Zap',
-    category: 'cloud',
-    installed: true,
-    enabled: true,
-    downloads: '11.5k',
-    rating: 4.9,
-  },
-]
-
-let state: PluginsState = {
-  isOpen: false,
-  plugins: DEFAULT_PLUGINS,
-}
-
-const listeners = new Set<(state: PluginsState) => void>()
-const notify = () => listeners.forEach((fn) => fn(state))
 
 export const pluginsStore = {
-  get: () => state,
-  open: () => {
-    state = { ...state, isOpen: true }
-    notify()
-  },
-  close: () => {
-    state = { ...state, isOpen: false }
-    notify()
-  },
-  toggle: () => {
-    state = { ...state, isOpen: !state.isOpen }
-    notify()
-  },
-  toggleInstall: (pluginId: string) => {
-    state = {
-      ...state,
-      plugins: state.plugins.map((p) =>
-        p.id === pluginId
-          ? { ...p, installed: !p.installed, enabled: !p.installed ? true : false }
-          : p,
-      ),
-    }
-    notify()
-  },
-  toggleEnable: (pluginId: string) => {
-    state = {
-      ...state,
-      plugins: state.plugins.map((p) =>
-        p.id === pluginId ? { ...p, enabled: !p.enabled } : p,
-      ),
-    }
-    notify()
-  },
+  get: () => open,
+  open: () => set(true),
+  close: () => set(false),
+  toggle: () => set(!open),
 }
 
-export const usePlugins = () => {
-  const [val, setVal] = useState<PluginsState>(state)
-  useEffect(() => {
-    listeners.add(setVal)
-    return () => {
-      listeners.delete(setVal)
-    }
-  }, [])
-  return val
+const subscribe = (fn: () => void) => {
+  listeners.add(fn)
+  return () => {
+    listeners.delete(fn)
+  }
+}
+
+const held = () => open
+
+export type PluginsState = {
+  isOpen: boolean
+  plugins: PluginMount[]
+  pending: boolean
+  /** Why there is nothing to show, when that is the reason. */
+  error: unknown
+}
+
+export const usePlugins = (): PluginsState => {
+  const { standing } = useSession()
+  const isOpen = useSyncExternalStore(subscribe, held, held)
+  const read = useRead<PluginMount[]>(key, () => ai().tools.plugins({ all: true }), {
+    enabled: standing === 'live',
+  })
+  return { isOpen, plugins: read.data ?? [], pending: read.pending, error: read.error }
 }

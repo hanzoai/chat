@@ -1,45 +1,36 @@
 /**
- * Multiplayer Room Invite & Team Access Modal.
+ * The org's roster.
+ *
+ * One read — `people.list({ owner })` — rendered as rows. What was here before
+ * was a shareable room link carrying an invite code nothing mints, an
+ * invite-by-email form that appended a row to an array in this browser, and a
+ * per-row delete. None of the three had a route, and the closest thing to one,
+ * SCIM's `DELETE /Users/{owner}/{name}`, deprovisions a person from the whole
+ * organization — a trash icon in a chat panel is the wrong place to keep that.
+ *
+ * The name and the `conversationId` prop stay because `src/shell/Chat.tsx`
+ * mounts it; the prop is unread, because nothing on this wire ties a person to
+ * a conversation.
  */
-import {
-  Check,
-  Copy,
-  Link,
-  Trash2,
-  Users,
-  X,
-} from '@hanzogui/lucide-icons-2'
+import { APIError } from '@hanzo/ai'
+import { Users, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
-import { useState, type FormEvent } from 'react'
+
+import { initial, label, tint } from './person'
 import { multiplayerStore, useMultiplayer } from './store'
 
-export const InviteModal = ({ conversationId }: { conversationId?: string | null }) => {
-  const { isInviteOpen, participants } = useMultiplayer()
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState<'editor' | 'viewer'>('editor')
-  const [copied, setCopied] = useState(false)
+/** What an empty roster means. The refusal is the contract's own sentence. */
+const nothing = (error: unknown, pending: boolean): string => {
+  if (error instanceof APIError && error.status === 403)
+    return 'Reading the whole directory takes an organization administrator.'
+  if (error) return 'The directory could not be read.'
+  return pending ? 'Reading the directory…' : 'Nobody else is in this organization.'
+}
+
+export const InviteModal = (_: { conversationId?: string | null }) => {
+  const { isInviteOpen, participants, pending, error } = useMultiplayer()
 
   if (!isInviteOpen) return null
-
-  const inviteLink = `${typeof window !== 'undefined' ? window.location.origin : 'https://hanzo.chat'}/c/${conversationId || 'new'}?invite=inv_${conversationId || 'hanzo_team'}`
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(inviteLink)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // fallback
-    }
-  }
-
-  const handleInvite = (e: FormEvent) => {
-    e.preventDefault()
-    if (email.trim() && email.includes('@')) {
-      multiplayerStore.inviteMember(email.trim(), role)
-      setEmail('')
-    }
-  }
 
   return (
     <div
@@ -66,12 +57,9 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
         backgroundColor="#0c0c0e"
         padding="$5"
         gap="$4"
-        style={{
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
-        }}
+        style={{ boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)' }}
         onClick={(e: any) => e.stopPropagation()}
       >
-        {/* Header */}
         <XStack alignItems="center" justifyContent="space-between">
           <XStack alignItems="center" gap="$2.5">
             <div
@@ -90,10 +78,10 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
             </div>
             <YStack gap="$0.5">
               <SizableText size="$3" fontWeight="700" color="$ink" style={{ color: '#ffffff' }}>
-                Multiplayer Collaboration
+                Your organization
               </SizableText>
               <SizableText size="$1" color="$faint" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                Invite teammates to co-pilot, review code, and chat with AI agents.
+                The people IAM answers for this organization.
               </SizableText>
             </YStack>
           </XStack>
@@ -113,193 +101,101 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
           </button>
         </XStack>
 
-        {/* Invite Link Row */}
-        <YStack gap="$1.5">
-          <SizableText size="$1" fontWeight="600" color="$ink">
-            Shareable Room Link
-          </SizableText>
-          <XStack
-            alignItems="center"
-            gap="$2"
-            padding="$2"
-            borderRadius="$3"
-            borderWidth={1}
-            borderColor="rgba(255, 255, 255, 0.08)"
-            backgroundColor="rgba(255, 255, 255, 0.03)"
-          >
-            <Link size={14} color="rgba(255, 255, 255, 0.4)" />
-            <input
-              type="text"
-              readOnly
-              value={inviteLink}
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                color: 'rgba(255, 255, 255, 0.8)',
-                fontSize: 12,
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="tap"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '5px 10px',
-                borderRadius: 6,
-                background: copied ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: copied ? '#34d399' : '#ffffff',
-                fontSize: 11.5,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
-          </XStack>
-        </YStack>
-
-        {/* Invite by Email */}
-        <form onSubmit={handleInvite}>
-          <YStack gap="$1.5">
-            <SizableText size="$1" fontWeight="600" color="$ink">
-              Invite by Email / IAM Handle
+        <YStack gap="$2">
+          {participants.length === 0 ? (
+            <SizableText size="$1" color="$faint" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              {nothing(error, pending)}
             </SizableText>
-            <XStack gap="$2">
-              <input
-                type="email"
-                placeholder="teammate@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+          ) : (
+            <>
+              <SizableText size="$1" fontWeight="600" color="$faint">
+                {participants.length} {participants.length === 1 ? 'person' : 'people'}
+              </SizableText>
+              <div
                 style={{
-                  flex: 1,
-                  padding: '7px 12px',
-                  borderRadius: 6,
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  color: '#ffffff',
-                  fontSize: 12.5,
-                  outline: 'none',
-                }}
-              />
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as 'editor' | 'viewer')}
-                style={{
-                  padding: '7px 10px',
-                  borderRadius: 6,
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: '#ffffff',
-                  fontSize: 12,
-                  outline: 'none',
-                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                  maxHeight: 280,
+                  overflowY: 'auto',
                 }}
               >
-                <option value="editor">Can Edit & Chat</option>
-                <option value="viewer">Viewer Only</option>
-              </select>
-              <button
-                type="submit"
-                className="tap"
-                style={{
-                  padding: '7px 14px',
-                  borderRadius: 6,
-                  background: '#ffffff',
-                  border: 'none',
-                  color: '#000000',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Invite
-              </button>
-            </XStack>
-          </YStack>
-        </form>
-
-        {/* Current Members List */}
-        <YStack gap="$2" paddingTop="$2">
-          <SizableText size="$1" fontWeight="600" color="$faint">
-            Members in this Chat ({participants.length})
-          </SizableText>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
-            {participants.map((p) => (
-              <XStack
-                key={p.id}
-                alignItems="center"
-                justifyContent="space-between"
-                padding="$2"
-                borderRadius="$2"
-                backgroundColor="rgba(255, 255, 255, 0.02)"
-              >
-                <XStack alignItems="center" gap="$2.5">
-                  <div
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 9999,
-                      background: p.color,
-                      color: '#000000',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 11,
-                      fontWeight: 700,
-                    }}
+                {participants.map((p) => (
+                  <XStack
+                    key={p.id}
+                    alignItems="center"
+                    justifyContent="space-between"
+                    padding="$2"
+                    borderRadius="$2"
+                    backgroundColor="rgba(255, 255, 255, 0.02)"
                   >
-                    {p.name.charAt(0)}
-                  </div>
-                  <div>
-                    <SizableText size="$1" fontWeight="600" color="$ink">
-                      {p.name}
-                    </SizableText>
-                    <SizableText size="$1" color="$faint" style={{ fontSize: 10.5 }}>
-                      {p.email}
-                    </SizableText>
-                  </div>
-                </XStack>
+                    <XStack alignItems="center" gap="$2.5">
+                      <div
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 9999,
+                          background: tint(p),
+                          color: '#000000',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          opacity: p.active === false ? 0.4 : 1,
+                        }}
+                      >
+                        {initial(p)}
+                      </div>
+                      <div>
+                        <SizableText size="$1" fontWeight="600" color="$ink">
+                          {label(p)}
+                        </SizableText>
+                        {p.email && (
+                          <SizableText size="$1" color="$faint" style={{ fontSize: 10.5 }}>
+                            {p.email}
+                          </SizableText>
+                        )}
+                      </div>
+                    </XStack>
 
-                <XStack alignItems="center" gap="$2">
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      color: 'rgba(255, 255, 255, 0.65)',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {p.role}
-                  </span>
-                  {p.role !== 'admin' && (
-                    <button
-                      type="button"
-                      onClick={() => multiplayerStore.removeMember(p.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'rgba(255, 255, 255, 0.4)',
-                        cursor: 'pointer',
-                        padding: 2,
-                      }}
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  )}
-                </XStack>
-              </XStack>
-            ))}
-          </div>
+                    <XStack alignItems="center" gap="$2">
+                      {p.admin && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            color: 'rgba(255, 255, 255, 0.65)',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          admin
+                        </span>
+                      )}
+                      {p.active === false && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            color: 'rgba(255, 255, 255, 0.45)',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          disabled
+                        </span>
+                      )}
+                    </XStack>
+                  </XStack>
+                ))}
+              </div>
+            </>
+          )}
         </YStack>
       </YStack>
     </div>

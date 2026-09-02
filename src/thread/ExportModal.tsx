@@ -11,12 +11,12 @@ import {
 import { useEffect, useState } from 'react'
 
 import * as store from '~/data/store'
-import { channelsStore, useChannels } from '~/channels/store'
+import { useChannels } from '~/channels/store'
 import { exportStore, useExport } from './exportStore'
 
 export const ExportModal = () => {
   const { isOpen } = useExport()
-  const { activeRoomId, rooms } = useChannels()
+  const { selected, rooms } = useChannels()
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -31,8 +31,8 @@ export const ExportModal = () => {
   if (!isOpen) return null
 
   const turns = store.turns.get()
-  const room = rooms.find((r) => r.id === activeRoomId)
-  const roomTitle = room?.name || 'conversation'
+  const room = rooms.find((r) => r.key === selected)
+  const roomTitle = room ? `#${room.roomId}` : 'conversation'
 
   const generateMarkdown = () => {
     let md = `# ${roomTitle}\n\n*Exported from Hanzo Chat on ${new Date().toLocaleString()}*\n\n---\n\n`
@@ -75,8 +75,7 @@ export const ExportModal = () => {
   }
 
   const handleForkConversation = () => {
-    const newRoomName = `${roomTitle}-fork`
-    channelsStore.createRoom('channel', ['user_self', 'agent_planner', 'agent_dev'], newRoomName, `Fork of #${roomTitle}`)
+    handleCopyMarkdown()
     exportStore.close()
   }
 
