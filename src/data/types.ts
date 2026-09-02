@@ -1,3 +1,5 @@
+import { brand } from '~/brand'
+
 /**
  * What the wire carries, and what a refusal means to a reader.
  *
@@ -228,7 +230,6 @@ export type Failure = {
   action?: { label: string; href: string }
 }
 
-const billing = 'https://billing.hanzo.ai'
 
 /**
  * The sentences, by the code the server sends.
@@ -252,12 +253,12 @@ const sentences: Record<string, Failure> = {
   insufficient_quota: {
     code: 'insufficient_quota',
     text: 'Your balance will not cover this request.',
-    action: { label: 'Add credit', href: billing },
+    action: brand.billing ? { label: 'Add credit', href: brand.billing } : undefined,
   },
   allowance_spent: {
     code: 'allowance_spent',
     text: "Today's free calls are spent. The count turns over at midnight UTC.",
-    action: { label: 'Choose a plan', href: billing },
+    action: brand.billing ? { label: 'Choose a plan', href: brand.billing } : undefined,
   },
   key_unknown: {
     code: 'key_unknown',

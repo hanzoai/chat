@@ -9,49 +9,19 @@
  * The swarm and terminal toggles ride here because this is the header's control
  * cluster; their state belongs to `~/agents` and `~/terminal`.
  */
-import { Terminal, Users, Zap } from '@hanzogui/lucide-icons-2'
+import { Terminal, Users } from '@hanzogui/lucide-icons-2'
 import { XStack } from '@hanzo/ui'
 
 import { initial, label, tint } from './person'
 import { multiplayerStore, useMultiplayer } from './store'
 import { terminalStore, useTerminal } from '~/terminal/store'
-import { swarmStore, useSwarm } from '~/agents/store'
 
 export const PresenceStack = () => {
   const { participants } = useMultiplayer()
   const { isOpen: isTerminalOpen } = useTerminal()
-  const { swarmMode } = useSwarm()
 
   return (
     <XStack alignItems="center" gap="$2">
-      {/* Multi-Agent Swarm Toggle */}
-      <button
-        type="button"
-        onClick={() => swarmStore.setSwarmMode(!swarmMode)}
-        className="tap"
-        title="Toggle Multi-Agent Swarm"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 5,
-          padding: '4px 9px',
-          borderRadius: 6,
-          background: swarmMode
-            ? 'linear-gradient(135deg, rgba(129, 140, 248, 0.25), rgba(52, 211, 153, 0.25))'
-            : 'rgba(255, 255, 255, 0.04)',
-          border: swarmMode
-            ? '1px solid rgba(129, 140, 248, 0.4)'
-            : '1px solid rgba(255, 255, 255, 0.08)',
-          color: swarmMode ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
-          fontSize: 11.5,
-          fontWeight: 600,
-          cursor: 'pointer',
-        }}
-      >
-        <Zap size={12} style={{ color: swarmMode ? '#34d399' : 'currentColor' }} />
-        <span>Swarm</span>
-      </button>
-
       {/* Cloud Sandbox & Terminal Toggle */}
       <button
         type="button"

@@ -14,10 +14,9 @@ import { row, rows } from '@hanzo/ui/glass'
 import { ConfirmDelete, DialogTemplate } from '@hanzo/ui/product'
 import { useState } from 'react'
 
+import { api } from '~/data/api'
 import type { User } from '~/data/types'
 
-/** Where a Hanzo identity is managed. One address, and it is not this app's. */
-const IAM = 'https://hanzo.id/account'
 
 export interface AccountProps {
   /** Who is signed in — `GET /v1/chat/user`. */
@@ -144,7 +143,7 @@ export function Account({ person, onSignOut, onClear, onDelete }: AccountProps) 
 
       <YStack {...rows}>
         <Anchor
-          href={IAM}
+          href={api.iam.account}
           target="_blank"
           rel="noopener noreferrer"
           textDecorationLine="none"

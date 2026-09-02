@@ -6,12 +6,12 @@
  * sees none rather than five that do not exist. Selecting one is local: no
  * route records who a conversation is addressed to.
  */
-import { Check, Plus, UserPlus, Users } from '@hanzogui/lucide-icons-2'
+import { Check, Plus, Users } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useRef, useState } from 'react'
 import type { Agent } from '@hanzo/ai'
 
-import { multiplayerStore, useMultiplayer } from '~/presence/store'
+import { useMultiplayer } from '~/presence/store'
 import { none, swarmStore, unread, useAgents, useSwarm } from './store'
 
 /** An agent's face: the glyph somebody picked, or its initial. */
@@ -261,46 +261,6 @@ export const SwarmBar = () => {
                 )
               })
             )}
-          </YStack>
-
-          <div style={{ height: 1, background: 'rgba(255, 255, 255, 0.08)' }} />
-
-          <YStack gap="$1.5">
-            <div
-              style={{
-                fontSize: 10.5,
-                fontWeight: 700,
-                color: 'rgba(255, 255, 255, 0.45)',
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-              }}
-            >
-              Multiplayer Teammates
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setIsMenuOpen(false)
-                multiplayerStore.openInvite()
-              }}
-              className="tap"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '8px 10px',
-                borderRadius: 8,
-                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(129, 140, 248, 0.2))',
-                border: '1px solid rgba(59, 130, 246, 0.35)',
-                color: '#ffffff',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              <UserPlus size={14} style={{ color: '#60a5fa' }} />
-              <span>Invite Teammate via Email</span>
-            </button>
           </YStack>
         </div>
       )}

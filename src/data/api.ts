@@ -23,6 +23,14 @@ export const api = {
     signup: `${brand.issuer}/signup/${clientId}`,
     account: `${brand.issuer}/account`,
   },
+  /**
+   * The brand's own public pages. Not the SDK's, and not this app's — and each
+   * is `undefined` for a brand that has not stated one, so a caller draws the
+   * link or does not rather than sending that brand's reader to another's.
+   */
+  plans: brand.site ? `${brand.site}/pricing` : undefined,
+  docs: brand.docs,
+  billing: brand.billing,
 } as const
 
 /** Where a refusal sends a visitor who has to sign in. */

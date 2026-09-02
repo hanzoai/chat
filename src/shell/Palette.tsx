@@ -1,8 +1,8 @@
 import { Palette as Bar, useCommandK, type Op } from '@hanzo/ui/product'
 import {
   Blocks,
+  Brain,
   Bot,
-  Building2,
   Clock,
   Code2,
   FolderGit2,
@@ -16,7 +16,6 @@ import {
   Settings,
   SquarePen,
   Terminal,
-  UserCheck,
   UserPlus,
   UserRound,
 } from '@hanzogui/lucide-icons-2'
@@ -30,6 +29,7 @@ import { boardStore } from '~/boards/store'
 import { channelsStore } from '~/channels/store'
 import { api } from '~/data/api'
 import { useSession } from '~/data/session'
+import { intelligenceStore } from '~/intelligence/store'
 import { mcpStore } from '~/mcp/store'
 import { pluginsStore } from '~/plugins/store'
 import { multiplayerStore } from '~/presence/store'
@@ -123,20 +123,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         icon: <FolderGit2 size={15} />,
       },
       {
-        id: 'orgs',
-        group: 'Workspace & Organization',
-        label: 'Organization & Tenancy Switcher',
-        hint: 'Switch orgs and IAM team policies',
-        icon: <Building2 size={15} />,
-      },
-      {
-        id: 'users',
-        group: 'Workspace & Organization',
-        label: 'User & Identity Switcher',
-        hint: 'Switch acting engineer identity & roles',
-        icon: <UserCheck size={15} />,
-      },
-      {
         id: 'plugins',
         group: 'Extensions & Tools',
         label: 'Plugins & Extensions Marketplace',
@@ -165,13 +151,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         icon: <Terminal size={15} />,
       },
       {
-        id: 'swarm',
-        group: 'Agentic & Cloud',
-        label: 'Toggle Multi-Agent Swarm Mode',
-        hint: '@vi, @dev, @des, @cyber, @opera, @algo (⌘J)',
-        icon: <Bot size={15} />,
-      },
-      {
         id: 'tasks',
         group: 'Agentic & Cloud',
         label: 'tasks.hanzo.ai & CI/CD Pipelines',
@@ -191,6 +170,13 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         label: 'MCP Skills & Server Connectors',
         hint: 'Filesystem, GitHub, Postgres, k3s, Web Search (⌘M)',
         icon: <Blocks size={15} />,
+      },
+      {
+        id: 'intelligence',
+        group: 'Agentic & Cloud',
+        label: 'Memory & Code Intelligence',
+        hint: 'What the estate remembers, and a search of the code index',
+        icon: <Brain size={15} />,
       },
       {
         id: 'builder',
@@ -264,10 +250,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
           swarmStore.openHub()
           break
         case 'projects':
-        case 'orgs':
-        case 'users':
-          projectsStore.open()
-          break
         case 'plugins':
           pluginsStore.open()
           break
@@ -280,9 +262,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         case 'terminal':
           terminalStore.toggle()
           break
-        case 'swarm':
-          swarmStore.setSwarmMode(!swarmStore.get().swarmMode)
-          break
         case 'tasks':
           taskQueueStore.open()
           break
@@ -291,6 +270,9 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
           break
         case 'mcp':
           mcpStore.open()
+          break
+        case 'intelligence':
+          intelligenceStore.open()
           break
         case 'builder':
           onOpenAgentBuilder?.()

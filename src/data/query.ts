@@ -1,11 +1,16 @@
 /**
  * Reading from the server, and remembering what came back.
  *
- * Four verbs. `useRead` for a value, `usePages` for a cursor-paged list,
- * `useSend` for a change, `invalidate` for "that is no longer true". Everything
- * else a data-fetching library offers — retries, windows, garbage collection,
- * suspense — is a policy this product does not have, and carrying the policies
- * it does not have is how a client ends up with a cache nobody can predict.
+ * Three verbs. `useRead` for a value, `useSend` for a change, `invalidate` for
+ * "that is no longer true". Everything else a data-fetching library offers —
+ * retries, windows, garbage collection, suspense — is a policy this product does
+ * not have, and carrying the policies it does not have is how a client ends up
+ * with a cache nobody can predict.
+ *
+ * It said FOUR and shipped two: `usePages` was named here and never written,
+ * and `useSend` was named here while thirteen stores each hand-rolled it. A verb
+ * a doc promises and a file does not define is worse than a missing one, because
+ * the next author writes their own rather than looking.
  *
  * It is built on `atom`'s primitive rather than beside it: one subscription
  * mechanism for the whole app, so a component that reads a conversation from
@@ -18,7 +23,7 @@
  * the identity is being decided. What re-reads it is `invalidate()`, which is
  * exactly what adopting an identity does.
  */
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import type { Key } from '~/data/keys'
 
@@ -57,6 +62,53 @@ const readers = new Map<string, () => Promise<unknown>>()
  */
 const eras = new Map<string, number>()
 
+/**
+ * How many settled answers to keep.
+ *
+ * The cache is a Map that only ever GREW: `invalidate` was the one thing that
+ * removed an entry, so a session accumulated one entry, one reader CLOSURE and
+ * one era counter per key it ever read — and a key can be minted per keystroke
+ * (`keys.symbols(query)`), so a long search typed a leak one character at a
+ * time. `readers` was the expensive third of it, because a closure retains
+ * whatever it closed over.
+ *
+ * 256 is chosen against what a screen can hold rather than against a memory
+ * budget: no view in this app reads more than a few dozen keys, so a bound this
+ * far above that evicts only what nothing is looking at.
+ */
+const keep = 256
+
+/**
+ * Drop the least recently settled answers nobody is reading.
+ *
+ * Three things make an entry INELIGIBLE and all three are correctness rather
+ * than policy: a live watcher means a mounted component is reading it, an
+ * in-flight read means an answer is coming, and `pending` means the same thing
+ * one field over. Evicting any of those would make a component that is on
+ * screen re-read what it already has — or worse, drop the era a running flight
+ * is about to check itself against.
+ *
+ * The era goes with the entry, and only for a key with no flight: `draw` reads
+ * the era when it starts and compares on arrival, so removing one under a
+ * running read would make a stale answer look current.
+ */
+const reclaim = () => {
+  if (cache.size <= keep) return
+  const loose: [string, number][] = []
+  for (const [id, entry] of cache) {
+    if (entry.pending || flights.has(id)) continue
+    if (watchers.get(id)?.size) continue
+    loose.push([id, entry.at])
+  }
+  // Oldest-settled first, and only as many as the overflow.
+  loose.sort((a, b) => a[1] - b[1])
+  for (const [id] of loose.slice(0, cache.size - keep)) {
+    cache.delete(id)
+    readers.delete(id)
+    eras.delete(id)
+  }
+}
+
 const tell = (id: string) => {
   const listeners = watchers.get(id)
   if (!listeners) return
@@ -65,6 +117,9 @@ const tell = (id: string) => {
 
 const hold = (id: string, entry: Entry) => {
   cache.set(id, entry)
+  // Reclaiming here rather than on a timer keeps it deterministic and keeps the
+  // bound in ONE place: the only way an entry enters the cache is through here.
+  reclaim()
   tell(id)
 }
 
@@ -188,7 +243,14 @@ export const invalidate = (...prefixes: Key[]) => {
 
     const reader = readers.get(id)
     if (watchers.get(id)?.size && reader) void draw(id, reader)
-    else tell(id)
+    else {
+      // Nothing is watching, so nothing will read it again through this reader.
+      // It held a closure; the era is what a future read would compare against
+      // and a future read starts from zero anyway.
+      readers.delete(id)
+      eras.delete(id)
+      tell(id)
+    }
   }
 }
 
@@ -198,3 +260,97 @@ export const write = <T,>(key: Key, data: T) =>
 
 /** What is cached under `key`, if anything. Never triggers a read. */
 export const peek = <T,>(key: Key): T | undefined => cache.get(idOf(key))?.data as T | undefined
+
+/**
+ * What went wrong, as a sentence somebody can read.
+ *
+ * There were TWELVE copies of this, one per store, identical to the character.
+ * An error reaches a screen exactly one way, so it is written down once — and
+ * the one thing it must not do is print the object's own spelling of itself,
+ * which is how `[object Object]` reaches a customer.
+ */
+export const reason = (e: unknown): string =>
+  e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
+
+export type Send<A extends unknown[]> = {
+  /** Run it. Resolves true when the call succeeded, false when it did not. */
+  run: (...args: A) => Promise<boolean>
+  /** In flight. */
+  pending: boolean
+  /** Why the last attempt failed, already a sentence. Null once one succeeds. */
+  fault: string | null
+}
+
+/**
+ * A change, and what it makes stale.
+ *
+ * The shape every store had hand-rolled: call the route, and on success say
+ * which keys no longer hold. Naming the keys is the whole point — a write that
+ * re-reads by calling its own reader again is a second statement of what it
+ * changed, and the two drift.
+ *
+ * IT DOES NOT THROW. A refusal is a value here (`fault`), because the caller is
+ * a click handler and a rejected promise from one is an unhandled rejection.
+ * `run` answers whether it worked, so a caller that must branch still can.
+ */
+export const useSend = <A extends unknown[]>(
+  call: (...args: A) => Promise<unknown>,
+  stale: Key[] = [],
+): Send<A> => {
+  const [pending, setPending] = useState(false)
+  const [fault, setFault] = useState<string | null>(null)
+
+  // The call closes over props that change every render, so the latest one is
+  // used — the same rule `useRead` applies to its reader.
+  const latest = useRef(call)
+  latest.current = call
+
+  const keys = useRef(stale)
+  keys.current = stale
+
+  const run = useCallback(async (...args: A): Promise<boolean> => {
+    setPending(true)
+    setFault(null)
+    try {
+      await latest.current(...args)
+      // Only on success: a refused write changed nothing, so nothing it names
+      // has gone stale, and dropping those keys would cost a re-read for free.
+      if (keys.current.length > 0) invalidate(...keys.current)
+      return true
+    } catch (e) {
+      setFault(reason(e))
+      return false
+    } finally {
+      setPending(false)
+    }
+  }, [])
+
+  return { run, pending, fault }
+}
+
+/**
+ * A value that lags the one given to it.
+ *
+ * For a key built from typing. `keys.symbols(query)` mints a key per KEYSTROKE,
+ * so a forty-character search was forty requests and forty cache entries — and
+ * thirty-nine of those answers were for a question the person had already
+ * finished asking.
+ *
+ * It is here rather than in the panel because it is a property of READING BY A
+ * TYPED KEY, which is a thing the cache does, and a second copy in each search
+ * box is how two of them come to wait different amounts.
+ *
+ * The delay is the pause that means "stopped typing", not a throttle: a person
+ * who types steadily gets ONE request when they stop, and a person who pastes
+ * gets one immediately after it.
+ */
+export const useSettled = <T,>(value: T, delay = 250): T => {
+  const [settled, setSettled] = useState(value)
+  useEffect(() => {
+    // The first value is already settled; only a CHANGE waits.
+    if (Object.is(settled, value)) return
+    const timer = setTimeout(() => setSettled(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay, settled])
+  return settled
+}

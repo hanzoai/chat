@@ -24,39 +24,36 @@ import { callbackPath, loginPath } from '~/data/api'
  */
 const scope = 'openid profile email offline_access'
 
+/**
+ * Which IAM answers.
+ *
+ * The brand's, unless a deployment names another — `hanzo up` stands the whole
+ * estate up on this machine, and pointing at it is then one variable rather
+ * than a second build. `VITE_HANZO_API` says where the API is; this says where
+ * identity is, and they move together. Naming only the API pointed the calls at
+ * a local cloud while the bearer still came from the public issuer, so every
+ * one of them answered 401.
+ */
+const issuer = (import.meta.env.VITE_HANZO_IAM as string) || brand.issuer
+
 let engine: IAM | null = null
 
 export const iam = (): IAM => {
   if (engine) return engine
 
-  const isLocal =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-
-  // On localhost against hanzo.id, the allowlisted redirect is a FIXED
-  // http://localhost:3000/auth/callback under hanzo-app — we do not own that
-  // allowlist, so the port is theirs to dictate.
-  //
-  // Against a LOCAL cloud we own it, and the app rarely has :3000 free, so the
-  // redirect follows the origin actually being served. Register that URI on the
-  // local issuer's hanzo-app; an issuer cannot redirect to a URI it never heard.
-  const localIssuer =
-    /^https?:\/\/(localhost|127\.0\.0\.1)(:|$|\/)/.test(brand.issuer)
-  const base = localIssuer ? window.location.origin : 'http://localhost:3000'
-  const effectiveClientId = isLocal ? 'hanzo-app' : clientId
-  const redirectUri = isLocal
-    ? `${base}${callbackPath}`
-    : `${window.location.origin}${callbackPath}`
-  const postLogoutRedirectUri = isLocal
-    ? `${base}${loginPath}?redirect=false`
-    : `${window.location.origin}${loginPath}?redirect=false`
+  // Where the browser already is. A redirect URI is a round trip back to THIS
+  // document, so the origin serving it is the only correct answer — a literal
+  // is right for one port and silently wrong for every other, which is what
+  // sent a dev server on 3090 back to a page on 3000 that was not running.
+  // What an issuer must then do is register the loopback origins it will serve.
+  const here = window.location.origin
 
   engine = new IAM({
-    serverUrl: brand.issuer,
-    clientId: effectiveClientId,
+    serverUrl: issuer,
+    clientId,
     organization: brand.org,
-    redirectUri,
-    postLogoutRedirectUri,
+    redirectUri: `${here}${callbackPath}`,
+    postLogoutRedirectUri: `${here}${loginPath}?redirect=false`,
     scope,
   })
 

@@ -2,28 +2,22 @@
  * The bottom user menu popover in the rail with Linear.app style liquid-glass aesthetics,
  * org switcher, account controls, and appearance options.
  */
+import { api } from '~/data/api'
 import {
-  Check,
-  ChevronDown,
   ChevronsUpDown,
   ExternalLink,
-  FileText,
   LogOut,
-  Moon,
   Settings,
-  Sun,
   User,
 } from '@hanzogui/lucide-icons-2'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
-import { brand, brands } from '~/brand'
 
 export interface AccountProps {
   name: string
   email?: string
   avatar?: string
   collapsed?: boolean
-  onFiles?: () => void
   onSettings?: () => void
   accountHref?: string
   plansHref?: string
@@ -76,24 +70,19 @@ export function Account({
   email,
   avatar,
   collapsed = false,
-  onFiles,
   onSettings,
   accountHref,
   plansHref,
-  helpHref = 'https://docs.hanzo.ai',
+  helpHref = api.docs,
   onSignOut,
 }: AccountProps) {
   const [open, setOpen] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
-  const [orgOpen, setOrgOpen] = useState(false)
-  const [currentOrg, setCurrentOrg] = useState(brand.org)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const clickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false)
-        setOrgOpen(false)
       }
     }
     if (open) {
@@ -149,114 +138,25 @@ export function Account({
               </div>
             )}
 
-            {/* Org Switcher Pill */}
-            <div style={{ marginTop: 8, position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => setOrgOpen(!orgOpen)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                  padding: '4px 8px',
-                  borderRadius: 6,
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  textTransform: 'lowercase',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: '#10b981',
-                      boxShadow: '0 0 6px #10b981',
-                    }}
-                  />
-                  <span>{currentOrg}</span>
-                </div>
-                <ChevronDown size={12} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-              </button>
-
-              {orgOpen && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 4px)',
-                    left: 0,
-                    right: 0,
-                    background: 'rgba(24, 24, 30, 0.98)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: 8,
-                    padding: 4,
-                    zIndex: 1010,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-                  }}
-                >
-                  {brands.map((b) => (
-                    <button
-                      key={b.org}
-                      type="button"
-                      onClick={() => {
-                        setCurrentOrg(b.org)
-                        setOrgOpen(false)
-                      }}
-                      style={{
-                        ...ITEM_STYLE,
-                        padding: '6px 8px',
-                        fontSize: 12,
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      <span>{b.org}</span>
-                      {currentOrg === b.org && <Check size={12} style={{ color: '#10b981' }} />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Action Items */}
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false)
-              onFiles?.()
-            }}
-            style={ITEM_STYLE}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FileText size={14} style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
-              <span>My Files</span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false)
-              away(helpHref)()
-            }}
-            style={ITEM_STYLE}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <ExternalLink size={14} style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
-              <span>Help & FAQ</span>
-            </div>
-          </button>
+          {helpHref ? (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                away(helpHref)()
+              }}
+              style={ITEM_STYLE}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <ExternalLink size={14} style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
+                <span>Help & FAQ</span>
+              </div>
+            </button>
+          ) : null}
 
           {accountHref && (
             <button
@@ -320,70 +220,6 @@ export function Account({
               ⌘,
             </kbd>
           </button>
-
-          {/* Color Theme Selector */}
-          <div
-            style={{
-              padding: '8px 10px 4px 10px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              marginTop: 4,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'rgba(255, 255, 255, 0.45)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.03em',
-                marginBottom: 6,
-              }}
-            >
-              Color theme
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setTheme('light')}
-              style={{ ...ITEM_STYLE, padding: '5px 8px', fontSize: 12.5 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <Sun size={13} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-                <span>Light</span>
-              </div>
-              {theme === 'light' && <Check size={12} style={{ color: '#ffffff' }} />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTheme('dark')}
-              style={{ ...ITEM_STYLE, padding: '5px 8px', fontSize: 12.5 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <Moon size={13} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-                <span>Dark</span>
-              </div>
-              {theme === 'dark' && <Check size={12} style={{ color: '#ffffff' }} />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTheme('system')}
-              style={{ ...ITEM_STYLE, padding: '5px 8px', fontSize: 12.5 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ fontSize: 12 }}>💻</span>
-                <span>Sync with system</span>
-              </div>
-              {theme === 'system' && <Check size={12} style={{ color: '#ffffff' }} />}
-            </button>
-          </div>
 
           {/* Log Out */}
           {onSignOut && (

@@ -12,11 +12,13 @@ import { useHandoff } from '~/compose/link'
 import { run } from '~/compose/stream'
 import { history, type Conversation, type Payload } from '~/compose/submit'
 import { useChannels } from '~/channels/store'
+import { ai } from '~/data/ai'
 import { useModels } from '~/data/config'
 import { useConvo } from '~/data/convos'
 import { requireLogin } from '~/data/gate'
+import { keys } from '~/data/keys'
 import { useTurns } from '~/data/messages'
-import { why } from '~/data/missing'
+import { invalidate } from '~/data/query'
 import * as store from '~/data/store'
 import type { Message, Part } from '~/data/types'
 import { InviteModal } from '~/presence/InviteModal'
@@ -171,6 +173,40 @@ export const Chat = () => {
    * rather than a toast, because it is the answer to the question above it and
    * a message that scrolls away takes the explanation with it.
    */
+  /**
+   * Write the turn that just streamed.
+   *
+   * `/v1/chat/completions` is the vendor-compatible face and records nothing, so
+   * a streamed conversation has an answer and no history until something writes
+   * one. `threads.record` is that write, into the SAME store the rail reads —
+   * without an id it opens a thread and answers the one it opened, which is how
+   * a first turn earns the address the browser then moves to.
+   *
+   * A write that fails leaves the address alone on purpose. The turn is on
+   * screen either way, and an id in the bar is what says this conversation was
+   * filed; putting one there for a write that did not land would say it twice
+   * and be wrong once.
+   */
+  const keep = useCallback(
+    async (payload: Payload, reply: Reply) => {
+      const said = spoken(reply)
+      if (!said) return
+      const thread = await ai()
+        .threads.record(
+          [
+            { role: 'user', content: payload.text },
+            { role: 'assistant', content: said },
+          ],
+          id ?? undefined,
+        )
+        .catch(() => null)
+      if (!thread) return
+      invalidate(keys.convos)
+      if (!id) navigate(`/c/${thread}`, { replace: true })
+    },
+    [id, navigate],
+  )
+
   const ask = useCallback(
     (payload: Payload, said: readonly Message[]) => {
       const local = `${payload.messageId}~`
@@ -190,12 +226,13 @@ export const Chat = () => {
           },
           ended: (whyEnded, fault) => {
             if (whyEnded === 'denied') requireLogin('anonymous')
-            if (whyEnded === 'failed') reply = faulted(reply, fault ?? why.write)
+            if (whyEnded === 'failed') reply = faulted(reply, fault ?? 'The model did not answer.')
             if (whyEnded === 'stopped') reply = stopped(reply)
             paint()
             store.busy.set(false)
             store.stop.set(null)
             artifactStore.updateTelemetry({ outputSummary: spoken(reply).slice(0, 200) })
+            if (whyEnded === 'done') void keep(payload, reply)
           },
         },
       )

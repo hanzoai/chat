@@ -49,6 +49,19 @@ export type Brand = {
   /** The hosts this brand answers on. */
   hosts: readonly string[]
   /**
+   * The brand's own public pages, where it has them.
+   *
+   * OPTIONAL, AND ABSENT MEANS THE LINK IS NOT DRAWN. These were four literal
+   * `hanzo.ai` addresses spread across four components, which is one bundle
+   * sending a Lux reader to Hanzo's pricing and a Zoo reader to Hanzo's docs.
+   * Naming them here makes them a brand fact like the mark and the issuer; a
+   * brand that has not stated one has no page to offer, and offering Hanzo's
+   * is worse than offering none.
+   */
+  site?: string
+  docs?: string
+  billing?: string
+  /**
    * The brand's `pk-` key, for asking without signing in.
    *
    * Optional, and unset on purpose: `createAiClient` at the pinned 0.6.7 takes
@@ -122,6 +135,9 @@ export const brands: readonly Brand[] = [
     scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['hanzo.chat', 'chat.hanzo.ai'],
+    site: 'https://hanzo.ai',
+    docs: 'https://docs.hanzo.ai',
+    billing: 'https://billing.hanzo.ai',
     // Free AI without signing in: this org-scoped `pk-` names the tenant, so an
     // anonymous visitor asks on the projected free/anonymous policy (data-shared,
     // rate-limited). A signed-in user's token layers on through `auth`.

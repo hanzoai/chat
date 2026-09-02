@@ -91,11 +91,10 @@ export const run = async (ref: string, input: string): Promise<AgentRun> => {
 export interface SwarmState {
   /** Agent NAMES, as `/v1/agents` answers them. */
   activeAgentIds: string[]
-  swarmMode: boolean
   isHubOpen: boolean
 }
 
-let state: SwarmState = { activeAgentIds: [], swarmMode: false, isHubOpen: false }
+let state: SwarmState = { activeAgentIds: [], isHubOpen: false }
 const listeners = new Set<(s: SwarmState) => void>()
 
 const put = (next: Partial<SwarmState>) => {
@@ -108,7 +107,6 @@ export const swarmStore = {
   openHub: () => put({ isHubOpen: true }),
   closeHub: () => put({ isHubOpen: false }),
   toggleHub: () => put({ isHubOpen: !state.isHubOpen }),
-  setSwarmMode: (swarmMode: boolean) => put({ swarmMode }),
 
   toggleAgent: (name: string) =>
     put({

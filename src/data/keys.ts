@@ -45,4 +45,7 @@ export const keys = {
   servers: ['mcp', 'servers'] as Key,
   status: ['mcp', 'status'] as Key,
 
+  memories: ['memories'] as Key,
+  symbols: (query: string) => ['symbols', query] as Key,
+
 } as const

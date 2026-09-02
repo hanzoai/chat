@@ -11,6 +11,7 @@ import {
 } from '@hanzo/ui'
 import { useEffect, useState } from 'react'
 
+import { api } from '~/data/api'
 import { takePending, watchLogin, type Reason } from '~/data/gate'
 import { useSession } from '~/data/session'
 
@@ -19,7 +20,6 @@ import { useSession } from '~/data/session'
  * reads the billing catalogue, and a number copied into a dialog is a number
  * that cannot know when the catalogue moves.
  */
-const PLANS = 'https://hanzo.ai/pricing'
 
 /** What each refusal actually means to the person reading it. */
 const copy: Record<Reason, { title: string; message: string }> = {
@@ -90,10 +90,10 @@ export const Gate = () => {
             preview has a reason to weigh a plan; somebody who never got a reply
             has not earned the question yet, and asking anyway is how a gate
             starts reading as a toll booth. */}
-        {reason === 'limit' ? (
+        {reason === 'limit' && api.plans ? (
           <Paragraph fontSize="$1" color="$color11">
             <Anchor
-              href={PLANS}
+              href={api.plans}
               target="_blank"
               rel="noopener noreferrer"
               textDecorationLine="underline"
