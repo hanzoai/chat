@@ -36,6 +36,14 @@ export type Brand = {
   mark: string
   /** What the document paints before anybody has stated a preference. */
   backdrop: 'dark' | 'light'
+  /**
+   * The immersive ground the shell floats on, as any CSS `background` value —
+   * a gradient (self-contained, so it paints offline and in the desktop
+   * webview) or a `url()` a brand would rather show. The glass chrome blurs
+   * over THIS, which is why it is a brand fact and not a component default:
+   * each brand owns the world its product sits in.
+   */
+  scene: string
   /** The line under the composer. Empty means the brand wants none. */
   footer: string
   /** The hosts this brand answers on. */
@@ -111,8 +119,13 @@ export const brands: readonly Brand[] = [
     title: 'Hanzo Chat',
     mark: HANZO,
     backdrop: 'dark',
+    scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['hanzo.chat', 'chat.hanzo.ai'],
+    // Free AI without signing in: this org-scoped `pk-` names the tenant, so an
+    // anonymous visitor asks on the projected free/anonymous policy (data-shared,
+    // rate-limited). A signed-in user's token layers on through `auth`.
+    publishableKey: 'pk-G7yTL-sSl6i9zGR_0s1qtGH8pf6tGKzosExH7ZzXSSg',
   },
   {
     org: 'lux',
@@ -121,6 +134,7 @@ export const brands: readonly Brand[] = [
     title: 'Lux Chat',
     mark: LUX,
     backdrop: 'dark',
+    scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 175, 55, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['lux.chat', 'chat.lux.network'],
   },
@@ -131,6 +145,7 @@ export const brands: readonly Brand[] = [
     title: 'Zoo Chat',
     mark: ZOO,
     backdrop: 'dark',
+    scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 197, 94, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['zoolabs.io', 'chat.zoo.ngo'],
   },

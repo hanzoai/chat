@@ -1,45 +1,112 @@
 import { Palette as Bar, useCommandK, type Op } from '@hanzo/ui/product'
-import { LogIn, LogOut, PanelLeft, Settings, SquarePen, UserRound } from '@hanzogui/lucide-icons-2'
-import { useCallback, useMemo, useState } from 'react'
+import {
+  Blocks,
+  Bot,
+  Brain,
+  Building2,
+  Clock,
+  Code2,
+  FileText,
+  FolderGit2,
+  Hash,
+  Kanban,
+  ListTodo,
+  LogIn,
+  LogOut,
+  PanelLeft,
+  PanelRight,
+  Settings,
+  Shield,
+  SquarePen,
+  Terminal,
+  UserCheck,
+  UserPlus,
+  UserRound,
+  Video,
+} from '@hanzogui/lucide-icons-2'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 
+import { swarmStore } from '~/agents/store'
+import { workspaceAppsStore } from '~/apps/store'
+import { artifactStore } from '~/artifact/store'
+import { automationsStore } from '~/automations/store'
+import { boardStore } from '~/boards/store'
+import { channelsStore } from '~/channels/store'
 import { api } from '~/data/api'
 import { useSession } from '~/data/session'
+import { intelligenceStore } from '~/intelligence/store'
+import { mcpStore } from '~/mcp/store'
+import { pluginsStore } from '~/plugins/store'
+import { multiplayerStore } from '~/presence/store'
+import { projectsStore } from '~/projects/store'
+import { taskQueueStore } from '~/tasks/store'
+import { terminalStore } from '~/terminal/store'
 
 export interface PaletteProps {
   onSettings: () => void
   onRail: () => void
+  onOpenAgentBuilder?: () => void
 }
 
 /**
  * ⌘K, on every route this app answers.
- *
- * It mounts in `Root` rather than in a header, because the CHORD is the
- * surface: a palette that only exists where a particular bar renders is a
- * palette people learn not to trust. Nothing paints until it is summoned.
- *
- * ONE palette holds the chord. Two would both bind ⌘K on the window, so the key
- * would open two overlays stacked on each other and which one you typed into
- * would come down to listener order — which is exactly what the tree this
- * replaces shipped, with a hand-rolled bar beside the shared one.
- *
- * It lists COMMANDS and nothing else. The chat rows the old palette carried are
- * gone on purpose: the rail has its own search over the whole list, so a second,
- * shorter list of the same conversations in a different place is two answers to
- * one question, and the shorter one is the one that goes stale.
- *
- * The ask row is where a palette stops being a menu. A command list is finite
- * and a question is not, so "no results" is never the right end of one — a query
- * nobody indexed goes to the composer as `?q=…&submit=true`, which is asked
- * rather than merely typed out. From `/c/:id` that starts a NEW conversation
- * with the question, which is what asking something unrelated means.
  */
-export const Palette = ({ onSettings, onRail }: PaletteProps) => {
+export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps) => {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const { standing, signIn, signOut } = useSession()
 
   useCommandK(useCallback(() => setOpen((was) => !was), []))
+
+  // Global hotkeys for instant agentic surfaces:
+  // ⌘` or ⌘\ -> Toggle Terminal & Cloud Sandbox
+  // ⌘J -> Toggle Swarm Mode
+  // ⌘M -> Toggle MCP Skills & Connectors
+  // ⌘B -> Open Sprint Boards
+  // ⌘Q -> Open Durable Task Queue
+  // ⌘T -> Open Zero-Trust Tunnel Sharing
+  // ⌘P -> Open Projects & Switcher
+  // ⌘X -> Open Plugins Marketplace
+  // ⌘A -> Open Scheduled Tasks & Automations
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCmd = e.metaKey || e.ctrlKey
+      if (isCmd && (e.key === '`' || e.key === '\\')) {
+        e.preventDefault()
+        terminalStore.toggle()
+      } else if (isCmd && (e.key === 'j' || e.key === 'J')) {
+        e.preventDefault()
+        artifactStore.toggle()
+      } else if (isCmd && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault()
+        mcpStore.toggle()
+      } else if (isCmd && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault()
+        boardStore.toggle()
+      } else if (isCmd && (e.key === 'q' || e.key === 'Q')) {
+        e.preventDefault()
+        taskQueueStore.toggle()
+      } else if (isCmd && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault()
+        workspaceAppsStore.toggle('tunnel')
+      } else if (isCmd && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault()
+        projectsStore.toggle()
+      } else if (isCmd && (e.key === 'x' || e.key === 'X')) {
+        e.preventDefault()
+        pluginsStore.toggle()
+      } else if (isCmd && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault()
+        swarmStore.toggleHub()
+      } else if (isCmd && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault()
+        automationsStore.toggle()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const ops = useMemo<Op[]>(() => {
     const list: Op[] = [
@@ -49,6 +116,146 @@ export const Palette = ({ onSettings, onRail }: PaletteProps) => {
         label: 'New chat',
         hint: 'Start a conversation',
         icon: <SquarePen size={15} />,
+      },
+      {
+        id: 'agents_apps',
+        group: 'Agentic & Cloud',
+        label: 'Agents and Apps Hub',
+        hint: 'AI agents, micro-apps, plugins, and automations (⌘E)',
+        icon: <Bot size={15} />,
+      },
+      {
+        id: 'projects',
+        group: 'Workspace & Organization',
+        label: 'Projects & Workspaces',
+        hint: 'Switch projects, create repos, assign agents (⌘P)',
+        icon: <FolderGit2 size={15} />,
+      },
+      {
+        id: 'orgs',
+        group: 'Workspace & Organization',
+        label: 'Organization & Tenancy Switcher',
+        hint: 'Switch orgs and IAM team policies',
+        icon: <Building2 size={15} />,
+      },
+      {
+        id: 'users',
+        group: 'Workspace & Organization',
+        label: 'User & Identity Switcher',
+        hint: 'Switch acting engineer identity & roles',
+        icon: <UserCheck size={15} />,
+      },
+      {
+        id: 'plugins',
+        group: 'Extensions & Tools',
+        label: 'Plugins & Extensions Marketplace',
+        hint: 'CI/CD, pgvector, KMS enclaves, ZAP profiler (⌘X)',
+        icon: <Blocks size={15} />,
+      },
+      {
+        id: 'automations',
+        group: 'Extensions & Tools',
+        label: 'Scheduled Tasks & Automations',
+        hint: 'Cron jobs, git push hooks, agent schedules (⌘A)',
+        icon: <Clock size={15} />,
+      },
+      {
+        id: 'inspector',
+        group: 'Agentic & Cloud',
+        label: 'Toggle Inspector & Right Sidebar',
+        hint: 'Inputs/outputs telemetry summary, preview iframe, logs (⌘J)',
+        icon: <PanelRight size={15} />,
+      },
+      {
+        id: 'terminal',
+        group: 'Agentic & Cloud',
+        label: 'Toggle Terminal & Cloud Sandbox',
+        hint: 'Local k3s, MicroVMs, Tabs, ZAP stream (⌘\\)',
+        icon: <Terminal size={15} />,
+      },
+      {
+        id: 'swarm',
+        group: 'Agentic & Cloud',
+        label: 'Toggle Multi-Agent Swarm Mode',
+        hint: '@planner, @dev, @secops, @researcher, @executor (⌘J)',
+        icon: <Bot size={15} />,
+      },
+      {
+        id: 'meet',
+        group: 'Workspace Apps',
+        label: 'meet.hanzo.ai — Live Video Room',
+        hint: 'WebRTC room with AI transcription agent',
+        icon: <Video size={15} />,
+      },
+      {
+        id: 'notes',
+        group: 'Workspace Apps',
+        label: 'notes.hanzo.ai & todo.hanzo.ai',
+        hint: 'Collaborative markdown notes and checklists',
+        icon: <FileText size={15} />,
+      },
+      {
+        id: 'tunnel',
+        group: 'Workspace Apps',
+        label: 'zt.hanzo.ai — Zero-Trust Dev Sharing',
+        hint: 'Expose local machine to team via Cloudflare (⌘T)',
+        icon: <Shield size={15} />,
+      },
+      {
+        id: 'tasks',
+        group: 'Agentic & Cloud',
+        label: 'tasks.hanzo.ai & CI/CD Pipelines',
+        hint: 'Orchestrate async background tasks & builds (⌘Q)',
+        icon: <ListTodo size={15} />,
+      },
+      {
+        id: 'boards',
+        group: 'Agentic & Cloud',
+        label: 'Sprint Boards & Agent Tasks',
+        hint: 'Kanban issues with autonomous agent dispatch (⌘B)',
+        icon: <Kanban size={15} />,
+      },
+      {
+        id: 'mcp',
+        group: 'Agentic & Cloud',
+        label: 'MCP Skills & Server Connectors',
+        hint: 'Filesystem, GitHub, Postgres, k3s, Web Search (⌘M)',
+        icon: <Blocks size={15} />,
+      },
+      {
+        id: 'intelligence',
+        group: 'Agentic & Cloud',
+        label: 'Memory & Code Intelligence',
+        hint: 'Vector memory, rules, and AST codebase symbols',
+        icon: <Brain size={15} />,
+      },
+      {
+        id: 'builder',
+        group: 'Agentic & Cloud',
+        label: 'Agent Builder & Studio',
+        hint: 'Create and deploy custom agent specialists',
+        icon: <Bot size={15} />,
+      },
+      {
+        id: 'canvas',
+        group: 'Agentic & Cloud',
+        label: 'Open Artifact Canvas',
+        hint: 'Live code editor and preview iframe',
+        icon: <Code2 size={15} />,
+      },
+      {
+        id: 'channel',
+        group: 'Collaboration',
+        label: 'Create Channel or Group',
+        hint: 'New topic or informal agent room',
+        icon: <Hash size={15} />,
+      },
+      {
+        id: 'invite',
+        group: 'Collaboration',
+        label: 'Invite Friends & Multiplayer Collaboration',
+        hint: 'Multiplayer room share & co-piloting',
+        icon: <UserPlus size={15} />,
       },
       {
         id: 'rail',
@@ -84,55 +291,91 @@ export const Palette = ({ onSettings, onRail }: PaletteProps) => {
     return list
   }, [standing])
 
-  /**
-   * Running one closes the bar first, always — including the rows that navigate.
-   * A palette left open over the screen it just moved you to is a palette you
-   * have to dismiss before you can read the thing you asked for.
-   */
   const run = useCallback(
     (op: Op) => {
-      setOpen(false)
       switch (op.id) {
         case 'new':
           navigate('/')
-          return
+          break
+        case 'agents_apps':
+          swarmStore.openHub()
+          break
+        case 'projects':
+        case 'orgs':
+        case 'users':
+          projectsStore.open()
+          break
+        case 'plugins':
+          pluginsStore.open()
+          break
+        case 'automations':
+          automationsStore.open()
+          break
+        case 'inspector':
+          artifactStore.toggle()
+          break
+        case 'terminal':
+          terminalStore.toggle()
+          break
+        case 'swarm':
+          swarmStore.setSwarmMode(!swarmStore.get().swarmMode)
+          break
+        case 'meet':
+          workspaceAppsStore.open('meet')
+          break
+        case 'notes':
+          workspaceAppsStore.open('notes')
+          break
+        case 'tunnel':
+          workspaceAppsStore.open('tunnel')
+          break
+        case 'tasks':
+          taskQueueStore.open()
+          break
+        case 'boards':
+          boardStore.open()
+          break
+        case 'mcp':
+          mcpStore.open()
+          break
+        case 'intelligence':
+          intelligenceStore.open()
+          break
+        case 'builder':
+          onOpenAgentBuilder?.()
+          break
+        case 'canvas':
+          artifactStore.open({
+            title: 'Untitled Sandbox',
+            code: '// Write TypeScript, TSX or HTML code here\nconsole.log("Hello from Hanzo Sandbox!");',
+            language: 'typescript',
+          })
+          break
+        case 'channel':
+          channelsStore.openCreate()
+          break
+        case 'invite':
+          multiplayerStore.openInvite()
+          break
         case 'rail':
           onRail()
-          return
+          break
         case 'settings':
           onSettings()
-          return
+          break
         case 'account':
-          window.open(api.iam.account, '_blank', 'noopener,noreferrer')
-          return
+          window.open(api.iam.account, '_blank', 'noopener')
+          break
         case 'signin':
-          signIn()
-          return
+          void signIn()
+          break
         case 'signout':
-          signOut()
-          return
+          void signOut()
+          break
       }
     },
-    [navigate, onRail, onSettings, signIn, signOut],
+    [navigate, onOpenAgentBuilder, onRail, onSettings, signIn, signOut],
   )
 
-  const ask = useCallback(
-    (question: string) => {
-      setOpen(false)
-      navigate(`/?q=${encodeURIComponent(question)}&submit=true`)
-    },
-    [navigate],
-  )
-
-  return (
-    <Bar
-      open={open}
-      onOpenChange={setOpen}
-      ops={ops}
-      onRun={run}
-      onAsk={ask}
-      placeholder="Search commands, or ask anything"
-      title="Commands"
-    />
-  )
+  return <Bar open={open} onOpenChange={setOpen} ops={ops} onRun={run} />
 }

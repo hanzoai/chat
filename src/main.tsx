@@ -1,4 +1,9 @@
 import { Hanzo } from '@hanzo/ui'
+// THE FACES. Zen is authored in `@hanzo/font`, which ships the woff2 the
+// `@font-face` needs; `@hanzo/ui`'s theme.css only names the family. This is the
+// estate's one way (`@hanzo/app` does the same) — import it once, here, and the
+// gui `--font-sans` token resolves to a real face instead of the system fallback.
+import '@hanzo/font/css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
@@ -12,9 +17,10 @@ import { brand, wear } from '~/brand'
  * `$background` / `$color12` / `$borderColor` tokens resolve against, the
  * generated stylesheet, and `disableInjectCSS` — the sheet is a real file, and
  * a provider that inlines it again ships a copy of it into every document.
- * There is no theme provider to add, no CSS to import, no config file to keep
- * in step; a second one of any of those is how two surfaces of the same product
- * end up different sizes.
+ * There is no theme provider to add and no config file to keep in step; the one
+ * CSS import is the faces above, because a font is bytes and `@hanzo/ui` ships
+ * only the token that names them. A second theme, config or face is how two
+ * surfaces of the same product end up different sizes.
  *
  * The theme is the brand's, not a literal: one image serves every brand, so the
  * served document carries a placeholder name, icon and backdrop and `wear()` is

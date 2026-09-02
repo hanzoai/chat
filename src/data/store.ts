@@ -68,13 +68,8 @@ export const busy = atom(false)
 
 /**
  * How to end the answer that is arriving, or `null` when none is.
- *
- * A function rather than a flag, because stopping is the composer's business
- * (it holds the reader and the request) and the button belongs to the composer
- * too — @hanzo/ui/chat's `Composer` has ONE control that submits and stops. This
- * exists so the thread can offer the same verb without reaching into it.
  */
-export const stop = atom<(() => void) | null>(null)
+export const stop = atom<{ cancel: () => void } | null>(null)
 
 /** The last refusal, already read into a sentence. */
 export const failure = atom<Failure | null>(null)

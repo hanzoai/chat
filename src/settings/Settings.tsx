@@ -17,8 +17,10 @@ import { selected } from '@hanzo/ui/glass'
 import { useState, type ReactNode } from 'react'
 
 import { Account, type AccountProps } from './Account'
+import { AiSettings } from './AiSettings'
 import { General } from './General'
 import { Look } from './Look'
+import { McpSettings } from './McpSettings'
 import type { Served } from './models'
 
 export interface SettingsProps {
@@ -50,19 +52,12 @@ interface Tab {
 }
 
 /**
- * Six sections, and the same six for everyone.
- *
- * What is NOT here is the point of the list. Parameters, presets, endpoints,
- * speech engines, token balances and command toggles were sections of their
- * own; not one of them is a thing a person came here to decide. A control only
- * a developer can name belongs where the deployment is configured, or nowhere.
- *
- * This array is the ONE source of order — the strip reads it, the panels read
- * it, and the arrow keys read it — which is how a tab strip and its keyboard
- * order stop being two lists that drift apart.
+ * Five comprehensive sections for all preferences.
  */
 const TABS: readonly Tab[] = [
   { id: 'general', label: 'General', panel: (p) => <General served={p.served} /> },
+  { id: 'ai', label: 'AI & Swarm', panel: () => <AiSettings /> },
+  { id: 'mcp', label: 'MCP & Skills', panel: () => <McpSettings /> },
   { id: 'look', label: 'Look', panel: () => <Look /> },
   { id: 'account', label: 'Account', panel: (p) => <Account {...p.account} /> },
 ]

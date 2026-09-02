@@ -2,51 +2,21 @@ import { Button, SizableText, XStack, YStack } from '@hanzo/ui'
 import { Sidebar, SidebarHeader, SidebarNewChat } from '@hanzo/ui/chat'
 import { scrim } from '@hanzo/ui/glass'
 import { HanzoMark } from '@hanzo/ui/product'
-import { useState, type ReactNode } from 'react'
+import { AppWindow, Blocks, Kanban, LayoutGrid, ListTodo } from '@hanzogui/lucide-icons-2'
+import { useRef, useState, type ReactNode } from 'react'
 
+import { workspaceAppsStore } from '~/apps/store'
+import { boardStore } from '~/boards/store'
+import { ChannelSection } from '~/channels/ChannelSection'
+import { mcpStore } from '~/mcp/store'
+import { swarmStore } from '~/agents/store'
+import { taskQueueStore } from '~/tasks/store'
 import type { Convo } from '~/data/types'
 import { Find } from './Find'
 import { Hits } from './Hits'
 import { List } from './List'
 
-/**
- * The left column — the SET, as a place on the page.
- *
- * THIS FILE IS THE ONLY PLACE THE THREE WIDTHS ARE WRITTEN. `Sidebar` takes a
- * width and has no idea it can be collapsed, which is the right shape for it:
- * a component that knew about collapsing would have to know about the drawer
- * too, and about which breakpoint decides. So the peek and the drawer are this
- * wrapper's, the column inside is the shell's, and both read the same three
- * numbers — because two defaults are how a column came to reflow underneath a
- * wrapper animating over it.
- *
- * Three states, one column:
- *
- *   open    260  the list, in flow
- *   rail     56  the mark and compose, in flow — collapsed is not gone
- *   drawer  320  over the page, with a scrim, below the breakpoint
- *
- * Collapsing narrows the column; it does not slide it away and it does not
- * unmount it. Keeping the column is what keeps the corner occupied, and a
- * corner that empties is why controls that belong to a sidebar end up re-homed
- * into a header and never come back.
- *
- * In `drawer` the column is positioned ABSOLUTELY, so it needs a positioned
- * ancestor — the shell mounts it inside the relative row that also holds the
- * thread. Without one it anchors to the page and the scrim covers the document
- * rather than the workspace.
- *
- * There is no hover-to-expand. A rail that widens because a pointer crossed it
- * moves the page out from under whatever the pointer was reaching for.
- *
- * The query lives here and nowhere else. It is the state that decides which of
- * two middles renders, and both of them are in this column — pushing it up to
- * the shell would make a second owner of a fact only this file consumes.
- * `onQuery` is offered for a surface that wants the server to answer instead;
- * the local rule still applies to whatever comes back, so the count in the
- * heading and the rows under it cannot disagree.
- */
-export const OPEN = 260
+export const OPEN = 270
 export const RAIL = 56
 const DRAWER = 320
 
@@ -93,23 +63,184 @@ export function Rail({
   account,
 }: RailProps) {
   const [query, setQuery] = useState('')
+  const [width, setWidth] = useState(OPEN)
+  const isDragging = useRef(false)
+  const startX = useRef(0)
+  const startWidth = useRef(OPEN)
 
   const ask = (next: string) => {
     setQuery(next)
     onQuery?.(next)
   }
 
-  // Opening a conversation from a drawer closes it: the drawer covers the very
-  // thread it just navigated to.
   const reach = (c: Convo) => {
     onOpen(c)
     if (drawer) onOpenChange(false)
   }
 
-  const column = (width: number) => (
-    <Sidebar width={width}>
+  const onMouseDownResizer = (e: React.MouseEvent) => {
+    e.preventDefault()
+    isDragging.current = true
+    startX.current = e.clientX
+    startWidth.current = width
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDragging.current) return
+      const delta = moveEvent.clientX - startX.current
+      const nextWidth = Math.min(480, Math.max(210, startWidth.current + delta))
+      setWidth(nextWidth)
+    }
+
+    const onMouseUp = () => {
+      isDragging.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+
+  const column = (w: number) => (
+    <Sidebar width={w}>
       <SidebarHeader title={title} onCollapse={() => onOpenChange(false)} />
       <SidebarNewChat onPress={onNew} />
+      <button
+        type="button"
+        onClick={() => swarmStore.openHub()}
+        className="tap"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '8px 10px',
+          borderRadius: 8,
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          fontSize: 13,
+          fontWeight: 600,
+          color: '#ffffff',
+          cursor: 'pointer',
+          marginTop: 4,
+          marginBottom: 6,
+          width: '100%',
+          textAlign: 'left',
+          transition: 'all 0.15s ease',
+        }}
+        data-testid="rail-agents-and-apps"
+      >
+        <LayoutGrid size={15} style={{ color: '#60a5fa' }} />
+        <span>Agents and Apps</span>
+      </button>
+
+      {/* Workspace & Build Tools Section */}
+      <YStack gap="$1" marginBottom="$2">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
+          <button
+            type="button"
+            onClick={() => boardStore.open()}
+            className="tap"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 8px',
+              borderRadius: 6,
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+            data-testid="rail-boards-link"
+          >
+            <Kanban size={13} style={{ color: '#34d399' }} />
+            <span>Boards</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => taskQueueStore.open()}
+            className="tap"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 8px',
+              borderRadius: 6,
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+            data-testid="rail-tasks-link"
+          >
+            <ListTodo size={13} style={{ color: '#fbbf24' }} />
+            <span>Tasks</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => workspaceAppsStore.open()}
+            className="tap"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 8px',
+              borderRadius: 6,
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+            data-testid="rail-apps-suite-link"
+          >
+            <AppWindow size={13} style={{ color: '#818cf8' }} />
+            <span>Apps Suite</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => mcpStore.open()}
+            className="tap"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 8px',
+              borderRadius: 6,
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+            data-testid="rail-mcp-link"
+          >
+            <Blocks size={13} style={{ color: '#f472b6' }} />
+            <span>MCP Hub</span>
+          </button>
+        </div>
+      </YStack>
+
+      {/* Channels Section */}
+      <ChannelSection />
+
       <Find value={query} onChange={ask} />
 
       {query.trim() === '' ? (
@@ -159,8 +290,6 @@ export function Rail({
     if (!open) return null
     return (
       <>
-        {/* The dim is a token, not `black`: a solid wall does not dim the page
-            behind a floating panel, it deletes it. */}
         <YStack
           {...scrim}
           position="absolute"
@@ -188,8 +317,36 @@ export function Rail({
 
   if (open) {
     return (
-      <YStack height="100%" data-testid="rail">
-        {column(OPEN)}
+      <YStack height="100%" position="relative" data-testid="rail">
+        {column(width)}
+        {/* Resizer Handle Bar */}
+        <div
+          onMouseDown={onMouseDownResizer}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: -3,
+            bottom: 0,
+            width: 6,
+            cursor: 'col-resize',
+            zIndex: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          title="Drag to resize sidebar"
+        >
+          <div
+            style={{
+              width: 2,
+              height: '100%',
+              background: 'rgba(255, 255, 255, 0.08)',
+              transition: 'background 0.15s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#34d399')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+          />
+        </div>
       </YStack>
     )
   }
@@ -206,9 +363,6 @@ export function Rail({
       borderColor="$borderColor"
       data-testid="rail"
     >
-      {/* In the rail the mark means EXPAND, and it is the only thing that can:
-          a 56px column whose one affordance opened something else would leave
-          the reader no way back to their own list. */}
       <Button
         variant="ghost"
         size="icon"
@@ -219,10 +373,6 @@ export function Rail({
       >
         <HanzoMark size={20} />
       </Button>
-      {/* The glyph is a wrapped `SizableText` and not the Button's own label,
-          because a `fontSize` on a Button does not reach the text host it
-          paints — the size prop's rung does, and at the rung a 36px control
-          uses, a `+` is a speck beside the mark above it. */}
       <Button variant="ghost" size="icon" aria-label="New chat" onPress={onNew}>
         <SizableText fontSize="$8" lineHeight={20} color="$color11">
           +

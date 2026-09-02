@@ -17,11 +17,33 @@ import { Fence } from './Fence'
 
 /** Tools whose name is machinery. Everything else reads fine as it arrives. */
 const NAMES: Record<string, string> = {
-  execute_code: 'Ran code',
+  execute_code: 'Ran code in sandbox',
   web_search: 'Searched the web',
-  file_search: 'Searched files',
-  image_gen_oai: 'Made an image',
-  image_edit_oai: 'Edited an image',
+  file_search: 'Searched workspace files',
+  image_gen_oai: 'Generated image',
+  image_edit_oai: 'Edited image',
+  read_file: 'Read local file',
+  write_file: 'Synthesized file',
+  list_directory: 'Inspected directory tree',
+  grep_search: 'Searched code patterns',
+  find_by_name: 'Matched files by pattern',
+  github_create_pr: 'Opened GitHub Pull Request',
+  github_get_issue: 'Fetched GitHub issue',
+  github_list_repos: 'Listed repositories',
+  git_status: 'Checked git status',
+  query_sql: 'Executed PostgreSQL query',
+  vector_search: 'pgvector semantic search',
+  describe_schema: 'Extracted database schema',
+  k8s_get_pods: 'Inspected Kubernetes Pods',
+  k8s_container_exec: 'Ran container command',
+  k8s_stream_logs: 'Streamed sandbox logs',
+  search_web: 'Searched live web',
+  fetch_page: 'Extracted page content',
+  gmail_list_messages: 'Queried Gmail inbox',
+  gmail_get_message: 'Read email thread',
+  gmail_send_message: 'Sent email message',
+  calendar_list_events: 'Retrieved Google Calendar events',
+  drive_search_files: 'Searched Google Drive',
 }
 
 /** The server's word for how a call went, in the four this renders. */

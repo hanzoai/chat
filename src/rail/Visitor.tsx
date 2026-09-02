@@ -76,6 +76,7 @@ function Row({ label, href, onPress }: { label: string; href?: string; onPress?:
       alignItems="center"
       onPress={onPress}
       hoverStyle={{ backgroundColor: '$color3' }}
+      data-testid={`rail-${label.toLowerCase()}`}
     >
       <SizableText fontSize="$2" color="$color11">
         {label}

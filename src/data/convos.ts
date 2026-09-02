@@ -29,7 +29,7 @@ export const useConvos = (enabled = true) =>
     keys.convos,
     async () => {
       const threads = await ai().threads.list()
-      return threads.map((t) => ({
+      return (threads as any[]).map((t: any) => ({
         conversationId: t.id,
         title: t.title ?? '',
         updatedAt: t.updatedAt,

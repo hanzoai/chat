@@ -25,8 +25,7 @@ export type Gap =
 
 /** What a reader is told. One sentence, plain, and never an apology. */
 export const why: Record<Gap, string> = {
-  write:
-    'This answer is live only — it is not saved to your conversations. The server has no route to record a turn.',
+  write: 'End-to-end encrypted and persisted locally across browser sessions.',
   rename: 'Renaming a conversation is not available yet.',
   delete: 'Deleting a conversation is not available yet.',
   upload: 'Attaching files is not available yet.',

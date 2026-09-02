@@ -34,7 +34,7 @@ export const useTurns = (convoId: string | null | undefined) =>
     async () => {
       const thread = await ai().threads.get(convoId as string)
       let parent: string | null = null
-      return (thread?.messages ?? []).map((m) => {
+      return ((thread as any)?.messages ?? []).map((m: any) => {
         const turn: Message = {
           messageId: m.id,
           conversationId: convoId ?? null,

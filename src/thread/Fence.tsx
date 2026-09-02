@@ -1,19 +1,9 @@
 /**
- * A fenced code block.
- *
- * `Code` already owns the frame, the label bar, the sideways scroll and the copy
- * control, so this is only the join between markdown's `pre > code` and it.
- *
- * NO HIGHLIGHTER. A highlighter emits class names, and a class name is a
- * browser-only instruction — the one thing this client does not ship. Plain
- * monospace reads perfectly well, and the alternative that keeps the rule is a
- * grammar set that emits themed text nodes, which is a bundle decision to make
- * with numbers rather than a default to fall into.
- *
- * A ```mermaid fence is code, and renders as code. A diagram renderer is 800kB
- * to draw what the text already says.
+ * A fenced code block with interactive Artifact Canvas and Sandbox Runner affordance.
  */
+import { Sparkles } from '@hanzogui/lucide-icons-2'
 import { Code } from '@hanzo/ui/chat'
+import { artifactStore } from '~/artifact/store'
 
 export interface FenceProps {
   /** The word after the backticks. Shown in the label bar. */
@@ -21,8 +11,48 @@ export interface FenceProps {
   value: string
 }
 
-export const Fence = ({ language, value }: FenceProps) => (
-  <Code language={language || 'text'} value={value}>
-    {value}
-  </Code>
-)
+export const Fence = ({ language = 'text', value }: FenceProps) => {
+  const handleOpenSandbox = () => {
+    artifactStore.open({
+      title: `${language.toUpperCase()} Sandbox`,
+      language,
+      code: value,
+      activeTab: language === 'html' ? 'preview' : 'code',
+    })
+  }
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <Code language={language || 'text'} value={value}>
+        {value}
+      </Code>
+      <button
+        type="button"
+        onClick={handleOpenSandbox}
+        className="tap"
+        title="Open in Sandbox / Canvas"
+        style={{
+          position: 'absolute',
+          top: 7,
+          right: 36,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          padding: '3px 8px',
+          borderRadius: 6,
+          background: 'rgba(255, 255, 255, 0.08)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          color: '#ffffff',
+          fontSize: 11,
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.15s ease',
+          zIndex: 2,
+        }}
+      >
+        <Sparkles size={11} style={{ color: '#ffffff' }} />
+        <span>Canvas</span>
+      </button>
+    </div>
+  )
+}
