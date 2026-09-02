@@ -1,53 +1,78 @@
 # Hanzo Chat
 
-The clean-room replacement for `hanzoai/chat`. Same product, rebuilt on the
-Hanzo stack instead of the fork's: `@hanzo/ui` components on the `@hanzo/gui`
-runtime, `react-router`, nothing else for the interface.
+A chat client for the estate. Vite and React draw it, `@hanzo/ui` supplies the
+components on the `@hanzo/gui` runtime, and `@hanzo/ai` is the only thing that
+speaks to a server.
 
-It takes the `chat` name when it lands — same move as `iam2`, which was written
-beside `iam` and became it. `chat2` is the name of the rewrite, not of the
-product.
+One bundle serves three products. `src/brand.ts` states a record per brand — its
+organization, issuer, name, mark, and the hosts it answers on — and `wear()`
+writes the title, icon and theme onto the document before the first render, so
+`hanzo.chat`, `lux.chat` and `zoolabs.io` are one build wearing three faces.
+Adding a brand is adding a record; nothing derives a name from a hostname, and
+no name for the product comes from the server.
 
-## What is not here
+## The wire
 
-No Tailwind and no Radix: no utility classes, no config file, no PostCSS
-pipeline to run one, and none of the shadcn/cva/cmdk/sonner layer that sits on
-top of them.
+There is no HTTP client here. `src/data/ai.ts` builds one `createAiClient` and
+that client owns the base URL, the bearer, the stale-token retry and the SSE
+decode, so no path to the API appears in this repository at all.
 
-That is not an omission to fill in later. A utility class is a browser-only
-instruction, so every one of them caps the app at the browser and forks the
-scale it renders at. Styling here is theme tokens and component props —
-`$background`, `$color12`, `$borderColor`, `padding="$4"` — resolved by the gui
-config that `<Hanzo>` mounts, which is why the same tree renders on web, native
-and desktop, and why the type scale moves for the whole product from one place.
+| what | call | route |
+| --- | --- | --- |
+| a turn | `chat.completions.create({stream:true})` | `POST /v1/chat/completions` |
+| history | `threads.list()`, `threads.get(id)` | `GET /v1/agents/chat/conversations` |
+| the menu | `models.list()` | `GET /v1/models` |
+| the visitor | `account.get()` | `GET /v1/ai/account` |
 
-`hanzo.app` is the proof this works at size: 366 gui atomic classes and zero
-Tailwind in production.
+Identity is `@hanzo/iam`, handed to the client structurally as one token source
+with one refresh, so no credential logic lives here either. `src/data/api.ts`
+names four addresses and they are all the issuer's, because they are full-page
+navigations the SDK does not make. `VITE_HANZO_API` moves the API without moving
+the identity, which is the one arrangement a local cloud needs.
+
+Where the server has no route, `src/data/missing.ts` says so and names the
+method it waits on. Nothing is stubbed and nothing is disabled: a control that
+cannot be pressed is a promise, so it is absent instead.
 
 ## Layout
 
-One home per concern. A thing that belongs to two of them belongs to neither and
+One home per concern. A thing belonging to two of them belongs to neither and
 goes down a level.
 
-| module          | owns                                                          |
-| --------------- | ------------------------------------------------------------- |
-| `src/shell`     | the page: providers, routes, the sign-in gate, the palette     |
-| `src/rail`      | the SET of conversations: the left column, a row and its verbs |
-| `src/thread`    | ONE conversation, rendered — turns, parts, markdown            |
-| `src/compose`   | the draft and its journey out — the payload and the stream     |
-| `src/settings`  | which model answers, and every persisted preference behind it  |
-| `src/data`      | the wire and the identity — URLs, fetch, session, store        |
+| module | owns |
+| --- | --- |
+| `src/shell` | the page — providers, routes, the sign-in gate, the palette |
+| `src/rail` | the set of conversations, and a row's verbs |
+| `src/thread` | one conversation rendered — turns, parts, markdown |
+| `src/compose` | the draft and its journey out — the payload, the turn in flight |
+| `src/data` | the client, the session, the store, and what the server cannot do |
+| `src/settings` | which model answers, and every preference behind it |
 
-`src/App.tsx` is the whole URL surface, and `src/data/api.ts` is the whole URL
-table. Nothing outside `src/data` knows an API host: the client is served beside
-the API and calls `/v1/chat/*` same-origin, which the dev proxy in
-`vite.config.ts` makes true on localhost too.
+The rest are rooms reached from the palette: `agents`, `artifact`, `automations`,
+`boards`, `channels`, `mcp`, `plugins`, `presence`, `projects`, `shortcuts`,
+`tasks`, `terminal`, `theme`.
 
-## Run
+## Styling
+
+No Tailwind, no Radix, no shadcn, and no `cn()`. Not an omission to fill in
+later — a utility class is a browser-only instruction, so each one caps the app
+at the browser and forks the scale it renders at. Styling is theme tokens and
+component props resolved by the gui config that `<Hanzo>` mounts, which is why
+one tree renders on web, native and desktop and why the type scale moves for the
+whole product from one place.
+
+## Verifying
 
 ```sh
-pnpm install
-pnpm dev         # http://localhost:3090
+CI=true pnpm install --no-frozen-lockfile
+pnpm dev          # localhost:3090, /v1 proxied so calls stay same-origin
 pnpm typecheck
+pnpm test         # 22 assertions, node --test, no framework
 pnpm build
 ```
+
+`noUnusedLocals` is on, so dead code fails the build — un-export a symbol and
+the compiler names it if nothing uses it. To prove the brand table without a
+browser, import `src/brand.ts` once per host with a stubbed
+`globalThis.window.location.hostname`; to prove the routes without a token, grep
+the built bundle for `/v1/`.
