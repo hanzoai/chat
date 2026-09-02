@@ -2,11 +2,13 @@
  * What this client cannot do yet, and why — in one place, so a control that is
  * off can say so in the same words everywhere it appears.
  *
- * Every entry here is a SERVER gap, not a decision. `/v1/agents/chat/conversations`
- * and `/conversations/{id}` are GET-only; there is no route to write, rename,
+ * Every entry here is a SERVER gap, not a decision. There is no route to rename,
  * delete or page a thread, and `@hanzo/ai` binds no method for any of it. The
  * alternative to this file was inventing routes and watching them 404 in the
  * reader's face, or leaving controls that quietly do nothing.
+ *
+ * Writing is no longer among them: `threads.record` opens a thread and appends
+ * to it, and `src/shell/Chat.tsx` calls it when a turn finishes streaming.
  *
  * A gap closes by a route appearing and the SDK binding it. When one does, the
  * entry is deleted and the control it disabled becomes live — which is why each
@@ -14,7 +16,6 @@
  */
 
 export type Gap =
-  | 'write'
   | 'rename'
   | 'delete'
   | 'upload'
@@ -25,7 +26,6 @@ export type Gap =
 
 /** What a reader is told. One sentence, plain, and never an apology. */
 export const why: Record<Gap, string> = {
-  write: 'End-to-end encrypted and persisted locally across browser sessions.',
   rename: 'Renaming a conversation is not available yet.',
   delete: 'Deleting a conversation is not available yet.',
   upload: 'Attaching files is not available yet.',
@@ -40,7 +40,6 @@ export const why: Record<Gap, string> = {
  * the day one of these exists, the name is what a reader greps for.
  */
 export const awaiting: Record<Gap, string> = {
-  write: 'threads.record',
   rename: 'threads.update',
   delete: 'threads.delete',
   upload: 'files.create',
