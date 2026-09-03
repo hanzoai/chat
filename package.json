@@ -6,14 +6,19 @@
   "description": "Hanzo Chat \u2014 the client, on @hanzo/gui + @hanzo/ui.",
   "packageManager": "pnpm@11.24.0",
   "files": [
-    "src"
+    "dist"
   ],
   "exports": {
-    "./*": "./src/*"
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "pack:lib": "tsc -p tsconfig.build.json",
+    "prepack": "pnpm pack:lib",
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types 'src/**/*.test.ts'",
     "preview": "vite preview"

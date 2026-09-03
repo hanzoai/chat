@@ -1,0 +1,17 @@
+{
+  // What ships. The app's own config never emits, because the app is bundled
+  // from source; a package that another project installs has to hand it real
+  // files and real declarations, since no resolver compiles TypeScript found
+  // inside node_modules.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "allowImportingTsExtensions": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+}

@@ -17,14 +17,13 @@
  * states its own facts and the hosts it answers on, and a new brand is a new
  * record and nothing else.
  *
- * Everything a brand can differ by is HERE. Split across two homes it gets
- * half-applied: the product's name used to be `config.appTitle` from the server
- * OR a hard-coded 'Hanzo Chat' beside every read of it, and since that route
- * answers nothing, every brand called itself Hanzo Chat.
+ * Everything a brand can differ by is HERE, because split across two homes it
+ * gets half-applied and every brand ends up wearing the first one's name.
  */
+import { shell } from './data/shell'
 
 export type Brand = {
-  /** IAM organization, lowercase. The OAuth client is `<org>-chat`. */
+  /** IAM organization, lowercase. The OAuth client is `<org>-<app>`. */
   org: string
   /** IAM origin, e.g. `https://hanzo.id`. */
   issuer: string
@@ -139,6 +138,7 @@ export const brands: readonly Brand[] = [
     site: 'https://hanzo.ai',
     docs: 'https://docs.hanzo.ai',
     billing: 'https://billing.hanzo.ai',
+    terms: 'https://hanzo.ai/terms',
     // Free AI without signing in: this org-scoped `pk-` names the tenant, so an
     // anonymous visitor asks on the projected free/anonymous policy (data-shared,
     // rate-limited). A signed-in user's token layers on through `auth`.
@@ -165,6 +165,7 @@ export const brands: readonly Brand[] = [
     scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 197, 94, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['zoolabs.io', 'chat.zoo.ngo'],
+    terms: 'https://zoo.ngo/terms',
   },
 ]
 
@@ -189,8 +190,14 @@ export const brand: Brand = {
   ...(typeof window === 'undefined' ? {} : window.__brand),
 }
 
-/** The OAuth client: `<org>-<app>`, the estate's rule, spelled once. */
-export const clientId = `${brand.org}-chat`
+/**
+ * The OAuth client: `<org>-<app>`, the estate's rule, spelled once.
+ *
+ * One bundle serves the web and the desktop, and the two are separate clients at
+ * the issuer — the desktop's redirect comes back to the shell, the web's to the
+ * document. Where it is running is the answer, so nothing has to be configured.
+ */
+export const clientId = `${brand.org}-${shell() ? 'app' : 'chat'}`
 
 /**
  * Put the brand on the document.
