@@ -1,6 +1,6 @@
 {
   "name": "@hanzo/chat",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "license": "MIT",
   "description": "Hanzo Chat \u2014 the client, on @hanzo/gui + @hanzo/ui.",
