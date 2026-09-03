@@ -81,7 +81,7 @@ export const ShortcutsModal = () => {
           border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: 20,
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-          display: 'grid',
+          display: 'grid', alignContent: 'start',
           overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
@@ -147,14 +147,14 @@ export const ShortcutsModal = () => {
         <div
           style={{
             padding: '18px 20px',
-            display: 'grid',
+            display: 'grid', alignContent: 'start',
             gap: 16,
             maxHeight: '70vh',
             overflowY: 'auto'
           }}
         >
           {SHORTCUT_CATEGORIES.map((category) => (
-            <div key={category.title} style={{ display: 'grid', gap: 8 }}>
+            <div key={category.title} style={{ display: 'grid', alignContent: 'start', gap: 8 }}>
               <div
                 style={{
                   fontSize: 11,
@@ -167,7 +167,7 @@ export const ShortcutsModal = () => {
                 {category.title}
               </div>
 
-              <div style={{ display: 'grid', gap: 4 }}>
+              <div style={{ display: 'grid', alignContent: 'start', gap: 4 }}>
                 {category.items.map((item, idx) => (
                   <div
                     key={idx}

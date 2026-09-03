@@ -156,7 +156,7 @@ export const SwarmBar = () => {
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             padding: 12,
-            display: 'grid',
+            display: 'grid', alignContent: 'start',
             gap: 10,
             zIndex: 50
           }}

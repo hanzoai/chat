@@ -140,7 +140,7 @@ export const Starters = ({ disabled = false, onPick }: StartersProps) => {
     : TEMPLATES.filter((t) => t.category === selectedCat).slice(0, 4)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 768, marginTop: 12, gap: 10 }}>
+    <div style={{ display: 'grid', alignContent: 'start', justifyItems: 'center', width: '100%', maxWidth: 768, marginTop: 12, gap: 10 }}>
       {/* Category Filter Pills */}
       <div
         style={{

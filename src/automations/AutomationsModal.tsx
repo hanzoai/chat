@@ -87,7 +87,7 @@ export const AutomationsModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -126,7 +126,7 @@ export const AutomationsModal = () => {
           </button>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 18, gap: 14 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', alignContent: 'start', padding: 18, gap: 14 }}>
           <form onSubmit={create} style={{ display: 'flex', gap: 8 }}>
             <input
               type="text"
@@ -173,7 +173,7 @@ export const AutomationsModal = () => {
             note('This org has no automations.')}
 
           {live && rows.length > 0 && (
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'grid', alignContent: 'start', gap: 10 }}>
               {rows.map((flow) => {
                 const armed = flow.status === 'ENABLED'
                 const open = selected === flow.id
@@ -187,7 +187,7 @@ export const AutomationsModal = () => {
                       border: open
                         ? '1px solid rgba(96, 165, 250, 0.4)'
                         : '1px solid rgba(255, 255, 255, 0.08)',
-                      display: 'grid',
+                      display: 'grid', alignContent: 'start',
                       gap: 10
                     }}
                   >
@@ -282,7 +282,7 @@ export const AutomationsModal = () => {
                         style={{
                           borderTop: '1px solid rgba(255, 255, 255, 0.06)',
                           paddingTop: 10,
-                          display: 'grid',
+                          display: 'grid', alignContent: 'start',
                           gap: 6,
                           fontSize: 11.5
                         }}

@@ -90,7 +90,7 @@ export const ProjectModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -169,7 +169,7 @@ export const ProjectModal = () => {
           </div>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 18, gap: 14 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', alignContent: 'start', padding: 18, gap: 14 }}>
           {pane === 'projects' && (
             <form onSubmit={add} style={{ display: 'flex', gap: 8 }}>
               <input
@@ -235,12 +235,12 @@ export const ProjectModal = () => {
                     borderRadius: 12,
                     background: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    display: 'grid',
+                    display: 'grid', alignContent: 'start',
                     gap: 10
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                    <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                    <div style={{ display: 'grid', alignContent: 'start', gap: 4, minWidth: 0 }}>
                       <span style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>
                         {project.name}
                       </span>
@@ -297,7 +297,7 @@ export const ProjectModal = () => {
           )}
 
           {live && pane === 'people' && people.data && people.data.length > 0 && (
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'grid', alignContent: 'start', gap: 8 }}>
               {people.data.map((person) => (
                 <div
                   key={person.id}

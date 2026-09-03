@@ -70,7 +70,7 @@ const Detail = ({ name }: { name: string }) => {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 8, paddingTop: 8, borderTop: line }}>
+    <div style={{ display: 'grid', alignContent: 'start', gap: 8, paddingTop: 8, borderTop: line }}>
       {detail.error ? (
         <span style={{ fontSize: 11, color: faint }}>{unread}</span>
       ) : detail.data?.instructions ? (
@@ -134,7 +134,7 @@ const Detail = ({ name }: { name: string }) => {
       )}
 
       {detail.data?.recentRuns?.length ? (
-        <div style={{ display: 'grid', gap: 3 }}>
+        <div style={{ display: 'grid', alignContent: 'start', gap: 3 }}>
           {detail.data.recentRuns.slice(0, 5).map((r) => (
             <div key={r.id} style={{ fontSize: 10, color: faint, display: 'flex', gap: 6 }}>
               <span style={{ color: r.status === 'ok' ? '#34d399' : '#f87171' }}>{r.status}</span>
@@ -184,7 +184,7 @@ export const AgentsAndAppsModal = ({ onOpenAgentBuilder }: AgentsAndAppsModalPro
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -252,7 +252,7 @@ export const AgentsAndAppsModal = ({ onOpenAgentBuilder }: AgentsAndAppsModalPro
                       borderRadius: 12,
                       background: 'rgba(255, 255, 255, 0.025)',
                       border: line,
-                      display: 'grid',
+                      display: 'grid', alignContent: 'start',
                       gap: 10
                     }}
                   >

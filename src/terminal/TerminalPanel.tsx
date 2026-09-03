@@ -80,7 +80,7 @@ export const TerminalPanel = () => {
       style={{
         backdropFilter: 'blur(32px) saturate(190%)',
         WebkitBackdropFilter: 'blur(32px)',
-        display: 'grid',
+        display: 'grid', alignContent: 'start',
         zIndex: 35
       }}
     >

@@ -61,7 +61,7 @@ const CARD: CSSProperties = {
   borderRadius: 12,
   background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
   border: '1px solid rgba(255, 255, 255, 0.08)',
-  display: 'grid',
+  display: 'grid', alignContent: 'start',
   gap: 6
 }
 
@@ -158,7 +158,7 @@ export const ArtifactPanel = () => {
       borderColor="rgba(255, 255, 255, 0.09)"
       backgroundColor="#09090c"
       style={{
-        display: 'grid',
+        display: 'grid', alignContent: 'start',
         position: 'relative',
         zIndex: 20,
         boxShadow: '-16px 0 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
@@ -355,7 +355,7 @@ export const ArtifactPanel = () => {
               fontSize: 11.5,
               lineHeight: 1.5,
               overflowY: 'auto',
-              display: 'grid',
+              display: 'grid', alignContent: 'start',
               boxSizing: 'border-box'
             }}
           >

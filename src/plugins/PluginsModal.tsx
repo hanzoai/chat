@@ -64,7 +64,7 @@ export const PluginsModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -168,7 +168,7 @@ export const PluginsModal = () => {
                   borderRadius: 12,
                   background: 'rgba(255, 255, 255, 0.03)',
                   border: plugin.enabled ? '1px solid rgba(167, 139, 250, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  display: 'grid',
+                  display: 'grid', alignContent: 'start',
                   gap: 10
                 }}
               >

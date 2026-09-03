@@ -165,9 +165,8 @@ export interface GreetingProps {
 }
 
 const CARD_STYLE: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
+  display: 'grid',
+  alignContent: 'space-between',
   padding: '16px 18px',
   borderRadius: 14,
   background: 'rgba(255, 255, 255, 0.03)',

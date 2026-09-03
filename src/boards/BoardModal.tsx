@@ -130,7 +130,7 @@ export const BoardModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -273,8 +273,7 @@ export const BoardModal = () => {
                   style={{
                     width: 260,
                     flexShrink: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    display: 'grid', alignContent: 'start',
                     gap: 8,
                     minHeight: 0,
                   }}
@@ -293,8 +292,7 @@ export const BoardModal = () => {
                       flex: 1,
                       minHeight: 0,
                       overflowY: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
+                      display: 'grid', alignContent: 'start',
                       gap: 8,
                     }}
                   >
@@ -313,7 +311,7 @@ export const BoardModal = () => {
                               card === issue.identifier
                                 ? '1px solid rgba(96, 165, 250, 0.5)'
                                 : '1px solid rgba(255, 255, 255, 0.08)',
-                            display: 'grid',
+                            display: 'grid', alignContent: 'start',
                             gap: 6,
                             cursor: 'pointer'
                           }}

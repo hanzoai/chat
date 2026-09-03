@@ -113,7 +113,7 @@ export const InviteModal = (_: { conversationId?: string | null }) => {
               </SizableText>
               <div
                 style={{
-                  display: 'grid',
+                  display: 'grid', alignContent: 'start',
                   gap: 6,
                   maxHeight: 280,
                   overflowY: 'auto'

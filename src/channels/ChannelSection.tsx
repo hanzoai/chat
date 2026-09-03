@@ -85,9 +85,7 @@ export const ChannelSection = () => {
               }}
               className="tap"
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'stretch',
+                display: 'grid', alignContent: 'start',
                 gap: 2,
                 padding: '5px 8px',
                 borderRadius: 6,
