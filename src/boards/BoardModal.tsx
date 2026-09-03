@@ -10,7 +10,7 @@
 import { ArrowLeft, ArrowRight, Hand, Kanban, Plus, Search, X } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
 
-import { useSession } from '~/data/session'
+import { useSession } from '../data/session'
 
 import { boardStore, useBoard } from './store'
 import {

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
-import { loginPath } from '~/data/api'
-import { useSession } from '~/data/session'
-import { Waiting } from '~/shell/Boundary'
+import { loginPath } from '../data/api'
+import { useSession } from '../data/session'
+import { Waiting } from './Boundary'
 
 /**
  * Where a sign-in lands on the way back from the issuer.

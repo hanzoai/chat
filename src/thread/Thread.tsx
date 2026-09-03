@@ -22,7 +22,7 @@ import { Fill } from '@hanzo/ui'
 import { Thread as Scroll, type Source } from '@hanzo/ui/chat'
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 
-import type { Message } from '~/data/types'
+import type { Message } from '../data/types'
 import { build, path, type Choice, type Chosen, type Entry, type Vote } from './tree'
 import { Turn } from './Turn'
 

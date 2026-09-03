@@ -19,8 +19,8 @@
 import { APIError, AuthError, type Leased, type Ran, type SandboxRuntime, type Wrote } from '@hanzo/ai'
 import { useEffect, useState } from 'react'
 
-import { client, ESTATE } from '~/data/origin'
-import { requireLogin } from '~/data/gate'
+import { client, ESTATE } from '../data/origin'
+import { requireLogin } from '../data/gate'
 
 /** `said` is what was typed; the rest is what the server answered. */
 export type Line = { kind: 'said' | 'out' | 'err' | 'note'; text: string }

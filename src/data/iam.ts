@@ -11,8 +11,8 @@
  */
 import { IAM } from '@hanzo/iam'
 
-import { brand, clientId } from '~/brand'
-import { callbackPath, loginPath } from '~/data/api'
+import { brand, clientId } from '../brand'
+import { callbackPath, loginPath } from './api'
 
 /**
  * What a session asks for.

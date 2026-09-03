@@ -3,8 +3,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { blank, type Draft } from '~/compose/submit'
-import type { Attachment } from '~/data/types'
+import { blank, type Draft } from './submit'
+import type { Attachment } from '../data/types'
 
 export const NEW = 'new'
 

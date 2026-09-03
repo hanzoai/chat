@@ -2,7 +2,7 @@ import { Paragraph, SizableText, Spinner, XStack } from '@hanzo/ui'
 import { SidebarScroll, SidebarSection } from '@hanzo/ui/chat'
 import { useEffect, useMemo, useRef } from 'react'
 
-import type { Convo } from '~/data/types'
+import type { Convo } from '../data/types'
 
 import { group, id } from './group'
 import { Item } from './Item'

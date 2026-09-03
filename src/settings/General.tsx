@@ -2,7 +2,7 @@ import { Paragraph, SizableText, Switch, XStack, YStack } from '@hanzo/ui'
 import { row, rows } from '@hanzo/ui/glass'
 
 import { Model } from './Model'
-import type { Served } from '~/data/types'
+import type { Served } from '../data/types'
 import { model, steps, temporary, usePref, type Pref } from './prefs'
 
 /**

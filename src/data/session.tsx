@@ -33,17 +33,17 @@ import {
   type ReactNode,
 } from 'react'
 
-import { client } from '~/data/origin'
-import { api } from '~/data/api'
-import { keepHere, take } from '~/data/back'
-import { guest } from '~/data/guest'
-import { iam } from '~/data/iam'
+import { client } from './origin'
+import { api } from './api'
+import { keepHere, take } from './back'
+import { guest } from './guest'
+import { iam } from './iam'
 import { HeldError } from '@hanzo/ai'
-import { keys } from '~/data/keys'
-import { exchanging, noSession, probe } from '~/data/probe'
-import { invalidate, useRead } from '~/data/query'
-import { shell, visit } from '~/data/shell'
-import type { Standing, User } from '~/data/types'
+import { keys } from './keys'
+import { exchanging, noSession, probe } from './probe'
+import { invalidate, useRead } from './query'
+import { shell, visit } from './shell'
+import type { Standing, User } from './types'
 
 
 export type Session = {

@@ -14,10 +14,10 @@
  * every keystroke sent a request and minted a cache entry per character, and
  * every one but the last was a question already finished being asked.
  */
-import { atom, useAtom } from '~/data/store'
-import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { reason, useRead, useSend, useSettled } from '~/data/query'
+import { atom, useAtom } from '../data/store'
+import { keys } from '../data/keys'
+import { client, ESTATE } from '../data/origin'
+import { reason, useRead, useSend, useSettled } from '../data/query'
 
 export interface MemoryItem {
   /** The memory's name in the store — how it is addressed. */

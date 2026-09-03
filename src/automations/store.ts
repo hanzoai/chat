@@ -4,7 +4,7 @@
  * The flows and their runs are the server's — `auto.ts` reads them — so the
  * panel holds only whether it is open and which row is expanded.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '../data/store'
 
 export type Panel = {
   isOpen: boolean

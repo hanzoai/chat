@@ -6,11 +6,11 @@ import { ArrowUp, Mic, MicOff, Paperclip, Square, X } from '@hanzogui/lucide-ico
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
-import { Starters, type Starter } from '~/compose/Starters'
-import { useDraft } from '~/compose/draft'
-import type { Handoff } from '~/compose/link'
-import { payload, type Conversation, type Draft, type Payload } from '~/compose/submit'
-import type { Attachment } from '~/data/types'
+import { Starters, type Starter } from './Starters'
+import { useDraft } from './draft'
+import type { Handoff } from './link'
+import { payload, type Conversation, type Draft, type Payload } from './submit'
+import type { Attachment } from '../data/types'
 
 const COLUMN = 768
 const MAX_TEXTAREA_HEIGHT = 220

@@ -12,7 +12,7 @@
  */
 import { Failure } from '@hanzo/ui/chat'
 
-import type { Message, Part } from '~/data/types'
+import type { Message, Part } from '../data/types'
 import { Files } from './Files'
 import { Picture } from './Picture'
 import { Prose } from './Prose'

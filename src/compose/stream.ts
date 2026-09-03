@@ -1,12 +1,11 @@
 /**
  * The turn in flight.
  *
- * One verb, where there were three. Streams decoded chat.completion.chunk
- * values from @hanzo/ai.
+ * One verb, streaming decoded `chat.completion.chunk` values from @hanzo/ai.
  */
 import type { ChatCompletionChunk, ChatCompletionMessage } from '@hanzo/ai'
-import { client, ESTATE } from '~/data/origin'
-import { explain } from '~/data/types'
+import { client, ESTATE } from '../data/origin'
+import { explain } from '../data/types'
 
 /** How a turn ended. The shell answers each differently, so it is told which. */
 export type Ended =

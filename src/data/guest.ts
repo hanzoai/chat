@@ -7,7 +7,7 @@
  * What a guest may do is decided there, from the absence of a bearer — which is
  * also why becoming one cannot fail and asks nobody's permission.
  */
-import type { User } from '~/data/types'
+import type { User } from './types'
 
 export const GUEST = 'guest'
 

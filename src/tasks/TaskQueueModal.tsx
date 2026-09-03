@@ -11,7 +11,7 @@
 import { ListTodo, Pause, Play, Square, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
-import { useSession } from '~/data/session'
+import { useSession } from '../data/session'
 
 import { steer, useRun, useRuns } from './runs'
 import { taskQueueStore, useTaskQueue } from './store'

@@ -22,7 +22,7 @@
  */
 import type { Source } from '@hanzo/ui/chat'
 
-import type { Feedback, Message } from '~/data/types'
+import type { Feedback, Message } from '../data/types'
 
 /** A thumbs-up or thumbs-down on an answer. */
 export type Vote = Feedback['rating']

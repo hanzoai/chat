@@ -1,4 +1,4 @@
-import { brand } from '~/brand'
+import { brand } from '../brand'
 
 /**
  * What the wire carries, and what a refusal means to a reader.

@@ -22,10 +22,10 @@
  */
 import { useSyncExternalStore } from 'react'
 
-import { client, ESTATE } from '~/data/origin'
-import { keys, sign, type Key } from '~/data/keys'
-import { invalidate, peek, useRead } from '~/data/query'
-import { useSession } from '~/data/session'
+import { client, ESTATE } from '../data/origin'
+import { keys, sign, type Key } from '../data/keys'
+import { invalidate, peek, useRead } from '../data/query'
+import { useSession } from '../data/session'
 import type { McpServer } from './types'
 
 const ACTIVATION = '/v1/tools/activation'

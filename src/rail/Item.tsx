@@ -1,7 +1,7 @@
 import { Spinner } from '@hanzo/ui'
 import { SidebarItem } from '@hanzo/ui/chat'
 
-import type { Convo } from '~/data/types'
+import type { Convo } from '../data/types'
 
 import { named } from './group'
 

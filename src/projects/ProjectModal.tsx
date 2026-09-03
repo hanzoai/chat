@@ -8,7 +8,7 @@
 import { Building2, FolderGit2, Plus, Star, UserCheck, X } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
 
-import { useSession } from '~/data/session'
+import { useSession } from '../data/session'
 
 import { create, star, useProjects, usePeople } from './projects'
 import { projectsStore, useProjectPanel } from './store'

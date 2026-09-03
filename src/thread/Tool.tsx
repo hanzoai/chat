@@ -12,7 +12,7 @@
 import { Step, type Ran } from '@hanzo/ui/chat'
 import type { ReactNode } from 'react'
 
-import type { ToolCall } from '~/data/types'
+import type { ToolCall } from '../data/types'
 import { Fence } from './Fence'
 
 /** Tools whose name is machinery. Everything else reads fine as it arrives. */

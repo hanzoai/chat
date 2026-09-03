@@ -25,9 +25,9 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import type { Person } from '@hanzo/ai'
 
-import { client, ESTATE } from '~/data/origin'
-import { useRead } from '~/data/query'
-import { useSession } from '~/data/session'
+import { client, ESTATE } from '../data/origin'
+import { useRead } from '../data/query'
+import { useSession } from '../data/session'
 
 export type MultiplayerState = {
   /** Whether the roster panel is open. */

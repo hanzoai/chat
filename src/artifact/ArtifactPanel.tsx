@@ -24,7 +24,7 @@ import {
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
-import { useLease, type Line } from '~/terminal/sandbox'
+import { useLease, type Line } from '../terminal/sandbox'
 import { artifactStore, previewable, runner, useArtifact, type ArtifactTab } from './store'
 
 const TAB = (active: boolean): CSSProperties => ({

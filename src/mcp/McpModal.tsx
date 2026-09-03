@@ -19,8 +19,8 @@ import { Blocks, Check, Plus, Power, Search, Trash2, Wrench, X } from '@hanzogui
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useState } from 'react'
 
-import { requireLogin } from '~/data/gate'
-import { useSession } from '~/data/session'
+import { requireLogin } from '../data/gate'
+import { useSession } from '../data/session'
 import { mcpStore, useCatalog, useMcp } from './store'
 import type { McpServer } from './types'
 

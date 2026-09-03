@@ -14,8 +14,8 @@ import { Bot, Save, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
 
-import { useModels } from '~/data/config'
-import { ESTATE } from '~/data/origin'
+import { useModels } from '../data/config'
+import { ESTATE } from '../data/origin'
 import { create, useTools } from './store'
 
 export interface AgentBuilderProps {

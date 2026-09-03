@@ -11,7 +11,7 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useRef, useState } from 'react'
 import type { Agent } from '@hanzo/ai'
 
-import { useMultiplayer } from '~/presence/store'
+import { useMultiplayer } from '../presence/store'
 import { none, swarmStore, unread, useAgents, useSwarm } from './store'
 
 /** An agent's face: the glyph somebody picked, or its initial. */

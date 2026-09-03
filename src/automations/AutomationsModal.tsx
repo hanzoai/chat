@@ -9,7 +9,7 @@
 import { Clock, Play, Plus, X, Zap } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
 
-import { useSession } from '~/data/session'
+import { useSession } from '../data/session'
 
 import { add, arm, start, useFlows, useRuns } from './auto'
 import { automationsStore, useAutomations } from './store'

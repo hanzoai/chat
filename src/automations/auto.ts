@@ -16,8 +16,8 @@
  * Nothing publishes a next firing time or a lifetime run total, so neither is
  * read. The last run is the head of `/v1/auto/runs`, which is newest first.
  */
-import { client, ESTATE } from '~/data/origin'
-import { invalidate, useRead } from '~/data/query'
+import { client, ESTATE } from '../data/origin'
+import { invalidate, useRead } from '../data/query'
 
 /** A flow row joined to its own record. Unix milliseconds on both clocks. */
 export type Flow = {

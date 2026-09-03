@@ -2,7 +2,7 @@ import { SizableText, YStack } from '@hanzo/ui'
 import { SidebarScroll, SidebarSection } from '@hanzo/ui/chat'
 import { useMemo } from 'react'
 
-import type { Convo } from '~/data/types'
+import type { Convo } from '../data/types'
 
 import { hits, id } from './group'
 import { Item } from './Item'

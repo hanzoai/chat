@@ -6,7 +6,7 @@
  */
 import type { ChatCompletionContentPart, ChatCompletionMessage } from '@hanzo/ai'
 
-import type { Attachment, Message } from '~/data/types'
+import type { Attachment, Message } from '../data/types'
 
 /**
  * What the composer holds.

@@ -5,7 +5,7 @@
  * board, what was typed into the search box, and which card is open. None of
  * that outlives the tab, which is why none of it is persisted.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '../data/store'
 
 export type View = {
   isOpen: boolean

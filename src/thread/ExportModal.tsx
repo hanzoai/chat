@@ -11,9 +11,9 @@ import {
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { client, ESTATE } from '~/data/origin'
-import * as store from '~/data/store'
-import { useChannels } from '~/channels/store'
+import { client, ESTATE } from '../data/origin'
+import * as store from '../data/store'
+import { useChannels } from '../channels/store'
 import { exportStore, useExport } from './exportStore'
 
 export const ExportModal = () => {

@@ -12,10 +12,10 @@
  * There is no route to write to and no SDK method to call, so nothing here
  * pretends otherwise — `~/data/missing` is what the rail's controls report.
  */
-import { client, ESTATE } from '~/data/origin'
-import { keys } from '~/data/keys'
-import { useRead } from '~/data/query'
-import type { Convo } from '~/data/types'
+import { client, ESTATE } from './origin'
+import { keys } from './keys'
+import { useRead } from './query'
+import type { Convo } from './types'
 
 /**
  * Every conversation, newest first.

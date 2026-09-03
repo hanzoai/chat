@@ -14,7 +14,7 @@ import { XStack } from '@hanzo/ui'
 
 import { initial, label, tint } from './person'
 import { multiplayerStore, useMultiplayer } from './store'
-import { terminalStore, useTerminal } from '~/terminal/store'
+import { terminalStore, useTerminal } from '../terminal/store'
 
 export const PresenceStack = () => {
   const { participants } = useMultiplayer()

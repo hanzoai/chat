@@ -16,7 +16,7 @@ import { test } from 'node:test'
 
 import { createAiClient, type ChatCompletionChunk } from '@hanzo/ai'
 
-import type { Message } from '~/data/types'
+import type { Message } from '../data/types'
 
 import { fold, opening, parts, spoken } from './frames.ts'
 import { history } from './submit.ts'

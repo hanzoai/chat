@@ -18,8 +18,8 @@
  */
 import type { Session, SessionCommand, SessionDetail } from '@hanzo/ai'
 
-import { client, ESTATE } from '~/data/origin'
-import { invalidate, useRead } from '~/data/query'
+import { client, ESTATE } from '../data/origin'
+import { invalidate, useRead } from '../data/query'
 
 const runs = ['runs'] as const
 const one = (id: string) => ['runs', 'one', id] as const

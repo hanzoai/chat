@@ -14,12 +14,12 @@ import {
 import { XStack } from '@hanzo/ui'
 import { useEffect, useState } from 'react'
 
-import { PresenceStack } from '~/presence/PresenceStack'
-import { artifactStore, useArtifact } from '~/artifact/store'
-import { useChannels } from '~/channels/store'
-import { exportStore } from '~/thread/exportStore'
-import { shortcutsStore } from '~/shortcuts/store'
-import { themeCustomizerStore } from '~/theme/store'
+import { PresenceStack } from '../presence/PresenceStack'
+import { artifactStore, useArtifact } from '../artifact/store'
+import { useChannels } from '../channels/store'
+import { exportStore } from '../thread/exportStore'
+import { shortcutsStore } from '../shortcuts/store'
+import { themeCustomizerStore } from '../theme/store'
 
 export interface HeaderProps {
   title: string

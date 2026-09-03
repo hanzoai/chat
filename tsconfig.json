@@ -17,10 +17,7 @@
     // extension, and nothing emits, so importing one is exact rather than lax.
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
-    "noEmit": true,
-    "paths": {
-      "~/*": ["./src/*"]
-    }
+    "noEmit": true
   },
   "include": ["src", "vite.config.ts"]
 }

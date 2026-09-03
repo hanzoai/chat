@@ -13,7 +13,7 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { X } from '@hanzogui/lucide-icons-2'
 import { useEffect } from 'react'
 
-import { why } from '~/data/missing'
+import { why } from '../data/missing'
 import { channelsStore, refusal, speaker, useChannels, useTransports, when } from './store'
 
 const Note = ({ children }: { children: string }) => (

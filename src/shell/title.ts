@@ -12,7 +12,7 @@
  */
 import { useEffect } from 'react'
 
-import { brand } from '~/brand'
+import { brand } from '../brand'
 
 export const useTitle = (subject?: string | null) => {
   useEffect(() => {

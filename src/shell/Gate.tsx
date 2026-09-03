@@ -12,10 +12,10 @@ import {
 } from '@hanzo/ui'
 import { useEffect, useState } from 'react'
 
-import { api } from '~/data/api'
-import { takePending, watchLogin, type Reason } from '~/data/gate'
-import { MACHINE, origins } from '~/data/origin'
-import { useSession } from '~/data/session'
+import { api } from '../data/api'
+import { takePending, watchLogin, type Reason } from '../data/gate'
+import { MACHINE, origins } from '../data/origin'
+import { useSession } from '../data/session'
 
 /**
  * Where somebody ready to pay goes. No price is repeated here: the plans page

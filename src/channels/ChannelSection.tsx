@@ -14,7 +14,7 @@
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { Compass, Hash, MessageSquare } from '@hanzogui/lucide-icons-2'
 
-import { why } from '~/data/missing'
+import { why } from '../data/missing'
 import { channelsStore, refusal, useChannels, when } from './store'
 
 const Note = ({ children }: { children: string }) => (

@@ -2,9 +2,9 @@ import { Button, H2, Paragraph, YStack } from '@hanzo/ui'
 import { useEffect, useRef } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 
-import { brand } from '~/brand'
-import { useSession } from '~/data/session'
-import { Waiting } from '~/shell/Boundary'
+import { brand } from '../brand'
+import { useSession } from '../data/session'
+import { Waiting } from './Boundary'
 
 /**
  * Where a refusal sends somebody, and it is a DOOR rather than a page.

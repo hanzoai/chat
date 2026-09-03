@@ -10,7 +10,7 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { useShown } from '~/show'
+import { useShown } from '../show'
 import { intelligenceStore, useForget, useIntelligence, useRemember } from './store'
 
 export const IntelligenceModal = () => {

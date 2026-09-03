@@ -1,9 +1,9 @@
 import { Anchor, Button, Checkbox, H2, Image, Label, Paragraph, XStack, YStack } from '@hanzo/ui'
 import { useState } from 'react'
 
-import { brand } from '~/brand'
-import { useSession } from '~/data/session'
-import { consent, usePref } from '~/settings/prefs'
+import { brand } from '../brand'
+import { useSession } from '../data/session'
+import { consent, usePref } from '../settings/prefs'
 
 /**
  * What an installed app asks before it opens, and it asks once.

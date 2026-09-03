@@ -6,7 +6,7 @@
  * row is selected. Those are this browser's and nobody else's, so they are an
  * atom rather than a cache entry.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '../data/store'
 
 export type Queue = {
   isOpen: boolean

@@ -16,10 +16,10 @@
  */
 import { createAiClient, type AiClient } from '@hanzo/ai'
 
-import { brand } from '~/brand'
-import { iam } from '~/data/iam'
-import { shell } from '~/data/shell'
-import { key } from '~/settings/prefs'
+import { brand } from '../brand'
+import { iam } from './iam'
+import { shell } from './shell'
+import { key } from '../settings/prefs'
 
 /** The estate. Its base URL is the SDK's default and is not restated. */
 export const ESTATE = 'hanzo'
