@@ -27,9 +27,6 @@ export interface Conversation {
   model?: string | null
 }
 
-/** The model asked when a conversation names none. */
-const DEFAULT_MODEL = 'deepseek-chat'
-
 export interface Payload {
   text: string
   files?: Attachment[]
@@ -54,7 +51,7 @@ export const payload = ({
   messageId: crypto.randomUUID(),
   parentMessageId: parent ?? null,
   conversationId: conversation?.conversationId ?? null,
-  model: conversation?.model || DEFAULT_MODEL,
+  model: conversation?.model ?? '',
 })
 
 /**

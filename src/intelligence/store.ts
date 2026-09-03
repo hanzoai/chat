@@ -16,7 +16,7 @@
  */
 import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { reason, useRead, useSend, useSettled } from '~/data/query'
 
 export interface MemoryItem {
@@ -65,7 +65,7 @@ export const asked = atom('')
 
 const readMemories = async (): Promise<MemoryItem[]> => {
   // The listing is enveloped: `{data: [...]}`.
-  const listed = await ai().http.collection<WireMemory>('data', {
+  const listed = await client(ESTATE).http.collection<WireMemory>('data', {
     path: '/v1/ai/memory/list',
   })
   return listed.map((one) => ({
@@ -84,7 +84,7 @@ interface Found {
 }
 
 const readSymbols = async (query: string): Promise<Found> => {
-  const answer = await ai().http.json<{ results?: WireSpan[]; degraded?: boolean }>({
+  const answer = await client(ESTATE).http.json<{ results?: WireSpan[]; degraded?: boolean }>({
     method: 'GET',
     path: '/v1/code/search',
     query: { q: query, type: 'symbol', limit: 50 },
@@ -159,7 +159,7 @@ export const useIntelligence = () => {
 export const useRemember = () =>
   useSend(async (content: string, kind = '') => {
     if (!content.trim()) return
-    await ai().http.json({
+    await client(ESTATE).http.json({
       method: 'POST',
       path: '/v1/ai/memory/remember',
       body: { content: content.trim(), kind: kind || undefined },
@@ -170,7 +170,7 @@ export const useRemember = () =>
 export const useForget = () =>
   useSend(async (name: string) => {
     if (!name) return
-    await ai().http.json({
+    await client(ESTATE).http.json({
       method: 'POST',
       path: '/v1/ai/memory/delete',
       body: { name },

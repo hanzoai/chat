@@ -21,7 +21,7 @@
  */
 import { APIError, rooms as group, type Channel, type Room } from '@hanzo/ai'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import type { Key } from '~/data/keys'
 import { peek, useRead, type Read } from '~/data/query'
 import { useSession } from '~/data/session'
@@ -40,7 +40,7 @@ const INBOX: Key = ['channels', 'inbox']
  * `connected` rides each entry instead.
  */
 export const useTransports = (enabled = true): Read<Channel[]> =>
-  useRead<Channel[]>(TRANSPORTS, () => ai().channels.list(), { enabled })
+  useRead<Channel[]>(TRANSPORTS, () => client(ESTATE).channels.list(), { enabled })
 
 /**
  * The rooms messages have arrived in, newest first.
@@ -50,7 +50,7 @@ export const useTransports = (enabled = true): Read<Channel[]> =>
  * spending a request on a promise.
  */
 export const useRooms = (enabled = true): Read<Room[]> =>
-  useRead<Room[]>(INBOX, async () => group((await ai().channels.inbox()).messages), { enabled })
+  useRead<Room[]>(INBOX, async () => group((await client(ESTATE).channels.inbox()).messages), { enabled })
 
 /** The room on screen, by `Room.key` — the SDK's `"<channel> <roomId>"`. */
 const chosen = atom<string | null>(null)

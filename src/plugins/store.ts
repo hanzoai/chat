@@ -15,7 +15,7 @@
 import { useSyncExternalStore } from 'react'
 import type { PluginMount } from '@hanzo/ai'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import type { Key } from '~/data/keys'
 import { useRead } from '~/data/query'
 import { useSession } from '~/data/session'
@@ -56,7 +56,7 @@ export type PluginsState = {
 export const usePlugins = (): PluginsState => {
   const { standing } = useSession()
   const isOpen = useSyncExternalStore(subscribe, held, held)
-  const read = useRead<PluginMount[]>(key, () => ai().tools.plugins({ all: true }), {
+  const read = useRead<PluginMount[]>(key, () => client(ESTATE).tools.plugins({ all: true }), {
     enabled: standing === 'live',
   })
   return { isOpen, plugins: read.data ?? [], pending: read.pending, error: read.error }

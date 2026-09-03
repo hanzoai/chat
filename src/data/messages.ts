@@ -16,7 +16,7 @@
  * 200 with an empty transcript for another tenant's id, so the SDK reads empty
  * as absent. An empty list is passed straight through as an empty conversation.
  */
-import { ai } from '~/data/ai'
+import { client } from '~/data/origin'
 import { keys } from '~/data/keys'
 import { useRead } from '~/data/query'
 import type { Message } from '~/data/types'
@@ -32,7 +32,7 @@ export const useTurns = (convoId: string | null | undefined) =>
   useRead<Message[]>(
     keys.turns(convoId ?? ''),
     async () => {
-      const thread = await ai().threads.get(convoId as string)
+      const thread = await client().threads.get(convoId as string)
       let parent: string | null = null
       return ((thread as any)?.messages ?? []).map((m: any) => {
         const turn: Message = {

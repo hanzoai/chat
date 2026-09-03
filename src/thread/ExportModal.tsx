@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import * as store from '~/data/store'
 import { useChannels } from '~/channels/store'
 import { exportStore, useExport } from './exportStore'
@@ -89,7 +89,7 @@ export const ExportModal = () => {
   const handleForkConversation = async () => {
     if (forking) return
     setForking(true)
-    const thread = await ai()
+    const thread = await client(ESTATE)
       .threads.record(turns.map((t) => ({ role: t.role, content: t.text ?? '' })))
       .catch(() => null)
     setForking(false)

@@ -15,6 +15,7 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
 
 import { useModels } from '~/data/config'
+import { ESTATE } from '~/data/origin'
 import { create, useTools } from './store'
 
 export interface AgentBuilderProps {
@@ -49,7 +50,9 @@ export const AgentBuilderModal = ({ isOpen, onClose }: AgentBuilderProps) => {
 
   if (!isOpen) return null
 
-  const served = Object.entries(models.data ?? {})
+  // An agent the org runs executes where the org is, so the picker offers the
+  // estate's models and not whatever happens to be loaded on this machine.
+  const served = Object.entries(models.data?.[ESTATE] ?? {})
   const listed = tools.data ?? []
 
   const toggleTool = (toolName: string) =>

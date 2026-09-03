@@ -12,7 +12,7 @@ import { useHandoff } from '~/compose/link'
 import { run } from '~/compose/stream'
 import { history, type Conversation, type Payload } from '~/compose/submit'
 import { useChannels } from '~/channels/store'
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { useModels } from '~/data/config'
 import { useConvo } from '~/data/convos'
 import { requireLogin } from '~/data/gate'
@@ -191,7 +191,7 @@ export const Chat = () => {
     async (payload: Payload, reply: Reply) => {
       const said = spoken(reply)
       if (!said) return
-      const thread = await ai()
+      const thread = await client(ESTATE)
         .threads.record(
           [
             { role: 'user', content: payload.text },

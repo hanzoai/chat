@@ -2,7 +2,10 @@ import { Toaster, TooltipProvider } from '@hanzo/ui'
 import { RouterProvider } from 'react-router/dom'
 
 import { Session } from '~/data/session'
+import { shell } from '~/data/shell'
 import { router } from '~/routes'
+import { consent, usePref } from '~/settings/prefs'
+import { Welcome } from '~/shell/Welcome'
 
 /** How long a hint waits before it appears, everywhere. ONE provider, so the
  *  product cannot have two hover speeds depending on which subtree the pointer
@@ -36,8 +39,24 @@ const HINT = 200
 export const App = () => (
   <TooltipProvider delay={HINT}>
     <Session>
-      <RouterProvider router={router} />
+      <Entry />
     </Session>
     <Toaster theme="dark" position="top-center" />
   </TooltipProvider>
 )
+
+/**
+ * The way in, and there are two of them for two kinds of visitor.
+ *
+ * An installed app asks for consent once and then is the app. A page has
+ * already agreed by the terms of the site serving it, so the web build has no
+ * screen here at all — a consent gate on hanzo.chat would be a wall in front of
+ * a product a browser is already reading.
+ *
+ * It sits under `<Session>` because Welcome offers to sign in, and inside the
+ * providers because it is a screen like any other.
+ */
+const Entry = () => {
+  const [agreed] = usePref(consent)
+  return shell() && !agreed ? <Welcome /> : <RouterProvider router={router} />
+}

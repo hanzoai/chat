@@ -114,6 +114,26 @@ export const usePref = <T>(p: Pref<T>): [T, Atom<T>['set']] => [useAtom(p), p.se
  */
 export const model = pref('model', '', text)
 
+/**
+ * The key the engine on this machine was started with.
+ *
+ * Started without one it serves any caller that can reach the port, and that
+ * port is bound on every interface. The shell mints this and starts the engine
+ * with it; a person running their own engine sets it to match.
+ */
+export const key = pref('key', '', text)
+
+/**
+ * The terms were agreed to, on this machine.
+ *
+ * An installed app asks once and remembers; a page has already agreed by the
+ * terms of the site serving it, so only the desktop reads this. It is a
+ * preference rather than component state because the answer has to outlive the
+ * launch that gave it — asked again on every start, a consent screen is a
+ * splash screen with a checkbox.
+ */
+export const consent = pref('consent', false, flag)
+
 /** A new conversation is not kept after you leave it. */
 export const temporary = pref('temporary', false, flag)
 

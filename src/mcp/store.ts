@@ -22,7 +22,7 @@
  */
 import { useSyncExternalStore } from 'react'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { keys, sign, type Key } from '~/data/keys'
 import { invalidate, peek, useRead } from '~/data/query'
 import { useSession } from '~/data/session'
@@ -92,7 +92,7 @@ export const mcpStore = {
       if (!server?.tools.length) return
       const names = server.tools.map((t) => t.name)
       const on = server.status !== 'connected'
-      await ai().http.json({
+      await client(ESTATE).http.json({
         method: 'PUT',
         path: ACTIVATION,
         body: on ? { activate: names, deactivate: [] } : { activate: [], deactivate: names },
@@ -112,7 +112,7 @@ export const mcpStore = {
     secret?: string
   }) =>
     void write(async () => {
-      const created = await ai().http.json<{ id?: string }>({
+      const created = await client(ESTATE).http.json<{ id?: string }>({
         method: 'POST',
         path: SERVERS,
         body: input,
@@ -123,7 +123,7 @@ export const mcpStore = {
   /** Deregisters one, so its tools leave the org's plane. 204, so no body. */
   disconnect: (id: string) =>
     void write(async () => {
-      await ai().http.raw({ method: 'DELETE', path: `${SERVERS}/${encodeURIComponent(id)}` })
+      await client(ESTATE).http.raw({ method: 'DELETE', path: `${SERVERS}/${encodeURIComponent(id)}` })
       if (panel.activeServerId === id) set({ activeServerId: null })
     }),
 }
@@ -139,10 +139,9 @@ const held = () => panel
 
 /** Every registered server, joined to the tools it contributed and their activation. */
 const load = async (): Promise<McpServer[]> => {
-  const client = ai()
   const [registered, tools] = await Promise.all([
-    client.tools.mcp(),
-    client.tools.list({ source: 'mcp' }),
+    client(ESTATE).tools.mcp(),
+    client(ESTATE).tools.list({ source: 'mcp' }),
   ])
 
   return Promise.all(
@@ -152,7 +151,7 @@ const load = async (): Promise<McpServer[]> => {
       // listing since unpublished leaves the server listed and unlabelled rather
       // than blanking every server the org has.
       const listing = server.listing
-        ? await client.tools.listing(server.listing).catch(() => undefined)
+        ? await client(ESTATE).tools.listing(server.listing).catch(() => undefined)
         : undefined
       return {
         id: server.id,
@@ -199,7 +198,7 @@ export const useCatalog = (q: string) => {
   const { standing } = useSession()
   const read = useRead(
     catalogKey(q),
-    () => ai().tools.catalog({ ...(q ? { q } : {}), limit: 24 }),
+    () => client(ESTATE).tools.catalog({ ...(q ? { q } : {}), limit: 24 }),
     { enabled: standing === 'live' },
   )
   return { ...read, listings: read.data?.catalog ?? [], total: read.data?.total ?? 0 }

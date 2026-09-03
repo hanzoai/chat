@@ -21,7 +21,7 @@ import { AiSettings } from './AiSettings'
 import { General } from './General'
 import { Look } from './Look'
 import { McpSettings } from './McpSettings'
-import type { Served } from './models'
+import type { Served } from '~/data/types'
 
 export interface SettingsProps {
   open: boolean

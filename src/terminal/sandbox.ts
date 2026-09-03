@@ -19,7 +19,7 @@
 import { APIError, AuthError, type Leased, type Ran, type SandboxRuntime, type Wrote } from '@hanzo/ai'
 import { useEffect, useState } from 'react'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { requireLogin } from '~/data/gate'
 
 /** `said` is what was typed; the rest is what the server answered. */
@@ -71,7 +71,7 @@ const said = (ran: Ran): Line[] => {
 const take = async (): Promise<Leased | null> => {
   patch({ busy: true })
   try {
-    const held = await ai().sandboxes.lease({
+    const held = await client(ESTATE).sandboxes.lease({
       class: 'exec',
       ...(lease.want ? { runtime: lease.want } : {}),
     })
@@ -125,7 +125,7 @@ export const sandbox = {
     if (!held) return null
     patch({ busy: true }, { kind: 'said', text: shown })
     try {
-      const ran = await ai().sandboxes.run(
+      const ran = await client(ESTATE).sandboxes.run(
         Array.isArray(what) ? { id: held.id, argv: what } : { id: held.id, command: shown },
       )
       patch({ busy: false }, ...said(ran))
@@ -141,7 +141,7 @@ export const sandbox = {
     if (!held) return null
     patch({ busy: true })
     try {
-      const wrote = await ai().sandboxes.write({ id: held.id, path, data })
+      const wrote = await client(ESTATE).sandboxes.write({ id: held.id, path, data })
       patch({ busy: false }, {
         kind: 'note',
         text: `${wrote.path ?? path}${wrote.bytes == null ? '' : ` · ${wrote.bytes} bytes`}`,
@@ -156,7 +156,7 @@ export const sandbox = {
   interrupt: async () => {
     if (!lease.held) return
     try {
-      const { stopped } = await ai().sandboxes.stop({ id: lease.held.id })
+      const { stopped } = await client(ESTATE).sandboxes.stop({ id: lease.held.id })
       patch({ busy: false }, { kind: 'note', text: `interrupted ${stopped ?? 0}` })
     } catch (fault) {
       refuse(fault)
@@ -169,7 +169,7 @@ export const sandbox = {
     if (!held) return
     patch({ busy: true })
     try {
-      await ai().sandboxes.end({ id: held.id })
+      await client(ESTATE).sandboxes.end({ id: held.id })
       patch({ held: null, busy: false }, { kind: 'note', text: `released ${held.id}` })
     } catch (fault) {
       // The lease is KEPT. `released` used to be written and the lease cleared

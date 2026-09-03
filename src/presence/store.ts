@@ -25,7 +25,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import type { Person } from '@hanzo/ai'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { useRead } from '~/data/query'
 import { useSession } from '~/data/session'
 
@@ -91,7 +91,7 @@ const usePeople = () => {
   return useRead<Person[]>(
     ['people', org ?? ''],
     async () => {
-      const people = await ai().people.list({ owner: org as string, service: false })
+      const people = await client(ESTATE).people.list({ owner: org as string, service: false })
       return me ? [...people].sort((a, b) => Number(b.name === me) - Number(a.name === me)) : people
     },
     { enabled: Boolean(org) },

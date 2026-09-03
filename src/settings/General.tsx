@@ -2,7 +2,7 @@ import { Paragraph, SizableText, Switch, XStack, YStack } from '@hanzo/ui'
 import { row, rows } from '@hanzo/ui/glass'
 
 import { Model } from './Model'
-import type { Served } from './models'
+import type { Served } from '~/data/types'
 import { model, steps, temporary, usePref, type Pref } from './prefs'
 
 /**
@@ -61,7 +61,7 @@ export function General({ served }: GeneralProps) {
         <SizableText fontSize="$3" fontWeight="500" color="$color">
           Model
         </SizableText>
-        <Model {...served} value={chosen} onChange={choose} placeholder="The default model" />
+        <Model models={served} value={chosen} onChange={choose} placeholder="The default model" />
         <Paragraph fontSize="$1" color="$color11">
           Which model answers when you start a conversation. Any conversation can still be moved to
           another one from the composer.

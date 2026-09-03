@@ -18,7 +18,7 @@
  */
 import type { Session, SessionCommand, SessionDetail } from '@hanzo/ai'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { invalidate, useRead } from '~/data/query'
 
 const runs = ['runs'] as const
@@ -26,16 +26,16 @@ const one = (id: string) => ['runs', 'one', id] as const
 
 /** Every run in the org, newest activity first. */
 export const useRuns = (enabled: boolean) =>
-  useRead<Session[]>(['runs', 'list'], () => ai().sessions.list({ limit: 50 }), { enabled })
+  useRead<Session[]>(['runs', 'list'], () => client(ESTATE).sessions.list({ limit: 50 }), { enabled })
 
 /** One run, with its direct children and its recent turns. */
 export const useRun = (id: string | null, enabled: boolean) =>
-  useRead<SessionDetail>(one(id ?? ''), () => ai().sessions.get(id as string), {
+  useRead<SessionDetail>(one(id ?? ''), () => client(ESTATE).sessions.get(id as string), {
     enabled: enabled && Boolean(id),
   })
 
 /** Record `stop`, `pause` or `resume` against a run, then re-read what it is. */
 export const steer = async (id: string, command: SessionCommand) => {
-  await ai().sessions.steer(id, command)
+  await client(ESTATE).sessions.steer(id, command)
   invalidate(runs)
 }

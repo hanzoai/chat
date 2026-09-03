@@ -33,7 +33,7 @@ import {
   type ReactNode,
 } from 'react'
 
-import { ai } from '~/data/ai'
+import { client } from '~/data/origin'
 import { api } from '~/data/api'
 import { keepHere, take } from '~/data/back'
 import { guest } from '~/data/guest'
@@ -42,6 +42,7 @@ import { HeldError } from '@hanzo/ai'
 import { keys } from '~/data/keys'
 import { exchanging, noSession, probe } from '~/data/probe'
 import { invalidate, useRead } from '~/data/query'
+import { shell, visit } from '~/data/shell'
 import type { Standing, User } from '~/data/types'
 
 
@@ -133,7 +134,7 @@ export const Session = ({ children }: { children: ReactNode }) => {
   const record = useRead<User>(
     keys.user,
     async () => {
-      const account = await ai().account.get()
+      const account = await client().account.get()
       return {
         id: account.name,
         name: account.displayName || account.name,
@@ -162,7 +163,7 @@ export const Session = ({ children }: { children: ReactNode }) => {
 
   const signIn = useCallback(() => {
     keepHere()
-    void iam().signinRedirect()
+    void iam().getSigninUrl().then(visit)
   }, [])
 
   /**
@@ -181,7 +182,7 @@ export const Session = ({ children }: { children: ReactNode }) => {
       const authorize = new URL(await iam().getSigninUrl())
       const signup = new URL(api.iam.signup)
       signup.search = authorize.search
-      window.location.href = signup.toString()
+      visit(signup.toString())
     })()
   }, [])
 
@@ -196,8 +197,17 @@ export const Session = ({ children }: { children: ReactNode }) => {
    * the issuer still recognising this browser, and the next sign-in is silent.
    */
   const signOut = useCallback(() => {
+    // A desktop session is the token THIS app holds, and that is all it may
+    // end. The issuer's session lives in the browser, which is a different
+    // agent with its own tabs — ending it from here would sign somebody out
+    // everywhere because they signed out of a chat window.
+    if (shell()) {
+      iam().clearTokens()
+      anonymous()
+      return
+    }
     void iam().logout()
-  }, [])
+  }, [anonymous])
 
   const land = useCallback(async () => {
     const where = take()

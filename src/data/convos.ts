@@ -12,7 +12,7 @@
  * There is no route to write to and no SDK method to call, so nothing here
  * pretends otherwise — `~/data/missing` is what the rail's controls report.
  */
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { keys } from '~/data/keys'
 import { useRead } from '~/data/query'
 import type { Convo } from '~/data/types'
@@ -28,7 +28,7 @@ export const useConvos = (enabled = true) =>
   useRead<Convo[]>(
     keys.convos,
     async () => {
-      const threads = await ai().threads.list()
+      const threads = await client(ESTATE).threads.list()
       return (threads as any[]).map((t: any) => ({
         conversationId: t.id,
         title: t.title ?? '',

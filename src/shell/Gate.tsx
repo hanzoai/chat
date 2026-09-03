@@ -1,6 +1,7 @@
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -13,6 +14,7 @@ import { useEffect, useState } from 'react'
 
 import { api } from '~/data/api'
 import { takePending, watchLogin, type Reason } from '~/data/gate'
+import { MACHINE, origins } from '~/data/origin'
 import { useSession } from '~/data/session'
 
 /**
@@ -52,12 +54,14 @@ const copy: Record<Reason, { title: string; message: string }> = {
  * this replaces actually shipped. It offers the existing Hanzo IAM login; it
  * does not implement one.
  *
- * It is an `AlertDialog`, not a `Dialog`, and the whole point is what that
- * takes AWAY. Escape is refused, a click outside is refused, and there is no
- * cancel — so the empty `onOpenChange={() => {}}` and the `showCancelButton={false}`
- * that used to say all that go with it. Every reason here is a REFUSAL with
- * nothing behind it to go back to, so dismissing it would leave somebody on a
- * product that cannot answer them, with no explanation of why.
+ * It is an `AlertDialog`, not a `Dialog`, because Escape and a click outside are
+ * refused: a refusal with nothing behind it should not be dismissable into a
+ * product that cannot answer.
+ *
+ * It offers a way out exactly when there IS one. On this machine the engine
+ * answers with no account, so a visitor refused by the estate has somewhere to
+ * go — another model in the same picker — and the gate says so and stands
+ * aside. Where there is no such origin, it is the wall it was.
  *
  * `takePending` runs in an effect rather than in a `useState` initializer.
  * Identity settles before the shell paints — a refused guest answers in
@@ -77,6 +81,7 @@ export const Gate = () => {
 
   if (!reason) return null
   const { title, message } = copy[reason]
+  const free = origins().some((origin) => origin.id === MACHINE)
 
   return (
     <AlertDialog open>
@@ -103,7 +108,15 @@ export const Gate = () => {
           </Paragraph>
         ) : null}
 
+        {free ? (
+          <Paragraph fontSize="$1" color="$color11">
+            Or pick a model under “On this machine” — those run here, cost
+            nothing and need no account.
+          </Paragraph>
+        ) : null}
+
         <AlertDialogFooter>
+          {free ? <AlertDialogCancel onPress={() => setReason(null)}>Not now</AlertDialogCancel> : null}
           <AlertDialogAction variant="outline" onPress={signUp}>
             Create an account
           </AlertDialogAction>

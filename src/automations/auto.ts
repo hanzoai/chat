@@ -16,7 +16,7 @@
  * Nothing publishes a next firing time or a lifetime run total, so neither is
  * read. The last run is the head of `/v1/auto/runs`, which is newest first.
  */
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { invalidate, useRead } from '~/data/query'
 
 /** A flow row joined to its own record. Unix milliseconds on both clocks. */
@@ -50,7 +50,7 @@ type Detail = {
 const flows = ['auto'] as const
 
 const record = async (id: string): Promise<Flow> => {
-  const one = await ai().http.json<Detail>({ method: 'GET', path: `/v1/auto/flows/${id}` })
+  const one = await client(ESTATE).http.json<Detail>({ method: 'GET', path: `/v1/auto/flows/${id}` })
   return {
     id: one.id,
     ...(one.status ? { status: one.status } : {}),
@@ -65,7 +65,7 @@ export const useFlows = (enabled: boolean) =>
   useRead<Flow[]>(
     ['auto', 'flows'],
     async () => {
-      const page = await ai().http.json<{ data?: { id: string }[] }>({
+      const page = await client(ESTATE).http.json<{ data?: { id: string }[] }>({
         method: 'GET',
         path: '/v1/auto/flows',
         query: { limit: 50 },
@@ -80,7 +80,7 @@ export const useRuns = (flowId: string | null, enabled: boolean) =>
   useRead<Run[]>(
     ['auto', 'runs', flowId ?? ''],
     async () => {
-      const page = await ai().http.json<{ data?: Run[] }>({
+      const page = await client(ESTATE).http.json<{ data?: Run[] }>({
         method: 'GET',
         path: '/v1/auto/runs',
         query: { flowId: flowId as string, limit: 20 },
@@ -92,18 +92,18 @@ export const useRuns = (flowId: string | null, enabled: boolean) =>
 
 /** Arms or disarms a flow's trigger. */
 export const arm = async (id: string, on: boolean) => {
-  await ai().http.json({ method: 'POST', path: `/v1/auto/flows/${id}/${on ? 'enable' : 'disable'}` })
+  await client(ESTATE).http.json({ method: 'POST', path: `/v1/auto/flows/${id}/${on ? 'enable' : 'disable'}` })
   invalidate(flows)
 }
 
 /** Starts one durable run now, whatever the trigger is. */
 export const start = async (id: string) => {
-  await ai().http.json({ method: 'POST', path: `/v1/auto/flows/${id}/run` })
+  await client(ESTATE).http.json({ method: 'POST', path: `/v1/auto/flows/${id}/run` })
   invalidate(flows)
 }
 
 /** Creates a flow and its first draft version. It is created DISABLED. */
 export const add = async (displayName: string) => {
-  await ai().http.json({ method: 'POST', path: '/v1/auto/flows', body: { displayName } })
+  await client(ESTATE).http.json({ method: 'POST', path: '/v1/auto/flows', body: { displayName } })
   invalidate(flows)
 }

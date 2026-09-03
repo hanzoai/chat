@@ -34,69 +34,19 @@ export type User = {
 export type Standing = 'unknown' | 'guest' | 'live'
 
 // ---------------------------------------------------------------------------
-// The deployment
+// What can be asked
 // ---------------------------------------------------------------------------
 
-/** A named, preconfigured way to ask — what the model selector actually lists. */
-export type Spec = {
-  name: string
-  label: string
-  preset: Preset
-  order?: number
-  default?: boolean
-  description?: string
-  group?: string
-  groupIcon?: string
-  showIconInMenu?: boolean
-  showIconInHeader?: boolean
-  iconURL?: string
-  webSearch?: boolean
-  fileSearch?: boolean
-  executeCode?: boolean
-  artifacts?: string | boolean
-  mcpServers?: string[]
-}
-
-/** The settings a spec carries — the same shape a conversation holds. */
-type Preset = {
-  endpoint?: string | null
-  endpointType?: string | null
-  model?: string | null
-  modelLabel?: string | null
-  promptPrefix?: string | null
-  temperature?: number | null
-  topP?: number
-  maxOutputTokens?: number | null
-  maxContextTokens?: number
-  greeting?: string
-  iconURL?: string | null
-  spec?: string | null
-  agent_id?: string
-  assistant_id?: string
-  web_search?: boolean
-  thinking?: boolean
-  fast?: boolean
-  [key: string]: unknown
-}
-
-/** One entry of `/v1/chat/endpoints` — what a provider can do here. */
-type Endpoint = {
-  order: number
-  type?: string
-  name?: string
-  iconURL?: string
-  version?: string
-  modelDisplayLabel?: string
-  userProvide?: boolean | null
-  userProvideURL?: boolean | null
-  capabilities?: string[]
-  retrievalModels?: string[]
-}
-
-export type Endpoints = Record<string, Endpoint | null>
-
-/** `/v1/chat/models` — the models each endpoint will serve. */
-export type Models = Record<string, string[]>
+/**
+ * Every model reachable, by origin then publisher.
+ *
+ * `/v1/models` is the whole input and it answers per origin, so this is two
+ * levels: WHERE it runs, and — inside that — who publishes it, which is the
+ * `owned_by` the route already carries. `Spec`, `Preset` and `Endpoint` used to
+ * live here for `/v1/chat/config` and `/v1/chat/endpoints`; neither route
+ * exists, so nothing could ever fill them.
+ */
+export type Served = Record<string, Record<string, string[]>>
 
 // ---------------------------------------------------------------------------
 // Conversations and turns

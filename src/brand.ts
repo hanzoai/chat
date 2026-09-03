@@ -51,16 +51,17 @@ export type Brand = {
   /**
    * The brand's own public pages, where it has them.
    *
-   * OPTIONAL, AND ABSENT MEANS THE LINK IS NOT DRAWN. These were four literal
-   * `hanzo.ai` addresses spread across four components, which is one bundle
-   * sending a Lux reader to Hanzo's pricing and a Zoo reader to Hanzo's docs.
-   * Naming them here makes them a brand fact like the mark and the issuer; a
-   * brand that has not stated one has no page to offer, and offering Hanzo's
-   * is worse than offering none.
+   * Optional, and absent means the link is not drawn. These are brand facts like
+   * the mark and the issuer: one bundle serves every brand, so an address written
+   * here on the assumption that it exists sends a Lux reader to Hanzo's pricing,
+   * and a consent screen pointing at a 404 is worse than a sentence with nothing
+   * to click. A brand that has not stated one has no page to offer.
    */
   site?: string
   docs?: string
   billing?: string
+  /** The terms somebody installing the desktop agrees to. */
+  terms?: string
   /**
    * The brand's `pk-` key, for asking without signing in.
    *

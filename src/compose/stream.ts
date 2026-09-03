@@ -5,7 +5,7 @@
  * values from @hanzo/ai.
  */
 import type { ChatCompletionChunk, ChatCompletionMessage } from '@hanzo/ai'
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { explain } from '~/data/types'
 
 /** How a turn ended. The shell answers each differently, so it is told which. */
@@ -42,9 +42,8 @@ export const run = (turn: Turn, ear: Ear): (() => void) => {
     ear.ended(why, fault)
   }
 
-  // Stream via @hanzo/ai SDK
-  const client = ai()
-  client.chat.completions
+  client(ESTATE)
+    .chat.completions
     .create(
       {
         model: turn.model,

@@ -19,7 +19,7 @@
  * purpose: a board IS a repository on the forge, and creating one is a forge
  * act with forge permissions.
  */
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { invalidate, useRead } from '~/data/query'
 
 /** The five columns the server recognises. An unknown value is refused with 400. */
@@ -86,7 +86,7 @@ const work = ['todo'] as const
 export const useBoards = (enabled: boolean) =>
   useRead<Board[]>(
     ['todo', 'boards'],
-    () => ai().http.json<Board[]>({ method: 'GET', path: '/v1/todo/projects' }),
+    () => client(ESTATE).http.json<Board[]>({ method: 'GET', path: '/v1/todo/projects' }),
     { enabled },
   )
 
@@ -95,7 +95,7 @@ export const useIssues = (key: string, enabled: boolean) =>
   useRead<Issue[]>(
     ['todo', 'issues', key],
     () =>
-      ai().http.json<Issue[]>({
+      client(ESTATE).http.json<Issue[]>({
         method: 'GET',
         path: '/v1/todo/board',
         query: key ? { key } : {},
@@ -108,7 +108,7 @@ export const useSearch = (q: string, enabled: boolean) =>
   useRead<Issue[]>(
     ['todo', 'search', q],
     async () => {
-      const found = await ai().http.json<{ issues?: Hit[] }>({
+      const found = await client(ESTATE).http.json<{ issues?: Hit[] }>({
         method: 'GET',
         path: '/v1/todo/issues',
         query: { q },
@@ -123,7 +123,7 @@ export const file = async (
   key: string,
   item: { title: string; description?: string; status?: Column; priority?: Priority },
 ) => {
-  await ai().http.json({ method: 'POST', path: `/v1/todo/projects/${key}/issues`, body: item })
+  await client(ESTATE).http.json({ method: 'POST', path: `/v1/todo/projects/${key}/issues`, body: item })
   invalidate(work)
 }
 
@@ -139,7 +139,7 @@ export const edit = async (
     assignee?: string
   },
 ) => {
-  await ai().http.json({
+  await client(ESTATE).http.json({
     method: 'PATCH',
     path: `/v1/todo/projects/${key}/issues/${num}`,
     body: patch,
@@ -149,6 +149,6 @@ export const edit = async (
 
 /** Takes an issue: it becomes the caller's and moves to `in_progress`. */
 export const claim = async (key: string, num: number) => {
-  await ai().http.json({ method: 'POST', path: `/v1/todo/projects/${key}/issues/${num}/claim` })
+  await client(ESTATE).http.json({ method: 'POST', path: `/v1/todo/projects/${key}/issues/${num}/claim` })
   invalidate(work)
 }

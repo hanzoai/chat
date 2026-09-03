@@ -13,7 +13,7 @@
  */
 import type { Person } from '@hanzo/ai'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import { invalidate, useRead } from '~/data/query'
 
 /** A project row, as `/v1/projects` answers it. `slug` is what addresses it. */
@@ -36,7 +36,7 @@ const all = ['projects'] as const
 export const useProjects = (enabled: boolean) =>
   useRead<Project[]>(
     ['projects', 'list'],
-    () => ai().http.json<Project[]>({ method: 'GET', path: '/v1/projects' }),
+    () => client(ESTATE).http.json<Project[]>({ method: 'GET', path: '/v1/projects' }),
     { enabled },
   )
 
@@ -44,13 +44,13 @@ export const useProjects = (enabled: boolean) =>
 export const usePeople = (owner: string | undefined, enabled: boolean) =>
   useRead<Person[]>(
     ['people', owner ?? ''],
-    () => ai().people.list({ owner: owner as string }),
+    () => client(ESTATE).people.list({ owner: owner as string }),
     { enabled: enabled && Boolean(owner) },
   )
 
 /** Creates a project in the caller's org. `name` is the only required field. */
 export const create = async (name: string, description?: string) => {
-  await ai().http.json({
+  await client(ESTATE).http.json({
     method: 'POST',
     path: '/v1/projects',
     body: { name, ...(description ? { description } : {}) },
@@ -60,7 +60,7 @@ export const create = async (name: string, description?: string) => {
 
 /** Bookmarks a project for the caller alone, or takes that bookmark back. */
 export const star = async (slug: string, on: boolean) => {
-  await ai().http.json({
+  await client(ESTATE).http.json({
     method: on ? 'PUT' : 'DELETE',
     path: `/v1/projects/${slug}/star`,
   })

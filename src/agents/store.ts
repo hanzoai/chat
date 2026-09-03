@@ -14,7 +14,7 @@
 import { APIError, type Agent, type AgentCreateParams, type AgentDetail, type AgentRun } from '@hanzo/ai'
 import { useEffect, useState } from 'react'
 
-import { ai } from '~/data/ai'
+import { client, ESTATE } from '~/data/origin'
 import type { Key } from '~/data/keys'
 import { invalidate, useRead } from '~/data/query'
 import { useSession } from '~/data/session'
@@ -35,13 +35,13 @@ const one = (ref: string): Key => ['agents', 'one', ref]
 /** Every agent the org has defined, each with its recorded run count. */
 export const useAgents = () => {
   const { standing } = useSession()
-  return useRead<Agent[]>(set, () => ai().agents.list(), { enabled: standing === 'live' })
+  return useRead<Agent[]>(set, () => client(ESTATE).agents.list(), { enabled: standing === 'live' })
 }
 
 /** One agent with its system prompt and its most recent runs. */
 export const useAgent = (ref: string | null) => {
   const { standing } = useSession()
-  return useRead<AgentDetail>(one(ref ?? ''), () => ai().agents.get(ref as string), {
+  return useRead<AgentDetail>(one(ref ?? ''), () => client(ESTATE).agents.get(ref as string), {
     enabled: standing === 'live' && Boolean(ref),
   })
 }
@@ -49,7 +49,7 @@ export const useAgent = (ref: string | null) => {
 /** The tool names an agent may be granted. The same catalogue a run resolves. */
 export const useTools = (enabled = true) => {
   const { standing } = useSession()
-  return useRead(['tools'] as Key, () => ai().tools.list(), {
+  return useRead(['tools'] as Key, () => client(ESTATE).tools.list(), {
     enabled: enabled && standing === 'live',
     fresh: 300_000,
   })
@@ -57,14 +57,14 @@ export const useTools = (enabled = true) => {
 
 /** Defines an agent in the caller's org. */
 export const create = async (params: AgentCreateParams): Promise<Agent> => {
-  const agent = await ai().agents.create(params)
+  const agent = await client(ESTATE).agents.create(params)
   invalidate(set)
   return agent
 }
 
 /** Removes an agent and every run recorded against it. */
 export const remove = async (ref: string): Promise<void> => {
-  await ai().agents.delete(ref)
+  await client(ESTATE).agents.delete(ref)
   swarmStore.deselect(ref)
   invalidate(set)
 }
@@ -78,7 +78,7 @@ export const remove = async (ref: string): Promise<void> => {
  */
 export const run = async (ref: string, input: string): Promise<AgentRun> => {
   try {
-    return await ai().agents.run(ref, input)
+    return await client(ESTATE).agents.run(ref, input)
   } catch (failure) {
     const recorded = failure instanceof APIError ? (failure.body as AgentRun | undefined) : undefined
     if (recorded?.status) return recorded

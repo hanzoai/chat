@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client'
 
 import { App } from '~/app'
 import { brand, wear } from '~/brand'
+import { unlock } from '~/data/vault'
 
 /**
  * The mount. Three lines, and the second one is the whole design system.
@@ -29,10 +30,18 @@ import { brand, wear } from '~/brand'
  */
 wear()
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Hanzo theme={brand.backdrop}>
-      <App />
-    </Hanzo>
-  </StrictMode>,
+/**
+ * The session is read off the machine BEFORE anything renders, because
+ * `Storage` is synchronous and a keychain is not: a store that answered null
+ * while it was still loading would sign everybody out at launch. On the web
+ * there is nothing to read and this settles in a microtask.
+ */
+void unlock().then(() =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <Hanzo theme={brand.backdrop}>
+        <App />
+      </Hanzo>
+    </StrictMode>,
+  ),
 )
