@@ -7,14 +7,29 @@ import { iam } from '~/data/iam'
 
 let client: AiClient | null = null
 
+/**
+ * Where the API is, when it is not where the SDK assumes.
+ *
+ * A named address wins: `VITE_HANZO_API` points a run at a local cloud, and
+ * `VITE_HANZO_IAM` moves the bearer with it — WHERE the API is and WHO is
+ * calling it are separate questions, and naming only the first answered 401 on
+ * every call.
+ *
+ * Unnamed, a DEV run is the origin serving this document. The SDK's default is
+ * absolute, and api.hanzo.ai grants CORS to the hosts a brand states and to no
+ * loopback origin, so an unset variable sends every call cross-origin to a
+ * preflight that fails — a shell that paints and then holds nothing, which is
+ * the failure this reads as. The `/v1` proxy in `vite.config.ts` exists to
+ * carry those calls and can only carry a same-origin path. A built app keeps
+ * the SDK's default, which is the host that already answers for its origin.
+ */
+const where = (): string | undefined =>
+  (import.meta.env.VITE_HANZO_API as string) ||
+  (import.meta.env.DEV ? window.location.origin : undefined)
+
 export const ai = (): AiClient =>
   (client ??= createAiClient({
     publishableKey: brand.publishableKey,
     auth: iam(),
-    // WHERE the API is and WHO is calling it are separate questions. Pointing
-    // the base URL at a local cloud used to drop the bearer with it, so every
-    // call to that cloud answered 401 — the one arrangement a local run needs.
-    ...(import.meta.env.VITE_HANZO_API
-      ? { baseUrl: import.meta.env.VITE_HANZO_API as string }
-      : {}),
+    ...(where() ? { baseUrl: where() as string } : {}),
   }))
