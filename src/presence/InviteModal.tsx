@@ -113,11 +113,10 @@ export const InviteModal = (_: { conversationId?: string | null }) => {
               </SizableText>
               <div
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
+                  display: 'grid',
                   gap: 6,
                   maxHeight: 280,
-                  overflowY: 'auto',
+                  overflowY: 'auto'
                 }}
               >
                 {participants.map((p) => (

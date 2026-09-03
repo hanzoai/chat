@@ -90,8 +90,7 @@ export const ProjectModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -236,13 +235,12 @@ export const ProjectModal = () => {
                     borderRadius: 12,
                     background: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
+                    display: 'grid',
+                    gap: 10
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                    <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
                       <span style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>
                         {project.name}
                       </span>

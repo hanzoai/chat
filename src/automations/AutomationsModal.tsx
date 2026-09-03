@@ -87,8 +87,7 @@ export const AutomationsModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -188,9 +187,8 @@ export const AutomationsModal = () => {
                       border: open
                         ? '1px solid rgba(96, 165, 250, 0.4)'
                         : '1px solid rgba(255, 255, 255, 0.08)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10,
+                      display: 'grid',
+                      gap: 10
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -284,10 +282,9 @@ export const AutomationsModal = () => {
                         style={{
                           borderTop: '1px solid rgba(255, 255, 255, 0.06)',
                           paddingTop: 10,
-                          display: 'flex',
-                          flexDirection: 'column',
+                          display: 'grid',
                           gap: 6,
-                          fontSize: 11.5,
+                          fontSize: 11.5
                         }}
                       >
                         {history.pending && !history.data && (

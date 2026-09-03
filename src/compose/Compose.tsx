@@ -343,10 +343,9 @@ export const Compose = ({
             ? '0 16px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(52, 211, 153, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.18)'
             : '0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
           padding: '14px 16px 12px 16px',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid',
           gap: 10,
-          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
         onPaste={handlePaste}
       >

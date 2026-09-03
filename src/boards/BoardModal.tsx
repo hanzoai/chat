@@ -130,8 +130,7 @@ export const BoardModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -314,10 +313,9 @@ export const BoardModal = () => {
                               card === issue.identifier
                                 ? '1px solid rgba(96, 165, 250, 0.5)'
                                 : '1px solid rgba(255, 255, 255, 0.08)',
-                            display: 'flex',
-                            flexDirection: 'column',
+                            display: 'grid',
                             gap: 6,
-                            cursor: 'pointer',
+                            cursor: 'pointer'
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

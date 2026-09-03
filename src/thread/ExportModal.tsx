@@ -122,9 +122,8 @@ export const ExportModal = () => {
           border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: 20,
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
+          display: 'grid',
+          overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
         data-testid="export-modal"
@@ -186,7 +185,7 @@ export const ExportModal = () => {
         </div>
 
         {/* Action Options */}
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ padding: '20px', display: 'grid', gap: 10 }}>
           {/* Download Markdown */}
           <button
             type="button"

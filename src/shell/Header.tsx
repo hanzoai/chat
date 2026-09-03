@@ -202,10 +202,9 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
               boxShadow: '0 16px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px)',
               padding: 6,
-              display: 'flex',
-              flexDirection: 'column',
+              display: 'grid',
               gap: 2,
-              zIndex: 100,
+              zIndex: 100
             }}
           >
             <button

@@ -75,8 +75,7 @@ export const IntelligenceModal = () => {
         style={{
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e: any) => e.stopPropagation()}
       >

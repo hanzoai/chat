@@ -156,10 +156,9 @@ export const SwarmBar = () => {
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             padding: 12,
-            display: 'flex',
-            flexDirection: 'column',
+            display: 'grid',
             gap: 10,
-            zIndex: 50,
+            zIndex: 50
           }}
         >
           <YStack gap="$1.5">

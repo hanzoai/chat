@@ -102,8 +102,7 @@ export const TaskQueueModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -168,10 +167,9 @@ export const TaskQueueModal = () => {
                 borderRight: '1px solid rgba(255, 255, 255, 0.08)',
                 backgroundColor: 'rgba(255, 255, 255, 0.01)',
                 padding: 10,
-                display: 'flex',
-                flexDirection: 'column',
+                display: 'grid',
                 gap: 8,
-                overflowY: 'auto',
+                overflowY: 'auto'
               }}
             >
               {rows.map((row: Session) => {
@@ -184,8 +182,7 @@ export const TaskQueueModal = () => {
                     onClick={() => taskQueueStore.select(row.id)}
                     className="tap"
                     style={{
-                      display: 'flex',
-                      flexDirection: 'column',
+                      display: 'grid',
                       gap: 6,
                       padding: '9px 12px',
                       borderRadius: 8,
@@ -194,7 +191,7 @@ export const TaskQueueModal = () => {
                       color: '#ffffff',
                       cursor: 'pointer',
                       textAlign: 'left',
-                      width: '100%',
+                      width: '100%'
                     }}
                   >
                     <div
@@ -269,7 +266,7 @@ export const TaskQueueModal = () => {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: '#ffffff' }}>
                     {detail?.title || id}
                   </div>

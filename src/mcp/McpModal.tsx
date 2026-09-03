@@ -179,7 +179,7 @@ const Connect = () => {
           setHeader('')
           setSecret('')
         }}
-        style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+        style={{ display: 'grid', gap: 10 }}
       >
         <SizableText size="$2" fontWeight="700" color="$ink">
           Or name an endpoint
@@ -368,7 +368,7 @@ export const McpModal = () => {
         borderWidth={1}
         borderColor="rgba(255, 255, 255, 0.12)"
         backgroundColor="#0c0c0e"
-        style={{ boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        style={{ boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)', overflow: 'hidden', display: 'grid' }}
         onClick={(e: any) => e.stopPropagation()}
       >
         <XStack

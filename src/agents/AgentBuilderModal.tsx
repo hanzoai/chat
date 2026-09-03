@@ -154,7 +154,7 @@ export const AgentBuilderModal = ({ isOpen, onClose }: AgentBuilderProps) => {
           </button>
         </XStack>
 
-        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
           <XStack gap="$3">
             <YStack flex={1} gap="$1.5">
               <SizableText size="$1" fontWeight="600" color="$ink">

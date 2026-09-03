@@ -37,11 +37,10 @@ const POPOVER_STYLE: CSSProperties = {
   borderRadius: 14,
   boxShadow: '0 16px 48px -8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
   padding: '10px 8px',
-  display: 'flex',
-  flexDirection: 'column',
+  display: 'grid',
   gap: 4,
   zIndex: 1000,
-  animation: 'popoverIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+  animation: 'popoverIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
 }
 
 const ITEM_STYLE: CSSProperties = {

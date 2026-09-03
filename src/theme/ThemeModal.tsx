@@ -40,9 +40,8 @@ export const ThemeModal = () => {
           border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: 20,
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
+          display: 'grid',
+          overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
         data-testid="theme-modal"
@@ -104,9 +103,9 @@ export const ThemeModal = () => {
         </div>
 
         {/* Content */}
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ padding: '20px', display: 'grid', gap: 20 }}>
           {/* Accent Colors */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gap: 8 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255, 255, 255, 0.45)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Accent Color Palette
             </div>
@@ -156,7 +155,7 @@ export const ThemeModal = () => {
           </div>
 
           {/* Glass Blur Slider */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255, 255, 255, 0.45)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 Backdrop Blur Intensity
@@ -174,7 +173,7 @@ export const ThemeModal = () => {
           </div>
 
           {/* Glass Surface Opacity Slider */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255, 255, 255, 0.45)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 Glass Surface Opacity
