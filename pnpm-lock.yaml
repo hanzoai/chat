@@ -22,8 +22,8 @@ catalogs:
       specifier: 8.27.7
       version: 8.27.7
     '@hanzo/vite':
-      specifier: 0.1.1
-      version: 0.1.1
+      specifier: 0.1.3
+      version: 0.1.3
     '@hanzogui/lucide-icons-2':
       specifier: 8.3.1
       version: 8.3.1
@@ -119,7 +119,7 @@ importers:
     devDependencies:
       '@hanzo/vite':
         specifier: 'catalog:'
-        version: 0.1.1(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))
+        version: 0.1.3(react@19.2.8)(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))
       '@types/node':
         specifier: 'catalog:'
         version: 26.4.1
@@ -595,6 +595,11 @@ packages:
       react:
         optional: true
 
+  '@hanzo/source@0.1.0':
+    resolution: {integrity: sha512-8OZNnKavcVSINtGuyEJ+BBXGtD4mkH3u/nRjVeWDc3iouyT6cUaHCYSpsGPpBapJCmrJj/u5CfaZ9CY0Nw40oA==}
+    peerDependencies:
+      react: '>=19'
+
   '@hanzo/ui@8.27.7':
     resolution: {integrity: sha512-Kyk9YoCzjX0O39h8+ZahbFGZv4Lqr0iJRvN0UlUWoeY+Y8CPcEhvKB00LUcjs8mXA5yEFgrL74dZx3aFsEQ9AQ==}
     peerDependencies:
@@ -633,10 +638,10 @@ packages:
       react-hook-form:
         optional: true
 
-  '@hanzo/vite@0.1.1':
-    resolution: {integrity: sha512-sdisBFwBTeDPKgyM8BLR3lQYLtnqBA/ehK3tzgEZ0jfQdfsxYKWn8x2wmAW1IMbzfpU3qguyXP238QoPihE1xw==}
+  '@hanzo/vite@0.1.3':
+    resolution: {integrity: sha512-aLoZcxhzR4pcOwdzHr10t7lKBquy9bYtyNN0lUChtD1ndPeEU/6aJB1owDpPhXVJg1lSsg+JuoPrejPvxtLQ8w==}
     peerDependencies:
-      vite: '>=6'
+      vite: '>=8'
 
   '@hanzogui/accordion@8.3.1':
     resolution: {integrity: sha512-78V9VrhpNP3t6A1ZICD3FEkUmKrvdm4SNLYw+C6p3UJDK+AOW3xIbI+L7RJOh3MRsiuZELQ91Y+vEvhcgYpmQw==}
@@ -3885,6 +3890,10 @@ snapshots:
       '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(react-native@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
+  '@hanzo/source@0.1.0(react@19.2.8)':
+    dependencies:
+      react: 19.2.8
+
   '@hanzo/ui@8.27.7(40a7741dcbd8dfdbb1111d83944d9d5a)':
     dependencies:
       '@hanzo/appearance': 0.2.2(react@19.2.8)
@@ -3913,9 +3922,12 @@ snapshots:
       - encoding
       - prop-types
 
-  '@hanzo/vite@0.1.1(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))':
+  '@hanzo/vite@0.1.3(react@19.2.8)(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))':
     dependencies:
+      '@hanzo/source': 0.1.0(react@19.2.8)
       vite: 8.2.2(@types/node@26.4.1)(terser@5.50.0)
+    transitivePeerDependencies:
+      - react
 
   '@hanzogui/accordion@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:

@@ -8,6 +8,7 @@
     "noEmit": false,
     "declaration": true,
     "declarationMap": true,
+    "sourceMap": true,
     // Source names the file it means, so `node --test` can run it straight; on
     // emit the same specifier becomes the `.js` beside it, which is the only
     // spelling Node resolves in a package.
