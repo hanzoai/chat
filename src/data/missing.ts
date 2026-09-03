@@ -47,7 +47,14 @@ export const awaiting: Record<Gap, string> = {
   tools: 'chat.completions.create({ tools })',
   /** The verb exists; `/v1/models` publishes no transcription model to name. */
   dictate: 'a transcription model in models.list()',
-  /** `createAiClient` takes no `publishableKey` at 0.6.7, and `auth` alone
-   *  throws before sending for a browser with no session. */
-  anonymous: "createAiClient({ publishableKey: 'pk-…' })",
+  /**
+   * NOT the SDK's to close. `createAiClient` takes a `publishableKey` at 0.6.16
+   * and `ai.ts` passes the brand's, so the client side of this is done. The
+   * gateway is what refuses: a `pk-` reaches `/v1/models`, `/v1/embeddings` and
+   * `/health`, and answers 403 on `/v1/chat/completions` — *"Use a secret key
+   * (sk-)"* — while no bearer at all answers 401. A secret key in a browser is
+   * not the fix, so this waits on the gateway serving anonymous turns on a
+   * publishable key.
+   */
+  anonymous: 'the gateway admitting pk- on /v1/chat/completions',
 }
