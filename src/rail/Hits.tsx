@@ -2,10 +2,10 @@ import { SizableText, YStack } from '@hanzo/ui'
 import { SidebarScroll, SidebarSection } from '@hanzo/ui/chat'
 import { useMemo } from 'react'
 
-import type { Convo } from '../data/types'
+import type { Convo } from '../data/types.ts'
 
-import { hits, id } from './group'
-import { Item } from './Item'
+import { hits, id } from './group.ts'
+import { Item } from './Item.tsx'
 
 /**
  * What finding one found.

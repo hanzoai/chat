@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 
-import { Boundary } from './shell/Boundary'
-import { Callback } from './shell/Callback'
-import { Chat } from './shell/Chat'
-import { Login } from './shell/Login'
-import { Root } from './shell/Root'
+import { Boundary } from './shell/Boundary.tsx'
+import { Callback } from './shell/Callback.tsx'
+import { Chat } from './shell/Chat.tsx'
+import { Login } from './shell/Login.tsx'
+import { Root } from './shell/Root.tsx'
 
 /**
  * Where the app is mounted, from the document that served it.

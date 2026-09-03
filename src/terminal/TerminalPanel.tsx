@@ -11,8 +11,8 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import type { SandboxRuntime } from '@hanzo/ai'
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 
-import { sandbox, useLease, type Line } from './sandbox'
-import { terminalStore, useTerminal } from './store'
+import { sandbox, useLease, type Line } from './sandbox.ts'
+import { terminalStore, useTerminal } from './store.ts'
 
 const ACTION: CSSProperties = {
   display: 'inline-flex',

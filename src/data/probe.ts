@@ -1,7 +1,7 @@
 /**
  * Ask the issuer, once per visit, whether this browser is already signed in.
  */
-import { keepHere } from './back'
+import { keepHere } from './back.ts'
 
 const SLOT = 'chat.probed'
 

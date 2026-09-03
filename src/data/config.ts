@@ -16,10 +16,10 @@
  * always was; what a guest may do is decided server-side from the absence of a
  * bearer, which is where it belongs and where it was already decided.
  */
-import { keys } from './keys'
-import { client, origins } from './origin'
-import { useRead } from './query'
-import type { Served } from './types'
+import { keys } from './keys.ts'
+import { client, origins } from './origin.ts'
+import { useRead } from './query.ts'
+import type { Served } from './types.ts'
 
 /** Who publishes a model, when it says. The menu's fallback group. */
 const OTHER = 'other'

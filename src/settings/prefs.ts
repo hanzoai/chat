@@ -1,4 +1,4 @@
-import { atom, useAtom, type Atom } from '../data/store'
+import { atom, useAtom, type Atom } from '../data/store.ts'
 
 /**
  * Every preference that outlives the tab, and the only code in this app that

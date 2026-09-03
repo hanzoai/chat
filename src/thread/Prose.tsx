@@ -13,7 +13,7 @@
  */
 import { Paragraph, YStack } from '@hanzo/ui'
 
-import { Markdown } from './markdown'
+import { Markdown } from './markdown.tsx'
 
 export interface ProseProps {
   source: string

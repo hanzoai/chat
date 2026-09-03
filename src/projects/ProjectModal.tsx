@@ -8,10 +8,10 @@
 import { Building2, FolderGit2, Plus, Star, UserCheck, X } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
 
-import { useSession } from '../data/session'
+import { useSession } from '../data/session.tsx'
 
-import { create, star, useProjects, usePeople } from './projects'
-import { projectsStore, useProjectPanel } from './store'
+import { create, star, useProjects, usePeople } from './projects.ts'
+import { projectsStore, useProjectPanel } from './store.ts'
 
 const field = {
   padding: '8px 12px',

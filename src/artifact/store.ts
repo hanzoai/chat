@@ -10,7 +10,7 @@
  * An artifact opens EMPTY. There is no code here until a fenced block or the
  * palette puts some here.
  */
-import { sandbox } from '../terminal/sandbox'
+import { sandbox } from '../terminal/sandbox.ts'
 
 import { useEffect, useState } from 'react'
 

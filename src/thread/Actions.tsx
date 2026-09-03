@@ -13,7 +13,7 @@ import { Pencil, RefreshCw, ThumbsDown, ThumbsUp } from '@hanzogui/lucide-icons-
 import { Button, XStack } from '@hanzo/ui'
 import { CopyButton, TooltipAnchor } from '@hanzo/ui/product'
 
-import type { Vote } from './tree'
+import type { Vote } from './tree.ts'
 
 export interface ActionsProps {
   /** The turn as text — what copy puts on the clipboard. */

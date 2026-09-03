@@ -1,8 +1,8 @@
 import { Paragraph, YStack } from '@hanzo/ui'
 import { rows } from '@hanzo/ui/glass'
 
-import { Toggle } from './General'
-import { compact, full } from './prefs'
+import { Toggle } from './General.tsx'
+import { compact, full } from './prefs.ts'
 
 /**
  * How the conversation reads.

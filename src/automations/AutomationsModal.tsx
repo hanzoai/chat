@@ -9,10 +9,10 @@
 import { Clock, Play, Plus, X, Zap } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
 
-import { useSession } from '../data/session'
+import { useSession } from '../data/session.tsx'
 
-import { add, arm, start, useFlows, useRuns } from './auto'
-import { automationsStore, useAutomations } from './store'
+import { add, arm, start, useFlows, useRuns } from './auto.ts'
+import { automationsStore, useAutomations } from './store.ts'
 
 const clock = (at?: number) => (at ? new Date(at).toLocaleString() : '')
 

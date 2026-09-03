@@ -25,7 +25,7 @@
  */
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
-import type { Key } from './keys'
+import type { Key } from './keys.ts'
 
 /** A separator no key part contains, so a prefix match is a real prefix. */
 const SEP = ''

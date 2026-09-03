@@ -11,7 +11,7 @@
  * go, and where this app's own doorway is. Both are navigations rather than
  * requests — the browser leaves — so neither can be a method call.
  */
-import { brand, clientId } from '../brand'
+import { brand, clientId } from '../brand.ts'
 
 export const api = {
   /**

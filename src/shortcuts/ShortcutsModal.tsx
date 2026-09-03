@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Keyboard, X } from '@hanzogui/lucide-icons-2'
-import { shortcutsStore, useShortcuts } from './store'
+import { shortcutsStore, useShortcuts } from './store.ts'
 
 interface ShortcutItem {
   keys: string[]

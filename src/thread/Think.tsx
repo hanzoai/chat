@@ -13,7 +13,7 @@
 import { Step } from '@hanzo/ui/chat'
 import { useState } from 'react'
 
-import { Prose } from './Prose'
+import { Prose } from './Prose.tsx'
 
 export interface ThinkProps {
   text: string

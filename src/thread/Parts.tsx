@@ -12,13 +12,13 @@
  */
 import { Failure } from '@hanzo/ui/chat'
 
-import type { Message, Part } from '../data/types'
-import { Files } from './Files'
-import { Picture } from './Picture'
-import { Prose } from './Prose'
-import { Think } from './Think'
-import { Tool } from './Tool'
-import { value } from './tree'
+import type { Message, Part } from '../data/types.ts'
+import { Files } from './Files.tsx'
+import { Picture } from './Picture.tsx'
+import { Prose } from './Prose.tsx'
+import { Think } from './Think.tsx'
+import { Tool } from './Tool.tsx'
+import { value } from './tree.ts'
 
 const OOPS = 'Something went wrong.'
 

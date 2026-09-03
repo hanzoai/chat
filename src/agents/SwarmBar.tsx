@@ -11,8 +11,8 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useRef, useState } from 'react'
 import type { Agent } from '@hanzo/ai'
 
-import { useMultiplayer } from '../presence/store'
-import { none, swarmStore, unread, useAgents, useSwarm } from './store'
+import { useMultiplayer } from '../presence/store.ts'
+import { none, swarmStore, unread, useAgents, useSwarm } from './store.ts'
 
 /** An agent's face: the glyph somebody picked, or its initial. */
 const face = (agent: Agent) => agent.emoji || agent.name.charAt(0).toUpperCase()

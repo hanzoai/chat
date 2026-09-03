@@ -14,8 +14,8 @@ import { row, rows } from '@hanzo/ui/glass'
 import { ConfirmDelete, DialogTemplate } from '@hanzo/ui/product'
 import { useState } from 'react'
 
-import { api } from '../data/api'
-import type { User } from '../data/types'
+import { api } from '../data/api.ts'
+import type { User } from '../data/types.ts'
 
 
 export interface AccountProps {

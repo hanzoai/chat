@@ -7,9 +7,9 @@ import '@hanzo/font/css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import { App } from './app'
-import { brand, wear } from './brand'
-import { unlock } from './data/vault'
+import { App } from './app.tsx'
+import { brand, wear } from './brand.ts'
+import { unlock } from './data/vault.ts'
 
 /**
  * The mount. Three lines, and the second one is the whole design system.

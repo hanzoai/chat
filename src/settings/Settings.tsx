@@ -16,12 +16,12 @@ import {
 import { selected } from '@hanzo/ui/glass'
 import { useState, type ReactNode } from 'react'
 
-import { Account, type AccountProps } from './Account'
-import { AiSettings } from './AiSettings'
-import { General } from './General'
-import { Look } from './Look'
-import { McpSettings } from './McpSettings'
-import type { Served } from '../data/types'
+import { Account, type AccountProps } from './Account.tsx'
+import { AiSettings } from './AiSettings.tsx'
+import { General } from './General.tsx'
+import { Look } from './Look.tsx'
+import { McpSettings } from './McpSettings.tsx'
+import type { Served } from '../data/types.ts'
 
 export interface SettingsProps {
   open: boolean

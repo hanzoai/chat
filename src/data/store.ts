@@ -19,7 +19,7 @@
  */
 import { useSyncExternalStore } from 'react'
 
-import type { Convo, Failure, Message } from './types'
+import type { Convo, Failure, Message } from './types.ts'
 
 export type Atom<T> = {
   /** The value, right now. */

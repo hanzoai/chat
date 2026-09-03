@@ -20,7 +20,7 @@
  * Everything a brand can differ by is HERE, because split across two homes it
  * gets half-applied and every brand ends up wearing the first one's name.
  */
-import { shell } from './data/shell'
+import { shell } from './data/shell.ts'
 
 export type Brand = {
   /** IAM organization, lowercase. The OAuth client is `<org>-<app>`. */

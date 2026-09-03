@@ -21,12 +21,12 @@
  */
 import { APIError, rooms as group, type Channel, type Room } from '@hanzo/ai'
 
-import { client, ESTATE } from '../data/origin'
-import type { Key } from '../data/keys'
-import { peek, useRead, type Read } from '../data/query'
-import { useSession } from '../data/session'
-import { atom, useAtom } from '../data/store'
-import { explain } from '../data/types'
+import { client, ESTATE } from '../data/origin.ts'
+import type { Key } from '../data/keys.ts'
+import { peek, useRead, type Read } from '../data/query.ts'
+import { useSession } from '../data/session.tsx'
+import { atom, useAtom } from '../data/store.ts'
+import { explain } from '../data/types.ts'
 
 /** Two cache keys under one prefix, so both drop together. */
 const TRANSPORTS: Key = ['channels', 'transports']

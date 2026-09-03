@@ -13,8 +13,8 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { X } from '@hanzogui/lucide-icons-2'
 import { useEffect } from 'react'
 
-import { why } from '../data/missing'
-import { channelsStore, refusal, speaker, useChannels, useTransports, when } from './store'
+import { why } from '../data/missing.ts'
+import { channelsStore, refusal, speaker, useChannels, useTransports, when } from './store.ts'
 
 const Note = ({ children }: { children: string }) => (
   <SizableText size="$1" style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.45)' }}>

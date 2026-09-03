@@ -1,6 +1,6 @@
 import { View } from '@hanzo/ui'
 
-import { brand } from '../brand'
+import { brand } from '../brand.ts'
 
 /**
  * The immersive ground the whole product floats on.

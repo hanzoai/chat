@@ -12,8 +12,8 @@
 import { Step, type Ran } from '@hanzo/ui/chat'
 import type { ReactNode } from 'react'
 
-import type { ToolCall } from '../data/types'
-import { Fence } from './Fence'
+import type { ToolCall } from '../data/types.ts'
+import { Fence } from './Fence.tsx'
 
 /** Tools whose name is machinery. Everything else reads fine as it arrives. */
 const NAMES: Record<string, string> = {

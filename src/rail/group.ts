@@ -1,4 +1,4 @@
-import type { Convo } from '../data/types'
+import type { Convo } from '../data/types.ts'
 
 /**
  * The SET, ordered and named — the only rules about a list of conversations

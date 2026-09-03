@@ -1,7 +1,7 @@
 import type { ModelCatalogEntry } from '@hanzo/ui/models'
 
-import type { Origin } from '../data/origin'
-import type { Served } from '../data/types'
+import type { Origin } from '../data/origin.ts'
+import type { Served } from '../data/types.ts'
 
 /**
  * What can be asked, as ONE list a picker can read.

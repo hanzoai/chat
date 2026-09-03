@@ -1,9 +1,9 @@
 import { Paragraph, SizableText, Switch, XStack, YStack } from '@hanzo/ui'
 import { row, rows } from '@hanzo/ui/glass'
 
-import { Model } from './Model'
-import type { Served } from '../data/types'
-import { model, steps, temporary, usePref, type Pref } from './prefs'
+import { Model } from './Model.tsx'
+import type { Served } from '../data/types.ts'
+import { model, steps, temporary, usePref, type Pref } from './prefs.ts'
 
 /**
  * One preference, as a line: the name, what it does under it, the switch hard

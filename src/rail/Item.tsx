@@ -1,9 +1,9 @@
 import { Spinner } from '@hanzo/ui'
 import { SidebarItem } from '@hanzo/ui/chat'
 
-import type { Convo } from '../data/types'
+import type { Convo } from '../data/types.ts'
 
-import { named } from './group'
+import { named } from './group.ts'
 
 /**
  * ONE conversation, as a row.

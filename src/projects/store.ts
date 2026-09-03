@@ -5,7 +5,7 @@
  * and the org is the principal's, so the only thing left to hold is whether
  * this panel is open and which of its two lists is in front.
  */
-import { atom, useAtom } from '../data/store'
+import { atom, useAtom } from '../data/store.ts'
 
 export type Pane = 'projects' | 'people'
 

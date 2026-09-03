@@ -8,8 +8,8 @@
 import { Paperclip } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack } from '@hanzo/ui'
 
-import type { Attachment } from '../data/types'
-import { Picture } from './Picture'
+import type { Attachment } from '../data/types.ts'
+import { Picture } from './Picture.tsx'
 
 const UNITS = ['B', 'KB', 'MB', 'GB']
 

@@ -1,9 +1,9 @@
 import { ModelSelector } from '@hanzo/ui/models'
 import { useMemo } from 'react'
 
-import { origins } from '../data/origin'
-import type { Served } from '../data/types'
-import { catalog } from './models'
+import { origins } from '../data/origin.ts'
+import type { Served } from '../data/types.ts'
+import { catalog } from './models.ts'
 
 /**
  * Which model answers — one control, every surface that asks.

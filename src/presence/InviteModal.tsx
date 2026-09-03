@@ -16,8 +16,8 @@ import { APIError } from '@hanzo/ai'
 import { Users, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 
-import { initial, label, tint } from './person'
-import { multiplayerStore, useMultiplayer } from './store'
+import { initial, label, tint } from './person.ts'
+import { multiplayerStore, useMultiplayer } from './store.ts'
 
 /** What an empty roster means. The refusal is the contract's own sentence. */
 const nothing = (error: unknown, pending: boolean): string => {

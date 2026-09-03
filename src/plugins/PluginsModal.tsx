@@ -10,9 +10,9 @@
 import { Blocks, Search, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
-import { requireLogin } from '../data/gate'
-import { useSession } from '../data/session'
-import { pluginsStore, usePlugins } from './store'
+import { requireLogin } from '../data/gate.ts'
+import { useSession } from '../data/session.tsx'
+import { pluginsStore, usePlugins } from './store.ts'
 
 const dim = 'rgba(255, 255, 255, 0.5)'
 const faint = 'rgba(255, 255, 255, 0.4)'

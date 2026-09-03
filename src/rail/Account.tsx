@@ -2,7 +2,7 @@
  * The bottom user menu popover in the rail with Linear.app style liquid-glass aesthetics,
  * org switcher, account controls, and appearance options.
  */
-import { api } from '../data/api'
+import { api } from '../data/api.ts'
 import {
   ChevronsUpDown,
   ExternalLink,

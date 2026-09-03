@@ -10,9 +10,9 @@
 import { ArrowLeft, ArrowRight, Hand, Kanban, Plus, Search, X } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
 
-import { useSession } from '../data/session'
+import { useSession } from '../data/session.tsx'
 
-import { boardStore, useBoard } from './store'
+import { boardStore, useBoard } from './store.ts'
 import {
   COLUMNS,
   PRIORITIES,
@@ -25,7 +25,7 @@ import {
   type Column,
   type Issue,
   type Priority,
-} from './todo'
+} from './todo.ts'
 
 const columnLook: Record<Column, { title: string; color: string }> = {
   backlog: { title: 'Backlog', color: 'rgba(255, 255, 255, 0.4)' },

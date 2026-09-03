@@ -13,8 +13,8 @@
  */
 import type { Person } from '@hanzo/ai'
 
-import { client, ESTATE } from '../data/origin'
-import { invalidate, useRead } from '../data/query'
+import { client, ESTATE } from '../data/origin.ts'
+import { invalidate, useRead } from '../data/query.ts'
 
 /** A project row, as `/v1/projects` answers it. `slug` is what addresses it. */
 export type Project = {

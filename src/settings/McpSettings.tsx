@@ -4,7 +4,7 @@
 import { Blocks, ExternalLink, Power } from '@hanzogui/lucide-icons-2'
 import { Paragraph, SizableText, XStack, YStack } from '@hanzo/ui'
 import { row, rows } from '@hanzo/ui/glass'
-import { mcpStore, useMcp } from '../mcp/store'
+import { mcpStore, useMcp } from '../mcp/store.ts'
 
 export function McpSettings() {
   const { servers } = useMcp()

@@ -16,10 +16,10 @@
  * 200 with an empty transcript for another tenant's id, so the SDK reads empty
  * as absent. An empty list is passed straight through as an empty conversation.
  */
-import { client } from './origin'
-import { keys } from './keys'
-import { useRead } from './query'
-import type { Message } from './types'
+import { client } from './origin.ts'
+import { keys } from './keys.ts'
+import { useRead } from './query.ts'
+import type { Message } from './types.ts'
 
 /**
  * Every turn of one conversation, oldest first.

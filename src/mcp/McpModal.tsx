@@ -19,10 +19,10 @@ import { Blocks, Check, Plus, Power, Search, Trash2, Wrench, X } from '@hanzogui
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useState } from 'react'
 
-import { requireLogin } from '../data/gate'
-import { useSession } from '../data/session'
-import { mcpStore, useCatalog, useMcp } from './store'
-import type { McpServer } from './types'
+import { requireLogin } from '../data/gate.ts'
+import { useSession } from '../data/session.tsx'
+import { mcpStore, useCatalog, useMcp } from './store.ts'
+import type { McpServer } from './types.ts'
 
 const dim = 'rgba(255, 255, 255, 0.5)'
 const faint = 'rgba(255, 255, 255, 0.4)'

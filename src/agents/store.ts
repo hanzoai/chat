@@ -14,10 +14,10 @@
 import { APIError, type Agent, type AgentCreateParams, type AgentDetail, type AgentRun } from '@hanzo/ai'
 import { useEffect, useState } from 'react'
 
-import { client, ESTATE } from '../data/origin'
-import type { Key } from '../data/keys'
-import { invalidate, useRead } from '../data/query'
-import { useSession } from '../data/session'
+import { client, ESTATE } from '../data/origin.ts'
+import type { Key } from '../data/keys.ts'
+import { invalidate, useRead } from '../data/query.ts'
+import { useSession } from '../data/session.tsx'
 
 /**
  * What a reader is told when the server answers nothing, or does not answer.

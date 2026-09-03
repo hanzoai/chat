@@ -45,8 +45,8 @@ import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-import { Cite } from './Cite'
-import { Fence } from './Fence'
+import { Cite } from './Cite.tsx'
+import { Fence } from './Fence.tsx'
 
 /**
  * The anchor a model writes beside a claim — U+E202 then `turn0search1`, in the

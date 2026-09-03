@@ -15,10 +15,10 @@
 import { useSyncExternalStore } from 'react'
 import type { PluginMount } from '@hanzo/ai'
 
-import { client, ESTATE } from '../data/origin'
-import type { Key } from '../data/keys'
-import { useRead } from '../data/query'
-import { useSession } from '../data/session'
+import { client, ESTATE } from '../data/origin.ts'
+import type { Key } from '../data/keys.ts'
+import { useRead } from '../data/query.ts'
+import { useSession } from '../data/session.tsx'
 
 const key: Key = ['plugins']
 

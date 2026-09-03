@@ -8,7 +8,10 @@
     "noEmit": false,
     "declaration": true,
     "declarationMap": true,
-    "allowImportingTsExtensions": false,
+    // Source names the file it means, so `node --test` can run it straight; on
+    // emit the same specifier becomes the `.js` beside it, which is the only
+    // spelling Node resolves in a package.
+    "rewriteRelativeImportExtensions": true,
     "outDir": "dist",
     "rootDir": "src"
   },

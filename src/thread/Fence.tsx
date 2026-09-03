@@ -3,7 +3,7 @@
  */
 import { Sparkles } from '@hanzogui/lucide-icons-2'
 import { Code } from '@hanzo/ui/chat'
-import { artifactStore } from '../artifact/store'
+import { artifactStore } from '../artifact/store.ts'
 
 export interface FenceProps {
   /** The word after the backticks. Shown in the label bar. */

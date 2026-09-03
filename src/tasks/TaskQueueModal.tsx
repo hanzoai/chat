@@ -11,10 +11,10 @@
 import { ListTodo, Pause, Play, Square, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
-import { useSession } from '../data/session'
+import { useSession } from '../data/session.tsx'
 
-import { steer, useRun, useRuns } from './runs'
-import { taskQueueStore, useTaskQueue } from './store'
+import { steer, useRun, useRuns } from './runs.ts'
+import { taskQueueStore, useTaskQueue } from './store.ts'
 import type { Session, SessionEvent, SessionStatus } from '@hanzo/ai'
 
 const badge = (status: SessionStatus | undefined) => {

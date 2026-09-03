@@ -12,12 +12,12 @@
  */
 import { Failure, Message, Sources, type Source } from '@hanzo/ui/chat'
 
-import { Actions, acts, type ActionsProps } from './Actions'
-import { Cited } from './Cite'
-import { Edit } from './Edit'
-import { Parts } from './Parts'
-import { Siblings } from './Siblings'
-import { plain, type Choice, type Vote } from './tree'
+import { Actions, acts, type ActionsProps } from './Actions.tsx'
+import { Cited } from './Cite.tsx'
+import { Edit } from './Edit.tsx'
+import { Parts } from './Parts.tsx'
+import { Siblings } from './Siblings.tsx'
+import { plain, type Choice, type Vote } from './tree.ts'
 
 const OOPS = 'Something went wrong.'
 

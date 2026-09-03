@@ -10,8 +10,8 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { useShown } from '../show'
-import { intelligenceStore, useForget, useIntelligence, useRemember } from './store'
+import { useShown } from '../show.ts'
+import { intelligenceStore, useForget, useIntelligence, useRemember } from './store.ts'
 
 export const IntelligenceModal = () => {
   const { isOpen, memories, symbols, query, activeTab, pending, fault, degraded } =

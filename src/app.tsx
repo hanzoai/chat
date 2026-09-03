@@ -1,11 +1,11 @@
 import { Toaster, TooltipProvider } from '@hanzo/ui'
 import { RouterProvider } from 'react-router/dom'
 
-import { Session } from './data/session'
-import { shell } from './data/shell'
-import { router } from './routes'
-import { consent, usePref } from './settings/prefs'
-import { Welcome } from './shell/Welcome'
+import { Session } from './data/session.tsx'
+import { shell } from './data/shell.ts'
+import { router } from './routes.tsx'
+import { consent, usePref } from './settings/prefs.ts'
+import { Welcome } from './shell/Welcome.tsx'
 
 /** How long a hint waits before it appears, everywhere. ONE provider, so the
  *  product cannot have two hover speeds depending on which subtree the pointer

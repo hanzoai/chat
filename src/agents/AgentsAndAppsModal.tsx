@@ -15,7 +15,7 @@ import { Loader, Play, Plus, Trash2, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 import type { Agent } from '@hanzo/ai'
 
-import { none, remove, run, swarmStore, unread, useAgent, useAgents, useSwarm } from './store'
+import { none, remove, run, swarmStore, unread, useAgent, useAgents, useSwarm } from './store.ts'
 
 export interface AgentsAndAppsModalProps {
   onOpenAgentBuilder?: () => void

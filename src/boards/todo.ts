@@ -19,8 +19,8 @@
  * purpose: a board IS a repository on the forge, and creating one is a forge
  * act with forge permissions.
  */
-import { client, ESTATE } from '../data/origin'
-import { invalidate, useRead } from '../data/query'
+import { client, ESTATE } from '../data/origin.ts'
+import { invalidate, useRead } from '../data/query.ts'
 
 /** The five columns the server recognises. An unknown value is refused with 400. */
 export const COLUMNS = ['backlog', 'todo', 'in_progress', 'done', 'canceled'] as const

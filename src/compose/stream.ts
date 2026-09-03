@@ -4,8 +4,8 @@
  * One verb, streaming decoded `chat.completion.chunk` values from @hanzo/ai.
  */
 import type { ChatCompletionChunk, ChatCompletionMessage } from '@hanzo/ai'
-import { client, ESTATE } from '../data/origin'
-import { explain } from '../data/types'
+import { client, ESTATE } from '../data/origin.ts'
+import { explain } from '../data/types.ts'
 
 /** How a turn ended. The shell answers each differently, so it is told which. */
 export type Ended =

@@ -24,8 +24,8 @@ import {
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
-import { useLease, type Line } from '../terminal/sandbox'
-import { artifactStore, previewable, runner, useArtifact, type ArtifactTab } from './store'
+import { useLease, type Line } from '../terminal/sandbox.ts'
+import { artifactStore, previewable, runner, useArtifact, type ArtifactTab } from './store.ts'
 
 const TAB = (active: boolean): CSSProperties => ({
   display: 'inline-flex',

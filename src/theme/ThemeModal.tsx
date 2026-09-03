@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Check, Palette, X } from '@hanzogui/lucide-icons-2'
-import { ACCENT_PALETTE, themeCustomizerStore, useThemeCustomizer } from './store'
+import { ACCENT_PALETTE, themeCustomizerStore, useThemeCustomizer } from './store.ts'
 
 export const ThemeModal = () => {
   const { isOpen, accent, blurPx, glassOpacity } = useThemeCustomizer()

@@ -22,7 +22,7 @@
  * NOT fall back to is a store that answers every call and forgets on exit,
  * which reads as a working keychain until the restart that loses the session.
  */
-import { call, shell } from './shell'
+import { call, shell } from './shell.ts'
 
 /** One entry, holding the whole session: the tokens travel together. */
 const NAME = 'session'
