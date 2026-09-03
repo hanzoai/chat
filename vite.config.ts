@@ -24,9 +24,41 @@ import react from '@vitejs/plugin-react'
  */
 const API = 'https://api.hanzo.ai'
 
+/**
+ * A single-page app has one document and many addresses, so every address that
+ * is not a file has to arrive at that document. Two servers host this bundle and
+ * only one of them knows that: `ghcr.io/hanzoai/spa` answers index.html for any
+ * route, while the Sites plane resolves an object key and otherwise misses.
+ *
+ * On the Sites plane a miss is answered by the site's own `404.html` when it
+ * published one (cloud `apps/sites` notFound), so emitting the document under
+ * that name is the whole fix — and it is the convention every static host
+ * already implements, rather than a flag this app would have to be granted.
+ *
+ * The status stays 404, deliberately. The browser runs the bundle regardless and
+ * the router takes the address from there, while a crawler and a health check
+ * still read "this is not a page I publish" — which is true of every address
+ * except the ones the router invents. Answering 200 would require the server to
+ * know which addresses this app claims, and it cannot.
+ *
+ * Without it `/auth/callback` missed, so the issuer completed a round trip into
+ * a not-found page and signing in was impossible on hanzo.chat.
+ */
+const spaFallback = {
+  name: 'spa-fallback',
+  // `writeBundle` runs after the HTML has been emitted, so index.html exists to
+  // be read; `closeBundle` would also work and is further from the emit.
+  async writeBundle(options: { dir?: string }) {
+    const { copyFile } = await import('node:fs/promises')
+    const { join } = await import('node:path')
+    const dir = options.dir ?? 'dist'
+    await copyFile(join(dir, 'index.html'), join(dir, '404.html'))
+  },
+}
+
 const config = hanzo(
   {
-    plugins: [react()],
+    plugins: [react(), spaFallback],
     server: {
       port: 3090,
       // Reachable by LAN name in dev — the Spark serves this to the Mac over
