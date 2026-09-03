@@ -1,0 +1,37 @@
+name: CI/CD
+
+# The caller, and deliberately nothing else: triggers plus the import. All real
+# config is the repo-root hanzo.yml, which platform.hanzo.ai reads too.
+#
+# `.hanzo/workflows`, NOT `.github/workflows`, on BOTH sides of the `uses:`.
+# Gitea collects workflows from the first of WORKFLOW_DIRS present in the commit
+# and resolves a reusable through the same allowlist, and github.com has zero
+# self-hosted runners for this org — so a job asking for hanzo-build-linux-amd64
+# there is never claimed, and an unclaimable job does not fail, it waits out the
+# 24h timeout while the next push queues behind it. Naming the .github path is
+# what took hanzoai/console's CI down.
+#
+# `master`, because that is this repository's default branch — measured, not
+# assumed (`git remote show origin` → HEAD branch: master). `main` exists too
+# and currently points at the same commit, which is a duplicate ref rather than
+# a second lane: listing both would put two runs on one tag, and since the
+# version comes from hanzoai/ci's bin/imgver deriving max(declared, published)+1
+# patch, two concurrent runs race to mint the same one. One branch, one lane.
+# Delete the duplicate and this list stays one entry.
+
+on:
+  push:
+    branches: [master]
+    # A `v*` tag is a RELEASE and publishes an image named after it, verbatim.
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cicd:
+    uses: hanzoai/ci/.hanzo/workflows/build.yml@v1
+    secrets: inherit

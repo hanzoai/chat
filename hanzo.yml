@@ -1,0 +1,58 @@
+# Hanzo CI/CD — chat. All real config is here; .hanzo/workflows/cicd.yml is
+# triggers and an import of hanzoai/ci.
+
+test:
+  # Frozen, so the gate resolves the same tree the Dockerfile does. The estate
+  # note that this repo needs --no-frozen-lockfile is stale: the lockfile has
+  # caught up with the `catalog:` conversion and a frozen install now resolves
+  # clean.
+  - name: install
+    run: |
+      set -e
+      corepack enable
+      pnpm install --frozen-lockfile
+
+  # Verbatim the build line the image runs, run before there is an image, so a
+  # break arrives in a minute instead of after a full layer stack. `pnpm build`
+  # is `tsc --noEmit && vite build`. A vite build that emits nothing still exits
+  # 0, hence the file test.
+  - name: build
+    run: |
+      set -e
+      pnpm build
+      test -s dist/index.html
+
+  # 22 assertions over the chunk fold and the SDK against a stub transport —
+  # node --test with type stripping, no framework. This is the gate that did not
+  # exist: every surface here is new code and none of it had ever been run by
+  # anything but a person.
+  - name: unit
+    run: |
+      set -e
+      pnpm test
+
+images:
+  # NOT `ghcr.io/hanzoai/chat`, and the name is the whole reason.
+  #
+  # That name belongs to the LibreChat fork, which is built out of the SEPARATE
+  # repo hanzoai/chat-v1 by its own .hanzo/workflows/deploy.yml, and it is the
+  # image two live Deployments run: universe charts/app/values/hanzo/chat.yaml
+  # (hanzo.chat, 1.0.273) and lux-chat.yaml (lux.chat, 1.0.268). Publishing this
+  # application under that name would put two different programs behind one
+  # reference, and the pods are replicas:1 + strategy:Recreate over an RWO SQLite
+  # claim, so there is no half-rolled state to notice it in — the next pull is
+  # the whole service.
+  #
+  # This name is the package's own (@hanzo/chat2). It stops being needed when
+  # chat-v1 is retired and this repo inherits `chat`; until then two names is the
+  # honest count, because there are two applications.
+  - name: chat2
+    context: .
+    dockerfile: Dockerfile
+    repo: ghcr.io/hanzoai/chat2
+    platforms: [linux/amd64]
+    # No build_secrets, and none belong here. The publishable keys in
+    # src/brand.ts are pk- values, public by construction, and each is held in
+    # its OWN brand record — so the host that selects the brand selects the key
+    # with it. That is what keeps one bundle serving hanzo.chat, lux.chat and
+    # zoolabs.io without filing three brands' traffic under one tenant.
