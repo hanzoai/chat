@@ -22,8 +22,8 @@ catalogs:
       specifier: 8.27.7
       version: 8.27.7
     '@hanzo/vite':
-      specifier: 0.1.3
-      version: 0.1.3
+      specifier: 0.1.4
+      version: 0.1.4
     '@hanzogui/lucide-icons-2':
       specifier: 8.3.1
       version: 8.3.1
@@ -119,7 +119,7 @@ importers:
     devDependencies:
       '@hanzo/vite':
         specifier: 'catalog:'
-        version: 0.1.3(react@19.2.8)(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))
+        version: 0.1.4(react@19.2.8)(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))
       '@types/node':
         specifier: 'catalog:'
         version: 26.4.1
@@ -638,8 +638,8 @@ packages:
       react-hook-form:
         optional: true
 
-  '@hanzo/vite@0.1.3':
-    resolution: {integrity: sha512-aLoZcxhzR4pcOwdzHr10t7lKBquy9bYtyNN0lUChtD1ndPeEU/6aJB1owDpPhXVJg1lSsg+JuoPrejPvxtLQ8w==}
+  '@hanzo/vite@0.1.4':
+    resolution: {integrity: sha512-pIawC2x4gwSR9JhTtpqMeZdxTWkPad6oUFe1nvjY/l6ZcSZgTrRJPDcHQUKfMQRIzUh92EVHDr8Z0RpxgzkXwQ==}
     peerDependencies:
       vite: '>=8'
 
@@ -3922,7 +3922,7 @@ snapshots:
       - encoding
       - prop-types
 
-  '@hanzo/vite@0.1.3(react@19.2.8)(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))':
+  '@hanzo/vite@0.1.4(react@19.2.8)(vite@8.2.2(@types/node@26.4.1)(terser@5.50.0))':
     dependencies:
       '@hanzo/source': 0.1.0(react@19.2.8)
       vite: 8.2.2(@types/node@26.4.1)(terser@5.50.0)

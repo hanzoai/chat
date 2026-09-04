@@ -67,14 +67,6 @@ const config = hanzo(
       allowedHosts: true,
       proxy: { '/v1': { target: API, changeOrigin: true } },
     },
-    // gui reads `process.env.*` at module scope — thirty-five different keys
-    // across the family — the way a bundler with a define pass is expected to
-    // answer. Next answers it for hanzo.app on its own; here it is one line,
-    // and it is the same line for all thirty-five, so a key added in a future
-    // gui release cannot reach the browser as `process is not defined` and take
-    // the first render with it. Vite's own, more specific `process.env.NODE_ENV`
-    // still wins where it applies.
-    define: { 'process.env': '{}' },
   },
   { root: import.meta.dirname },
 )
