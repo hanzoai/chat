@@ -301,7 +301,7 @@ export const Chat = () => {
     [ask],
   )
 
-  const { model } = useMemo(() => pick(address), [address])
+  const { model } = useMemo(() => pick(address || brand.model), [address])
 
   const conversation = useMemo<Conversation>(
     () => ({ conversationId: id, model }),

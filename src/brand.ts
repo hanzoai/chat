@@ -72,6 +72,8 @@ export type Brand = {
    * takes it.
    */
   publishableKey?: string
+  /** The model a first turn goes to when the reader has chosen none: the brand's free tier, so a new account always gets an answer. */
+  model: string
 }
 
 /**
@@ -135,6 +137,7 @@ export const brands: readonly Brand[] = [
     scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['hanzo.chat', 'chat.hanzo.ai'],
+    model: 'enso-free',
     site: 'https://hanzo.ai',
     docs: 'https://docs.hanzo.ai',
     billing: 'https://billing.hanzo.ai',
@@ -154,6 +157,8 @@ export const brands: readonly Brand[] = [
     scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 175, 55, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['lux.chat', 'chat.lux.network'],
+    model: 'zen-free',
+    publishableKey: 'pk-y1QM7ZZf30ZzqTkawqxM_KO4G0JrZ7TggJK0sknvm1o',
   },
   {
     org: 'zoo',
@@ -165,6 +170,8 @@ export const brands: readonly Brand[] = [
     scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 197, 94, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
     hosts: ['zoolabs.io', 'chat.zoo.ngo'],
+    model: 'zen-free',
+    publishableKey: 'pk-PyRP4mQtp9Pt8w-BnL0DMR6WCi4EC9hXdIrccKbOtK8',
     terms: 'https://zoo.ngo/terms',
   },
 ]
