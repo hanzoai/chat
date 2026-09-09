@@ -34,7 +34,7 @@ export const ProjectModal = () => {
   const on = isOpen && live
 
   // `user.role` carries the account's `owner`, which IS the org — the same one
-  // /v1/projects is keyed by, so nothing here has to ask a second time.
+  // /v1/project is keyed by, so nothing here has to ask a second time.
   const org = user?.role
 
   const projects = useProjects(on)

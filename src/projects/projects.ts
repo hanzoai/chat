@@ -1,7 +1,7 @@
 /**
  * Projects, and the people who can see them.
  *
- * `/v1/projects` is keyed by the validated principal's org and never by
+ * `/v1/project` is keyed by the validated principal's org and never by
  * anything in the request, so there is exactly one org here — the caller's —
  * and no switcher: a control that changed the org would change nothing the
  * server reads. The org's name comes off the account the session already read,
@@ -16,7 +16,7 @@ import type { Person } from '@hanzo/ai'
 import { client, ESTATE } from '../data/origin.ts'
 import { invalidate, useRead } from '../data/query.ts'
 
-/** A project row, as `/v1/projects` answers it. `slug` is what addresses it. */
+/** A project row, as `/v1/project` answers it. `slug` is what addresses it. */
 export type Project = {
   id: string
   slug: string
@@ -36,7 +36,7 @@ const all = ['projects'] as const
 export const useProjects = (enabled: boolean) =>
   useRead<Project[]>(
     ['projects', 'list'],
-    () => client(ESTATE).http.json<Project[]>({ method: 'GET', path: '/v1/projects' }),
+    () => client(ESTATE).http.json<Project[]>({ method: 'GET', path: '/v1/project' }),
     { enabled },
   )
 
@@ -52,7 +52,7 @@ export const usePeople = (owner: string | undefined, enabled: boolean) =>
 export const create = async (name: string, description?: string) => {
   await client(ESTATE).http.json({
     method: 'POST',
-    path: '/v1/projects',
+    path: '/v1/project',
     body: { name, ...(description ? { description } : {}) },
   })
   invalidate(all)
@@ -62,7 +62,7 @@ export const create = async (name: string, description?: string) => {
 export const star = async (slug: string, on: boolean) => {
   await client(ESTATE).http.json({
     method: on ? 'PUT' : 'DELETE',
-    path: `/v1/projects/${slug}/star`,
+    path: `/v1/project/${slug}/star`,
   })
   invalidate(all)
 }
