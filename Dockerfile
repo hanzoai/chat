@@ -35,6 +35,6 @@ RUN pnpm build && [ -s dist/index.html ] && [ -d dist/assets ]
 # client-routed SPA, so it needs index.html served for every path. hanzoai/static
 # defaults to `Content-Security-Policy: default-src 'none'`, which blocks the
 # bundle the page loads and leaves a blank screen. Defaults: PORT=3000, ROOT=/public.
-FROM ghcr.io/hanzoai/spa:1.4.11
+FROM ghcr.io/hanzoai/spa:1.4.13
 COPY --from=build /build/dist /public
 EXPOSE 3000
