@@ -142,7 +142,7 @@ const hanzo: Brand = {
   scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))',
   footer: '',
   hosts: ['hanzo.chat', 'chat.hanzo.ai'],
-  model: 'enso-free',
+  model: 'enso-auto',
   site: 'https://hanzo.ai',
   docs: 'https://docs.hanzo.ai',
   billing: 'https://billing.hanzo.ai',
