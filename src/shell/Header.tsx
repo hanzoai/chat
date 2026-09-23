@@ -14,6 +14,7 @@ import {
 import { XStack } from '@hanzo/ui'
 import { useEffect, useState } from 'react'
 
+import { team } from '../brand.ts'
 import { PresenceStack } from '../presence/PresenceStack.tsx'
 import { artifactStore, useArtifact } from '../artifact/store.ts'
 import { useChannels } from '../channels/store.ts'
@@ -87,7 +88,7 @@ export const Header = ({ title, rail, onRail }: HeaderProps) => {
       }
     >
       <XStack alignItems="center" gap="$1.5" style={{ position: 'relative' }}>
-        <PresenceStack />
+        {team && <PresenceStack />}
 
         {/* Theme Customizer Trigger */}
         <button

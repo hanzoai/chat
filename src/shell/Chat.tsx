@@ -5,7 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router'
 import { SwarmBar } from '../agents/SwarmBar.tsx'
 import { ArtifactPanel } from '../artifact/ArtifactPanel.tsx'
 import { artifactStore } from '../artifact/store.ts'
-import { brand } from '../brand.ts'
+import { brand, team } from '../brand.ts'
 import { Compose } from '../compose/Compose.tsx'
 import { faulted, fold, opening, parts, spoken, stopped, type Part as Piece, type Reply } from '../compose/frames.ts'
 import { useHandoff } from '../compose/link.ts'
@@ -349,15 +349,16 @@ export const Chat = () => {
                     textAlign="center"
                     letterSpacing="-0.02em"
                   >
-                    What can I help you ship?
+                    {team ? 'What can I help you ship?' : 'What can I help with?'}
                   </H2>
-                  <Paragraph fontSize="$3" color="$color10" textAlign="center">
-                    Multi-agent swarms, luxury commerce, Next.js 16, and cloud infrastructure.
-                  </Paragraph>
+                  {team && (
+                    <Paragraph fontSize="$3" color="$color10" textAlign="center">
+                      Multi-agent swarms, luxury commerce, Next.js 16, and cloud infrastructure.
+                    </Paragraph>
+                  )}
                 </YStack>
 
-                {/* Multi-Agent Swarm Selector */}
-                <SwarmBar />
+                {team && <SwarmBar />}
 
                 {/* Centered Composer with Examples Below */}
                 <Compose
@@ -396,8 +397,7 @@ export const Chat = () => {
                 padding="$3"
                 $md={{ padding: '$4' }}
               >
-                {/* Multi-Agent Swarm Selector & Status */}
-                <SwarmBar />
+                {team && <SwarmBar />}
 
                 <Compose
                   conversation={conversation}
@@ -431,15 +431,15 @@ export const Chat = () => {
         {/* Artifacts and Sandbox Runner Canvas */}
         <ArtifactPanel />
 
-        {/* Interactive Terminal & Cloud Sandbox Panel */}
-        <TerminalPanel />
+        {team && <TerminalPanel />}
       </XStack>
 
-      {/* Multiplayer Room Invite & Team Access Modal */}
-      <InviteModal conversationId={id} />
-
-      {/* Global Channel Discovery & Follow Modal */}
-      <BrowseChannelsModal />
+      {team && (
+        <>
+          <InviteModal conversationId={id} />
+          <BrowseChannelsModal />
+        </>
+      )}
 
       {/* Live Duplex Agent Voice Call Modal */}
 

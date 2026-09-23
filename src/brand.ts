@@ -74,6 +74,13 @@ export type Brand = {
   publishableKey?: string
   /** The model a first turn goes to when the reader has chosen none: the brand's free tier, so a new account always gets an answer. */
   model: string
+  /**
+   * Which product this host is: `chat` is the single-player chat, `team` the
+   * workspace (boards, tasks, channels, agents, MCP, the terminal). It is also
+   * the IAM application, `<org>-<app>`, so one fact names both the client a host
+   * signs in with and what it shows.
+   */
+  app: 'chat' | 'team'
 }
 
 /**
@@ -125,28 +132,32 @@ const ZOO = mark(
     '</g>',
 )
 
+const hanzo: Brand = {
+  org: 'hanzo',
+  issuer: 'https://hanzo.id',
+  name: 'Hanzo',
+  title: 'Hanzo Chat',
+  mark: HANZO,
+  backdrop: 'dark',
+  scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))',
+  footer: '',
+  hosts: ['hanzo.chat', 'chat.hanzo.ai'],
+  model: 'enso-free',
+  site: 'https://hanzo.ai',
+  docs: 'https://docs.hanzo.ai',
+  billing: 'https://billing.hanzo.ai',
+  terms: 'https://hanzo.ai/terms',
+  // Free AI without signing in: this org-scoped `pk-` names the tenant, so an
+  // anonymous visitor asks on the projected free/anonymous policy (data-shared,
+  // rate-limited). A signed-in user's token layers on through `auth`.
+  publishableKey: 'pk-G7yTL-sSl6i9zGR_0s1qtGH8pf6tGKzosExH7ZzXSSg',
+  app: 'chat',
+}
+
 /** Every brand this image serves. To add one, add a record. */
 export const brands: readonly Brand[] = [
-  {
-    org: 'hanzo',
-    issuer: 'https://hanzo.id',
-    name: 'Hanzo',
-    title: 'Hanzo Chat',
-    mark: HANZO,
-    backdrop: 'dark',
-    scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))',
-    footer: '',
-    hosts: ['hanzo.chat', 'chat.hanzo.ai'],
-    model: 'enso-free',
-    site: 'https://hanzo.ai',
-    docs: 'https://docs.hanzo.ai',
-    billing: 'https://billing.hanzo.ai',
-    terms: 'https://hanzo.ai/terms',
-    // Free AI without signing in: this org-scoped `pk-` names the tenant, so an
-    // anonymous visitor asks on the projected free/anonymous policy (data-shared,
-    // rate-limited). A signed-in user's token layers on through `auth`.
-    publishableKey: 'pk-G7yTL-sSl6i9zGR_0s1qtGH8pf6tGKzosExH7ZzXSSg',
-  },
+  hanzo,
+  { ...hanzo, title: 'Hanzo Team', hosts: ['hanzo.team'], app: 'team' },
   {
     org: 'lux',
     issuer: 'https://lux.id',
@@ -159,6 +170,7 @@ export const brands: readonly Brand[] = [
     hosts: ['lux.chat', 'chat.lux.network'],
     model: 'zen-free',
     publishableKey: 'pk-y1QM7ZZf30ZzqTkawqxM_KO4G0JrZ7TggJK0sknvm1o',
+    app: 'chat',
   },
   {
     org: 'zoo',
@@ -173,6 +185,7 @@ export const brands: readonly Brand[] = [
     model: 'zen-free',
     publishableKey: 'pk-PyRP4mQtp9Pt8w-BnL0DMR6WCi4EC9hXdIrccKbOtK8',
     terms: 'https://zoo.ngo/terms',
+    app: 'chat',
   },
 ]
 
@@ -204,7 +217,13 @@ export const brand: Brand = {
  * the issuer — the desktop's redirect comes back to the shell, the web's to the
  * document. Where it is running is the answer, so nothing has to be configured.
  */
-export const clientId = `${brand.org}-${shell() ? 'app' : 'chat'}`
+export const clientId = `${brand.org}-${shell() ? 'app' : brand.app}`
+
+/**
+ * Whether the workspace surfaces render. The desktop is the whole app, so the
+ * shell always has them; a web host has them when its brand is the team product.
+ */
+export const team = shell() || brand.app === 'team'
 
 /**
  * Put the brand on the document.

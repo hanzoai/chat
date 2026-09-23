@@ -6,7 +6,7 @@ import { AgentBuilderModal } from '../agents/AgentBuilderModal.tsx'
 import { AgentsAndAppsModal } from '../agents/AgentsAndAppsModal.tsx'
 import { AutomationsModal } from '../automations/AutomationsModal.tsx'
 import { BoardModal } from '../boards/BoardModal.tsx'
-import { brand } from '../brand.ts'
+import { brand, team } from '../brand.ts'
 import { api } from '../data/api.ts'
 import { useModels } from '../data/config.ts'
 import { useConvos } from '../data/convos.ts'
@@ -128,31 +128,29 @@ export const Root = () => {
       {/* Memory & Code Intelligence Modal */}
       <IntelligenceModal />
 
-      {/* Agent Builder & Studio Modal */}
-      <AgentBuilderModal
-        isOpen={agentBuilder}
-        onClose={() => setAgentBuilder(false)}
-      />
-
-      {/* Agents & Apps Hub Modal */}
-      <AgentsAndAppsModal
-        onOpenAgentBuilder={() => setAgentBuilder(true)}
-      />
-
-      {/* Sprint Boards & Issue Kanban Modal */}
-      <BoardModal />
-
-      {/* Durable Task Queue & CI/CD Modal */}
-      <TaskQueueModal />
+      {team && (
+        <>
+          <AgentBuilderModal
+            isOpen={agentBuilder}
+            onClose={() => setAgentBuilder(false)}
+          />
+          <AgentsAndAppsModal
+            onOpenAgentBuilder={() => setAgentBuilder(true)}
+          />
+          <BoardModal />
+          <TaskQueueModal />
+        </>
+      )}
 
       {/* Projects, Organizations & User Switcher Modal */}
       <ProjectModal />
 
-      {/* Plugins & Extensions Marketplace Modal */}
-      <PluginsModal />
-
-      {/* Scheduled Tasks & Automations Modal */}
-      <AutomationsModal />
+      {team && (
+        <>
+          <PluginsModal />
+          <AutomationsModal />
+        </>
+      )}
     </Screen>
   )
 }

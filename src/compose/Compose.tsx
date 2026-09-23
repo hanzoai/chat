@@ -6,6 +6,7 @@ import { ArrowUp, Mic, MicOff, Paperclip, Square, X } from '@hanzogui/lucide-ico
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
+import { team } from '../brand.ts'
 import { Starters, type Starter } from './Starters.tsx'
 import { useDraft } from './draft.ts'
 import type { Handoff } from './link.ts'
@@ -500,7 +501,7 @@ export const Compose = ({
       </div>
 
       {/* Examples / Starter Suggestion Cards Below Composer */}
-      {empty && <Starters starters={starters} disabled={busy || disabled} onPick={fire} />}
+      {empty && team && <Starters starters={starters} disabled={busy || disabled} onPick={fire} />}
     </YStack>
   )
 }

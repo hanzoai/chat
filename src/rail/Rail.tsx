@@ -5,6 +5,7 @@ import { HanzoMark } from '@hanzo/ui/product'
 import { Blocks, Kanban, LayoutGrid, ListTodo } from '@hanzogui/lucide-icons-2'
 import { useRef, useState, type ReactNode } from 'react'
 
+import { team } from '../brand.ts'
 import { boardStore } from '../boards/store.ts'
 import { ChannelSection } from '../channels/ChannelSection.tsx'
 import { mcpStore } from '../mcp/store.ts'
@@ -108,113 +109,117 @@ export function Rail({
     <Sidebar width={w}>
       <SidebarHeader title={title} onCollapse={() => onOpenChange(false)} />
       <SidebarNewChat onPress={onNew} />
-      <button
-        type="button"
-        onClick={() => swarmStore.openHub()}
-        className="tap"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '8px 10px',
-          borderRadius: 8,
-          background: 'rgba(255, 255, 255, 0.04)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          fontSize: 13,
-          fontWeight: 600,
-          color: '#ffffff',
-          cursor: 'pointer',
-          marginTop: 4,
-          marginBottom: 6,
-          width: '100%',
-          textAlign: 'left',
-          transition: 'all 0.15s ease',
-        }}
-        data-testid="rail-agents-and-apps"
-      >
-        <LayoutGrid size={15} style={{ color: '#60a5fa' }} />
-        <span>Agents and Apps</span>
-      </button>
-
-      {/* Workspace & Build Tools Section */}
-      <YStack gap="$1" marginBottom="$2">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
+      {team && (
+        <>
           <button
             type="button"
-            onClick={() => boardStore.open()}
+            onClick={() => swarmStore.openHub()}
             className="tap"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '6px 8px',
-              borderRadius: 6,
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: 11.5,
+              gap: 8,
+              padding: '8px 10px',
+              borderRadius: 8,
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              fontSize: 13,
               fontWeight: 600,
+              color: '#ffffff',
               cursor: 'pointer',
+              marginTop: 4,
+              marginBottom: 6,
+              width: '100%',
               textAlign: 'left',
+              transition: 'all 0.15s ease',
             }}
-            data-testid="rail-boards-link"
+            data-testid="rail-agents-and-apps"
           >
-            <Kanban size={13} style={{ color: '#34d399' }} />
-            <span>Boards</span>
+            <LayoutGrid size={15} style={{ color: '#60a5fa' }} />
+            <span>Agents and Apps</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => taskQueueStore.open()}
-            className="tap"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 8px',
-              borderRadius: 6,
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: 11.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
-            data-testid="rail-tasks-link"
-          >
-            <ListTodo size={13} style={{ color: '#fbbf24' }} />
-            <span>Tasks</span>
-          </button>
+          {/* Workspace & Build Tools Section */}
+          <YStack gap="$1" marginBottom="$2">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
+              <button
+                type="button"
+                onClick={() => boardStore.open()}
+                className="tap"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 8px',
+                  borderRadius: 6,
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+                data-testid="rail-boards-link"
+              >
+                <Kanban size={13} style={{ color: '#34d399' }} />
+                <span>Boards</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => mcpStore.open()}
-            className="tap"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 8px',
-              borderRadius: 6,
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: 11.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
-            data-testid="rail-mcp-link"
-          >
-            <Blocks size={13} style={{ color: '#f472b6' }} />
-            <span>MCP Hub</span>
-          </button>
-        </div>
-      </YStack>
+              <button
+                type="button"
+                onClick={() => taskQueueStore.open()}
+                className="tap"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 8px',
+                  borderRadius: 6,
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+                data-testid="rail-tasks-link"
+              >
+                <ListTodo size={13} style={{ color: '#fbbf24' }} />
+                <span>Tasks</span>
+              </button>
 
-      {/* Channels Section */}
-      <ChannelSection />
+              <button
+                type="button"
+                onClick={() => mcpStore.open()}
+                className="tap"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 8px',
+                  borderRadius: 6,
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+                data-testid="rail-mcp-link"
+              >
+                <Blocks size={13} style={{ color: '#f472b6' }} />
+                <span>MCP Hub</span>
+              </button>
+            </div>
+          </YStack>
+
+          {/* Channels Section */}
+          <ChannelSection />
+        </>
+      )}
 
       <Find value={query} onChange={ask} />
 
