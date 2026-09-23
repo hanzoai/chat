@@ -75,12 +75,12 @@ export type Brand = {
   /** The model a first turn goes to when the reader has chosen none: the brand's free tier, so a new account always gets an answer. */
   model: string
   /**
-   * Which product this host is: `chat` is the single-player chat, `team` the
-   * workspace (boards, tasks, channels, agents, MCP, the terminal). It is also
-   * the IAM application, `<org>-<app>`, so one fact names both the client a host
-   * signs in with and what it shows.
+   * The IAM application this host signs in as, `<org>-<app>`, and so what it is:
+   * `chat` is the single-player chat; `app` is the whole Hanzo App — the
+   * workspace the desktop runs, with boards, tasks, channels, agents, MCP and
+   * the terminal. One fact names both the client and the product.
    */
-  app: 'chat' | 'team'
+  app: 'chat' | 'app'
 }
 
 /**
@@ -157,7 +157,7 @@ const hanzo: Brand = {
 /** Every brand this image serves. To add one, add a record. */
 export const brands: readonly Brand[] = [
   hanzo,
-  { ...hanzo, title: 'Hanzo Team', hosts: ['hanzo.team'], app: 'team' },
+  { ...hanzo, title: 'Hanzo Team', hosts: ['hanzo.team', 'www.hanzo.team'], app: 'app' },
   {
     org: 'lux',
     issuer: 'https://lux.id',
@@ -219,11 +219,8 @@ export const brand: Brand = {
  */
 export const clientId = `${brand.org}-${shell() ? 'app' : brand.app}`
 
-/**
- * Whether the workspace surfaces render. The desktop is the whole app, so the
- * shell always has them; a web host has them when its brand is the team product.
- */
-export const team = shell() || brand.app === 'team'
+/** Whether the workspace surfaces render: in the desktop, and on a host that serves the whole app. */
+export const team = shell() || brand.app === 'app'
 
 /**
  * Put the brand on the document.
