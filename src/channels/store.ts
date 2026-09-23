@@ -19,7 +19,7 @@
  * here. The only state left is which room is on screen and whether the reader
  * has the directory open — facts about this browser, not answers from a server.
  */
-import { APIError, rooms as group, type Channel, type Room } from '@hanzo/ai'
+import { APIError, type Channel } from '@hanzo/ai'
 
 import { client, ESTATE } from '../data/origin.ts'
 import type { Key } from '../data/keys.ts'
@@ -27,6 +27,7 @@ import { peek, useRead, type Read } from '../data/query.ts'
 import { useSession } from '../data/session.tsx'
 import { atom, useAtom } from '../data/store.ts'
 import { explain } from '../data/types.ts'
+import { rooms, type Room } from './room.ts'
 
 /** Two cache keys under one prefix, so both drop together. */
 const TRANSPORTS: Key = ['channels', 'transports']
@@ -43,14 +44,14 @@ export const useTransports = (enabled = true): Read<Channel[]> =>
   useRead<Channel[]>(TRANSPORTS, () => client(ESTATE).channels.list(), { enabled })
 
 /**
- * The rooms messages have arrived in, newest first.
+ * The rooms messages have arrived in, newest first, named and in prose.
  *
  * One page. `inbox()` is a cursor feed and `since` walks it, but nothing here
  * asks for a second page yet — paging a feed nobody has scrolled would be
  * spending a request on a promise.
  */
 export const useRooms = (enabled = true): Read<Room[]> =>
-  useRead<Room[]>(INBOX, async () => group((await client(ESTATE).channels.inbox()).messages), { enabled })
+  useRead<Room[]>(INBOX, async () => rooms((await client(ESTATE).channels.inbox()).messages), { enabled })
 
 /** The room on screen, by `Room.key` — the SDK's `"<channel> <roomId>"`. */
 const chosen = atom<string | null>(null)

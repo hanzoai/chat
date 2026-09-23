@@ -140,7 +140,7 @@ export const Chat = () => {
   const activeRoom = rooms.find((r) => r.key === selected)
 
   const activeTitle = activeRoom
-    ? `#${activeRoom.roomId} (${activeRoom.channel})`
+    ? `${activeRoom.name} (${activeRoom.channel})`
     : (record.data?.title ?? held?.title ?? 'New chat')
 
   useTitle(activeTitle)

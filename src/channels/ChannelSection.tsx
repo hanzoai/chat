@@ -7,9 +7,9 @@
  * rides the row rather than splitting the list into sections the server does
  * not have.
  *
- * A row is written with the platform's own id, because that is the only name
- * there is: a Slack conversation is `C024BE91L` and a Telegram chat is a signed
- * integer. Dressing one up would be inventing a name nobody sent.
+ * A row is written with the room's name and its last message in prose, both
+ * from `room.ts`: the wire names a room only by its platform id (`C024BE91L`),
+ * which is an address and never shown.
  */
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { Compass, Hash, MessageSquare } from '@hanzogui/lucide-icons-2'
@@ -114,7 +114,7 @@ export const ChannelSection = () => {
                     color: active ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
                   }}
                 >
-                  {room.roomId}
+                  {room.name}
                 </SizableText>
                 <SizableText size="$1" color="$faint" style={{ fontSize: 10, color: 'rgba(255, 255, 255, 0.35)' }}>
                   {room.channel}

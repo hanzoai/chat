@@ -35,7 +35,7 @@ export const ExportModal = () => {
 
   const turns = store.turns.get()
   const room = rooms.find((r) => r.key === selected)
-  const roomTitle = room ? `#${room.roomId}` : 'conversation'
+  const roomTitle = room ? room.name : 'conversation'
 
   const generateMarkdown = () => {
     let md = `# ${roomTitle}\n\n*Exported from Hanzo Chat on ${new Date().toLocaleString()}*\n\n---\n\n`

@@ -166,7 +166,7 @@ export const BrowseChannelsModal = () => {
                 size="$1"
                 style={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10, fontWeight: 700, color: 'rgba(255, 255, 255, 0.5)' }}
               >
-                {room.channel} · {room.roomId} · {room.roomKind}
+                {room.channel} · {room.name} · {room.roomKind}
               </SizableText>
               {room.messages.map((message) => (
                 <YStack key={message.id} gap="$0.5">

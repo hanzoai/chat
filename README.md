@@ -107,7 +107,7 @@ fork of that rather than a second copy of this.
 CI=true pnpm install --no-frozen-lockfile
 pnpm dev          # localhost:3090, /v1 proxied so calls stay same-origin
 pnpm typecheck
-pnpm test         # 31 assertions, node --test, no framework
+pnpm test         # 39 assertions, node --test, no framework
 pnpm build
 ```
 
