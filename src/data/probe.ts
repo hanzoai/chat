@@ -1,6 +1,7 @@
 /**
  * Ask the issuer, once per visit, whether this browser is already signed in.
  */
+import { stated } from '../brand.ts'
 import { keepHere } from './back.ts'
 
 const SLOT = 'chat.probed'
@@ -46,10 +47,10 @@ export const noSession = (error: string | null | undefined): boolean =>
 export const probe = async (go: () => Promise<void>): Promise<boolean> => {
   if (typeof window === 'undefined') return false
 
-  // On localhost, skip the silent redirect probe to prevent OAuth origin mismatch errors.
-  const isLocal =
-    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  if (isLocal) return false
+  // Only where the brand's client returns: anywhere else — loopback, the
+  // desktop, a copy on another host — the issuer refuses the redirect_uri and
+  // the visitor is left on its error page instead of back here as a guest.
+  if (!stated) return false
 
   const storage = slot()
   if (!storage || storage.getItem(SLOT) === '1') return false

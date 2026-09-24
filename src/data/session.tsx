@@ -33,8 +33,9 @@ import {
   type ReactNode,
 } from 'react'
 
+import { home, signsIn } from '../brand.ts'
 import { client } from './origin.ts'
-import { api } from './api.ts'
+import { api, loginPath } from './api.ts'
 import { keepHere, take } from './back.ts'
 import { guest } from './guest.ts'
 import { iam } from './iam.ts'
@@ -162,6 +163,7 @@ export const Session = ({ children }: { children: ReactNode }) => {
   const nobody = useMemo(guest, [])
 
   const signIn = useCallback(() => {
+    if (!signsIn) return visit(`${home}${loginPath}`)
     keepHere()
     void iam().getSigninUrl().then(visit)
   }, [])
@@ -177,6 +179,7 @@ export const Session = ({ children }: { children: ReactNode }) => {
    * back, by which time this visit has spent its probe.
    */
   const signUp = useCallback(() => {
+    if (!signsIn) return visit(`${home}${loginPath}`)
     keepHere()
     void (async () => {
       const authorize = new URL(await iam().getSigninUrl())

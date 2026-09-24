@@ -223,6 +223,30 @@ export const clientId = `${brand.org}-${shell() ? 'app' : brand.app}`
 export const team = shell() || brand.app === 'app'
 
 /**
+ * Whether the issuer returns to THIS host.
+ *
+ * A brand's client is registered for the hosts the brand states. Anywhere else
+ * this bundle is served — the Sites plane publishes it a second time at
+ * chat2.hanzo.app, a fork runs it on its own domain — an authorize carrying this
+ * origin as its redirect_uri is refused before any sign-in screen is drawn
+ * (RFC 6749 §4.1.2.1: the issuer must not send the browser back to an address
+ * it does not trust), so the visitor is left on the issuer's error page. Such a
+ * host is a guest-only copy: it never probes, and signing in happens on the
+ * brand's own host.
+ */
+export const stated = brand.hosts.includes(host)
+
+/**
+ * Whether a sign-in may start here: a stated host, the desktop (its own client,
+ * returning to the shell), or loopback, where a developer registers their own
+ * port with their own issuer.
+ */
+export const signsIn = stated || shell() || host === 'localhost' || host === '127.0.0.1'
+
+/** The brand's own sign-in, for a host that cannot start one. */
+export const home = `https://${brand.hosts[0]}`
+
+/**
  * Put the brand on the document.
  *
  * The served HTML is the same bytes for every brand, so the title and the icon
