@@ -20,7 +20,7 @@
     "pack:lib": "tsc -p tsconfig.build.json",
     "prepack": "pnpm pack:lib",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types 'src/**/*.test.ts'",
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
     "preview": "vite preview"
   },
   "dependencies": {
