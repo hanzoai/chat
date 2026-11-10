@@ -4,6 +4,27 @@ A chat client, and the package the desktop is built from. Vite and React draw
 it, `@hanzo/ui` supplies the components on the `@hanzo/gui` runtime, and
 `@hanzo/ai` is the only thing that speaks to a server.
 
+## Quickstart (Run Locally)
+
+Requires Node.js 22+ and `pnpm`.
+
+```sh
+git clone https://github.com/hanzoai/chat && cd chat
+CI=true pnpm install --no-frozen-lockfile
+
+# Default dev mode — serves http://localhost:3090 and proxies /v1 to api.hanzo.ai
+pnpm dev
+
+# Point at a local / self-hosted Hanzo Cloud + Hanzo IAM stack instead:
+VITE_HANZO_API=http://127.0.0.1:8080 \
+VITE_HANZO_IAM=http://127.0.0.1:8000 \
+  pnpm dev
+```
+
+> **Air-gapped single-binary option:** If you want a zero-Node, fully offline chat UI + local LLM server on one machine with no IAM server required, run [`hanzoai/engine`](https://github.com/hanzoai/engine) and open `http://127.0.0.1:1234/ui`. See the full [Self-Hosting & Air-Gapped Guide](https://docs.hanzo.ai/docs/self-hosting).
+
+---
+
 One bundle serves three products. `src/brand.ts` states a record per brand — its
 organization, issuer, name, mark, and the hosts it answers on — and `wear()`
 writes the title, icon and theme onto the document before the first render, so
