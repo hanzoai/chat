@@ -1,5 +1,7 @@
 # Hanzo Chat
 
+[![Open in Hanzo](https://hanzo.app/badges/open-in-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/chat&ref=main&action=open) [![Edit with Hanzo](https://hanzo.app/badges/edit-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/chat&ref=main&action=edit) [![Deploy with Hanzo](https://hanzo.app/badges/deploy-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/chat&ref=main&action=deploy)
+
 A chat client, and the package the desktop is built from. Vite and React draw
 it, `@hanzo/ui` supplies the components on the `@hanzo/gui` runtime, and
 `@hanzo/ai` is the only thing that speaks to a server.
