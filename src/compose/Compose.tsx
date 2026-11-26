@@ -4,6 +4,7 @@
  */
 import { ArrowUp, Mic, MicOff, Paperclip, Square, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
+import { sends } from '@hanzo/ui/chat'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { team } from '../brand.ts'
@@ -144,9 +145,14 @@ export const Compose = ({
         if (isImg) {
           preview = await new Promise<string>((resolve) => {
             const reader = new FileReader()
-            reader.onload = () => resolve(reader.result as string)
+            reader.onload = () => resolve((reader.result as string) || '')
+            reader.onerror = () => resolve('')
             reader.readAsDataURL(f)
           })
+          if (!preview) {
+            setRefused(`${f.name} could not be read, so it was not attached.`)
+            continue
+          }
         } else {
           // Read it or refuse it. Over the limit the body used to be left empty
           // and the file attached anyway, so the turn carried a header naming a
@@ -155,11 +161,20 @@ export const Compose = ({
             setRefused(`${f.name} is too large to read, so it was not attached.`)
             continue
           }
+          let failed = false
           text = await new Promise<string>((resolve) => {
             const reader = new FileReader()
-            reader.onload = () => resolve(reader.result as string)
+            reader.onload = () => resolve((reader.result as string) || '')
+            reader.onerror = () => {
+              failed = true
+              resolve('')
+            }
             reader.readAsText(f)
           })
+          if (failed) {
+            setRefused(`${f.name} could not be read, so it was not attached.`)
+            continue
+          }
         }
 
         incoming.push({
@@ -221,8 +236,7 @@ export const Compose = ({
   const send = useCallback(() => fire(draft.text), [fire, draft.text])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Send on Enter without shift
+    if (sends(e.key, e.nativeEvent)) {
       e.preventDefault()
       send()
     }
