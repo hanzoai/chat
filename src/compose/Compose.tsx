@@ -10,15 +10,12 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { team } from '../brand.ts'
 import { Starters, type Starter } from './Starters.tsx'
 import { useDraft } from './draft.ts'
+import { processFilesBatch } from './files.ts'
 import type { Handoff } from './link.ts'
 import { payload, type Conversation, type Draft, type Payload } from './submit.ts'
-import type { Attachment } from '../data/types.ts'
 
 const COLUMN = 768
 const MAX_TEXTAREA_HEIGHT = 220
-
-/** The largest file whose text rides in a turn. */
-const READABLE = 500_000
 
 export interface ComposeProps {
   conversation?: Conversation | null
@@ -135,59 +132,11 @@ export const Compose = ({
 
   const processFiles = useCallback(
     async (fileList: FileList | File[]) => {
-      const incoming: Attachment[] = []
       setRefused(null)
-      for (const f of Array.from(fileList)) {
-        const isImg = f.type.startsWith('image/')
-        let preview = ''
-        let text = ''
-
-        if (isImg) {
-          preview = await new Promise<string>((resolve) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve((reader.result as string) || '')
-            reader.onerror = () => resolve('')
-            reader.readAsDataURL(f)
-          })
-          if (!preview) {
-            setRefused(`${f.name} could not be read, so it was not attached.`)
-            continue
-          }
-        } else {
-          // Read it or refuse it. Over the limit the body used to be left empty
-          // and the file attached anyway, so the turn carried a header naming a
-          // file whose contents nobody — reader or model — ever saw.
-          if (f.size >= READABLE) {
-            setRefused(`${f.name} is too large to read, so it was not attached.`)
-            continue
-          }
-          let failed = false
-          text = await new Promise<string>((resolve) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve((reader.result as string) || '')
-            reader.onerror = () => {
-              failed = true
-              resolve('')
-            }
-            reader.readAsText(f)
-          })
-          if (failed) {
-            setRefused(`${f.name} could not be read, so it was not attached.`)
-            continue
-          }
-        }
-
-        incoming.push({
-          file_id: `file_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          filename: f.name,
-          filepath: preview || '',
-          type: f.type || 'application/octet-stream',
-          bytes: f.size,
-          preview,
-          text,
-        })
+      const { incoming, refusal } = await processFilesBatch(fileList)
+      if (refusal) {
+        setRefused(refusal)
       }
-
       if (incoming.length > 0) {
         addFiles(incoming)
       }
