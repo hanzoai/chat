@@ -18,9 +18,10 @@ CI=true pnpm install --no-frozen-lockfile
 pnpm dev
 
 # Point at a local / self-hosted Hanzo Cloud + Hanzo IAM stack instead:
-VITE_HANZO_API=http://127.0.0.1:8080 \
-VITE_HANZO_IAM=http://127.0.0.1:8000 \
-  pnpm dev
+VITE_HANZO_API=http://127.0.0.1:1234 pnpm dev
+
+# Run automated smoke test suite:
+npm test
 ```
 
 > **Air-gapped single-binary option:** If you want a zero-Node, fully offline chat UI + local LLM server on one machine with no IAM server required, run [`hanzoai/engine`](https://github.com/hanzoai/engine) and open `http://127.0.0.1:1234/ui`. See the full [Self-Hosting & Air-Gapped Guide](https://docs.hanzo.ai/docs/self-hosting).

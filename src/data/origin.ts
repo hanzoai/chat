@@ -28,7 +28,9 @@ export const ESTATE = 'hanzo'
 export const MACHINE = 'local'
 
 /** Where the engine listens when the shell starts it. */
-export const ENGINE = 'http://127.0.0.1:36900'
+export const ENGINE =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_HANZO_API) ||
+  'http://127.0.0.1:1234'
 
 export interface Origin {
   id: string
